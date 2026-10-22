@@ -238,6 +238,29 @@ void CachedLatinArticleTest::SetUp()
     ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
 }
 
+class CharsetIsolationArticleTest : public ArticleIoTest, public testing::WithParamInterface<std::string_view>
+{
+protected:
+    void SetUp() override;
+};
+
+void CharsetIsolationArticleTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    m_mime_section.mime_parse_type("text/plain; charset=Latin1");
+    ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ("\xC3\xA9\n", line);
+    std::fclose(g_art_fp);
+    g_art_fp = nullptr;
+    m_mime_section.mime_parse_type(GetParam());
+    ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
+}
+
 } // namespace
 
 TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
@@ -454,22 +477,20 @@ TEST_F(ArticleIoTest, convertsEveryCachedBase64LineOnce)
     EXPECT_FALSE(read_art_buf(line, false));
 }
 
-TEST_F(ArticleIoTest, unknownAndMissingCharsetsNeverInheritPreviousArticle)
+TEST_P(CharsetIsolationArticleTest, doesNotInheritThePreviousArticleCharset)
 {
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
-    for (const std::string_view type : {"text/plain; charset=Latin1", "text/plain; charset=unknown", "text/plain"})
-    {
-        m_mime_section.mime_parse_type(type);
-        open_article_text("\xE9\n");
-        std::string line;
-        ASSERT_TRUE(read_art_buf(line, false));
-        EXPECT_EQ(type == "text/plain; charset=Latin1" ? "\xC3\xA9\n" : "\xEF\xBF\xBD\n", line);
-        std::fclose(g_art_fp);
-        g_art_fp = nullptr;
-    }
+    std::string line;
+
+    const bool read = read_art_buf(line, false);
+
+    ASSERT_TRUE(read);
+    EXPECT_EQ("\xEF\xBF\xBD\n", line);
 }
+
+INSTANTIATE_TEST_SUITE_P(CharsetDeclaration, CharsetIsolationArticleTest,
+                         testing::Values("text/plain; charset=unknown", "text/plain"),
+                         [](const testing::TestParamInfo<std::string_view> &info)
+                         { return info.param == "text/plain" ? "Missing" : "Unknown"; });
 
 TEST_F(ArticleIoTest, htmlFilteringReceivesUtf8AfterTransferDecoding)
 {
