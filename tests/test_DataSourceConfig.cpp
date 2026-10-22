@@ -120,6 +120,12 @@ void ParsedDataSourceFieldTest::SetUp()
     m_config = parse(GetParam().text);
 }
 
+class ModeratorFilePolicyTest : public testing::Test
+{
+protected:
+    DataSourceConfig m_config;
+};
+
 } // namespace
 
 TEST_P(DataSourceSchemaLookupTest, recognizesCurrentFieldsAndRejectsObsoleteNames)
@@ -167,12 +173,21 @@ TEST_F(DataSourceConfigTest, recognizesModeratorsFile)
     EXPECT_NE(nullptr, DataSourceConfig::schema().find("Moderators File"));
 }
 
-TEST_F(DataSourceConfigTest, parsesAndPreservesModeratorFilePolicy)
+INSTANTIATE_TEST_SUITE_P(ParsedModeratorFile, ParsedDataSourceFieldTest,
+                         testing::Values(DataSourceFieldCase{"Moderators File",
+                                                             "[source]\nModerators File = ~/moderators\n",
+                                                             &DataSourceConfig::moderators_file, "~/moderators"}));
+
+TEST_F(ModeratorFilePolicyTest, moderatorPolicyIsInitiallyAbsent)
 {
-    const DataSourceConfig config = parse("[source]\nModerators File = ~/moderators\n");
-    expect_value("~/moderators", config.moderators_file());
-    DataSourceConfig copy;
-    EXPECT_FALSE(copy.moderators_file());
-    copy.set_moderators_file("none");
-    expect_value("none", copy.moderators_file());
+    const std::optional<std::string_view> policy = m_config.moderators_file();
+
+    EXPECT_FALSE(policy.has_value());
+}
+
+TEST_F(ModeratorFilePolicyTest, setterPreservesTheDisabledPolicy)
+{
+    m_config.set_moderators_file("none");
+
+    expect_value("none", m_config.moderators_file());
 }
