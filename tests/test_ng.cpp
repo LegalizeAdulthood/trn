@@ -1720,6 +1720,36 @@ void DefaultCommandArticleTest::expect_pending(std::string_view input)
     EXPECT_FALSE(macro_pending());
 }
 
+class DefaultLineEndingArticleTest : public DefaultCommandArticleTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+};
+
+void DefaultLineEndingArticleTest::SetUp()
+{
+    DefaultCommandArticleTest::SetUp();
+    push_char('q');
+}
+
+class SelectorDefaultReturnArticleTest : public DefaultCommandArticleTest,
+                                         public testing::WithParamInterface<std::tuple<bool, long>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorDefaultReturnArticleTest::SetUp()
+{
+    DefaultCommandArticleTest::SetUp();
+    const bool universal = std::get<0>(GetParam());
+    g_sa_in = !universal;
+    g_univ_read_virt_flag = universal;
+    g_search_ahead = ArticleNum{std::get<1>(GetParam())};
+    set_default_cmd();
+    push_char('n');
+}
+
 class ScanContinuationArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -12859,24 +12889,19 @@ TEST_F(DefaultCommandArticleTest, spaceExecutesOneDefaultAndLeavesLaterCommandsF
 }
 
 #ifndef STRICT_CR
-TEST_F(DefaultCommandArticleTest, returnAndCarriageReturnAcceptTheDisplayedDefault)
+TEST_P(DefaultLineEndingArticleTest, acceptsTheDisplayedDefaultWithoutConsumingQueuedInput)
 {
-    for (const char command : {'\n', '\r'})
-    {
-        SCOPED_TRACE(static_cast<int>(command));
-        g_art = ArticleNum{1};
-        g_artp = article_ptr(g_art);
-        push_char('q');
+    const ArticleSwitchResult result = art_switch(std::string{GetParam(), FINISH_CMD});
 
-        EXPECT_EQ(AS_NORM, art_switch(std::string{command, FINISH_CMD}));
-
-        expect_position(2);
-        EXPECT_TRUE(g_s_default_cmd);
-        EXPECT_TRUE(g_univ_default_cmd);
-        EXPECT_EQ('n', g_last_char);
-        expect_pending("q");
-    }
+    EXPECT_EQ(AS_NORM, result);
+    expect_position(2);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_EQ('n', g_last_char);
+    expect_pending("q");
 }
+
+INSTANTIATE_TEST_SUITE_P(LineEnding, DefaultLineEndingArticleTest, testing::Values('\n', '\r'));
 #endif
 
 TEST_F(DefaultCommandArticleTest, caretDefaultDispatchesTheControlCommandWithoutConsumingQueuedInput)
@@ -12898,49 +12923,22 @@ TEST_F(DefaultCommandArticleTest, caretDefaultDispatchesTheControlCommandWithout
     expect_pending("q");
 }
 
-TEST_F(DefaultCommandArticleTest, acceptingEitherReadingDefaultReturnsToTheScanSelector)
+TEST_P(SelectorDefaultReturnArticleTest, returnsToTheSelectorWithoutConsumingQueuedInput)
 {
-    g_sa_in = true;
-    for (const long search_ahead : {0, 1})
-    {
-        SCOPED_TRACE(search_ahead);
-        g_search_ahead = ArticleNum{search_ahead};
-        set_default_cmd();
-        push_char('n');
+    const ArticleSwitchResult result = art_switch(" ");
 
-        EXPECT_EQ(AS_SA, art_switch(" "));
-
-        expect_position(1);
-        EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
-        EXPECT_TRUE(g_s_default_cmd);
-        EXPECT_TRUE(g_univ_default_cmd);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        expect_pending("n");
-    }
+    EXPECT_EQ(std::get<0>(GetParam()) ? AS_CLEAN : AS_SA, result);
+    expect_position(1, std::get<0>(GetParam()) ? NG_NEXT : NG_NORM);
+    EXPECT_EQ(ArticleNum{std::get<1>(GetParam())}, g_search_ahead);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    expect_pending("n");
 }
 
-TEST_F(DefaultCommandArticleTest, acceptingEitherReadingDefaultReturnsToTheUniversalSelector)
-{
-    g_univ_read_virt_flag = true;
-    for (const long search_ahead : {0, 1})
-    {
-        SCOPED_TRACE(search_ahead);
-        g_search_ahead = ArticleNum{search_ahead};
-        set_default_cmd();
-        push_char('n');
-
-        EXPECT_EQ(AS_CLEAN, art_switch(" "));
-
-        expect_position(1, NG_NEXT);
-        EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
-        EXPECT_TRUE(g_s_default_cmd);
-        EXPECT_TRUE(g_univ_default_cmd);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        expect_pending("n");
-    }
-}
+INSTANTIATE_TEST_SUITE_P(SelectorAndDefault, SelectorDefaultReturnArticleTest,
+                         testing::Combine(testing::Bool(), testing::Values(0L, 1L)));
 
 TEST_F(DefaultCommandArticleTest, explicitNextOverridesSelectorReturnAndLaterDefaultsRetainFollowMode)
 {
