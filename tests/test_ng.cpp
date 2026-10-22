@@ -2258,6 +2258,34 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     return output;
 }
 
+struct SearchAheadBypassCase
+{
+    const char *name;
+    int         scan_on;
+    bool        threaded;
+    long        search_ahead;
+};
+
+class SearchAheadBypassArticleTest : public SearchAheadArticleTest,
+                                     public testing::WithParamInterface<SearchAheadBypassCase>
+{
+protected:
+    void SetUp() override;
+
+    std::vector<ArticleNum> m_visited;
+};
+
+void SearchAheadBypassArticleTest::SetUp()
+{
+    SearchAheadArticleTest::SetUp();
+    set_subject_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+                          AF_EXISTS | AF_UNREAD, AF_EXISTS},
+                         2);
+    g_scan_on = GetParam().scan_on;
+    g_threaded_group = GetParam().threaded;
+    g_search_ahead = ArticleNum{GetParam().search_ahead};
+}
+
 constexpr char NEXT_SUBJECT = Ctl('n');
 constexpr char PREVIOUS_SUBJECT = Ctl('p');
 
@@ -10912,30 +10940,22 @@ TEST_F(SearchAheadArticleTest, interruptedFallbackRestoresTheCurrentPairAndKeeps
     EXPECT_FALSE(g_old_subject);
 }
 
-TEST_F(SearchAheadArticleTest, disabledScanThreadedGroupOrDisabledSearchAheadUsesOrdinaryAdvancement)
+TEST_P(SearchAheadBypassArticleTest, usesOrdinaryAdvancementWithoutSearching)
 {
-    set_subject_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
-                          AF_EXISTS | AF_UNREAD, AF_EXISTS},
-                         2);
-    for (int gate = 0; gate < 3; ++gate)
-    {
-        SCOPED_TRACE(gate);
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
-        g_scan_on = gate == 0 ? 0 : 1;
-        g_threaded_group = gate == 1;
-        g_search_ahead = gate == 2 ? ArticleNum{} : ArticleNum{-1};
-        std::vector<ArticleNum> visited;
+    next(3, AS_NORM, [this](ArticleNum article) { m_visited.push_back(article); });
 
-        next(3, AS_NORM, [&](ArticleNum article) { visited.push_back(article); });
-
-        EXPECT_TRUE(visited.empty());
-        EXPECT_EQ(ArticleNum{}, g_search_ahead);
-        EXPECT_EQ(9, g_page_line);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_old_subject);
-    }
+    EXPECT_TRUE(m_visited.empty());
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_EQ(9, g_page_line);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_old_subject);
 }
+
+INSTANTIATE_TEST_SUITE_P(BypassGate, SearchAheadBypassArticleTest,
+                         testing::Values(SearchAheadBypassCase{"ScanDisabled", 0, false, -1},
+                                         SearchAheadBypassCase{"ThreadedGroup", 1, true, -1},
+                                         SearchAheadBypassCase{"SearchAheadDisabled", 1, false, 0}),
+                         [](const testing::TestParamInfo<SearchAheadBypassCase> &info) { return info.param.name; });
 
 TEST_F(SearchAheadArticleTest, nextFromGroupEndRestartsReadingAndClearsSearchAheadWithoutSearching)
 {
