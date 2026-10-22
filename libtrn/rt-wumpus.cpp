@@ -295,7 +295,7 @@ static void cache_tree(Article *ap, int depth, TreeRenderState &render)
         default:
             break;
         }
-        if (ap->m_child1)
+        if (ap->m_child1 && (!render.stop_at_max_depth || depth < render.max_depth))
         {
             cache_tree(ap->m_child1, depth + 1, render);
             if (depth_mode == 1)
