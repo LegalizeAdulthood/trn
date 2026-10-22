@@ -26,6 +26,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace
 {
@@ -306,6 +307,91 @@ void UnicodeProfileArticleTest::SetUp()
     std::string line;
     ASSERT_FALSE(read_art_buf(line, false));
     ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
+}
+
+struct UnicodeReplacementArticleCase
+{
+    std::string_view         name;
+    std::string_view         body;
+    std::string_view         header;
+    std::vector<std::string> expected_lines;
+};
+
+const UnicodeReplacementArticleCase UNICODE_REPLACEMENT_ARTICLE_CASES[]{
+    {"EscapedReplacement",
+     "A\xE2\x80\x99"
+     "B\nNext\n",
+     "=?UTF-8?Q?A=E2=80=99B?=",
+     {"Aleft\t\n", "right\\\"B\n", "Next\n"}},
+    {"Deletion",
+     "A\xE2\x80\x94"
+     "B\nNext\n",
+     "=?UTF-8?Q?A=E2=80=94B?=",
+     {"AB\n", "Next\n"}},
+    {"NonrecursiveReplacement",
+     "A\xF0\x9F\x98\x8A"
+     "B\nNext\n",
+     "=?UTF-8?Q?A=F0=9F=98=8AB?=",
+     {"A\xE2\x80\x94"
+      "B\n",
+      "Next\n"}},
+    {"CombinedReplacements",
+     "A\xE2\x80\x99"
+     "B\xE2\x80\x94"
+     "C\xF0\x9F\x98\x8A"
+     "D\nNext\n",
+     "=?UTF-8?Q?A=E2=80=99B=E2=80=94C=F0=9F=98=8AD?=",
+     {"Aleft\t\n",
+      "right\\\"BC\xE2\x80\x94"
+      "D\n",
+      "Next\n"}}};
+
+void PrintTo(const UnicodeReplacementArticleCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class UnicodeReplacementArticleTest : public ArticleIoTest,
+                                      public testing::WithParamInterface<UnicodeReplacementArticleCase>
+{
+protected:
+    void                     SetUp() override;
+    std::vector<std::string> read_presentation();
+
+    std::string m_presentation;
+};
+
+void UnicodeReplacementArticleTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    g_charsets = "up";
+    reset_char_subst_mode();
+    ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
+        "unicode substitutions", {}, "U+2019 = \"left\\t\\nright\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\n"}));
+    m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    g_word_wrap_offset = -1;
+    ASSERT_NO_FATAL_FAILURE(open_article_text(GetParam().body));
+    const std::vector<std::string> lines = read_presentation();
+    ASSERT_EQ(GetParam().expected_lines, lines);
+    for (const std::string &line : lines)
+    {
+        m_presentation += line;
+    }
+    ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
+}
+
+std::vector<std::string> UnicodeReplacementArticleTest::read_presentation()
+{
+    std::vector<std::string> lines;
+    std::string              line;
+    while (read_art_buf(line, false))
+    {
+        lines.push_back(line);
+    }
+    return lines;
 }
 
 } // namespace
@@ -759,40 +845,24 @@ INSTANTIATE_TEST_SUITE_P(SourceCharset, UnicodeProfileArticleTest, testing::Valu
                          [](const testing::TestParamInfo<UnicodeProfileArticleCase> &info)
                          { return std::string{info.param.name}; });
 
-TEST_F(ArticleIoTest, unicodeReplacementEscapesAndDeletionSurviveCacheRereads)
+TEST_P(UnicodeReplacementArticleTest, preservesReplacementTextAndLineBoundariesOnCacheReread)
 {
-    g_charsets = "up";
-    reset_char_subst_mode();
-    ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
-        "unicode substitutions", {}, "U+2019 = \"left\\t\\nright\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\n"}));
-    m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
-    g_word_wrap_offset = -1;
-    open_article_text("A\xE2\x80\x99"
-                      "B\xE2\x80\x94"
-                      "C\xF0\x9F\x98\x8A"
-                      "D\nNext\n");
-    std::string line;
+    const std::vector<std::string> lines = read_presentation();
 
-    for (int pass = 0; pass < 2; ++pass)
-    {
-        ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
-        ASSERT_TRUE(read_art_buf(line, false));
-        EXPECT_EQ("Aleft\t\n", line);
-        ASSERT_TRUE(read_art_buf(line, false));
-        EXPECT_EQ("right\\\"BC\xE2\x80\x94"
-                  "D\n",
-                  line);
-        ASSERT_TRUE(read_art_buf(line, false));
-        EXPECT_EQ("Next\n", line);
-        EXPECT_FALSE(read_art_buf(line, false));
-    }
-    EXPECT_EQ("Aleft\t\nright\\\"BC\xE2\x80\x94"
-              "D",
-              str_char_subst(decode_header("=?UTF-8?Q?A=E2=80=99B=E2=80=94C=F0=9F=98=8AD?="), 'u'));
+    EXPECT_EQ(GetParam().expected_lines, lines);
 }
+
+TEST_P(UnicodeReplacementArticleTest, presentsHeaderAndBodyReplacementTextIdentically)
+{
+    const std::string header = str_char_subst(decode_header(GetParam().header), 'u') + "\nNext\n";
+
+    EXPECT_EQ(m_presentation, header);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReplacementBehavior, UnicodeReplacementArticleTest,
+                         testing::ValuesIn(UNICODE_REPLACEMENT_ARTICLE_CASES),
+                         [](const testing::TestParamInfo<UnicodeReplacementArticleCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
 {
