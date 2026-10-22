@@ -13689,33 +13689,50 @@ TEST_P(EmptyDirectNavigationArticleTest, keepsNumberAndPointerConsistent)
 
 INSTANTIATE_TEST_SUITE_P(Command, EmptyDirectNavigationArticleTest, testing::Values("^", "_N", "_P"));
 
-TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
+struct NewsgroupUnreadTextCase
 {
-    EXPECT_EQ("\nUnkill: +select or all?", std::string{ng_unread_prompt_for_test(false, true)});
-    EXPECT_EQ("\nUnkill?", std::string{ng_unread_prompt_for_test(false, false)});
+    std::string_view name;
+    std::string_view (*text)(bool, bool);
+    bool             has_current_article;
+    std::string_view terse;
+    std::string_view verbose;
+};
+
+const NewsgroupUnreadTextCase NEWSGROUP_UNREAD_TEXT_CASES[]{
+    {"GroupPrompt", ng_unread_prompt_for_test, false, "\nUnkill?", "\nUnkill: +select or all?"},
+    {"ArticlePrompt", ng_unread_prompt_for_test, true, "\nUnkill?", "\nUnkill: +select, thread, subthread, or all?"},
+    {"GroupHelp", ng_unread_thread_help_for_test, false, {}, {}},
+    {"ArticleHelp", ng_unread_thread_help_for_test, true,
+     "t or SP to mark thread unread.\ns to mark subthread unread.\n",
+     "Type t or SP to mark this thread's articles as unread.\n"
+     "Type s to mark the current article and its descendants as unread.\n"}};
+
+void PrintTo(const NewsgroupUnreadTextCase &value, std::ostream *output)
+{
+    *output << value.name;
 }
 
-TEST(NewsgroupUnreadPromptTest, omitsThreadHelpWithoutCurrentArticle)
+class NewsgroupUnreadPromptTest : public testing::TestWithParam<std::tuple<NewsgroupUnreadTextCase, bool>>
 {
-    EXPECT_TRUE(ng_unread_thread_help_for_test(false, true).empty());
-    EXPECT_TRUE(ng_unread_thread_help_for_test(false, false).empty());
+};
+
+TEST_P(NewsgroupUnreadPromptTest, returnsTheExpectedTextForTheReadingContext)
+{
+    const NewsgroupUnreadTextCase &test_case = std::get<0>(GetParam());
+    const bool                     verbose = std::get<1>(GetParam());
+
+    const std::string_view text = test_case.text(test_case.has_current_article, verbose);
+
+    EXPECT_EQ(verbose ? test_case.verbose : test_case.terse, text);
 }
 
-TEST(NewsgroupUnreadPromptTest, usesArticlePromptWithCurrentArticle)
-{
-    EXPECT_EQ("\nUnkill: +select, thread, subthread, or all?", std::string{ng_unread_prompt_for_test(true, true)});
-    EXPECT_EQ("\nUnkill?", std::string{ng_unread_prompt_for_test(true, false)});
-}
-
-TEST(NewsgroupUnreadPromptTest, usesThreadHelpWithCurrentArticle)
-{
-    EXPECT_EQ("Type t or SP to mark this thread's articles as unread.\n"
-              "Type s to mark the current article and its descendants as unread.\n",
-              std::string{ng_unread_thread_help_for_test(true, true)});
-    EXPECT_EQ("t or SP to mark thread unread.\n"
-              "s to mark subthread unread.\n",
-              std::string{ng_unread_thread_help_for_test(true, false)});
-}
+INSTANTIATE_TEST_SUITE_P(ApiOriginAndVerbosity, NewsgroupUnreadPromptTest,
+                         testing::Combine(testing::ValuesIn(NEWSGROUP_UNREAD_TEXT_CASES), testing::Bool()),
+                         [](const testing::TestParamInfo<std::tuple<NewsgroupUnreadTextCase, bool>> &info)
+                         {
+                             return std::string{std::get<0>(info.param).name} +
+                                    (std::get<1>(info.param) ? "Verbose" : "Terse");
+                         });
 
 TEST(CatchupLeaveUnreadCountTest, parsesNumericPrefix)
 {
