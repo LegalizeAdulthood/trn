@@ -782,36 +782,42 @@ INSTANTIATE_TEST_SUITE_P(ConfiguredPostingHeaders, GeneratedDefinitionTest,
                                          config_string_case(TRN_TEST_POSTING_HEADER_TEMPLATES_CONFIGURED_CONFIG,
                                                             "SUPERSEDE_HEADER", "test-supersede\\n")));
 
-TEST(GeneratedConfigTest, replyAndForwardTemplatesDefaultMatchHistoricalFallbacks)
+namespace
 {
-    constexpr std::string_view forward_header = "To: %\\\"\\n"
-                                                "\\n"
-                                                "To: \\\"\\n"
-                                                "Subject: %(%i=^$?:%[subject] (fwd\\\\)\\n"
-                                                "%(%{FROM}=^$?:From: %{FROM}\\n)"
-                                                "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\\n)"
-                                                "X-Newsgroups: %n\\n"
-                                                "In-Reply-To: %i)\\n"
-                                                "%(%[references]=^$?:References: %[references]\\n)"
-                                                "Organization: %o\\n"
-                                                "Mime-Version: 1.0\\n"
-                                                "Content-Type: multipart/mixed; boundary=\\\"=%$%^#=--\\\"\\n"
-                                                "Cc: \\n"
-                                                "Bcc: \\n"
-                                                "\\n";
 
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "YOU_SAID", "In article %i you write:");
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "ATTRIBUTION",
-                         "In article %i,%?%)f <%>f> wrote:");
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "MAIL_POSTER", TRN_TEST_DEFAULT_MAIL_POSTER);
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
-                         TRN_TEST_DEFAULT_FORWARD_POSTER);
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_HEADER", forward_header);
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_MSG",
-                         "------- start of forwarded message -------");
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_MSG_END",
-                         "------- end of forwarded message -------");
-}
+constexpr std::string_view DEFAULT_FORWARD_HEADER = "To: %\\\"\\n"
+                                                    "\\n"
+                                                    "To: \\\"\\n"
+                                                    "Subject: %(%i=^$?:%[subject] (fwd\\\\)\\n"
+                                                    "%(%{FROM}=^$?:From: %{FROM}\\n)"
+                                                    "%(%{REPLYTO}=^$?:Reply-To: %{REPLYTO}\\n)"
+                                                    "X-Newsgroups: %n\\n"
+                                                    "In-Reply-To: %i)\\n"
+                                                    "%(%[references]=^$?:References: %[references]\\n)"
+                                                    "Organization: %o\\n"
+                                                    "Mime-Version: 1.0\\n"
+                                                    "Content-Type: multipart/mixed; boundary=\\\"=%$%^#=--\\\"\\n"
+                                                    "Cc: \\n"
+                                                    "Bcc: \\n"
+                                                    "\\n";
+
+} // namespace
+
+INSTANTIATE_TEST_SUITE_P(
+    ReplyAndForwardDefaults, GeneratedDefinitionTest,
+    testing::Values(
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "YOU_SAID", "In article %i you write:"),
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "ATTRIBUTION",
+                           "In article %i,%?%)f <%>f> wrote:"),
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "MAIL_POSTER",
+                           TRN_TEST_DEFAULT_MAIL_POSTER),
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
+                           TRN_TEST_DEFAULT_FORWARD_POSTER),
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_HEADER", DEFAULT_FORWARD_HEADER),
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_MSG",
+                           "------- start of forwarded message -------"),
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_MSG_END",
+                           "------- end of forwarded message -------")));
 
 TEST(GeneratedConfigTest, helperToolDefaultsMatchToolDiscovery)
 {
