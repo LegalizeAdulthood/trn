@@ -217,6 +217,27 @@ void ArticleBufferViewTest::TearDown()
     g_head_buf = m_old_head_buf;
 }
 
+class CachedLatinArticleTest : public ArticleIoTest
+{
+protected:
+    void SetUp() override;
+};
+
+void CachedLatinArticleTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    m_mime_section.mime_parse_type("text/plain; charset=ISO-8859-1");
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ("\xC3\xA9\n", line);
+    utf_init(CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_ASCII);
+    ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
+}
+
 } // namespace
 
 TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
@@ -367,23 +388,24 @@ TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
     EXPECT_EQ("part separator\n", first);
 }
 
-TEST_F(ArticleIoTest, decodesLatinTextBeforeCachingAndKeepsRawBytes)
+TEST_F(CachedLatinArticleTest, rereadsTheCachedPresentationAfterChangingGlobalCharsets)
 {
-    m_mime_section.mime_parse_type("text/plain; charset=ISO-8859-1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
-    open_article_text("\xE9\n");
     std::string line;
 
-    ASSERT_TRUE(read_art_buf(line, false));
+    const bool read = read_art_buf(line, false);
+
+    ASSERT_TRUE(read);
     EXPECT_EQ("\xC3\xA9\n", line);
-    utf_init(CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_ASCII);
-    ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
-    ASSERT_TRUE(read_art_buf(line, false));
-    EXPECT_EQ("\xC3\xA9\n", line);
+}
+
+TEST_F(CachedLatinArticleTest, readsTheOriginalRawBytesAfterCachingThePresentation)
+{
+    std::string line;
     std::rewind(g_art_fp);
-    ASSERT_TRUE(read_art(line));
+
+    const bool read = read_art(line);
+
+    ASSERT_TRUE(read);
     EXPECT_EQ("\xE9\n", line);
 }
 
