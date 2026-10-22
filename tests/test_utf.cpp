@@ -913,64 +913,95 @@ TEST(CharSubstTest, transliteratesLatin1ToMonospacedAscii)
     EXPECT_EQ("AOUs", str_char_subst(input, 'm'));
 }
 
-TEST(CharSubstTest, mapsUnicodeLatinSymbolsWithHistoricalTables)
+namespace
 {
-    constexpr std::string_view input{"\xC2\xA0\xC2\xA3\xC2\xA9\xC2\xAE\xC2\xB1\xC2\xBC\xC3\xBF"};
 
-    EXPECT_EQ(" (c)(R)+/- 1/4ij", str_char_subst(input, 'a'));
-    EXPECT_EQ(" cRy", str_char_subst(input, 'm'));
+struct SubstitutionTextCase
+{
+    const char *name;
+    std::string input;
+    std::string expected;
+};
+
+void PrintTo(const SubstitutionTextCase &value, std::ostream *out)
+{
+    *out << value.name;
 }
 
-TEST(CharSubstTest, passesUnmappedUnicodeThroughAllModes)
+using CharSubstInputCase = std::tuple<char, SubstitutionTextCase>;
+
+class CharSubstInputTest : public Utf8ScalarTest, public WithParamInterface<CharSubstInputCase>
 {
-    constexpr std::string_view input{"\xC4\x80\xC2\x80\xE5\xA4\xA9"
-                                     "e\xCC\x81\xF0\x9F\x98\x9A\xE2\x80\x99"};
-    for (const char mode : {'\0', 'p', 'a', 'm', 't'})
-    {
-        SCOPED_TRACE(mode);
-        EXPECT_EQ(input, str_char_subst(input, mode));
-    }
+protected:
+    void SetUp() override;
+
+    std::string m_input;
+    std::string m_expected;
+};
+
+void CharSubstInputTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    m_input = std::get<1>(GetParam()).input;
+    m_expected = std::get<1>(GetParam()).expected;
 }
 
-TEST(CharSubstTest, identityPreservesEveryValidScalarByteForByte)
+std::string valid_scalar_sequence()
 {
     std::string input;
     for (const Utf8ScalarCase &value : UTF8_SCALARS)
     {
         input += value.bytes;
     }
-    EXPECT_EQ(input, str_char_subst(input, '\0'));
-    EXPECT_EQ(input, str_char_subst(input, 'p'));
+    return input;
 }
 
-TEST(CharSubstTest, malformedBytesBecomeReplacementScalars)
+constexpr const char *HISTORICAL_LATIN_SYMBOLS = "\xC2\xA0\xC2\xA3\xC2\xA9\xC2\xAE\xC2\xB1\xC2\xBC\xC3\xBF";
+constexpr const char *UNMAPPED_UNICODE_TEXT = "\xC4\x80\xC2\x80\xE5\xA4\xA9"
+                                              "e\xCC\x81\xF0\x9F\x98\x9A\xE2\x80\x99";
+
+} // namespace
+
+TEST_P(CharSubstInputTest, substitutesOneInputInTheConfiguredMode)
 {
-    constexpr std::string_view input{"\xFF"
-                                     "x\xC3\xE2\x80\x99"};
-    constexpr std::string_view expected{"\xEF\xBF\xBD"
-                                        "x\xEF\xBF\xBD\xE2\x80\x99"};
-    for (const char mode : {'\0', 'p', 'a', 'm', 't'})
-    {
-        SCOPED_TRACE(mode);
-        EXPECT_EQ(expected, str_char_subst(input, mode));
-    }
+    const std::string transformed = str_char_subst(m_input, std::get<0>(GetParam()));
+
+    EXPECT_EQ(m_expected, transformed);
 }
 
-TEST(CharSubstTest, asciiModesPreserveEmbeddedNul)
-{
-    const std::string_view input{"\xC3\x84\0\xC3\x9F", 5};
-    EXPECT_EQ(std::string("Ae\0ss", 5), str_char_subst(input, 'a'));
-    EXPECT_EQ(std::string("A\0s", 3), str_char_subst(input, 'm'));
-}
+INSTANTIATE_TEST_SUITE_P(
+    HistoricalLatinSymbols, CharSubstInputTest,
+    Values(CharSubstInputCase{'a', SubstitutionTextCase{"LatinSymbols", HISTORICAL_LATIN_SYMBOLS, " (c)(R)+/- 1/4ij"}},
+           CharSubstInputCase{'m', SubstitutionTextCase{"LatinSymbols", HISTORICAL_LATIN_SYMBOLS, " cRy"}}));
 
-TEST(CharSubstTest, allModesStopAfterFirstNewline)
-{
-    for (const char mode : {'\0', 'p', 'a', 'm', 't'})
-    {
-        SCOPED_TRACE(mode);
-        EXPECT_EQ("first\n", str_char_subst("first\nsecond", mode));
-    }
-}
+INSTANTIATE_TEST_SUITE_P(UnmappedUnicode, CharSubstInputTest,
+                         Combine(Values('\0', 'p', 'a', 'm', 't'),
+                                 Values(SubstitutionTextCase{"UnmappedScalars", UNMAPPED_UNICODE_TEXT,
+                                                             UNMAPPED_UNICODE_TEXT})));
+
+INSTANTIATE_TEST_SUITE_P(IdentityScalarSequence, CharSubstInputTest,
+                         Combine(Values('\0', 'p'),
+                                 Values(SubstitutionTextCase{"AllValidScalars", valid_scalar_sequence(),
+                                                             valid_scalar_sequence()})));
+
+INSTANTIATE_TEST_SUITE_P(MalformedBytes, CharSubstInputTest,
+                         Combine(Values('\0', 'p', 'a', 'm', 't'),
+                                 Values(SubstitutionTextCase{"MalformedBytes",
+                                                             "\xFF"
+                                                             "x\xC3\xE2\x80\x99",
+                                                             "\xEF\xBF\xBD"
+                                                             "x\xEF\xBF\xBD\xE2\x80\x99"})));
+
+INSTANTIATE_TEST_SUITE_P(
+    EmbeddedNul, CharSubstInputTest,
+    Values(CharSubstInputCase{'a', SubstitutionTextCase{"EmbeddedNul", std::string{"\xC3\x84\0\xC3\x9F", 5},
+                                                        std::string{"Ae\0ss", 5}}},
+           CharSubstInputCase{'m', SubstitutionTextCase{"EmbeddedNul", std::string{"\xC3\x84\0\xC3\x9F", 5},
+                                                        std::string{"A\0s", 3}}}));
+
+INSTANTIATE_TEST_SUITE_P(NewlineStopping, CharSubstInputTest,
+                         Combine(Values('\0', 'p', 'a', 'm', 't'),
+                                 Values(SubstitutionTextCase{"StopsAtNewline", "first\nsecond", "first\n"})));
 
 TEST(CharSubstTest, convertsHistoricalTexUmlautsToUtf8)
 {
