@@ -40,6 +40,20 @@ void ModeratorPatternTest::SetUp()
     m_expected = std::get<2>(GetParam());
 }
 
+class MalformedModeratorRuleTest : public testing::TestWithParam<std::string_view>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_rules;
+};
+
+void MalformedModeratorRuleTest::SetUp()
+{
+    m_rules = GetParam();
+    m_rules += " comp.* : good+tag@example.test \r\n";
+}
+
 constexpr const char *FIRST_MATCH_RULES = "# comment\n\ncomp.lang.[ac]*:specific@example.test\n"
                                           "comp.*:general@example.test\n*:fallback@example.test\n";
 constexpr const char *PATTERN_LIST_RULES = "comp.*,!comp.test,news.announce:shared@example.test\n"
@@ -119,17 +133,21 @@ INSTANTIATE_TEST_SUITE_P(
                     ModeratorPatternCase{PATTERN_LIST_RULES, "news.announce", "shared@example.test"},
                     ModeratorPatternCase{PATTERN_LIST_RULES, "comp.test", "other@example.test"}));
 
-TEST(ModeratorPatternTest, ignoresMalformedRulesAndUnsafeAddresses)
+TEST_P(MalformedModeratorRuleTest, ignoresTheRuleAndUsesTheValidFallback)
 {
-    const std::string rules{" \t# comment\r\nmissing colon\n:empty@example.test\ncomp.*:\n"
-                            "comp.*:bad%q@example.test\ncomp.*:%s%s@example.test\n"
-                            "comp.*:two addresses@example.test\ncomp.*:bad<addr>@example.test\n"
-                            " comp.* : good+tag@example.test \r\n"};
+    const std::string recipient = moderator_address("comp.test", m_rules);
 
-    EXPECT_EQ("good+tag@example.test", moderator_address("comp.test", rules));
-    EXPECT_TRUE(moderator_address("", "*:all@example.test").empty());
-    EXPECT_TRUE(moderator_address("comp.test\nBcc: injected", "*:all@example.test").empty());
+    EXPECT_EQ("good+tag@example.test", recipient);
 }
+
+INSTANTIATE_TEST_SUITE_P(IgnoredAndUnsafeRules, MalformedModeratorRuleTest,
+                         testing::Values(" \t# comment\r\n", "missing colon\n", ":empty@example.test\n", "comp.*:\n",
+                                         "comp.*:bad%q@example.test\n", "comp.*:%s%s@example.test\n",
+                                         "comp.*:two addresses@example.test\n", "comp.*:bad<addr>@example.test\n"));
+
+INSTANTIATE_TEST_SUITE_P(InvalidGroups, ModeratorPatternTest,
+                         testing::Values(ModeratorPatternCase{"*:all@example.test", "", ""},
+                                         ModeratorPatternCase{"*:all@example.test", "comp.test\nBcc: injected", ""}));
 
 TEST_F(ModeratorSourceTest, readsLocalFileAndSeesUpdates)
 {
