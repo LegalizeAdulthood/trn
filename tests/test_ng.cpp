@@ -1293,6 +1293,24 @@ class NumericRangeFailureArticleTest : public NumericRangeArticleTest, public te
 {
 };
 
+class NumericRangeSelectionArticleTest : public NumericRangeArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void NumericRangeSelectionArticleTest::SetUp()
+{
+    NumericRangeArticleTest::SetUp();
+    if (GetParam())
+    {
+        article_ptr(ArticleNum{3})->m_flags = CACHED | AF_UNREAD | AF_SEL;
+        g_selected_count = ArticleUnread{6};
+        g_search_ahead = ArticleNum{-1};
+        g_force_last = true;
+    }
+}
+
 class CurrentArticleJumpArticleTest : public NumericJumpArticleTest, public testing::WithParamInterface<long>
 {
 protected:
@@ -13294,22 +13312,18 @@ TEST_F(NumericRangeArticleTest, dotThroughDollarIncludesTheLastArticleAndSkipsAb
     EXPECT_EQ("8 articles matched, 5 killed, 4 deselected.", g_msg);
 }
 
-TEST_F(NumericRangeArticleTest, rangeSelectionAndDeselectionChangeOnlyEligibleTargetsAndExactCounts)
+TEST_P(NumericRangeSelectionArticleTest, changesOnlyEligibleTargetsAndExactCounts)
 {
-    apply_range("1-4:+\n");
+    apply_range(GetParam() ? "3-4:-\n" : "1-4:+\n");
 
-    expect_changes({{3, CACHED | AF_UNREAD | AF_SEL}});
+    const ArticleFlags expected_flags = CACHED | AF_UNREAD | (GetParam() ? AF_NONE : AF_SEL);
+    expect_changes({{3, expected_flags}, {4, expected_flags}});
     EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
-    EXPECT_EQ(ArticleUnread{6}, g_selected_count);
-    EXPECT_EQ("4 articles matched, 1 selected.", g_msg);
-
-    apply_range("3-4:-\n");
-
-    expect_changes({{3, CACHED | AF_UNREAD}, {4, CACHED | AF_UNREAD}});
-    EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
-    EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ("2 articles deselected.", g_msg);
+    EXPECT_EQ(ArticleUnread{GetParam() ? 4 : 6}, g_selected_count);
+    EXPECT_EQ(GetParam() ? "2 articles deselected." : "4 articles matched, 1 selected.", g_msg);
 }
+
+INSTANTIATE_TEST_SUITE_P(SelectOrDeselect, NumericRangeSelectionArticleTest, testing::Bool());
 
 TEST_F(NumericRangeArticleTest, rangeWithoutAnyStoredTargetsReportsNoArticlesAffected)
 {
