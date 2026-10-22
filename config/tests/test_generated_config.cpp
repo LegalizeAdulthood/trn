@@ -839,31 +839,31 @@ INSTANTIATE_TEST_SUITE_P(
         config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_MSG_END",
                            "------- end of forwarded message -------")));
 
-TEST(GeneratedConfigTest, helperToolDefaultsMatchToolDiscovery)
-{
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, TRN_TEST_DEFAULT_SHELL_START);
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
-                         std::string{"pager=\"${PAGER-"} + TRN_TEST_DEFAULT_PAGER + "}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
-                         std::string{"ispell=\"${ISPELL_PROGRAM-"} + TRN_TEST_DEFAULT_ISPELL_PROGRAM + "}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
-                         std::string{"ispell_options=\"${ISPELL_OPTIONS-"} + TRN_TEST_DEFAULT_ISPELL_OPTIONS + "}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"diff="} + TRN_TEST_DEFAULT_DIFF_PROGRAM);
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"ed="} + TRN_TEST_DEFAULT_ED_PROGRAM);
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
-                         std::string{"spell=\"${SPELL_PROGRAM-"} + TRN_TEST_DEFAULT_SPELL_PROGRAM + "}\"");
-}
+INSTANTIATE_TEST_SUITE_P(
+    HelperToolDefaults, GeneratedDefinitionTest,
+    testing::Values(
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, TRN_TEST_DEFAULT_SHELL_START},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                          std::string{"pager=\"${PAGER-"} + TRN_TEST_DEFAULT_PAGER + "}\""},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                          std::string{"ispell=\"${ISPELL_PROGRAM-"} + TRN_TEST_DEFAULT_ISPELL_PROGRAM + "}\""},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                          std::string{"ispell_options=\"${ISPELL_OPTIONS-"} + TRN_TEST_DEFAULT_ISPELL_OPTIONS + "}\""},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"diff="} + TRN_TEST_DEFAULT_DIFF_PROGRAM},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, std::string{"ed="} + TRN_TEST_DEFAULT_ED_PROGRAM},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT,
+                          std::string{"spell=\"${SPELL_PROGRAM-"} + TRN_TEST_DEFAULT_SPELL_PROGRAM + "}\""}));
 
-TEST(GeneratedConfigTest, helperToolConfiguredValuesAreEmitted)
-{
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "#!/test/sh");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "pager=\"${PAGER-/test/bin/more}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell=\"${ISPELL_PROGRAM-/test/bin/ispell}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell_options=\"${ISPELL_OPTIONS--x -Tlatin1}\"");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "diff=/test/bin/diff");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ed=/test/bin/ed");
-    expect_file_contains(TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "spell=\"${SPELL_PROGRAM-/test/bin/spell}\"");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredHelperTools, GeneratedDefinitionTest,
+    testing::Values(
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "#!/test/sh"},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "pager=\"${PAGER-/test/bin/more}\""},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell=\"${ISPELL_PROGRAM-/test/bin/ispell}\""},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ispell_options=\"${ISPELL_OPTIONS--x -Tlatin1}\""},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "diff=/test/bin/diff"},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ed=/test/bin/ed"},
+        GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "spell=\"${SPELL_PROGRAM-/test/bin/spell}\""}));
 
 TEST(GeneratedConfigTest, helperFilesDoNotContainOldToolVariables)
 {
