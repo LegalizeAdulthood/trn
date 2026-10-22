@@ -1003,18 +1003,18 @@ INSTANTIATE_TEST_SUITE_P(NewlineStopping, CharSubstInputTest,
                          Combine(Values('\0', 'p', 'a', 'm', 't'),
                                  Values(SubstitutionTextCase{"StopsAtNewline", "first\nsecond", "first\n"})));
 
-TEST(CharSubstTest, convertsHistoricalTexUmlautsToUtf8)
-{
-    EXPECT_EQ("\xC3\x84\xC3\x96\xC3\x9C\xC3\xA4\xC3\xB6\xC3\xBC\xC3\x9F", str_char_subst(R"("A"O"U"a"o"u"s)", 't'));
-    EXPECT_EQ("\xC3\xA4", str_char_subst(R"(\"a)", 't'));
-}
+INSTANTIATE_TEST_SUITE_P(
+    TexSpellings, CharSubstInputTest,
+    Values(CharSubstInputCase{'t', SubstitutionTextCase{"UmlautSequence", R"("A"O"U"a"o"u"s)",
+                                                        "\xC3\x84\xC3\x96\xC3\x9C\xC3\xA4\xC3\xB6\xC3\xBC\xC3\x9F"}},
+           CharSubstInputCase{'t', SubstitutionTextCase{"EscapedUmlaut", R"(\"a)", "\xC3\xA4"}}));
 
-TEST(CharSubstTest, texPreservesUnmappedSequencesAndTrailingPrefixes)
-{
-    EXPECT_EQ("\"\xE5\xA4\xA9\\xyz\"q\\", str_char_subst("\"\xE5\xA4\xA9\\xyz\"q\\", 't'));
-    EXPECT_EQ("\"", str_char_subst("\"", 't'));
-    EXPECT_EQ("a", str_char_subst("a", 't'));
-}
+INSTANTIATE_TEST_SUITE_P(TexUnmappedAndTrailingPrefixes, CharSubstInputTest,
+                         Values(CharSubstInputCase{'t', SubstitutionTextCase{"UnmappedAndTrailingPrefix",
+                                                                             "\"\xE5\xA4\xA9\\xyz\"q\\",
+                                                                             "\"\xE5\xA4\xA9\\xyz\"q\\"}},
+                                CharSubstInputCase{'t', SubstitutionTextCase{"TrailingQuote", "\"", "\""}},
+                                CharSubstInputCase{'t', SubstitutionTextCase{"PlainLetter", "a", "a"}}));
 
 TEST(CharSubstTest, texInstancesRetainTheirOwnPendingPrefix)
 {
@@ -1030,30 +1030,89 @@ TEST(CharSubstTest, texInstancesRetainTheirOwnPendingPrefix)
     EXPECT_EQ("", second.finish());
 }
 
-TEST(CharSubstTest, texPrefixCanCrossCallsWithoutDuplicatingBackslashes)
+class TexSubstitutionTest : public Utf8ScalarTest
 {
-    CharSubstitution subst{'t'};
+protected:
+    CharSubstitution m_substitution{'t'};
+};
 
-    EXPECT_EQ("", subst.substitute("\\"));
-    EXPECT_EQ("", subst.substitute("\""));
-    EXPECT_EQ("\xC3\x84", subst.substitute("A"));
-    EXPECT_EQ("\\xyz", subst.substitute("\\xyz"));
-    EXPECT_EQ("\"\xF0\x9F\x98\x9A", subst.substitute("\"\xF0\x9F\x98\x9A"));
-    EXPECT_EQ("", subst.finish());
+TEST_F(TexSubstitutionTest, completesAnUmlautAcrossCallsWithoutDuplicatingBackslashes)
+{
+    ASSERT_EQ("", m_substitution.substitute("\\"));
+    ASSERT_EQ("", m_substitution.substitute("\""));
+
+    const std::string transformed = m_substitution.substitute("A");
+
+    EXPECT_EQ("\xC3\x84", transformed);
+    EXPECT_EQ("", m_substitution.finish());
 }
 
-TEST(CharSubstTest, finishingTexFlushesAndResetsPendingPrefix)
-{
-    CharSubstitution subst{'t'};
+using TexPassThroughCase = std::tuple<std::string_view, std::string_view>;
 
-    EXPECT_EQ("", subst.substitute("\""));
-    EXPECT_EQ("\"", subst.finish());
-    EXPECT_EQ("", subst.finish());
-    EXPECT_EQ("a", subst.substitute("a"));
-    EXPECT_EQ("", subst.substitute("\\"));
-    EXPECT_EQ("\\", subst.finish());
-    EXPECT_EQ("a", subst.substitute("a"));
+class TexPassThroughTest : public TexSubstitutionTest, public WithParamInterface<TexPassThroughCase>
+{
+};
+
+TEST_P(TexPassThroughTest, preservesAnUnmappedSuffixWithoutAPendingPrefix)
+{
+    const std::string transformed = m_substitution.substitute(std::get<0>(GetParam()));
+
+    EXPECT_EQ(std::get<1>(GetParam()), transformed);
+    EXPECT_EQ("", m_substitution.finish());
 }
+
+INSTANTIATE_TEST_SUITE_P(BackslashAndUnicodeSuffixes, TexPassThroughTest,
+                         Values(TexPassThroughCase{"\\xyz", "\\xyz"},
+                                TexPassThroughCase{"\"\xF0\x9F\x98\x9A", "\"\xF0\x9F\x98\x9A"}));
+
+class PendingTexPrefixTest : public TexSubstitutionTest, public WithParamInterface<std::string_view>
+{
+protected:
+    void SetUp() override;
+};
+
+void PendingTexPrefixTest::SetUp()
+{
+    TexSubstitutionTest::SetUp();
+    ASSERT_EQ("", m_substitution.substitute(GetParam()));
+}
+
+TEST_P(PendingTexPrefixTest, finishingFlushesThePendingPrefix)
+{
+    const std::string flushed = m_substitution.finish();
+
+    EXPECT_EQ(GetParam(), flushed);
+}
+
+INSTANTIATE_TEST_SUITE_P(QuoteAndBackslash, PendingTexPrefixTest, Values("\"", "\\"));
+
+class FinishedTexPrefixTest : public PendingTexPrefixTest
+{
+protected:
+    void SetUp() override;
+};
+
+void FinishedTexPrefixTest::SetUp()
+{
+    ASSERT_NO_FATAL_FAILURE(PendingTexPrefixTest::SetUp());
+    ASSERT_EQ(GetParam(), m_substitution.finish());
+}
+
+TEST_P(FinishedTexPrefixTest, finishingAgainDoesNotRepeatThePrefix)
+{
+    const std::string flushed = m_substitution.finish();
+
+    EXPECT_TRUE(flushed.empty());
+}
+
+TEST_P(FinishedTexPrefixTest, subsequentTextDoesNotInheritThePrefix)
+{
+    const std::string transformed = m_substitution.substitute("a");
+
+    EXPECT_EQ("a", transformed);
+}
+
+INSTANTIATE_TEST_SUITE_P(QuoteAndBackslash, FinishedTexPrefixTest, Values("\"", "\\"));
 
 TEST(CharSubstTest, discardingTexInstanceDoesNotAffectNextArticle)
 {
@@ -1067,17 +1126,30 @@ TEST(CharSubstTest, discardingTexInstanceDoesNotAffectNextArticle)
     EXPECT_EQ("", next.finish());
 }
 
-TEST_F(Utf8ScalarTest, substitutionIgnoresGlobalCharsetState)
+class GlobalCharsetSubstitutionTest : public Utf8ScalarTest, public WithParamInterface<std::string_view>
 {
-    for (const std::string_view charset :
-         {CHARSET_NAME_ASCII, CHARSET_NAME_ISO8859_1, CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8})
-    {
-        utf_init(charset, charset);
-        EXPECT_EQ("Ae\xE2\x80\x99", str_char_subst("\xC3\x84\xE2\x80\x99", 'a'));
-        EXPECT_EQ(charset, input_charset_name());
-        EXPECT_EQ(charset, output_charset_name());
-    }
+protected:
+    void SetUp() override;
+};
+
+void GlobalCharsetSubstitutionTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    utf_init(GetParam(), GetParam());
 }
+
+TEST_P(GlobalCharsetSubstitutionTest, substitutionIgnoresGlobalCharsetState)
+{
+    const std::string transformed = str_char_subst("\xC3\x84\xE2\x80\x99", 'a');
+
+    EXPECT_EQ("Ae\xE2\x80\x99", transformed);
+    EXPECT_EQ(GetParam(), input_charset_name());
+    EXPECT_EQ(GetParam(), output_charset_name());
+}
+
+INSTANTIATE_TEST_SUITE_P(GlobalCharsets, GlobalCharsetSubstitutionTest,
+                         Values(CHARSET_NAME_ASCII, CHARSET_NAME_ISO8859_1, CHARSET_NAME_WINDOWS_1252,
+                                CHARSET_NAME_UTF8));
 
 class CharsetDecoderTest : public Utf8ScalarTest
 {
