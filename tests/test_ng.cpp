@@ -2019,6 +2019,52 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     return output;
 }
 
+struct ReadModifierSearchCase
+{
+    char        direction;
+    const char *query;
+    long        target;
+};
+
+class ReadModifierSearchArticleTest : public SearchCommandArticleTest,
+                                      public testing::WithParamInterface<ReadModifierSearchCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void ReadModifierSearchArticleTest::SetUp()
+{
+    SearchCommandArticleTest::SetUp();
+    set_search_articles(
+        {AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+        3);
+}
+
+struct FailedDirectionalSearchCase
+{
+    char         direction;
+    const char  *query;
+    long         current;
+    ArticleFlags fourth_flags;
+    ArticleFlags fifth_flags;
+};
+
+class FailedDirectionalSearchArticleTest : public SearchCommandArticleTest,
+                                           public testing::WithParamInterface<FailedDirectionalSearchCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void FailedDirectionalSearchArticleTest::SetUp()
+{
+    SearchCommandArticleTest::SetUp();
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, GetParam().fourth_flags,
+                         GetParam().fifth_flags, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        GetParam().current);
+}
+
 class SearchActionArticleTest : public SearchCommandArticleTest
 {
 protected:
@@ -11222,71 +11268,37 @@ TEST_F(SearchCommandArticleTest, reverseSearchSkipsCurrentReadAndMissingArticles
     EXPECT_FALSE(g_art_do_read);
 }
 
-TEST_F(SearchCommandArticleTest, readModifierFindsReadArticlesInEitherDirectionWithoutChangingReadState)
+TEST_P(ReadModifierSearchArticleTest, findsReadArticlesWithoutChangingReadState)
 {
-    set_search_articles(
-        {AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE, AF_EXISTS, AF_EXISTS | AF_UNREAD},
-        3);
-    struct SearchCase
-    {
-        char        direction;
-        const char *query;
-        long        target;
-    };
-    for (const SearchCase test_case : {SearchCase{'/', "needle/r", 6}, SearchCase{'?', "needle?r", 2}})
-    {
-        SCOPED_TRACE(test_case.direction);
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
+    search_articles(GetParam().direction, GetParam().query);
 
-        search_articles(test_case.direction, test_case.query);
-
-        EXPECT_EQ(ArticleNum{test_case.target}, g_art);
-        EXPECT_EQ(article_ptr(g_art), g_artp);
-        EXPECT_EQ(AF_EXISTS, g_artp->m_flags);
-        EXPECT_TRUE(g_art_do_read);
-    }
-}
-
-TEST_F(SearchCommandArticleTest, unsuccessfulSearchRestoresCurrentArticleNumberAndPointerInEitherDirection)
-{
-    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_NONE, AF_EXISTS,
-                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
-                        3);
-    for (const char direction : {'/', '?'})
-    {
-        SCOPED_TRACE(direction);
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
-
-        const std::string output = search_articles(direction, "absent", AS_ASK);
-
-        EXPECT_NE(std::string::npos, output.find("Not found."));
-        EXPECT_EQ(ArticleNum{3}, g_art);
-        EXPECT_EQ(article_ptr(g_art), g_artp);
-    }
-}
-
-TEST_F(SearchCommandArticleTest, directionalExhaustionDoesNotWrapToMatchesOnTheOtherSide)
-{
-    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
-                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
-                        7);
-
-    const std::string forward_output = search_articles('/', "earlier", AS_ASK);
-
-    EXPECT_NE(std::string::npos, forward_output.find("Not found."));
-    EXPECT_EQ(ArticleNum{7}, g_art);
+    EXPECT_EQ(ArticleNum{GetParam().target}, g_art);
     EXPECT_EQ(article_ptr(g_art), g_artp);
-    g_art = g_curr_art = ArticleNum{1};
-    g_artp = g_curr_artp = article_ptr(g_art);
+    EXPECT_EQ(AF_EXISTS, g_artp->m_flags);
+    EXPECT_TRUE(g_art_do_read);
+}
 
-    const std::string reverse_output = search_articles('?', "later", AS_ASK);
+INSTANTIATE_TEST_SUITE_P(Direction, ReadModifierSearchArticleTest,
+                         testing::Values(ReadModifierSearchCase{'/', "needle/r", 6},
+                                         ReadModifierSearchCase{'?', "needle?r", 2}));
 
-    EXPECT_NE(std::string::npos, reverse_output.find("Not found."));
-    EXPECT_EQ(ArticleNum{1}, g_art);
+TEST_P(FailedDirectionalSearchArticleTest, preservesCurrentArticleWhenNoMatchRemainsInTheDirection)
+{
+    const std::string output = search_articles(GetParam().direction, GetParam().query, AS_ASK);
+
+    EXPECT_NE(std::string::npos, output.find("Not found."));
+    EXPECT_EQ(ArticleNum{GetParam().current}, g_art);
     EXPECT_EQ(article_ptr(g_art), g_artp);
 }
+
+INSTANTIATE_TEST_SUITE_P(NoMatch, FailedDirectionalSearchArticleTest,
+                         testing::Values(FailedDirectionalSearchCase{'/', "absent", 3, AF_NONE, AF_EXISTS},
+                                         FailedDirectionalSearchCase{'?', "absent", 3, AF_NONE, AF_EXISTS}));
+
+INSTANTIATE_TEST_SUITE_P(
+    NoWrap, FailedDirectionalSearchArticleTest,
+    testing::Values(FailedDirectionalSearchCase{'/', "earlier", 7, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                    FailedDirectionalSearchCase{'?', "later", 1, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}));
 
 TEST_F(SearchCommandArticleTest, searchesFromGroupEndStartAtTheAppropriateBoundary)
 {
