@@ -5304,6 +5304,10 @@ protected:
     void TearDown() override;
     void start_download();
 
+    ArticlePosition m_header_end{};
+    ArticlePosition m_position{};
+    ArticlePosition m_end{};
+
 private:
     DataSource                                               m_remote_source{};
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
@@ -5331,6 +5335,10 @@ void DownloadEndArticleTest::SetUp()
     std::error_code error;
     std::filesystem::current_path(output_dir(), error);
     ASSERT_FALSE(error) << error.message();
+    ASSERT_NO_FATAL_FAILURE(start_download());
+    m_header_end = g_header_type[PAST_HEADER].min_pos;
+    m_position = m_header_end + ArticlePosition{g_do_hiding ? 3 : 2};
+    m_end = m_header_end + ArticlePosition{g_do_hiding ? 8 : 7};
 }
 
 void DownloadEndArticleTest::TearDown()
@@ -5376,6 +5384,20 @@ void DownloadEndArticleTest::start_download()
     ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
     ASSERT_TRUE(testing::Mock::VerifyAndClearExpectations(m_connection.get()));
     EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("Last")).WillOnce(testing::Return("."));
+}
+
+class CompletedDownloadCacheArticleTest : public DownloadEndArticleTest
+{
+protected:
+    void SetUp() override;
+};
+
+void CompletedDownloadCacheArticleTest::SetUp()
+{
+    DownloadEndArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    (void) display(Ctl('e'));
+    ASSERT_EQ(0, seek_art(ArticlePosition{}));
 }
 
 class SubjectListingArticleTest : public RereadArticleTest
@@ -12222,34 +12244,37 @@ TEST_F(JumpToEndArticleTest, groupEndLeavesPagerStateUntouchedWithoutAnOpenArtic
 
 TEST_P(DownloadEndArticleTest, finishesThePendingBodyAndTargetsTheEndInTheCurrentDisplayMode)
 {
-    ASSERT_NO_FATAL_FAILURE(start_download());
-    const ArticlePosition header_end = g_header_type[PAST_HEADER].min_pos;
-    const ArticlePosition position = header_end + ArticlePosition{g_do_hiding ? 3 : 2};
-    const ArticlePosition end = header_end + ArticlePosition{g_do_hiding ? 8 : 7};
-
     const std::string output = display(Ctl('e'));
 
     EXPECT_NE(std::string::npos, output.find("Receiving..."));
-    expect_end(end, ArticleLine{41}, ArticleLine{40}, 0);
-    EXPECT_EQ(header_end + ArticlePosition{7}, nntp_art_size());
+    expect_end(m_end, ArticleLine{41}, ArticleLine{40}, 0);
+    EXPECT_EQ(m_header_end + ArticlePosition{7}, nntp_art_size());
     EXPECT_EQ(nntp_art_size(), g_raw_art_size);
-    EXPECT_EQ(end, g_art_size);
-    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(m_end, g_art_size);
+    EXPECT_EQ(m_position, g_art_pos);
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 3 : 2}, art_buf_pos());
     EXPECT_EQ(GetParam(), g_do_hiding);
     EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
     std::string next_line;
     ASSERT_TRUE(read_art_buf(next_line, false));
     EXPECT_EQ("Last\n", next_line);
-    EXPECT_EQ(0, seek_art(ArticlePosition{}));
-    EXPECT_EQ("Subject: end\n", nntp_read_art(NNTP_STRLEN));
-    EXPECT_EQ("\n", nntp_read_art(NNTP_STRLEN));
-    EXPECT_EQ("\xC4\n", nntp_read_art(NNTP_STRLEN));
-    EXPECT_EQ("Last\n", nntp_read_art(NNTP_STRLEN));
-    EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutHiding, DownloadEndArticleTest, testing::Bool());
+
+TEST_P(CompletedDownloadCacheArticleTest, rereadsTheOriginalArticleBytesThroughEndOfFile)
+{
+    std::string article;
+
+    for (std::string line{nntp_read_art(NNTP_STRLEN)}; !line.empty(); line = nntp_read_art(NNTP_STRLEN))
+    {
+        article += line;
+    }
+
+    EXPECT_EQ("Subject: end\n\n\xC4\nLast\n", article);
+}
+
+INSTANTIATE_TEST_SUITE_P(WithAndWithoutHiding, CompletedDownloadCacheArticleTest, testing::Bool());
 
 TEST_P(SubjectListingPositionArticleTest, listsAllUnreadSubjectsInArticleOrderEvenInSelectedOnlyMode)
 {
