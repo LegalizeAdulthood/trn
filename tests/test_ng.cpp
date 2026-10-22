@@ -2859,6 +2859,40 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     return output;
 }
 
+class SortedForwardArticleNavigationTest : public SortedArticleNavigationTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+    void set_forward_articles(std::initializer_list<ArticleFlags> flags);
+};
+
+void SortedForwardArticleNavigationTest::SetUp()
+{
+    SortedArticleNavigationTest::SetUp();
+    g_threaded_group = GetParam();
+}
+
+void SortedForwardArticleNavigationTest::set_forward_articles(std::initializer_list<ArticleFlags> flags)
+{
+    set_articles(flags, 4);
+    set_order({2, 4, 1, 3});
+}
+
+class SortedExplicitForwardArticleNavigationTest : public SortedForwardArticleNavigationTest
+{
+protected:
+    void SetUp() override;
+};
+
+void SortedExplicitForwardArticleNavigationTest::SetUp()
+{
+    SortedForwardArticleNavigationTest::SetUp();
+    set_forward_articles(
+        {AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL});
+    g_selected_only = true;
+    g_search_ahead = ArticleNum{2};
+}
+
 class ArticleTraversalTest : public UnreadScopeArticleTest
 {
 protected:
@@ -6835,23 +6869,16 @@ TEST_P(NextUnreadArticleTest, restartsAtUnreadArticleWhenAlreadyAfterLastArticle
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, NextUnreadArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
 
-TEST_F(SortedArticleNavigationTest, nextUnreadFollowsDisplayedOrderInsteadOfNumericOrThreadOrder)
+TEST_P(SortedForwardArticleNavigationTest, nextUnreadFollowsDisplayedOrderInsteadOfNumericOrThreadOrder)
 {
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 4);
-    set_order({2, 4, 1, 3});
-    for (const bool threaded : {false, true})
-    {
-        SCOPED_TRACE(threaded);
-        g_threaded_group = threaded;
-        g_art = ArticleNum{4};
-        g_artp = article_ptr(g_art);
-        g_art_ptr = nullptr;
+    set_forward_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD});
 
-        expect_next_unread(1, 2);
-        expect_next_unread(3, 3);
-        expect_next_unread(2, 0);
-    }
+    expect_next_unread(1, 2);
+    expect_next_unread(3, 3);
+    expect_next_unread(2, 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(ReadingMode, SortedForwardArticleNavigationTest, testing::Bool());
 
 TEST_F(SortedArticleNavigationTest, nextUnreadSkipsReadEntriesButIncludesUnselectedUnreadArticles)
 {
@@ -6934,25 +6961,22 @@ TEST_F(SortedArticleNavigationTest, nextUnreadRepairsTheSortedCursorAfterAnArtic
     expect_next_unread(4, 1);
 }
 
-TEST_F(SortedArticleNavigationTest, nextArticleIncludesReadAndUnselectedEntriesAndStopsAfterTheSortedEnd)
+TEST_P(SortedExplicitForwardArticleNavigationTest, nextArticleIncludesReadAndUnselectedEntriesInDisplayedOrder)
 {
-    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 4);
-    set_order({2, 4, 1, 3});
-    g_selected_only = true;
-    for (const bool threaded : {false, true})
-    {
-        SCOPED_TRACE(threaded);
-        g_threaded_group = threaded;
-        g_art = ArticleNum{4};
-        g_artp = article_ptr(g_art);
-        g_art_ptr = nullptr;
-        g_search_ahead = ArticleNum{2};
-
-        expect_next_article(1, 2);
-        expect_next_article(3, 3);
-        expect_next_article(5, 0);
-    }
+    expect_next_article(1, 2);
+    expect_next_article(3, 3);
 }
+
+TEST_P(SortedExplicitForwardArticleNavigationTest, nextArticleStopsAfterTheSortedEnd)
+{
+    g_art = ArticleNum{3};
+    g_artp = article_ptr(g_art);
+    g_art_ptr = article_ptr_list_begin() + 3;
+
+    expect_next_article(5, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingMode, SortedExplicitForwardArticleNavigationTest, testing::Bool());
 
 TEST_F(SortedArticleNavigationTest, nextArticleFromGroupEndRestartsAtTheFirstSortedReadUnselectedEntry)
 {
