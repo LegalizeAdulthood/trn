@@ -9,6 +9,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace
 {
@@ -102,6 +103,7 @@ struct GeneratedTextCase
 {
     const char *filename;
     std::string expected;
+    bool        available{true};
 };
 
 void PrintTo(const GeneratedTextCase &value, std::ostream *output)
@@ -119,6 +121,10 @@ protected:
 
 void GeneratedDefinitionTest::SetUp()
 {
+    if (!GetParam().available)
+    {
+        GTEST_SKIP() << "This artifact is not generated on this platform.";
+    }
     m_contents = file_contents(GetParam().filename);
     ASSERT_FALSE(m_contents.empty()) << GetParam().filename;
 }
@@ -181,6 +187,22 @@ bool cmake_bool(std::string_view value)
 bool windows_generated_helpers()
 {
     return cmake_bool(TRN_TEST_GENERATED_WINDOWS_HELPERS);
+}
+
+using PostingCommandCase = std::pair<std::string_view, std::string_view>;
+
+class WindowsPostingCommandTest : public testing::TestWithParam<PostingCommandCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void WindowsPostingCommandTest::SetUp()
+{
+    if (!windows_generated_helpers())
+    {
+        GTEST_SKIP() << "Windows posting defaults apply only on Windows.";
+    }
 }
 
 bool generated_pnews_header()
@@ -574,41 +596,44 @@ INSTANTIATE_TEST_SUITE_P(ConfiguredVerifiers, GeneratedDefinitionTest,
                                          config_string_case(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG,
                                                             "VERIFY_PGP", "test-pgp %A")));
 
-TEST(GeneratedConfigTest, postingHelperPathsDefaultMatchHistoricalFallbacks)
+TEST_P(WindowsPostingCommandTest, usesTheWindowsLauncherDefault)
 {
-    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "CALL_INEWS", TRN_TEST_DEFAULT_CALL_INEWS);
-    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "NEWS_POSTER", TRN_TEST_DEFAULT_NEWS_POSTER);
-    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "MAIL_POSTER", TRN_TEST_DEFAULT_MAIL_POSTER);
-    if (windows_generated_helpers())
-    {
-        EXPECT_EQ("Pnews.cmd -h \"%h\"", std::string{TRN_TEST_DEFAULT_NEWS_POSTER});
-        EXPECT_EQ("Rnmail.cmd -h \"%h\"", std::string{TRN_TEST_DEFAULT_MAIL_POSTER});
-    }
+    EXPECT_EQ(GetParam().second, GetParam().first);
 }
 
-TEST(GeneratedConfigTest, postingHelperPathConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "CALL_INEWS", "/test/bin/inews -h <%h");
-    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "NEWS_POSTER", "/test/bin/Pnews -h %h");
-    expect_config_string(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG, "MAIL_POSTER", "/test/bin/Rnmail -h %h");
-}
+INSTANTIATE_TEST_SUITE_P(NewsAndMail, WindowsPostingCommandTest,
+                         testing::Values(PostingCommandCase{TRN_TEST_DEFAULT_NEWS_POSTER, "Pnews.cmd -h \"%h\""},
+                                         PostingCommandCase{TRN_TEST_DEFAULT_MAIL_POSTER, "Rnmail.cmd -h \"%h\""}));
 
-TEST(GeneratedConfigTest, postingHelpersUseInstalledHelperPaths)
-{
-    const std::string bin_dir = TRN_TEST_BIN_DIR;
+INSTANTIATE_TEST_SUITE_P(PostingHelperDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "CALL_INEWS",
+                                                            TRN_TEST_DEFAULT_CALL_INEWS),
+                                         config_string_case(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "NEWS_POSTER",
+                                                            TRN_TEST_DEFAULT_NEWS_POSTER),
+                                         config_string_case(TRN_TEST_POSTING_HELPER_PATHS_DEFAULT_CONFIG, "MAIL_POSTER",
+                                                            TRN_TEST_DEFAULT_MAIL_POSTER)));
 
-    if (windows_generated_helpers())
-    {
-        expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
-                             "call \"" + bin_dir + "/Rnmail.cmd\" -h \"%h\"");
-        return;
-    }
+INSTANTIATE_TEST_SUITE_P(ConfiguredPostingHelpers, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG,
+                                                            "CALL_INEWS", "/test/bin/inews -h <%h"),
+                                         config_string_case(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG,
+                                                            "NEWS_POSTER", "/test/bin/Pnews -h %h"),
+                                         config_string_case(TRN_TEST_POSTING_HELPER_PATHS_CONFIGURED_CONFIG,
+                                                            "MAIL_POSTER", "/test/bin/Rnmail -h %h")));
 
-    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"artcheck="} + bin_dir + "/trn-artchk");
-    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"nntplist="} + bin_dir + "/nntplist");
-    expect_file_contains(TRN_TEST_GENERATED_PNEWS_FILE, std::string{"inews=\""} + bin_dir + "/inews\"");
-    expect_config_string(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER", bin_dir + "/Rnmail -h %h");
-}
+INSTANTIATE_TEST_SUITE_P(
+    InstalledPostingHelpers, GeneratedDefinitionTest,
+    testing::Values(
+        GeneratedTextCase{TRN_TEST_GENERATED_PNEWS_FILE, std::string{"artcheck="} + TRN_TEST_BIN_DIR + "/trn-artchk",
+                          !windows_generated_helpers()},
+        GeneratedTextCase{TRN_TEST_GENERATED_PNEWS_FILE, std::string{"nntplist="} + TRN_TEST_BIN_DIR + "/nntplist",
+                          !windows_generated_helpers()},
+        GeneratedTextCase{TRN_TEST_GENERATED_PNEWS_FILE, std::string{"inews=\""} + TRN_TEST_BIN_DIR + "/inews\"",
+                          !windows_generated_helpers()},
+        config_string_case(TRN_TEST_REPLY_FORWARD_TEMPLATES_DEFAULT_CONFIG, "FORWARD_POSTER",
+                           windows_generated_helpers()
+                               ? std::string{"call \""} + TRN_TEST_BIN_DIR + "/Rnmail.cmd\" -h \"%h\""
+                               : std::string{TRN_TEST_BIN_DIR} + "/Rnmail -h %h")));
 
 TEST(GeneratedConfigTest, windowsMailHelperInvokesPowerShell)
 {
