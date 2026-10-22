@@ -70,6 +70,31 @@ int case_insensitive_cmp(std::string_view key, HashDatum data)
     return 0;
 }
 
+class StoreLastHashTest : public testing::Test
+{
+protected:
+    std::string    m_alpha{"alpha"};
+    HashTableOwner m_table{};
+};
+
+class HashWalkTest : public testing::Test
+{
+protected:
+    void store_values(unsigned alpha_length, unsigned beta_length, unsigned gamma_length);
+
+    std::string    m_alpha{"alpha"};
+    std::string    m_beta{"beta"};
+    std::string    m_gamma{"gamma"};
+    HashTableOwner m_table{1};
+};
+
+void HashWalkTest::store_values(unsigned alpha_length, unsigned beta_length, unsigned gamma_length)
+{
+    hash_store(m_table.get(), m_alpha, make_datum(m_alpha, alpha_length));
+    hash_store(m_table.get(), m_beta, make_datum(m_beta, beta_length));
+    hash_store(m_table.get(), m_gamma, make_datum(m_gamma, gamma_length));
+}
+
 } // namespace
 
 TEST(HashTest, fetchMissingReturnsEmptyDatum)
@@ -130,19 +155,25 @@ TEST(HashTest, storeReplacesExistingDatum)
     EXPECT_EQ(2U, data.dat_len);
 }
 
-TEST(HashTest, storeLastInsertsAndUpdatesLastFetch)
+TEST_F(StoreLastHashTest, insertsTheLastMissingFetch)
 {
-    HashTableOwner table{};
-    std::string    alpha{"alpha"};
+    const HashDatum missing = hash_fetch(m_table.get(), m_alpha);
+    ASSERT_EQ(nullptr, missing.dat_ptr);
 
-    const HashDatum missing = hash_fetch(table.get(), alpha);
-    EXPECT_EQ(nullptr, missing.dat_ptr);
+    hash_store_last(make_datum(m_alpha, 3));
 
-    hash_store_last(make_datum(alpha, 3));
-    EXPECT_EQ(3U, hash_fetch(table.get(), alpha).dat_len);
+    EXPECT_EQ(3U, hash_fetch(m_table.get(), m_alpha).dat_len);
+}
 
-    hash_store_last(make_datum(alpha, 4));
-    EXPECT_EQ(4U, hash_fetch(table.get(), alpha).dat_len);
+TEST_F(StoreLastHashTest, replacesTheLastExistingFetch)
+{
+    hash_store(m_table.get(), m_alpha, make_datum(m_alpha, 3));
+    const HashDatum existing = hash_fetch(m_table.get(), m_alpha);
+    ASSERT_EQ(3U, existing.dat_len);
+
+    hash_store_last(make_datum(m_alpha, 4));
+
+    EXPECT_EQ(4U, hash_fetch(m_table.get(), m_alpha).dat_len);
 }
 
 TEST(HashTest, deleteRemovesOnlyMatchingKey)
@@ -160,28 +191,26 @@ TEST(HashTest, deleteRemovesOnlyMatchingKey)
     EXPECT_EQ(20U, hash_fetch(table.get(), beta).dat_len);
 }
 
-TEST(HashTest, walkCanUpdateAndRemoveEntries)
+TEST_F(HashWalkTest, updatesEveryWalkedEntry)
 {
-    HashTableOwner table{1};
-    std::string    alpha{"alpha"};
-    std::string    beta{"beta"};
-    std::string    gamma{"gamma"};
+    store_values(1, 2, 3);
 
-    hash_store(table.get(), alpha, make_datum(alpha, 1));
-    hash_store(table.get(), beta, make_datum(beta, 2));
-    hash_store(table.get(), gamma, make_datum(gamma, 3));
+    hash_walk(m_table.get(), add_extra_to_datum, 10);
 
-    hash_walk(table.get(), add_extra_to_datum, 10);
+    EXPECT_EQ(11U, hash_fetch(m_table.get(), m_alpha).dat_len);
+    EXPECT_EQ(12U, hash_fetch(m_table.get(), m_beta).dat_len);
+    EXPECT_EQ(13U, hash_fetch(m_table.get(), m_gamma).dat_len);
+}
 
-    EXPECT_EQ(11U, hash_fetch(table.get(), alpha).dat_len);
-    EXPECT_EQ(12U, hash_fetch(table.get(), beta).dat_len);
-    EXPECT_EQ(13U, hash_fetch(table.get(), gamma).dat_len);
+TEST_F(HashWalkTest, removesOnlyTheMatchingWalkedEntry)
+{
+    store_values(11, 12, 13);
 
-    hash_walk(table.get(), remove_matching_datum, 12);
+    hash_walk(m_table.get(), remove_matching_datum, 12);
 
-    EXPECT_EQ(11U, hash_fetch(table.get(), alpha).dat_len);
-    EXPECT_EQ(nullptr, hash_fetch(table.get(), beta).dat_ptr);
-    EXPECT_EQ(13U, hash_fetch(table.get(), gamma).dat_len);
+    EXPECT_EQ(11U, hash_fetch(m_table.get(), m_alpha).dat_len);
+    EXPECT_EQ(nullptr, hash_fetch(m_table.get(), m_beta).dat_ptr);
+    EXPECT_EQ(13U, hash_fetch(m_table.get(), m_gamma).dat_len);
 }
 
 TEST(HashTest, customComparatorIsUsed)
