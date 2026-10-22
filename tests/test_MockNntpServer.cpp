@@ -10,6 +10,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace
 {
@@ -46,6 +47,39 @@ void write_line(tcp::socket &socket, std::string_view line)
     std::string buffer{line};
     buffer += "\r\n";
     write(socket, asio::buffer(buffer));
+}
+
+class ConnectedMockNntpServerTest : public testing::Test
+{
+protected:
+    void connect();
+    void TearDown() override
+    {
+        m_server.verify();
+    }
+    std::vector<std::string> read_lines(std::size_t count);
+
+    MockNntpServer   m_server;
+    asio::io_context m_context;
+    tcp::socket      m_socket{m_context};
+    std::string      m_buffer;
+};
+
+void ConnectedMockNntpServerTest::connect()
+{
+    m_server.start();
+    m_socket = connect_to_loopback(m_context, m_server.port());
+    ASSERT_EQ("200 trn-test NNTP server ready\r\n", read_line(m_socket, m_buffer));
+}
+
+std::vector<std::string> ConnectedMockNntpServerTest::read_lines(std::size_t count)
+{
+    std::vector<std::string> lines;
+    while (count-- > 0)
+    {
+        lines.push_back(read_line(m_socket, m_buffer));
+    }
+    return lines;
 }
 
 } // namespace
@@ -136,29 +170,39 @@ TEST(MockNntpServerTest, sendsConfiguredWelcomeBanner)
     server.verify();
 }
 
-TEST(MockNntpServerTest, sendsExpectedListResponse)
+TEST_F(ConnectedMockNntpServerTest, sendsExpectedReaderModeResponse)
 {
-    MockNntpServer server;
-    server.expect_mode_reader();
-    server.expect_list({"comp.lang.apl 2 1 y", "comp.lang.c++ 3 1 y"});
-    server.expect_quit();
-    server.start();
+    m_server.expect_mode_reader();
+    ASSERT_NO_FATAL_FAILURE(connect());
 
-    asio::io_context context;
-    tcp::socket      socket = connect_to_loopback(context, server.port());
-    std::string      buffer;
+    write_line(m_socket, "MODE READER");
+    const std::string response = read_line(m_socket, m_buffer);
 
-    EXPECT_EQ("200 trn-test NNTP server ready\r\n", read_line(socket, buffer));
-    write_line(socket, "MODE READER");
-    EXPECT_EQ("200 trn-test reader mode\r\n", read_line(socket, buffer));
-    write_line(socket, "LIST");
-    EXPECT_EQ("215 list follows\r\n", read_line(socket, buffer));
-    EXPECT_EQ("comp.lang.apl 2 1 y\r\n", read_line(socket, buffer));
-    EXPECT_EQ("comp.lang.c++ 3 1 y\r\n", read_line(socket, buffer));
-    EXPECT_EQ(".\r\n", read_line(socket, buffer));
-    write_line(socket, "QUIT");
-    EXPECT_EQ("205 closing connection\r\n", read_line(socket, buffer));
-    server.verify();
+    EXPECT_EQ("200 trn-test reader mode\r\n", response);
+}
+
+TEST_F(ConnectedMockNntpServerTest, sendsExpectedListResponse)
+{
+    m_server.expect_list({"comp.lang.apl 2 1 y", "comp.lang.c++ 3 1 y"});
+    ASSERT_NO_FATAL_FAILURE(connect());
+    const std::vector<std::string> expected{"215 list follows\r\n", "comp.lang.apl 2 1 y\r\n",
+                                            "comp.lang.c++ 3 1 y\r\n", ".\r\n"};
+
+    write_line(m_socket, "LIST");
+    const std::vector<std::string> response = read_lines(expected.size());
+
+    EXPECT_EQ(expected, response);
+}
+
+TEST_F(ConnectedMockNntpServerTest, sendsExpectedQuitResponse)
+{
+    m_server.expect_quit();
+    ASSERT_NO_FATAL_FAILURE(connect());
+
+    write_line(m_socket, "QUIT");
+    const std::string response = read_line(m_socket, m_buffer);
+
+    EXPECT_EQ("205 closing connection\r\n", response);
 }
 
 TEST(MockNntpServerTest, sendsExpectedGroupAndArticleReadResponses)
