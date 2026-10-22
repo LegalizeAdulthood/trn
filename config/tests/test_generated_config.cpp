@@ -539,39 +539,40 @@ INSTANTIATE_TEST_SUITE_P(
                     config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "USE_FTP", false),
                     config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "REPLYTO_POSTER_CHECKING", true)));
 
-TEST(GeneratedConfigTest, shellCommandDefaultsMatchPlatformFallbacks)
-{
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SH", TRN_TEST_DEFAULT_SH);
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "PIPE_SAVER", TRN_TEST_DEFAULT_PIPE_SAVER);
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SHAR_SAVER", TRN_TEST_DEFAULT_SHAR_SAVER);
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "CUSTOM_SAVER", TRN_TEST_DEFAULT_CUSTOM_SAVER);
-}
+INSTANTIATE_TEST_SUITE_P(ShellCommandDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG, "SH",
+                                                            TRN_TEST_DEFAULT_SH),
+                                         config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG,
+                                                            "PIPE_SAVER", TRN_TEST_DEFAULT_PIPE_SAVER),
+                                         config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG,
+                                                            "SHAR_SAVER", TRN_TEST_DEFAULT_SHAR_SAVER),
+                                         config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_DEFAULT_CONFIG,
+                                                            "CUSTOM_SAVER", TRN_TEST_DEFAULT_CUSTOM_SAVER)));
 
-TEST(GeneratedConfigTest, shellCommandConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "SH", "/test/sh");
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "PIPE_SAVER", "test-pipe %A %b");
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "SHAR_SAVER", "test-shar %A");
-    expect_config_string(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "CUSTOM_SAVER", "test-custom %A %e");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredShellCommands, GeneratedDefinitionTest,
+    testing::Values(
+        config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "SH", "/test/sh"),
+        config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "PIPE_SAVER", "test-pipe %A %b"),
+        config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "SHAR_SAVER", "test-shar %A"),
+        config_string_case(TRN_TEST_SHELL_COMMAND_DEFAULTS_CONFIGURED_CONFIG, "CUSTOM_SAVER", "test-custom %A %e")));
 
-TEST(GeneratedConfigTest, verificationCommandDefaultsMatchToolDiscovery)
-{
-    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DEFAULT_CONFIG, "VERIFY_RIPEM", TRN_TEST_DEFAULT_VERIFY_RIPEM);
-    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DEFAULT_CONFIG, "VERIFY_PGP", TRN_TEST_DEFAULT_VERIFY_PGP);
-}
+INSTANTIATE_TEST_SUITE_P(VerifierDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_VERIFICATION_COMMANDS_DEFAULT_CONFIG,
+                                                            "VERIFY_RIPEM", TRN_TEST_DEFAULT_VERIFY_RIPEM),
+                                         config_string_case(TRN_TEST_VERIFICATION_COMMANDS_DEFAULT_CONFIG, "VERIFY_PGP",
+                                                            TRN_TEST_DEFAULT_VERIFY_PGP)));
 
-TEST(GeneratedConfigTest, verificationCommandDisabledDefaultsAreEmitted)
-{
-    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DISABLED_CONFIG, "VERIFY_RIPEM", "");
-    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_DISABLED_CONFIG, "VERIFY_PGP", "");
-}
+INSTANTIATE_TEST_SUITE_P(
+    DisabledVerifiers, GeneratedDefinitionTest,
+    testing::Values(config_string_case(TRN_TEST_VERIFICATION_COMMANDS_DISABLED_CONFIG, "VERIFY_RIPEM", ""),
+                    config_string_case(TRN_TEST_VERIFICATION_COMMANDS_DISABLED_CONFIG, "VERIFY_PGP", "")));
 
-TEST(GeneratedConfigTest, verificationCommandConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG, "VERIFY_RIPEM", "test-ripem %A");
-    expect_config_string(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG, "VERIFY_PGP", "test-pgp %A");
-}
+INSTANTIATE_TEST_SUITE_P(ConfiguredVerifiers, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG,
+                                                            "VERIFY_RIPEM", "test-ripem %A"),
+                                         config_string_case(TRN_TEST_VERIFICATION_COMMANDS_CONFIGURED_CONFIG,
+                                                            "VERIFY_PGP", "test-pgp %A")));
 
 TEST(GeneratedConfigTest, postingHelperPathsDefaultMatchHistoricalFallbacks)
 {
