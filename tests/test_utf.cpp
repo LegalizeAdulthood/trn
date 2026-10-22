@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -59,6 +60,7 @@ struct InvalidUtf8Case
 {
     const char      *name;
     std::string_view bytes;
+    std::string_view recovered;
 };
 
 void PrintTo(const InvalidUtf8Case &value, std::ostream *out)
@@ -67,44 +69,62 @@ void PrintTo(const InvalidUtf8Case &value, std::ostream *out)
 }
 
 constexpr InvalidUtf8Case INVALID_UTF8[]{
-    {"ContinuationMinimum", "\x80"},
-    {"ContinuationMaximum", "\xBF"},
-    {"OverlongNul", "\xC0\x80"},
-    {"OverlongAscii", "\xC1\xBF"},
-    {"OverlongThreeByteNul", "\xE0\x80\x80"},
-    {"OverlongThreeByte", "\xE0\x9F\xBF"},
-    {"OverlongFourByteNul", "\xF0\x80\x80\x80"},
-    {"OverlongFourByte", "\xF0\x8F\xBF\xBF"},
-    {"HighSurrogateMinimum", "\xED\xA0\x80"},
-    {"HighSurrogateMaximum", "\xED\xAF\xBF"},
-    {"LowSurrogateMinimum", "\xED\xB0\x80"},
-    {"LowSurrogateMaximum", "\xED\xBF\xBF"},
-    {"AboveScalarMaximum", "\xF4\x90\x80\x80"},
-    {"InvalidFourByteLead", "\xF5\x80\x80\x80"},
-    {"LegacyFiveByte", "\xF8\x88\x80\x80\x80"},
-    {"LegacySixByte", "\xFC\x84\x80\x80\x80\x80"},
-    {"InvalidLeadFe", "\xFE"},
-    {"InvalidLeadFf", "\xFF"},
-    {"TruncatedTwoByte", "\xC2"},
-    {"TruncatedThreeByteLead", "\xE2"},
-    {"TruncatedThreeByte", "\xE2\x82"},
-    {"TruncatedFourByteLead", "\xF0"},
-    {"TruncatedFourByteSecond", "\xF0\x9F"},
-    {"TruncatedFourByteThird", "\xF0\x9F\x98"},
-    {"InvalidTwoByteContinuation", "\xC2"
-                                   "A"},
-    {"InvalidThreeByteSecond", "\xE2"
-                               "(\xA1"},
-    {"InvalidThreeByteThird", "\xE2\x82"
-                              "A"},
-    {"InvalidFourByteSecond", "\xF0"
-                              "(\x80\x80"},
-    {"InvalidFourByteThird", "\xF0\x9F"
-                             "A\x80"},
-    {"InvalidFourByteFourth", "\xF0\x9F\x98"
-                              "A"},
-    {"Cesu8SurrogatePair", "\xED\xA0\xBD\xED\xB8\x9A"},
-    {"NulContinuation", {"\xC2\0", 2}},
+    {"ContinuationMinimum", "\x80", "\xEF\xBF\xBD"},
+    {"ContinuationMaximum", "\xBF", "\xEF\xBF\xBD"},
+    {"OverlongNul", "\xC0\x80", "\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"OverlongAscii", "\xC1\xBF", "\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"OverlongThreeByteNul", "\xE0\x80\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"OverlongThreeByte", "\xE0\x9F\xBF", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"OverlongFourByteNul", "\xF0\x80\x80\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"OverlongFourByte", "\xF0\x8F\xBF\xBF", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"HighSurrogateMinimum", "\xED\xA0\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"HighSurrogateMaximum", "\xED\xAF\xBF", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"LowSurrogateMinimum", "\xED\xB0\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"LowSurrogateMaximum", "\xED\xBF\xBF", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"AboveScalarMaximum", "\xF4\x90\x80\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"InvalidFourByteLead", "\xF5\x80\x80\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"LegacyFiveByte", "\xF8\x88\x80\x80\x80", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"LegacySixByte", "\xFC\x84\x80\x80\x80\x80",
+     "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"InvalidLeadFe", "\xFE", "\xEF\xBF\xBD"},
+    {"InvalidLeadFf", "\xFF", "\xEF\xBF\xBD"},
+    {"TruncatedTwoByte", "\xC2", "\xEF\xBF\xBD"},
+    {"TruncatedThreeByteLead", "\xE2", "\xEF\xBF\xBD"},
+    {"TruncatedThreeByte", "\xE2\x82", "\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"TruncatedFourByteLead", "\xF0", "\xEF\xBF\xBD"},
+    {"TruncatedFourByteSecond", "\xF0\x9F", "\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"TruncatedFourByteThird", "\xF0\x9F\x98", "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"InvalidTwoByteContinuation",
+     "\xC2"
+     "A",
+     "\xEF\xBF\xBD"
+     "A"},
+    {"InvalidThreeByteSecond",
+     "\xE2"
+     "(\xA1",
+     "\xEF\xBF\xBD(\xEF\xBF\xBD"},
+    {"InvalidThreeByteThird",
+     "\xE2\x82"
+     "A",
+     "\xEF\xBF\xBD\xEF\xBF\xBD"
+     "A"},
+    {"InvalidFourByteSecond",
+     "\xF0"
+     "(\x80\x80",
+     "\xEF\xBF\xBD(\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"InvalidFourByteThird",
+     "\xF0\x9F"
+     "A\x80",
+     "\xEF\xBF\xBD\xEF\xBF\xBD"
+     "A\xEF\xBF\xBD"},
+    {"InvalidFourByteFourth",
+     "\xF0\x9F\x98"
+     "A",
+     "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"
+     "A"},
+    {"Cesu8SurrogatePair", "\xED\xA0\xBD\xED\xB8\x9A",
+     "\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"},
+    {"NulContinuation", {"\xC2\0", 2}, {"\xEF\xBF\xBD\0", 4}},
 };
 
 class Utf8ScalarTest : public Test
@@ -793,47 +813,78 @@ INSTANTIATE_TEST_SUITE_P(Issue34, UnicodeAsciiMappingTest, Combine(ValuesIn(UNIC
                                     (std::get<1>(info.param) == 'u' ? "Unicode" : "Plain");
                          });
 
-TEST(UnicodeSubstitutionTest, sourceBytesAreDecodedBeforeScalarSubstitution)
+using UnicodeSourceCase = std::tuple<std::string_view, std::string_view, std::string_view>;
+
+class DecodedUnicodeSourceTest : public Utf8ScalarTest, public WithParamInterface<UnicodeSourceCase>
 {
-    struct SourceCase
-    {
-        std::string_view bytes;
-        std::string_view expected;
-    };
-    constexpr SourceCase cases[]{
-        {"\x85", "..."}, {"\x91", "`"},  {"\x92", "'"},   {"\x93", "\""},
-        {"\x94", "\""},  {"\x96", "--"}, {"\x97", "---"}, {"\xA0", " "},
-    };
-    for (const SourceCase &value : cases)
-    {
-        EXPECT_EQ(value.expected,
-                  CharSubstitution('u', {}).substitute(CharsetDecoder{"windows-1252"}.decode(value.bytes)));
-    }
-    EXPECT_EQ("\n", CharSubstitution('u', {}).substitute(CharsetDecoder{"Latin1"}.decode("\x85")));
-    EXPECT_EQ("\xC2\x91", CharSubstitution('u', {}).substitute(CharsetDecoder{"Latin1"}.decode("\x91")));
-    EXPECT_EQ("\xEF\xBF\xBD", CharSubstitution('u', {}).substitute("\x91"));
+protected:
+    void SetUp() override;
+
+    std::string                   m_source;
+    std::string                   m_expected;
+    std::optional<CharsetDecoder> m_decoder;
+    CharSubstitution              m_substitution{'u', {}};
+};
+
+void DecodedUnicodeSourceTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    const auto &[charset, source, expected] = GetParam();
+    m_source = source;
+    m_expected = expected;
+    m_decoder.emplace(charset);
 }
 
-TEST(UnicodeSubstitutionTest, malformedUtf8RecoversWithoutLosingFollowingMapping)
+TEST_P(DecodedUnicodeSourceTest, decodesSourceBytesBeforeScalarSubstitution)
 {
-    for (const InvalidUtf8Case &value : INVALID_UTF8)
-    {
-        SCOPED_TRACE(value.name);
-        std::string expected;
-        for (const unsigned char byte : value.bytes)
-        {
-            if (byte < 128)
-            {
-                expected += static_cast<char>(byte);
-            }
-            else
-            {
-                expected += "\xEF\xBF\xBD";
-            }
-        }
-        EXPECT_EQ(expected + "'", CharSubstitution('u', {}).substitute(std::string{value.bytes} + "\xE2\x80\x99"));
-    }
+    const std::string decoded = m_decoder->decode(m_source);
+    const std::string transformed = m_substitution.substitute(decoded);
+
+    EXPECT_EQ(m_expected, transformed);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    Windows1252AndLatin1, DecodedUnicodeSourceTest,
+    Values(UnicodeSourceCase{"windows-1252", "\x85", "..."}, UnicodeSourceCase{"windows-1252", "\x91", "`"},
+           UnicodeSourceCase{"windows-1252", "\x92", "'"}, UnicodeSourceCase{"windows-1252", "\x93", "\""},
+           UnicodeSourceCase{"windows-1252", "\x94", "\""}, UnicodeSourceCase{"windows-1252", "\x96", "--"},
+           UnicodeSourceCase{"windows-1252", "\x97", "---"}, UnicodeSourceCase{"windows-1252", "\xA0", " "},
+           UnicodeSourceCase{"Latin1", "\x85", "\n"}, UnicodeSourceCase{"Latin1", "\x91", "\xC2\x91"}));
+
+TEST_F(Utf8ScalarTest, unicodeSubstitutionReplacesAnUndecodedLegacyByte)
+{
+    const std::string source{"\x91"};
+
+    const std::string transformed = CharSubstitution('u', {}).substitute(source);
+
+    EXPECT_EQ("\xEF\xBF\xBD", transformed);
+}
+
+class MalformedUnicodeRecoveryTest : public Utf8ScalarTest, public WithParamInterface<InvalidUtf8Case>
+{
+protected:
+    void SetUp() override;
+
+    std::string      m_source;
+    std::string      m_expected;
+    CharSubstitution m_substitution{'u', {}};
+};
+
+void MalformedUnicodeRecoveryTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    m_source = std::string{GetParam().bytes} + "\xE2\x80\x99";
+    m_expected = std::string{GetParam().recovered} + "'";
+}
+
+TEST_P(MalformedUnicodeRecoveryTest, recoversWithoutLosingTheFollowingMapping)
+{
+    const std::string transformed = m_substitution.substitute(m_source);
+
+    EXPECT_EQ(m_expected, transformed);
+}
+
+INSTANTIATE_TEST_SUITE_P(MalformedInputs, MalformedUnicodeRecoveryTest, ValuesIn(INVALID_UTF8));
 
 TEST(UnicodeSubstitutionTest, preservesUnmappedScalarsAndEmbeddedNul)
 {
