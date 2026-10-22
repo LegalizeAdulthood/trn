@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <iterator>
+#include <ostream>
 #include <string>
 #include <string_view>
 
@@ -97,12 +98,42 @@ void expect_helper_has_no_metaconfig_residue(const char *filename)
     }
 }
 
-void expect_config_define(const char *filename, std::string_view name, bool defined)
+struct GeneratedTextCase
+{
+    const char *filename;
+    std::string expected;
+};
+
+void PrintTo(const GeneratedTextCase &value, std::ostream *output)
+{
+    *output << value.expected;
+}
+
+class GeneratedDefinitionTest : public testing::TestWithParam<GeneratedTextCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_contents;
+};
+
+void GeneratedDefinitionTest::SetUp()
+{
+    m_contents = file_contents(GetParam().filename);
+    ASSERT_FALSE(m_contents.empty()) << GetParam().filename;
+}
+
+GeneratedTextCase config_define_case(const char *filename, std::string_view name, bool defined)
 {
     const std::string expected =
         defined ? std::string{"#define "} + std::string{name} : std::string{"/* #undef "} + std::string{name} + " */";
 
-    expect_file_contains(filename, expected);
+    return {filename, expected};
+}
+
+void expect_config_define(const char *filename, std::string_view name, bool defined)
+{
+    expect_file_contains(filename, config_define_case(filename, name, defined).expected);
 }
 
 void expect_config_string(const char *filename, std::string_view name, std::string_view value)
@@ -161,13 +192,20 @@ void expect_name_parsing_policy(const char *filename, std::string_view name_type
 
 } // namespace
 
-TEST(GeneratedConfigTest, inputAndSignalProbesMatchPlatformChecks)
+TEST_P(GeneratedDefinitionTest, emitsTheExpectedDefinition)
 {
-    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "I_SGTTY", cmake_bool(TRN_TEST_I_SGTTY));
-    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_RDCHK", cmake_bool(TRN_TEST_HAS_RDCHK));
-    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGBLOCK", cmake_bool(TRN_TEST_HAS_SIGBLOCK));
-    expect_config_define(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGHOLD", cmake_bool(TRN_TEST_HAS_SIGHOLD));
+    const std::size_t position = m_contents.find(GetParam().expected);
+
+    EXPECT_NE(std::string::npos, position) << GetParam().filename;
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    InputAndSignalProbes, GeneratedDefinitionTest,
+    testing::Values(
+        config_define_case(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "I_SGTTY", cmake_bool(TRN_TEST_I_SGTTY)),
+        config_define_case(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_RDCHK", cmake_bool(TRN_TEST_HAS_RDCHK)),
+        config_define_case(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGBLOCK", cmake_bool(TRN_TEST_HAS_SIGBLOCK)),
+        config_define_case(TRN_TEST_INPUT_SIGNAL_PROBES_CONFIG, "HAS_SIGHOLD", cmake_bool(TRN_TEST_HAS_SIGHOLD))));
 
 TEST(GeneratedConfigTest, waitStatusProbeMatchesPlatformCheck)
 {
@@ -180,28 +218,27 @@ TEST(GeneratedConfigTest, termlibProbeMatchesPlatformCheck)
     expect_config_define(TRN_TEST_TERMLIB_PROBE_CONFIG, "HAS_TERMLIB", cmake_bool(TRN_TEST_DEFAULT_HAS_TERMLIB));
 }
 
-TEST(GeneratedConfigTest, platformPolicyDefaultsMatchFeatureProbes)
-{
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "MSDOS", false);
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_CONIO_TERMINAL_INPUT",
-                         cmake_bool(TRN_TEST_USE_CONIO_TERMINAL_INPUT));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_BUILTIN_TERMINAL_CAPABILITIES",
-                         cmake_bool(TRN_TEST_USE_BUILTIN_TERMINAL_CAPABILITIES));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_SPAWN_SHELL",
-                         cmake_bool(TRN_TEST_USE_SPAWN_SHELL));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_UNDERSCORE_SLEEP",
-                         cmake_bool(TRN_TEST_USE_UNDERSCORE_SLEEP));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_WINDOWS_ENVIRONMENT_NAMES",
-                         cmake_bool(TRN_TEST_USE_WINDOWS_ENVIRONMENT_NAMES));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_WINDOWS_FILENAME_RULES",
-                         cmake_bool(TRN_TEST_USE_WINDOWS_FILENAME_RULES));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "CHECK_NEWSRC_LOCK_PROCESS",
-                         cmake_bool(TRN_TEST_CHECK_NEWSRC_LOCK_PROCESS));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "SET_ARTICLE_TEMP_FILE_PERMISSIONS",
-                         cmake_bool(TRN_TEST_SET_ARTICLE_TEMP_FILE_PERMISSIONS));
-    expect_config_define(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "PRESERVE_NEWSRC_FILE_PERMISSIONS",
-                         cmake_bool(TRN_TEST_PRESERVE_NEWSRC_FILE_PERMISSIONS));
-}
+INSTANTIATE_TEST_SUITE_P(
+    PlatformPolicies, GeneratedDefinitionTest,
+    testing::Values(config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "MSDOS", false),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_CONIO_TERMINAL_INPUT",
+                                       cmake_bool(TRN_TEST_USE_CONIO_TERMINAL_INPUT)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_BUILTIN_TERMINAL_CAPABILITIES",
+                                       cmake_bool(TRN_TEST_USE_BUILTIN_TERMINAL_CAPABILITIES)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_SPAWN_SHELL",
+                                       cmake_bool(TRN_TEST_USE_SPAWN_SHELL)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_UNDERSCORE_SLEEP",
+                                       cmake_bool(TRN_TEST_USE_UNDERSCORE_SLEEP)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_WINDOWS_ENVIRONMENT_NAMES",
+                                       cmake_bool(TRN_TEST_USE_WINDOWS_ENVIRONMENT_NAMES)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "USE_WINDOWS_FILENAME_RULES",
+                                       cmake_bool(TRN_TEST_USE_WINDOWS_FILENAME_RULES)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "CHECK_NEWSRC_LOCK_PROCESS",
+                                       cmake_bool(TRN_TEST_CHECK_NEWSRC_LOCK_PROCESS)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "SET_ARTICLE_TEMP_FILE_PERMISSIONS",
+                                       cmake_bool(TRN_TEST_SET_ARTICLE_TEMP_FILE_PERMISSIONS)),
+                    config_define_case(TRN_TEST_PLATFORM_POLICY_DEFAULT_CONFIG, "PRESERVE_NEWSRC_FILE_PERMISSIONS",
+                                       cmake_bool(TRN_TEST_PRESERVE_NEWSRC_FILE_PERMISSIONS))));
 
 TEST(GeneratedConfigTest, activeTimesDefaultIsNone)
 {
@@ -475,28 +512,28 @@ TEST(GeneratedConfigTest, localTimeFormatConfiguredValueIsEmitted)
     expect_config_string(TRN_TEST_LOCAL_TIME_FORMAT_CONFIGURED_CONFIG, "LOCALTIME_FMT", "test %Y");
 }
 
-TEST(GeneratedConfigTest, featurePolicyDefaultsMatchHistoricalFallbacks)
-{
-    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "MAIL_CALL", cmake_bool(TRN_TEST_DEFAULT_MAIL_CALL));
-    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "NO_FIREWORKS",
-                         cmake_bool(TRN_TEST_DEFAULT_NO_FIREWORKS));
-    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "TILDE_NAME", cmake_bool(TRN_TEST_DEFAULT_TILDE_NAME));
-    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "VALIDATE_XREF_SITE",
-                         cmake_bool(TRN_TEST_DEFAULT_VALIDATE_XREF_SITE));
-    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "USE_FTP", cmake_bool(TRN_TEST_DEFAULT_USE_FTP));
-    expect_config_define(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "REPLYTO_POSTER_CHECKING",
-                         cmake_bool(TRN_TEST_DEFAULT_REPLYTO_POSTER_CHECKING));
-}
+INSTANTIATE_TEST_SUITE_P(
+    DefaultFeatures, GeneratedDefinitionTest,
+    testing::Values(
+        config_define_case(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "MAIL_CALL", cmake_bool(TRN_TEST_DEFAULT_MAIL_CALL)),
+        config_define_case(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "NO_FIREWORKS",
+                           cmake_bool(TRN_TEST_DEFAULT_NO_FIREWORKS)),
+        config_define_case(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "TILDE_NAME",
+                           cmake_bool(TRN_TEST_DEFAULT_TILDE_NAME)),
+        config_define_case(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "VALIDATE_XREF_SITE",
+                           cmake_bool(TRN_TEST_DEFAULT_VALIDATE_XREF_SITE)),
+        config_define_case(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "USE_FTP", cmake_bool(TRN_TEST_DEFAULT_USE_FTP)),
+        config_define_case(TRN_TEST_FEATURE_POLICY_DEFAULT_CONFIG, "REPLYTO_POSTER_CHECKING",
+                           cmake_bool(TRN_TEST_DEFAULT_REPLYTO_POSTER_CHECKING))));
 
-TEST(GeneratedConfigTest, featurePolicyConfiguredValuesAreEmitted)
-{
-    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "MAIL_CALL", false);
-    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "NO_FIREWORKS", false);
-    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "TILDE_NAME", false);
-    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "VALIDATE_XREF_SITE", true);
-    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "USE_FTP", false);
-    expect_config_define(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "REPLYTO_POSTER_CHECKING", true);
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredFeatures, GeneratedDefinitionTest,
+    testing::Values(config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "MAIL_CALL", false),
+                    config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "NO_FIREWORKS", false),
+                    config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "TILDE_NAME", false),
+                    config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "VALIDATE_XREF_SITE", true),
+                    config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "USE_FTP", false),
+                    config_define_case(TRN_TEST_FEATURE_POLICY_CONFIGURED_CONFIG, "REPLYTO_POSTER_CHECKING", true)));
 
 TEST(GeneratedConfigTest, shellCommandDefaultsMatchPlatformFallbacks)
 {
