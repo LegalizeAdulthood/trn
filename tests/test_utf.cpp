@@ -445,23 +445,83 @@ TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
     EXPECT_EQ("[T] ", current_char_subst());
 }
 
-TEST_F(CurrentCharSubstTest, unicodeProfileIsOptIn)
-{
-    EXPECT_EQ(std::string::npos, g_charsets.find('u'));
-    const std::string text{"\xE2\x80\x99\xE2\x80\x94\xE4\xB8\xAD"};
-    reset_char_subst_mode();
-    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+constexpr std::string_view UNICODE_PROFILE_TEXT{"\xE2\x80\x99\xE2\x80\x94\xE4\xB8\xAD"};
 
+class UnicodeProfileTest : public CurrentCharSubstTest
+{
+protected:
+    const std::string m_text{UNICODE_PROFILE_TEXT};
+};
+
+using UnicodeProfileCase = std::tuple<bool, std::string_view>;
+
+class UnicodeProfileTransformTest : public UnicodeProfileTest, public WithParamInterface<UnicodeProfileCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void UnicodeProfileTransformTest::SetUp()
+{
+    UnicodeProfileTest::SetUp();
+    if (std::get<0>(GetParam()))
+    {
+        g_charsets = "up";
+    }
+    reset_char_subst_mode();
+}
+
+class EnabledUnicodeProfileTest : public UnicodeProfileTest
+{
+protected:
+    void SetUp() override;
+};
+
+void EnabledUnicodeProfileTest::SetUp()
+{
+    UnicodeProfileTest::SetUp();
     g_charsets = "up";
     reset_char_subst_mode();
-    EXPECT_EQ("'---\xE4\xB8\xAD", str_char_subst(text, current_char_subst_mode()));
-    g_verbose = true;
-    EXPECT_EQ("[Unicode->ASCII] ", current_char_subst());
-    g_verbose = false;
-    EXPECT_EQ("[A] ", current_char_subst());
+}
 
+class UnicodeProfileLabelTest : public EnabledUnicodeProfileTest, public WithParamInterface<UnicodeProfileCase>
+{
+};
+
+TEST_F(CurrentCharSubstTest, unicodeProfileIsAbsentFromDefaultModes)
+{
+    EXPECT_EQ(std::string::npos, g_charsets.find('u'));
+}
+
+TEST_P(UnicodeProfileTransformTest, substitutesOnlyWhenUnicodeModeIsEnabled)
+{
+    const std::string transformed = str_char_subst(m_text, current_char_subst_mode());
+
+    EXPECT_EQ(std::get<1>(GetParam()), transformed);
+}
+
+INSTANTIATE_TEST_SUITE_P(DisabledAndEnabled, UnicodeProfileTransformTest,
+                         Values(UnicodeProfileCase{false, UNICODE_PROFILE_TEXT},
+                                UnicodeProfileCase{true, "'---\xE4\xB8\xAD"}));
+
+TEST_P(UnicodeProfileLabelTest, showsTheUnicodeModeLabel)
+{
+    g_verbose = std::get<0>(GetParam());
+
+    const std::string label{current_char_subst()};
+
+    EXPECT_EQ(std::get<1>(GetParam()), label);
+}
+
+INSTANTIATE_TEST_SUITE_P(TerseAndVerbose, UnicodeProfileLabelTest,
+                         Values(UnicodeProfileCase{false, "[A] "}, UnicodeProfileCase{true, "[Unicode->ASCII] "}));
+
+TEST_F(EnabledUnicodeProfileTest, cyclesFromUnicodeToPlainText)
+{
     next_char_subst_mode();
-    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+    const std::string transformed = str_char_subst(m_text, current_char_subst_mode());
+
+    EXPECT_EQ(m_text, transformed);
 }
 
 TEST_F(CurrentCharSubstTest, returnsCurrentMode)
