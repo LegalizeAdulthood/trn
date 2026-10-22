@@ -19,6 +19,7 @@
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
+#include <trn/nntp.h>
 #include <trn/rcstuff.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
@@ -36,6 +37,7 @@
 #include <test_config.h>
 
 #include "mock_env.h"
+#include "MockNNTPConnection.h"
 
 #include <gtest/gtest.h>
 
@@ -46,6 +48,7 @@
 #include <fstream>
 #include <functional>
 #include <initializer_list>
+#include <memory>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -3949,6 +3952,151 @@ class BackwardPageMarkingArticleTest : public BackwardPagingArticleTest,
                                        public testing::WithParamInterface<std::tuple<MarkingMode, MarkingAreas, long>>
 {
 };
+
+class JumpToEndArticleTest : public CachedDisplayArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void read_prefix(std::string_view expected);
+    void expect_end(ArticlePosition end, ArticleLine line = ArticleLine{41}, ArticleLine light = ArticleLine{40},
+                    int column = 9);
+
+private:
+    ArticlePosition m_old_inner_search{g_inner_search};
+    ArticleLine     m_old_inner_light{g_inner_light};
+    int             m_old_g_line{g_g_line};
+    char            m_old_hide_everything{g_hide_everything};
+};
+
+void JumpToEndArticleTest::SetUp()
+{
+    CachedDisplayArticleTest::SetUp();
+    g_inner_search = ArticlePosition{29};
+    g_inner_light = ArticleLine{13};
+    g_g_line = 6;
+    g_hide_everything = '\f';
+}
+
+void JumpToEndArticleTest::TearDown()
+{
+    g_inner_search = m_old_inner_search;
+    g_inner_light = m_old_inner_light;
+    g_g_line = m_old_g_line;
+    g_hide_everything = m_old_hide_everything;
+    CachedDisplayArticleTest::TearDown();
+}
+
+void JumpToEndArticleTest::read_prefix(std::string_view expected)
+{
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ(expected, line);
+    g_art_pos = art_buf_article_pos();
+}
+
+void JumpToEndArticleTest::expect_end(ArticlePosition end, ArticleLine line, ArticleLine light, int column)
+{
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_do_fseek);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(line, g_art_line_num);
+    EXPECT_EQ(line, g_top_line);
+    EXPECT_EQ(light, g_inner_light);
+    EXPECT_EQ(end, g_inner_search);
+    EXPECT_EQ(0, g_g_line);
+    EXPECT_EQ('b', g_hide_everything);
+    EXPECT_EQ(12, g_term_line);
+    EXPECT_EQ(column, g_term_col);
+    EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_EQ('p', current_char_subst_mode());
+}
+
+class KnownSizeEndArticleTest : public JumpToEndArticleTest, public testing::WithParamInterface<std::pair<long, bool>>
+{
+};
+
+class DownloadEndArticleTest : public JumpToEndArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void start_download();
+
+private:
+    DataSource                                               m_remote_source{};
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
+    NNTPLink                                                 m_old_nntp_link{g_nntp_link};
+    std::string                                              m_old_head_buf{g_head_buf};
+    std::string                                              m_old_ser_line{g_ser_line};
+    std::string                                              m_old_last_command{g_last_command};
+    std::filesystem::path                                    m_old_current_path{std::filesystem::current_path()};
+    std::filesystem::path                                    m_download_file;
+    std::string_view                                         m_old_tc_ce{g_tc_CE};
+};
+
+void DownloadEndArticleTest::SetUp()
+{
+    JumpToEndArticleTest::SetUp();
+    m_remote_source.m_flags = DF_REMOTE;
+    g_data_source = &m_remote_source;
+    m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link = {};
+    g_nntp_link.connection = m_connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_tc_CE = "\033[K";
+    nntp_gets_clear_buffer();
+    (void) nntp_art_name(ArticleNum{}, false);
+    std::error_code error;
+    std::filesystem::current_path(output_dir(), error);
+    ASSERT_FALSE(error) << error.message();
+}
+
+void DownloadEndArticleTest::TearDown()
+{
+    nntp_finish_body(FB_DISCARD);
+    if (g_art_fp)
+    {
+        std::fclose(g_art_fp);
+        g_art_fp = nullptr;
+    }
+    (void) nntp_art_name(ArticleNum{}, false);
+    nntp_gets_clear_buffer();
+    g_nntp_link = std::move(m_old_nntp_link);
+    g_head_buf = m_old_head_buf;
+    g_ser_line = m_old_ser_line;
+    g_last_command = m_old_last_command;
+    g_tc_CE = m_old_tc_ce;
+    std::error_code error;
+    std::filesystem::current_path(m_old_current_path, error);
+    std::filesystem::remove(m_download_file, error);
+    JumpToEndArticleTest::TearDown();
+}
+
+void DownloadEndArticleTest::start_download()
+{
+    set_reading_position(4);
+    g_do_hiding = GetParam();
+    std::fclose(g_art_fp);
+    g_art_fp = nullptr;
+    g_parsed_art = g_art;
+    g_head_buf = "Subject: end\n\n";
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("BODY 4"), testing::_));
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .WillOnce(testing::Return("222 4 <end@example.test> body follows"))
+        .WillOnce(testing::Return("\xC4"));
+    nntp_body(g_art);
+    ASSERT_NE(nullptr, g_art_fp);
+    m_download_file = output_dir() / nntp_art_name(g_art, false);
+    ASSERT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    set_art_buf_seek(g_header_type[PAST_HEADER].min_pos);
+    g_raw_art_size = g_art_size = ArticlePosition{-1};
+    read_prefix(g_do_hiding ? "\xC3\x84\n" : "\xC4\n");
+    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+    ASSERT_TRUE(testing::Mock::VerifyAndClearExpectations(m_connection.get()));
+    EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("Last")).WillOnce(testing::Return("."));
+}
 
 } // namespace
 
@@ -10932,6 +11080,164 @@ TEST_F(BackwardPagingArticleTest, longArticlePagingCrossesTheVirtualArrayWindowU
     EXPECT_EQ(ArticleLine{7}, g_highlight);
     expect_target(252, "Line 252\n");
 }
+
+TEST_P(KnownSizeEndArticleTest, jumpsToTheKnownEndWithoutChangingArticleReadOrSelectionState)
+{
+    set_reading_position(GetParam().first);
+    set_article_text("First\nLast\n");
+    g_do_hiding = GetParam().second;
+    ASSERT_NO_FATAL_FAILURE(read_prefix("First\n"));
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_EQ(std::string::npos, output.find("Receiving"));
+    expect_end(ArticlePosition{11});
+    EXPECT_EQ(ArticlePosition{11}, g_raw_art_size);
+    EXPECT_EQ(ArticlePosition{11}, g_art_size);
+    EXPECT_EQ(ArticlePosition{6}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{6}, art_buf_pos());
+    EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 0}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 6}, tell_art());
+    EXPECT_EQ(GetParam().second, g_do_hiding);
+    std::string next_line;
+    ASSERT_TRUE(read_art_buf(next_line, false));
+    EXPECT_EQ("Last\n", next_line);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnreadWithAndWithoutHiding, KnownSizeEndArticleTest,
+                         testing::Values(std::make_pair(2L, true), std::make_pair(4L, true), std::make_pair(2L, false),
+                                         std::make_pair(4L, false)));
+
+TEST_F(JumpToEndArticleTest, decodesTheRemainingMimeTextAndRestoresTheHeaderRelativeReadingPosition)
+{
+    set_reading_position(4);
+    const std::string     header{"Subject: end\n\n"};
+    const ArticlePosition header_end{static_cast<long>(header.size())};
+    set_article_text(header + "First\n=4C=61=73=74\n");
+    g_mime_section->m_encoding = MENCODE_QPRINT;
+    g_header_type[PAST_HEADER].min_pos = header_end;
+    ASSERT_EQ(0, seek_art(header_end));
+    set_art_buf_seek(header_end);
+    ASSERT_NO_FATAL_FAILURE(read_prefix("First\n"));
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_EQ(std::string::npos, output.find("Receiving"));
+    expect_end(header_end + ArticlePosition{11});
+    EXPECT_EQ(header_end + ArticlePosition{19}, g_raw_art_size);
+    EXPECT_EQ(header_end + ArticlePosition{11}, g_art_size);
+    EXPECT_EQ(header_end + ArticlePosition{6}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{6}, art_buf_pos());
+    EXPECT_EQ(ArticlePosition{11}, art_buf_len());
+    EXPECT_EQ(g_raw_art_size, art_buf_seek());
+    EXPECT_EQ("First\nLast\n", art_buf_view(header_end));
+    std::string next_line;
+    ASSERT_TRUE(read_art_buf(next_line, false));
+    EXPECT_EQ("Last\n", next_line);
+}
+
+TEST_F(JumpToEndArticleTest, jumpingFromTheFirstLineSetsTheHighlightBeforeTheArticle)
+{
+    set_reading_position(4);
+    set_article_text("First\nLast\n");
+    g_art_line_num = ArticleLine{};
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_EQ(std::string::npos, output.find("Receiving"));
+    expect_end(ArticlePosition{11}, ArticleLine{}, ArticleLine{-1});
+    EXPECT_EQ(ArticlePosition{}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{}, art_buf_pos());
+    EXPECT_EQ("First\nLast\n", art_buf_view(ArticlePosition{}));
+}
+
+TEST_F(JumpToEndArticleTest, anEmptyArticleStillRequestsTheLastPageWithoutReadingPastTheBuffer)
+{
+    set_reading_position(4);
+    set_article_text("");
+    g_art_line_num = ArticleLine{};
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_EQ(std::string::npos, output.find("Receiving"));
+    expect_end(ArticlePosition{}, ArticleLine{}, ArticleLine{-1});
+    EXPECT_EQ(ArticlePosition{}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{}, g_raw_art_size);
+    EXPECT_EQ(ArticlePosition{}, g_art_size);
+    expect_cleared_cache();
+}
+
+TEST_F(JumpToEndArticleTest, jumpingWhenAlreadyAtArticleEndRetainsTheEndPosition)
+{
+    set_reading_position(4);
+    set_article_text("Last\n");
+    ASSERT_NO_FATAL_FAILURE(read_prefix("Last\n"));
+    g_art_line_num = ArticleLine{1};
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_EQ(std::string::npos, output.find("Receiving"));
+    expect_end(ArticlePosition{5}, ArticleLine{1}, ArticleLine{});
+    EXPECT_EQ(ArticlePosition{5}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{5}, art_buf_pos());
+    EXPECT_EQ(ArticlePosition{5}, art_buf_len());
+    EXPECT_EQ("Last\n", art_buf_view(ArticlePosition{}));
+}
+
+TEST_F(JumpToEndArticleTest, groupEndLeavesPagerStateUntouchedWithoutAnOpenArticleOrKnownSize)
+{
+    set_reading_position(8);
+    std::fclose(g_art_fp);
+    g_art_fp = nullptr;
+    g_raw_art_size = g_art_size = ArticlePosition{-1};
+    g_art_pos = ArticlePosition{17};
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_EQ(std::string::npos, output.find("Receiving"));
+    expect_unmoved_view();
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticlePosition{-1}, g_raw_art_size);
+    EXPECT_EQ(ArticlePosition{-1}, g_art_size);
+    EXPECT_EQ(ArticlePosition{17}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{29}, g_inner_search);
+    EXPECT_EQ(ArticleLine{13}, g_inner_light);
+    EXPECT_EQ(6, g_g_line);
+    EXPECT_EQ('\f', g_hide_everything);
+    expect_cleared_cache();
+}
+
+TEST_P(DownloadEndArticleTest, finishesThePendingBodyAndTargetsTheEndInTheCurrentDisplayMode)
+{
+    ASSERT_NO_FATAL_FAILURE(start_download());
+    const ArticlePosition header_end = g_header_type[PAST_HEADER].min_pos;
+    const ArticlePosition position = header_end + ArticlePosition{g_do_hiding ? 3 : 2};
+    const ArticlePosition end = header_end + ArticlePosition{g_do_hiding ? 8 : 7};
+
+    const std::string output = display(Ctl('e'));
+
+    EXPECT_NE(std::string::npos, output.find("Receiving..."));
+    expect_end(end, ArticleLine{41}, ArticleLine{40}, 0);
+    EXPECT_EQ(header_end + ArticlePosition{7}, nntp_art_size());
+    EXPECT_EQ(nntp_art_size(), g_raw_art_size);
+    EXPECT_EQ(end, g_art_size);
+    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(ArticlePosition{g_do_hiding ? 3 : 2}, art_buf_pos());
+    EXPECT_EQ(GetParam(), g_do_hiding);
+    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    std::string next_line;
+    ASSERT_TRUE(read_art_buf(next_line, false));
+    EXPECT_EQ("Last\n", next_line);
+    EXPECT_EQ(0, seek_art(ArticlePosition{}));
+    EXPECT_EQ("Subject: end\n", nntp_read_art(NNTP_STRLEN));
+    EXPECT_EQ("\n", nntp_read_art(NNTP_STRLEN));
+    EXPECT_EQ("\xC4\n", nntp_read_art(NNTP_STRLEN));
+    EXPECT_EQ("Last\n", nntp_read_art(NNTP_STRLEN));
+    EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(WithAndWithoutHiding, DownloadEndArticleTest, testing::Bool());
 
 TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
 {

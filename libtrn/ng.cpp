@@ -1759,7 +1759,7 @@ normal_search:
                 {
                     nntp_finish_body(FB_OUTPUT);
                     g_raw_art_size = nntp_art_size();
-                    g_art_size = art_buf_size_from_raw(g_raw_art_size);
+                    g_art_size = g_do_hiding ? art_buf_size_from_raw(g_raw_art_size) : g_raw_art_size;
                 }
                 if (g_do_hiding)
                 {
