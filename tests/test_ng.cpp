@@ -3207,6 +3207,38 @@ void BreadthFirstUnreadWrapArticleTest::SetUp()
     g_univ_follow_temp = true;
 }
 
+class BreadthFirstExplicitNextArticleTest : public BreadthFirstArticleTest
+{
+protected:
+    void SetUp() override;
+};
+
+void BreadthFirstExplicitNextArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_SEL,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
+             1);
+    g_selected_only = true;
+}
+
+class BreadthFirstExplicitNextBoundaryArticleTest : public BreadthFirstExplicitNextArticleTest,
+                                                    public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void BreadthFirstExplicitNextBoundaryArticleTest::SetUp()
+{
+    BreadthFirstExplicitNextArticleTest::SetUp();
+    g_art = ArticleNum{GetParam() ? 13 : 12};
+    g_artp = g_art <= g_last_art ? article_ptr(g_art) : nullptr;
+    g_s_follow_temp = true;
+    g_univ_follow_temp = true;
+}
+
 class DepthFirstArticleTest : public BranchingArticleTest
 {
 protected:
@@ -7171,21 +7203,23 @@ INSTANTIATE_TEST_SUITE_P(Tree, BreadthFirstUnreadWrapArticleTest, testing::Value
                          [](const testing::TestParamInfo<BreadthFirstUnreadCase> &info)
                          { return std::string{info.param.name}; });
 
-TEST_F(BreadthFirstArticleTest, explicitNextIncludesReadAndUnselectedEntriesAndStopsBeforeRestarting)
+TEST_F(BreadthFirstExplicitNextArticleTest, explicitNextIncludesReadAndUnselectedEntriesInLevelOrder)
 {
-    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_SEL,
-              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
-              AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
-             1);
-    g_selected_only = true;
-
-    for (const long number : {2, 6, 7, 3, 5, 8, 10, 4, 9, 11, 12, 13})
+    for (const long number : {2, 6, 7, 3, 5, 8, 10, 4, 9, 11, 12})
     {
         SCOPED_TRACE(number);
         expect_next('N', number);
     }
-    expect_next('N', 1);
 }
+
+TEST_P(BreadthFirstExplicitNextBoundaryArticleTest, explicitNextHandlesTheGroupBoundary)
+{
+    expect_next('N', GetParam() ? 1 : 13);
+}
+
+INSTANTIATE_TEST_SUITE_P(StartPosition, BreadthFirstExplicitNextBoundaryArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info)
+                         { return info.param ? "AtGroupEnd" : "AtLastArticle"; });
 
 TEST_F(BreadthFirstArticleTest, missingParentLosesUnreadAndSelectionCountsOnceWhileItsChildrenRemainReachable)
 {
