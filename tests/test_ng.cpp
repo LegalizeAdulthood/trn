@@ -4037,31 +4037,33 @@ void SubjectThreadBoundaryArticleTest::SetUp()
     m_target = g_threaded_group ? boundary.thread_target : boundary.subject_target;
 }
 
-class SelectedPreviousSubjectThreadArticleTest : public SubjectThreadArticleTest
+class SelectedPreviousSubjectThreadArticleStateTest : public SubjectThreadArticleStateTest
 {
 protected:
     void TearDown() override;
-    void set_selected_subjects(std::initializer_list<ArticleFlags> flags, long current);
+    void set_selected_subjects(std::initializer_list<ArticleFlags> flags, long current, bool threaded);
     void expect_previous(long number, std::initializer_list<long> missing = {}, bool force_last = false);
     void expect_navigation(char command, long number, bool reread, std::initializer_list<long> missing = {},
                            bool force_last = false);
 
 private:
+    SelectionMode m_expected_mode{SM_ARTICLE};
     int  m_old_selected_subjects{g_selected_subj_cnt};
     bool m_old_verify{g_verify};
 };
 
-void SelectedPreviousSubjectThreadArticleTest::TearDown()
+void SelectedPreviousSubjectThreadArticleStateTest::TearDown()
 {
     g_selected_subj_cnt = m_old_selected_subjects;
     g_verify = m_old_verify;
-    SubjectThreadArticleTest::TearDown();
+    SubjectThreadArticleStateTest::TearDown();
 }
 
-void SelectedPreviousSubjectThreadArticleTest::set_selected_subjects(std::initializer_list<ArticleFlags> flags,
-                                                                     long                                current)
+void SelectedPreviousSubjectThreadArticleStateTest::set_selected_subjects(std::initializer_list<ArticleFlags> flags,
+                                                                          long current, bool threaded)
 {
-    set_subjects(flags, current);
+    set_subjects(flags, current, threaded);
+    m_expected_mode = threaded ? SM_THREAD : SM_SUBJECT;
     g_selected_only = true;
     g_verify = false;
     g_selected_count = 0;
@@ -4086,14 +4088,15 @@ void SelectedPreviousSubjectThreadArticleTest::set_selected_subjects(std::initia
     }
 }
 
-void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std::initializer_list<long> missing,
-                                                               bool force_last)
+void SelectedPreviousSubjectThreadArticleStateTest::expect_previous(long number, std::initializer_list<long> missing,
+                                                                    bool force_last)
 {
     expect_navigation('<', number, false, missing, force_last);
 }
 
-void SelectedPreviousSubjectThreadArticleTest::expect_navigation(char command, long number, bool reread,
-                                                                 std::initializer_list<long> missing, bool force_last)
+void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char command, long number, bool reread,
+                                                                      std::initializer_list<long> missing,
+                                                                      bool                        force_last)
 {
     const std::pair<ArticleNum, Article *>  current = std::make_pair(g_curr_art, g_curr_artp);
     const std::pair<ArticleNum, Article *>  recent = std::make_pair(g_recent_art, g_recent_artp);
@@ -4159,7 +4162,7 @@ void SelectedPreviousSubjectThreadArticleTest::expect_navigation(char command, l
     EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(force_last, g_force_last);
     EXPECT_EQ(threaded_group, g_threaded_group);
-    EXPECT_EQ(GetParam() ? SM_THREAD : SM_SUBJECT, g_sel_mode);
+    EXPECT_EQ(m_expected_mode, g_sel_mode);
     EXPECT_EQ(breadth_first, g_breadth_first);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
     for (long article = 1; article <= g_last_art.value_of(); ++article)
@@ -4172,6 +4175,53 @@ void SelectedPreviousSubjectThreadArticleTest::expect_navigation(char command, l
         SCOPED_TRACE(index);
         EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
     }
+}
+
+class SelectedPreviousSubjectThreadArticleTest : public SelectedPreviousSubjectThreadArticleStateTest,
+                                                 public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+    void set_selected_subjects(std::initializer_list<ArticleFlags> flags, long current);
+};
+
+void SelectedPreviousSubjectThreadArticleTest::SetUp()
+{
+    SelectedPreviousSubjectThreadArticleStateTest::SetUp();
+    g_threaded_group = GetParam();
+}
+
+void SelectedPreviousSubjectThreadArticleTest::set_selected_subjects(std::initializer_list<ArticleFlags> flags,
+                                                                     long                                current)
+{
+    SelectedPreviousSubjectThreadArticleStateTest::set_selected_subjects(flags, current, GetParam());
+}
+
+class SelectedPreviousReadingOrderArticleTest : public SelectedPreviousSubjectThreadArticleStateTest,
+                                                public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+
+    long m_target{};
+};
+
+void SelectedPreviousReadingOrderArticleTest::SetUp()
+{
+    SelectedPreviousSubjectThreadArticleStateTest::SetUp();
+    g_threaded_group = std::get<0>(GetParam());
+    set_selected_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+                          9, g_threaded_group);
+    // Thread 5 has children 6 and 7; article 8 is a child of 6.
+    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
+    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
+    article_ptr(ArticleNum{7})->m_child1 = nullptr;
+    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
+    g_breadth_first = std::get<1>(GetParam());
+    m_target = g_threaded_group && !g_breadth_first ? 8 : 7;
 }
 
 class SubjectFallbackArticleTest : public SelectedPreviousSubjectThreadArticleTest
@@ -8807,29 +8857,18 @@ TEST_P(SelectedPreviousSubjectThreadArticleTest, skipsMissingParentsAndSelectedR
     expect_previous(8, GetParam() ? std::initializer_list<long>{5, 7} : std::initializer_list<long>{7});
 }
 
-TEST_P(SelectedPreviousSubjectThreadArticleTest, choosesTheFirstSelectedUnreadArticleInTheConfiguredReadingOrder)
+TEST_P(SelectedPreviousReadingOrderArticleTest, choosesTheFirstSelectedUnreadArticleInTheConfiguredReadingOrder)
 {
-    set_selected_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
-                           AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
-                          9);
-    // Thread 5 has children 6 and 7; article 8 is a child of 6.
-    article_ptr(ArticleNum{6})->m_child1 = article_ptr(ArticleNum{8});
-    article_ptr(ArticleNum{6})->m_sibling = article_ptr(ArticleNum{7});
-    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{5});
-    article_ptr(ArticleNum{7})->m_child1 = nullptr;
-    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{6});
-
-    for (const bool breadth_first : {false, true})
-    {
-        SCOPED_TRACE(breadth_first);
-        g_breadth_first = breadth_first;
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
-
-        expect_previous(GetParam() && !breadth_first ? 8 : 7);
-    }
+    expect_previous(m_target);
 }
+
+INSTANTIATE_TEST_SUITE_P(ScopeAndOrder, SelectedPreviousReadingOrderArticleTest,
+                         testing::Combine(testing::Bool(), testing::Bool()),
+                         [](const testing::TestParamInfo<std::tuple<bool, bool>> &info)
+                         {
+                             return std::string{std::get<0>(info.param) ? "Thread" : "Subject"} +
+                                    (std::get<1>(info.param) ? "BreadthFirst" : "DepthFirst");
+                         });
 
 TEST_P(SelectedPreviousSubjectThreadArticleTest, entersFromGroupEndAtTheLastEligibleSubjectOrThread)
 {
