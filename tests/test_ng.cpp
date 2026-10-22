@@ -466,6 +466,22 @@ void SubjectThreadSelectionArticleTest::SetUp()
     g_sel_mode = GetParam() ? SM_THREAD : SM_SUBJECT;
 }
 
+class GroupEndScopeSelectionArticleTest : public ScopeSelectionArticleTest,
+                                          public testing::WithParamInterface<std::tuple<bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void GroupEndScopeSelectionArticleTest::SetUp()
+{
+    ScopeSelectionArticleTest::SetUp();
+    g_threaded_group = std::get<0>(GetParam());
+    g_sel_mode = g_threaded_group ? SM_THREAD : SM_SUBJECT;
+    g_art = g_curr_art = ArticleNum{8};
+    g_artp = g_curr_artp = nullptr;
+}
+
 class GroupUnreadArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -5960,25 +5976,25 @@ TEST_P(SubjectThreadSelectionArticleTest, deselectingTheLastSelectionKeepsCounts
     }
 }
 
-TEST_P(SubjectThreadSelectionArticleTest, groupEndRejectsBothCommandsWithoutChangingSelections)
+TEST_P(GroupEndScopeSelectionArticleTest, rejectsCommandWithoutChangingSelections)
 {
-    g_art = g_curr_art = ArticleNum{8};
-    g_artp = g_curr_artp = nullptr;
-    for (const char action : {'+', '-'})
-    {
-        SCOPED_TRACE(action);
+    const std::string output = change_scope(std::get<1>(GetParam()), 8);
 
-        const std::string output = change_scope(action, 8);
-
-        EXPECT_NE(std::string::npos, output.find("End of group"));
-        expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL,
-                      AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
-        EXPECT_EQ(ArticleUnread{2}, g_selected_count);
-        EXPECT_EQ(2, g_selected_subj_cnt);
-    }
+    EXPECT_NE(std::string::npos, output.find("End of group"));
+    expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK});
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    EXPECT_EQ(2, g_selected_subj_cnt);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadingScope, SubjectThreadSelectionArticleTest, testing::Bool());
+INSTANTIATE_TEST_SUITE_P(ReadingScopeAndCommand, GroupEndScopeSelectionArticleTest,
+                         testing::Combine(testing::Bool(), testing::Values('+', '-')),
+                         [](const testing::TestParamInfo<std::tuple<bool, char>> &info)
+                         {
+                             return std::string{std::get<0>(info.param) ? "Thread" : "Subject"} +
+                                    (std::get<1>(info.param) == '+' ? "Select" : "Deselect");
+                         });
 
 TEST_F(ScopeSelectionArticleTest, breadthFirstSelectionSkipsReadAncestorsBeforeChoosingAnUnreadSibling)
 {
