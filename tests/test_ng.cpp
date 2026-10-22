@@ -1,17 +1,20 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
+#include <trn/art.h>
 #include <trn/artio.h>
 #include <trn/artsrch.h>
 #include <trn/artstate.h>
 #include <trn/bits.h>
 #include <trn/cache.h>
+#include <trn/charsubst.h>
 #include <trn/datasrc.h>
 #include <trn/file-contents.h>
 #include <trn/final.h>
 #include <trn/head.h>
 #include <trn/intrp.h>
 #include <trn/kfile.h>
+#include <trn/mime.h>
 #include <trn/ng-internal.h>
 #include <trn/ngdata.h>
 #include <trn/ngstuff.h>
@@ -3558,6 +3561,7 @@ protected:
     void        TearDown() override;
     void        set_reading_position(long current);
     std::string display(char command);
+    std::string display(std::string command, std::string_view input = {});
     void        expect_unmoved_view();
 
 private:
@@ -3626,6 +3630,11 @@ void RereadArticleTest::set_reading_position(long current)
 
 std::string RereadArticleTest::display(char command)
 {
+    return display(std::string{command});
+}
+
+std::string RereadArticleTest::display(std::string command, std::string_view input)
+{
     const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
     const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
     const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
@@ -3639,9 +3648,13 @@ std::string RereadArticleTest::display(char command)
         subject_flags.push_back(subject.m_flags);
     }
     push_char('q');
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
+    {
+        push_char(*ch);
+    }
     testing::internal::CaptureStdout();
 
-    const ArticleSwitchResult result = art_switch(std::string{command});
+    const ArticleSwitchResult result = art_switch(std::move(command));
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(AS_NORM, result);
@@ -3689,6 +3702,134 @@ class RotateArticleTest : public RereadArticleTest, public testing::WithParamInt
 };
 
 class ToggleRotationArticleTest : public RereadArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class CachedDisplayArticleTest : public RereadArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void cache_article(std::string_view expected = "\xC3\x84\n");
+    void expect_redraw(ArticleLine line);
+    void expect_cleared_cache();
+
+private:
+    DataSource            m_data_source{};
+    MimeSection           m_section{};
+    std::filesystem::path m_output_dir;
+    std::FILE            *m_old_art_fp{g_art_fp};
+    DataSource           *m_old_data_source{g_data_source};
+    MimeSection          *m_old_mime_section{g_mime_section};
+    MimeState             m_old_mime_state{g_mime_state};
+    bool                  m_old_is_mime{g_is_mime};
+    ArticlePosition       m_old_art_pos{g_art_pos};
+    ArticlePosition       m_old_raw_art_size{g_raw_art_size};
+    ArticlePosition       m_old_art_size{g_art_size};
+    HeaderType            m_old_past_header{g_header_type[PAST_HEADER]};
+    int                   m_old_tc_cols{g_tc_COLS};
+    int                   m_old_word_wrap_offset{g_word_wrap_offset};
+    char                  m_old_subst{current_char_subst_mode()};
+    std::string           m_old_charsets{g_charsets};
+};
+
+void CachedDisplayArticleTest::SetUp()
+{
+    RereadArticleTest::SetUp();
+    g_art_fp = nullptr;
+    art_io_init();
+    g_data_source = &m_data_source;
+    m_section.mime_parse_type("text/plain; charset=Latin1");
+    g_mime_section = &m_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    g_header_type[PAST_HEADER].min_pos = ArticlePosition{};
+    g_tc_COLS = 80;
+    g_word_wrap_offset = 8;
+    g_charsets = "pa";
+    set_char_subst_mode('p');
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_output_dir =
+        std::filesystem::path{TRN_TEST_TMP_DIR} / "CachedDisplayArticleTest" / info->test_suite_name() / info->name();
+    std::error_code error;
+    std::filesystem::create_directories(m_output_dir, error);
+    ASSERT_FALSE(error) << error.message();
+    const std::filesystem::path article_file = m_output_dir / "article";
+    {
+        std::ofstream output{article_file, std::ios::binary};
+        output << "\xC4\n";
+        ASSERT_TRUE(output.good());
+    }
+    g_art_fp = std::fopen(article_file.string().c_str(), "rb");
+    ASSERT_NE(nullptr, g_art_fp);
+    g_raw_art_size = ArticlePosition{2};
+    g_art_size = g_raw_art_size;
+    g_art_pos = ArticlePosition{};
+}
+
+void CachedDisplayArticleTest::TearDown()
+{
+    if (g_art_fp)
+    {
+        std::fclose(g_art_fp);
+    }
+    art_io_final();
+    g_art_fp = m_old_art_fp;
+    g_data_source = m_old_data_source;
+    g_mime_section = m_old_mime_section;
+    g_mime_state = m_old_mime_state;
+    g_is_mime = m_old_is_mime;
+    g_art_pos = m_old_art_pos;
+    g_raw_art_size = m_old_raw_art_size;
+    g_art_size = m_old_art_size;
+    g_header_type[PAST_HEADER] = m_old_past_header;
+    g_tc_COLS = m_old_tc_cols;
+    g_word_wrap_offset = m_old_word_wrap_offset;
+    g_charsets = m_old_charsets;
+    set_char_subst_mode(m_old_subst);
+    std::error_code error;
+    std::filesystem::remove(m_output_dir / "article", error);
+    std::filesystem::remove(m_output_dir, error);
+    RereadArticleTest::TearDown();
+}
+
+void CachedDisplayArticleTest::cache_article(std::string_view expected)
+{
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ(expected, line);
+    ASSERT_FALSE(art_buf_empty());
+    ASSERT_EQ(expected, art_buf_view(ArticlePosition{}));
+}
+
+void CachedDisplayArticleTest::expect_redraw(ArticleLine line)
+{
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_do_fseek);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(line, g_art_line_num);
+    EXPECT_EQ(0, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+    EXPECT_EQ(0, g_fire_is_out);
+}
+
+void CachedDisplayArticleTest::expect_cleared_cache()
+{
+    EXPECT_TRUE(art_buf_empty());
+    EXPECT_EQ(ArticlePosition{}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{}, art_buf_pos());
+    EXPECT_EQ(ArticlePosition{}, art_buf_seek());
+}
+
+class RefreshArticleTest : public CachedDisplayArticleTest, public testing::WithParamInterface<std::pair<char, long>>
+{
+};
+
+class RefreshBoundaryArticleTest : public CachedDisplayArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class SubstitutionArticleTest : public CachedDisplayArticleTest, public testing::WithParamInterface<long>
 {
 };
 
@@ -10310,6 +10451,165 @@ TEST_F(RereadArticleTest, uppercaseRotationClampsAnUnsetTopLineAtTheArticleStart
     EXPECT_EQ(0, g_term_line);
     EXPECT_EQ(0, g_term_col);
     EXPECT_EQ(0, g_fire_is_out);
+}
+
+TEST_P(RefreshArticleTest, refreshRedrawsTheCurrentScreenWithoutChangingDisplayOptionsOrCachedText)
+{
+    const char command = GetParam().first;
+    const long current = GetParam().second;
+    set_reading_position(current);
+    cache_article();
+    g_rotate = true;
+    const bool hiding = current != 2;
+    g_do_hiding = hiding;
+
+    const std::string output = display(command);
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{15});
+    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(hiding, g_do_hiding);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
+    EXPECT_EQ(ArticlePosition{3}, art_buf_pos());
+    EXPECT_EQ(ArticlePosition{3}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{2}, art_buf_seek());
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndReadState, RefreshArticleTest,
+                         testing::Values(std::make_pair('l', 2L), std::make_pair('l', 4L), std::make_pair(Ctl('l'), 2L),
+                                         std::make_pair(Ctl('l'), 4L)));
+
+TEST_P(RefreshBoundaryArticleTest, refreshClampsAnUnsetTopLineWithoutInvalidatingCachedText)
+{
+    set_reading_position(4);
+    cache_article();
+    g_top_line = ArticleLine{-1};
+
+    const std::string output = display(GetParam());
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
+    EXPECT_EQ(ArticlePosition{3}, art_buf_pos());
+}
+
+TEST_P(RefreshBoundaryArticleTest, refreshAtGroupEndPreservesTheEndPositionAndCachedPresentation)
+{
+    set_reading_position(8);
+    cache_article();
+    g_rotate = true;
+
+    const std::string output = display(GetParam());
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
+    EXPECT_EQ(ArticlePosition{3}, art_buf_pos());
+    expect_unmoved_view();
+}
+
+INSTANTIATE_TEST_SUITE_P(RefreshKeys, RefreshBoundaryArticleTest, testing::Values('l', Ctl('l')));
+
+TEST_P(SubstitutionArticleTest, changingSubstitutionDiscardsCachedTextAndRestartsTheCurrentArticle)
+{
+    set_reading_position(GetParam());
+    cache_article();
+    g_rotate = true;
+
+    const std::string output = display("_C");
+
+    EXPECT_FALSE(output.empty());
+    EXPECT_EQ('a', current_char_subst_mode());
+    expect_cleared_cache();
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_TRUE(g_rotate);
+    ASSERT_EQ(0, seek_art(ArticlePosition{}));
+    cache_article("Ae\n");
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadOrUnread, SubstitutionArticleTest, testing::Values(2L, 4L));
+
+TEST_F(CachedDisplayArticleTest, substitutionWrapsToTheFirstModeAndRegeneratesThePresentation)
+{
+    set_reading_position(4);
+    set_char_subst_mode('a');
+    cache_article("Ae\n");
+
+    const std::string output = display("_C");
+
+    EXPECT_FALSE(output.empty());
+    EXPECT_EQ('p', current_char_subst_mode());
+    expect_cleared_cache();
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    ASSERT_EQ(0, seek_art(ArticlePosition{}));
+    cache_article();
+}
+
+TEST_F(CachedDisplayArticleTest, substitutionEnablesTheFirstConfiguredModeWhenInitiallyDisabled)
+{
+    set_reading_position(4);
+    set_char_subst_mode('\0');
+    cache_article();
+
+    const std::string output = display("_C");
+
+    EXPECT_FALSE(output.empty());
+    EXPECT_EQ('p', current_char_subst_mode());
+    expect_cleared_cache();
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+}
+
+TEST_F(CachedDisplayArticleTest, substitutionAtGroupEndChangesModeAndDiscardsCacheWithoutRequestingRedraw)
+{
+    set_reading_position(8);
+    cache_article();
+    g_rotate = true;
+
+    const std::string output = display("_C");
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ('a', current_char_subst_mode());
+    expect_cleared_cache();
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_EQ(12, g_term_line);
+    EXPECT_EQ(9, g_term_col);
+    EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
+}
+
+TEST_F(CachedDisplayArticleTest, completingTheSubstitutionPrefixConsumesOnlyItsSecondCharacter)
+{
+    set_reading_position(4);
+    cache_article();
+
+    const std::string output = display(std::string{'_', FINISH_CMD}, "C");
+
+    EXPECT_NE(std::string::npos, output.find('C'));
+    EXPECT_EQ('a', current_char_subst_mode());
+    expect_cleared_cache();
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
 }
 
 TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
