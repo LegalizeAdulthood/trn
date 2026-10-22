@@ -946,9 +946,19 @@ class CatchupConfirmArticleTest : public CatchupArticleTest, public testing::Wit
 {
 };
 
-class CatchupCancelArticleTest : public CatchupArticleTest, public testing::WithParamInterface<char>
+class CatchupCancelArticleTest : public CatchupArticleTest, public testing::WithParamInterface<std::tuple<char, long>>
 {
+protected:
+    void SetUp() override;
 };
+
+void CatchupCancelArticleTest::SetUp()
+{
+    CatchupArticleTest::SetUp();
+    set_catchup_articles();
+    g_art = g_curr_art = ArticleNum{std::get<1>(GetParam())};
+    g_artp = g_curr_artp = g_art > g_last_art ? nullptr : article_ptr(g_art);
+}
 
 class CatchupHelpArticleTest : public CatchupArticleTest, public testing::WithParamInterface<bool>
 {
@@ -6487,26 +6497,22 @@ TEST_P(CatchupConfirmArticleTest, confirmationMarksAllReadAndKeepsTheEndNumberAn
 
 INSTANTIATE_TEST_SUITE_P(Answer, CatchupConfirmArticleTest, testing::Values('y', ' '));
 
-TEST_P(CatchupCancelArticleTest, cancellationPreservesArticlesCountsAndReadingPositionIncludingGroupEnd)
+TEST_P(CatchupCancelArticleTest, cancellationPreservesArticlesCountsAndReadingPosition)
 {
-    set_catchup_articles();
-    for (const long current : {4, 8})
-    {
-        SCOPED_TRACE(current);
-        g_art = ArticleNum{current};
-        g_artp = current == 8 ? nullptr : article_ptr(g_art);
-        g_curr_art = g_art;
-        g_curr_artp = g_artp;
+    catch_up(std::string{std::get<0>(GetParam())}, AS_ASK);
 
-        catch_up(std::string{GetParam()}, AS_ASK);
-
-        EXPECT_EQ(ArticleNum{current}, g_art);
-        EXPECT_EQ(g_curr_artp, g_artp);
-        expect_catchup_unchanged();
-    }
+    EXPECT_EQ(ArticleNum{std::get<1>(GetParam())}, g_art);
+    EXPECT_EQ(g_curr_artp, g_artp);
+    expect_catchup_unchanged();
 }
 
-INSTANTIATE_TEST_SUITE_P(Answer, CatchupCancelArticleTest, testing::Values('n', 'q'));
+INSTANTIATE_TEST_SUITE_P(AnswerAndPosition, CatchupCancelArticleTest,
+                         testing::Combine(testing::Values('n', 'q'), testing::Values(4L, 8L)),
+                         [](const testing::TestParamInfo<std::tuple<char, long>> &info)
+                         {
+                             return std::string{std::get<0>(info.param) == 'n' ? "Decline" : "Quit"} +
+                                    (std::get<1>(info.param) == 8 ? "AtGroupEnd" : "AtArticle");
+                         });
 
 TEST_P(CatchupHelpArticleTest, helpExplainsTheChoicesAndReturnsToThePromptBeforeCancellation)
 {
