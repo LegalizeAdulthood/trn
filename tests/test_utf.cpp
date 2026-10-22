@@ -1233,44 +1233,117 @@ TEST_P(CharsetAliasTest, decodesAsciiWithoutChangingGlobalState)
 
 INSTANTIATE_TEST_SUITE_P(LegacyAliases, CharsetAliasTest, ValuesIn(charsets));
 
-TEST_F(CharsetDecoderTest, unknownAndMissingNamesUseStrictUtf8Fallback)
+class LegacyCharsetDecoderStateTest : public CharsetDecoderTest
 {
+protected:
+    void SetUp() override;
+};
+
+void LegacyCharsetDecoderStateTest::SetUp()
+{
+    CharsetDecoderTest::SetUp();
     utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_ISO8859_1);
-    for (const std::string_view name : {"unknown", "", "UTF-8"})
-    {
-        const CharsetDecoder decoder{name};
-        EXPECT_EQ("\xC3\xA9\xEF\xBF\xBD", decoder.decode("\xC3\xA9\xFF"));
-    }
-    EXPECT_EQ(CHARSET_UNKNOWN, CharsetDecoder{"unknown"}.charset());
-    EXPECT_EQ(CHARSET_UTF8, CharsetDecoder{}.charset());
 }
 
-TEST_F(CharsetDecoderTest, malformedUtf8NeverSwallowsFollowingAscii)
+class Utf8FallbackDecoderTest : public LegacyCharsetDecoderStateTest, public WithParamInterface<std::string_view>
 {
-    const CharsetDecoder decoder{"UTF-8"};
-    for (const InvalidUtf8Case &value : INVALID_UTF8)
-    {
-        SCOPED_TRACE(value.name);
-        std::string expected;
-        for (std::string_view remaining = value.bytes; !remaining.empty();)
-        {
-            const Utf8Scalar scalar = decode_utf8_scalar(remaining);
-            expected += encode_utf8_scalar(scalar.code_point == INVALID_CODE_POINT ? 0xFFFD : scalar.code_point);
-            remaining.remove_prefix(scalar.byte_count);
-        }
-        EXPECT_EQ(expected + "X", decoder.decode(std::string{value.bytes} + "X"));
-    }
+protected:
+    void SetUp() override;
+
+    std::optional<CharsetDecoder> m_decoder;
+};
+
+void Utf8FallbackDecoderTest::SetUp()
+{
+    LegacyCharsetDecoderStateTest::SetUp();
+    m_decoder.emplace(GetParam());
 }
 
-TEST_F(CharsetDecoderTest, preservesNulAndValidUtf8Scalars)
+TEST_P(Utf8FallbackDecoderTest, decodesStrictUtf8RegardlessOfLegacyGlobalState)
+{
+    const std::string decoded = m_decoder->decode("\xC3\xA9\xFF");
+
+    EXPECT_EQ("\xC3\xA9\xEF\xBF\xBD", decoded);
+}
+
+INSTANTIATE_TEST_SUITE_P(UnknownMissingAndUtf8Names, Utf8FallbackDecoderTest, Values("unknown", "", "UTF-8"));
+
+TEST_F(LegacyCharsetDecoderStateTest, unknownNameHasUnknownCharsetTag)
+{
+    const CharsetDecoder decoder{"unknown"};
+
+    const int charset = decoder.charset();
+
+    EXPECT_EQ(CHARSET_UNKNOWN, charset);
+}
+
+TEST_F(LegacyCharsetDecoderStateTest, defaultConstructionSelectsUtf8)
 {
     const CharsetDecoder decoder;
-    EXPECT_TRUE(decoder.decode({}).empty());
-    for (const Utf8ScalarCase &value : UTF8_SCALARS)
-    {
-        EXPECT_EQ(value.bytes, decoder.decode(value.bytes));
-    }
-    EXPECT_EQ(std::string("a\0b", 3), CharsetDecoder{"Latin1"}.decode({"a\0b", 3}));
+
+    const int charset = decoder.charset();
+
+    EXPECT_EQ(CHARSET_UTF8, charset);
+}
+
+class MalformedCharsetDecoderTest : public CharsetDecoderTest, public WithParamInterface<InvalidUtf8Case>
+{
+protected:
+    void SetUp() override;
+
+    CharsetDecoder m_decoder{"UTF-8"};
+    std::string    m_source;
+    std::string    m_expected;
+};
+
+void MalformedCharsetDecoderTest::SetUp()
+{
+    CharsetDecoderTest::SetUp();
+    m_source = std::string{GetParam().bytes} + "X";
+    m_expected = std::string{GetParam().recovered} + "X";
+}
+
+TEST_P(MalformedCharsetDecoderTest, recoversWithoutSwallowingFollowingAscii)
+{
+    const std::string decoded = m_decoder.decode(m_source);
+
+    EXPECT_EQ(m_expected, decoded);
+}
+
+INSTANTIATE_TEST_SUITE_P(MalformedInputs, MalformedCharsetDecoderTest, ValuesIn(INVALID_UTF8));
+
+class DefaultCharsetScalarTest : public CharsetDecoderTest, public WithParamInterface<Utf8ScalarCase>
+{
+protected:
+    CharsetDecoder m_decoder;
+};
+
+TEST_P(DefaultCharsetScalarTest, preservesTheValidScalarBytes)
+{
+    const std::string decoded = m_decoder.decode(GetParam().bytes);
+
+    EXPECT_EQ(GetParam().bytes, decoded);
+}
+
+INSTANTIATE_TEST_SUITE_P(ValidScalars, DefaultCharsetScalarTest, ValuesIn(UTF8_SCALARS));
+
+TEST_F(CharsetDecoderTest, defaultDecoderPreservesEmptyInput)
+{
+    const CharsetDecoder decoder;
+
+    const std::string decoded = decoder.decode({});
+
+    EXPECT_TRUE(decoded.empty());
+}
+
+TEST_F(CharsetDecoderTest, latin1DecoderPreservesEmbeddedNulAndFollowingText)
+{
+    const CharsetDecoder decoder{"Latin1"};
+    const std::string    input{"a\0b", 3};
+
+    const std::string decoded = decoder.decode(input);
+
+    EXPECT_EQ(input, decoded);
 }
 
 TEST_F(CharsetDecoderTest, interleavedDecodersKeepTheirInterpretations)
@@ -1285,26 +1358,93 @@ TEST_F(CharsetDecoderTest, interleavedDecodersKeepTheirInterpretations)
     EXPECT_EQ("\xC3\xA9", latin.decode("\xE9"));
 }
 
-TEST_F(CharsetDecoderTest, utf8TerminalOutputIgnoresLegacyCharsetState)
+class Utf8TerminalQueryTest : public CharsetDecoderTest
 {
+protected:
+    void SetUp() override;
+    void expect_global_charsets_unchanged() const;
+
+    const std::string m_text{"\xC3\xA9\xE5\xA4\xA9"
+                             "e\xCC\x81"};
+};
+
+void Utf8TerminalQueryTest::SetUp()
+{
+    CharsetDecoderTest::SetUp();
     utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_ASCII);
-    std::string_view text{"\xC3\xA9\xE5\xA4\xA9"
-                          "e\xCC\x81"};
-    EXPECT_EQ(4, utf8_visual_length(text));
-    EXPECT_EQ(1, utf8_visual_width_at(text));
+}
 
-    testing::internal::CaptureStdout();
-    EXPECT_EQ(1, put_utf8_char_adv(text, true));
-    EXPECT_EQ(2, put_utf8_char_adv(text, true));
-    EXPECT_EQ(1, put_utf8_char_adv(text, false));
-    EXPECT_EQ(0, put_utf8_char_adv(text, true));
-    const std::string output = testing::internal::GetCapturedStdout();
-
-    EXPECT_EQ("\xC3\xA9\xE5\xA4\xA9\xCC\x81", output);
-    EXPECT_TRUE(text.empty());
+void Utf8TerminalQueryTest::expect_global_charsets_unchanged() const
+{
     EXPECT_EQ(CHARSET_NAME_ISO8859_1, input_charset_name());
     EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
 }
+
+TEST_F(Utf8TerminalQueryTest, visualLengthIgnoresLegacyCharsetState)
+{
+    const int length = utf8_visual_length(m_text);
+
+    EXPECT_EQ(4, length);
+    expect_global_charsets_unchanged();
+}
+
+TEST_F(Utf8TerminalQueryTest, firstScalarWidthIgnoresLegacyCharsetState)
+{
+    const int width = utf8_visual_width_at(m_text);
+
+    EXPECT_EQ(1, width);
+    expect_global_charsets_unchanged();
+}
+
+using Utf8AdvanceCase = std::tuple<std::string_view, bool, int, std::string_view, std::string_view>;
+
+class Utf8AdvancementTest : public Utf8TerminalQueryTest, public WithParamInterface<Utf8AdvanceCase>
+{
+protected:
+    void SetUp() override;
+    int  advance();
+
+    std::string      m_source;
+    std::string_view m_remaining;
+    std::string      m_output;
+};
+
+void Utf8AdvancementTest::SetUp()
+{
+    Utf8TerminalQueryTest::SetUp();
+    m_source = std::get<0>(GetParam());
+    m_remaining = m_source;
+}
+
+int Utf8AdvancementTest::advance()
+{
+    testing::internal::CaptureStdout();
+    const int width = put_utf8_char_adv(m_remaining, std::get<1>(GetParam()));
+    m_output = testing::internal::GetCapturedStdout();
+    return width;
+}
+
+TEST_P(Utf8AdvancementTest, advancesOneScalarWithConfiguredPrinting)
+{
+    const int width = advance();
+
+    EXPECT_EQ(std::get<2>(GetParam()), width);
+    EXPECT_EQ(std::get<3>(GetParam()), m_output);
+    EXPECT_EQ(std::get<4>(GetParam()), m_remaining);
+    expect_global_charsets_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(PrintedAndHiddenScalars, Utf8AdvancementTest,
+                         Values(Utf8AdvanceCase{"\xC3\xA9\xE5\xA4\xA9"
+                                                "e\xCC\x81",
+                                                true, 1, "\xC3\xA9",
+                                                "\xE5\xA4\xA9"
+                                                "e\xCC\x81"},
+                                Utf8AdvanceCase{"\xE5\xA4\xA9"
+                                                "e\xCC\x81",
+                                                true, 2, "\xE5\xA4\xA9", "e\xCC\x81"},
+                                Utf8AdvanceCase{"e\xCC\x81", false, 1, "", "\xCC\x81"},
+                                Utf8AdvanceCase{"\xCC\x81", true, 0, "\xCC\x81", ""}));
 
 constexpr std::string_view ARBITRARY_ASCII{"a"};
 constexpr std::string_view ARBITRARY_ISO8859D1_1{"\303\241"};
