@@ -6,39 +6,78 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <string>
 #include <string_view>
+#include <tuple>
 
-TEST(YencPrescanTest, readsSingleAndMultipartHeadersWithFilenameLast)
+namespace
 {
-    const std::optional<YencHeader> single = yenc_prescan("=ybegin line=128 size=3 name=path/a file.bin\r\n");
-    ASSERT_TRUE(single);
-    EXPECT_EQ("path/a file.bin", single->filename);
-    EXPECT_EQ(3U, single->size);
-    EXPECT_EQ(1, single->part);
-    EXPECT_EQ(1, single->total);
-    EXPECT_FALSE(single->multipart);
-    const std::optional<YencHeader> split = yenc_prescan("=ybegin part=2 total=3 line=128 size=11 name=a.bin\n");
-    ASSERT_TRUE(split);
-    EXPECT_TRUE(split->multipart);
-    EXPECT_EQ(2, split->part);
-    EXPECT_EQ(3, split->total);
-    ASSERT_TRUE(yenc_prescan("=ybegin part=1 line=128 size=3 name=a.bin"));
-    EXPECT_EQ(0, yenc_prescan("=ybegin part=1 line=128 size=3 name=a.bin")->total);
-}
 
-TEST(YencPrescanTest, rejectsIncompleteAndInvalidMetadata)
+class YencHeaderTest : public testing::Test
 {
-    for (const std::string_view line :
-         {"=ybegin2 line=128 size=3 name=a.bin", "=ybegin size=3 name=a.bin", "=ybegin line=0 size=3 name=a.bin",
-          "=ybegin line=128 name=a.bin", "=ybegin line=128 size=-1 name=a.bin", "=ybegin line=128 size=3 name=",
-          "=ybegin part=0 line=128 size=3 name=a.bin", "=ybegin part=3 total=2 line=128 size=3 name=a.bin",
-          "=ybegin line=128 size=18446744073709551616 name=a.bin", "=ybegin line=128 size=3 size=4 name=a.bin"})
+protected:
+    std::string m_header;
+};
+
+using YencHeaderCase = std::tuple<std::string_view, std::string_view, std::uint64_t, int, int, bool>;
+
+class ValidYencHeaderTest : public YencHeaderTest, public testing::WithParamInterface<YencHeaderCase>
+{
+protected:
+    void SetUp() override
     {
-        SCOPED_TRACE(line);
-        EXPECT_FALSE(yenc_prescan(line));
+        m_header = std::get<0>(GetParam());
     }
+};
+
+class InvalidYencHeaderTest : public YencHeaderTest, public testing::WithParamInterface<std::string_view>
+{
+protected:
+    void SetUp() override
+    {
+        m_header = GetParam();
+    }
+};
+
+} // namespace
+
+TEST_P(ValidYencHeaderTest, readsTheHeaderMetadataWithFilenameLast)
+{
+    const auto &[text, filename, size, part, total, multipart] = GetParam();
+
+    const std::optional<YencHeader> header = yenc_prescan(m_header);
+
+    ASSERT_TRUE(header);
+    EXPECT_EQ(filename, header->filename);
+    EXPECT_EQ(size, header->size);
+    EXPECT_EQ(part, header->part);
+    EXPECT_EQ(total, header->total);
+    EXPECT_EQ(multipart, header->multipart);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    SingleAndMultipart, ValidYencHeaderTest,
+    testing::Values(YencHeaderCase{"=ybegin line=128 size=3 name=path/a file.bin\r\n", "path/a file.bin", 3, 1, 1,
+                                   false},
+                    YencHeaderCase{"=ybegin part=2 total=3 line=128 size=11 name=a.bin\n", "a.bin", 11, 2, 3, true},
+                    YencHeaderCase{"=ybegin part=1 line=128 size=3 name=a.bin", "a.bin", 3, 1, 0, true}));
+
+TEST_P(InvalidYencHeaderTest, rejectsIncompleteAndInvalidMetadata)
+{
+    const std::optional<YencHeader> header = yenc_prescan(m_header);
+
+    EXPECT_FALSE(header);
+}
+
+INSTANTIATE_TEST_SUITE_P(InvalidMetadata, InvalidYencHeaderTest,
+                         testing::Values("=ybegin2 line=128 size=3 name=a.bin", "=ybegin size=3 name=a.bin",
+                                         "=ybegin line=0 size=3 name=a.bin", "=ybegin line=128 name=a.bin",
+                                         "=ybegin line=128 size=-1 name=a.bin",
+                                         "=ybegin line=128 size=3 name=", "=ybegin part=0 line=128 size=3 name=a.bin",
+                                         "=ybegin part=3 total=2 line=128 size=3 name=a.bin",
+                                         "=ybegin line=128 size=18446744073709551616 name=a.bin",
+                                         "=ybegin line=128 size=3 size=4 name=a.bin"));
 
 TEST(YencDecodeTest, decodesSinglePartWithCrcAndIgnoresSurroundingProse)
 {
