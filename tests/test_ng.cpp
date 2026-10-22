@@ -4073,6 +4073,29 @@ void DirectNumericEndArticleTest::SetUp()
     g_reread = false;
 }
 
+class EmptyDirectNavigationArticleTest : public DirectNavigationArticleTest,
+                                         public testing::WithParamInterface<std::string>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmptyDirectNavigationArticleTest::SetUp()
+{
+    DirectNavigationArticleTest::SetUp();
+    g_article_list.clear();
+    g_first_subject = g_last_subject = nullptr;
+    g_last_art = g_last_cached = ArticleNum{};
+    m_newsgroup.m_to_read = ArticleUnread{};
+    g_selected_count = ArticleUnread{};
+    g_selected_subj_cnt = 0;
+    g_recent_art = ArticleNum{-1};
+    g_recent_artp = nullptr;
+    position(1);
+    g_search_ahead = ArticleNum{3};
+    g_reread = false;
+}
+
 class DirectNumericStepArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<char>
 {
 };
@@ -13657,26 +13680,14 @@ TEST_F(DirectNavigationArticleTest, configuredNavigationAfterANumericStepRepairs
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
 }
 
-TEST_F(DirectNavigationArticleTest, directCommandsKeepNumberAndPointerConsistentInAnEmptyGroup)
+TEST_P(EmptyDirectNavigationArticleTest, keepsNumberAndPointerConsistent)
 {
-    g_article_list.clear();
-    g_first_subject = g_last_subject = nullptr;
-    g_last_art = g_last_cached = ArticleNum{};
-    m_newsgroup.m_to_read = ArticleUnread{};
-    g_selected_count = ArticleUnread{};
-    g_selected_subj_cnt = 0;
-    g_recent_art = ArticleNum{-1};
-    g_recent_artp = nullptr;
-    position(1);
-    for (const std::string command : {"^", "_N", "_P"})
-    {
-        SCOPED_TRACE(command);
-        g_search_ahead = ArticleNum{3};
-        const bool previous = command == "_P";
+    const bool previous = GetParam() == "_P";
 
-        navigate(command, 1, false, previous ? AS_ASK : AS_NORM, previous ? 3 : 0);
-    }
+    navigate(GetParam(), 1, false, previous ? AS_ASK : AS_NORM, previous ? 3 : 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(Command, EmptyDirectNavigationArticleTest, testing::Values("^", "_N", "_P"));
 
 TEST(NewsgroupUnreadPromptTest, usesGroupPromptWithoutCurrentArticle)
 {
