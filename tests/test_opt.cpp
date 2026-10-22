@@ -147,6 +147,35 @@ protected:
     char                       m_old_mode{};
 };
 
+class LoadedUnicodeMappingsTest : public UnicodeConfigurationTest
+{
+protected:
+    void SetUp() override;
+
+    const std::string m_text{"\xE2\x80\x99\xF0\x9F\x98\x8A"};
+};
+
+void LoadedUnicodeMappingsTest::SetUp()
+{
+    UnicodeConfigurationTest::SetUp();
+    const fs::path path = m_root / "trnrc";
+    std::ofstream{path} << "[unicode substitutions]\nU+2019 = custom\nU+1F60A = ':)'\n";
+    load_options(path);
+}
+
+class EnabledUnicodeMappingsTest : public LoadedUnicodeMappingsTest
+{
+protected:
+    void SetUp() override;
+};
+
+void EnabledUnicodeMappingsTest::SetUp()
+{
+    LoadedUnicodeMappingsTest::SetUp();
+    set_option(OI_CHARSET, "up");
+    reset_char_subst_mode();
+}
+
 class AutoSaveNameOptionTest : public testing::Test
 {
 protected:
@@ -309,19 +338,26 @@ TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
     EXPECT_NE(std::string::npos, output.find("# keep this note\n\n[extra]\nvalue = yes\n"));
 }
 
-TEST_F(UnicodeConfigurationTest, loadsMappingsWithoutEnablingSubstitution)
+TEST_F(LoadedUnicodeMappingsTest, loadingMappingsDoesNotEnableSubstitution)
 {
-    const fs::path path = m_root / "trnrc";
-    std::ofstream{path} << "[unicode substitutions]\nU+2019 = custom\nU+1F60A = ':)'\n";
-    load_options(path);
+    const std::string text = str_char_subst(m_text, current_char_subst_mode());
 
-    const std::string text{"\xE2\x80\x99\xF0\x9F\x98\x8A"};
-    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
-    set_option(OI_CHARSET, "up");
-    reset_char_subst_mode();
-    EXPECT_EQ("custom:)", str_char_subst(text, current_char_subst_mode()));
+    EXPECT_EQ(m_text, text);
+}
+
+TEST_F(EnabledUnicodeMappingsTest, explicitOptInUsesLoadedMappings)
+{
+    const std::string text = str_char_subst(m_text, current_char_subst_mode());
+
+    EXPECT_EQ("custom:)", text);
+}
+
+TEST_F(EnabledUnicodeMappingsTest, cyclingReturnsToPlainOutput)
+{
     next_char_subst_mode();
-    EXPECT_EQ(text, str_char_subst(text, current_char_subst_mode()));
+    const std::string text = str_char_subst(m_text, current_char_subst_mode());
+
+    EXPECT_EQ(m_text, text);
 }
 
 TEST_F(UnicodeConfigurationTest, savesAndReloadsOptInAndEscapedMappings)
