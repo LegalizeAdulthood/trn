@@ -5,22 +5,47 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
+#include <tuple>
 
-TEST(EditDistanceTest, handlesEmptyInputs)
+namespace
 {
-    EXPECT_EQ(0, edit_distn("", ""));
-    EXPECT_EQ(3, edit_distn("", "abc"));
-    EXPECT_EQ(3, edit_distn("abc", ""));
+
+using EditDistanceCase = std::tuple<std::string_view, std::string_view, int>;
+
+class EditDistanceInputTest : public testing::TestWithParam<EditDistanceCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_from;
+    std::string m_to;
+};
+
+void EditDistanceInputTest::SetUp()
+{
+    m_from = std::get<0>(GetParam());
+    m_to = std::get<1>(GetParam());
 }
 
-TEST(EditDistanceTest, handlesCommonEdits)
+} // namespace
+
+TEST_P(EditDistanceInputTest, measuresTheDistanceBetweenTheInputPair)
 {
-    EXPECT_EQ(0, edit_distn("comp.lang.c", "comp.lang.c"));
-    EXPECT_EQ(2, edit_distn("comp.lang.c", "comp.lang.cpp"));
-    EXPECT_EQ(1, edit_distn("comp.lang.c", "comp.lang.x"));
-    EXPECT_EQ(1, edit_distn("ab", "ba"));
-    EXPECT_EQ(3, edit_distn("kitten", "sitting"));
+    const int distance = edit_distn(m_from, m_to);
+
+    EXPECT_EQ(std::get<2>(GetParam()), distance);
 }
+
+INSTANTIATE_TEST_SUITE_P(EmptyOperands, EditDistanceInputTest,
+                         testing::Values(EditDistanceCase{"", "", 0}, EditDistanceCase{"", "abc", 3},
+                                         EditDistanceCase{"abc", "", 3}));
+
+INSTANTIATE_TEST_SUITE_P(CommonEdits, EditDistanceInputTest,
+                         testing::Values(EditDistanceCase{"comp.lang.c", "comp.lang.c", 0},
+                                         EditDistanceCase{"comp.lang.c", "comp.lang.cpp", 2},
+                                         EditDistanceCase{"comp.lang.c", "comp.lang.x", 1},
+                                         EditDistanceCase{"ab", "ba", 1}, EditDistanceCase{"kitten", "sitting", 3}));
 
 TEST(EditDistanceTest, handlesLongInputs)
 {
