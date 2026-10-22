@@ -7,35 +7,79 @@
 #include <gtest/gtest.h>
 
 #include <string_view>
+#include <utility>
 
-TEST(OptionCatalogTest, schemaRecognizesOptionsByName)
+namespace
 {
-    const OptionCatalog catalog;
-    const IniSchema     &schema = catalog.schema();
 
-    const IniField *terse = schema.find("terse output");
-    const IniField *threads = schema.find("USE THREADS");
+class OptionCatalogFixture : public testing::Test
+{
+protected:
+    const OptionCatalog m_catalog;
+};
 
-    ASSERT_NE(nullptr, terse);
+using CatalogSchemaField = std::pair<std::string_view, OptionIndex>;
+
+class CatalogSchemaLookupTest : public OptionCatalogFixture, public testing::WithParamInterface<CatalogSchemaField>
+{
+};
+
+using CatalogHeading = std::pair<int, std::string_view>;
+
+class CatalogHeadingTest : public OptionCatalogFixture, public testing::WithParamInterface<CatalogHeading>
+{
+};
+
+} // namespace
+
+TEST_P(CatalogSchemaLookupTest, recognizesTheOptionNameIgnoringCase)
+{
+    const IniField *field = m_catalog.schema().find(GetParam().first);
+
+    ASSERT_NE(nullptr, field);
+    EXPECT_EQ(GetParam().second, field->id());
+}
+
+INSTANTIATE_TEST_SUITE_P(OptionNames, CatalogSchemaLookupTest,
+                         testing::Values(CatalogSchemaField{"terse output", OI_TERSE_OUTPUT},
+                                         CatalogSchemaField{"USE THREADS", OI_USE_THREADS}));
+
+TEST_F(OptionCatalogFixture, threadOptionAdvertisesBooleanHelp)
+{
+    const IniField *threads = m_catalog.schema().find("USE THREADS");
     ASSERT_NE(nullptr, threads);
-    EXPECT_EQ(OI_TERSE_OUTPUT, terse->id());
-    EXPECT_EQ(OI_USE_THREADS, threads->id());
-    EXPECT_EQ(std::string_view{"yes/no"}, threads->help());
+
+    const std::string_view help = threads->help();
+
+    EXPECT_EQ(std::string_view{"yes/no"}, help);
 }
 
-TEST(OptionCatalogTest, displayRowsPreserveGroups)
+TEST_F(OptionCatalogFixture, countsDisplayRows)
 {
-    const OptionCatalog catalog;
+    const int count = m_catalog.row_count();
 
-    EXPECT_EQ(95, catalog.row_count());
-    EXPECT_EQ(96, catalog.option_limit());
-    EXPECT_TRUE(catalog.is_group(1));
-    EXPECT_EQ(std::string_view{"Display Options"}, catalog.name(1));
-    EXPECT_TRUE(catalog.is_group(10));
-    EXPECT_EQ(std::string_view{"Selector Options"}, catalog.name(10));
-    EXPECT_TRUE(catalog.is_group(80));
-    EXPECT_EQ(std::string_view{"Article Scan Mode Options"}, catalog.name(80));
+    EXPECT_EQ(95, count);
 }
+
+TEST_F(OptionCatalogFixture, reportsTheOptionIndexLimit)
+{
+    const int limit = m_catalog.option_limit();
+
+    EXPECT_EQ(96, limit);
+}
+
+TEST_P(CatalogHeadingTest, retainsTheGroupHeadingAndTitle)
+{
+    const bool             is_group = m_catalog.is_group(GetParam().first);
+    const std::string_view name = m_catalog.name(GetParam().first);
+
+    EXPECT_TRUE(is_group);
+    EXPECT_EQ(GetParam().second, name);
+}
+
+INSTANTIATE_TEST_SUITE_P(GroupRows, CatalogHeadingTest,
+                         testing::Values(CatalogHeading{1, "Display Options"}, CatalogHeading{10, "Selector Options"},
+                                         CatalogHeading{80, "Article Scan Mode Options"}));
 
 TEST(OptionCatalogTest, mapsOptionIndexesToDisplayRows)
 {
