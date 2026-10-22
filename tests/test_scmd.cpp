@@ -18,6 +18,8 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
+#include <utility>
 
 namespace
 {
@@ -100,14 +102,24 @@ protected:
     char                 m_old_erase_char{};
 };
 
+using DescriptionMatchCase = std::pair<std::string_view, bool>;
+
+class ScanDescriptionMatchTest : public ScanCommandTest, public testing::WithParamInterface<DescriptionMatchCase>
+{
+};
+
 } // namespace
 
-TEST_F(ScanCommandTest, descriptionSearchMatchesIgnoringCase)
+TEST_P(ScanDescriptionMatchTest, matchesDescriptionIgnoringCase)
 {
-    EXPECT_TRUE(scmd_match_description_for_test(1, "mixed"));
-    EXPECT_TRUE(scmd_match_description_for_test(1, "CASEY"));
-    EXPECT_FALSE(scmd_match_description_for_test(1, "missing"));
+    const bool matches = scmd_match_description_for_test(1, GetParam().first);
+
+    EXPECT_EQ(GetParam().second, matches);
 }
+
+INSTANTIATE_TEST_SUITE_P(SearchText, ScanDescriptionMatchTest,
+                         testing::Values(DescriptionMatchCase{"mixed", true}, DescriptionMatchCase{"CASEY", true},
+                                         DescriptionMatchCase{"missing", false}));
 
 TEST_F(ScanCommandTest, jumpNumberReadsSecondDigit)
 {
