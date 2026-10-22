@@ -4046,6 +4046,31 @@ void EarliestUnreadArticleTest::SetUp()
     g_search_ahead = ArticleNum{3};
 }
 
+class MissingCurrentReadStateArticleTest : public ReadStateArticleStateTest,
+                                           public testing::WithParamInterface<std::tuple<bool, std::pair<char, long>>>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_command;
+    ArticleNum  m_current{};
+};
+
+void MissingCurrentReadStateArticleTest::SetUp()
+{
+    ReadStateArticleStateTest::SetUp();
+    g_threaded_group = std::get<0>(GetParam());
+    const std::pair<char, long> command = std::get<1>(GetParam());
+    m_command = std::string{command.first};
+    m_current = ArticleNum{command.second};
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS}, 4);
+    g_art = m_current;
+    g_artp = nullptr;
+    g_curr_art = g_art;
+    g_curr_artp = nullptr;
+    capture_output();
+}
+
 class SiblingArticleTest : public ArticleNavigationTest
 {
 };
@@ -9832,42 +9857,33 @@ TEST_P(ReadStateArticleTest, delaysAnAlreadyReadArticleWithoutChangingUnreadOrSe
     }
 }
 
-TEST_P(ReadStateArticleTest, ignoresEndOfGroupAndExpiredArticlePositions)
+TEST_P(MissingCurrentReadStateArticleTest, ignoresCommandWithoutChangingArticleStateOrCounts)
 {
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS}, 4);
-    struct CommandCase
-    {
-        const char *command;
-        long        current;
-    };
-    for (const CommandCase test_case :
-         {CommandCase{"j", 4}, CommandCase{"m", 4}, CommandCase{"M", 4}, CommandCase{"j", 0}, CommandCase{"m", 0}})
-    {
-        SCOPED_TRACE(testing::Message() << test_case.command << " at " << test_case.current);
-        g_art = ArticleNum{test_case.current};
-        g_curr_art = g_art;
-        testing::internal::CaptureStdout();
+    const ArticleSwitchResult result = art_switch(m_command);
 
-        const ArticleSwitchResult result = art_switch(test_case.command);
-
-        const std::string output = testing::internal::GetCapturedStdout();
-        EXPECT_EQ(AS_ASK, result);
-        EXPECT_EQ(std::string::npos, output.find("Article"));
-        EXPECT_EQ(ArticleNum{test_case.current}, g_art);
-        EXPECT_EQ(nullptr, g_artp);
-        EXPECT_EQ(g_art, g_curr_art);
-        EXPECT_EQ(nullptr, g_curr_artp);
-        EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{1})->m_flags);
-        EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{2})->m_flags);
-        EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{3})->m_flags);
-        EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
-        EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-        EXPECT_EQ(10, g_check_count);
-        EXPECT_EQ(0, g_dm_count);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_force_last);
-    }
+    const std::string output = stop_capture();
+    EXPECT_EQ(AS_ASK, result);
+    EXPECT_EQ(std::string::npos, output.find("Article"));
+    EXPECT_EQ(m_current, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{1})->m_flags);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{2})->m_flags);
+    EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_EQ(10, g_check_count);
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
 }
+
+INSTANTIATE_TEST_SUITE_P(ReadingScopeAndCommand, MissingCurrentReadStateArticleTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(std::make_pair('j', 4L), std::make_pair('m', 4L),
+                                                          std::make_pair('M', 4L), std::make_pair('j', 0L),
+                                                          std::make_pair('m', 0L))));
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, ReadStateArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
