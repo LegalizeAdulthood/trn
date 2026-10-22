@@ -18,6 +18,7 @@
 #include <system_error>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace
 {
@@ -154,6 +155,49 @@ void UnivTest::TearDown()
     }
     reset_fake_visit_group();
     reset_test_newsgroups();
+}
+
+class UniversalListPositionTest : public UnivTest
+{
+protected:
+    void SetUp() override;
+
+    UniversalItem *m_second{};
+};
+
+void UniversalListPositionTest::SetUp()
+{
+    UnivTest::SetUp();
+    univ_mask_load("", "Index");
+    UniversalItem first = make_universal_item(UniversalTextPlaceholder{});
+    UniversalItem second = make_universal_item(UniversalDebugData{});
+    first.m_num = 41;
+    second.m_num = 42;
+    append_universal_item(std::move(first));
+    m_second = append_universal_item(std::move(second));
+}
+
+class UniversalItemIndexTest : public UniversalListPositionTest, public testing::WithParamInterface<bool>
+{
+};
+
+class UniversalArticleDescriptionTest : public UnivTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+
+    UniversalItem m_item{};
+};
+
+void UniversalArticleDescriptionTest::SetUp()
+{
+    UnivTest::SetUp();
+    m_item = make_undescribed_numbered_article("alt.article");
+    m_item.m_score = 7;
+    if (GetParam())
+    {
+        m_item.article().subj = "Re: abc\tdef";
+    }
 }
 
 } // namespace
@@ -363,28 +407,34 @@ TEST_F(UnivTest, debugItemStoresStringPayload)
     EXPECT_EQ("debug item", stored_item->debug_string());
 }
 
-TEST_F(UnivTest, itemIndexFindsStableListPosition)
+TEST_P(UniversalItemIndexTest, returnsTheStoredIndexOrZeroForNull)
 {
-    univ_mask_load("", "Index");
-    UniversalItem first = make_universal_item(UniversalTextPlaceholder{});
-    UniversalItem second = make_universal_item(UniversalDebugData{});
-    first.m_num = 41;
-    second.m_num = 42;
-    append_universal_item(std::move(first));
-    append_universal_item(std::move(second));
+    UniversalItem *item = GetParam() ? univ_item(41) : nullptr;
 
-    EXPECT_EQ(UniversalItemIndex{}, univ_index(nullptr));
-    EXPECT_EQ(41, univ_index(univ_item(41)));
-    EXPECT_EQ(nullptr, univ_item(99));
+    const UniversalItemIndex index = univ_index(item);
 
-    UniversalItem *second_item = univ_item(42);
-    ASSERT_NE(nullptr, second_item);
-    UniversalItems        items = univ_items(42);
-    UniversalItemIterator iter = items.begin();
-    ASSERT_NE(items.end(), iter);
-    EXPECT_EQ(second_item, &*iter);
-    ++iter;
-    EXPECT_EQ(items.end(), iter);
+    EXPECT_EQ(GetParam() ? 41 : UniversalItemIndex{}, index);
+}
+
+INSTANTIATE_TEST_SUITE_P(NullAndStored, UniversalItemIndexTest, testing::Bool());
+
+TEST_F(UniversalListPositionTest, missingItemHasNoPointer)
+{
+    UniversalItem *item = univ_item(99);
+
+    EXPECT_EQ(nullptr, item);
+}
+
+TEST_F(UniversalListPositionTest, rangeStartsAtTheRequestedStoredPosition)
+{
+    std::vector<UniversalItem *> actual;
+
+    for (UniversalItem &item : univ_items(42))
+    {
+        actual.push_back(&item);
+    }
+
+    EXPECT_EQ((std::vector<UniversalItem *>{m_second}), actual);
 }
 
 TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
@@ -433,17 +483,15 @@ TEST_F(UnivTest, virtualPassExpandsNumberedArticleWithoutDescription)
     EXPECT_EQ("alt.article", g_visited_group);
 }
 
-TEST_F(UnivTest, articleDescriptionFormatsScoreAuthorAndSubject)
+TEST_P(UniversalArticleDescriptionTest, formatsScoreAndTheAvailableSubject)
 {
-    UniversalItem item = make_undescribed_numbered_article("alt.article");
-    item.m_score = 7;
+    const std::string description{m_item.univ_article_desc()};
 
-    EXPECT_EQ("[  7]     <No Author>  <No Subject>", std::string{item.univ_article_desc()});
-
-    item.article().subj = "Re: abc\tdef";
-
-    EXPECT_EQ("[  7]     <No Author>  >abc def", std::string{item.univ_article_desc()});
+    EXPECT_EQ(GetParam() ? "[  7]     <No Author>  >abc def" : "[  7]     <No Author>  <No Subject>",
+              description);
 }
+
+INSTANTIATE_TEST_SUITE_P(MissingAndNormalized, UniversalArticleDescriptionTest, testing::Bool());
 
 TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
 {
