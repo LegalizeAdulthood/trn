@@ -411,21 +411,21 @@ INSTANTIATE_TEST_SUITE_P(
         config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "SIGNATURE_FILE", "%./test-signature"),
         config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "NNTP_AUTH_FILE", "%./test-nntpauth")));
 
-TEST(GeneratedConfigTest, dataFilePathsDefaultMatchHistoricalFallbacks)
-{
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "GLOBAL_INIT", TRN_TEST_DEFAULT_GLOBAL_INIT);
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "DEFACCESS", TRN_TEST_DEFAULT_DEFACCESS);
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "TRNACCESS", TRN_TEST_DEFAULT_TRNACCESS);
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "NEWSNEWSNAME", TRN_TEST_DEFAULT_NEWSNEWSNAME);
-}
+INSTANTIATE_TEST_SUITE_P(
+    DataFileDefaults, GeneratedDefinitionTest,
+    testing::Values(
+        config_string_case(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "GLOBAL_INIT", TRN_TEST_DEFAULT_GLOBAL_INIT),
+        config_string_case(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "DEFACCESS", TRN_TEST_DEFAULT_DEFACCESS),
+        config_string_case(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "TRNACCESS", TRN_TEST_DEFAULT_TRNACCESS),
+        config_string_case(TRN_TEST_DATA_FILE_PATHS_DEFAULT_CONFIG, "NEWSNEWSNAME", TRN_TEST_DEFAULT_NEWSNEWSNAME)));
 
-TEST(GeneratedConfigTest, dataFilePathsConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "GLOBAL_INIT", "%X/test-INIT");
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "DEFACCESS", "%X/test-access.def");
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "TRNACCESS", "%+/test-access");
-    expect_config_string(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "NEWSNEWSNAME", "%X/test-newsnews");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredDataFiles, GeneratedDefinitionTest,
+    testing::Values(config_string_case(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "GLOBAL_INIT", "%X/test-INIT"),
+                    config_string_case(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "DEFACCESS", "%X/test-access.def"),
+                    config_string_case(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "TRNACCESS", "%+/test-access"),
+                    config_string_case(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "NEWSNEWSNAME",
+                                       "%X/test-newsnews")));
 
 TEST(GeneratedConfigTest, defaultDataFilesAreGenerated)
 {
