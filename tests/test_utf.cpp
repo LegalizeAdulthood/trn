@@ -1155,28 +1155,83 @@ class CharsetDecoderTest : public Utf8ScalarTest
 {
 };
 
-TEST_F(CharsetDecoderTest, decodesSupportedSingleByteCharsets)
+using CharsetDecodeCase = std::tuple<std::string_view, std::string_view, std::string_view>;
+
+class SingleByteCharsetDecoderTest : public CharsetDecoderTest, public WithParamInterface<CharsetDecodeCase>
 {
-    EXPECT_EQ("\xC3\xA9\xC2\xAD\xC2\x80", CharsetDecoder{"ISO-8859-1"}.decode("\xE9\xAD\x80"));
-    EXPECT_EQ("\xE2\x82\xAC\xC5\xA0\xC5\xA1\xC5\xBD\xC5\xBE\xC5\x92\xC5\x93\xC5\xB8",
-              CharsetDecoder{"iso8859-15"}.decode("\xA4\xA6\xA8\xB4\xB8\xBC\xBD\xBE"));
-    EXPECT_EQ("\xE2\x80\x99\xE2\x82\xAC\xEF\xBF\xBD", CharsetDecoder{"WINDOWS-1252"}.decode("\x92\x80\x81"));
-    EXPECT_EQ("A\xEF\xBF\xBD", CharsetDecoder{"us-ascii"}.decode("A\x80"));
+protected:
+    void SetUp() override;
+
+    std::optional<CharsetDecoder> m_decoder;
+    std::string                   m_input;
+    std::string                   m_expected;
+};
+
+void SingleByteCharsetDecoderTest::SetUp()
+{
+    CharsetDecoderTest::SetUp();
+    const auto &[charset, input, expected] = GetParam();
+    m_decoder.emplace(charset);
+    m_input = input;
+    m_expected = expected;
 }
 
-TEST_F(CharsetDecoderTest, recognizesAllLegacyAliasesWithoutChangingGlobalState)
+TEST_P(SingleByteCharsetDecoderTest, decodesTheInputUsingTheSelectedCharset)
 {
+    const std::string decoded = m_decoder->decode(m_input);
+
+    EXPECT_EQ(m_expected, decoded);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SupportedSingleByteCharsets, SingleByteCharsetDecoderTest,
+    Values(CharsetDecodeCase{"ISO-8859-1", "\xE9\xAD\x80", "\xC3\xA9\xC2\xAD\xC2\x80"},
+           CharsetDecodeCase{"iso8859-15", "\xA4\xA6\xA8\xB4\xB8\xBC\xBD\xBE",
+                             "\xE2\x82\xAC\xC5\xA0\xC5\xA1\xC5\xBD\xC5\xBE\xC5\x92\xC5\x93\xC5\xB8"},
+           CharsetDecodeCase{"WINDOWS-1252", "\x92\x80\x81", "\xE2\x80\x99\xE2\x82\xAC\xEF\xBF\xBD"},
+           CharsetDecodeCase{"us-ascii", "A\x80", "A\xEF\xBF\xBD"}));
+
+class CharsetAliasTest : public CharsetDecoderTest, public WithParamInterface<CharsetParam>
+{
+protected:
+    void SetUp() override;
+    void expect_global_charsets_unchanged() const;
+
+    std::optional<CharsetDecoder> m_decoder;
+    std::optional<CharsetDecoder> m_canonical;
+};
+
+void CharsetAliasTest::SetUp()
+{
+    CharsetDecoderTest::SetUp();
     utf_init(CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_ASCII);
-    for (const CharsetParam &param : charsets)
-    {
-        const CharsetDecoder decoder{param.value};
-        const CharsetDecoder canonical{param.name};
-        EXPECT_EQ(canonical.charset(), decoder.charset());
-        EXPECT_EQ("abc", decoder.decode("abc"));
-    }
+    m_decoder.emplace(GetParam().value);
+    m_canonical.emplace(GetParam().name);
+}
+
+void CharsetAliasTest::expect_global_charsets_unchanged() const
+{
     EXPECT_EQ(CHARSET_NAME_WINDOWS_1252, input_charset_name());
     EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
 }
+
+TEST_P(CharsetAliasTest, selectsTheCanonicalCharsetWithoutChangingGlobalState)
+{
+    const int charset = m_decoder->charset();
+
+    EXPECT_EQ(m_canonical->charset(), charset);
+    expect_global_charsets_unchanged();
+}
+
+TEST_P(CharsetAliasTest, decodesAsciiWithoutChangingGlobalState)
+{
+    const std::string decoded = m_decoder->decode("abc");
+
+    EXPECT_EQ("abc", decoded);
+    expect_global_charsets_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(LegacyAliases, CharsetAliasTest, ValuesIn(charsets));
 
 TEST_F(CharsetDecoderTest, unknownAndMissingNamesUseStrictUtf8Fallback)
 {
