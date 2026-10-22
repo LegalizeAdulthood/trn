@@ -3135,6 +3135,80 @@ class BreadthFirstArticleTest : public BranchingArticleTest
 {
 };
 
+struct BreadthFirstSelectedNextCase
+{
+    std::string_view name;
+    long             current;
+    long             target;
+};
+
+const BreadthFirstSelectedNextCase BREADTH_FIRST_SELECTED_NEXT_CASES[]{{"RestartFromGroupEnd", 13, 8},
+                                                                       {"NextSelectedLevel", 8, 4},
+                                                                       {"NextSelectedThread", 4, 12},
+                                                                       {"WrapToFirstSelectedArticle", 12, 8}};
+
+void PrintTo(const BreadthFirstSelectedNextCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class BreadthFirstSelectedNextArticleTest : public BreadthFirstArticleTest,
+                                            public testing::WithParamInterface<BreadthFirstSelectedNextCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void BreadthFirstSelectedNextArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
+             GetParam().current);
+    g_selected_only = true;
+    g_s_follow_temp = GetParam().current <= 12;
+    g_univ_follow_temp = GetParam().current <= 12;
+}
+
+struct BreadthFirstAllReadBoundaryCase
+{
+    std::string_view    name;
+    long                current;
+    char                command;
+    long                target;
+    ArticleSwitchResult result;
+};
+
+const BreadthFirstAllReadBoundaryCase BREADTH_FIRST_ALL_READ_BOUNDARY_CASES[]{{"ReachGroupEnd", 12, 'n', 13, AS_NORM},
+                                                                              {"RestartReading", 13, 'N', 1, AS_NORM},
+                                                                              {"LeaveGroup", 13, 'n', 13, AS_CLEAN}};
+
+void PrintTo(const BreadthFirstAllReadBoundaryCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class BreadthFirstAllReadBoundaryArticleTest : public BreadthFirstArticleTest,
+                                               public testing::WithParamInterface<BreadthFirstAllReadBoundaryCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void BreadthFirstAllReadBoundaryArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS, AF_EXISTS},
+             GetParam().current <= 12 ? GetParam().current : 1);
+    if (GetParam().current > 12)
+    {
+        g_s_follow_temp = true;
+        g_univ_follow_temp = true;
+        ASSERT_EQ(AS_NORM, art_switch("$"));
+    }
+}
+
 struct BreadthFirstUnreadCase
 {
     std::string_view                    name;
@@ -7399,19 +7473,15 @@ TEST_F(BreadthFirstArticleTest, explicitNextSkipsMissingRootsAndParentsWithoutLo
     }
 }
 
-TEST_F(BreadthFirstArticleTest, selectedNextUnreadFromGroupEndStartsAtTheFirstEligibleLevel)
+TEST_P(BreadthFirstSelectedNextArticleTest, nextUnreadFindsTheSelectedArticleInLevelOrder)
 {
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
-             13);
-    g_selected_only = true;
-
-    for (const long number : {8, 4, 12, 8})
-    {
-        SCOPED_TRACE(number);
-        expect_next('n', number);
-    }
+    expect_next('n', GetParam().target);
 }
+
+INSTANTIATE_TEST_SUITE_P(Position, BreadthFirstSelectedNextArticleTest,
+                         testing::ValuesIn(BREADTH_FIRST_SELECTED_NEXT_CASES),
+                         [](const testing::TestParamInfo<BreadthFirstSelectedNextCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(BreadthFirstArticleTest, selectedNextUnreadStaysAtGroupEndWhileUnselectedUnreadArticlesRemain)
 {
@@ -7635,17 +7705,15 @@ TEST_F(BreadthFirstArticleTest, previousTraversesMultipleRootsAtEachLevelBeforeR
     }
 }
 
-TEST_F(BreadthFirstArticleTest, allReadGroupAllowsExplicitRestartAndLeavesOnNextUnreadAtGroupEnd)
+TEST_P(BreadthFirstAllReadBoundaryArticleTest, nextCommandHandlesTheAllReadGroupBoundary)
 {
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-              AF_EXISTS, AF_EXISTS, AF_EXISTS},
-             12);
-
-    expect_next('n', 13);
-    expect_next('N', 1);
-    EXPECT_EQ(AS_NORM, art_switch("$"));
-    expect_next('n', 13, {}, AS_CLEAN);
+    expect_next(GetParam().command, GetParam().target, {}, GetParam().result);
 }
+
+INSTANTIATE_TEST_SUITE_P(Position, BreadthFirstAllReadBoundaryArticleTest,
+                         testing::ValuesIn(BREADTH_FIRST_ALL_READ_BOUNDARY_CASES),
+                         [](const testing::TestParamInfo<BreadthFirstAllReadBoundaryCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(DepthFirstArticleTest, previousAllCrossesBranchesAndReadThreadsBeforeTheFirstUnreadArticle)
 {
