@@ -390,14 +390,30 @@ TEST_F(CompressSubjectTest, substitutesUnicodeBeforeTruncation)
     EXPECT_EQ("Aex", compress(&m_article, 3));
 }
 
-TEST_F(CompressSubjectTest, texTruncationKeepsUnicodeScalars)
+using SubjectTruncationCase = std::pair<int, std::string_view>;
+
+class TexSubjectTruncationTest : public CompressSubjectTest, public WithParamInterface<SubjectTruncationCase>
 {
+protected:
+    void SetUp() override;
+};
+
+void TexSubjectTruncationTest::SetUp()
+{
+    CompressSubjectTest::SetUp();
     set_char_subst_mode('t');
     m_subject.m_str = "    \"Axyz";
-
-    EXPECT_EQ("\xC3\x84", compress(&m_article, 1));
-    EXPECT_EQ("\xC3\x84x", compress(&m_article, 2));
 }
+
+TEST_P(TexSubjectTruncationTest, keepsWholeUnicodeScalarsAtTheRequestedWidth)
+{
+    const std::string subject = compress(&m_article, GetParam().first);
+
+    EXPECT_EQ(GetParam().second, subject);
+}
+
+INSTANTIATE_TEST_SUITE_P(Widths, TexSubjectTruncationTest,
+                         Values(SubjectTruncationCase{1, "\xC3\x84"}, SubjectTruncationCase{2, "\xC3\x84x"}));
 
 class PerformStatusEndTest : public Test
 {
