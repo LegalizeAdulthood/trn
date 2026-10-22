@@ -19,6 +19,7 @@
 
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 namespace
@@ -108,6 +109,12 @@ class ScanDescriptionMatchTest : public ScanCommandTest, public testing::WithPar
 {
 };
 
+using ScanSearchMessageCase = std::tuple<char, bool, std::string_view>;
+
+class ScanCommandSearchTest : public testing::TestWithParam<ScanSearchMessageCase>
+{
+};
+
 } // namespace
 
 TEST_P(ScanDescriptionMatchTest, matchesDescriptionIgnoringCase)
@@ -157,17 +164,18 @@ TEST_F(ScanCommandTest, finishCommandCompletesCommandText)
     EXPECT_EQ("/topic", command);
 }
 
-TEST(ScanCommandSearchTest, searchNoMatchMessages)
+TEST_P(ScanCommandSearchTest, reportsNoMatchForTheSearchDirectionAndWrapState)
 {
-    EXPECT_EQ("No matches forward from current point.",
-              std::string{scmd_search_error_message_for_test('/', false)});
-    EXPECT_EQ("No matches backward from current point.",
-              std::string{scmd_search_error_message_for_test('?', false)});
-    EXPECT_EQ("No matches.",
-              std::string{scmd_search_error_message_for_test('g', false)});
-    EXPECT_EQ("No other entry matches.",
-              std::string{scmd_search_error_message_for_test('g', true)});
+    const std::string message{scmd_search_error_message_for_test(std::get<0>(GetParam()), std::get<1>(GetParam()))};
+
+    EXPECT_EQ(std::get<2>(GetParam()), message);
 }
+
+INSTANTIATE_TEST_SUITE_P(DirectionAndWrap, ScanCommandSearchTest,
+                         testing::Values(ScanSearchMessageCase{'/', false, "No matches forward from current point."},
+                                         ScanSearchMessageCase{'?', false, "No matches backward from current point."},
+                                         ScanSearchMessageCase{'g', false, "No matches."},
+                                         ScanSearchMessageCase{'g', true, "No other entry matches."}));
 
 TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)
 {
