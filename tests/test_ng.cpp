@@ -3275,6 +3275,24 @@ void DepthFirstSkipArticleTest::SetUp()
     m_depth = GetParam().depth;
 }
 
+class BreadthFirstLevelArticleTest : public BreadthFirstArticleTest
+{
+protected:
+    void SetUp() override;
+
+    Article *m_root{};
+};
+
+void BreadthFirstLevelArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS, AF_EXISTS},
+             1);
+    m_root = article_ptr(ArticleNum{1});
+    m_root->m_sibling = article_ptr(ArticleNum{11});
+}
+
 struct NextOnLevelCase
 {
     std::string_view name;
@@ -3301,7 +3319,7 @@ void PrintTo(const NextOnLevelCase &value, std::ostream *output)
     *output << value.name;
 }
 
-class BreadthFirstNextOnLevelArticleTest : public BreadthFirstArticleTest,
+class BreadthFirstNextOnLevelArticleTest : public BreadthFirstLevelArticleTest,
                                            public testing::WithParamInterface<NextOnLevelCase>
 {
 protected:
@@ -3312,12 +3330,48 @@ protected:
 
 void BreadthFirstNextOnLevelArticleTest::SetUp()
 {
-    BreadthFirstArticleTest::SetUp();
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-              AF_EXISTS, AF_EXISTS, AF_EXISTS},
-             1);
-    article_ptr(ArticleNum{1})->m_sibling = article_ptr(ArticleNum{11});
+    BreadthFirstLevelArticleTest::SetUp();
     m_cursor = article_ptr(ArticleNum{GetParam().current});
+}
+
+struct LastOnLevelCase
+{
+    std::string_view name;
+    int              level;
+    long             before;
+    long             target;
+};
+
+const LastOnLevelCase LAST_ON_LEVEL_CASES[]{{"RootTail", 0, 0, 11},
+                                            {"ChildTail", 1, 0, 12},
+                                            {"GrandchildTail", 2, 0, 10},
+                                            {"DeepestTail", 3, 0, 9},
+                                            {"NonexistentLevel", 4, 0, 0},
+                                            {"BeforeFirstRoot", 0, 1, 0},
+                                            {"BeforeFirstGrandchild", 2, 3, 0},
+                                            {"RootPredecessor", 0, 11, 1},
+                                            {"ChildPredecessor", 1, 12, 7},
+                                            {"GrandchildPredecessor", 2, 8, 5},
+                                            {"DeepestPredecessor", 3, 9, 4}};
+
+void PrintTo(const LastOnLevelCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class BreadthFirstLastOnLevelArticleTest : public BreadthFirstLevelArticleTest,
+                                           public testing::WithParamInterface<LastOnLevelCase>
+{
+protected:
+    void SetUp() override;
+
+    const Article *m_before{};
+};
+
+void BreadthFirstLastOnLevelArticleTest::SetUp()
+{
+    BreadthFirstLevelArticleTest::SetUp();
+    m_before = GetParam().before ? article_ptr(ArticleNum{GetParam().before}) : nullptr;
 }
 
 class DepthFirstArticleTest : public BranchingArticleTest
@@ -7426,27 +7480,17 @@ INSTANTIATE_TEST_SUITE_P(Query, BreadthFirstNextOnLevelArticleTest, testing::Val
                          [](const testing::TestParamInfo<NextOnLevelCase> &info)
                          { return std::string{info.param.name}; });
 
-TEST_F(BreadthFirstArticleTest, lastOnLevelFindsTheTailOrThePredecessorBeforeATarget)
+TEST_P(BreadthFirstLastOnLevelArticleTest, returnsTheLastArticleBeforeTheRequestedBoundary)
 {
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-              AF_EXISTS, AF_EXISTS, AF_EXISTS},
-             1);
-    Article *root = article_ptr(ArticleNum{1});
-    root->m_sibling = article_ptr(ArticleNum{11});
+    Article *const last = m_root->last_on_level(GetParam().level, m_before);
 
-    for (const auto &[level, number] : {std::pair{0, 11L}, {1, 12L}, {2, 10L}, {3, 9L}})
-    {
-        SCOPED_TRACE(level);
-        EXPECT_EQ(article_ptr(ArticleNum{number}), root->last_on_level(level));
-    }
-    EXPECT_EQ(nullptr, root->last_on_level(4));
-    EXPECT_EQ(nullptr, root->last_on_level(0, root));
-    EXPECT_EQ(nullptr, root->last_on_level(2, article_ptr(ArticleNum{3})));
-    EXPECT_EQ(root, root->last_on_level(0, article_ptr(ArticleNum{11})));
-    EXPECT_EQ(article_ptr(ArticleNum{7}), root->last_on_level(1, article_ptr(ArticleNum{12})));
-    EXPECT_EQ(article_ptr(ArticleNum{5}), root->last_on_level(2, article_ptr(ArticleNum{8})));
-    EXPECT_EQ(article_ptr(ArticleNum{4}), root->last_on_level(3, article_ptr(ArticleNum{9})));
+    Article *const expected = GetParam().target ? article_ptr(ArticleNum{GetParam().target}) : nullptr;
+    EXPECT_EQ(expected, last);
 }
+
+INSTANTIATE_TEST_SUITE_P(Query, BreadthFirstLastOnLevelArticleTest, testing::ValuesIn(LAST_ON_LEVEL_CASES),
+                         [](const testing::TestParamInfo<LastOnLevelCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(BreadthFirstArticleTest, explicitPreviousIncludesReadAndUnselectedEntriesInReverseLevelOrder)
 {
