@@ -14,6 +14,9 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
 
 using namespace testing;
 
@@ -69,6 +72,17 @@ void HeaderCharsetTest::TearDown()
     utf_init(m_input, m_output);
 }
 
+using HeaderDecodeCase = std::pair<std::string_view, std::string_view>;
+using UnknownHeaderCharsetCase = std::tuple<std::string_view, HeaderDecodeCase>;
+
+class UnknownHeaderCharsetTest : public HeaderCharsetTest, public WithParamInterface<UnknownHeaderCharsetCase>
+{
+};
+
+class HeaderDecodeInputTest : public HeaderCharsetTest, public WithParamInterface<HeaderDecodeCase>
+{
+};
+
 TEST_F(HeaderCharsetTest, eachWordUsesItsDeclaredCharset)
 {
     utf_init(CHARSET_NAME_ASCII, CHARSET_NAME_ASCII);
@@ -80,27 +94,39 @@ TEST_F(HeaderCharsetTest, eachWordUsesItsDeclaredCharset)
     EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
 }
 
-TEST_F(HeaderCharsetTest, unknownWordsNeverInheritPreviousDecoder)
+TEST_P(UnknownHeaderCharsetTest, unknownWordsNeverInheritPreviousDecoder)
 {
-    for (const std::string_view charset : {CHARSET_NAME_ISO8859_1, CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8})
-    {
-        utf_init(charset, charset);
-        EXPECT_EQ("\xEF\xBF\xBD", decode_header("=?unknown?Q?=E9?="));
-        EXPECT_EQ("\xC3\xA9\xEF\xBF\xBD", decode_header("=?Latin1?Q?=E9?= =?unknown?Q?=E9?="));
-        EXPECT_EQ("\xE2\x80\x99", decode_header("=?unknown?Q?=E2=80=99?="));
-        EXPECT_EQ(charset, input_charset_name());
-        EXPECT_EQ(charset, output_charset_name());
-    }
+    const auto &[charset, input] = GetParam();
+    utf_init(charset, charset);
+
+    const std::string decoded = decode_header(input.first);
+
+    EXPECT_EQ(input.second, decoded);
+    EXPECT_EQ(charset, input_charset_name());
+    EXPECT_EQ(charset, output_charset_name());
 }
 
-TEST_F(HeaderCharsetTest, malformedCharsetBytesUseReplacementScalars)
+INSTANTIATE_TEST_SUITE_P(PriorCharsetAndInput, UnknownHeaderCharsetTest,
+                         Combine(Values(CHARSET_NAME_ISO8859_1, CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8),
+                                 Values(HeaderDecodeCase{"=?unknown?Q?=E9?=", "\xEF\xBF\xBD"},
+                                        HeaderDecodeCase{"=?Latin1?Q?=E9?= =?unknown?Q?=E9?=", "\xC3\xA9\xEF\xBF\xBD"},
+                                        HeaderDecodeCase{"=?unknown?Q?=E2=80=99?=", "\xE2\x80\x99"})));
+
+TEST_P(HeaderDecodeInputTest, decodesHeaderText)
 {
-    EXPECT_EQ("\xEF\xBF\xBD\xEF\xBF\xBD", decode_header("=?UTF-8?Q?=C0=AF?="));
-    EXPECT_EQ("\xEF\xBF\xBD", decode_header("=?US-ASCII?Q?=FF?="));
-    EXPECT_EQ("\xEF\xBF\xBD", decode_header("=?windows-1252?Q?=81?="));
-    EXPECT_EQ("\xC2\xAD", decode_header("=?ISO-8859-1?Q?=AD?="));
-    EXPECT_EQ("\xEF\xBF\xBD", decode_header("\xFF"));
+    const HeaderDecodeCase &input = GetParam();
+
+    const std::string decoded = decode_header(input.first);
+
+    EXPECT_EQ(input.second, decoded);
 }
+
+INSTANTIATE_TEST_SUITE_P(MalformedAndLegacyBytes, HeaderDecodeInputTest,
+                         Values(HeaderDecodeCase{"=?UTF-8?Q?=C0=AF?=", "\xEF\xBF\xBD\xEF\xBF\xBD"},
+                                HeaderDecodeCase{"=?US-ASCII?Q?=FF?=", "\xEF\xBF\xBD"},
+                                HeaderDecodeCase{"=?windows-1252?Q?=81?=", "\xEF\xBF\xBD"},
+                                HeaderDecodeCase{"=?ISO-8859-1?Q?=AD?=", "\xC2\xAD"},
+                                HeaderDecodeCase{"\xFF", "\xEF\xBF\xBD"}));
 
 TEST_F(HeaderCharsetTest, incompleteWordRetainsLiteralTextAndState)
 {
@@ -110,11 +136,9 @@ TEST_F(HeaderCharsetTest, incompleteWordRetainsLiteralTextAndState)
     EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
 }
 
-TEST_F(HeaderCharsetTest, keepsWhitespaceBeforeOrdinaryText)
-{
-    EXPECT_EQ("Hello world", decode_header("=?US-ASCII?Q?Hello?= world"));
-    EXPECT_EQ("Helloworld", decode_header("=?US-ASCII?Q?Hello?= \t=?US-ASCII?Q?world?="));
-}
+INSTANTIATE_TEST_SUITE_P(WhitespaceBoundaries, HeaderDecodeInputTest,
+                         Values(HeaderDecodeCase{"=?US-ASCII?Q?Hello?= world", "Hello world"},
+                                HeaderDecodeCase{"=?US-ASCII?Q?Hello?= \t=?US-ASCII?Q?world?=", "Helloworld"}));
 
 TEST_F(HeaderCharsetTest, controlFilteringUsesUnicodeInsteadOfGlobalCharset)
 {
