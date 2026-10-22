@@ -15,6 +15,8 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace
@@ -43,6 +45,50 @@ void expect_value(const IniSectionValues &values, int field_id, std::string_view
     ASSERT_TRUE(actual.has_value());
     EXPECT_EQ(expected, *actual);
 }
+
+constexpr const char *RANGE_INPUT = "[test]\n"
+                                    "Alpha Key = one\n"
+                                    "Empty Key = # comment\n"
+                                    "Unknown Key = ignored\n";
+constexpr const char *MIXED_CASE_INPUT = "[test]\n"
+                                         "MIXED CASE KEY = yes\n"
+                                         "Unknown Key = ignored\n";
+
+class ParsedIniSectionTest : public testing::Test
+{
+protected:
+    void parse(std::string contents);
+
+    IniDocument     m_document;
+    const IniSchema m_schema{
+        "test",
+        {IniField::value(TEST_FIELD_ALPHA, "Alpha Key"), IniField::value(TEST_FIELD_BETA, "Beta Key"),
+         IniField::value(TEST_FIELD_CONTINUED, "Continued Key"), IniField::value(TEST_FIELD_EMPTY, "Empty Key"),
+         IniField::value(TEST_FIELD_ESCAPED, "Escaped Key"), IniField::value(TEST_FIELD_MIXED_CASE, "Mixed Case Key"),
+         IniField::value(TEST_FIELD_QUOTED, "Quoted Key"), IniField::value(TEST_FIELD_TRAILING, "Trailing Key")}};
+    IniSectionValues m_values;
+    bool             m_parsed{};
+    std::string      m_output;
+};
+
+void ParsedIniSectionTest::parse(std::string contents)
+{
+    m_document = IniDocument{std::move(contents), "test input"};
+    const IniSection section = *m_document.begin();
+    testing::internal::CaptureStdout();
+    m_parsed = parse_ini_section(section, m_schema, m_values);
+    m_output = testing::internal::GetCapturedStdout();
+}
+
+using ParsedIniValue = std::tuple<const char *, TestIniField, std::string_view>;
+
+class ParsedIniValueTest : public ParsedIniSectionTest, public testing::WithParamInterface<ParsedIniValue>
+{
+};
+
+class UnknownIniFieldTest : public ParsedIniSectionTest, public testing::WithParamInterface<const char *>
+{
+};
 
 } // namespace
 
@@ -105,28 +151,46 @@ TEST(IniDocumentTest, parsesSectionValues)
     EXPECT_EQ(std::string_view{"two"}, *beta);
 }
 
-TEST(IniDocumentTest, parsesRangeSectionValues)
+TEST_P(ParsedIniValueTest, parsesTheConfiguredValue)
 {
-    IniDocument     document{"[test]\n"
-                             "Alpha Key = one\n"
-                             "Empty Key = # comment\n"
-                             "Unknown Key = ignored\n",
-                             "test input"};
-    const IniSchema schema{
-        "test", {IniField::value(TEST_FIELD_ALPHA, "Alpha Key"), IniField::value(TEST_FIELD_EMPTY, "Empty Key")}};
-    IniSectionValues values;
+    const auto &[input, field, expected] = GetParam();
 
-    const IniSection section = *document.begin();
+    parse(input);
 
-    testing::internal::CaptureStdout();
-    const bool        parsed = parse_ini_section(section, schema, values);
-    const std::string output = testing::internal::GetCapturedStdout();
-
-    EXPECT_TRUE(parsed);
-    expect_value(values, TEST_FIELD_ALPHA, "one");
-    EXPECT_FALSE(values.contains(TEST_FIELD_EMPTY));
-    EXPECT_NE(std::string::npos, output.find("Unknown option: `Unknown Key'."));
+    EXPECT_TRUE(m_parsed);
+    EXPECT_EQ(1U, m_values.size());
+    expect_value(m_values, field, expected);
 }
+
+INSTANTIATE_TEST_SUITE_P(RangeAndCase, ParsedIniValueTest,
+                         testing::Values(ParsedIniValue{RANGE_INPUT, TEST_FIELD_ALPHA, "one"},
+                                         ParsedIniValue{MIXED_CASE_INPUT, TEST_FIELD_MIXED_CASE, "yes"}));
+
+INSTANTIATE_TEST_SUITE_P(
+    Normalization, ParsedIniValueTest,
+    testing::Values(
+        ParsedIniValue{"[test]\nAlpha Key = one # comment\n", TEST_FIELD_ALPHA, "one"},
+        ParsedIniValue{"[test]\nBeta Key = \"two # not comment\" # comment\n", TEST_FIELD_BETA, "two # not comment"},
+        ParsedIniValue{"[test]\nEscaped Key = hello\\nthere\n", TEST_FIELD_ESCAPED, "hello\nthere"},
+        ParsedIniValue{"[test]\nContinued Key = line\\\n continued\n", TEST_FIELD_CONTINUED, "line continued"},
+        ParsedIniValue{"[test]\nTrailing Key = text     \n", TEST_FIELD_TRAILING, "text"},
+        ParsedIniValue{"[test]\nQuoted Key = '  padded  '  # tail\n", TEST_FIELD_QUOTED, "  padded  "}));
+
+TEST_F(ParsedIniSectionTest, omitsEmptyValues)
+{
+    parse(RANGE_INPUT);
+
+    EXPECT_FALSE(m_values.contains(TEST_FIELD_EMPTY));
+}
+
+TEST_P(UnknownIniFieldTest, reportsUnknownFields)
+{
+    parse(GetParam());
+
+    EXPECT_NE(std::string::npos, m_output.find("Unknown option: `Unknown Key'."));
+}
+
+INSTANTIATE_TEST_SUITE_P(RangeAndCase, UnknownIniFieldTest, testing::Values(RANGE_INPUT, MIXED_CASE_INPUT));
 
 TEST(IniDocumentTest, rangeSectionWithoutValuesClearsValues)
 {
@@ -144,59 +208,6 @@ TEST(IniDocumentTest, rangeSectionWithoutValuesClearsValues)
     ASSERT_NE(document.end(), iterator);
     EXPECT_FALSE(parse_ini_section(*iterator, schema, values));
     EXPECT_EQ(0U, values.size());
-}
-
-TEST(IniDocumentTest, normalizesParsedValues)
-{
-    IniDocument     document{"[test]\n"
-                             "Alpha Key = one # comment\n"
-                             "Beta Key = \"two # not comment\" # comment\n"
-                             "Escaped Key = hello\\nthere\n"
-                             "Continued Key = line\\\n"
-                             " continued\n"
-                             "Empty Key = # comment\n"
-                             "Trailing Key = text     \n"
-                             "Quoted Key = '  padded  '  # tail\n",
-                             "test input"};
-    const IniSchema schema{
-        "test",
-        {IniField::value(TEST_FIELD_ALPHA, "Alpha Key"), IniField::value(TEST_FIELD_BETA, "Beta Key"),
-         IniField::value(TEST_FIELD_CONTINUED, "Continued Key"), IniField::value(TEST_FIELD_EMPTY, "Empty Key"),
-         IniField::value(TEST_FIELD_ESCAPED, "Escaped Key"), IniField::value(TEST_FIELD_QUOTED, "Quoted Key"),
-         IniField::value(TEST_FIELD_TRAILING, "Trailing Key")}};
-    IniSectionValues values;
-
-    const IniSection section = *document.begin();
-    parse_ini_section(section, schema, values);
-
-    EXPECT_EQ(6, values.size());
-    expect_value(values, TEST_FIELD_ALPHA, "one");
-    expect_value(values, TEST_FIELD_BETA, "two # not comment");
-    expect_value(values, TEST_FIELD_CONTINUED, "line continued");
-    EXPECT_FALSE(values.contains(TEST_FIELD_EMPTY));
-    expect_value(values, TEST_FIELD_ESCAPED, "hello\nthere");
-    expect_value(values, TEST_FIELD_QUOTED, "  padded  ");
-    expect_value(values, TEST_FIELD_TRAILING, "text");
-}
-
-TEST(IniDocumentTest, matchesSchemaNamesCaseInsensitivelyAndReportsUnknownFields)
-{
-    IniDocument      document{"[test]\n"
-                              "MIXED CASE KEY = yes\n"
-                              "Unknown Key = ignored\n",
-                              "test input"};
-    const IniSchema  schema{"test", {IniField::value(TEST_FIELD_MIXED_CASE, "Mixed Case Key")}};
-    IniSectionValues values;
-
-    const IniSection section = *document.begin();
-
-    testing::internal::CaptureStdout();
-    parse_ini_section(section, schema, values);
-    const std::string output = testing::internal::GetCapturedStdout();
-
-    EXPECT_EQ(1, values.size());
-    expect_value(values, TEST_FIELD_MIXED_CASE, "yes");
-    EXPECT_NE(std::string::npos, output.find("Unknown option: `Unknown Key'."));
 }
 
 TEST(IniDocumentTest, parsesFileContents)
