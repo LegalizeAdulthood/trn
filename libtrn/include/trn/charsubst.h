@@ -17,6 +17,8 @@
 
 #include <config/config2.h>
 
+#include <trn/utf.h>
+
 #include <optional>
 #include <string>
 #include <string_view>
@@ -34,15 +36,17 @@ std::string current_char_subst();
 
 class IniSection;
 
+using ReplacementMapping = std::pair<CodePoint, std::string>;
+
 class UnicodeSubstitutionProfile
 {
 public:
     // Overlay a section atomically. Later entries for a scalar take precedence.
     bool                            configure(const IniSection &section);
-    std::optional<std::string_view> replacement(unsigned long scalar) const;
+    std::optional<std::string_view> replacement(CodePoint scalar) const;
 
 private:
-    std::vector<std::pair<unsigned long, std::string>> m_mappings;
+    std::vector<ReplacementMapping> m_mappings;
 };
 
 extern UnicodeSubstitutionProfile g_unicode_substitutions;

@@ -37,7 +37,9 @@ namespace
 constexpr std::string::size_type NO_CHAR_SUBST = std::string::npos;
 std::string::size_type           s_char_subst_index{NO_CHAR_SUBST};
 
-constexpr std::pair<CodePoint, std::string_view> UNICODE_ASCII[]{
+using ReplacementText = std::pair<CodePoint, std::string_view>;
+
+constexpr ReplacementText UNICODE_ASCII[]{
     {0x0085, "\n"},  {0x2011, "-"}, {0x2012, "--"}, {0x2013, "--"}, {0x2014, "---"}, {0x2015, "---"},
     {0x2016, "||"},  {0x2017, "_"}, {0x2018, "`"},  {0x2019, "'"},  {0x201C, "\""},  {0x201D, "\""},
     {0x2020, "+"},   {0x2021, "+"}, {0x2022, "*"},  {0x2023, ">"},  {0x2024, "."},   {0x2025, ".."},
@@ -205,7 +207,7 @@ static constexpr const char *s_iso_to_ascii[ISO_TABLES][96] =
 
 bool UnicodeSubstitutionProfile::configure(const IniSection &section)
 {
-    std::vector<std::pair<CodePoint, std::string>> mappings = m_mappings;
+    std::vector<ReplacementMapping> mappings = m_mappings;
     for (const IniSetting setting : section)
     {
         const std::string_view key = setting.name();
@@ -225,8 +227,7 @@ bool UnicodeSubstitutionProfile::configure(const IniSection &section)
             return false;
         }
         auto entry = std::lower_bound(mappings.begin(), mappings.end(), scalar,
-                                      [](const std::pair<CodePoint, std::string> &mapping, CodePoint value)
-                                      { return mapping.first < value; });
+                                      [](const ReplacementMapping &m, CodePoint cp) { return m.first < cp; });
         if (entry != mappings.end() && entry->first == scalar)
         {
             entry->second = std::move(text);
@@ -240,11 +241,10 @@ bool UnicodeSubstitutionProfile::configure(const IniSection &section)
     return true;
 }
 
-std::optional<std::string_view> UnicodeSubstitutionProfile::replacement(unsigned long scalar) const
+std::optional<std::string_view> UnicodeSubstitutionProfile::replacement(CodePoint scalar) const
 {
     const auto entry = std::lower_bound(m_mappings.begin(), m_mappings.end(), scalar,
-                                        [](const std::pair<CodePoint, std::string> &mapping, CodePoint value)
-                                        { return mapping.first < value; });
+                                        [](const ReplacementMapping &m, CodePoint cp) { return m.first < cp; });
     return entry != m_mappings.end() && entry->first == scalar ? std::optional<std::string_view>{entry->second}
                                                                : std::nullopt;
 }
@@ -278,8 +278,7 @@ std::string CharSubstitution::substitute(std::string_view input)
                 continue;
             }
             const auto entry = std::lower_bound(std::begin(UNICODE_ASCII), std::end(UNICODE_ASCII), scalar,
-                                                [](const std::pair<CodePoint, std::string_view> &mapping,
-                                                   CodePoint value) { return mapping.first < value; });
+                                                [](const ReplacementText &m, CodePoint cp) { return m.first < cp; });
             if (entry != std::end(UNICODE_ASCII) && entry->first == scalar)
             {
                 result += entry->second;
