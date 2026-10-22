@@ -113,33 +113,78 @@ TEST_F(AdvertisedCapabilitySetTest, addingLinesDoesNotMarkTheSetAvailable)
     EXPECT_FALSE(m_capabilities.available);
 }
 
-TEST(NntpCapabilitiesTest, acceptsCaseAndWhitespaceVariants)
+class CapabilityLineTest : public Test
 {
-    NntpCapabilities capabilities;
-    capabilities.add("lIsT\tactive  Newsgroups\tOVERVIEW.FMT\r\n");
-    capabilities.add("oVeR\tmsgid\r\n");
+protected:
+    void add_line(std::string_view line);
 
-    EXPECT_TRUE(capabilities.has("list"));
-    EXPECT_TRUE(capabilities.has("LIST", "ACTIVE"));
-    EXPECT_TRUE(capabilities.has("list", "newsgroups"));
-    EXPECT_TRUE(capabilities.has("LIST", "overview.fmt"));
-    EXPECT_TRUE(capabilities.has("over", "MSGID"));
-    EXPECT_FALSE(capabilities.has("LIST", "NEWS"));
+    std::string      m_line;
+    NntpCapabilities m_capabilities;
+};
+
+void CapabilityLineTest::add_line(std::string_view line)
+{
+    m_line = line;
+    m_capabilities.add(m_line);
 }
 
-TEST(NntpCapabilitiesTest, ignoresEmptyAndReservedLines)
+using CapabilityLineNameCase = std::tuple<std::string_view, std::string_view, bool>;
+using CapabilityLineArgumentCase = std::tuple<std::string_view, std::string_view, std::string_view, bool>;
+
+class CapabilityLineNameTest : public CapabilityLineTest, public WithParamInterface<CapabilityLineNameCase>
 {
-    NntpCapabilities capabilities;
-    for (const std::string_view line : {"", "\r\n", ".", "#READER", "1READER", " READER", "\tREADER"})
+protected:
+    void SetUp() override
     {
-        capabilities.add(line);
+        add_line(std::get<0>(GetParam()));
     }
-    capabilities.add("XPRIVATE extension");
+};
 
-    EXPECT_FALSE(capabilities.has("READER"));
-    EXPECT_FALSE(capabilities.has(""));
-    EXPECT_TRUE(capabilities.has("XPRIVATE", "extension"));
+class CapabilityLineArgumentTest : public CapabilityLineTest, public WithParamInterface<CapabilityLineArgumentCase>
+{
+protected:
+    void SetUp() override
+    {
+        add_line(std::get<0>(GetParam()));
+    }
+};
+
+constexpr const char *VARIANT_LIST_LINE = "lIsT\tactive  Newsgroups\tOVERVIEW.FMT\r\n";
+
+TEST_P(CapabilityLineNameTest, recognizesOnlyAcceptedCapabilityNames)
+{
+    const auto &[line, name, expected] = GetParam();
+
+    const bool present = m_capabilities.has(name);
+
+    EXPECT_EQ(expected, present);
 }
+
+INSTANTIATE_TEST_SUITE_P(CaseVariants, CapabilityLineNameTest,
+                         Values(CapabilityLineNameCase{VARIANT_LIST_LINE, "list", true}));
+
+INSTANTIATE_TEST_SUITE_P(IgnoredLines, CapabilityLineNameTest,
+                         Combine(Values("", "\r\n", ".", "#READER", "1READER", " READER", "\tREADER"),
+                                 Values("READER", ""), Values(false)));
+
+TEST_P(CapabilityLineArgumentTest, recognizesOnlyAcceptedCapabilityArguments)
+{
+    const auto &[line, name, argument, expected] = GetParam();
+
+    const bool present = m_capabilities.has(name, argument);
+
+    EXPECT_EQ(expected, present);
+}
+
+INSTANTIATE_TEST_SUITE_P(CaseAndWhitespaceVariants, CapabilityLineArgumentTest,
+                         Values(CapabilityLineArgumentCase{VARIANT_LIST_LINE, "LIST", "ACTIVE", true},
+                                CapabilityLineArgumentCase{VARIANT_LIST_LINE, "list", "newsgroups", true},
+                                CapabilityLineArgumentCase{VARIANT_LIST_LINE, "LIST", "overview.fmt", true},
+                                CapabilityLineArgumentCase{"oVeR\tmsgid\r\n", "over", "MSGID", true},
+                                CapabilityLineArgumentCase{VARIANT_LIST_LINE, "LIST", "NEWS", false}));
+
+INSTANTIATE_TEST_SUITE_P(PrivateExtensions, CapabilityLineArgumentTest,
+                         Values(CapabilityLineArgumentCase{"XPRIVATE extension", "XPRIVATE", "extension", true}));
 
 using MockNNTPConnectionFactory =
     StrictMock<MockFunction<ConnectionPtr(std::string_view machine, int port, std::string_view service)>>;
