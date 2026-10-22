@@ -136,14 +136,19 @@ void expect_config_define(const char *filename, std::string_view name, bool defi
     expect_file_contains(filename, config_define_case(filename, name, defined).expected);
 }
 
-void expect_config_string(const char *filename, std::string_view name, std::string_view value)
+GeneratedTextCase config_string_case(const char *filename, std::string_view name, std::string_view value)
 {
     const std::string literal = name == "NEWS_POSTER" || name == "MAIL_POSTER" || name == "FORWARD_POSTER"
                                     ? " R\"trn(" + std::string{value} + ")trn\""
                                     : " \"" + std::string{value} + "\"";
     const std::string expected = std::string{"#define "} + std::string{name} + literal;
 
-    expect_file_contains(filename, expected);
+    return {filename, expected};
+}
+
+void expect_config_string(const char *filename, std::string_view name, std::string_view value)
+{
+    expect_file_contains(filename, config_string_case(filename, name, value).expected);
 }
 
 void expect_config_char(const char *filename, std::string_view name, std::string_view value)
@@ -364,48 +369,47 @@ TEST(GeneratedConfigTest, nameParsingCanUseBerkeleyPasswdFormat)
     expect_name_parsing_policy(TRN_TEST_NAME_PARSING_BERKELEY_CONFIG, "bsd");
 }
 
-TEST(GeneratedConfigTest, accountNameFilesDefaultMatchesHistoricalFallback)
-{
-    const std::string password_file = std::string{"#define PASSWORD_FILE \""} + TRN_TEST_DEFAULT_PASSWORD_FILE + "\"";
-    const std::string login_dir_field = std::string{"#define LOGIN_DIR_FIELD "} + TRN_TEST_DEFAULT_LOGIN_DIR_FIELD;
-    const std::string fullname_file = std::string{"#define FULLNAMEFILE \""} + TRN_TEST_DEFAULT_FULLNAMEFILE + "\"";
+INSTANTIATE_TEST_SUITE_P(AccountDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, "PASSWORD_FILE",
+                                                            TRN_TEST_DEFAULT_PASSWORD_FILE),
+                                         GeneratedTextCase{TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG,
+                                                           std::string{"#define LOGIN_DIR_FIELD "} +
+                                                               TRN_TEST_DEFAULT_LOGIN_DIR_FIELD},
+                                         config_string_case(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, "FULLNAMEFILE",
+                                                            TRN_TEST_DEFAULT_FULLNAMEFILE)));
 
-    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, password_file);
-    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, login_dir_field);
-    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_DEFAULT_CONFIG, fullname_file);
-}
+INSTANTIATE_TEST_SUITE_P(ConfiguredAccountFiles, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG,
+                                                            "PASSWORD_FILE", "/var/lib/trn/passwd"),
+                                         GeneratedTextCase{TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG,
+                                                           "#define LOGIN_DIR_FIELD 7"},
+                                         config_string_case(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG,
+                                                            "FULLNAMEFILE", "%./profile-name")));
 
-TEST(GeneratedConfigTest, accountNameFilesConfiguredValuesAreEmitted)
-{
-    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG,
-                         "#define PASSWORD_FILE \"/var/lib/trn/passwd\"");
-    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG, "#define LOGIN_DIR_FIELD 7");
-    expect_file_contains(TRN_TEST_ACCOUNT_NAME_FILES_CONFIGURED_CONFIG, "#define FULLNAMEFILE \"%./profile-name\"");
-}
+INSTANTIATE_TEST_SUITE_P(
+    UserStateDefaults, GeneratedDefinitionTest,
+    testing::Values(config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "TRNDIR", TRN_TEST_DEFAULT_TRNDIR),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "TRNMACRO", TRN_TEST_DEFAULT_TRNMACRO),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "RNMACRO", TRN_TEST_DEFAULT_RNMACRO),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "RCNAME", TRN_TEST_DEFAULT_RCNAME),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "LOCKNAME", TRN_TEST_DEFAULT_LOCKNAME),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "LASTNAME", TRN_TEST_DEFAULT_LASTNAME),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "SIGNATURE_FILE",
+                                       TRN_TEST_DEFAULT_SIGNATURE_FILE),
+                    config_string_case(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "NNTP_AUTH_FILE",
+                                       TRN_TEST_DEFAULT_NNTP_AUTH_FILE)));
 
-TEST(GeneratedConfigTest, userStatePathsDefaultMatchHistoricalFallbacks)
-{
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "TRNDIR", TRN_TEST_DEFAULT_TRNDIR);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "TRNMACRO", TRN_TEST_DEFAULT_TRNMACRO);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "RNMACRO", TRN_TEST_DEFAULT_RNMACRO);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "RCNAME", TRN_TEST_DEFAULT_RCNAME);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "LOCKNAME", TRN_TEST_DEFAULT_LOCKNAME);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "LASTNAME", TRN_TEST_DEFAULT_LASTNAME);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "SIGNATURE_FILE", TRN_TEST_DEFAULT_SIGNATURE_FILE);
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_DEFAULT_CONFIG, "NNTP_AUTH_FILE", TRN_TEST_DEFAULT_NNTP_AUTH_FILE);
-}
-
-TEST(GeneratedConfigTest, userStatePathsConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "TRNDIR", "%./trn-test");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "TRNMACRO", "%+/test-macros");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "RNMACRO", "%./test-rnmac");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "RCNAME", "%./test-newsrc");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LOCKNAME", "%./test-rnlock");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LASTNAME", "%./test-rnlast");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "SIGNATURE_FILE", "%./test-signature");
-    expect_config_string(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "NNTP_AUTH_FILE", "%./test-nntpauth");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredUserState, GeneratedDefinitionTest,
+    testing::Values(
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "TRNDIR", "%./trn-test"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "TRNMACRO", "%+/test-macros"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "RNMACRO", "%./test-rnmac"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "RCNAME", "%./test-newsrc"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LOCKNAME", "%./test-rnlock"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "LASTNAME", "%./test-rnlast"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "SIGNATURE_FILE", "%./test-signature"),
+        config_string_case(TRN_TEST_USER_STATE_PATHS_CONFIGURED_CONFIG, "NNTP_AUTH_FILE", "%./test-nntpauth")));
 
 TEST(GeneratedConfigTest, dataFilePathsDefaultMatchHistoricalFallbacks)
 {
