@@ -41,11 +41,32 @@ void expect_file_not_contains(const char *filename, std::string_view expected)
     EXPECT_EQ(std::string::npos, contents.find(expected)) << filename;
 }
 
-void expect_file_exists(const char *filename)
+struct GeneratedArtifactCase
 {
-    std::ifstream file{filename, std::ios::binary};
+    const char *filename;
+    bool        available{true};
+};
 
-    EXPECT_TRUE(file.good()) << filename;
+void PrintTo(const GeneratedArtifactCase &value, std::ostream *output)
+{
+    *output << value.filename;
+}
+
+class GeneratedArtifactTest : public testing::TestWithParam<GeneratedArtifactCase>
+{
+protected:
+    void SetUp() override;
+
+    std::ifstream m_file;
+};
+
+void GeneratedArtifactTest::SetUp()
+{
+    if (!GetParam().available)
+    {
+        GTEST_SKIP() << "This artifact is not generated on this platform.";
+    }
+    m_file.open(GetParam().filename, std::ios::binary);
 }
 
 void expect_helper_has_no_metaconfig_residue(const char *filename)
@@ -448,25 +469,24 @@ INSTANTIATE_TEST_SUITE_P(
                     config_string_case(TRN_TEST_DATA_FILE_PATHS_CONFIGURED_CONFIG, "NEWSNEWSNAME",
                                        "%X/test-newsnews")));
 
-TEST(GeneratedConfigTest, defaultDataFilesAreGenerated)
+TEST_P(GeneratedArtifactTest, generatesTheArtifact)
 {
-    expect_file_exists(TRN_TEST_GENERATED_GLOBAL_INIT_FILE);
-    expect_file_exists(TRN_TEST_GENERATED_DEFACCESS_FILE);
-    expect_file_exists(TRN_TEST_GENERATED_NEWSNEWS_FILE);
+    EXPECT_TRUE(m_file.good()) << GetParam().filename;
 }
 
-TEST(GeneratedConfigTest, runtimeHelperFilesAreGenerated)
-{
-    expect_file_exists(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
-    expect_file_exists(TRN_TEST_GENERATED_NORM_SAVER_FILE);
-    expect_file_exists(TRN_TEST_GENERATED_PNEWS_FILE);
-    if (generated_pnews_header())
-    {
-        expect_file_exists(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
-    }
-    expect_file_exists(TRN_TEST_GENERATED_RNMAIL_FILE);
-    expect_file_exists(TRN_TEST_GENERATED_SPELLER_FILE);
-}
+INSTANTIATE_TEST_SUITE_P(DefaultDataFiles, GeneratedArtifactTest,
+                         testing::Values(GeneratedArtifactCase{TRN_TEST_GENERATED_GLOBAL_INIT_FILE},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_DEFACCESS_FILE},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_NEWSNEWS_FILE}));
+
+INSTANTIATE_TEST_SUITE_P(RuntimeHelpers, GeneratedArtifactTest,
+                         testing::Values(GeneratedArtifactCase{TRN_TEST_GENERATED_MBOX_SAVER_FILE},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_NORM_SAVER_FILE},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_PNEWS_FILE},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_PNEWS_HEADER_FILE,
+                                                               generated_pnews_header()},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_RNMAIL_FILE},
+                                         GeneratedArtifactCase{TRN_TEST_GENERATED_SPELLER_FILE}));
 
 INSTANTIATE_TEST_SUITE_P(ArticlePathDefaults, GeneratedDefinitionTest,
                          testing::Values(config_string_case(TRN_TEST_ARTICLE_PATH_TEMPLATES_DEFAULT_CONFIG,
