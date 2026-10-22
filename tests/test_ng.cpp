@@ -50,6 +50,7 @@
 #include <initializer_list>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -2460,6 +2461,31 @@ void BulkArticleOrderTest::SetUp()
         }
         g_art_ptr = g_art_ptr_list.data() + 4;
     }
+}
+
+struct EmptyBulkCommandCase
+{
+    std::string_view name;
+    std::string_view input;
+};
+
+void PrintTo(const EmptyBulkCommandCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class EmptyBulkCommandArticleTest : public BulkSelectionArticleTest,
+                                    public testing::WithParamInterface<EmptyBulkCommandCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmptyBulkCommandArticleTest::SetUp()
+{
+    BulkSelectionArticleTest::SetUp();
+    g_msg = "prior status";
+    g_perform_count = 19;
 }
 
 class PersistentKillArticleTest : public KillSubjectArticleTest
@@ -5724,21 +5750,21 @@ TEST_F(BulkSelectionArticleTest, erasedCommandRequestsInputWithoutAffectingArtic
     EXPECT_EQ(std::string::npos, output.find("prior status"));
 }
 
-TEST_F(BulkSelectionArticleTest, emptyCommandRequestsInputWithoutReportingAStaleStatus)
+TEST_P(EmptyBulkCommandArticleTest, requestsInputWithoutReportingAStaleStatus)
 {
-    for (const std::string_view input : {"\n", ":\n", ".\n", ":.\n"})
-    {
-        SCOPED_TRACE(input);
-        g_msg = "prior status";
-        g_perform_count = 19;
+    const std::string output = apply_bulk(GetParam().input, AS_INP);
 
-        const std::string output = apply_bulk(input, AS_INP);
-
-        expect_bulk_unchanged();
-        EXPECT_EQ("prior status", g_msg);
-        EXPECT_EQ(std::string::npos, output.find("prior status"));
-    }
+    expect_bulk_unchanged();
+    EXPECT_EQ("prior status", g_msg);
+    EXPECT_EQ(std::string::npos, output.find("prior status"));
 }
+
+INSTANTIATE_TEST_SUITE_P(CommandPrefix, EmptyBulkCommandArticleTest,
+                         testing::Values(EmptyBulkCommandCase{"Plain", "\n"}, EmptyBulkCommandCase{"Inverse", ":\n"},
+                                         EmptyBulkCommandCase{"CurrentThread", ".\n"},
+                                         EmptyBulkCommandCase{"InverseCurrentThread", ":.\n"}),
+                         [](const testing::TestParamInfo<EmptyBulkCommandCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(BulkSelectionArticleTest, currentThreadScopeAtGroupEndRequestsInputWithoutAffectingArticles)
 {
