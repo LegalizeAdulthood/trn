@@ -3876,12 +3876,14 @@ void LastVisitedAliasArticleTest::SetUp()
 }
 
 class ArticleNavigationRejectionTest : public ArticleStateTest,
-                                       public testing::WithParamInterface<std::tuple<char, bool>>
+                                       public testing::WithParamInterface<std::tuple<char, bool, long>>
 {
 protected:
     void        SetUp() override;
     void        TearDown() override;
     std::string stop_capture();
+
+    ArticleNum m_current{};
 
 private:
     bool m_capturing{};
@@ -3891,6 +3893,7 @@ void ArticleNavigationRejectionTest::SetUp()
 {
     ArticleStateTest::SetUp();
     g_verbose = std::get<1>(GetParam());
+    m_current = ArticleNum{std::get<2>(GetParam())};
     testing::internal::CaptureStdout();
     m_capturing = true;
 }
@@ -3919,7 +3922,7 @@ protected:
 void ThreadNavigationGroupEndArticleTest::SetUp()
 {
     ArticleNavigationRejectionTest::SetUp();
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, m_current.value_of());
     g_threaded_group = true;
 }
 
@@ -3932,7 +3935,9 @@ protected:
 void UnthreadedNavigationArticleTest::SetUp()
 {
     ArticleNavigationRejectionTest::SetUp();
-    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 3);
+    set_articles({m_current == ArticleNum{1} ? AF_EXISTS | AF_UNREAD : AF_EXISTS, AF_EXISTS,
+                  m_current == ArticleNum{3} ? AF_EXISTS | AF_UNREAD : AF_EXISTS},
+                 m_current.value_of());
     g_threaded_group = false;
 }
 
@@ -9270,9 +9275,9 @@ TEST_P(ThreadNavigationGroupEndArticleTest, preservesEndOfGroupWithoutCurrentArt
     EXPECT_EQ(AS_ASK, result);
     EXPECT_NE(std::string::npos,
               output.find(std::get<1>(GetParam()) ? "You're at the end of the group." : "End of group."));
-    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(m_current, g_art);
     EXPECT_EQ(nullptr, g_artp);
-    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(m_current, g_curr_art);
     EXPECT_EQ(nullptr, g_curr_artp);
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
     EXPECT_FALSE(g_reread);
@@ -9283,7 +9288,7 @@ TEST_P(ThreadNavigationGroupEndArticleTest, preservesEndOfGroupWithoutCurrentArt
 }
 
 INSTANTIATE_TEST_SUITE_P(ParentOrRoot, ThreadNavigationGroupEndArticleTest,
-                         testing::Combine(testing::Values('[', '{'), testing::Bool()));
+                         testing::Combine(testing::Values('[', '{'), testing::Bool(), testing::Values(3L)));
 
 TEST_P(UnthreadedNavigationArticleTest, rejectsUnthreadedGroupWithoutMoving)
 {
@@ -9293,9 +9298,9 @@ TEST_P(UnthreadedNavigationArticleTest, rejectsUnthreadedGroupWithoutMoving)
     EXPECT_EQ(AS_ASK, result);
     EXPECT_NE(std::string::npos,
               output.find(std::get<1>(GetParam()) ? "This group is not threaded." : "Unthreaded group."));
-    EXPECT_EQ(ArticleNum{3}, g_art);
-    ASSERT_EQ(article_ptr(ArticleNum{3}), g_artp);
-    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(m_current, g_art);
+    ASSERT_EQ(article_ptr(m_current), g_artp);
+    EXPECT_EQ(m_current, g_curr_art);
     EXPECT_EQ(g_artp, g_curr_artp);
     EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
@@ -9307,7 +9312,7 @@ TEST_P(UnthreadedNavigationArticleTest, rejectsUnthreadedGroupWithoutMoving)
 }
 
 INSTANTIATE_TEST_SUITE_P(ParentOrRoot, UnthreadedNavigationArticleTest,
-                         testing::Combine(testing::Values('[', '{'), testing::Bool()));
+                         testing::Combine(testing::Values('[', '{'), testing::Bool(), testing::Values(3L)));
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, ParentRootArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Root" : "Parent"; });
@@ -9395,66 +9400,11 @@ TEST_P(ChildLeafArticleTest, preservesPositionWithoutDescendantsWithVerboseWarni
     EXPECT_EQ(0, g_term_col);
 }
 
-TEST_P(ChildLeafArticleTest, preservesEndOfGroupWithoutCurrentArticle)
-{
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
-    g_threaded_group = true;
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        g_term_line = 0;
-        g_term_col = 0;
-        testing::internal::CaptureStdout();
+INSTANTIATE_TEST_SUITE_P(ChildOrLeaf, ThreadNavigationGroupEndArticleTest,
+                         testing::Combine(testing::Values(']', '}'), testing::Bool(), testing::Values(3L)));
 
-        const ArticleSwitchResult result = art_switch(GetParam() ? "}" : "]");
-
-        const std::string output = testing::internal::GetCapturedStdout();
-        EXPECT_EQ(AS_ASK, result);
-        EXPECT_NE(std::string::npos, output.find(verbose ? "You're at the end of the group." : "End of group."));
-        EXPECT_EQ(ArticleNum{3}, g_art);
-        EXPECT_EQ(nullptr, g_artp);
-        EXPECT_EQ(ArticleNum{3}, g_curr_art);
-        EXPECT_EQ(nullptr, g_curr_artp);
-        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        EXPECT_EQ(2, g_term_line);
-        EXPECT_EQ(0, g_term_col);
-    }
-}
-
-TEST_P(ChildLeafArticleTest, rejectsUnthreadedGroupWithoutMoving)
-{
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS}, 1);
-    g_threaded_group = false;
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        g_term_line = 0;
-        g_term_col = 0;
-        testing::internal::CaptureStdout();
-
-        const ArticleSwitchResult result = art_switch(GetParam() ? "}" : "]");
-
-        const std::string output = testing::internal::GetCapturedStdout();
-        EXPECT_EQ(AS_ASK, result);
-        EXPECT_NE(std::string::npos, output.find(verbose ? "This group is not threaded." : "Unthreaded group."));
-        EXPECT_EQ(ArticleNum{1}, g_art);
-        ASSERT_EQ(article_ptr(ArticleNum{1}), g_artp);
-        EXPECT_EQ(ArticleNum{1}, g_curr_art);
-        EXPECT_EQ(g_artp, g_curr_artp);
-        EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
-        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
-        EXPECT_FALSE(g_reread);
-        EXPECT_FALSE(g_s_follow_temp);
-        EXPECT_FALSE(g_univ_follow_temp);
-        EXPECT_EQ(2, g_term_line);
-        EXPECT_EQ(0, g_term_col);
-    }
-}
+INSTANTIATE_TEST_SUITE_P(ChildOrLeaf, UnthreadedNavigationArticleTest,
+                         testing::Combine(testing::Values(']', '}'), testing::Bool(), testing::Values(1L)));
 
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, ChildLeafArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Leaf" : "Child"; });
