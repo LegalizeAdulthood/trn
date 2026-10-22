@@ -37,6 +37,7 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/univ.h>
+#include <trn/utf.h>
 #include <trn/util.h>
 #include <util/env-internal.h>
 #include <util/util2.h>
@@ -1632,6 +1633,81 @@ void InterpolatorNewsgroupTest::TearDown()
     InterpolatorTest::TearDown();
 }
 
+class ArticleHeaderPresentationTest : public InterpolatorNewsgroupTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void render_article();
+
+    DoArticleResult m_result{DA_NORM};
+    std::string     m_rendered;
+
+private:
+    int                                      m_old_mouse_bar_count{g_mouse_bar_cnt};
+    decltype(g_header_type[FROM_LINE].flags) m_old_from_flags{g_header_type[FROM_LINE].flags};
+    ArticleLine                              m_old_top_line{g_top_line};
+    ArticleLine                              m_old_init_lines{g_init_lines};
+    int                                      m_old_lines{g_tc_LINES};
+    int                                      m_old_columns{g_tc_COLS};
+    std::string_view                         m_old_input{input_charset_name()};
+    std::string_view                         m_old_output{output_charset_name()};
+    std::string                              m_old_charsets{g_charsets};
+    char                                     m_old_subst{current_char_subst_mode()};
+    std::string                              m_old_prompt{g_prompt};
+    Article                                 *m_old_current_article{g_curr_artp};
+    Article                                 *m_old_article{g_artp};
+    bool                                     m_capturing{};
+};
+
+void ArticleHeaderPresentationTest::SetUp()
+{
+    InterpolatorNewsgroupTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    g_mouse_bar_cnt = 0;
+    g_header_type[FROM_LINE].flags |= HT_MAGIC;
+    g_top_line = ArticleLine{-1};
+    g_init_lines = ArticleLine{30000};
+    g_tc_LINES = 30000;
+    g_tc_COLS = 80;
+    reset_char_subst_mode();
+    g_curr_artp = article_ptr(g_art);
+    g_artp = g_curr_artp;
+    m_env.expect_no_envar("LOCALTIMEFMT");
+    ASSERT_TRUE(parse_header(g_art));
+}
+
+void ArticleHeaderPresentationTest::TearDown()
+{
+    if (m_capturing)
+    {
+        (void) testing::internal::GetCapturedStdout();
+        m_capturing = false;
+    }
+    InterpolatorNewsgroupTest::TearDown();
+    g_mouse_bar_cnt = m_old_mouse_bar_count;
+    g_header_type[FROM_LINE].flags = m_old_from_flags;
+    g_top_line = m_old_top_line;
+    g_init_lines = m_old_init_lines;
+    g_tc_LINES = m_old_lines;
+    g_tc_COLS = m_old_columns;
+    utf_init(m_old_input, m_old_output);
+    g_charsets = m_old_charsets;
+    set_char_subst_mode(m_old_subst);
+    g_prompt = m_old_prompt;
+    g_curr_artp = m_old_current_article;
+    g_artp = m_old_article;
+}
+
+void ArticleHeaderPresentationTest::render_article()
+{
+    testing::internal::CaptureStdout();
+    m_capturing = true;
+    m_result = do_article();
+    m_rendered = testing::internal::GetCapturedStdout();
+    m_capturing = false;
+}
+
 void write_article_body(const fs::path &article_file, std::string_view body, std::string_view extra_headers = {})
 {
     std::ofstream{article_file} << "Path: " TRN_TEST_HEADER_PATH "\n"
@@ -2388,28 +2464,21 @@ TEST_F(InterpolatorNewsgroupTest, followupPromptDefaultStartsNewTopic)
     EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
 }
 
-TEST_F(InterpolatorNewsgroupTest, displaysFromNameInArticleHeader)
+TEST_F(ArticleHeaderPresentationTest, displaysFromNameWhilePreservingTheCachedHeader)
 {
-    ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
-    g_header_type[FROM_LINE].flags |= HT_MAGIC;
-    g_top_line = ArticleLine{-1};
-    g_init_lines = ArticleLine{30000};
-    g_tc_LINES = 30000;
-    g_tc_COLS = 80;
-    reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
-    m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    render_article();
 
-    testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
-    const std::string     output = testing::internal::GetCapturedStdout();
-
-    EXPECT_EQ(DA_NORM, result);
-    EXPECT_NE(std::string::npos, output.find("From: " TRN_TEST_HEADER_FROM_NAME));
-    EXPECT_EQ(std::string::npos, output.find("From: " TRN_TEST_HEADER_FROM));
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_NE(std::string::npos, m_rendered.find("From: " TRN_TEST_HEADER_FROM_NAME));
+    EXPECT_EQ(std::string::npos, m_rendered.find("From: " TRN_TEST_HEADER_FROM));
     EXPECT_EQ(TRN_TEST_HEADER_FROM, fetch_lines(g_art, FROM_LINE));
+}
+
+TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
+{
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
     EXPECT_EQ("%sEnd of article " + std::to_string(TRN_TEST_ARTICLE_NUM) + " (of " +
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
               g_prompt);
