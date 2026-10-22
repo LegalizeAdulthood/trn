@@ -34,42 +34,83 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <tuple>
 #include <utility>
 
 namespace fs = std::filesystem;
 
 using namespace testing;
 
-TEST(NntpCapabilitiesTest, recognizesAdvertisedFeaturesAndArguments)
+class AdvertisedCapabilitySetTest : public Test
 {
-    NntpCapabilities capabilities;
+protected:
+    void SetUp() override;
+
+    NntpCapabilities m_capabilities;
+};
+
+void AdvertisedCapabilitySetTest::SetUp()
+{
     for (const std::string_view line :
          {"VERSION 2 3", "READER", "POST", "IHAVE", "NEWNEWS", "LIST ACTIVE NEWSGROUPS OVERVIEW.FMT HEADERS",
           "OVER MSGID", "HDR", "MODE-READER", "STARTTLS", "AUTHINFO USER SASL", "SASL PLAIN SCRAM-SHA-256"})
     {
-        capabilities.add(line);
+        m_capabilities.add(line);
     }
+}
 
-    for (const std::string_view name : {"VERSION", "READER", "POST", "IHAVE", "NEWNEWS", "LIST", "OVER", "HDR",
-                                        "MODE-READER", "STARTTLS", "AUTHINFO", "SASL"})
-    {
-        EXPECT_TRUE(capabilities.has(name)) << name;
-    }
-    EXPECT_TRUE(capabilities.has("VERSION", "2"));
-    EXPECT_TRUE(capabilities.has("VERSION", "3"));
-    EXPECT_TRUE(capabilities.has("LIST", "ACTIVE"));
-    EXPECT_TRUE(capabilities.has("LIST", "NEWSGROUPS"));
-    EXPECT_TRUE(capabilities.has("LIST", "OVERVIEW.FMT"));
-    EXPECT_TRUE(capabilities.has("LIST", "HEADERS"));
-    EXPECT_TRUE(capabilities.has("OVER", "MSGID"));
-    EXPECT_TRUE(capabilities.has("AUTHINFO", "USER"));
-    EXPECT_TRUE(capabilities.has("AUTHINFO", "SASL"));
-    EXPECT_TRUE(capabilities.has("SASL", "SCRAM-SHA-256"));
-    EXPECT_FALSE(capabilities.has("LIST", "SUBSCRIPTIONS"));
-    EXPECT_FALSE(capabilities.has("VERSION", "4"));
-    EXPECT_FALSE(capabilities.has("XGTITLE"));
-    EXPECT_FALSE(capabilities.has("XGTITLE", "comp.lang.apl"));
-    EXPECT_FALSE(capabilities.available);
+using CapabilityNameCase = std::pair<std::string_view, bool>;
+using CapabilityArgumentCase = std::tuple<std::string_view, std::string_view, bool>;
+
+class AdvertisedCapabilityNameTest : public AdvertisedCapabilitySetTest, public WithParamInterface<CapabilityNameCase>
+{
+};
+
+class AdvertisedCapabilityArgumentTest : public AdvertisedCapabilitySetTest,
+                                         public WithParamInterface<CapabilityArgumentCase>
+{
+};
+
+TEST_P(AdvertisedCapabilityNameTest, findsOnlyAdvertisedNames)
+{
+    const CapabilityNameCase &input = GetParam();
+
+    const bool present = m_capabilities.has(input.first);
+
+    EXPECT_EQ(input.second, present);
+}
+
+INSTANTIATE_TEST_SUITE_P(AdvertisedAndMissing, AdvertisedCapabilityNameTest,
+                         Values(CapabilityNameCase{"VERSION", true}, CapabilityNameCase{"READER", true},
+                                CapabilityNameCase{"POST", true}, CapabilityNameCase{"IHAVE", true},
+                                CapabilityNameCase{"NEWNEWS", true}, CapabilityNameCase{"LIST", true},
+                                CapabilityNameCase{"OVER", true}, CapabilityNameCase{"HDR", true},
+                                CapabilityNameCase{"MODE-READER", true}, CapabilityNameCase{"STARTTLS", true},
+                                CapabilityNameCase{"AUTHINFO", true}, CapabilityNameCase{"SASL", true},
+                                CapabilityNameCase{"XGTITLE", false}));
+
+TEST_P(AdvertisedCapabilityArgumentTest, findsOnlyAdvertisedArguments)
+{
+    const auto &[name, argument, expected] = GetParam();
+
+    const bool present = m_capabilities.has(name, argument);
+
+    EXPECT_EQ(expected, present);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AdvertisedAndMissing, AdvertisedCapabilityArgumentTest,
+    Values(CapabilityArgumentCase{"VERSION", "2", true}, CapabilityArgumentCase{"VERSION", "3", true},
+           CapabilityArgumentCase{"LIST", "ACTIVE", true}, CapabilityArgumentCase{"LIST", "NEWSGROUPS", true},
+           CapabilityArgumentCase{"LIST", "OVERVIEW.FMT", true}, CapabilityArgumentCase{"LIST", "HEADERS", true},
+           CapabilityArgumentCase{"OVER", "MSGID", true}, CapabilityArgumentCase{"AUTHINFO", "USER", true},
+           CapabilityArgumentCase{"AUTHINFO", "SASL", true}, CapabilityArgumentCase{"SASL", "SCRAM-SHA-256", true},
+           CapabilityArgumentCase{"LIST", "SUBSCRIPTIONS", false}, CapabilityArgumentCase{"VERSION", "4", false},
+           CapabilityArgumentCase{"XGTITLE", "comp.lang.apl", false}));
+
+TEST_F(AdvertisedCapabilitySetTest, addingLinesDoesNotMarkTheSetAvailable)
+{
+    EXPECT_FALSE(m_capabilities.available);
 }
 
 TEST(NntpCapabilitiesTest, acceptsCaseAndWhitespaceVariants)
