@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
+#include <ostream>
 #include <string>
 #include <string_view>
 
@@ -14,11 +16,7 @@ namespace
 class CompiledRegexTest : public testing::Test
 {
 protected:
-    void SetUp() override
-    {
-        search_init();
-        m_regex.init_compex();
-    }
+    void SetUp() override;
 
     void TearDown() override
     {
@@ -28,13 +26,56 @@ protected:
     CompiledRegex m_regex{};
 };
 
-TEST_F(CompiledRegexTest, literalPatternMatchesText)
+void CompiledRegexTest::SetUp()
 {
-    EXPECT_TRUE(m_regex.compile("needle", false, false).empty());
-
-    EXPECT_TRUE(m_regex.execute(std::string_view{"haystack needle"}));
-    EXPECT_FALSE(m_regex.execute(std::string_view{"haystack"}));
+    search_init();
+    m_regex.init_compex();
 }
+
+struct RegexMatchCase
+{
+    const char      *name;
+    std::string_view pattern;
+    std::size_t      pattern_length;
+    bool             metacharacters;
+    std::string_view text;
+    bool             expected;
+};
+
+void PrintTo(const RegexMatchCase &value, std::ostream *out)
+{
+    *out << value.name;
+}
+
+class RegexMatchingTest : public CompiledRegexTest, public testing::WithParamInterface<RegexMatchCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_pattern;
+    std::string m_text;
+};
+
+void RegexMatchingTest::SetUp()
+{
+    CompiledRegexTest::SetUp();
+    const RegexMatchCase &input = GetParam();
+    m_pattern = input.pattern;
+    m_text = input.text;
+    const std::string_view pattern = std::string_view{m_pattern}.substr(0, input.pattern_length);
+    ASSERT_TRUE(m_regex.compile(pattern, input.metacharacters, false).empty());
+}
+
+TEST_P(RegexMatchingTest, matchesOnlyTheConfiguredPatternAndInput)
+{
+    const bool matched = m_regex.execute(std::string_view{m_text});
+
+    EXPECT_EQ(GetParam().expected, matched);
+}
+
+INSTANTIATE_TEST_SUITE_P(LiteralPatterns, RegexMatchingTest,
+                         testing::Values(RegexMatchCase{"LiteralMatch", "needle", 6, false, "haystack needle", true},
+                                         RegexMatchCase{"LiteralMiss", "needle", 6, false, "haystack", false}));
 
 TEST_F(CompiledRegexTest, emptyPatternReusesPreviousExpression)
 {
@@ -49,16 +90,9 @@ TEST_F(CompiledRegexTest, malformedCharacterClassReportsError)
     EXPECT_EQ(std::string_view{"Missing ]"}, m_regex.compile("[abc", true, false));
 }
 
-TEST_F(CompiledRegexTest, patternViewDoesNotReadTrailingText)
-{
-    const std::string      pattern{"[a]x"};
-    const std::string_view prefix{pattern.data(), 3};
-
-    ASSERT_TRUE(m_regex.compile(prefix, true, false).empty());
-
-    EXPECT_TRUE(m_regex.execute(std::string_view{"a"}));
-    EXPECT_FALSE(m_regex.execute(std::string_view{"x"}));
-}
+INSTANTIATE_TEST_SUITE_P(BoundedPatterns, RegexMatchingTest,
+                         testing::Values(RegexMatchCase{"BoundedMatch", "[a]x", 3, true, "a", true},
+                                         RegexMatchCase{"BoundedMiss", "[a]x", 3, true, "x", false}));
 
 TEST_F(CompiledRegexTest, bracketTextIsAvailableAfterMatch)
 {
