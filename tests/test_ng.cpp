@@ -1884,6 +1884,7 @@ protected:
     void        SetUp() override;
     void        TearDown() override;
     void        set_search_articles(std::initializer_list<ArticleFlags> flags, long current);
+    void        set_boundary_search_articles(long current);
     std::string search_articles(char direction, std::string_view query, ArticleSwitchResult expected = AS_NORM,
                                 const std::function<void(ArticleNum)> &progress = {});
     std::string enter_search(char direction, std::string_view input, ArticleSwitchResult expected,
@@ -1963,6 +1964,13 @@ void SearchCommandArticleTest::set_search_articles(std::initializer_list<Article
     m_subjects[2].m_str = "Re: Needle later";
     g_recent_art = ArticleNum{1};
     g_recent_artp = article_ptr(g_recent_art);
+}
+
+void SearchCommandArticleTest::set_boundary_search_articles(long current)
+{
+    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
+                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                        current);
 }
 
 std::string SearchCommandArticleTest::search_articles(char direction, std::string_view query,
@@ -2063,6 +2071,35 @@ void FailedDirectionalSearchArticleTest::SetUp()
     set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, GetParam().fourth_flags,
                          GetParam().fifth_flags, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
                         GetParam().current);
+}
+
+class GroupEndSearchArticleTest : public SearchCommandArticleTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+};
+
+void GroupEndSearchArticleTest::SetUp()
+{
+    SearchCommandArticleTest::SetUp();
+    set_boundary_search_articles(8);
+}
+
+class RepeatPatternSearchArticleTest : public SearchCommandArticleTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+};
+
+void RepeatPatternSearchArticleTest::SetUp()
+{
+    SearchCommandArticleTest::SetUp();
+    set_boundary_search_articles(3);
+    search_articles('/', "needle");
+    ASSERT_EQ(ArticleNum{6}, g_art);
+    ASSERT_EQ(article_ptr(g_art), g_artp);
+    g_art = g_curr_art = ArticleNum{GetParam() == '/' ? 6L : 7L};
+    g_artp = g_curr_artp = article_ptr(g_art);
 }
 
 class SearchActionArticleTest : public SearchCommandArticleTest
@@ -11288,7 +11325,7 @@ TEST_P(FailedDirectionalSearchArticleTest, preservesCurrentArticleWhenNoMatchRem
 
     EXPECT_NE(std::string::npos, output.find("Not found."));
     EXPECT_EQ(ArticleNum{GetParam().current}, g_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_curr_artp, g_artp);
 }
 
 INSTANTIATE_TEST_SUITE_P(NoMatch, FailedDirectionalSearchArticleTest,
@@ -11300,65 +11337,30 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values(FailedDirectionalSearchCase{'/', "earlier", 7, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
                     FailedDirectionalSearchCase{'?', "later", 1, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}));
 
-TEST_F(SearchCommandArticleTest, searchesFromGroupEndStartAtTheAppropriateBoundary)
+TEST_P(GroupEndSearchArticleTest, startsAtTheAppropriateBoundary)
 {
-    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
-                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
-                        8);
-    for (const char direction : {'/', '?'})
-    {
-        SCOPED_TRACE(direction);
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
+    search_articles(GetParam(), "needle");
 
-        search_articles(direction, "needle");
-
-        EXPECT_EQ(ArticleNum{direction == '/' ? 1 : 7}, g_art);
-        EXPECT_EQ(article_ptr(g_art), g_artp);
-    }
+    EXPECT_EQ(ArticleNum{GetParam() == '/' ? 1L : 7L}, g_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
 }
 
-TEST_F(SearchCommandArticleTest, emptyPatternRepeatsThePreviousSearchInEitherDirection)
+INSTANTIATE_TEST_SUITE_P(Direction, GroupEndSearchArticleTest, testing::Values('/', '?'));
+
+TEST_P(RepeatPatternSearchArticleTest, emptyPatternRepeatsThePreviousSearch)
 {
-    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
-                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
-                        3);
+    search_articles(GetParam(), "");
 
-    search_articles('/', "needle");
-    ASSERT_EQ(ArticleNum{6}, g_art);
-    ASSERT_EQ(article_ptr(g_art), g_artp);
-    g_curr_art = g_art;
-    g_curr_artp = g_artp;
-
-    search_articles('/', "");
-    EXPECT_EQ(ArticleNum{7}, g_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    g_curr_art = g_art;
-    g_curr_artp = g_artp;
-
-    search_articles('?', "");
-    EXPECT_EQ(ArticleNum{6}, g_art);
+    EXPECT_EQ(ArticleNum{GetParam() == '/' ? 7L : 6L}, g_art);
     EXPECT_EQ(article_ptr(g_art), g_artp);
     EXPECT_EQ("needle", g_last_pat);
 }
 
-TEST_F(SearchCommandArticleTest, unsuccessfulSearchFromGroupEndRestoresTheNullCurrentPointer)
-{
-    set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
-                         AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
-                        8);
-    for (const char direction : {'/', '?'})
-    {
-        SCOPED_TRACE(direction);
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
+INSTANTIATE_TEST_SUITE_P(Direction, RepeatPatternSearchArticleTest, testing::Values('/', '?'));
 
-        search_articles(direction, "absent", AS_ASK);
-
-        EXPECT_EQ(ArticleNum{8}, g_art);
-        EXPECT_EQ(nullptr, g_artp);
-    }
-}
+INSTANTIATE_TEST_SUITE_P(GroupEnd, FailedDirectionalSearchArticleTest,
+                         testing::Values(FailedDirectionalSearchCase{'/', "absent", 8, AF_EXISTS, AF_NONE},
+                                         FailedDirectionalSearchCase{'?', "absent", 8, AF_EXISTS, AF_NONE}));
 
 TEST_F(SearchCommandArticleTest, interruptionRestoresCurrentArticleNumberAndPointer)
 {
