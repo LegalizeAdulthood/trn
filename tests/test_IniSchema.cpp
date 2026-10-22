@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <string_view>
+#include <tuple>
 
 namespace
 {
@@ -25,30 +26,49 @@ IniSchema make_schema()
                      }};
 }
 
+class IniSchemaTest : public testing::Test
+{
+protected:
+    const IniSchema m_schema{make_schema()};
+};
+
+using SchemaLookup = std::tuple<std::string_view, TestField, std::string_view, std::string_view>;
+
+class SchemaLookupTest : public IniSchemaTest, public testing::WithParamInterface<SchemaLookup>
+{
+};
+
+class MissingSchemaKeyTest : public IniSchemaTest, public testing::WithParamInterface<std::string_view>
+{
+};
+
 } // namespace
 
-TEST(IniSchemaTest, lookupIsCaseInsensitive)
+TEST_P(SchemaLookupTest, findsTheFieldRegardlessOfKeyCase)
 {
-    const IniSchema schema = make_schema();
+    const auto &[key, id, name, help] = GetParam();
 
-    const IniField *alpha = schema.find("ALPHA KEY");
-    const IniField *beta = schema.find("beta key");
+    const IniField *field = m_schema.find(key);
 
-    ASSERT_NE(nullptr, alpha);
-    ASSERT_NE(nullptr, beta);
-    EXPECT_EQ(TF_ALPHA, alpha->id());
-    EXPECT_EQ(std::string_view{"Alpha Key"}, alpha->name());
-    EXPECT_EQ(std::string_view{"alpha help"}, alpha->help());
-    EXPECT_EQ(TF_BETA, beta->id());
+    ASSERT_NE(nullptr, field);
+    EXPECT_EQ(id, field->id());
+    EXPECT_EQ(name, field->name());
+    EXPECT_EQ(help, field->help());
 }
 
-TEST(IniSchemaTest, displayGroupsAreNotLookupEntries)
-{
-    const IniSchema schema = make_schema();
+INSTANTIATE_TEST_SUITE_P(CaseVariants, SchemaLookupTest,
+                         testing::Values(SchemaLookup{"ALPHA KEY", TF_ALPHA, "Alpha Key", "alpha help"},
+                                         SchemaLookup{"beta key", TF_BETA, "Beta Key", ""}));
 
-    EXPECT_EQ(nullptr, schema.find("Display Group"));
-    EXPECT_EQ(nullptr, schema.find("Missing Key"));
+TEST_P(MissingSchemaKeyTest, doesNotFindANonValueKey)
+{
+    const IniField *field = m_schema.find(GetParam());
+
+    EXPECT_EQ(nullptr, field);
 }
+
+INSTANTIATE_TEST_SUITE_P(DisplayGroupAndAbsentKey, MissingSchemaKeyTest,
+                         testing::Values("Display Group", "Missing Key"));
 
 TEST(IniSchemaTest, fieldsPreserveDisplayOrder)
 {
