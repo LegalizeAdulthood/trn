@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <fcntl.h>
 #include <filesystem>
 #include <string>
 #include <system_error>
@@ -32,7 +33,11 @@ void back_page_init()
     back_page_final();
     const std::string vary_name = file_exp(VARYNAME);
     close(creat(vary_name.c_str(), 0600));
-    s_vary_fd = open(vary_name.c_str(), 2);
+    int open_flags = O_RDWR;
+#ifdef _WIN32
+    open_flags |= _O_BINARY;
+#endif
+    s_vary_fd = open(vary_name.c_str(), open_flags);
     std::error_code error;
     fs::remove(vary_name, error);
     if (s_vary_fd < 0)
