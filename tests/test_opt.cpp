@@ -186,41 +186,26 @@ private:
     std::string m_old_save_name;
 };
 
-struct SavedSelectorCommand
-{
-    OptionIndex option;
-    std::string value;
-};
-
-class SelectorCommandOptionTest : public testing::Test
+class SelectorCommandOptionTest : public testing::TestWithParam<OptionIndex>
 {
 protected:
-    void SetUp() override
-    {
-        for (SavedSelectorCommand &saved : m_saved_values)
-        {
-            saved.value = option_value(saved.option);
-        }
-    }
-
-    void TearDown() override
-    {
-        for (const SavedSelectorCommand &saved : m_saved_values)
-        {
-            set_option(saved.option, saved.value);
-        }
-    }
+    void SetUp() override;
+    void TearDown() override;
 
 private:
-    std::array<SavedSelectorCommand, 6> m_saved_values{{
-        {OI_UNIV_SEL_CMDS, {}},
-        {OI_NEWSRC_SEL_CMDS, {}},
-        {OI_ADD_SEL_CMDS, {}},
-        {OI_NEWSGROUP_SEL_CMDS, {}},
-        {OI_NEWS_SEL_CMDS, {}},
-        {OI_OPTION_SEL_CMDS, {}},
-    }};
+    std::string m_saved_value;
 };
+
+void SelectorCommandOptionTest::SetUp()
+{
+    m_saved_value = option_value(GetParam());
+    set_option(GetParam(), "ab");
+}
+
+void SelectorCommandOptionTest::TearDown()
+{
+    set_option(GetParam(), m_saved_value);
+}
 
 class HeaderListOptionTest : public testing::Test
 {
@@ -442,46 +427,25 @@ TEST_F(AutoSaveNameOptionTest, optionValueFallsBackToCompiledSaveDirectory)
     EXPECT_EQ(yes_or_no(uses_category_save_directory), option_value(OI_AUTO_SAVE_NAME));
 }
 
-TEST_F(SelectorCommandOptionTest, commandOptionsKeepOnlyFirstTwoCharacters)
+TEST_P(SelectorCommandOptionTest, commandOptionKeepsOnlyFirstTwoCharacters)
 {
-    set_option(OI_UNIV_SEL_CMDS, "abcd");
-    set_option(OI_NEWSRC_SEL_CMDS, "abcd");
-    set_option(OI_ADD_SEL_CMDS, "abcd");
-    set_option(OI_NEWSGROUP_SEL_CMDS, "abcd");
-    set_option(OI_NEWS_SEL_CMDS, "abcd");
-    set_option(OI_OPTION_SEL_CMDS, "abcd");
+    set_option(GetParam(), "xy");
 
-    EXPECT_EQ("ab", option_value(OI_UNIV_SEL_CMDS));
-    EXPECT_EQ("ab", option_value(OI_NEWSRC_SEL_CMDS));
-    EXPECT_EQ("ab", option_value(OI_ADD_SEL_CMDS));
-    EXPECT_EQ("ab", option_value(OI_NEWSGROUP_SEL_CMDS));
-    EXPECT_EQ("ab", option_value(OI_NEWS_SEL_CMDS));
-    EXPECT_EQ("ab", option_value(OI_OPTION_SEL_CMDS));
+    set_option(GetParam(), "abcd");
+
+    EXPECT_EQ("ab", option_value(GetParam()));
 }
 
-TEST_F(SelectorCommandOptionTest, oneCharacterCommandOptionsPreservePageCommand)
+TEST_P(SelectorCommandOptionTest, oneCharacterCommandOptionPreservesPageCommand)
 {
-    set_option(OI_UNIV_SEL_CMDS, "ab");
-    set_option(OI_NEWSRC_SEL_CMDS, "ab");
-    set_option(OI_ADD_SEL_CMDS, "ab");
-    set_option(OI_NEWSGROUP_SEL_CMDS, "ab");
-    set_option(OI_NEWS_SEL_CMDS, "ab");
-    set_option(OI_OPTION_SEL_CMDS, "ab");
+    set_option(GetParam(), "x");
 
-    set_option(OI_UNIV_SEL_CMDS, "x");
-    set_option(OI_NEWSRC_SEL_CMDS, "x");
-    set_option(OI_ADD_SEL_CMDS, "x");
-    set_option(OI_NEWSGROUP_SEL_CMDS, "x");
-    set_option(OI_NEWS_SEL_CMDS, "x");
-    set_option(OI_OPTION_SEL_CMDS, "x");
-
-    EXPECT_EQ("xb", option_value(OI_UNIV_SEL_CMDS));
-    EXPECT_EQ("xb", option_value(OI_NEWSRC_SEL_CMDS));
-    EXPECT_EQ("xb", option_value(OI_ADD_SEL_CMDS));
-    EXPECT_EQ("xb", option_value(OI_NEWSGROUP_SEL_CMDS));
-    EXPECT_EQ("xb", option_value(OI_NEWS_SEL_CMDS));
-    EXPECT_EQ("xb", option_value(OI_OPTION_SEL_CMDS));
+    EXPECT_EQ("xb", option_value(GetParam()));
 }
+
+INSTANTIATE_TEST_SUITE_P(Selectors, SelectorCommandOptionTest,
+                         testing::Values(OI_UNIV_SEL_CMDS, OI_NEWSRC_SEL_CMDS, OI_ADD_SEL_CMDS, OI_NEWSGROUP_SEL_CMDS,
+                                         OI_NEWS_SEL_CMDS, OI_OPTION_SEL_CMDS));
 
 TEST_F(HeaderListOptionTest, hidingOptionParsesCommaSeparatedOverrides)
 {
