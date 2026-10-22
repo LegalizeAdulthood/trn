@@ -216,6 +216,49 @@ void NaturalAddGroupOrderTest::SetUp()
     g_sel_sort = SS_NATURAL;
 }
 
+struct AddGroupSortCase
+{
+    const char        *name;
+    SelectionSortMode  previous_mode;
+    int                previous_direction;
+    SelectionSortMode  mode;
+    int                direction;
+    std::array<int, 3> order;
+};
+
+const AddGroupSortCase ADD_GROUP_SORT_CASES[]{{"CountAscending", SS_NATURAL, 1, SS_COUNT, 1, {1, 0, 2}},
+                                              {"CountDescending", SS_COUNT, 1, SS_COUNT, -1, {2, 0, 1}},
+                                              {"NameDescending", SS_COUNT, -1, SS_STRING, -1, {0, 2, 1}},
+                                              {"NaturalDescending", SS_STRING, -1, SS_NATURAL, -1, {2, 1, 0}}};
+
+void PrintTo(const AddGroupSortCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class AddGroupSortTest : public AddGroupStorageTest, public testing::WithParamInterface<AddGroupSortCase>
+{
+protected:
+    void SetUp() override;
+
+    std::array<AddGroupIndex, 3> m_ids{};
+};
+
+void AddGroupSortTest::SetUp()
+{
+    AddGroupStorageTest::SetUp();
+    m_ids = {add_to_list("comp.Z", 3, ':'), add_to_list("comp.a", 3, ':'), add_to_list("comp.b", 9, ':')};
+    for (const AddGroupIndex index : m_ids)
+    {
+        ASSERT_NE(AddGroupIndex::None, index);
+    }
+    g_sel_sort = GetParam().previous_mode;
+    g_sel_direction = GetParam().previous_direction;
+    sort_add_groups();
+    g_sel_sort = GetParam().mode;
+    g_sel_direction = GetParam().direction;
+}
+
 class ScanActiveTest : public testing::Test
 {
 protected:
@@ -687,26 +730,18 @@ TEST_F(NaturalAddGroupOrderTest, restoresInsertionOrderAfterNameSorting)
     EXPECT_EQ(m_alpha, g_add_groups.next(m_beta));
 }
 
-TEST_F(AddGroupStorageTest, nameAndCountSortingUseDirectionAndNameTies)
+TEST_P(AddGroupSortTest, ordersGroupsAndTraversalAccordingToTheModeAndDirection)
 {
-    const AddGroupIndex z = add_to_list("comp.Z", 3, ':');
-    const AddGroupIndex a = add_to_list("comp.a", 3, ':');
-    const AddGroupIndex b = add_to_list("comp.b", 9, ':');
-    g_sel_sort = SS_COUNT;
     sort_add_groups();
-    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(a, z, b));
-    g_sel_direction = -1;
-    sort_add_groups();
-    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(b, z, a));
-    EXPECT_EQ(z, g_add_groups.next(b));
-    EXPECT_EQ(b, g_add_groups.prev(z));
-    g_sel_sort = SS_STRING;
-    sort_add_groups();
-    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(z, b, a));
-    g_sel_sort = SS_NATURAL;
-    sort_add_groups();
-    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(b, a, z));
+
+    const std::array<int, 3> &order = GetParam().order;
+    EXPECT_THAT(g_add_groups.indices(), testing::ElementsAre(m_ids[order[0]], m_ids[order[1]], m_ids[order[2]]));
+    EXPECT_EQ(m_ids[order[1]], g_add_groups.next(m_ids[order[0]]));
+    EXPECT_EQ(m_ids[order[0]], g_add_groups.prev(m_ids[order[1]]));
 }
+
+INSTANTIATE_TEST_SUITE_P(ModeAndDirection, AddGroupSortTest, testing::ValuesIn(ADD_GROUP_SORT_CASES),
+                         [](const testing::TestParamInfo<AddGroupSortCase> &info) { return info.param.name; });
 
 TEST_F(AddGroupStorageTest, clearDisposesGroupsAndDuplicateLookupState)
 {
