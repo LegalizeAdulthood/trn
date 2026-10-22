@@ -1,6 +1,7 @@
 // This software is copyrighted as detailed in the LICENSE file.
 // Copyright (c) 2026, Richard Thomson
 
+#include <trn/artio.h>
 #include <trn/artsrch.h>
 #include <trn/artstate.h>
 #include <trn/bits.h>
@@ -3549,6 +3550,147 @@ void SubjectFallbackArticleTest::expect_from(char command, long current, long ta
     g_curr_artp = g_artp;
     expect_navigation(command, target, reread, missing, force_last);
 }
+
+class RereadArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        set_reading_position(long current);
+    std::string display(char command);
+    void        expect_unmoved_view();
+
+private:
+    bool             m_old_do_hiding{g_do_hiding};
+    bool             m_old_rotate{g_rotate};
+    bool             m_old_do_fseek{g_do_fseek};
+    ArticleLine      m_old_art_line_num{g_art_line_num};
+    ArticleLine      m_old_top_line{g_top_line};
+    int              m_old_fire_is_out{g_fire_is_out};
+    int              m_old_tc_lines{g_tc_LINES};
+    std::string_view m_old_tc_cd{g_tc_CD};
+    std::string_view m_old_tc_ho{g_tc_HO};
+    std::string_view m_old_tc_cr{g_tc_CR};
+};
+
+void RereadArticleTest::SetUp()
+{
+    UnreadScopeArticleTest::SetUp();
+    g_do_hiding = true;
+    g_rotate = false;
+    g_do_fseek = false;
+    g_art_line_num = ArticleLine{41};
+    g_top_line = ArticleLine{15};
+    g_term_line = 12;
+    g_term_col = 9;
+    g_fire_is_out = STANDOUT | UNDERLINE;
+    g_tc_LINES = 24;
+    g_tc_CD = "\033[J";
+    g_tc_HO = "\033[H";
+    g_tc_CR = "\r";
+}
+
+void RereadArticleTest::TearDown()
+{
+    g_do_hiding = m_old_do_hiding;
+    g_rotate = m_old_rotate;
+    g_do_fseek = m_old_do_fseek;
+    g_art_line_num = m_old_art_line_num;
+    g_top_line = m_old_top_line;
+    g_fire_is_out = m_old_fire_is_out;
+    g_tc_LINES = m_old_tc_lines;
+    g_tc_CD = m_old_tc_cd;
+    g_tc_HO = m_old_tc_ho;
+    g_tc_CR = m_old_tc_cr;
+    UnreadScopeArticleTest::TearDown();
+}
+
+void RereadArticleTest::set_reading_position(long current)
+{
+    set_scope({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS | AF_UNREAD,
+               AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL},
+              current);
+    for (Subject &subject : m_subjects)
+    {
+        subject.m_flags |= SF_SEL;
+    }
+    g_selected_subj_cnt = 3;
+    g_selected_only = true;
+    g_recent_art = ArticleNum{6};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{1};
+    g_search_ahead = ArticleNum{6};
+    g_general_mode = GM_READ;
+    g_mode = current <= g_last_art.value_of() ? MM_ARTICLE : MM_ARTICLE_END;
+}
+
+std::string RereadArticleTest::display(char command)
+{
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticleNum                       first = g_first_art;
+    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       search_ahead = g_search_ahead;
+    const MinorMode                        mode = g_mode;
+    std::vector<SubjectFlags>              subject_flags;
+    for (const Subject &subject : m_subjects)
+    {
+        subject_flags.push_back(subject.m_flags);
+    }
+    push_char('q');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{command});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_NORM, result);
+    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(search_ahead, g_search_ahead);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(mode, g_mode);
+    EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_selected_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS | AF_UNREAD,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL});
+    for (std::size_t index = 0; index < subject_flags.size(); ++index)
+    {
+        EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
+    }
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('q', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+void RereadArticleTest::expect_unmoved_view()
+{
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(12, g_term_line);
+    EXPECT_EQ(9, g_term_col);
+    EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
+}
+
+class RereadCurrentArticleTest : public RereadArticleTest, public testing::WithParamInterface<long>
+{
+};
+
+class RotateArticleTest : public RereadArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class ToggleRotationArticleTest : public RereadArticleTest, public testing::WithParamInterface<bool>
+{
+};
 
 } // namespace
 
@@ -9995,6 +10137,179 @@ TEST_F(SearchCommandArticleTest, correctedPatternFindsAnArticleAfterACompileErro
     EXPECT_EQ(ArticleNum{6}, g_art);
     EXPECT_EQ(article_ptr(g_art), g_artp);
     EXPECT_EQ("needle", g_last_pat);
+}
+
+TEST_P(RereadCurrentArticleTest, viewingUnhiddenRereadsTheCurrentArticleWithoutDisablingRotation)
+{
+    set_reading_position(GetParam());
+    g_rotate = true;
+
+    const std::string output = display('v');
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_do_hiding);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_FALSE(g_force_last);
+    expect_unmoved_view();
+}
+
+TEST_P(RereadCurrentArticleTest, controlRRereadsTheCurrentArticleWithHidingAndWithoutRotation)
+{
+    set_reading_position(GetParam());
+    g_do_hiding = false;
+    g_rotate = true;
+
+    const std::string output = display(Ctl('r'));
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_FALSE(g_force_last);
+    expect_unmoved_view();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadOrUnread, RereadCurrentArticleTest, testing::Values(2L, 4L));
+
+TEST_P(RotateArticleTest, rotationRereadsTheCurrentReadArticleWithoutChangingHiding)
+{
+    set_reading_position(2);
+
+    const std::string output = display(GetParam());
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_force_last);
+    expect_unmoved_view();
+}
+
+TEST_P(RotateArticleTest, requestingRotationWhenAlreadyEnabledKeepsItEnabled)
+{
+    set_reading_position(4);
+    g_rotate = true;
+    g_do_hiding = false;
+
+    const std::string output = display(GetParam());
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_FALSE(g_do_hiding);
+    EXPECT_FALSE(g_force_last);
+    expect_unmoved_view();
+}
+
+TEST_P(RotateArticleTest, rotationAtGroupEndKeepsTheEndPromptWithoutRereadingTheEndPosition)
+{
+    set_reading_position(8);
+
+    const std::string output = display(GetParam());
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_rotate);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_unmoved_view();
+}
+
+INSTANTIATE_TEST_SUITE_P(RotationKeys, RotateArticleTest, testing::Values('x', Ctl('x')));
+
+TEST_F(RereadArticleTest, viewingUnhiddenAtGroupEndLeavesTheDisplayOptionsAndRereadStateAlone)
+{
+    set_reading_position(8);
+    g_rotate = true;
+
+    const std::string output = display('v');
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_TRUE(g_rotate);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_unmoved_view();
+}
+
+TEST_F(RereadArticleTest, controlRAtGroupEndResetsDisplayOptionsAndKeepsTheEndPrompt)
+{
+    set_reading_position(8);
+    g_do_hiding = false;
+    g_rotate = true;
+
+    const std::string output = display(Ctl('r'));
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_FALSE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_unmoved_view();
+}
+
+TEST_P(ToggleRotationArticleTest, uppercaseRotationTogglesTheModeAndRedrawsFromTheCurrentTopLine)
+{
+    set_reading_position(4);
+    g_rotate = GetParam();
+    g_do_hiding = false;
+
+    const std::string output = display('X');
+
+    EXPECT_FALSE(output.empty());
+    EXPECT_EQ(!GetParam(), g_rotate);
+    EXPECT_FALSE(g_do_hiding);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_TRUE(g_do_fseek);
+    EXPECT_EQ(ArticleLine{15}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(0, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+    EXPECT_EQ(0, g_fire_is_out);
+}
+
+TEST_P(ToggleRotationArticleTest, uppercaseRotationAtGroupEndTogglesWithoutForcingTheEndPromptOrRedraw)
+{
+    set_reading_position(8);
+    g_rotate = GetParam();
+    g_do_hiding = false;
+
+    const std::string output = display('X');
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(!GetParam(), g_rotate);
+    EXPECT_FALSE(g_do_hiding);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(nullptr, g_artp);
+    expect_unmoved_view();
+}
+
+INSTANTIATE_TEST_SUITE_P(RotationInitiallyOffOrOn, ToggleRotationArticleTest, testing::Bool());
+
+TEST_F(RereadArticleTest, uppercaseRotationClampsAnUnsetTopLineAtTheArticleStart)
+{
+    set_reading_position(4);
+    g_top_line = ArticleLine{-1};
+
+    const std::string output = display('X');
+
+    EXPECT_FALSE(output.empty());
+    EXPECT_TRUE(g_rotate);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_TRUE(g_do_fseek);
+    EXPECT_EQ(ArticleLine{}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(0, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+    EXPECT_EQ(0, g_fire_is_out);
 }
 
 TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
