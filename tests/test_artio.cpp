@@ -261,6 +261,53 @@ void CharsetIsolationArticleTest::SetUp()
     ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
 }
 
+struct UnicodeProfileArticleCase
+{
+    std::string_view name;
+    std::string_view type;
+    std::string_view header;
+    std::string_view body;
+    std::string_view expected;
+};
+
+constexpr UnicodeProfileArticleCase UNICODE_PROFILE_ARTICLE_CASES[]{
+    {"Utf8", "text/plain; charset=UTF-8",
+     "=?UTF-8?Q?=F0=9F=98=8A=E2=80=AF=E2=80=94?=", "=F0=9F=98=8A=E2=80=AF=E2=80=94\n", ":) ---\n"},
+    {"Windows1252", "text/plain; charset=windows-1252", "=?windows-1252?Q?=91a=92_=93b=94_=96_=97_=85_=A0x?=",
+     "=91a=92 =93b=94 =96 =97 =85 =A0x\n", "`a' \"b\" -- --- ...  x\n"}};
+
+void PrintTo(const UnicodeProfileArticleCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class UnicodeProfileArticleTest : public ArticleIoTest, public testing::WithParamInterface<UnicodeProfileArticleCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_presentation;
+};
+
+void UnicodeProfileArticleTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    g_charsets = "up";
+    reset_char_subst_mode();
+    g_word_wrap_offset = -1;
+    g_mime_section = &m_mime_section;
+    g_is_mime = true;
+    m_mime_section.mime_parse_type(GetParam().type);
+    m_mime_section.m_encoding = MENCODE_QPRINT;
+    g_mime_state = TEXT_MIME;
+    ASSERT_NO_FATAL_FAILURE(open_article_text(GetParam().body));
+    ASSERT_TRUE(read_art_buf(m_presentation, false));
+    ASSERT_EQ(GetParam().expected, m_presentation);
+    std::string line;
+    ASSERT_FALSE(read_art_buf(line, false));
+    ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
+}
+
 } // namespace
 
 TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
@@ -680,48 +727,37 @@ TEST_F(ArticleIoTest, htmlFinalLineIsSubstitutedAfterFiltering)
     EXPECT_EQ("Ae \n", line);
 }
 
-TEST_F(ArticleIoTest, unicodeProfileMatchesEncodedHeadersAndMimeBodies)
+TEST_P(UnicodeProfileArticleTest, presentsEncodedHeadersAndMimeBodiesIdentically)
 {
-    g_charsets = "up";
-    reset_char_subst_mode();
-    g_word_wrap_offset = -1;
-    g_mime_section = &m_mime_section;
-    g_is_mime = true;
-    struct EncodedCase
-    {
-        std::string_view type;
-        std::string_view header;
-        std::string_view body;
-        std::string_view expected;
-    };
-    constexpr EncodedCase cases[]{
-        {"text/plain; charset=UTF-8", "=?UTF-8?Q?=F0=9F=98=8A=E2=80=AF=E2=80=94?=", "=F0=9F=98=8A=E2=80=AF=E2=80=94\n",
-         ":) ---\n"},
-        {"text/plain; charset=windows-1252", "=?windows-1252?Q?=91a=92_=93b=94_=96_=97_=85_=A0x?=",
-         "=91a=92 =93b=94 =96 =97 =85 =A0x\n", "`a' \"b\" -- --- ...  x\n"},
-    };
-    for (const EncodedCase &value : cases)
-    {
-        SCOPED_TRACE(value.type);
-        m_mime_section.mime_parse_type(value.type);
-        m_mime_section.m_encoding = MENCODE_QPRINT;
-        g_mime_state = TEXT_MIME;
-        open_article_text(value.body);
-        std::string line;
-        ASSERT_TRUE(read_art_buf(line, false));
-        EXPECT_EQ(value.expected, line);
-        EXPECT_EQ(str_char_subst(decode_header(value.header), 'u') + "\n", line);
-        EXPECT_FALSE(read_art_buf(line, false));
-        ASSERT_EQ(0, seek_art_buf(ArticlePosition{}));
-        ASSERT_TRUE(read_art_buf(line, false));
-        EXPECT_EQ(value.expected, line);
-        std::rewind(g_art_fp);
-        ASSERT_TRUE(read_art(line));
-        EXPECT_EQ(value.body, line);
-        std::fclose(g_art_fp);
-        g_art_fp = nullptr;
-    }
+    const std::string header = str_char_subst(decode_header(GetParam().header), 'u') + "\n";
+
+    EXPECT_EQ(m_presentation, header);
 }
+
+TEST_P(UnicodeProfileArticleTest, rereadsTheCachedPresentationWithoutChangingIt)
+{
+    std::string line;
+
+    const bool read = read_art_buf(line, false);
+
+    ASSERT_TRUE(read);
+    EXPECT_EQ(GetParam().expected, line);
+}
+
+TEST_P(UnicodeProfileArticleTest, readsTheOriginalRawArticleBytes)
+{
+    std::string line;
+    std::rewind(g_art_fp);
+
+    const bool read = read_art(line);
+
+    ASSERT_TRUE(read);
+    EXPECT_EQ(GetParam().body, line);
+}
+
+INSTANTIATE_TEST_SUITE_P(SourceCharset, UnicodeProfileArticleTest, testing::ValuesIn(UNICODE_PROFILE_ARTICLE_CASES),
+                         [](const testing::TestParamInfo<UnicodeProfileArticleCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(ArticleIoTest, unicodeReplacementEscapesAndDeletionSurviveCacheRereads)
 {
