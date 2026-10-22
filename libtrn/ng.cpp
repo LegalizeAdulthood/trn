@@ -1485,6 +1485,8 @@ normal_search:
         case SRCH_SUBJ_DONE:
             if (g_sa_in)
             {
+                g_art = g_curr_art;
+                g_artp = g_curr_artp;
                 return AS_SA;
             }
             top_article();

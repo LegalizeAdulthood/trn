@@ -510,7 +510,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             break;
         }
         g_artp = article_ptr(g_art);
-        if (do_read || (!(g_artp->m_flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE)))
+        const bool matches_selection =
+            !g_selected_only || (g_artp->m_flags & AF_SEL) || (cmd_chr != Ctl('n') && cmd_chr != Ctl('p'));
+        if (matches_selection && (do_read || (!(g_artp->m_flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE))))
         {
             if (wanted(compex, g_art, how_much))
             {
