@@ -2756,6 +2756,7 @@ class SortedArticleNavigationTest : public ArticleStateTest
 {
 protected:
     void set_order(std::initializer_list<long> order);
+    void        set_position_after_navigation(long number, long index);
     void expect_next_unread(long number, long index, ArticleSwitchResult result = AS_NORM);
     void expect_next_article(long number, long index);
     std::string expect_previous(char command, long number, long index, ArticleSwitchResult result = AS_NORM);
@@ -2776,6 +2777,15 @@ void SortedArticleNavigationTest::set_order(std::initializer_list<long> order)
     g_parsed_art = ArticleNum{1};
     g_reread = true;
     g_force_last = true;
+}
+
+void SortedArticleNavigationTest::set_position_after_navigation(long number, long index)
+{
+    g_art = ArticleNum{number};
+    g_artp = g_art <= g_last_art ? article_ptr(g_art) : nullptr;
+    g_art_ptr = article_ptr_list_begin() + index;
+    g_s_follow_temp = true;
+    g_univ_follow_temp = true;
 }
 
 void SortedArticleNavigationTest::expect_next_unread(long number, long index, ArticleSwitchResult result)
@@ -2891,6 +2901,61 @@ void SortedExplicitForwardArticleNavigationTest::SetUp()
         {AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL});
     g_selected_only = true;
     g_search_ahead = ArticleNum{2};
+}
+
+class SortedExhaustedArticleNavigationTest : public SortedArticleNavigationTest,
+                                             public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SortedExhaustedArticleNavigationTest::SetUp()
+{
+    SortedArticleNavigationTest::SetUp();
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 2);
+    set_order({3, 1, 2});
+    if (GetParam())
+    {
+        set_position_after_navigation(4, 0);
+    }
+}
+
+class SortedRestartArticleNavigationTest : public SortedArticleNavigationTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SortedRestartArticleNavigationTest::SetUp()
+{
+    SortedArticleNavigationTest::SetUp();
+    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS}, 4);
+    set_order({3, 1, 2});
+    g_selected_only = true;
+    g_art_ptr = article_ptr_list_begin() + 1;
+    if (GetParam())
+    {
+        set_position_after_navigation(3, 0);
+    }
+}
+
+class SortedSingleEntryArticleNavigationTest : public SortedArticleNavigationTest,
+                                               public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SortedSingleEntryArticleNavigationTest::SetUp()
+{
+    SortedArticleNavigationTest::SetUp();
+    set_articles({AF_EXISTS}, 1);
+    set_order({1});
+    if (GetParam())
+    {
+        set_position_after_navigation(2, 0);
+    }
 }
 
 class ArticleTraversalTest : public UnreadScopeArticleTest
@@ -6931,14 +6996,14 @@ TEST_F(SortedArticleNavigationTest, selectedNextUnreadWrapsBackToTheOnlyEligible
     expect_next_unread(3, 1);
 }
 
-TEST_F(SortedArticleNavigationTest, nextUnreadStopsAtGroupEndThenLeavesWhenAllArticlesAreRead)
+TEST_P(SortedExhaustedArticleNavigationTest, nextUnreadHandlesAnExhaustedSortedGroup)
 {
-    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 2);
-    set_order({3, 1, 2});
-
-    expect_next_unread(4, 0);
-    expect_next_unread(4, 0, AS_CLEAN);
+    expect_next_unread(4, 0, GetParam() ? AS_CLEAN : AS_NORM);
 }
+
+INSTANTIATE_TEST_SUITE_P(StartPosition, SortedExhaustedArticleNavigationTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info)
+                         { return info.param ? "AtGroupEnd" : "AtLastArticle"; });
 
 TEST_F(SortedArticleNavigationTest, selectedNextUnreadRemainsAtGroupEndWhenOnlyUnselectedUnreadArticlesRemain)
 {
@@ -6978,16 +7043,14 @@ TEST_P(SortedExplicitForwardArticleNavigationTest, nextArticleStopsAfterTheSorte
 
 INSTANTIATE_TEST_SUITE_P(ReadingMode, SortedExplicitForwardArticleNavigationTest, testing::Bool());
 
-TEST_F(SortedArticleNavigationTest, nextArticleFromGroupEndRestartsAtTheFirstSortedReadUnselectedEntry)
+TEST_P(SortedRestartArticleNavigationTest, nextArticleFollowsSortedOrderAtRestart)
 {
-    set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS}, 4);
-    set_order({3, 1, 2});
-    g_selected_only = true;
-    g_art_ptr = article_ptr_list_begin() + 1;
-
-    expect_next_article(3, 0);
-    expect_next_article(1, 1);
+    expect_next_article(GetParam() ? 1 : 3, GetParam() ? 1 : 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(StartPosition, SortedRestartArticleNavigationTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info)
+                         { return info.param ? "AfterRestart" : "AtGroupEnd"; });
 
 TEST_F(SortedArticleNavigationTest, nextArticleRestartsTheSortedListEvenWhenAllArticlesAreRead)
 {
@@ -7005,14 +7068,14 @@ TEST_F(SortedArticleNavigationTest, nextArticleRestartsInSortedOrderWhenTheFirst
     expect_next_article(3, 0);
 }
 
-TEST_F(SortedArticleNavigationTest, nextArticleInASingleEntryListStopsAtGroupEndUntilExplicitlyRestarted)
+TEST_P(SortedSingleEntryArticleNavigationTest, nextArticleHandlesTheSortedBoundary)
 {
-    set_articles({AF_EXISTS}, 1);
-    set_order({1});
-
-    expect_next_article(2, 0);
-    expect_next_article(1, 0);
+    expect_next_article(GetParam() ? 1 : 2, 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(StartPosition, SortedSingleEntryArticleNavigationTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info)
+                         { return info.param ? "AtGroupEnd" : "AtOnlyArticle"; });
 
 TEST_F(BreadthFirstArticleTest, nextUnreadVisitsEveryLevelBeforeDescendingAndWrapsAfterTheLastThread)
 {
