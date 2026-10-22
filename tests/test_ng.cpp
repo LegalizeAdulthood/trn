@@ -3239,6 +3239,42 @@ void BreadthFirstExplicitNextBoundaryArticleTest::SetUp()
     g_univ_follow_temp = true;
 }
 
+struct DepthFirstSkipCase
+{
+    std::string_view name;
+    long             current;
+    int              depth;
+    long             target;
+    int              target_depth;
+};
+
+const DepthFirstSkipCase DEPTH_FIRST_SKIP_CASES[]{
+    {"ChildBranch", 2, 1, 6, 1}, {"Sibling", 3, 2, 5, 2}, {"AncestorSibling", 5, 2, 6, 1}};
+
+void PrintTo(const DepthFirstSkipCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class DepthFirstSkipArticleTest : public BreadthFirstArticleTest, public testing::WithParamInterface<DepthFirstSkipCase>
+{
+protected:
+    void SetUp() override;
+
+    Article *m_cursor{};
+    int      m_depth{};
+};
+
+void DepthFirstSkipArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS, AF_EXISTS},
+             1);
+    m_cursor = article_ptr(ArticleNum{GetParam().current});
+    m_depth = GetParam().depth;
+}
+
 class DepthFirstArticleTest : public BranchingArticleTest
 {
 protected:
@@ -7321,24 +7357,17 @@ TEST_F(BreadthFirstArticleTest, depthFirstStepTracksDepthAcrossChildrenSiblingsA
     EXPECT_EQ(-1, depth);
 }
 
-TEST_F(BreadthFirstArticleTest, depthFirstStepCanSkipDescendantsWithoutLosingDepth)
+TEST_P(DepthFirstSkipArticleTest, skipsDescendantsAndTracksTheTargetDepth)
 {
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-              AF_EXISTS, AF_EXISTS, AF_EXISTS},
-             1);
-    int      depth = 1;
-    Article *cursor = article_ptr(ArticleNum{2})->bump_article(depth, false);
+    m_cursor = m_cursor->bump_article(m_depth, false);
 
-    EXPECT_EQ(article_ptr(ArticleNum{6}), cursor);
-    EXPECT_EQ(1, depth);
-    depth = 2;
-    cursor = article_ptr(ArticleNum{3})->bump_article(depth, false);
-    EXPECT_EQ(article_ptr(ArticleNum{5}), cursor);
-    EXPECT_EQ(2, depth);
-    cursor = cursor->bump_article(depth, false);
-    EXPECT_EQ(article_ptr(ArticleNum{6}), cursor);
-    EXPECT_EQ(1, depth);
+    EXPECT_EQ(article_ptr(ArticleNum{GetParam().target}), m_cursor);
+    EXPECT_EQ(GetParam().target_depth, m_depth);
 }
+
+INSTANTIATE_TEST_SUITE_P(Position, DepthFirstSkipArticleTest, testing::ValuesIn(DEPTH_FIRST_SKIP_CASES),
+                         [](const testing::TestParamInfo<DepthFirstSkipCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(BreadthFirstArticleTest, nextOnLevelCrossesBranchesAndRootsWithoutVisitingOtherLevels)
 {
