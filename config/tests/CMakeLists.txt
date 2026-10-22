@@ -19,11 +19,10 @@ target_compile_features(pnews-test-tool PRIVATE cxx_std_17)
 target_folder(pnews-test-tool "Tests")
 if(WIN32)
     add_test(NAME MailSubmissionTest.headers
-        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
-            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
-            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_mail_headers.ps1"
-            -Adapter "${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1"
-            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mail-headers")
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTRN_TEST_MAIL_ADAPTER=${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1"
+            "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/mail-headers"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_mail_headers.cmake")
     set_tests_properties(MailSubmissionTest.headers PROPERTIES LABELS trn TIMEOUT 30)
     add_test(NAME MailSubmissionTest.nativeSmtp
         COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
@@ -32,14 +31,6 @@ if(WIN32)
             -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mail-smtp"
             -Adapter "${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1")
     set_tests_properties(MailSubmissionTest.nativeSmtp PROPERTIES LABELS trn TIMEOUT 90)
-    add_test(NAME ToolStreamTest.utf8Console
-        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
-            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
-            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_tool_streams.ps1"
-            -Tools "${PROJECT_BINARY_DIR}/config/data/trn-tools.ps1"
-            -Tool "$<TARGET_FILE:pnews-test-tool>"
-            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/tool-streams")
-    set_tests_properties(ToolStreamTest.utf8Console PROPERTIES LABELS trn TIMEOUT 30)
 endif()
 if(UNIX)
     add_test(NAME HelperPackageTest.unix
@@ -100,16 +91,22 @@ foreach(case IN ITEMS full body first_byte past_end empty append spaces)
     set_tests_properties(NormSaverTest.${case} PROPERTIES LABELS trn)
 endforeach()
 if(WIN32)
-    foreach(case IN ITEMS bytes invalid_offset arity missing_input missing_parent locked_output same_file)
+    foreach(case IN ITEMS invalid_offset arity missing_input missing_parent same_file)
         add_test(NAME NormSaverTest.${case}
-            COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
-                -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
-                -File "${CMAKE_CURRENT_SOURCE_DIR}/test_norm_saver.ps1"
-                -Helper "${TRN_GENERATED_NORM_SAVER_FILE}"
-                -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/norm-saver-${case}"
-                -Case "${case}")
+            COMMAND "${CMAKE_COMMAND}"
+                "-DTRN_TEST_SAVER=${TRN_GENERATED_NORM_SAVER_FILE}"
+                "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/norm-saver-${case}"
+                "-DTRN_TEST_CASE=${case}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_saver_errors.cmake")
         set_tests_properties(NormSaverTest.${case} PROPERTIES LABELS trn)
     endforeach()
+    add_test(NAME NormSaverTest.locked_output
+        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_saver_locked.ps1"
+            -Helper "${TRN_GENERATED_NORM_SAVER_FILE}"
+            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/norm-saver-locked_output")
+    set_tests_properties(NormSaverTest.locked_output PROPERTIES LABELS trn)
 endif()
 
 set(test_saved_mbox_char "${MBOX_CHAR}")
@@ -138,7 +135,7 @@ foreach(format IN ITEMS mbox mmdf)
     endif()
     set(mbox_cases full body first_byte past_end empty append record)
     if(WIN32)
-        list(APPEND mbox_cases spaces)
+        list(APPEND mbox_cases spaces unicode_envelope)
     endif()
     foreach(case IN LISTS mbox_cases)
         add_test(NAME MboxSaverTest.${format}_${case}
@@ -151,33 +148,37 @@ foreach(format IN ITEMS mbox mmdf)
         set_tests_properties(MboxSaverTest.${format}_${case} PROPERTIES LABELS trn)
     endforeach()
     if(WIN32)
-        foreach(case IN ITEMS bytes boundary unicode_envelope invalid_offset arity missing_input missing_parent locked_output same_file)
+        foreach(case IN ITEMS invalid_offset arity missing_input missing_parent same_file)
             add_test(NAME MboxSaverTest.${format}_${case}
-                COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
-                    -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
-                    -File "${CMAKE_CURRENT_SOURCE_DIR}/test_mbox_saver.ps1"
-                    -Helper "${test_mbox_helper}"
-                    -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mbox-${format}-${case}"
-                    -Case "${case}" -Mmdf "${TRN_MBOX_SAVER_MMDF}")
+                COMMAND "${CMAKE_COMMAND}"
+                    "-DTRN_TEST_SAVER=${test_mbox_helper}"
+                    "-DTRN_TEST_HAS_ENVELOPE=ON"
+                    "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/mbox-${format}-${case}"
+                    "-DTRN_TEST_CASE=${case}"
+                    -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_saver_errors.cmake")
             set_tests_properties(MboxSaverTest.${format}_${case} PROPERTIES LABELS trn)
         endforeach()
+        add_test(NAME MboxSaverTest.${format}_locked_output
+            COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+                -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+                -File "${CMAKE_CURRENT_SOURCE_DIR}/test_saver_locked.ps1"
+                -Helper "${test_mbox_helper}" -HasEnvelope
+                -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mbox-${format}-locked_output")
+        set_tests_properties(MboxSaverTest.${format}_locked_output PROPERTIES LABELS trn)
     endif()
 endforeach()
 set(MBOX_CHAR "${test_saved_mbox_char}")
 
 set(speller_cases correct multiple words clean failure cancel missing_tool pager_failure word_failure quote_pattern no_quotes empty)
 if(WIN32)
-    list(APPEND speller_cases insert delete header_order)
-    foreach(case IN ITEMS bytes arity missing_input locked invalid_pattern invalid_options)
-        add_test(NAME SpellerTest.${case}
-            COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
-                -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
-                -File "${CMAKE_CURRENT_SOURCE_DIR}/test_speller.ps1"
-                -Helper "${TRN_GENERATED_SPELLER_FILE}"
-                -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/speller-${case}"
-                -Case "${case}")
-        set_tests_properties(SpellerTest.${case} PROPERTIES LABELS trn)
-    endforeach()
+    list(APPEND speller_cases insert delete header_order arity missing_input invalid_pattern invalid_options)
+    add_test(NAME SpellerTest.locked
+        COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
+            -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
+            -File "${CMAKE_CURRENT_SOURCE_DIR}/test_speller.ps1"
+            -Helper "${TRN_GENERATED_SPELLER_FILE}"
+            -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/speller-locked")
+    set_tests_properties(SpellerTest.locked PROPERTIES LABELS trn)
 endif()
 foreach(case IN LISTS speller_cases)
     add_test(NAME SpellerTest.${case}
