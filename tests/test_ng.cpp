@@ -3940,22 +3940,22 @@ void SiblingArticleTest::set_siblings(long current)
     }
 }
 
-class SubjectThreadArticleTest : public ArticleNavigationTest
+class SubjectThreadArticleStateTest : public ArticleStateTest
 {
 protected:
-    void set_subjects(std::initializer_list<ArticleFlags> flags, long current);
+    void set_subjects(std::initializer_list<ArticleFlags> flags, long current, bool threaded);
 
     Subject m_subjects[6]{};
 };
 
-void SubjectThreadArticleTest::set_subjects(std::initializer_list<ArticleFlags> flags, long current)
+void SubjectThreadArticleStateTest::set_subjects(std::initializer_list<ArticleFlags> flags, long current, bool threaded)
 {
     ASSERT_NE(0U, flags.size());
     ASSERT_EQ(0U, flags.size() % 4);
     ASSERT_LE(flags.size(), 12U);
     set_articles(flags, current);
     const long subject_count = static_cast<long>(flags.size() / 2);
-    g_sel_mode = GetParam() ? SM_THREAD : SM_SUBJECT;
+    g_sel_mode = threaded ? SM_THREAD : SM_SUBJECT;
     g_first_subject = &m_subjects[0];
     g_last_subject = &m_subjects[subject_count - 1];
     for (long index = 0; index < subject_count; ++index)
@@ -3977,6 +3977,64 @@ void SubjectThreadArticleTest::set_subjects(std::initializer_list<ArticleFlags> 
             article->m_child1 = number % 4 ? article_ptr(ArticleNum{number + 1}) : nullptr;
         }
     }
+}
+
+class SubjectThreadArticleTest : public SubjectThreadArticleStateTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+    void set_subjects(std::initializer_list<ArticleFlags> flags, long current);
+};
+
+void SubjectThreadArticleTest::SetUp()
+{
+    SubjectThreadArticleStateTest::SetUp();
+    g_threaded_group = GetParam();
+}
+
+void SubjectThreadArticleTest::set_subjects(std::initializer_list<ArticleFlags> flags, long current)
+{
+    SubjectThreadArticleStateTest::set_subjects(flags, current, GetParam());
+}
+
+struct SubjectThreadBoundaryCase
+{
+    std::string_view name;
+    char             command;
+    long             current;
+    long             subject_target;
+    long             thread_target;
+    bool             force_last;
+};
+
+const SubjectThreadBoundaryCase SUBJECT_THREAD_BOUNDARY_CASES[]{{"NextFromGroupEnd", '>', 9, 2, 2, false},
+                                                                {"PreviousFromGroupEnd", '<', 9, 8, 6, false},
+                                                                {"NextAtLastScope", '>', 8, 9, 9, true},
+                                                                {"PreviousAtFirstScope", '<', 1, 9, 9, true}};
+
+void PrintTo(const SubjectThreadBoundaryCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class SubjectThreadBoundaryArticleTest : public SubjectThreadArticleStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, SubjectThreadBoundaryCase>>
+{
+protected:
+    void SetUp() override;
+
+    long m_target{};
+};
+
+void SubjectThreadBoundaryArticleTest::SetUp()
+{
+    SubjectThreadArticleStateTest::SetUp();
+    g_threaded_group = std::get<0>(GetParam());
+    const SubjectThreadBoundaryCase &boundary = std::get<1>(GetParam());
+    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+                 boundary.current, g_threaded_group);
+    m_target = g_threaded_group ? boundary.thread_target : boundary.subject_target;
 }
 
 class SelectedPreviousSubjectThreadArticleTest : public SubjectThreadArticleTest
@@ -8668,42 +8726,29 @@ TEST_P(SubjectThreadArticleTest, nextSkipsMissingArticlesAndFallsBackToReadArtic
     EXPECT_EQ(GetParam(), g_threaded_group);
 }
 
-TEST_P(SubjectThreadArticleTest, entersFromEndAndStopsAtSubjectOrThreadBoundaries)
+TEST_P(SubjectThreadBoundaryArticleTest, handlesTheSubjectOrThreadBoundary)
 {
-    set_subjects({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS,
-                  AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD},
-                 9);
-    struct NavigationCase
-    {
-        const char *command;
-        long        current;
-        long        expected;
-        bool        force_last;
-    };
-    for (const NavigationCase test_case :
-         {NavigationCase{">", 9, 2, false}, NavigationCase{"<", 9, GetParam() ? 6L : 8L, false},
-          NavigationCase{">", 8, 9, true}, NavigationCase{"<", 1, 9, true}})
-    {
-        SCOPED_TRACE(testing::Message() << test_case.command << " from " << test_case.current);
-        g_art = ArticleNum{test_case.current};
-        g_artp = test_case.current <= 8 ? article_ptr(g_art) : nullptr;
-        g_curr_art = g_art;
-        g_curr_artp = g_artp;
-        g_reread = false;
-        g_force_last = false;
+    const SubjectThreadBoundaryCase &boundary = std::get<1>(GetParam());
 
-        EXPECT_EQ(AS_NORM, art_switch(test_case.command));
+    EXPECT_EQ(AS_NORM, art_switch(std::string{boundary.command}));
 
-        EXPECT_EQ(ArticleNum{test_case.expected}, g_art);
-        EXPECT_EQ(test_case.expected <= 8 ? article_ptr(ArticleNum{test_case.expected}) : nullptr, g_artp);
-        EXPECT_EQ(ArticleNum{test_case.current}, g_curr_art);
-        EXPECT_EQ(test_case.current <= 8 ? article_ptr(ArticleNum{test_case.current}) : nullptr, g_curr_artp);
-        EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
-        EXPECT_FALSE(g_reread);
-        EXPECT_EQ(test_case.force_last, g_force_last);
-        EXPECT_EQ(GetParam(), g_threaded_group);
-    }
+    EXPECT_EQ(ArticleNum{m_target}, g_art);
+    EXPECT_EQ(m_target <= 8 ? article_ptr(ArticleNum{m_target}) : nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{boundary.current}, g_curr_art);
+    EXPECT_EQ(boundary.current <= 8 ? article_ptr(ArticleNum{boundary.current}) : nullptr, g_curr_artp);
+    EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(boundary.force_last, g_force_last);
+    EXPECT_EQ(std::get<0>(GetParam()), g_threaded_group);
 }
+
+INSTANTIATE_TEST_SUITE_P(ScopeAndBoundary, SubjectThreadBoundaryArticleTest,
+                         testing::Combine(testing::Bool(), testing::ValuesIn(SUBJECT_THREAD_BOUNDARY_CASES)),
+                         [](const testing::TestParamInfo<std::tuple<bool, SubjectThreadBoundaryCase>> &info)
+                         {
+                             return std::string{std::get<0>(info.param) ? "Thread" : "Subject"} +
+                                    std::string{std::get<1>(info.param).name};
+                         });
 
 TEST_P(SelectedPreviousSubjectThreadArticleTest, findsSelectedUnreadTargetPastReadAndUnselectedArticles)
 {
