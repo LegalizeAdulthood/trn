@@ -3135,6 +3135,78 @@ class BreadthFirstArticleTest : public BranchingArticleTest
 {
 };
 
+struct BreadthFirstUnreadCase
+{
+    std::string_view                    name;
+    std::initializer_list<ArticleFlags> flags;
+    std::initializer_list<long>         order;
+    long                                wrap_target;
+    bool                                selected_only;
+    long                                search_ahead;
+};
+
+const BreadthFirstUnreadCase BREADTH_FIRST_UNREAD_CASES[]{
+    {"AllUnread",
+     {AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+      AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+      AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+     {2, 6, 7, 3, 5, 8, 10, 4, 9, 11, 12},
+     1,
+     false,
+     2},
+    {"ReadParents",
+     {AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS,
+      AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD},
+     {6, 3, 8, 4, 9, 12},
+     6,
+     false,
+     0},
+    {"SelectedOnly",
+     {AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+      AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
+      AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
+      AF_EXISTS | AF_UNREAD | AF_SEL},
+     {7, 3, 8, 10, 4, 12},
+     1,
+     true,
+     0}};
+
+void PrintTo(const BreadthFirstUnreadCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class BreadthFirstUnreadArticleTest : public BreadthFirstArticleTest,
+                                      public testing::WithParamInterface<BreadthFirstUnreadCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void BreadthFirstUnreadArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree(GetParam().flags, 1);
+    g_selected_only = GetParam().selected_only;
+    g_search_ahead = ArticleNum{GetParam().search_ahead};
+}
+
+class BreadthFirstUnreadWrapArticleTest : public BreadthFirstUnreadArticleTest
+{
+protected:
+    void SetUp() override;
+};
+
+void BreadthFirstUnreadWrapArticleTest::SetUp()
+{
+    BreadthFirstUnreadArticleTest::SetUp();
+    g_art = ArticleNum{*(GetParam().order.end() - 1)};
+    g_artp = article_ptr(g_art);
+    g_search_ahead = ArticleNum{};
+    g_s_follow_temp = true;
+    g_univ_follow_temp = true;
+}
+
 class DepthFirstArticleTest : public BranchingArticleTest
 {
 protected:
@@ -7077,20 +7149,27 @@ INSTANTIATE_TEST_SUITE_P(StartPosition, SortedSingleEntryArticleNavigationTest, 
                          [](const testing::TestParamInfo<bool> &info)
                          { return info.param ? "AtGroupEnd" : "AtOnlyArticle"; });
 
-TEST_F(BreadthFirstArticleTest, nextUnreadVisitsEveryLevelBeforeDescendingAndWrapsAfterTheLastThread)
+TEST_P(BreadthFirstUnreadArticleTest, nextUnreadVisitsEligibleArticlesInLevelOrderAcrossThreads)
 {
-    set_tree({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
-              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
-              AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
-             1);
-    g_search_ahead = ArticleNum{2};
-
-    for (const long number : {2, 6, 7, 3, 5, 8, 10, 4, 9, 11, 12, 1})
+    for (const long number : GetParam().order)
     {
         SCOPED_TRACE(number);
         expect_next('n', number);
     }
 }
+
+INSTANTIATE_TEST_SUITE_P(Tree, BreadthFirstUnreadArticleTest, testing::ValuesIn(BREADTH_FIRST_UNREAD_CASES),
+                         [](const testing::TestParamInfo<BreadthFirstUnreadCase> &info)
+                         { return std::string{info.param.name}; });
+
+TEST_P(BreadthFirstUnreadWrapArticleTest, nextUnreadWrapsFromTheLastThreadToTheFirstEligibleArticle)
+{
+    expect_next('n', GetParam().wrap_target);
+}
+
+INSTANTIATE_TEST_SUITE_P(Tree, BreadthFirstUnreadWrapArticleTest, testing::ValuesIn(BREADTH_FIRST_UNREAD_CASES),
+                         [](const testing::TestParamInfo<BreadthFirstUnreadCase> &info)
+                         { return std::string{info.param.name}; });
 
 TEST_F(BreadthFirstArticleTest, explicitNextIncludesReadAndUnselectedEntriesAndStopsBeforeRestarting)
 {
@@ -7106,35 +7185,6 @@ TEST_F(BreadthFirstArticleTest, explicitNextIncludesReadAndUnselectedEntriesAndS
         expect_next('N', number);
     }
     expect_next('N', 1);
-}
-
-TEST_F(BreadthFirstArticleTest, nextUnreadSkipsReadParentsAndContinuesAcrossThreads)
-{
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD,
-              AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD},
-             1);
-
-    for (const long number : {6, 3, 8, 4, 9, 12, 6})
-    {
-        SCOPED_TRACE(number);
-        expect_next('n', number);
-    }
-}
-
-TEST_F(BreadthFirstArticleTest, selectedNextUnreadSkipsUnselectedAndSelectedReadArticles)
-{
-    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
-              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL,
-              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS,
-              AF_EXISTS | AF_UNREAD | AF_SEL},
-             1);
-    g_selected_only = true;
-
-    for (const long number : {7, 3, 8, 10, 4, 12, 1})
-    {
-        SCOPED_TRACE(number);
-        expect_next('n', number);
-    }
 }
 
 TEST_F(BreadthFirstArticleTest, missingParentLosesUnreadAndSelectionCountsOnceWhileItsChildrenRemainReachable)
