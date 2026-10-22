@@ -5,6 +5,7 @@
 
 #include <trn/Article.h>
 #include <trn/artstate.h>
+#include <trn/backpage.h>
 #include <trn/charsubst.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
@@ -12,13 +13,18 @@
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/utf.h>
+#include <util/env.h>
+
+#include <test_config.h>
 
 #include "support/UnderlineFixture.h"
 
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <filesystem>
 #include <string>
+#include <system_error>
 
 namespace
 {
@@ -28,6 +34,7 @@ class TreeRenderingTest : public testing::Test
 protected:
     void SetUp() override
     {
+        m_old_tmp_dir = g_tmp_dir;
         m_old_curr_artp = g_curr_artp;
         m_old_recent_artp = g_recent_artp;
         m_old_selected_only = g_selected_only;
@@ -44,6 +51,14 @@ protected:
         m_old_tc_bc = g_tc_BC;
         m_old_fire_is_out = g_fire_is_out;
         m_old_erase_screen = g_erase_screen;
+
+        const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
+        m_output_dir = std::filesystem::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
+        std::error_code error;
+        std::filesystem::create_directories(m_output_dir, error);
+        ASSERT_FALSE(error) << error.message();
+        g_tmp_dir = m_output_dir.generic_string();
+        back_page_init();
 
         m_subject.m_thread = &m_current;
         m_subject.m_thread_link = &m_subject;
@@ -73,6 +88,12 @@ protected:
 
     void TearDown() override
     {
+        back_page_final();
+        g_tmp_dir = m_old_tmp_dir;
+        std::error_code error;
+        std::filesystem::remove_all(m_output_dir, error);
+        EXPECT_FALSE(error) << error.message();
+
         g_curr_artp = nullptr;
         init_tree();
 
@@ -100,6 +121,9 @@ protected:
     Article m_current{};
     Article m_recent{};
     Subject m_subject{};
+
+    std::filesystem::path m_output_dir;
+    std::string           m_old_tmp_dir;
 
     Article    *m_old_curr_artp{};
     Article    *m_old_recent_artp{};

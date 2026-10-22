@@ -12,6 +12,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <string>
@@ -19,7 +20,7 @@
 
 namespace fs = std::filesystem;
 
-static int             s_vary_fd{0};         // virtual array file for storing  file offsets
+static int             s_vary_fd{-1};         // virtual array file for storing  file offsets
 static ArticlePosition s_vary_buf[VARY_SIZE]; // current window onto virtual array
 static long            s_old_offset{-1};     // offset to block currently in window
 #ifdef DEBUG
@@ -28,6 +29,7 @@ static int             s_max_index{-1};
 
 void back_page_init()
 {
+    back_page_final();
     const std::string vary_name = file_exp(VARYNAME);
     close(creat(vary_name.c_str(), 0600));
     s_vary_fd = open(vary_name.c_str(), 2);
@@ -38,6 +40,20 @@ void back_page_init()
         fmt::print("Can't open {}\n", vary_name);
         sig_catcher(0);
     }
+}
+
+void back_page_final()
+{
+    if (s_vary_fd >= 0)
+    {
+        close(s_vary_fd);
+        s_vary_fd = -1;
+    }
+    s_old_offset = -1;
+    std::fill_n(s_vary_buf, VARY_SIZE, ArticlePosition{});
+#ifdef DEBUG
+    s_max_index = -1;
+#endif
 }
 
 // virtual array read

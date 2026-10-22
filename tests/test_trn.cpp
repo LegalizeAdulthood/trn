@@ -8,6 +8,7 @@
 #include <trn/art.h>
 #include <trn/artio.h>
 #include <trn/artstate.h>
+#include <trn/backpage.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
@@ -26,6 +27,7 @@
 #include <trn/smisc.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
+#include <util/env.h>
 
 #include <test_config.h>
 
@@ -194,6 +196,7 @@ protected:
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_our_pid = g_our_pid;
+        m_old_tmp_dir = g_tmp_dir;
         m_old_current_path = fs::current_path();
         std::copy(std::begin(g_header_type), std::end(g_header_type), m_old_header_type.begin());
         m_old_errno = errno;
@@ -229,6 +232,7 @@ protected:
         fs::create_directories(m_output_dir, error);
         ASSERT_FALSE(error) << error.message();
 
+        g_tmp_dir = m_output_dir.generic_string();
         drain_macro_buffer();
         g_newsgroup_data.clear();
         g_newsgroup_order.clear();
@@ -326,6 +330,7 @@ protected:
 
         head_init();
         art_io_init();
+        back_page_init();
         cache_init();
         (void) nntp_art_name(ArticleNum{}, false);
 
@@ -348,6 +353,7 @@ protected:
         }
         (void) nntp_art_name(ArticleNum{}, false);
         art_io_final();
+        back_page_final();
         head_final();
         std::error_code error;
         fs::current_path(m_old_current_path, error);
@@ -428,6 +434,7 @@ protected:
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
         g_our_pid = m_old_our_pid;
+        g_tmp_dir = m_old_tmp_dir;
         std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_type));
         errno = m_old_errno;
         g_erase_char = m_old_erase_char;
@@ -566,6 +573,7 @@ protected:
     NNTPLink                          m_old_nntp_link{};
     std::string                       m_old_newsgroup_name;
     std::string                       m_old_newsgroup_dir;
+    std::string                       m_old_tmp_dir;
     std::string                       m_old_default_cmd;
     AddNewType                        m_old_add_new_by_default{};
     bool                              m_old_fuzzy_get{};
