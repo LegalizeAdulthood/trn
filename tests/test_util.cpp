@@ -490,15 +490,29 @@ TEST_F(EnvInitTest, clampsInvalidNetSpeed)
     EXPECT_EQ(1, g_net_speed);
 }
 
-TEST(TextToSecsTest, returnsSentinelValues)
-{
-    constexpr std::time_t default_secs{3660};
+using DurationParseCase = std::pair<std::string_view, std::time_t>;
 
-    EXPECT_EQ(0, text_to_secs("", default_secs));
-    EXPECT_EQ(0, text_to_secs("never", default_secs));
-    EXPECT_EQ(2, text_to_secs("missing", default_secs));
-    EXPECT_EQ(default_secs, text_to_secs("yes", default_secs));
+class DurationParseTest : public testing::TestWithParam<DurationParseCase>
+{
+protected:
+    void SetUp() override
+    {
+        m_text = GetParam().first;
+    }
+
+    std::string m_text;
+};
+
+TEST_P(DurationParseTest, returnsTheSentinelValue)
+{
+    const std::time_t result = text_to_secs(m_text, 3660);
+
+    EXPECT_EQ(GetParam().second, result);
 }
+
+INSTANTIATE_TEST_SUITE_P(Sentinels, DurationParseTest,
+                         testing::Values(DurationParseCase{"", 0}, DurationParseCase{"never", 0},
+                                         DurationParseCase{"missing", 2}, DurationParseCase{"yes", 3660}));
 
 TEST(TextToSecsTest, parsesMinutesByDefault)
 {
@@ -532,34 +546,47 @@ TEST(TextToSecsTest, respectsStringViewExtent)
     EXPECT_EQ(3600, text_to_secs(text, 999));
 }
 
-TEST(SecsToTextTest, returnsSentinelText)
+using DurationTextCase = std::pair<std::time_t, std::string_view>;
+
+class DurationTextTest : public testing::TestWithParam<DurationTextCase>
 {
-    EXPECT_EQ(std::string{"never"}, secs_to_text(0));
-    EXPECT_EQ(std::string{"never"}, secs_to_text(1));
-    EXPECT_EQ(std::string{"missing"}, secs_to_text(2));
+};
+
+TEST_P(DurationTextTest, formatsTheDuration)
+{
+    const std::string result = secs_to_text(GetParam().first);
+
+    EXPECT_EQ(GetParam().second, result);
 }
 
-TEST(SecsToTextTest, formatsCompositeIntervals)
+INSTANTIATE_TEST_SUITE_P(SentinelsAndCompositeIntervals, DurationTextTest,
+                         testing::Values(DurationTextCase{0, "never"}, DurationTextCase{1, "never"},
+                                         DurationTextCase{2, "missing"},
+                                         DurationTextCase{93780, "1 day, 2 hours, 3 minutes"},
+                                         DurationTextCase{176400, "2 days, 1 hour"}));
+
+using NumericConditionCase = std::pair<std::string_view, bool>;
+
+class NumericConditionTest : public testing::TestWithParam<NumericConditionCase>
 {
-    EXPECT_EQ(std::string{"1 day, 2 hours, 3 minutes"}, secs_to_text(93780));
-    EXPECT_EQ(std::string{"2 days, 1 hour"}, secs_to_text(176400));
+protected:
+    void SetUp() override
+    {
+        m_text = GetParam().first;
+    }
+
+    std::string m_text;
+};
+
+TEST_P(NumericConditionTest, evaluatesTheComparison)
+{
+    const bool result = check_ini_cond(m_text);
+
+    EXPECT_EQ(GetParam().second, result);
 }
 
-TEST(CheckIniCondTest, comparesNumbers)
-{
-    EXPECT_TRUE(check_ini_cond("5 > 3"));
-    EXPECT_FALSE(check_ini_cond("5 < 3"));
-    EXPECT_TRUE(check_ini_cond("5 >= 5"));
-}
-
-TEST(CheckIniCondTest, handlesNegatedNumericCompare)
-{
-    EXPECT_TRUE(check_ini_cond("5!<3"));
-    EXPECT_FALSE(check_ini_cond("5!>3"));
-}
-
-TEST(CheckIniCondTest, keepsAtoiStyleNumericLenience)
-{
-    EXPECT_TRUE(check_ini_cond(" 5 > 3junk"));
-    EXPECT_TRUE(check_ini_cond("+5 > 3"));
-}
+INSTANTIATE_TEST_SUITE_P(OperatorsNegationAndLenience, NumericConditionTest,
+                         testing::Values(NumericConditionCase{"5 > 3", true}, NumericConditionCase{"5 < 3", false},
+                                         NumericConditionCase{"5 >= 5", true}, NumericConditionCase{"5!<3", true},
+                                         NumericConditionCase{"5!>3", false}, NumericConditionCase{" 5 > 3junk", true},
+                                         NumericConditionCase{"+5 > 3", true}));
