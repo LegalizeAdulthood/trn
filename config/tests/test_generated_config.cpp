@@ -151,12 +151,11 @@ void expect_config_string(const char *filename, std::string_view name, std::stri
     expect_file_contains(filename, config_string_case(filename, name, value).expected);
 }
 
-void expect_config_char(const char *filename, std::string_view name, std::string_view value)
+GeneratedTextCase config_char_case(const char *filename, std::string_view name, std::string_view value)
 {
-    ASSERT_EQ(1, value.size()) << name;
     const std::string expected = std::string{"#define "} + std::string{name} + " '" + std::string{value} + "'";
 
-    expect_file_contains(filename, expected);
+    return {filename, expected};
 }
 
 void expect_news_source_defaults(const char *filename, bool has_local_spool, std::string_view server_name,
@@ -480,32 +479,32 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values(config_string_case(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVEDIR", "%p/test-save"),
                     config_string_case(TRN_TEST_SAVE_PATH_TEMPLATES_CONFIGURED_CONFIG, "SAVENAME", "test-%a")));
 
-TEST(GeneratedConfigTest, killFilePathsDefaultMatchHistoricalFallbacks)
-{
-    expect_config_string(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_GLOBAL", TRN_TEST_DEFAULT_KILL_GLOBAL);
-    expect_config_string(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_LOCAL", TRN_TEST_DEFAULT_KILL_LOCAL);
-    expect_config_string(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_THREADS", TRN_TEST_DEFAULT_KILL_THREADS);
-}
+INSTANTIATE_TEST_SUITE_P(KillFileDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_GLOBAL",
+                                                            TRN_TEST_DEFAULT_KILL_GLOBAL),
+                                         config_string_case(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_LOCAL",
+                                                            TRN_TEST_DEFAULT_KILL_LOCAL),
+                                         config_string_case(TRN_TEST_KILL_FILE_PATHS_DEFAULT_CONFIG, "KILL_THREADS",
+                                                            TRN_TEST_DEFAULT_KILL_THREADS)));
 
-TEST(GeneratedConfigTest, killFilePathsConfiguredValuesAreEmitted)
-{
-    expect_config_string(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_GLOBAL", "%p/test-global-kill");
-    expect_config_string(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_LOCAL", "%p/%c/test-local-kill");
-    expect_config_string(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_THREADS", "%+/test-thread-kill");
-}
+INSTANTIATE_TEST_SUITE_P(ConfiguredKillFiles, GeneratedDefinitionTest,
+                         testing::Values(config_string_case(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_GLOBAL",
+                                                            "%p/test-global-kill"),
+                                         config_string_case(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_LOCAL",
+                                                            "%p/%c/test-local-kill"),
+                                         config_string_case(TRN_TEST_KILL_FILE_PATHS_CONFIGURED_CONFIG, "KILL_THREADS",
+                                                            "%+/test-thread-kill")));
 
-TEST(GeneratedConfigTest, selectionPolicyDefaultMatchesHistoricalFallbacks)
-{
-    expect_config_char(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "UNSUBSCRIBED_CHAR",
-                       TRN_TEST_DEFAULT_UNSUBSCRIBED_CHAR);
-    expect_config_string(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "SELECTION_CHARS", TRN_TEST_DEFAULT_SELECTION_CHARS);
-}
+INSTANTIATE_TEST_SUITE_P(SelectionDefaults, GeneratedDefinitionTest,
+                         testing::Values(config_char_case(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "UNSUBSCRIBED_CHAR",
+                                                          TRN_TEST_DEFAULT_UNSUBSCRIBED_CHAR),
+                                         config_string_case(TRN_TEST_SELECTION_POLICY_DEFAULT_CONFIG, "SELECTION_CHARS",
+                                                            TRN_TEST_DEFAULT_SELECTION_CHARS)));
 
-TEST(GeneratedConfigTest, selectionPolicyConfiguredValuesAreEmitted)
-{
-    expect_config_char(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "UNSUBSCRIBED_CHAR", "?");
-    expect_config_string(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "SELECTION_CHARS", "xyz789");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredSelection, GeneratedDefinitionTest,
+    testing::Values(config_char_case(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "UNSUBSCRIBED_CHAR", "?"),
+                    config_string_case(TRN_TEST_SELECTION_POLICY_CONFIGURED_CONFIG, "SELECTION_CHARS", "xyz789")));
 
 TEST(GeneratedConfigTest, localTimeFormatDefaultMatchesHistoricalFallback)
 {
