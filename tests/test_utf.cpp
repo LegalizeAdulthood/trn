@@ -14,9 +14,11 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <tuple>
 
 using namespace testing;
 
@@ -174,36 +176,73 @@ TEST_F(Utf8ScalarTest, emptyInputMakesNoProgress)
     EXPECT_EQ(0U, result.byte_count);
 }
 
-TEST_F(Utf8ScalarTest, rejectsNonScalarsWhenEncoding)
+class RejectedUtf8ScalarTest : public Utf8ScalarTest, public WithParamInterface<CodePoint>
 {
-    for (const CodePoint scalar : {0xD800UL, 0xDBFFUL, 0xDC00UL, 0xDFFFUL, 0x110000UL, 0x1FFFFFUL, 0x7FFFFFFFUL,
-                                   static_cast<CodePoint>(INVALID_CODE_POINT)})
-    {
-        SCOPED_TRACE(scalar);
-        EXPECT_TRUE(encode_utf8_scalar(scalar).empty());
-    }
+};
+
+TEST_P(RejectedUtf8ScalarTest, rejectsNonScalarsWhenEncoding)
+{
+    const std::string encoded = encode_utf8_scalar(GetParam());
+
+    EXPECT_TRUE(encoded.empty());
 }
 
-TEST_F(Utf8ScalarTest, operationsIgnoreGlobalCharsetState)
+INSTANTIATE_TEST_SUITE_P(NonScalars, RejectedUtf8ScalarTest,
+                         Values(0xD800UL, 0xDBFFUL, 0xDC00UL, 0xDFFFUL, 0x110000UL, 0x1FFFFFUL, 0x7FFFFFFFUL,
+                                static_cast<CodePoint>(INVALID_CODE_POINT)));
+
+using GlobalCharsetScalarCase = std::tuple<std::string_view, Utf8ScalarCase>;
+
+class GlobalCharsetScalarTest : public Utf8ScalarTest, public WithParamInterface<GlobalCharsetScalarCase>
 {
-    for (const std::string_view charset : {CHARSET_NAME_ASCII, CHARSET_NAME_ISO8859_1, CHARSET_NAME_ISO8859_15,
-                                           CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8})
-    {
-        SCOPED_TRACE(charset);
-        utf_init(charset, charset);
-        const std::string_view input = input_charset_name();
-        const std::string_view output = output_charset_name();
-        for (const Utf8ScalarCase &value : UTF8_SCALARS)
-        {
-            const Utf8Scalar result = decode_utf8_scalar(value.bytes);
-            EXPECT_EQ(value.scalar, result.code_point);
-            EXPECT_EQ(value.bytes.size(), result.byte_count);
-            EXPECT_EQ(value.bytes, encode_utf8_scalar(value.scalar));
-        }
-        EXPECT_EQ(input, input_charset_name());
-        EXPECT_EQ(output, output_charset_name());
-    }
+protected:
+    void SetUp() override;
+    void expect_charset_unchanged() const;
+
+    std::string_view m_input_name;
+    std::string_view m_output_name;
+};
+
+void GlobalCharsetScalarTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    const std::string_view charset = std::get<0>(GetParam());
+    utf_init(charset, charset);
+    m_input_name = input_charset_name();
+    m_output_name = output_charset_name();
 }
+
+void GlobalCharsetScalarTest::expect_charset_unchanged() const
+{
+    EXPECT_EQ(m_input_name, input_charset_name());
+    EXPECT_EQ(m_output_name, output_charset_name());
+}
+
+TEST_P(GlobalCharsetScalarTest, decodingIgnoresGlobalCharsetState)
+{
+    const Utf8ScalarCase &value = std::get<1>(GetParam());
+
+    const Utf8Scalar result = decode_utf8_scalar(value.bytes);
+
+    EXPECT_EQ(value.scalar, result.code_point);
+    EXPECT_EQ(value.bytes.size(), result.byte_count);
+    expect_charset_unchanged();
+}
+
+TEST_P(GlobalCharsetScalarTest, encodingIgnoresGlobalCharsetState)
+{
+    const Utf8ScalarCase &value = std::get<1>(GetParam());
+
+    const std::string encoded = encode_utf8_scalar(value.scalar);
+
+    EXPECT_EQ(value.bytes, encoded);
+    expect_charset_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(CharsetAndScalar, GlobalCharsetScalarTest,
+                         Combine(Values(CHARSET_NAME_ASCII, CHARSET_NAME_ISO8859_1, CHARSET_NAME_ISO8859_15,
+                                        CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_UTF8),
+                                 ValuesIn(UTF8_SCALARS)));
 
 TEST_F(Utf8ScalarTest, malformedInputDoesNotConsumeFollowingAscii)
 {
@@ -225,38 +264,59 @@ TEST_F(Utf8ScalarTest, malformedInputDoesNotConsumeFollowingAscii)
               text);
 }
 
-TEST_F(Utf8ScalarTest, boundedChunksCanBeRetriedWithoutState)
+class PartialUtf8RetryTest : public Utf8ScalarTest, public WithParamInterface<std::size_t>
 {
-    constexpr std::string_view text{"\xF0\x9F\x98\x9A"};
-    for (std::size_t size = 1; size < text.size(); ++size)
-    {
-        const Utf8Scalar partial = decode_utf8_scalar(text.substr(0, size));
-        EXPECT_EQ(INVALID_CODE_POINT, partial.code_point);
-        EXPECT_EQ(1U, partial.byte_count);
-    }
-    const Utf8Scalar complete = decode_utf8_scalar(text);
+protected:
+    static constexpr std::string_view TEXT{"\xF0\x9F\x98\x9A"};
+};
+
+TEST_P(PartialUtf8RetryTest, retriesTheCompleteScalarAfterABoundedPrefix)
+{
+    const Utf8Scalar partial = decode_utf8_scalar(TEXT.substr(0, GetParam()));
+    ASSERT_EQ(INVALID_CODE_POINT, partial.code_point);
+    ASSERT_EQ(1U, partial.byte_count);
+
+    const Utf8Scalar complete = decode_utf8_scalar(TEXT);
+
     EXPECT_EQ(0x1F61AUL, complete.code_point);
     EXPECT_EQ(4U, complete.byte_count);
 }
 
-TEST_F(Utf8ScalarTest, headerPipelinePreservesRawBytesAndOrdersConversions)
+INSTANTIATE_TEST_SUITE_P(BoundedPrefixes, PartialUtf8RetryTest, Values(std::size_t{1}, std::size_t{2}, std::size_t{3}));
+
+class HeaderEncodingPipelineTest : public Utf8ScalarTest, public WithParamInterface<std::string_view>
 {
-    for (const std::string_view raw : {"=?ISO-8859-1?Q?=E9?=", "=?ISO-8859-1?B?6Q==?="})
-    {
-        const std::string source{raw};
-        utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_UTF8);
-        const std::string semantic = decode_header(source);
-        ASSERT_EQ("\xC3\xA9", semantic);
-        const std::string presentation = str_char_subst(semantic, 'p');
-        EXPECT_EQ(semantic, presentation);
-        const Utf8Scalar result = decode_utf8_scalar(presentation);
-        EXPECT_EQ(0xE9UL, result.code_point);
-        EXPECT_EQ(2U, result.byte_count);
-        utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
-        EXPECT_EQ(1, visual_length_of(presentation));
-        EXPECT_EQ(raw, source);
-    }
+protected:
+    void SetUp() override;
+
+    std::string m_source;
+};
+
+void HeaderEncodingPipelineTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    m_source = GetParam();
+    utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_UTF8);
 }
+
+TEST_P(HeaderEncodingPipelineTest, preservesRawBytesAndOrdersConversions)
+{
+    const std::string semantic = decode_header(m_source);
+    const std::string presentation = str_char_subst(semantic, 'p');
+    const Utf8Scalar  result = decode_utf8_scalar(presentation);
+    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
+    const int width = visual_length_of(presentation);
+
+    ASSERT_EQ("\xC3\xA9", semantic);
+    EXPECT_EQ(semantic, presentation);
+    EXPECT_EQ(0xE9UL, result.code_point);
+    EXPECT_EQ(2U, result.byte_count);
+    EXPECT_EQ(1, width);
+    EXPECT_EQ(GetParam(), m_source);
+}
+
+INSTANTIATE_TEST_SUITE_P(QuotedPrintableAndBase64, HeaderEncodingPipelineTest,
+                         Values("=?ISO-8859-1?Q?=E9?=", "=?ISO-8859-1?B?6Q==?="));
 
 } // namespace
 
