@@ -326,7 +326,7 @@ protected:
 
     bool extract(std::string_view text)
     {
-        const auto header = yenc_prescan(text.substr(0, text.find('\n')));
+        const std::optional<YencHeader> header = yenc_prescan(text.substr(0, text.find('\n')));
         EXPECT_TRUE(header);
         if (!header)
         {

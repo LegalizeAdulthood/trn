@@ -53,7 +53,7 @@ static long sa_get_subj_thread(long e)
         subject.erase(0, 2);
     }
 
-    const std::unordered_map<std::string, long>::const_iterator existing = s_sa_thread_nums.find(subject);
+    const auto existing = s_sa_thread_nums.find(subject);
     if (existing != s_sa_thread_nums.end())
     {
         return existing->second;

@@ -36,8 +36,8 @@ std::string_view next_line(std::string_view &text)
 
 std::optional<std::string_view> field(const Fields &fields, std::string_view name)
 {
-    const auto found =
-        std::find_if(fields.begin(), fields.end(), [name](const auto &entry) { return entry.first == name; });
+    const auto found = std::find_if(fields.begin(), fields.end(),
+                                    [name](const Fields::value_type &entry) { return entry.first == name; });
     return found == fields.end() ? std::nullopt : std::optional<std::string_view>{found->second};
 }
 
@@ -82,13 +82,13 @@ std::optional<Fields> parse_fields(std::string_view text, bool has_filename = fa
 template <typename T>
 std::optional<T> number(const Fields &fields, std::string_view name, int base = 10)
 {
-    const auto value = field(fields, name);
+    const std::optional<std::string_view> value = field(fields, name);
     if (!value || value->empty())
     {
         return std::nullopt;
     }
     T          result{};
-    const auto parsed = std::from_chars(value->data(), value->data() + value->size(), result, base);
+    const std::from_chars_result parsed = std::from_chars(value->data(), value->data() + value->size(), result, base);
     if (parsed.ec != std::errc{} || parsed.ptr != value->data() + value->size())
     {
         return std::nullopt;
@@ -110,7 +110,7 @@ constexpr std::array<std::uint32_t, 256> crc_table()
     }
     return table;
 }
-constexpr auto CRC_TABLE = crc_table();
+constexpr std::array<std::uint32_t, 256> CRC_TABLE = crc_table();
 } // namespace
 
 std::uint32_t yenc_crc32(std::string_view bytes, std::uint32_t previous)
@@ -130,14 +130,14 @@ std::optional<YencHeader> yenc_prescan(std::string_view line)
     {
         return std::nullopt;
     }
-    const auto fields = parse_fields(line.substr(8), true);
+    const std::optional<Fields> fields = parse_fields(line.substr(8), true);
     if (!fields)
     {
         return std::nullopt;
     }
-    const auto length = number<std::uint64_t>(*fields, "line");
-    const auto size = number<std::uint64_t>(*fields, "size");
-    const auto name = field(*fields, "name");
+    const std::optional<std::uint64_t>    length = number<std::uint64_t>(*fields, "line");
+    const std::optional<std::uint64_t>    size = number<std::uint64_t>(*fields, "size");
+    const std::optional<std::string_view> name = field(*fields, "name");
     if (!length || *length == 0 || !size || !name || name->empty())
     {
         return std::nullopt;
@@ -145,7 +145,7 @@ std::optional<YencHeader> yenc_prescan(std::string_view line)
     YencHeader result{std::string{*name}, *size, *length};
     if (field(*fields, "part"))
     {
-        const auto part = number<int>(*fields, "part");
+        const std::optional<int> part = number<int>(*fields, "part");
         if (!part || *part < 1 || *size == 0)
         {
             return std::nullopt;
@@ -156,7 +156,7 @@ std::optional<YencHeader> yenc_prescan(std::string_view line)
     }
     if (field(*fields, "total"))
     {
-        const auto total = number<int>(*fields, "total");
+        const std::optional<int> total = number<int>(*fields, "total");
         if (!result.multipart || !total || *total < result.part)
         {
             return std::nullopt;
@@ -181,13 +181,14 @@ std::optional<YencPart> yenc_decode(std::string_view text)
     if (header->multipart)
     {
         const std::string_view line = next_line(text);
-        const auto             fields = line.substr(0, 7) == "=ypart " ? parse_fields(line.substr(7)) : std::nullopt;
+        const std::optional<Fields> fields =
+            line.substr(0, 7) == "=ypart " ? parse_fields(line.substr(7)) : std::nullopt;
         if (!fields)
         {
             return std::nullopt;
         }
-        const auto begin = number<std::uint64_t>(*fields, "begin");
-        const auto end = number<std::uint64_t>(*fields, "end");
+        const std::optional<std::uint64_t> begin = number<std::uint64_t>(*fields, "begin");
+        const std::optional<std::uint64_t> end = number<std::uint64_t>(*fields, "end");
         if (!begin || !end || *begin == 0 || *end < *begin || *end > header->size)
         {
             return std::nullopt;
@@ -201,19 +202,19 @@ std::optional<YencPart> yenc_decode(std::string_view text)
         const std::string_view line = next_line(text);
         if (line.substr(0, 6) == "=yend ")
         {
-            const auto fields = parse_fields(line.substr(6));
+            const std::optional<Fields> fields = parse_fields(line.substr(6));
             if (!fields || number<std::uint64_t>(*fields, "size") != expected || result.data.size() != expected)
             {
                 return std::nullopt;
             }
             for (const std::string_view key : {"crc32", "pcrc32"})
             {
-                const auto raw = field(*fields, key);
+                const std::optional<std::string_view> raw = field(*fields, key);
                 if (!raw)
                 {
                     continue;
                 }
-                const auto crc = number<std::uint32_t>(*fields, key, 16);
+                const std::optional<std::uint32_t> crc = number<std::uint32_t>(*fields, key, 16);
                 if (!crc || raw->size() != 8 ||
                     ((key == "pcrc32" || !header->multipart) && *crc != yenc_crc32(result.data)))
                 {

@@ -205,7 +205,7 @@ static constexpr const char *s_iso_to_ascii[ISO_TABLES][96] =
 
 bool UnicodeSubstitutionProfile::configure(const IniSection &section)
 {
-    auto mappings = m_mappings;
+    std::vector<std::pair<CodePoint, std::string>> mappings = m_mappings;
     for (const IniSetting setting : section)
     {
         const std::string_view key = setting.name();
@@ -225,7 +225,8 @@ bool UnicodeSubstitutionProfile::configure(const IniSection &section)
             return false;
         }
         auto entry = std::lower_bound(mappings.begin(), mappings.end(), scalar,
-                                      [](const auto &mapping, CodePoint value) { return mapping.first < value; });
+                                      [](const std::pair<CodePoint, std::string> &mapping, CodePoint value)
+                                      { return mapping.first < value; });
         if (entry != mappings.end() && entry->first == scalar)
         {
             entry->second = std::move(text);
@@ -242,7 +243,8 @@ bool UnicodeSubstitutionProfile::configure(const IniSection &section)
 std::optional<std::string_view> UnicodeSubstitutionProfile::replacement(unsigned long scalar) const
 {
     const auto entry = std::lower_bound(m_mappings.begin(), m_mappings.end(), scalar,
-                                        [](const auto &mapping, CodePoint value) { return mapping.first < value; });
+                                        [](const std::pair<CodePoint, std::string> &mapping, CodePoint value)
+                                        { return mapping.first < value; });
     return entry != m_mappings.end() && entry->first == scalar ? std::optional<std::string_view>{entry->second}
                                                                : std::nullopt;
 }
@@ -270,14 +272,14 @@ std::string CharSubstitution::substitute(std::string_view input)
         input.remove_prefix(decoded.byte_count);
         if (m_mode == 'u')
         {
-            if (const auto replacement = m_unicode_profile.replacement(scalar))
+            if (const std::optional<std::string_view> replacement = m_unicode_profile.replacement(scalar))
             {
                 result += *replacement;
                 continue;
             }
-            const auto entry =
-                std::lower_bound(std::begin(UNICODE_ASCII), std::end(UNICODE_ASCII), scalar,
-                                 [](const auto &mapping, CodePoint value) { return mapping.first < value; });
+            const auto entry = std::lower_bound(std::begin(UNICODE_ASCII), std::end(UNICODE_ASCII), scalar,
+                                                [](const std::pair<CodePoint, std::string_view> &mapping,
+                                                   CodePoint value) { return mapping.first < value; });
             if (entry != std::end(UNICODE_ASCII) && entry->first == scalar)
             {
                 result += entry->second;

@@ -97,8 +97,8 @@ TEST(IniDocumentTest, parsesSectionValues)
     const IniSection section = *document.begin();
     parse_ini_section(section, schema, values);
 
-    const auto alpha = values.value(TEST_FIELD_ALPHA);
-    const auto beta = values.value(TEST_FIELD_BETA);
+    const std::optional<std::string_view> alpha = values.value(TEST_FIELD_ALPHA);
+    const std::optional<std::string_view> beta = values.value(TEST_FIELD_BETA);
     ASSERT_TRUE(alpha.has_value());
     ASSERT_TRUE(beta.has_value());
     EXPECT_EQ(std::string_view{"one"}, *alpha);

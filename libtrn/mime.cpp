@@ -356,7 +356,7 @@ static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos)
 template <typename Params>
 static std::string mime_find_param(const Params &params, std::string_view param)
 {
-    for (const auto &raw_param : params)
+    for (const typename Params::value_type &raw_param : params)
     {
         const std::string_view text{raw_param};
         std::size_t            pos = mime_skip_whitespace(text, 0);

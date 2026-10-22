@@ -100,7 +100,7 @@ int main(int argc, char **argv)
         std::string        recipients;
         while (std::getline(lines, line))
         {
-            const auto equal = line.find(" = ");
+            const std::size_t equal = line.find(" = ");
             if (equal == std::string::npos)
             {
                 continue;
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
         {
             for (const std::string marker : {"-----BEGIN PGP SIGNED MESSAGE-----\n", "-----BEGIN PGP SIGNATURE-----\n"})
             {
-                const auto at = body.find(marker);
+                const std::size_t at = body.find(marker);
                 if (at != std::string::npos)
                 {
                     body.erase(at, marker.size());

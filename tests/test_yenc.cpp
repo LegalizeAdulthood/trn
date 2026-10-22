@@ -11,14 +11,14 @@
 
 TEST(YencPrescanTest, readsSingleAndMultipartHeadersWithFilenameLast)
 {
-    const auto single = yenc_prescan("=ybegin line=128 size=3 name=path/a file.bin\r\n");
+    const std::optional<YencHeader> single = yenc_prescan("=ybegin line=128 size=3 name=path/a file.bin\r\n");
     ASSERT_TRUE(single);
     EXPECT_EQ("path/a file.bin", single->filename);
     EXPECT_EQ(3U, single->size);
     EXPECT_EQ(1, single->part);
     EXPECT_EQ(1, single->total);
     EXPECT_FALSE(single->multipart);
-    const auto split = yenc_prescan("=ybegin part=2 total=3 line=128 size=11 name=a.bin\n");
+    const std::optional<YencHeader> split = yenc_prescan("=ybegin part=2 total=3 line=128 size=11 name=a.bin\n");
     ASSERT_TRUE(split);
     EXPECT_TRUE(split->multipart);
     EXPECT_EQ(2, split->part);
@@ -42,8 +42,8 @@ TEST(YencPrescanTest, rejectsIncompleteAndInvalidMetadata)
 
 TEST(YencDecodeTest, decodesSinglePartWithCrcAndIgnoresSurroundingProse)
 {
-    const auto part = yenc_decode("Introduction\r\n=ybegin line=128 size=3 name=cat.bin\r\n"
-                                  "\x6D\x8B\x9E\r\n=yend size=3 crc32=a6130548\r\nSignature\r\n");
+    const std::optional<YencPart> part = yenc_decode("Introduction\r\n=ybegin line=128 size=3 name=cat.bin\r\n"
+                                                     "\x6D\x8B\x9E\r\n=yend size=3 crc32=a6130548\r\nSignature\r\n");
     ASSERT_TRUE(part);
     EXPECT_EQ("Cat", part->data);
     EXPECT_EQ(1U, part->begin);
@@ -53,7 +53,8 @@ TEST(YencDecodeTest, decodesSinglePartWithCrcAndIgnoresSurroundingProse)
 
 TEST(YencDecodeTest, decodesCriticalEscapesNulAndHighBytes)
 {
-    const auto part = yenc_decode("=ybegin line=128 size=6 name=bytes.bin\n=@=J=M=}*)\n=yend size=6\n");
+    const std::optional<YencPart> part =
+        yenc_decode("=ybegin line=128 size=6 name=bytes.bin\n=@=J=M=}*)\n=yend size=6\n");
     ASSERT_TRUE(part);
     EXPECT_EQ(std::string("\xD6\xE0\xE3\x13\0\xFF", 6), part->data);
 }
@@ -75,8 +76,8 @@ TEST(YencDecodeTest, rejectsCorruptionAndTruncation)
 TEST(YencDecodeTest, checksMultipartRangePartNumberAndChecksum)
 {
     const std::string header{"=ybegin part=2 total=2 line=128 size=11 name=hello.bin\n"};
-    const auto        part = yenc_decode(header + "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n"
-                                                  "=yend size=5 part=2 pcrc32=3a771143 crc32=8bd69e52\n");
+    const std::optional<YencPart> part = yenc_decode(header + "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n"
+                                                              "=yend size=5 part=2 pcrc32=3a771143 crc32=8bd69e52\n");
     ASSERT_TRUE(part);
     EXPECT_EQ("world", part->data);
     EXPECT_EQ(7U, part->begin);
@@ -102,7 +103,7 @@ TEST(YencDecodeTest, crcMatchesPublishedVectorAndIncrementalInput)
 
 TEST(YencDecodeTest, decodesAllByteValues)
 {
-    const auto part = yenc_decode(YENC_ALL_BYTES);
+    const std::optional<YencPart> part = yenc_decode(YENC_ALL_BYTES);
     ASSERT_TRUE(part);
     ASSERT_EQ(256U, part->data.size());
     for (int i = 0; i < 256; ++i)

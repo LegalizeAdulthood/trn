@@ -405,8 +405,8 @@ void ScopeSelectionArticleTest::set_selection_scope(std::initializer_list<Articl
 
 std::string ScopeSelectionArticleTest::change_scope(char action, long target, ArticleSwitchResult expected)
 {
-    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
     const ArticleUnread unread = m_newsgroup.m_to_read;
     const ArticleNum    first = g_first_art;
     push_char('n');
@@ -531,9 +531,9 @@ void ThreadKillArticleTest::set_thread(long current)
 
 std::string ThreadKillArticleTest::kill_articles(std::string command, ArticleSwitchResult expected)
 {
-    const auto article = std::make_pair(g_art, g_artp);
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
     push_char('n');
     testing::internal::CaptureStdout();
 
@@ -603,11 +603,11 @@ void DelayScopeArticleTest::set_delay_articles(long current)
 
 std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult expected)
 {
-    const auto          article = std::make_pair(g_art, g_artp);
-    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto          order = g_art_ptr_list;
-    const auto          cursor = g_art_ptr;
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
+    Article **const                        cursor = g_art_ptr;
     const bool          threaded = g_threaded_group;
     const bool          breadth_first = g_breadth_first;
     const SelectionMode mode = g_sel_mode;
@@ -690,9 +690,9 @@ void RestoreDelayedArticleTest::TearDown()
 
 std::string RestoreDelayedArticleTest::restore_delayed(long first)
 {
-    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto          order = g_art_ptr_list;
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
     const ArticleNum    parsed = g_parsed_art;
     const ArticleNum    search_ahead = g_search_ahead;
     const bool          selected_only = g_selected_only;
@@ -846,10 +846,10 @@ void CatchupArticleTest::set_catchup_articles(long current)
 
 std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchResult expected)
 {
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto order = g_art_ptr_list;
-    const auto cursor = g_art_ptr;
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
+    Article **const                        cursor = g_art_ptr;
     const bool threaded = g_threaded_group;
     const bool breadth_first = g_breadth_first;
     const bool scan = g_sa_in;
@@ -1011,15 +1011,15 @@ void NumericJumpArticleTest::TearDown()
 
 std::string NumericJumpArticleTest::enter_number(std::string_view input, ArticleSwitchResult expected)
 {
-    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto                                       order = g_art_ptr_list;
-    const auto                                       cursor = g_art_ptr;
-    const auto                                       first = g_first_art;
-    const auto                                       parsed = g_parsed_art;
-    const auto                                       unread = m_newsgroup.m_to_read;
-    const auto                                       selected = g_selected_count;
-    const auto                                       subject_flags = g_first_subject->m_flags;
+    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>                     order = g_art_ptr_list;
+    Article **const                                  cursor = g_art_ptr;
+    const ArticleNum                                 first = g_first_art;
+    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleUnread                              unread = m_newsgroup.m_to_read;
+    const ArticleUnread                              selected = g_selected_count;
+    const SubjectFlags                               subject_flags = g_first_subject->m_flags;
     const int                                        selected_subjects = g_selected_subj_cnt;
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
     for (const auto &[number, article] : g_article_list)
@@ -1027,7 +1027,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
         flags.emplace_back(number, article.m_flags);
     }
     push_char('Q');
-    const auto suffix = input.substr(1);
+    const std::string_view suffix = input.substr(1);
     for (auto ch = suffix.rbegin(); ch != suffix.rend(); ++ch)
     {
         push_char(*ch);
@@ -1134,12 +1134,12 @@ void NumericRangeArticleTest::TearDown()
 std::string NumericRangeArticleTest::apply_range(std::string_view input, ArticleSwitchResult expected,
                                                  long search_ahead)
 {
-    const auto article = std::make_pair(g_art, g_artp);
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto order = g_art_ptr_list;
-    const auto cursor = g_art_ptr;
-    const auto parsed = g_parsed_art;
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
+    Article **const                        cursor = g_art_ptr;
+    const ArticleNum                       parsed = g_parsed_art;
     const bool reread = g_reread;
     m_before_flags.clear();
     for (const auto &[number, entry] : g_article_list)
@@ -1147,7 +1147,7 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
         m_before_flags.emplace_back(number.value_of(), entry.m_flags);
     }
     push_char('Q');
-    const auto suffix = input.substr(1);
+    const std::string_view suffix = input.substr(1);
     for (auto ch = suffix.rbegin(); ch != suffix.rend(); ++ch)
     {
         push_char(*ch);
@@ -1187,8 +1187,9 @@ void NumericRangeArticleTest::expect_changes(std::initializer_list<std::pair<lon
 {
     for (const auto &[number, flags] : changes)
     {
-        const auto entry = std::find_if(m_before_flags.begin(), m_before_flags.end(),
-                                        [number](const auto &item) { return item.first == number; });
+        const auto entry =
+            std::find_if(m_before_flags.begin(), m_before_flags.end(),
+                         [number](const std::pair<long, ArticleFlags> &item) { return item.first == number; });
         ASSERT_NE(m_before_flags.end(), entry);
         entry->second = flags;
     }
@@ -1279,11 +1280,11 @@ void UnsubscribeArticleTest::TearDown()
 
 std::string UnsubscribeArticleTest::unsubscribe()
 {
-    const auto          article = std::make_pair(g_art, g_artp);
-    const auto          current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto          recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto          order = g_art_ptr_list;
-    const auto          cursor = g_art_ptr;
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
+    Article **const                        cursor = g_art_ptr;
     const ArticleNum    first = g_first_art;
     const ArticleUnread unread = m_newsgroup.m_to_read;
     const ArticleUnread selected = g_selected_count;
@@ -1294,9 +1295,9 @@ std::string UnsubscribeArticleTest::unsubscribe()
     const bool          scan = g_sa_in;
     const bool          follow = g_sa_follow;
     const bool          temporary_follow = g_s_follow_temp;
-    const auto          groups = g_newsgroup_to_read;
-    const auto          newsrc_flags = m_newsrc.flags;
-    const auto          rc_line = m_newsgroup.m_rc_line;
+    const NewsgroupNum                     groups = g_newsgroup_to_read;
+    const NewsrcFlags                      newsrc_flags = m_newsrc.flags;
+    const std::string                      rc_line = m_newsgroup.m_rc_line;
 
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
     for (const auto &[number, entry] : g_article_list)
@@ -1413,8 +1414,8 @@ std::string SelectorEntryArticleTest::run_selector(std::string command, char_int
                                                    const std::function<char(char_int)> &selector,
                                                    ArticleSwitchResult expected, DoNewsgroupResult exit_code)
 {
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
     int        calls = 0;
     const auto invoke = [&](char_int selector_command)
     {
@@ -1546,9 +1547,9 @@ void QuitCommandArticleTest::SetUp()
 
 void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupResult expected)
 {
-    const auto      position = std::make_pair(g_art, g_artp);
-    const auto      current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto      recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> position = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
     const MinorMode mode = g_mode;
     g_newsgroup_exit_code = NG_MINUS;
     push_char('n');
@@ -1720,15 +1721,15 @@ void ScanContinuationArticleTest::set_scan_articles(std::initializer_list<Articl
 void ScanContinuationArticleTest::dispatch(std::string command, long number, ArticleSwitchResult expected,
                                            DoNewsgroupResult exit_code)
 {
-    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto                                       first = g_first_art;
-    const auto                                       parsed = g_parsed_art;
-    const auto                                       unread = m_newsgroup.m_to_read;
-    const auto                                       selected = g_selected_count;
-    const auto                                       selected_subjects = g_selected_subj_cnt;
-    const auto                                       mode = g_sel_mode;
-    const auto                                       scan_article = g_sa_art;
+    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticleNum                                 first = g_first_art;
+    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleUnread                              unread = m_newsgroup.m_to_read;
+    const ArticleUnread                              selected = g_selected_count;
+    const int                                        selected_subjects = g_selected_subj_cnt;
+    const SelectionMode                              mode = g_sel_mode;
+    const ArticleNum                                 scan_article = g_sa_art;
     const bool                                       selected_only = g_selected_only;
     const bool                                       scan_in = g_sa_in;
     const bool                                       scan_go = g_sa_go;
@@ -1902,8 +1903,8 @@ std::string SearchCommandArticleTest::search_articles(char direction, std::strin
 std::string SearchCommandArticleTest::enter_search(char direction, std::string_view input, ArticleSwitchResult expected,
                                                    const std::function<void(ArticleNum)> &progress)
 {
-    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_recent_art, g_recent_artp);
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
@@ -1989,16 +1990,16 @@ void SearchAheadArticleTest::set_subject_articles(std::initializer_list<ArticleF
 std::string SearchAheadArticleTest::next(long number, ArticleSwitchResult expected,
                                          const std::function<void(ArticleNum)> &progress)
 {
-    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto                                       first = g_first_art;
-    const auto                                       parsed = g_parsed_art;
-    const auto                                       unread = m_newsgroup.m_to_read;
-    const auto                                       selected = g_selected_count;
+    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticleNum                                 first = g_first_art;
+    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleUnread                              unread = m_newsgroup.m_to_read;
+    const ArticleUnread                              selected = g_selected_count;
     const int                                        selected_subjects = g_selected_subj_cnt;
     const bool                                       selected_only = g_selected_only;
     const bool                                       force_last = g_force_last;
-    const auto                                       article_count = g_article_list.size();
+    const std::size_t                                article_count = g_article_list.size();
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
     for (const auto &[article_number, article] : g_article_list)
     {
@@ -2109,8 +2110,8 @@ void KillSubjectArticleTest::set_kill_articles(long current)
 std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, long target,
                                                  const std::function<void(ArticleNum)> &progress, std::string command)
 {
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
     push_char('n');
     testing::internal::CaptureStdout();
 
@@ -2187,11 +2188,11 @@ void BulkSelectionArticleTest::TearDown()
 
 std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, ArticleSwitchResult expected)
 {
-    const auto article = std::make_pair(g_art, g_artp);
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto order = g_art_ptr_list;
-    const auto cursor = g_art_ptr;
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
+    Article **const                        cursor = g_art_ptr;
     push_char('n');
     for (auto it = input.rbegin(); it != input.rend(); ++it)
     {
@@ -2366,9 +2367,9 @@ void MemorizeArticleTest::TearDown()
 
 std::string MemorizeArticleTest::memorize(char command, std::string_view replies, ArticleSwitchResult expected)
 {
-    const auto article = std::make_pair(g_art, g_artp);
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
     push_char('n');
     for (auto it = replies.rbegin(); it != replies.rend(); ++it)
     {
@@ -2543,15 +2544,15 @@ std::string SortedArticleNavigationTest::expect_previous(char command, long numb
 std::string SortedArticleNavigationTest::expect_navigation(char command, long number, long index,
                                                            ArticleSwitchResult result)
 {
-    const auto current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto order = g_art_ptr_list;
-    const auto unread = m_newsgroup.m_to_read;
-    const auto selected = g_selected_count;
-    const auto first = g_first_art;
-    const auto parsed = g_parsed_art;
-    const auto search_ahead = g_search_ahead;
-    const auto subject_flags = g_first_subject->m_flags;
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>           order = g_art_ptr_list;
+    const ArticleUnread                    unread = m_newsgroup.m_to_read;
+    const ArticleUnread                    selected = g_selected_count;
+    const ArticleNum                       first = g_first_art;
+    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       search_ahead = g_search_ahead;
+    const SubjectFlags                     subject_flags = g_first_subject->m_flags;
     const bool selected_only = g_selected_only;
     const bool reread = g_reread;
     const bool force_last = g_force_last;
@@ -2691,12 +2692,12 @@ std::string ArticleTraversalTest::expect_previous(char command, long number, std
 std::string ArticleTraversalTest::expect_navigation(char command, long number, std::initializer_list<long> missing,
                                                     ArticleSwitchResult result)
 {
-    const auto    current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto    recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto    first = g_first_art;
-    const auto    parsed = g_parsed_art;
-    const auto    search_ahead = g_search_ahead;
-    const auto    selection_mode = g_sel_mode;
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticleNum                       first = g_first_art;
+    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       search_ahead = g_search_ahead;
+    const SelectionMode                    selection_mode = g_sel_mode;
     const int     selected_subjects = g_selected_subj_cnt;
     const bool    selected_only = g_selected_only;
     const bool    threaded_group = g_threaded_group;
@@ -2876,21 +2877,21 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
                                                   ArticleSwitchResult result, long search_ahead, long order_index,
                                                   char typed_second)
 {
-    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto                                       order = g_art_ptr_list;
-    const auto                                       cursor = g_art_ptr;
-    const auto                                       first = g_first_art;
-    const auto                                       parsed = g_parsed_art;
-    const auto                                       unread = m_newsgroup.m_to_read;
-    const auto                                       selected = g_selected_count;
+    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::vector<Article *>                     order = g_art_ptr_list;
+    Article **const                                  cursor = g_art_ptr;
+    const ArticleNum                                 first = g_first_art;
+    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleUnread                              unread = m_newsgroup.m_to_read;
+    const ArticleUnread                              selected = g_selected_count;
     const int                                        selected_subjects = g_selected_subj_cnt;
     const bool                                       selected_only = g_selected_only;
     const bool                                       force_last = g_force_last;
     const bool                                       threaded = g_threaded_group;
     const bool                                       breadth_first = g_breadth_first;
-    const auto                                       mode = g_mode;
-    const auto                                       follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
+    const MinorMode                                  mode = g_mode;
+    const std::pair<bool, bool>                      follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
     for (const auto &[number, article] : g_article_list)
     {
@@ -3235,22 +3236,22 @@ void SelectedPreviousSubjectThreadArticleTest::expect_previous(long number, std:
 void SelectedPreviousSubjectThreadArticleTest::expect_navigation(char command, long number, bool reread,
                                                                  std::initializer_list<long> missing, bool force_last)
 {
-    const auto                current = std::make_pair(g_curr_art, g_curr_artp);
-    const auto                recent = std::make_pair(g_recent_art, g_recent_artp);
-    const auto                first = g_first_art;
-    const auto                parsed = g_parsed_art;
-    const auto                search_ahead = g_search_ahead;
-    const auto                selected_subjects = g_selected_subj_cnt;
-    const auto                mode = std::make_pair(g_general_mode, g_mode);
-    const auto                first_subject = g_first_subject;
-    const auto                last_subject = g_last_subject;
-    const auto                terminal = std::make_pair(g_term_line, g_term_col);
-    const auto                follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
+    const std::pair<ArticleNum, Article *>  current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *>  recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticleNum                        first = g_first_art;
+    const ArticleNum                        parsed = g_parsed_art;
+    const ArticleNum                        search_ahead = g_search_ahead;
+    const int                               selected_subjects = g_selected_subj_cnt;
+    const std::pair<GeneralMode, MinorMode> mode = std::make_pair(g_general_mode, g_mode);
+    Subject *const                          first_subject = g_first_subject;
+    Subject *const                          last_subject = g_last_subject;
+    const std::pair<int, int>               terminal = std::make_pair(g_term_line, g_term_col);
+    const std::pair<bool, bool>             follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
     const bool                breadth_first = g_breadth_first;
     const bool                selected_only = g_selected_only;
     const bool                threaded_group = g_threaded_group;
-    auto                      unread = m_newsgroup.m_to_read;
-    auto                      selected = g_selected_count;
+    ArticleUnread                           unread = m_newsgroup.m_to_read;
+    ArticleUnread                           selected = g_selected_count;
     std::vector<ArticleFlags> flags;
     for (long article = 1; article <= g_last_art.value_of(); ++article)
     {
@@ -5628,7 +5629,7 @@ TEST_F(CatchupArticleTest, aTailLargerThanTheGroupDoesNotMarkAnyArticlesRead)
 TEST_P(CatchupUnsubscribeArticleTest, unsubscribeCatchesUpAndRequestsCleanupWhilePreservingTheReadingAnchor)
 {
     set_catchup_articles(GetParam() ? 8 : 4);
-    const auto article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
 
     const std::string output = catch_up("u", AS_CLEAN);
 
@@ -10155,7 +10156,7 @@ INSTANTIATE_TEST_SUITE_P(Verbosity, NumericRangeFailureArticleTest, testing::Boo
 
 TEST_F(NumericRangeArticleTest, rangeExecutorStopsAtAnInterruptionAndRestoresTheReadingAnchor)
 {
-    const auto article = std::make_pair(g_art, g_artp);
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
     g_int_count = 1;
     testing::internal::CaptureStdout();
 
@@ -10357,7 +10358,7 @@ TEST_P(DirectFirstExhaustionArticleTest, caretRetainsAConsistentEndPositionWhenN
 {
     for (long number = 1; number <= 12; ++number)
     {
-        const auto flags = article_ptr(ArticleNum{number})->m_flags;
+        const ArticleFlags flags = article_ptr(ArticleNum{number})->m_flags;
         set_flags(number, flags & ~(GetParam() ? AF_SEL : AF_UNREAD | AF_SEL));
     }
     g_selected_only = GetParam();

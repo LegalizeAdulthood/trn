@@ -35,7 +35,7 @@ protected:
 
 void ModeratorSourceTest::SetUp()
 {
-    const auto *info = testing::UnitTest::GetInstance()->current_test_info();
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
     m_directory = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
     std::filesystem::create_directories(m_directory);
     m_source.m_moderators_file = (m_directory / "moderators").generic_string();
@@ -181,7 +181,7 @@ TEST_F(ModeratorSourceTest, incompleteRemoteListDoesNotPublishMatchingPrefix)
         .WillOnce(testing::Return("215 list follows"))
         .WillOnce(testing::Return("comp.*:premature@example.test"))
         .WillOnce(testing::Invoke(
-            [](auto &error)
+            [](error_code_t &error)
             {
                 error = boost::system::errc::make_error_code(boost::system::errc::io_error);
                 return std::string{};

@@ -376,7 +376,7 @@ SaveResult save_article(std::string_view command)
                     decode_type = 1;
                     break;
                 }
-                if (const auto header = yenc_prescan(line_text))
+                if (const std::optional<YencHeader> header = yenc_prescan(line_text))
                 {
                     filename = header->filename;
                     part = header->part;

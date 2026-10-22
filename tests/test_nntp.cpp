@@ -1820,7 +1820,7 @@ TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
     }
     lines.emplace_back(".");
     EXPECT_CALL(*m_connection, write_line(StrEq("ARTICLE 7"), _));
-    auto &reads = EXPECT_CALL(*m_connection, read_line(_));
+    testing::internal::TypedExpectation<std::string(error_code_t &)> &reads = EXPECT_CALL(*m_connection, read_line(_));
     for (const std::string &line : lines)
     {
         reads.WillOnce(Return(line));
@@ -1834,7 +1834,7 @@ TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
         {
             article += chunk;
         }
-        const auto decoded = yenc_decode(article);
+        const std::optional<YencPart> decoded = yenc_decode(article);
         ASSERT_TRUE(decoded);
         ASSERT_EQ(256U, decoded->data.size());
         for (int i = 0; i < 256; ++i)

@@ -105,7 +105,7 @@ TEST(HashTest, storeAcceptsBoundedStringViewKeys)
     HashTableOwner         table{};
     const std::string      buffer{"prefix-key-suffix"};
     std::string            key{"key"};
-    const auto             key_pos = buffer.find(key);
+    const std::size_t      key_pos = buffer.find(key);
     const std::string_view key_view{buffer.data() + key_pos, key.size()};
 
     hash_store(table.get(), key_view, make_datum(key, 33));

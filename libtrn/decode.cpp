@@ -656,7 +656,7 @@ static bool decode_yenc_piece(MimeCapEntry *mcp, std::string_view first_line)
             break;
         }
     }
-    const auto current = yenc_decode(encoded);
+    const std::optional<YencPart> current = yenc_decode(encoded);
     if (!current)
     {
         return fail("Invalid yEnc data, size, or CRC.");
@@ -736,7 +736,7 @@ static bool decode_yenc_piece(MimeCapEntry *mcp, std::string_view first_line)
         {
             std::ifstream     input{dir / std::to_string(part), std::ios::binary};
             const std::string text{std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
-            const auto        decoded = yenc_decode(text);
+            const std::optional<YencPart> decoded = yenc_decode(text);
             if (!decoded || !decoded->header.multipart || decoded->header.part != part ||
                 decoded->header.size != current->header.size || decoded->header.filename != current->header.filename ||
                 (decoded->header.total && decoded->header.total != total) || decoded->begin != written + 1)

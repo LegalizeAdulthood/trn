@@ -186,7 +186,7 @@ bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
         target = 0;
     }
     const auto target_pos = static_cast<std::size_t>(target);
-    const auto pos = std::min(target_pos, g_newsgroup_order.size());
+    const std::size_t pos = std::min(target_pos, g_newsgroup_order.size());
     g_newsgroup_order.insert(g_newsgroup_order.begin() + pos, np);
     sync_newsgroup_order_links();
     renumber_newsgroup_order();
