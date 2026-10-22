@@ -3860,6 +3860,21 @@ class LastVisitedArticleTest : public ArticleNavigationTest
 {
 };
 
+class LastVisitedAliasArticleTest : public ArticleStateTest, public testing::WithParamInterface<std::tuple<bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void LastVisitedAliasArticleTest::SetUp()
+{
+    ArticleStateTest::SetUp();
+    g_threaded_group = std::get<0>(GetParam());
+    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 2);
+    g_recent_art = ArticleNum{1};
+    g_recent_artp = article_ptr(g_recent_art);
+}
+
 class ParentRootArticleTest : public ArticleNavigationTest
 {
 };
@@ -8494,33 +8509,29 @@ TEST_P(LastVisitedArticleTest, returnsToEndOfGroupAndRetainsSearchAheadMode)
     EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
 }
 
-TEST_P(LastVisitedArticleTest, acceptsBackspaceAndDeleteAliases)
+TEST_P(LastVisitedAliasArticleTest, returnsToTheLastVisitedArticle)
 {
-    set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS}, 2);
-    g_recent_art = ArticleNum{1};
-    g_recent_artp = article_ptr(g_recent_art);
-    for (const char *command : {"\b", "\177"})
-    {
-        SCOPED_TRACE(static_cast<int>(command[0]));
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
-        g_reread = false;
-        g_force_last = false;
+    EXPECT_EQ(AS_NORM, art_switch(std::string{std::get<1>(GetParam())}));
 
-        EXPECT_EQ(AS_NORM, art_switch(command));
-
-        EXPECT_EQ(ArticleNum{1}, g_art);
-        EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
-        EXPECT_EQ(ArticleNum{2}, g_curr_art);
-        EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
-        EXPECT_EQ(ArticleNum{1}, g_recent_art);
-        EXPECT_EQ(article_ptr(ArticleNum{1}), g_recent_artp);
-        EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
-        EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
-        EXPECT_TRUE(g_reread);
-        EXPECT_TRUE(g_force_last);
-    }
+    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{1}, g_recent_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_recent_artp);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_artp->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
 }
+
+INSTANTIATE_TEST_SUITE_P(ReadingModeAndAlias, LastVisitedAliasArticleTest,
+                         testing::Combine(testing::Bool(), testing::Values('\b', '\177')),
+                         [](const testing::TestParamInfo<std::tuple<bool, char>> &info)
+                         {
+                             return std::string{std::get<0>(info.param) ? "Threaded" : "Numeric"} +
+                                    (std::get<1>(info.param) == '\b' ? "Backspace" : "Delete");
+                         });
 
 TEST_P(LastVisitedArticleTest, returnsToVirtualArticleUsingSavedPointer)
 {
