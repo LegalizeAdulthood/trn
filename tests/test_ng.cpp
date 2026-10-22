@@ -1870,9 +1870,27 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     EXPECT_FALSE(macro_pending());
 }
 
-class ScanEntryArticleTest : public ScanContinuationArticleTest, public testing::WithParamInterface<bool>
+class ScanEntryArticleTest : public ScanContinuationArticleTest,
+                             public testing::WithParamInterface<std::tuple<bool, bool>>
 {
+protected:
+    void SetUp() override;
+
+    long m_current{};
 };
+
+void ScanEntryArticleTest::SetUp()
+{
+    ScanContinuationArticleTest::SetUp();
+    m_current = std::get<0>(GetParam()) ? 8 : 3;
+    set_reading(m_current);
+    g_sa_in = std::get<1>(GetParam());
+    g_sa_go_explicit = g_sa_in;
+    g_s_follow_temp = true;
+    g_univ_follow_temp = true;
+    g_reread = true;
+    g_force_last = true;
+}
 
 class ScanNextCommandArticleTest : public ScanContinuationArticleTest, public testing::WithParamInterface<char>
 {
@@ -12445,17 +12463,7 @@ TEST_F(QuitCommandArticleTest, quitVariantsPreserveTheEndOfGroupPosition)
 
 TEST_P(ScanEntryArticleTest, semicolonRequestsExplicitScanWithoutChangingTheReadingAnchor)
 {
-    const long current = GetParam() ? 8 : 3;
-    set_reading(current);
-    g_sa_in = false;
-    g_s_follow_temp = true;
-    g_univ_follow_temp = true;
-    g_reread = true;
-    g_force_last = true;
-
-    dispatch(";", current, AS_SA);
-    g_sa_in = true;
-    dispatch(";", current, AS_SA);
+    dispatch(";", m_current, AS_SA);
 
     EXPECT_TRUE(g_sa_go_explicit);
     EXPECT_FALSE(g_sa_go);
@@ -12468,8 +12476,12 @@ TEST_P(ScanEntryArticleTest, semicolonRequestsExplicitScanWithoutChangingTheRead
     EXPECT_FALSE(g_univ_default_cmd);
 }
 
-INSTANTIATE_TEST_SUITE_P(ArticleOrGroupEnd, ScanEntryArticleTest, testing::Bool(),
-                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "GroupEnd" : "Article"; });
+INSTANTIATE_TEST_SUITE_P(OriginAndScanState, ScanEntryArticleTest, testing::Combine(testing::Bool(), testing::Bool()),
+                         [](const testing::TestParamInfo<std::tuple<bool, bool>> &info)
+                         {
+                             return std::string{std::get<0>(info.param) ? "GroupEnd" : "Article"} +
+                                    (std::get<1>(info.param) ? "ScanActive" : "ScanInactive");
+                         });
 
 TEST_P(ScanNextCommandArticleTest, scanDefaultTakesPriorityOverUniversalReturnAtGroupEnd)
 {
