@@ -24,6 +24,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace
@@ -236,6 +237,12 @@ void SelectorCommandOptionTest::TearDown()
     set_option(GetParam(), m_saved_value);
 }
 
+using QuotedOptionValue = std::pair<std::string_view, std::string_view>;
+
+class QuotedOptionValueTest : public testing::TestWithParam<QuotedOptionValue>
+{
+};
+
 class HeaderListOptionTest : public testing::Test
 {
 protected:
@@ -397,19 +404,18 @@ TEST(QuoteStringTest, leavesSimpleValuesUnquoted)
     EXPECT_EQ(std::string{"plain-value"}, quote_string("plain-value"));
 }
 
-TEST(QuoteStringTest, quotesWhitespaceAndComments)
+TEST_P(QuotedOptionValueTest, quotesAndEscapesTheValue)
 {
-    EXPECT_EQ(std::string{"\" leading\""}, quote_string(" leading"));
-    EXPECT_EQ(std::string{"\"two  spaces\""}, quote_string("two  spaces"));
-    EXPECT_EQ(std::string{"\"value#comment\""}, quote_string("value#comment"));
+    const std::string quoted = quote_string(GetParam().first);
+
+    EXPECT_EQ(GetParam().second, quoted);
 }
 
-TEST(QuoteStringTest, escapesChosenQuoteAndBackslash)
-{
-    EXPECT_EQ(std::string{"\"can't\""}, quote_string("can't"));
-    EXPECT_EQ(std::string{"'say \"hi\"'"}, quote_string("say \"hi\""));
-    EXPECT_EQ(std::string{"\"c:\\\\tmp\""}, quote_string("c:\\tmp"));
-}
+INSTANTIATE_TEST_SUITE_P(
+    ValuesNeedingQuotes, QuotedOptionValueTest,
+    testing::Values(QuotedOptionValue{" leading", "\" leading\""}, QuotedOptionValue{"two  spaces", "\"two  spaces\""},
+                    QuotedOptionValue{"value#comment", "\"value#comment\""}, QuotedOptionValue{"can't", "\"can't\""},
+                    QuotedOptionValue{"say \"hi\"", "'say \"hi\"'"}, QuotedOptionValue{"c:\\tmp", "\"c:\\\\tmp\""}));
 
 TEST_F(AutoSaveNameOptionTest, yesUsesArticleNameInNewsgroupDirectory)
 {
