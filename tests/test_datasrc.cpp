@@ -22,9 +22,11 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <tuple>
 
 namespace
 {
@@ -328,6 +330,60 @@ protected:
     std::string                   m_old_nntp_auth_file;
     std::time_t                   m_old_def_refetch_secs{};
 };
+
+class AccessPolicyInitTest : public DataSourceInitTest
+{
+protected:
+    void SetUp() override;
+};
+
+void AccessPolicyInitTest::SetUp()
+{
+    DataSourceInitTest::SetUp();
+    m_env.expect_no_envar("NNTPSERVER");
+    m_env.expect_no_envar("NNTP_FORCE_AUTH");
+}
+
+struct TlsPolicyField
+{
+    const char *name;
+    bool NNTPLink::*member;
+    bool            expected;
+};
+
+void PrintTo(const TlsPolicyField &value, std::ostream *stream)
+{
+    *stream << value.name;
+}
+
+class DataSourceTlsPolicyTest : public AccessPolicyInitTest,
+                                public testing::WithParamInterface<std::tuple<bool, TlsPolicyField>>
+{
+protected:
+    void SetUp() override;
+};
+
+void DataSourceTlsPolicyTest::SetUp()
+{
+    AccessPolicyInitTest::SetUp();
+    std::ofstream{m_output_dir / "access"}
+        << "[tls-policy]\nNNTP Server = news.example\n"
+        << (std::get<0>(GetParam()) ? "STARTTLS = n\nRequire TLS For Auth = Y\nRequire TLS For Posting = y\n"
+                                    : "STARTTLS = no\nRequire TLS For Auth = yes\nRequire TLS For Posting = yes\n");
+}
+
+class DataSourceModeratorPolicyTest : public AccessPolicyInitTest, public testing::WithParamInterface<std::string_view>
+{
+protected:
+    void SetUp() override;
+};
+
+void DataSourceModeratorPolicyTest::SetUp()
+{
+    AccessPolicyInitTest::SetUp();
+    std::ofstream{m_output_dir / "access"}
+        << "[moderators]\nNNTP Server = news.example\nModerators File = " << GetParam() << '\n';
+}
 
 } // namespace
 
@@ -836,24 +892,23 @@ TEST_F(DataSourceInitTest, readsForceAuthFromEnvironment)
     EXPECT_TRUE(source.m_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED);
 }
 
-TEST_F(DataSourceInitTest, readsTlsPolicyFromAccessFile)
+TEST_P(DataSourceTlsPolicyTest, readsTheConfiguredPolicyField)
 {
-    std::ofstream{m_output_dir / "access"} << "[tls-policy]\n"
-                                              "NNTP Server = news.example\n"
-                                              "STARTTLS = no\n"
-                                              "Require TLS For Auth = yes\n"
-                                              "Require TLS For Posting = yes\n";
-    m_env.expect_no_envar("NNTPSERVER");
-    m_env.expect_no_envar("NNTP_FORCE_AUTH");
-
     data_source_init();
 
     const DataSource *source = get_data_source("tls-policy");
     ASSERT_NE(nullptr, source);
-    EXPECT_FALSE(source->m_nntp_link.allow_starttls);
-    EXPECT_TRUE(source->m_nntp_link.require_tls_for_auth);
-    EXPECT_TRUE(source->m_nntp_link.require_tls_for_posting);
+    const TlsPolicyField &field = std::get<1>(GetParam());
+    EXPECT_EQ(field.expected, source->m_nntp_link.*field.member);
 }
+
+INSTANTIATE_TEST_SUITE_P(LongAndShortValues, DataSourceTlsPolicyTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(TlsPolicyField{"STARTTLS", &NNTPLink::allow_starttls, false},
+                                                          TlsPolicyField{"Require TLS For Auth",
+                                                                         &NNTPLink::require_tls_for_auth, true},
+                                                          TlsPolicyField{"Require TLS For Posting",
+                                                                         &NNTPLink::require_tls_for_posting, true})));
 
 TEST_F(DataSourceInitTest, expandsModeratorFileFromAccessFile)
 {
@@ -883,41 +938,17 @@ TEST_F(DataSourceInitTest, defaultsModeratorFileBesideLocalActiveFile)
     EXPECT_EQ((m_output_dir / "moderators").generic_string(), source->m_moderators_file);
 }
 
-TEST_F(DataSourceInitTest, preservesDisabledAndRemoteModeratorPolicies)
+TEST_P(DataSourceModeratorPolicyTest, preservesTheModeratorFilePolicy)
 {
-    std::ofstream{m_output_dir / "access"} << "[disabled]\nNNTP Server = news.example\nModerators File = none\n"
-                                              "[remote]\nNNTP Server = news.example\nModerators File = remote\n";
-    m_env.expect_no_envar("NNTPSERVER");
-    m_env.expect_no_envar("NNTP_FORCE_AUTH");
-
     data_source_init();
 
-    const DataSource *disabled = get_data_source("disabled");
-    const DataSource *remote = get_data_source("remote");
-    ASSERT_NE(nullptr, disabled);
-    ASSERT_NE(nullptr, remote);
-    EXPECT_EQ("none", disabled->m_moderators_file);
-    EXPECT_EQ("remote", remote->m_moderators_file);
-}
-
-TEST_F(DataSourceInitTest, readsShortTlsPolicyValues)
-{
-    std::ofstream{m_output_dir / "access"} << "[tls-policy]\n"
-                                              "NNTP Server = news.example\n"
-                                              "STARTTLS = n\n"
-                                              "Require TLS For Auth = Y\n"
-                                              "Require TLS For Posting = y\n";
-    m_env.expect_no_envar("NNTPSERVER");
-    m_env.expect_no_envar("NNTP_FORCE_AUTH");
-
-    data_source_init();
-
-    const DataSource *source = get_data_source("tls-policy");
+    const DataSource *source = get_data_source("moderators");
     ASSERT_NE(nullptr, source);
-    EXPECT_FALSE(source->m_nntp_link.allow_starttls);
-    EXPECT_TRUE(source->m_nntp_link.require_tls_for_auth);
-    EXPECT_TRUE(source->m_nntp_link.require_tls_for_posting);
+    EXPECT_EQ(GetParam(), source->m_moderators_file);
 }
+
+INSTANTIATE_TEST_SUITE_P(DisabledAndRemote, DataSourceModeratorPolicyTest,
+                         testing::Values(std::string_view{"none"}, std::string_view{"remote"}));
 
 TEST_F(DataSourceInitTest, readsImplicitTlsFromAccessFile)
 {
