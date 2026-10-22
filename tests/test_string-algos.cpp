@@ -1,10 +1,12 @@
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #include <trn/string-algos.h>
 
 #include <config/common.h>
 
 #include <gtest/gtest.h>
 
+#include <ostream>
 #include <string>
 #include <string_view>
 
@@ -159,22 +161,37 @@ TEST_F(StringAlgosTest, isHorSpaceNul)
     ASSERT_FALSE(is_hor_space('\0'));
 }
 
-TEST_F(StringAlgosTest, isHorSpaceSpaceTab)
+namespace
 {
-    ASSERT_TRUE(is_hor_space(' '));
-    ASSERT_TRUE(is_hor_space('\t'));
+
+struct HorizontalSpaceCase
+{
+    const char *name;
+    char        input;
+    bool        expected;
+};
+
+void PrintTo(const HorizontalSpaceCase &value, std::ostream *out)
+{
+    *out << value.name;
 }
 
-TEST_F(StringAlgosTest, isHorSpaceOtherWhiteSpace)
+class HorizontalSpaceInputTest : public TestWithParam<HorizontalSpaceCase>
 {
-    ASSERT_FALSE(is_hor_space('\r'));
-    ASSERT_FALSE(is_hor_space('\n'));
-    ASSERT_FALSE(is_hor_space('\v'));
+};
+
+} // namespace
+
+TEST_P(HorizontalSpaceInputTest, classifiesOneCharacter)
+{
+    const bool horizontal = is_hor_space(GetParam().input);
+
+    EXPECT_EQ(GetParam().expected, horizontal);
 }
 
-TEST_F(StringAlgosTest, isHorSpacePrintable)
-{
-    ASSERT_FALSE(is_hor_space('a'));
-    ASSERT_FALSE(is_hor_space('!'));
-    ASSERT_FALSE(is_hor_space('B'));
-}
+INSTANTIATE_TEST_SUITE_P(
+    WhitespaceAndPrintableCharacters, HorizontalSpaceInputTest,
+    Values(HorizontalSpaceCase{"Space", ' ', true}, HorizontalSpaceCase{"Tab", '\t', true},
+           HorizontalSpaceCase{"CarriageReturn", '\r', false}, HorizontalSpaceCase{"LineFeed", '\n', false},
+           HorizontalSpaceCase{"VerticalTab", '\v', false}, HorizontalSpaceCase{"LowercaseA", 'a', false},
+           HorizontalSpaceCase{"Exclamation", '!', false}, HorizontalSpaceCase{"UppercaseB", 'B', false}));
