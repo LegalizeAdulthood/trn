@@ -1638,6 +1638,171 @@ void DefaultCommandArticleTest::expect_pending(std::string_view input)
     EXPECT_FALSE(macro_pending());
 }
 
+class ScanContinuationArticleTest : public UnreadScopeArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void set_reading(long current, SelectionMode mode = SM_THREAD);
+    void set_scan_articles(std::initializer_list<ArticleFlags> flags, long current, SelectionMode mode = SM_THREAD);
+    void dispatch(std::string command, long number, ArticleSwitchResult expected = AS_NORM,
+                  DoNewsgroupResult exit_code = NG_NORM);
+
+private:
+    bool          m_old_sa_follow{g_sa_follow};
+    bool          m_old_univ_follow{g_univ_follow};
+    bool          m_old_sa_go{g_sa_go};
+    bool          m_old_sa_go_explicit{g_sa_go_explicit};
+    bool          m_old_sa_do_sel_threads{g_sa_do_sel_threads};
+    ArticleNum    m_old_sa_art{g_sa_art};
+    unsigned char m_old_last_char{g_last_char};
+    int           m_old_int_count{g_int_count};
+};
+
+void ScanContinuationArticleTest::SetUp()
+{
+    UnreadScopeArticleTest::SetUp();
+    g_sa_in = true;
+    g_sa_follow = false;
+    g_univ_follow = false;
+    g_sa_go = false;
+    g_sa_go_explicit = false;
+    g_sa_do_sel_threads = true;
+    g_sa_art = ArticleNum{6};
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    g_int_count = 0;
+    g_default_cmd = "npq";
+    g_search_ahead = ArticleNum{3};
+}
+
+void ScanContinuationArticleTest::TearDown()
+{
+    g_sa_follow = m_old_sa_follow;
+    g_univ_follow = m_old_univ_follow;
+    g_sa_go = m_old_sa_go;
+    g_sa_go_explicit = m_old_sa_go_explicit;
+    g_sa_do_sel_threads = m_old_sa_do_sel_threads;
+    g_sa_art = m_old_sa_art;
+    g_last_char = m_old_last_char;
+    g_int_count = m_old_int_count;
+    UnreadScopeArticleTest::TearDown();
+}
+
+void ScanContinuationArticleTest::set_reading(long current, SelectionMode mode)
+{
+    set_scan_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD,
+                       AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
+                      current, mode);
+}
+
+void ScanContinuationArticleTest::set_scan_articles(std::initializer_list<ArticleFlags> flags, long current,
+                                                    SelectionMode mode)
+{
+    set_scope(flags, current);
+    g_sel_mode = mode;
+    g_recent_art = ArticleNum{6};
+    g_recent_artp = article_find(g_recent_art);
+    g_parsed_art = ArticleNum{3};
+    for (const auto &[number, article] : g_article_list)
+    {
+        if (article.m_flags & AF_SEL)
+        {
+            article.m_subj->m_flags |= SF_SEL;
+        }
+    }
+    for (const Subject &subject : m_subjects)
+    {
+        g_selected_subj_cnt += (subject.m_flags & SF_SEL) != 0;
+    }
+}
+
+void ScanContinuationArticleTest::dispatch(std::string command, long number, ArticleSwitchResult expected,
+                                           DoNewsgroupResult exit_code)
+{
+    const auto                                       current = std::make_pair(g_curr_art, g_curr_artp);
+    const auto                                       recent = std::make_pair(g_recent_art, g_recent_artp);
+    const auto                                       first = g_first_art;
+    const auto                                       parsed = g_parsed_art;
+    const auto                                       unread = m_newsgroup.m_to_read;
+    const auto                                       selected = g_selected_count;
+    const auto                                       selected_subjects = g_selected_subj_cnt;
+    const auto                                       mode = g_sel_mode;
+    const auto                                       scan_article = g_sa_art;
+    const bool                                       selected_only = g_selected_only;
+    const bool                                       scan_in = g_sa_in;
+    const bool                                       scan_go = g_sa_go;
+    const bool                                       scan_explicit = g_sa_go_explicit || command == ";";
+    const bool                                       scan_threads = g_sa_do_sel_threads;
+    const bool                                       scan_follow = g_sa_follow;
+    const bool                                       univ_follow = g_univ_follow;
+    const bool                                       virtual_read = g_univ_read_virt_flag;
+    std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
+    for (const auto &[article_number, article] : g_article_list)
+    {
+        flags.emplace_back(article_number, article.m_flags);
+    }
+    std::vector<SubjectFlags> subject_flags;
+    for (const Subject &subject : m_subjects)
+    {
+        subject_flags.push_back(subject.m_flags);
+    }
+    push_char('q');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::move(command));
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(expected, result);
+    EXPECT_TRUE(output.empty()) << output;
+    EXPECT_EQ(ArticleNum{number}, g_art);
+    EXPECT_EQ(article_find(g_art), g_artp);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(unread, m_newsgroup.m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(scan_in, g_sa_in);
+    EXPECT_EQ(scan_go, g_sa_go);
+    EXPECT_EQ(scan_explicit, g_sa_go_explicit);
+    EXPECT_EQ(scan_threads, g_sa_do_sel_threads);
+    EXPECT_EQ(scan_article, g_sa_art);
+    EXPECT_EQ(scan_follow, g_sa_follow);
+    EXPECT_EQ(univ_follow, g_univ_follow);
+    EXPECT_EQ(virtual_read, g_univ_read_virt_flag);
+    EXPECT_EQ(exit_code, g_newsgroup_exit_code);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_TRUE(g_art_ptr_list.empty());
+    EXPECT_EQ(nullptr, g_art_ptr);
+    EXPECT_EQ(flags.size(), g_article_list.size());
+    for (const auto &[article_number, expected_flags] : flags)
+    {
+        SCOPED_TRACE(article_number.value_of());
+        EXPECT_EQ(expected_flags, article_find(article_number)->m_flags);
+    }
+    for (int index = 0; index < 3; ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
+    }
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('q', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+class ScanEntryArticleTest : public ScanContinuationArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class ScanNextCommandArticleTest : public ScanContinuationArticleTest, public testing::WithParamInterface<char>
+{
+};
+
 class SearchCommandArticleTest : public UnreadScopeArticleTest
 {
 protected:
@@ -9073,6 +9238,361 @@ TEST_F(QuitCommandArticleTest, quitVariantsPreserveTheEndOfGroupPosition)
         SCOPED_TRACE(test_case.command);
         expect_quit(test_case.command, test_case.result);
     }
+}
+
+TEST_P(ScanEntryArticleTest, semicolonRequestsExplicitScanWithoutChangingTheReadingAnchor)
+{
+    const long current = GetParam() ? 8 : 3;
+    set_reading(current);
+    g_sa_in = false;
+    g_s_follow_temp = true;
+    g_univ_follow_temp = true;
+    g_reread = true;
+    g_force_last = true;
+
+    dispatch(";", current, AS_SA);
+    g_sa_in = true;
+    dispatch(";", current, AS_SA);
+
+    EXPECT_TRUE(g_sa_go_explicit);
+    EXPECT_FALSE(g_sa_go);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrGroupEnd, ScanEntryArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "GroupEnd" : "Article"; });
+
+TEST_P(ScanNextCommandArticleTest, scanDefaultTakesPriorityOverUniversalReturnAtGroupEnd)
+{
+    set_reading(8);
+    g_default_cmd = std::string{GetParam()};
+    g_univ_read_virt_flag = true;
+    g_reread = true;
+    g_force_last = true;
+
+    dispatch(" ", 8, AS_SA);
+
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+}
+
+TEST_P(ScanNextCommandArticleTest, universalFollowDoesNotBypassTheScanDefaultReturn)
+{
+    set_reading(2);
+    g_default_cmd = std::string{GetParam()};
+    g_univ_read_virt_flag = true;
+    g_univ_follow = true;
+
+    dispatch(" ", 2, AS_SA);
+
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_P(ScanNextCommandArticleTest, persistentScanFollowTakesPriorityOverUniversalDefaultReturn)
+{
+    set_reading(2);
+    g_default_cmd = std::string{GetParam()};
+    g_univ_read_virt_flag = true;
+    g_sa_follow = true;
+
+    dispatch(" ", 3);
+
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_EQ(GetParam() == 'N', g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_P(ScanNextCommandArticleTest, universalDefaultReturnsWhenScanIsInactive)
+{
+    set_reading(2);
+    g_default_cmd = std::string{GetParam()};
+    g_sa_in = false;
+    g_sa_follow = true;
+    g_univ_read_virt_flag = true;
+    g_reread = true;
+
+    dispatch(" ", 2, AS_CLEAN, NG_NEXT);
+
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_TRUE(g_reread);
+}
+
+TEST_P(ScanNextCommandArticleTest, persistentUniversalFollowContinuesAcrossThreadsWhenScanIsInactive)
+{
+    set_reading(5);
+    g_default_cmd = std::string{GetParam()};
+    g_sa_in = false;
+    g_univ_read_virt_flag = true;
+    g_univ_follow = true;
+
+    dispatch(" ", 6);
+
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_EQ(GetParam() == 'N', g_reread);
+}
+
+TEST_P(ScanNextCommandArticleTest, explicitNextEstablishesTemporaryUniversalFollowForLaterDefaults)
+{
+    set_reading(2);
+    g_default_cmd = std::string{GetParam()};
+    g_sa_in = false;
+    g_univ_read_virt_flag = true;
+
+    dispatch(std::string{GetParam()}, 3);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+
+    dispatch(" ", 4);
+
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_EQ(GetParam() == 'N', g_reread);
+}
+
+TEST_P(ScanNextCommandArticleTest, allReadGroupCleansUpOnUnreadNextAndAllowsExplicitRereading)
+{
+    set_scan_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 8);
+    const bool rereading = GetParam() == 'N';
+
+    dispatch(std::string{GetParam()}, rereading ? 1 : 8, rereading ? AS_NORM : AS_CLEAN);
+
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(rereading ? ArticleNum{} : ArticleNum{3}, g_search_ahead);
+    EXPECT_EQ(rereading, g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+INSTANTIATE_TEST_SUITE_P(NextCommand, ScanNextCommandArticleTest, testing::Values('n', 'N'),
+                         [](const testing::TestParamInfo<char> &info)
+                         { return info.param == 'n' ? "NextUnread" : "NextIncludingRead"; });
+
+TEST_F(ScanContinuationArticleTest, articleModeExplicitNextReadsOneArticleThenTheDefaultReturnsToScan)
+{
+    set_reading(1, SM_ARTICLE);
+    g_univ_read_virt_flag = true;
+
+    dispatch("n", 2);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+    g_search_ahead = ArticleNum{5};
+
+    dispatch(" ", 3, AS_SA);
+
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{5}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_F(ScanContinuationArticleTest, articleModeDefaultWithPersistentFollowAdvancesBeforeReturningToScan)
+{
+    set_reading(1, SM_ARTICLE);
+    g_sa_follow = true;
+
+    dispatch(" ", 2, AS_SA);
+
+    EXPECT_FALSE(g_s_follow_temp);
+    EXPECT_FALSE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_F(ScanContinuationArticleTest, subjectModeTemporaryFollowStopsAtTheFirstArticleOfTheNextSubject)
+{
+    set_reading(1, SM_SUBJECT);
+    g_univ_read_virt_flag = true;
+
+    dispatch("n", 2);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+    g_search_ahead = ArticleNum{5};
+
+    dispatch(" ", 3, AS_SA);
+
+    EXPECT_NE(g_curr_artp->m_subj, g_artp->m_subj);
+    EXPECT_EQ(g_curr_artp->m_subj->m_thread, g_artp->m_subj->m_thread);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{5}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_F(ScanContinuationArticleTest, threadModeTemporaryFollowCrossesSubjectsAndReturnsAtTheNextThread)
+{
+    set_reading(2);
+    g_univ_read_virt_flag = true;
+
+    dispatch("n", 3);
+    EXPECT_NE(g_curr_artp->m_subj, g_artp->m_subj);
+    EXPECT_EQ(g_curr_artp->m_subj->m_thread, g_artp->m_subj->m_thread);
+    for (const long number : {4, 5})
+    {
+        SCOPED_TRACE(number);
+        g_curr_art = g_art;
+        g_curr_artp = g_artp;
+        dispatch(" ", number);
+        EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    }
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+    g_search_ahead = ArticleNum{5};
+
+    dispatch(" ", 6, AS_SA);
+
+    EXPECT_NE(g_curr_artp->m_subj->m_thread, g_artp->m_subj->m_thread);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{5}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_F(ScanContinuationArticleTest, nextUnreadSkipsReadMissingAndUnselectedArticlesBeforeTheThreadBoundary)
+{
+    set_scan_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_NONE, AF_EXISTS | AF_UNREAD,
+                       AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL},
+                      2);
+    g_selected_only = true;
+
+    dispatch("n", 6, AS_SA);
+
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+}
+
+TEST_F(ScanContinuationArticleTest, explicitUppercaseNextIncludesReadUnselectedArticlesAndCrossesScanBoundaries)
+{
+    set_scan_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                       AF_EXISTS | AF_UNREAD | AF_SEL},
+                      2, SM_SUBJECT);
+    g_selected_only = true;
+
+    dispatch("N", 3);
+
+    EXPECT_NE(g_curr_artp->m_subj, g_artp->m_subj);
+    EXPECT_TRUE(g_reread);
+    g_art = g_curr_art = ArticleNum{5};
+    g_artp = g_curr_artp = article_find(g_art);
+    g_sel_mode = SM_THREAD;
+    g_reread = false;
+    g_search_ahead = ArticleNum{5};
+
+    dispatch("N", 6);
+
+    EXPECT_NE(g_curr_artp->m_subj->m_thread, g_artp->m_subj->m_thread);
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+}
+
+TEST_F(ScanContinuationArticleTest, unreadExhaustionReturnsToScanWithoutWrappingAndGroupEndRestartHonorsSelection)
+{
+    set_scan_articles(
+        {AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+        7);
+    g_selected_only = true;
+
+    dispatch("n", 8, AS_SA);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+
+    dispatch("n", 4, AS_SA);
+
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_F(ScanContinuationArticleTest, groupEndWithoutSelectedUnreadArticlesReturnsToScanWithoutChoosingUnselectedArticles)
+{
+    set_scan_articles(
+        {AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 8);
+    g_selected_only = true;
+
+    dispatch("n", 8, AS_SA);
+
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{3}, g_search_ahead);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+}
+
+TEST_F(ScanContinuationArticleTest, uppercaseNextReachesGroupEndAndRestartsWithoutReturningToScan)
+{
+    set_reading(7);
+
+    dispatch("N", 8);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_FALSE(g_reread);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    g_curr_art = g_art;
+    g_curr_artp = g_artp;
+    g_force_last = false;
+
+    dispatch("N", 1);
+
+    EXPECT_TRUE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+}
+
+TEST_F(ScanContinuationArticleTest, nonThreadedReadingDoesNotApplyTheThreadedScanSubjectBoundary)
+{
+    set_reading(2, SM_SUBJECT);
+    g_threaded_group = false;
+
+    dispatch("n", 3);
+
+    EXPECT_NE(g_curr_artp->m_subj, g_artp->m_subj);
+    EXPECT_EQ(ArticleNum{}, g_search_ahead);
+    EXPECT_TRUE(g_s_follow_temp);
+    EXPECT_TRUE(g_univ_follow_temp);
+    EXPECT_FALSE(g_reread);
 }
 
 TEST_F(DefaultCommandArticleTest, spaceExecutesOneDefaultAndLeavesLaterCommandsForTheirOwnDispatch)
