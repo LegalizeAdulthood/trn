@@ -15,12 +15,14 @@
 #include <trn/hash.h>
 #include <trn/head.h>
 #include <trn/init.h>
+#include <trn/mime.h>
 #include <trn/ng-internal.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
+#include <trn/respond.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -34,6 +36,7 @@
 
 #include <test_config.h>
 
+#include "mock_env.h"
 #include "support/MockNntpServer.h"
 
 #include <gmock/gmock.h>
@@ -47,6 +50,7 @@
 #include <iterator>
 #include <map>
 #include <optional>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -642,13 +646,12 @@ protected:
     char                              m_empty_tc[1]{};
 };
 
-class OnDemandThreadArticleTest : public InputNewsgroupTest
+class LocalSpoolArticleTest : public InputNewsgroupTest
 {
 protected:
     void        SetUp() override;
     void        TearDown() override;
     void        open_group(bool cache_all = true);
-    std::string display_tree();
 
 private:
     Subject           *m_old_first_subject{g_first_subject};
@@ -677,7 +680,7 @@ private:
     bool               m_old_s_default_cmd{g_s_default_cmd};
 };
 
-void OnDemandThreadArticleTest::SetUp()
+void LocalSpoolArticleTest::SetUp()
 {
     InputNewsgroupTest::SetUp();
     m_data_source.m_flags = DF_NONE;
@@ -719,7 +722,7 @@ void OnDemandThreadArticleTest::SetUp()
                           "References: <root@example.test>\n\nBranch body\n";
 }
 
-void OnDemandThreadArticleTest::TearDown()
+void LocalSpoolArticleTest::TearDown()
 {
     close_cache();
     hash_destroy(g_msg_id_hash);
@@ -750,7 +753,7 @@ void OnDemandThreadArticleTest::TearDown()
     InputNewsgroupTest::TearDown();
 }
 
-void OnDemandThreadArticleTest::open_group(bool cache_all)
+void LocalSpoolArticleTest::open_group(bool cache_all)
 {
     add_newsgroup("comp.lang.cpp", "", ArticleNum{1}, ArticleNum{3});
     set_current_newsgroup(0);
@@ -770,6 +773,12 @@ void OnDemandThreadArticleTest::open_group(bool cache_all)
     ASSERT_FALSE(g_threaded_group);
     ASSERT_EQ(AF_NONE, g_curr_artp->m_flags & AF_THREADED);
 }
+
+class OnDemandThreadArticleTest : public LocalSpoolArticleTest
+{
+protected:
+    std::string display_tree();
+};
 
 std::string OnDemandThreadArticleTest::display_tree()
 {
@@ -822,6 +831,190 @@ class SelectedOnDemandThreadArticleTest : public OnDemandThreadArticleTest, publ
 {
 };
 
+class SaveArticleTest : public LocalSpoolArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string save(char command, std::string_view input, ArticleSwitchResult expected = AS_ASK);
+    std::string saved_text() const;
+    std::string expected_text(char command, bool mailbox = false) const;
+    void        expect_mailbox(char command, std::string_view prefix = {});
+
+    fs::path m_destination;
+    fs::path m_spool;
+
+    static constexpr std::string_view HEADER = "From: Root <root@example.test>\n"
+                                               "Subject: Topic\n"
+                                               "Date: 21 Oct 2026 10:00:00 GMT\n"
+                                               "Message-ID: <root@example.test>\n\n";
+    static constexpr std::string_view BODY = "Root first line\nRoot next line\nFrom a body line\nLast line\n";
+
+private:
+    trn::testing::MockEnvironment m_env;
+    std::string                   m_old_priv_dir{g_priv_dir};
+    std::string                   m_old_save_dest{g_save_dest};
+    ArticlePosition               m_old_save_from{g_save_from};
+    bool                          m_old_norm_always{g_norm_always};
+    bool                          m_old_mbox_always{g_mbox_always};
+    MimeSection                   m_old_mime_article{std::move(g_mime_article)};
+    MimeSection                  *m_old_mime_section{g_mime_section};
+    MimeState                     m_old_mime_state{g_mime_state};
+    bool                          m_old_is_mime{g_is_mime};
+    bool                          m_old_multimedia_mime{g_multimedia_mime};
+    std::string                   m_old_msg{g_msg};
+};
+
+void SaveArticleTest::SetUp()
+{
+    EXPECT_CALL(m_env.getter, Call(testing::_)).Times(testing::AnyNumber()).WillRepeatedly(testing::Return(nullptr));
+    LocalSpoolArticleTest::SetUp();
+    m_spool = m_output_dir / "spool" / "comp" / "lang" / "cpp";
+    fs::create_directories(m_spool);
+    for (const char *number : {"1", "2", "3"})
+    {
+        fs::rename(m_output_dir / number, m_spool / number);
+    }
+    std::ofstream{m_spool / "1"} << HEADER << BODY;
+    fs::current_path(m_spool);
+    m_data_source.m_spool_dir = (m_output_dir / "spool").generic_string();
+    g_priv_dir = (m_output_dir / "saved").generic_string();
+    fs::create_directories(g_priv_dir);
+    m_destination = fs::path{g_priv_dir} / "saved article";
+    m_env.expect_env_repeatedly("SAVEDIR", g_priv_dir.c_str());
+    m_env.expect_env_repeatedly("SAVENAME", "%a");
+    m_env.expect_no_envars({"NORMSAVER", "MBOXSAVER"});
+    g_norm_always = true;
+    g_mbox_always = false;
+    g_mime_article = {};
+    g_mime_section = &g_mime_article;
+    open_group(false);
+    g_curr_artp->select_article(AUTO_KILL_NONE);
+    g_selected_only = true;
+    ASSERT_EQ(0, std::fseek(g_art_fp, 0, SEEK_END));
+    g_art_pos = tell_art();
+}
+
+void SaveArticleTest::TearDown()
+{
+    g_mime_article.mime_clear_struct();
+    g_mime_article = std::move(m_old_mime_article);
+    g_mime_section = m_old_mime_section;
+    g_mime_state = m_old_mime_state;
+    g_is_mime = m_old_is_mime;
+    g_multimedia_mime = m_old_multimedia_mime;
+    g_priv_dir = m_old_priv_dir;
+    g_save_dest = m_old_save_dest;
+    g_save_from = m_old_save_from;
+    g_norm_always = m_old_norm_always;
+    g_mbox_always = m_old_mbox_always;
+    g_msg = m_old_msg;
+    LocalSpoolArticleTest::TearDown();
+}
+
+std::string SaveArticleTest::save(char command, std::string_view input, ArticleSwitchResult expected)
+{
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const ArticlePosition                  position = g_art_pos;
+    const ArticleLine                      line = g_art_line_num;
+    const ArticleLine                      top = g_top_line;
+    const ArticleNum                       first = g_first_art;
+    const SubjectFlags                     subject_flags = g_curr_artp->m_subj->m_flags;
+    std::vector<ArticleFlags>              flags;
+    for (long number = 1; number <= 3; ++number)
+    {
+        flags.push_back(article_ptr(ArticleNum{number})->m_flags);
+    }
+    push_char('n');
+    push_command(input);
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{command, FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
+    EXPECT_EQ(current, std::make_pair(g_art, g_artp));
+    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(first, g_first_art);
+    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(line, g_art_line_num);
+    EXPECT_EQ(top, g_top_line);
+    EXPECT_EQ(g_curr_art, g_parsed_art);
+    EXPECT_EQ(g_curr_art, g_open_art);
+    EXPECT_EQ(subject_flags, g_curr_artp->m_subj->m_flags);
+    EXPECT_EQ(3, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(m_spool, fs::current_path());
+    EXPECT_EQ(0, g_int_count);
+    for (long number = 1; number <= 3; ++number)
+    {
+        EXPECT_EQ(flags[number - 1], article_ptr(ArticleNum{number})->m_flags);
+    }
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    return output;
+}
+
+std::string SaveArticleTest::saved_text() const
+{
+    std::ifstream input{m_destination};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+std::string SaveArticleTest::expected_text(char command, bool mailbox) const
+{
+    std::string text;
+    if (command == 's' || command == 'S')
+    {
+        text = "Article: 1 of comp.lang.cpp\n";
+        text += HEADER;
+    }
+    text += BODY;
+    if (mailbox && MBOX_CHAR != '\001')
+    {
+        text.insert(text.find("From a body line"), ">");
+    }
+    text += "\n\n";
+    return text;
+}
+
+void SaveArticleTest::expect_mailbox(char command, std::string_view prefix)
+{
+    std::string text = saved_text();
+    ASSERT_EQ(prefix, std::string_view{text}.substr(0, prefix.size()));
+    text.erase(0, prefix.size());
+#if MBOX_CHAR == '\001'
+    EXPECT_EQ("\001\001\001\001\n" + expected_text(command, true) + "\001\001\001\001\n", text);
+#else
+    const std::size_t end = text.find('\n');
+    ASSERT_NE(std::string::npos, end);
+    EXPECT_TRUE(std::regex_match(text.substr(0, end),
+                                 std::regex{"From root@example[.]test [A-Z][a-z]{2} [A-Z][a-z]{2} +[0-9]{1,2} "
+                                            "[0-9]{2}:[0-9]{2}:[0-9]{2}( [^ ]+)? [0-9]{4}"}))
+        << text.substr(0, end);
+    EXPECT_EQ(expected_text(command, true), text.substr(end + 1));
+#endif
+}
+
+class PlainSaveArticleTest : public SaveArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class AppendSaveArticleTest : public SaveArticleTest, public testing::WithParamInterface<char>
+{
+};
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -836,6 +1029,103 @@ constexpr const char *HELP_TEXT = "You can request help from:  trn-users@lists.s
                                   "Send bug reports, suggestions, etc. to:  trn-workers@lists.sourceforge.net\n";
 
 } // namespace
+
+TEST_P(PlainSaveArticleTest, savesTheRequestedHeadersOrBodyToANewFile)
+{
+    const std::string input = m_destination.generic_string() + '\n';
+
+    const std::string output = save(GetParam(), input);
+
+    EXPECT_EQ(expected_text(GetParam()), saved_text());
+    EXPECT_NE(std::string::npos, output.find("Saved to file " + m_destination.generic_string()));
+    EXPECT_EQ(m_destination.generic_string(), g_save_dest);
+}
+
+INSTANTIATE_TEST_SUITE_P(SaveCommands, PlainSaveArticleTest, testing::Values('s', 'S', 'w', 'W'));
+
+TEST_P(AppendSaveArticleTest, appendsHeadersOrBodyWithoutReplacingExistingPlainText)
+{
+    std::ofstream{m_destination} << "Existing text\n";
+
+    const std::string output = save(GetParam(), m_destination.generic_string() + '\n');
+
+    EXPECT_EQ("Existing text\n" + expected_text(GetParam()), saved_text());
+    EXPECT_NE(std::string::npos, output.find("Appended to file "));
+}
+
+TEST_P(AppendSaveArticleTest, createsAMailboxWithAnEnvelopeAndQuotedBodyFromLines)
+{
+    g_norm_always = false;
+
+    const std::string output = save(GetParam(), m_destination.generic_string() + "\ny");
+
+    expect_mailbox(GetParam());
+    EXPECT_NE(std::string::npos, output.find("Saved to mailbox "));
+}
+
+TEST_P(AppendSaveArticleTest, detectsAndAppendsToAnExistingMailbox)
+{
+#if MBOX_CHAR == '\001'
+    const std::string prefix = "\001\001\001\001\nPrevious message\n\001\001\001\001\n";
+#else
+    const std::string prefix = "From old@example.test Wed Oct 21 00:00:00 2026\nPrevious message\n\n";
+#endif
+    std::ofstream{m_destination} << prefix;
+
+    const std::string output = save(GetParam(), m_destination.generic_string() + '\n');
+
+    expect_mailbox(GetParam(), prefix);
+    EXPECT_NE(std::string::npos, output.find("Appended to mailbox "));
+}
+
+INSTANTIATE_TEST_SUITE_P(HeadersOrBody, AppendSaveArticleTest, testing::Values('s', 'w'));
+
+TEST_F(SaveArticleTest, erasingTheSaveCommandCancelsBeforeOpeningADestination)
+{
+    const std::string old_destination = g_save_dest;
+
+    const std::string output = save('s', "\b", AS_INP);
+
+    EXPECT_FALSE(fs::exists(m_destination));
+    EXPECT_EQ(old_destination, g_save_dest);
+    EXPECT_EQ("Save aborted at article 1", g_msg);
+    EXPECT_EQ(std::string::npos, output.find("Saved to "));
+}
+
+TEST_F(SaveArticleTest, cancellingTheFormatPromptLeavesTheDestinationAbsent)
+{
+    g_norm_always = false;
+
+    const std::string output = save('w', m_destination.generic_string() + "\nq");
+
+    EXPECT_FALSE(fs::exists(m_destination));
+    EXPECT_NE(std::string::npos, output.find("use mailbox format?"));
+    EXPECT_EQ(std::string::npos, output.find("Saved to "));
+}
+
+TEST_F(SaveArticleTest, reportsAnUnwritableDestinationAndReturnsToTheArticlePrompt)
+{
+    const fs::path blocker = fs::path{g_priv_dir} / "blocker";
+    std::ofstream{blocker} << "Keep this file\n";
+    m_destination = blocker / "article";
+
+    const std::string output = save('s', m_destination.generic_string() + '\n');
+
+    EXPECT_NE(std::string::npos, output.find("Not saved"));
+    EXPECT_EQ(std::string::npos, output.find("Saved to "));
+    EXPECT_FALSE(fs::exists(m_destination));
+    EXPECT_TRUE(fs::is_regular_file(blocker));
+}
+
+TEST_F(SaveArticleTest, anEmptyFilenameUsesTheConfiguredDirectoryAndArticleNumber)
+{
+    m_destination = fs::path{g_priv_dir} / "1";
+
+    const std::string output = save('s', "\n");
+
+    EXPECT_EQ(expected_text('s'), saved_text());
+    EXPECT_NE(std::string::npos, output.find("Saved to file " + m_destination.generic_string()));
+}
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {

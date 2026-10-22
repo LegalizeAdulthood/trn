@@ -35,6 +35,7 @@
 #include <util/env.h>
 #include <util/util2.h>
 
+#include <fmt/chrono.h>
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -42,6 +43,7 @@
 #include <charconv>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -636,8 +638,10 @@ reask_save:
 #if MBOX_CHAR == '\001'
                 fmt::print(s_tmp_fp, "\001\001\001\001\n");
 #else
-                const std::string from_line = do_interp("From %t %`LANG= date`\n");
-                fmt::print(s_tmp_fp, "{}", from_line);
+                const std::string sender = do_interp("%t");
+                const std::time_t now = std::time(nullptr);
+                const std::tm     local = *std::localtime(&now);
+                fmt::print(s_tmp_fp, "From {} {:%a %b %e %H:%M:%S %Y}\n", sender, local);
                 quote_From = true;
 #endif
             }
