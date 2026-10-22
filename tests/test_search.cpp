@@ -9,6 +9,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace
 {
@@ -40,6 +41,7 @@ struct RegexMatchCase
     bool             metacharacters;
     std::string_view text;
     bool             expected;
+    std::size_t      text_length{std::string_view::npos};
 };
 
 void PrintTo(const RegexMatchCase &value, std::ostream *out)
@@ -68,7 +70,9 @@ void RegexMatchingTest::SetUp()
 
 TEST_P(RegexMatchingTest, matchesOnlyTheConfiguredPatternAndInput)
 {
-    const bool matched = m_regex.execute(std::string_view{m_text});
+    const std::string_view text = std::string_view{m_text}.substr(0, GetParam().text_length);
+
+    const bool matched = m_regex.execute(text);
 
     EXPECT_EQ(GetParam().expected, matched);
 }
@@ -94,15 +98,42 @@ INSTANTIATE_TEST_SUITE_P(BoundedPatterns, RegexMatchingTest,
                          testing::Values(RegexMatchCase{"BoundedMatch", "[a]x", 3, true, "a", true},
                                          RegexMatchCase{"BoundedMiss", "[a]x", 3, true, "x", false}));
 
-TEST_F(CompiledRegexTest, bracketTextIsAvailableAfterMatch)
+class MatchedBracketRegexTest : public CompiledRegexTest
 {
-    ASSERT_TRUE(m_regex.compile(R"(prefix \(needle\) suffix)", true, false).empty());
-    ASSERT_TRUE(m_regex.execute(std::string_view{"prefix needle suffix"}));
+protected:
+    void SetUp() override;
 
-    EXPECT_TRUE(m_regex.has_brackets());
-    EXPECT_EQ(std::string_view{"needle"}, m_regex.get_bracket(1));
-    EXPECT_TRUE(m_regex.get_bracket(2).empty());
+    const std::string m_pattern{R"(prefix \(needle\) suffix)"};
+    const std::string m_text{"prefix needle suffix"};
+};
+
+void MatchedBracketRegexTest::SetUp()
+{
+    CompiledRegexTest::SetUp();
+    ASSERT_TRUE(m_regex.compile(m_pattern, true, false).empty());
+    ASSERT_TRUE(m_regex.execute(std::string_view{m_text}));
 }
+
+TEST_F(MatchedBracketRegexTest, reportsThePresenceOfCaptureBrackets)
+{
+    EXPECT_TRUE(m_regex.has_brackets());
+}
+
+using BracketLookupCase = std::pair<int, std::string_view>;
+
+class BracketLookupTest : public MatchedBracketRegexTest, public testing::WithParamInterface<BracketLookupCase>
+{
+};
+
+TEST_P(BracketLookupTest, returnsTheRequestedCaptureOrAnEmptyView)
+{
+    const std::string_view capture = m_regex.get_bracket(GetParam().first);
+
+    EXPECT_EQ(GetParam().second, capture);
+}
+
+INSTANTIATE_TEST_SUITE_P(ValidAndMissingCaptures, BracketLookupTest,
+                         testing::Values(BracketLookupCase{1, "needle"}, BracketLookupCase{2, ""}));
 
 TEST_F(CompiledRegexTest, bracketTextDoesNotOutliveCallerView)
 {
@@ -117,15 +148,9 @@ TEST_F(CompiledRegexTest, bracketTextDoesNotOutliveCallerView)
     EXPECT_EQ(std::string_view{"needle"}, m_regex.get_bracket(1));
 }
 
-TEST_F(CompiledRegexTest, matchViewDoesNotReadTrailingText)
-{
-    const std::string      text{"haystack needle"};
-    const std::string_view prefix{text.data(), 8};
-
-    ASSERT_TRUE(m_regex.compile("needle", false, false).empty());
-
-    EXPECT_FALSE(m_regex.execute(prefix));
-    EXPECT_TRUE(m_regex.execute(text));
-}
+INSTANTIATE_TEST_SUITE_P(
+    BoundedAndFullText, RegexMatchingTest,
+    testing::Values(RegexMatchCase{"BoundedTextMiss", "needle", 6, false, "haystack needle", false, 8},
+                    RegexMatchCase{"FullTextMatch", "needle", 6, false, "haystack needle", true, 15}));
 
 } // namespace
