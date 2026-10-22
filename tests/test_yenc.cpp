@@ -76,6 +76,19 @@ void InvalidYencPartTest::SetUp()
     m_text += GetParam().second;
 }
 
+using YencCrcVector = std::pair<std::string_view, std::uint32_t>;
+
+class YencCrcVectorTest : public testing::TestWithParam<YencCrcVector>
+{
+protected:
+    void SetUp() override
+    {
+        m_input = GetParam().first;
+    }
+
+    std::string m_input;
+};
+
 } // namespace
 
 TEST_P(ValidYencHeaderTest, readsTheHeaderMetadataWithFilenameLast)
@@ -175,11 +188,25 @@ INSTANTIATE_TEST_SUITE_P(
         InvalidYencPartInput{YENC_MULTIPART_HEADER,
                              "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=00000000\n"}));
 
-TEST(YencDecodeTest, crcMatchesPublishedVectorAndIncrementalInput)
+TEST_P(YencCrcVectorTest, matchesTheExpectedCrc)
 {
-    EXPECT_EQ(0U, yenc_crc32({}));
-    EXPECT_EQ(0xCBF43926U, yenc_crc32("123456789"));
-    EXPECT_EQ(0x8BD69E52U, yenc_crc32("world", yenc_crc32("Hello ")));
+    const std::uint32_t crc = yenc_crc32(m_input);
+
+    EXPECT_EQ(GetParam().second, crc);
+}
+
+INSTANTIATE_TEST_SUITE_P(EmptyAndPublishedVector, YencCrcVectorTest,
+                         testing::Values(YencCrcVector{"", 0U}, YencCrcVector{"123456789", 0xCBF43926U}));
+
+TEST(YencDecodeTest, crcAcceptsIncrementalInput)
+{
+    const std::string   prefix{"Hello "};
+    const std::string   suffix{"world"};
+    const std::uint32_t initial = yenc_crc32(prefix);
+
+    const std::uint32_t crc = yenc_crc32(suffix, initial);
+
+    EXPECT_EQ(0x8BD69E52U, crc);
 }
 
 TEST(YencDecodeTest, decodesAllByteValues)
