@@ -3135,6 +3135,25 @@ class BreadthFirstArticleTest : public BranchingArticleTest
 {
 };
 
+class BreadthFirstPreviousBoundaryArticleTest : public BreadthFirstArticleTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+
+    int m_line{};
+};
+
+void BreadthFirstPreviousBoundaryArticleTest::SetUp()
+{
+    BreadthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+              AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS},
+             1);
+    g_selected_only = true;
+    g_search_ahead = ArticleNum{2};
+    m_line = g_term_line;
+}
+
 struct BreadthFirstSelectedNextCase
 {
     std::string_view name;
@@ -7620,25 +7639,17 @@ TEST_F(BreadthFirstArticleTest, selectedPreviousUnreadSkipsUnselectedAndSelected
     }
 }
 
-TEST_F(BreadthFirstArticleTest, previousAtTheFirstArticleWarnsAndPreservesPosition)
+TEST_P(BreadthFirstPreviousBoundaryArticleTest, previousAtTheFirstArticleWarnsAndPreservesPosition)
 {
-    set_tree({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-              AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS},
-             1);
-    g_selected_only = true;
-    for (const char command : {'p', 'P'})
-    {
-        SCOPED_TRACE(command);
-        g_search_ahead = ArticleNum{2};
-        const int line = g_term_line;
+    const std::string output = expect_previous(GetParam(), 1, {}, AS_ASK);
 
-        const std::string output = expect_previous(command, 1, {}, AS_ASK);
-
-        EXPECT_NE(std::string::npos, output.find(command == 'p' ? "No previous unread selected articles"
-                                                                : "No previous selected articles"));
-        EXPECT_EQ(line + 2, g_term_line);
-    }
+    EXPECT_NE(std::string::npos, output.find(GetParam() == 'p' ? "No previous unread selected articles"
+                                                               : "No previous selected articles"));
+    EXPECT_EQ(m_line + 2, g_term_line);
 }
+
+INSTANTIATE_TEST_SUITE_P(Command, BreadthFirstPreviousBoundaryArticleTest, testing::Values('p', 'P'),
+                         [](const testing::TestParamInfo<char> &info) { return info.param == 'p' ? "Unread" : "All"; });
 
 TEST_F(BreadthFirstArticleTest, previousUnreadPreservesTheFirstEligiblePositionDespiteLaterUnreadArticles)
 {
