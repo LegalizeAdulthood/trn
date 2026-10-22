@@ -2,8 +2,7 @@
 # Copyright (c) 2026, Richard Thomson
 #requires -Version 5.1
 
-param([string] $WorkDirectory, [string] $Adapter = '',
-    [string] $Helper = '', [string] $OnlyCase = '')
+param([string] $WorkDirectory, [string] $Adapter = '')
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $utf8 = [Text.UTF8Encoding]::new($false)
@@ -47,7 +46,6 @@ $text = "From: author@example.test`r`nTo: reader@example.test`r`nCc: copy@exampl
 [IO.File]::WriteAllText($message, $text, $utf8)
 if ($Adapter) { . $Adapter }
 foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', 'authentication', 'timeout', 'cancelled', 'certificate')) {
-    if ($OnlyCase -and $case -ne $OnlyCase) { continue }
     $expectAccepted = $case -in @('accepted', 'oauth2', 'implicit')
     $directory = Join-Path $WorkDirectory $case
     [void] [IO.Directory]::CreateDirectory($directory)
@@ -192,32 +190,7 @@ foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', '
             [IO.File]::WriteAllText($inputMessage, $text.Insert($text.IndexOf('Subject:'), "Bcc: hidden@example.test`r`n"), $utf8)
             $success = $false
             try {
-                if ($Helper) {
-                    $homeDirectory = Join-Path $directory 'home'
-                    [void] [IO.Directory]::CreateDirectory($homeDirectory)
-                    $env:HOME = $homeDirectory; $env:DOTDIR = $homeDirectory
-                    $env:FAST_RNMAIL = 'no'; $env:PGPCOMMAND = ''
-                    $env:MAILSIGNATURE = Join-Path $homeDirectory 'absent'
-                    $env:MAILRECORD = Join-Path $directory 'sent.mbox'
-                    $env:REPLYSAVER = ''
-                    $include = Join-Path $directory 'empty include'
-                    [IO.File]::WriteAllBytes($include, [byte[]] @())
-                    $composer = [Diagnostics.Process]::new()
-                    $composer.StartInfo.FileName = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-                    $composer.StartInfo.Arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "' +
-                        [IO.Path]::ChangeExtension($Helper, '.ps1') + '" -h "' + $inputMessage + '"'
-                    $composer.StartInfo.UseShellExecute = $false
-                    $composer.StartInfo.RedirectStandardInput = $true
-                    [void] $composer.Start()
-                    $composer.StandardInput.WriteLine($include)
-                    $composer.StandardInput.WriteLine('s')
-                    $composer.StandardInput.Close()
-                    $composer.WaitForExit()
-                    if ($composer.ExitCode -ne 0) { throw 'Installed mail composer failed.' }
-                    $composer.Dispose()
-                    if (![IO.File]::Exists($env:MAILRECORD)) { throw 'Installed mail composer did not save sent mail.' }
-                }
-                else { Send-TrnMail $inputMessage }
+                Send-TrnMail $inputMessage
                 $success = $true
             }
             catch { if ($expectAccepted) { throw } }

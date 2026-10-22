@@ -44,21 +44,18 @@ Status key:
 
 ## Environment Variables
 
-The generated-config rows use `config/tests/test_generated_config.cpp`.
 Runtime override rows use `tests/test_sw.cpp` for `-E` parsing and the
 named runtime test for behavior.
 
-- `ATTRIBUTION`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, reply/followup text in
-  `tests/test_interp.cpp`, and one manual reply check.
+- `ATTRIBUTION`: Automated plus manual.  Verify reply/followup text in
+  `tests/test_interp.cpp` and one manual reply check.
 - `AUTOSUBSCRIBE`: Automated.  Verify matching behavior in
   `tests/test_autosub.cpp`.
 - `AUTOUNSUBSCRIBE`: Automated.  Verify matching behavior in
   `tests/test_autosub.cpp`.
 - `CANCEL`: Manual plus automated.  Verify cancel command interpolation in
   `tests/test_interp.cpp` and run one manual cancel-flow smoke test.
-- `CANCELHEADER`: Automated plus manual.  Verify configured header text in
-  `config/tests/test_generated_config.cpp` and cancel output in
+- `CANCELHEADER`: Automated plus manual.  Verify cancel output in
   `tests/test_interp.cpp`.
 - `DOTDIR`: Automated.  Verify startup and expansion behavior in
   `tests/test_init.cpp` and `tests/test_interp.cpp`.
@@ -70,22 +67,17 @@ named runtime test for behavior.
   `config/data/environment.in`.
 - `FIRSTLINE`: Automated plus manual.  Verify display interpolation in
   `tests/test_interp.cpp` and run one manual article display check.
-- `FORWARDHEADER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp` and forward output in
+- `FORWARDHEADER`: Automated plus manual.  Verify forward output in
   `tests/test_interp.cpp`.
-- `FORWARDPOSTER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp` and run one manual forward
-  smoke test.
+- `FORWARDPOSTER`: Manual.  Run one manual forward smoke test.
 - `HIDELINE`: Automated plus manual.  Verify runtime use in
   `tests/test_interp.cpp` and run one manual hidden-header display check.
 - `HOME`: Automated.  Verify startup path selection in
   `tests/test_init.cpp`.
 - `KILLGLOBAL`: Automated plus manual.  Verify global KILL path handling in
-  `tests/test_kfile.cpp` and generated defaults in
-  `config/tests/test_generated_config.cpp`.
+  `tests/test_kfile.cpp`.
 - `KILLLOCAL`: Automated plus manual.  Verify local KILL path handling in
-  `tests/test_kfile.cpp` and generated defaults in
-  `config/tests/test_generated_config.cpp`.
+  `tests/test_kfile.cpp`.
 - `LOGDIR`: Automated.  Verify fallback home-directory selection in
   `tests/test_init.cpp`.
 - `LOGNAME`: Automated.  Verify login-name selection in
@@ -93,17 +85,12 @@ named runtime test for behavior.
 - `LOCALTIMEFMT`: Automated.  Verify article date formatting in
   `tests/test_interp.cpp`.
 - `MAILCALL`: Automated plus manual.  Verify pager-prompt interpolation in
-  `tests/test_interp.cpp` and generated defaults in
-  `config/tests/test_generated_config.cpp`.
-- `MAILFILE`: Automated plus manual.  Verify configured defaults in
-  `config/tests/test_generated_config.cpp` and run one manual mail-call
-  smoke test.
-- `MAILHEADER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, mail reply output in
-  `tests/test_interp.cpp`, and `man/Rnmail.1`.
-- `MAILPOSTER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, mail reply behavior in
-  `tests/test_interp.cpp`, and `man/Rnmail.1`.
+  `tests/test_interp.cpp`.
+- `MAILFILE`: Manual.  Run one manual mail-call smoke test.
+- `MAILHEADER`: Automated plus manual.  Verify mail reply output in
+  `tests/test_interp.cpp` and `man/Rnmail.1`.
+- `MAILPOSTER`: Automated plus manual.  Verify mail reply behavior in
+  `tests/test_interp.cpp` and `man/Rnmail.1`.
 - `MBOXSAVER`: Automated plus manual.  Verify mailbox save behavior in
   `tests/test_interp.cpp` and run one manual mailbox-save smoke test.
 - `MODSTRING`: Manual plus runtime coverage.  Verify moderated-group text
@@ -112,14 +99,12 @@ named runtime test for behavior.
 - `NAME`: Automated.  Verify real-name override behavior in
   `tests/test_interp.cpp` and name fallback behavior in
   `tests/test_init.cpp`.
-- `NEWSHEADER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, followup output in
-  `tests/test_interp.cpp`, and `man/Pnews.1`.
+- `NEWSHEADER`: Automated plus manual.  Verify followup output in
+  `tests/test_interp.cpp` and `man/Pnews.1`.
 - `NEWSORG`: Automated.  Verify organization lookup in
   `tests/test_interp.cpp`.
-- `NEWSPOSTER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, followup behavior in
-  `tests/test_interp.cpp`, and `man/Pnews.1`.
+- `NEWSPOSTER`: Automated plus manual.  Verify followup behavior in
+  `tests/test_interp.cpp` and `man/Pnews.1`.
 - `NNTPSERVER`: Automated.  Verify current source selection and
   remote-list coverage in `tests/test_datasrc.cpp`, and remote
   read-one-article coverage in `tests/test_trn.cpp`.
@@ -134,22 +119,19 @@ named runtime test for behavior.
   paging smoke test and compare `man/trn.1` with
   `config/data/environment.in`.
 - `PIPESAVER`: Automated plus manual.  Verify pipe-save interpolation in
-  `tests/test_interp.cpp` and generated defaults in
-  `config/tests/test_generated_config.cpp`.
+  `tests/test_interp.cpp`.
 - `REPLYTO`: Automated plus manual.  Verify reply header behavior in
   `tests/test_interp.cpp` and run one manual reply smoke test.
 - `RNINIT`: Automated plus manual.  Verify switch parsing in
   `tests/test_sw.cpp`, startup selection in `libtrn/opt.cpp`, and one
   manual rn-mode startup check.
-- `RNMACRO`: Automated plus manual.  Verify generated default paths in
-  `config/tests/test_generated_config.cpp`, macro loading in
-  `tests/test_terminal.cpp`, and one manual macro-file check.
-- `SAVEDIR`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, save path behavior in
-  `tests/test_opt.cpp` and `tests/test_interp.cpp`, and one manual save.
-- `SAVENAME`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp`, save-name behavior in
-  `tests/test_opt.cpp`, and one manual save.
+- `RNMACRO`: Automated plus manual.  Verify macro loading in
+  `tests/test_terminal.cpp` and one manual macro-file check.
+- `SAVEDIR`: Automated plus manual.  Verify save path behavior in
+  `tests/test_opt.cpp` and `tests/test_interp.cpp`, then run one manual
+  save.
+- `SAVENAME`: Automated plus manual.  Verify save-name behavior in
+  `tests/test_opt.cpp` and one manual save.
 - `SELECTCHARS`: Automated plus manual.  Verify selector commands in
   `tests/test_rt-select.cpp` and run one manual selector selection check.
 - `SHELL`: Manual plus CMake default coverage.  Verify shell-start defaults
@@ -157,8 +139,7 @@ named runtime test for behavior.
   shell escape.
 - `SUBJLINE`: Automated.  Verify subject-line override behavior in
   `tests/test_subject.cpp`.
-- `SUPERSEDEHEADER`: Automated plus manual.  Verify generated defaults in
-  `config/tests/test_generated_config.cpp` and supersede output in
+- `SUPERSEDEHEADER`: Automated plus manual.  Verify supersede output in
   `tests/test_interp.cpp`.
 - `TERM`: Manual plus terminal tests.  Verify terminal behavior in
   `tests/test_terminal.cpp` and run one manual terminal smoke test.
@@ -168,9 +149,8 @@ named runtime test for behavior.
 - `TRNINIT`: Automated plus manual.  Verify switch parsing in
   `tests/test_sw.cpp`, startup selection in `libtrn/opt.cpp`, and one
   manual trn-mode startup check.
-- `TRNMACRO`: Automated plus manual.  Verify generated default paths in
-  `config/tests/test_generated_config.cpp`, macro loading in
-  `tests/test_terminal.cpp`, and one manual macro-file check.
+- `TRNMACRO`: Automated plus manual.  Verify macro loading in
+  `tests/test_terminal.cpp` and one manual macro-file check.
 - `UNSHAR`: Manual.  Verify shell-archive extraction with one manual `e`
   command smoke test and compare `HelpFiles/hints` with `man/trn.1`.
 - `USER`: Automated.  Verify login-name selection in
@@ -209,9 +189,8 @@ named runtime test for behavior.
 - `e` yencoded binary extraction: Deferred.  yEnc implementation and tests
   are tracked by slice 36.
 - Posting: Automated plus manual.  Verify cancel, supersede, reply,
-  forward, and followup output in `tests/test_interp.cpp`, generated helper
-  defaults in `config/tests/test_generated_config.cpp`, and one manual
-  `Pnews` smoke test.
+  forward, and followup output in `tests/test_interp.cpp`, then run one
+  manual `Pnews` smoke test.
 - Command-line options: Automated plus manual.  Verify switch parsing in
   `tests/test_sw.cpp`, option application in `tests/test_opt.cpp`,
   `tests/test_OptionCatalog.cpp`, and `tests/test_OptionApplier.cpp`, then

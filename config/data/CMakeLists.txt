@@ -29,7 +29,6 @@ endforeach()
 string(REPLACE "\\" "/" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
 string(REGEX REPLACE "^[A-Za-z]:/" "" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
 string(REGEX REPLACE "^/+" "" trn_private_lib_install_dir "${trn_private_lib_install_dir}")
-set(TRN_INSTALL_PRIVATE_LIBDIR "${trn_private_lib_install_dir}" PARENT_SCOPE)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../../INIT.txt" INIT COPYONLY)
 configure_file(access_def.in access.def @ONLY)
@@ -70,13 +69,6 @@ if(WIN32)
         trn-mail.ps1.in
         Speller.cmd.in
         Speller.ps1.in)
-    set(TRN_GENERATED_WINDOWS_HELPERS ON)
-    set(TRN_INSTALL_MBOX_SAVER_HELPER_NAME "mbox.saver.cmd" PARENT_SCOPE)
-    set(TRN_INSTALL_NORM_SAVER_HELPER_NAME "norm.saver.cmd" PARENT_SCOPE)
-    set(TRN_INSTALL_PNEWS_HELPER_NAME "Pnews.cmd" PARENT_SCOPE)
-    set(TRN_INSTALL_PNEWS_HEADER_NAME "" PARENT_SCOPE)
-    set(TRN_INSTALL_RNMAIL_HELPER_NAME "Rnmail.cmd" PARENT_SCOPE)
-    set(TRN_INSTALL_SPELLER_HELPER_NAME "Speller.cmd" PARENT_SCOPE)
 
     configure_file(mbox.saver.cmd.in "${trn_mbox_saver_output}" COPYONLY)
     configure_file(mbox.saver.ps1.in "${trn_mbox_saver_support_output}" @ONLY)
@@ -116,13 +108,6 @@ else()
         Pnews.header.in
         Rnmail.in
         Speller.in)
-    set(TRN_GENERATED_WINDOWS_HELPERS OFF)
-    set(TRN_INSTALL_MBOX_SAVER_HELPER_NAME "mbox.saver" PARENT_SCOPE)
-    set(TRN_INSTALL_NORM_SAVER_HELPER_NAME "norm.saver" PARENT_SCOPE)
-    set(TRN_INSTALL_PNEWS_HELPER_NAME "Pnews" PARENT_SCOPE)
-    set(TRN_INSTALL_PNEWS_HEADER_NAME "Pnews.header" PARENT_SCOPE)
-    set(TRN_INSTALL_RNMAIL_HELPER_NAME "Rnmail" PARENT_SCOPE)
-    set(TRN_INSTALL_SPELLER_HELPER_NAME "Speller" PARENT_SCOPE)
 
     configure_file(mbox.saver.in "${trn_mbox_saver_output}" @ONLY)
     configure_file(norm.saver.in "${trn_norm_saver_output}" @ONLY)
@@ -135,10 +120,8 @@ endif()
 set(TRN_GENERATED_MBOX_SAVER_FILE "${trn_mbox_saver_output}" PARENT_SCOPE)
 set(TRN_GENERATED_NORM_SAVER_FILE "${trn_norm_saver_output}" PARENT_SCOPE)
 set(TRN_GENERATED_PNEWS_FILE "${trn_pnews_output}" PARENT_SCOPE)
-set(TRN_GENERATED_PNEWS_HEADER_FILE "${trn_pnews_header_output}" PARENT_SCOPE)
 set(TRN_GENERATED_RNMAIL_FILE "${trn_rnmail_output}" PARENT_SCOPE)
 set(TRN_GENERATED_SPELLER_FILE "${trn_speller_output}" PARENT_SCOPE)
-set(TRN_GENERATED_WINDOWS_HELPERS "${TRN_GENERATED_WINDOWS_HELPERS}" PARENT_SCOPE)
 
 set(trn_public_helper_outputs
     "${trn_pnews_output}"

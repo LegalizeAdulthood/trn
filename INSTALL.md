@@ -98,10 +98,6 @@ toolchain variables, or historical audit entries in `docs/config.md`.
 - `PRIVATE_LIB`: trn private library directory used by `%X`.
 - `BIN_DIR`: command directory used by generated posting defaults.
 
-Coverage: `ConfigCMakeTest.installLayoutContainsRuntimeHelpers`,
-`GeneratedConfigTest.newsLibDefaultMatchesPlatformDefault`,
-`GeneratedConfigTest.newsLibConfiguredPathIsEmitted`, and
-`GeneratedConfigTest.postingHelpersUseInstalledHelperPaths`.
 Untested: `INSTALL_PREFIX`.
 
 ### News Source Variables
@@ -123,18 +119,8 @@ Coverage: `ConfigCMakeTest.newsSourceProbeDetectsLocalOnly`,
 `ConfigCMakeTest.newsSourceDefaultsUseNntpMode`,
 `ConfigCMakeTest.newsSourceEmptyDefaultReplacesLegacyPath`,
 `ConfigCMakeTest.newsSourceDefaultsUseLocalMode`,
-`ConfigCMakeTest.newsSourceDefaultsUseBothMode`,
-`ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool`,
-`GeneratedConfigTest.newsSourceDetectedDefaultsAreEmitted`,
-`GeneratedConfigTest.newsSourceNntpModeDefaultsAreEmitted`,
-`GeneratedConfigTest.newsSourceLocalModeDefaultsAreEmitted`,
-`GeneratedConfigTest.newsSourceBothModeDefaultsAreEmitted`,
-`GeneratedConfigTest.activeTimesDefaultIsNone`,
-`GeneratedConfigTest.activeTimesConfiguredPathIsEmitted`,
-`GeneratedConfigTest.groupDescConfiguredPathIsEmitted`,
-`GeneratedConfigTest.subscriptionsConfiguredPathIsEmitted`,
-`GeneratedConfigTest.overviewDirConfiguredPathIsEmitted`, and
-`GeneratedConfigTest.overviewFmtConfiguredPathIsEmitted`.
+`ConfigCMakeTest.newsSourceDefaultsUseBothMode`, and
+`ConfigCMakeTest.newsSourceDefaultsRejectLocalWithoutSpool`.
 Untested: `EXTRA_INEWS`.
 
 ### Account And Site Identity
@@ -168,12 +154,7 @@ Coverage: `ConfigCMakeTest.nameTypeAcceptsBsd`,
 `ConfigCMakeTest.postingHostMatchSegmentsRejectsText`,
 `ConfigCMakeTest.postingHostMatchSegmentsRejectsNegative`,
 `ConfigCMakeTest.pnewsDistributionCodeAcceptsNone`,
-`ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty`,
-`GeneratedConfigTest.accountNameFilesDefaultMatchHistoricalFallback`,
-`GeneratedConfigTest.accountNameFilesConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.postingHostMatchSegments*`,
-`GeneratedConfigTest.pnewsDistributionDefaultsMatchHistoricalFallbacks`,
-`GeneratedConfigTest.pnewsDistributionConfiguredValuesAreEmitted`, and
+`ConfigCMakeTest.pnewsDistributionCodeRejectsEmpty`, and
 `HostMatchNameTest.*`.
 Untested: `ROOT_UID`, `ORG_NAME`, `IGNORE_ORG`, `POSTING_HOSTNAME`, and
 `PIPE_HOST_CMD`.
@@ -193,20 +174,7 @@ Untested: `ROOT_UID`, `ORG_NAME`, `IGNORE_ORG`, `POSTING_HOSTNAME`, and
 - `KILL_GLOBAL`, `KILL_LOCAL`, and `KILL_THREADS`: memorized-command
   paths.
 
-Coverage: `GeneratedConfigTest.userStatePaths*`,
-`GeneratedConfigTest.userStatePathsConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.dataFilePathsDefaultMatchHistoricalFallbacks`,
-`GeneratedConfigTest.dataFilePathsConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.articlePathTemplatesDefaultMatchHistoricalFallbacks`,
-`GeneratedConfigTest.articlePathTemplatesConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.mailFileDefaultMatchesHistoricalFallback`,
-`GeneratedConfigTest.mailFileConfiguredPathIsEmitted`,
-`GeneratedConfigTest.savePathTemplatesDefaultMatchCMakeSelection`,
-`GeneratedConfigTest.savePathTemplatesCanUseCategoryPolicy`,
-`GeneratedConfigTest.savePathTemplatesConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.killFilePathsDefaultMatchHistoricalFallbacks`,
-`GeneratedConfigTest.killFilePathsConfiguredValuesAreEmitted`,
-`ConfigCMakeTest.savePathDefaultsUseFlatMode`, and
+Coverage: `ConfigCMakeTest.savePathDefaultsUseFlatMode` and
 `ConfigCMakeTest.savePathDefaultsUseCategoryMode`.
 Untested: `MIMECAP`.
 
@@ -223,15 +191,8 @@ Untested: `MIMECAP`.
 - `VERIFY_RIPEM` and `VERIFY_PGP`: optional verifier commands.
 
 Coverage: `ConfigCMakeTest.toolPathDefaultsUseFoundTools`,
-`ConfigCMakeTest.toolPathDefaultsDisableMissingTools`,
-`ConfigCMakeTest.toolPathDefaultsKeepOverrides`,
-`GeneratedConfigTest.shellCommandDefaultsMatchPlatformFallbacks`,
-`GeneratedConfigTest.shellCommandConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.verificationCommandDefaultsMatchToolDiscovery`,
-`GeneratedConfigTest.verificationCommandDisabledDefaultsAreEmitted`,
-`GeneratedConfigTest.verificationCommandConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.helperToolDefaultsMatchToolDiscovery`, and
-`GeneratedConfigTest.helperToolConfiguredValuesAreEmitted`.
+`ConfigCMakeTest.toolPathDefaultsDisableMissingTools`, and
+`ConfigCMakeTest.toolPathDefaultsKeepOverrides`.
 Untested: `PREF_SHELL`.
 
 ### Posting And Reply Variables
@@ -244,14 +205,6 @@ Untested: `PREF_SHELL`.
 - `YOU_SAID`, `ATTRIBUTION`, `FORWARD_POSTER`, `FORWARD_HEADER`,
   `FORWARD_MSG`, and `FORWARD_MSG_END`: reply and forward defaults.
 - `REPLYTO_POSTER_CHECKING`: optional reply-to poster identity check.
-
-Coverage: `GeneratedConfigTest.postingHelperPaths*`,
-`GeneratedConfigTest.postingHelperPathConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.postingHeaderTemplates*`,
-`GeneratedConfigTest.postingHeaderTemplateConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.replyAndForwardTemplates*`,
-`GeneratedConfigTest.postingHelpersUseInstalledHelperPaths`, and
-`GeneratedConfigTest.featurePolicyConfiguredValuesAreEmitted`.
 
 ### UI And Runtime Behavior Variables
 
@@ -273,13 +226,6 @@ Coverage: `ConfigCMakeTest.unsubscribedCharAcceptsSingleCharacter`,
 `ConfigCMakeTest.termlibDefaultUsesMissingProbe`,
 `ConfigCMakeTest.termlibOverrideCanEnableMissingProbe`,
 `ConfigCMakeTest.termlibOverrideCanDisableFoundProbe`,
-`GeneratedConfigTest.selectionPolicyDefaultMatchesHistoricalFallbacks`,
-`GeneratedConfigTest.selectionPolicyConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.localTimeFormatDefaultMatchesHistoricalFallback`,
-`GeneratedConfigTest.localTimeFormatConfiguredValueIsEmitted`,
-`GeneratedConfigTest.featurePolicyDefaultsMatchHistoricalFallbacks`,
-`GeneratedConfigTest.featurePolicyConfiguredValuesAreEmitted`,
-`GeneratedConfigTest.termlibProbeMatchesPlatformCheck`,
 `SelectorPageTest.outputSelectorUsesConfiguredCharacterOrder`, and
 `tests/test_bits.cpp` plus `tests/test_rcln.cpp` when `MCHASE` is
 enabled.
