@@ -2869,6 +2869,26 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     return output;
 }
 
+class SortedPreviousBoundaryArticleNavigationTest : public SortedArticleNavigationTest,
+                                                    public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+
+    int m_line{};
+};
+
+void SortedPreviousBoundaryArticleNavigationTest::SetUp()
+{
+    SortedArticleNavigationTest::SetUp();
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 2);
+    set_order({2, 4, 1, 3});
+    g_selected_only = true;
+    g_parsed_art = ArticleNum{2};
+    g_search_ahead = ArticleNum{2};
+    m_line = g_term_line;
+}
+
 class SortedForwardArticleNavigationTest : public SortedArticleNavigationTest, public testing::WithParamInterface<bool>
 {
 protected:
@@ -3485,6 +3505,28 @@ void DepthFirstArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, 
     article_ptr(ArticleNum{4})->m_parent = article_ptr(ArticleNum{5});
 }
 
+class DepthFirstPreviousBoundaryArticleTest : public DepthFirstArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+
+    int m_line{};
+};
+
+void DepthFirstPreviousBoundaryArticleTest::SetUp()
+{
+    DepthFirstArticleTest::SetUp();
+    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
+              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD,
+              AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
+             3);
+    g_first_art = ArticleNum{3};
+    g_selected_only = true;
+    g_verbose = GetParam();
+    g_search_ahead = ArticleNum{2};
+    m_line = g_term_line;
+}
+
 class DepthFirstMissingArticleTest : public DepthFirstArticleTest, public testing::WithParamInterface<char>
 {
 };
@@ -3749,6 +3791,28 @@ class SubjectOrderPreviousCommandArticleTest : public SubjectOrderPreviousArticl
                                                public testing::WithParamInterface<char>
 {
 };
+
+class SubjectOrderPreviousBoundaryArticleTest : public SubjectOrderPreviousArticleTest,
+                                                public testing::WithParamInterface<std::tuple<char, bool>>
+{
+protected:
+    void SetUp() override;
+
+    int m_line{};
+};
+
+void SubjectOrderPreviousBoundaryArticleTest::SetUp()
+{
+    SubjectOrderPreviousArticleTest::SetUp();
+    set_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
+                  AF_EXISTS},
+                 5);
+    g_selected_only = true;
+    g_verbose = std::get<1>(GetParam());
+    g_search_ahead = ArticleNum{-1};
+    m_line = g_term_line;
+}
 
 class NextArticleTest : public ArticleNavigationTest
 {
@@ -7806,28 +7870,17 @@ TEST_P(DepthFirstMissingArticleTest, previousSkipsMissingDescendantsParentsAndRo
 INSTANTIATE_TEST_SUITE_P(PreviousCommand, DepthFirstMissingArticleTest, testing::Values('p', 'P'),
                          [](const testing::TestParamInfo<char> &info) { return std::string{info.param}; });
 
-TEST_F(DepthFirstArticleTest, firstEligibleBranchPreservesPositionWithoutWrappingToLaterSelections)
+TEST_P(DepthFirstPreviousBoundaryArticleTest, firstEligibleBranchPreservesPositionWithoutWrappingToLaterSelections)
 {
-    set_tree({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
-              AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD,
-              AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL},
-             3);
-    g_first_art = ArticleNum{3};
-    g_selected_only = true;
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        g_search_ahead = ArticleNum{2};
-        const int line = g_term_line;
+    const std::string output = expect_previous('p', 3, {}, AS_ASK);
 
-        const std::string output = expect_previous('p', 3, {}, AS_ASK);
-
-        EXPECT_NE(std::string::npos, output.find(verbose ? "There are no unread selected articles prior to this one."
-                                                         : "No previous unread selected articles"));
-        EXPECT_EQ(line + 2, g_term_line);
-    }
+    EXPECT_NE(std::string::npos, output.find(GetParam() ? "There are no unread selected articles prior to this one."
+                                                        : "No previous unread selected articles"));
+    EXPECT_EQ(m_line + 2, g_term_line);
 }
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, DepthFirstPreviousBoundaryArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Verbose" : "Terse"; });
 
 TEST_F(DepthFirstArticleTest, previousUnreadPreservesGroupEndWhenNoUnreadArticlesAreSelected)
 {
@@ -7935,28 +7988,24 @@ TEST_P(SubjectOrderPreviousCommandArticleTest, missingEarlierSubjectsPreserveThe
     }
 }
 
-TEST_P(SubjectOrderPreviousCommandArticleTest, firstSubjectBoundaryPreservesPositionWithoutWrapping)
+TEST_P(SubjectOrderPreviousBoundaryArticleTest, firstSubjectBoundaryPreservesPositionWithoutWrapping)
 {
-    set_subjects({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS,
-                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS,
-                  AF_EXISTS},
-                 5);
-    g_selected_only = true;
-    for (const bool verbose : {false, true})
-    {
-        SCOPED_TRACE(verbose);
-        g_verbose = verbose;
-        const int line = g_term_line;
+    const std::string output = expect_previous(std::get<0>(GetParam()), 5, {}, AS_ASK);
 
-        const std::string output = expect_subject_previous(GetParam(), 5, {}, AS_ASK);
-
-        const std::string qualifier = GetParam() == 'p' ? " unread" : "";
-        EXPECT_NE(std::string::npos,
-                  output.find(verbose ? "There are no" + qualifier + " selected articles prior to this one."
-                                      : "No previous" + qualifier + " selected articles"));
-        EXPECT_EQ(line + 2, g_term_line);
-    }
+    const std::string qualifier = std::get<0>(GetParam()) == 'p' ? " unread" : "";
+    EXPECT_NE(std::string::npos,
+              output.find(std::get<1>(GetParam()) ? "There are no" + qualifier + " selected articles prior to this one."
+                                                  : "No previous" + qualifier + " selected articles"));
+    EXPECT_EQ(m_line + 2, g_term_line);
 }
+
+INSTANTIATE_TEST_SUITE_P(CommandAndVerbosity, SubjectOrderPreviousBoundaryArticleTest,
+                         testing::Combine(testing::Values('p', 'P'), testing::Bool()),
+                         [](const testing::TestParamInfo<std::tuple<char, bool>> &info)
+                         {
+                             return std::string{std::get<0>(info.param)} +
+                                    (std::get<1>(info.param) ? "Verbose" : "Terse");
+                         });
 
 TEST_P(SubjectOrderPreviousCommandArticleTest, successfulPreviousCancelsSearchAheadBeforeTheNextNumericStep)
 {
@@ -8143,25 +8192,17 @@ TEST_F(SortedArticleNavigationTest, previousAllFromGroupEndUsesTheLastSortedRead
     EXPECT_TRUE(expect_previous('P', 2, 3).empty());
 }
 
-TEST_F(SortedArticleNavigationTest, previousAtTheFirstSortedEntryPreservesPositionAndWarns)
+TEST_P(SortedPreviousBoundaryArticleNavigationTest, previousAtTheFirstSortedEntryPreservesPositionAndWarns)
 {
-    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 2);
-    set_order({2, 4, 1, 3});
-    g_selected_only = true;
-    g_parsed_art = ArticleNum{2};
-    for (const char command : {'p', 'P'})
-    {
-        SCOPED_TRACE(command);
-        g_search_ahead = ArticleNum{2};
-        const int line = g_term_line;
+    const std::string output = expect_previous(GetParam(), 2, 0, AS_ASK);
 
-        const std::string output = expect_previous(command, 2, 0, AS_ASK);
-
-        EXPECT_NE(std::string::npos, output.find(command == 'p' ? "No previous unread selected articles"
-                                                                : "No previous selected articles"));
-        EXPECT_EQ(line + 2, g_term_line);
-    }
+    EXPECT_NE(std::string::npos, output.find(GetParam() == 'p' ? "No previous unread selected articles"
+                                                               : "No previous selected articles"));
+    EXPECT_EQ(m_line + 2, g_term_line);
 }
+
+INSTANTIATE_TEST_SUITE_P(Command, SortedPreviousBoundaryArticleNavigationTest, testing::Values('p', 'P'),
+                         [](const testing::TestParamInfo<char> &info) { return info.param == 'p' ? "Unread" : "All"; });
 
 TEST_F(SortedArticleNavigationTest, previousUnreadPreservesTheFirstEligiblePositionWhenThePrefixIsRead)
 {
