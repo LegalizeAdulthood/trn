@@ -90,6 +90,13 @@ struct DisplayModeRestorer
     }
 };
 
+class SelectorDisplayStyleTest : public testing::TestWithParam<bool>
+{
+private:
+    DisplayModeRestorer m_restore{g_sel_grp_display_mode, g_sel_art_display_mode, g_sel_grp_display_mode_index,
+                                  g_sel_art_display_mode_index};
+};
+
 struct SwitchFlagRestorer
 {
     bool check_flag;
@@ -317,19 +324,18 @@ TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
     EXPECT_EQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
 }
 
-TEST(SwitchTest, selectorDisplayStyleOptionsReturnConfiguredOrder)
+TEST_P(SelectorDisplayStyleTest, returnsTheConfiguredStyleOrderAndInitialMode)
 {
-    DisplayModeRestorer restore{g_sel_grp_display_mode, g_sel_art_display_mode, g_sel_grp_display_mode_index,
-                                g_sel_art_display_mode_index};
+    const OptionIndex option = GetParam() ? OI_NEWSGROUP_SEL_STYLES : OI_NEWS_SEL_STYLES;
+    const char       *styles = GetParam() ? "mls" : "dslm";
 
-    set_option(OI_NEWSGROUP_SEL_STYLES, "mls");
-    set_option(OI_NEWS_SEL_STYLES, "dslm");
+    set_option(option, styles);
 
-    EXPECT_EQ('m', current_group_display_mode());
-    EXPECT_EQ('d', current_article_display_mode());
-    EXPECT_EQ("mls", option_value(OI_NEWSGROUP_SEL_STYLES));
-    EXPECT_EQ("dslm", option_value(OI_NEWS_SEL_STYLES));
+    EXPECT_EQ(styles[0], GetParam() ? current_group_display_mode() : current_article_display_mode());
+    EXPECT_EQ(styles, option_value(option));
 }
+
+INSTANTIATE_TEST_SUITE_P(ArticleAndNewsgroup, SelectorDisplayStyleTest, testing::Bool());
 
 TEST(OptionValueTest, expandsMouseButtonsWithoutChangingParsedStorage)
 {
