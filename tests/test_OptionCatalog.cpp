@@ -30,6 +30,18 @@ class CatalogHeadingTest : public OptionCatalogFixture, public testing::WithPara
 {
 };
 
+using CatalogOptionRow = std::pair<OptionIndex, int>;
+
+class CatalogOptionRowTest : public OptionCatalogFixture, public testing::WithParamInterface<CatalogOptionRow>
+{
+};
+
+using CatalogPreviousGroup = std::pair<int, int>;
+
+class CatalogPreviousGroupTest : public OptionCatalogFixture, public testing::WithParamInterface<CatalogPreviousGroup>
+{
+};
+
 } // namespace
 
 TEST_P(CatalogSchemaLookupTest, recognizesTheOptionNameIgnoringCase)
@@ -81,22 +93,33 @@ INSTANTIATE_TEST_SUITE_P(GroupRows, CatalogHeadingTest,
                          testing::Values(CatalogHeading{1, "Display Options"}, CatalogHeading{10, "Selector Options"},
                                          CatalogHeading{80, "Article Scan Mode Options"}));
 
-TEST(OptionCatalogTest, mapsOptionIndexesToDisplayRows)
+TEST_P(CatalogOptionRowTest, mapsTheOptionToItsDisplayRow)
 {
-    const OptionCatalog catalog;
+    const int row = m_catalog.row_for(GetParam().first);
 
-    EXPECT_EQ(2, catalog.row_for(OI_TERSE_OUTPUT));
-    EXPECT_EQ(32, catalog.row_for(OI_USE_THREADS));
-    EXPECT_EQ(95, catalog.row_for(OI_SC_VERBOSE));
-    EXPECT_EQ(OI_SC_VERBOSE, catalog.option(95));
-    EXPECT_EQ(0, catalog.row_for(OI_NONE));
+    EXPECT_EQ(GetParam().second, row);
 }
 
-TEST(OptionCatalogTest, findsPreviousGroupForOptionRows)
-{
-    const OptionCatalog catalog;
+INSTANTIATE_TEST_SUITE_P(ValidOptions, CatalogOptionRowTest,
+                         testing::Values(CatalogOptionRow{OI_TERSE_OUTPUT, 2}, CatalogOptionRow{OI_USE_THREADS, 32},
+                                         CatalogOptionRow{OI_SC_VERBOSE, 95}));
 
-    EXPECT_EQ(1, catalog.previous_group_row(2));
-    EXPECT_EQ(31, catalog.previous_group_row(44));
-    EXPECT_EQ(94, catalog.previous_group_row(95));
+INSTANTIATE_TEST_SUITE_P(MissingOption, CatalogOptionRowTest, testing::Values(CatalogOptionRow{OI_NONE, 0}));
+
+TEST_F(OptionCatalogFixture, mapsTheLastDisplayRowBackToItsOption)
+{
+    const OptionIndex option = m_catalog.option(95);
+
+    EXPECT_EQ(OI_SC_VERBOSE, option);
 }
+
+TEST_P(CatalogPreviousGroupTest, findsTheGroupBeforeTheOptionRow)
+{
+    const int group = m_catalog.previous_group_row(GetParam().first);
+
+    EXPECT_EQ(GetParam().second, group);
+}
+
+INSTANTIATE_TEST_SUITE_P(OptionRows, CatalogPreviousGroupTest,
+                         testing::Values(CatalogPreviousGroup{2, 1}, CatalogPreviousGroup{44, 31},
+                                         CatalogPreviousGroup{95, 94}));
