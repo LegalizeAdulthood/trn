@@ -27,14 +27,72 @@ namespace
 
 namespace fs = std::filesystem;
 
-TEST(AtGreySpaceTest, classifiesWhitespaceControlAndNormalCharacters)
-{
-    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
+using GreySpaceCase = std::pair<std::string_view, bool>;
 
-    EXPECT_TRUE(at_grey_space(" "));
-    EXPECT_TRUE(at_grey_space("\001"));
-    EXPECT_FALSE(at_grey_space("A"));
+class GreySpaceTest : public testing::TestWithParam<GreySpaceCase>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+    std::string m_old_input;
+    std::string m_old_output;
+    std::string m_text;
+};
+
+void GreySpaceTest::SetUp()
+{
+    m_old_input = input_charset_name();
+    m_old_output = output_charset_name();
+    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
+    m_text = GetParam().first;
 }
+
+void GreySpaceTest::TearDown()
+{
+    utf_init(m_old_input, m_old_output);
+}
+
+TEST_P(GreySpaceTest, classifiesTheCharacter)
+{
+    const bool result = at_grey_space(m_text);
+
+    EXPECT_EQ(GetParam().second, result);
+}
+
+INSTANTIATE_TEST_SUITE_P(WhitespaceControlAndNormal, GreySpaceTest,
+                         testing::Values(GreySpaceCase{" ", true}, GreySpaceCase{"\001", true},
+                                         GreySpaceCase{"A", false}));
+
+using NeedleCase = std::tuple<std::string_view, std::string_view, bool>;
+
+class SensitiveNeedleTest : public testing::TestWithParam<NeedleCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_text;
+    std::string m_needle;
+};
+
+void SensitiveNeedleTest::SetUp()
+{
+    m_text = std::get<0>(GetParam());
+    m_needle = std::get<1>(GetParam());
+}
+
+using BerkeleyNameCase = std::pair<std::string_view, std::string_view>;
+
+class BerkeleyNameTest : public testing::TestWithParam<BerkeleyNameCase>
+{
+protected:
+    void SetUp() override
+    {
+        m_gecos = GetParam().first;
+    }
+
+    std::string m_gecos;
+};
 
 TEST(ShellWaitStatusTest, decodesExitStatus)
 {
@@ -267,25 +325,23 @@ TEST_F(TempFilenameTest, returnsUniqueNameInTempDirectory)
     EXPECT_TRUE(ends_with(filename, ".2468"));
 }
 
-TEST(InStringTest, findsCaseSensitiveNeedle)
+TEST_P(SensitiveNeedleTest, findsTheCaseSensitiveNeedle)
 {
-    const std::string text{"The quick brown fox"};
+    const bool result = in_string(m_text, m_needle, true);
 
-    EXPECT_TRUE(in_string(std::string_view{text}, "quick", true));
-    EXPECT_FALSE(in_string(std::string_view{text}, "Quick", true));
+    EXPECT_EQ(std::get<2>(GetParam()), result);
 }
+
+INSTANTIATE_TEST_SUITE_P(MatchMismatchAndEmptyNeedle, SensitiveNeedleTest,
+                         testing::Values(NeedleCase{"The quick brown fox", "quick", true},
+                                         NeedleCase{"The quick brown fox", "Quick", false},
+                                         NeedleCase{"text", "", true}, NeedleCase{"", "", false}));
 
 TEST(InStringTest, findsCaseInsensitiveNeedle)
 {
     const std::string text{"The quick brown fox"};
 
     EXPECT_TRUE(in_string(std::string_view{text}, "QUICK", false));
-}
-
-TEST(InStringTest, findsEmptyNeedleOnlyInNonEmptyText)
-{
-    EXPECT_TRUE(in_string(std::string_view{"text"}, "", true));
-    EXPECT_FALSE(in_string(std::string_view{}, "", true));
 }
 
 TEST_P(StringEscapeTest, decodesOneEscapeForm)
@@ -338,17 +394,18 @@ TEST_F(FileExpansionTest, expandsDotDirectory)
     EXPECT_EQ("C:/Users/tester/.trn/access", file_exp("%./access"));
 }
 
-TEST(PasswdFullNameTest, berkeleyKeepsNameBeforeDelimiters)
+TEST_P(BerkeleyNameTest, extractsTheFullName)
 {
-    EXPECT_EQ("Mister Guest User", passwd_full_name("Mister Guest User,Room 42", "guest", PasswdNameFormat::Berkeley));
-    EXPECT_EQ("Mister Guest User", passwd_full_name("Mister Guest User;Room 42", "guest", PasswdNameFormat::Berkeley));
+    const std::string result = passwd_full_name(m_gecos, "guest", PasswdNameFormat::Berkeley);
+
+    EXPECT_EQ(GetParam().second, result);
 }
 
-TEST(PasswdFullNameTest, berkeleyExpandsAmpersandWithCapitalizedLogin)
-{
-    EXPECT_EQ("Guest User", passwd_full_name("& User", "guest", PasswdNameFormat::Berkeley));
-    EXPECT_EQ("& User", passwd_full_name(R"(\& User)", "guest", PasswdNameFormat::Berkeley));
-}
+INSTANTIATE_TEST_SUITE_P(DelimitersAndAmpersands, BerkeleyNameTest,
+                         testing::Values(BerkeleyNameCase{"Mister Guest User,Room 42", "Mister Guest User"},
+                                         BerkeleyNameCase{"Mister Guest User;Room 42", "Mister Guest User"},
+                                         BerkeleyNameCase{"& User", "Guest User"},
+                                         BerkeleyNameCase{R"(\& User)", "& User"}));
 
 TEST(PasswdFullNameTest, usgKeepsNameBetweenHyphenAndParen)
 {
