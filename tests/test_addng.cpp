@@ -107,6 +107,41 @@ protected:
     int               m_old_sel_direction{};
 };
 
+class StoredAddGroupsTest : public AddGroupStorageTest
+{
+protected:
+    void SetUp() override;
+
+    AddGroupIndex m_first{};
+    AddGroupIndex m_last{};
+};
+
+void StoredAddGroupsTest::SetUp()
+{
+    AddGroupStorageTest::SetUp();
+    m_first = add_to_list("comp.lang.c++", 42, ':');
+    m_last = add_to_list("news.software.readers", -1, '!');
+    ASSERT_NE(AddGroupIndex::None, m_first);
+    ASSERT_NE(AddGroupIndex::None, m_last);
+}
+
+class AddGroupInitializationTest : public AddGroupStorageTest, public testing::WithParamInterface<bool>
+{
+};
+
+class StoredAddGroupTraversalTest : public StoredAddGroupsTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void StoredAddGroupTraversalTest::SetUp()
+{
+    StoredAddGroupsTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    ASSERT_EQ(m_first, add_to_list("comp.lang.c++", 99, '!'));
+}
+
 class ScanActiveTest : public testing::Test
 {
 protected:
@@ -472,27 +507,58 @@ TEST_F(ActiveListPatternTest, usesCurrentRestrictionInsideSavedOuterRestrictions
     end_only();
 }
 
-TEST_F(AddGroupStorageTest, storesNamesWithoutAddingDuplicates)
+TEST_F(StoredAddGroupsTest, duplicateInsertionPreservesIdentityAndStoredData)
 {
-    const AddGroupIndex first = add_to_list("comp.lang.c++", 42, ':');
-    const AddGroupIndex last = add_to_list("news.software.readers", -1, '!');
     const AddGroupIndex duplicate = add_to_list("comp.lang.c++", 99, '!');
 
     ASSERT_EQ(2U, g_add_groups.size());
-    EXPECT_EQ(first, duplicate);
-    EXPECT_EQ(first, g_add_groups.first());
-    EXPECT_EQ(last, g_add_groups.last());
-    EXPECT_EQ(last, g_add_groups.next(first));
-    EXPECT_EQ(first, g_add_groups.prev(last));
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.prev(first));
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(last));
-    EXPECT_EQ("comp.lang.c++", g_add_groups[first].m_name);
-    EXPECT_EQ("news.software.readers", g_add_groups[last].m_name);
-    EXPECT_EQ(42, g_add_groups[first].m_to_read.value_of());
-    EXPECT_EQ(0, g_add_groups[last].m_to_read.value_of());
-    EXPECT_EQ(AGF_SEL, g_add_groups[first].m_flags);
-    EXPECT_EQ(AGF_DEL, g_add_groups[last].m_flags);
+    EXPECT_EQ(m_first, duplicate);
+    EXPECT_EQ("comp.lang.c++", g_add_groups[m_first].m_name);
+    EXPECT_EQ("news.software.readers", g_add_groups[m_last].m_name);
+    EXPECT_EQ(42, g_add_groups[m_first].m_to_read.value_of());
+    EXPECT_EQ(0, g_add_groups[m_last].m_to_read.value_of());
+    EXPECT_EQ(AGF_SEL, g_add_groups[m_first].m_flags);
+    EXPECT_EQ(AGF_DEL, g_add_groups[m_last].m_flags);
 }
+
+TEST_P(AddGroupInitializationTest, initializesStoredNameCountAndSelection)
+{
+    const bool        unsubscribed = GetParam();
+    const std::string name = unsubscribed ? "news.software.readers" : "comp.lang.c++";
+
+    const AddGroupIndex index = add_to_list(name, unsubscribed ? -1 : 42, unsubscribed ? '!' : ':');
+
+    ASSERT_NE(AddGroupIndex::None, index);
+    EXPECT_EQ(1U, g_add_groups.size());
+    EXPECT_EQ(name, g_add_groups[index].m_name);
+    EXPECT_EQ(unsubscribed ? 0 : 42, g_add_groups[index].m_to_read.value_of());
+    EXPECT_EQ(unsubscribed ? AGF_DEL : AGF_SEL, g_add_groups[index].m_flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(SubscriptionState, AddGroupInitializationTest, testing::Bool());
+
+TEST_P(StoredAddGroupTraversalTest, startsAtTheDirectionBoundary)
+{
+    const AddGroupIndex index = GetParam() ? g_add_groups.last() : g_add_groups.first();
+
+    EXPECT_EQ(GetParam() ? m_last : m_first, index);
+}
+
+TEST_P(StoredAddGroupTraversalTest, visitsTheOtherStoredGroup)
+{
+    const AddGroupIndex index = GetParam() ? g_add_groups.prev(m_last) : g_add_groups.next(m_first);
+
+    EXPECT_EQ(GetParam() ? m_first : m_last, index);
+}
+
+TEST_P(StoredAddGroupTraversalTest, stopsAtTheTraversalBoundary)
+{
+    const AddGroupIndex index = GetParam() ? g_add_groups.prev(m_first) : g_add_groups.next(m_last);
+
+    EXPECT_EQ(AddGroupIndex::None, index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReverseOrForward, StoredAddGroupTraversalTest, testing::Bool());
 
 TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
 {
