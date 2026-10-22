@@ -5,6 +5,7 @@
 #include <trn/artio.h>
 #include <trn/artsrch.h>
 #include <trn/artstate.h>
+#include <trn/backpage.h>
 #include <trn/bits.h>
 #include <trn/cache.h>
 #include <trn/charsubst.h>
@@ -29,6 +30,8 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/univ.h>
+#include <util/env.h>
+#include <util/util2.h>
 
 #include <test_config.h>
 
@@ -45,6 +48,7 @@
 #include <initializer_list>
 #include <string>
 #include <system_error>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -3710,9 +3714,14 @@ class CachedDisplayArticleTest : public RereadArticleTest
 protected:
     void SetUp() override;
     void TearDown() override;
+    void                         set_article_text(std::string_view text);
     void cache_article(std::string_view expected = "\xC3\x84\n");
     void expect_redraw(ArticleLine line);
     void expect_cleared_cache();
+    const std::filesystem::path &output_dir() const
+    {
+        return m_output_dir;
+    }
 
 private:
     DataSource            m_data_source{};
@@ -3754,17 +3763,28 @@ void CachedDisplayArticleTest::SetUp()
     std::error_code error;
     std::filesystem::create_directories(m_output_dir, error);
     ASSERT_FALSE(error) << error.message();
+    set_article_text("\xC4\n");
+}
+
+void CachedDisplayArticleTest::set_article_text(std::string_view text)
+{
+    if (g_art_fp)
+    {
+        std::fclose(g_art_fp);
+        g_art_fp = nullptr;
+    }
     const std::filesystem::path article_file = m_output_dir / "article";
     {
         std::ofstream output{article_file, std::ios::binary};
-        output << "\xC4\n";
+        output << text;
         ASSERT_TRUE(output.good());
     }
     g_art_fp = std::fopen(article_file.string().c_str(), "rb");
     ASSERT_NE(nullptr, g_art_fp);
-    g_raw_art_size = ArticlePosition{2};
+    g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
     g_art_size = g_raw_art_size;
     g_art_pos = ArticlePosition{};
+    clear_art_buf();
 }
 
 void CachedDisplayArticleTest::TearDown()
@@ -3830,6 +3850,103 @@ class RefreshBoundaryArticleTest : public CachedDisplayArticleTest, public testi
 };
 
 class SubstitutionArticleTest : public CachedDisplayArticleTest, public testing::WithParamInterface<long>
+{
+};
+
+class BackwardPagingArticleTest : public CachedDisplayArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void load_article(long line_count = 40, long page_break_after = -1);
+    void expect_target(long line, std::string_view expected);
+
+private:
+    std::string           m_old_tmp_dir{g_tmp_dir};
+    std::filesystem::path m_vary_file;
+    MarkingMode           m_old_marking{g_marking};
+    MarkingAreas          m_old_marking_areas{g_marking_areas};
+    ArticleLine           m_old_highlight{g_highlight};
+};
+
+void BackwardPagingArticleTest::SetUp()
+{
+    CachedDisplayArticleTest::SetUp();
+    g_tmp_dir = output_dir().generic_string();
+    m_vary_file = file_exp(VARYNAME);
+    back_page_init();
+    g_tc_LINES = 10;
+    g_marking = NO_MARKING;
+    g_marking_areas = BACK_PAGE_MARKING;
+    g_highlight = ArticleLine{7};
+}
+
+void BackwardPagingArticleTest::TearDown()
+{
+    back_page_final();
+    std::error_code error;
+    std::filesystem::remove(m_vary_file, error);
+    g_tmp_dir = m_old_tmp_dir;
+    g_marking = m_old_marking;
+    g_marking_areas = m_old_marking_areas;
+    g_highlight = m_old_highlight;
+    CachedDisplayArticleTest::TearDown();
+}
+
+void BackwardPagingArticleTest::load_article(long line_count, long page_break_after)
+{
+    std::string text;
+    for (long line = 0; line < line_count; ++line)
+    {
+        text += "Line " + std::to_string(line);
+        if (line == page_break_after)
+        {
+            text += '\f';
+        }
+        text += '\n';
+    }
+    set_article_text(text);
+    for (long line = 0; line < line_count; ++line)
+    {
+        const ArticlePosition position = art_buf_pos();
+        std::string           content;
+        ASSERT_TRUE(read_art_buf(content, false));
+        ASSERT_EQ("Line " + std::to_string(line) + (line == page_break_after ? "\f\n" : "\n"), content);
+        virtual_write(ArticleLine{line}, line == page_break_after ? -position : position);
+    }
+    virtual_write(ArticleLine{line_count}, art_buf_pos());
+}
+
+void BackwardPagingArticleTest::expect_target(long line, std::string_view expected)
+{
+    EXPECT_EQ(ArticleLine{line}, g_art_line_num);
+    const ArticlePosition saved_position = virtual_read(g_art_line_num);
+    const ArticlePosition position = saved_position < 0 ? -saved_position : saved_position;
+    ASSERT_EQ(0, seek_art(art_buf_seek()));
+    ASSERT_EQ(0, seek_art_buf(position));
+    std::string content;
+    ASSERT_TRUE(read_art_buf(content, false));
+    EXPECT_EQ(expected, content);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_EQ('p', current_char_subst_mode());
+}
+
+class BackwardPageArticleTest : public BackwardPagingArticleTest,
+                                public testing::WithParamInterface<std::tuple<char, int, long>>
+{
+};
+
+class BackwardPageBoundaryArticleTest : public BackwardPagingArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class BackwardCommandArticleTest : public BackwardPagingArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+class BackwardPageMarkingArticleTest : public BackwardPagingArticleTest,
+                                       public testing::WithParamInterface<std::tuple<MarkingMode, MarkingAreas, long>>
 {
 };
 
@@ -10610,6 +10727,210 @@ TEST_F(CachedDisplayArticleTest, completingTheSubstitutionPrefixConsumesOnlyItsS
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
+}
+
+TEST_F(BackwardPagingArticleTest, uppercaseBMovesBackOneLineWithoutAddingPageHighlighting)
+{
+    set_reading_position(4);
+    load_article();
+    g_top_line = ArticleLine{28};
+    g_marking = STANDOUT;
+
+    const std::string output = display('B');
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{27});
+    EXPECT_EQ(ArticleLine{27}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(27, "Line 27\n");
+}
+
+TEST_P(BackwardPageArticleTest, pageBackUsesTheScreenHeightAndRecordedArticleOffsets)
+{
+    const char command = std::get<0>(GetParam());
+    const int  height = std::get<1>(GetParam());
+    const long target = std::get<2>(GetParam());
+    set_reading_position(2);
+    load_article();
+    g_top_line = ArticleLine{28};
+    g_tc_LINES = height;
+
+    const std::string output = display(command);
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{target});
+    EXPECT_EQ(ArticleLine{target}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(target, "Line " + std::to_string(target) + '\n');
+}
+
+INSTANTIATE_TEST_SUITE_P(PageKeysAndScreenHeights, BackwardPageArticleTest,
+                         testing::Values(std::make_tuple('b', 10, 20L), std::make_tuple(Ctl('b'), 10, 20L),
+                                         std::make_tuple('b', 24, 6L), std::make_tuple(Ctl('b'), 24, 6L)));
+
+TEST_P(BackwardPageBoundaryArticleTest, pageBackClampsAtTheArticleStartWhenLessThanAPageRemains)
+{
+    set_reading_position(4);
+    load_article();
+    g_top_line = ArticleLine{3};
+
+    const std::string output = display(GetParam());
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(0, "Line 0\n");
+}
+
+TEST_F(BackwardPagingArticleTest, lineBackAtTheArticleStartKeepsTheStartSentinelAndClampsTheSeekLine)
+{
+    set_reading_position(4);
+    load_article();
+    g_top_line = ArticleLine{};
+
+    const std::string output = display('B');
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(0, "Line 0\n");
+}
+
+TEST_P(BackwardPageMarkingArticleTest, pageBackHighlightsTheOldTopLineOnlyWhenBackPageMarkingIsEnabled)
+{
+    const MarkingMode  marking = std::get<0>(GetParam());
+    const MarkingAreas areas = std::get<1>(GetParam());
+    const long         highlight = std::get<2>(GetParam());
+    set_reading_position(4);
+    load_article();
+    g_top_line = ArticleLine{28};
+    g_marking = marking;
+    g_marking_areas = areas;
+
+    const std::string output = display('b');
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{20});
+    EXPECT_EQ(ArticleLine{20}, g_top_line);
+    EXPECT_EQ(ArticleLine{highlight}, g_highlight);
+    EXPECT_EQ(marking, g_marking);
+    EXPECT_EQ(areas, g_marking_areas);
+    expect_target(20, "Line 20\n");
+}
+
+INSTANTIATE_TEST_SUITE_P(MarkingPolicy, BackwardPageMarkingArticleTest,
+                         testing::Values(std::make_tuple(STANDOUT, BACK_PAGE_MARKING, 28L),
+                                         std::make_tuple(UNDERLINE, BACK_PAGE_MARKING, 28L),
+                                         std::make_tuple(NO_MARKING, BACK_PAGE_MARKING, 7L),
+                                         std::make_tuple(STANDOUT, HALF_PAGE_MARKING, 7L)));
+
+TEST_P(BackwardPageBoundaryArticleTest, pageBackStopsAfterThePreviousFormFeedBoundary)
+{
+    set_reading_position(4);
+    load_article(40, 12);
+    g_top_line = ArticleLine{20};
+    ASSERT_LT(virtual_read(ArticleLine{12}), ArticlePosition{});
+
+    const std::string output = display(GetParam());
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{13});
+    EXPECT_EQ(ArticleLine{13}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(13, "Line 13\n");
+}
+
+INSTANTIATE_TEST_SUITE_P(PageKeys, BackwardPageBoundaryArticleTest, testing::Values('b', Ctl('b')));
+
+TEST_F(BackwardPagingArticleTest, singleLineBackCanReachTheLineBeforeAFormFeedBoundary)
+{
+    set_reading_position(4);
+    load_article(40, 12);
+    g_top_line = ArticleLine{13};
+    ASSERT_LT(virtual_read(ArticleLine{12}), ArticlePosition{});
+
+    const std::string output = display('B');
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{12});
+    EXPECT_EQ(ArticleLine{12}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(12, "Line 12\f\n");
+}
+
+TEST_P(BackwardCommandArticleTest, unsetTopLineRequestsRereadingFromTheArticleStart)
+{
+    set_reading_position(4);
+    load_article();
+    g_top_line = ArticleLine{-1};
+
+    const std::string output = display(GetParam());
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{});
+    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(0, "Line 0\n");
+}
+
+TEST_P(BackwardCommandArticleTest, groupEndDoesNotSeekRedrawOrChangeHighlighting)
+{
+    set_reading_position(8);
+    load_article();
+    g_marking = STANDOUT;
+    const ArticlePosition cached_position = art_buf_pos();
+    const ArticlePosition cached_length = art_buf_len();
+
+    const std::string output = display(GetParam());
+
+    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(STANDOUT, g_marking);
+    EXPECT_EQ(cached_position, art_buf_pos());
+    EXPECT_EQ(cached_length, art_buf_len());
+    expect_unmoved_view();
+}
+
+INSTANTIATE_TEST_SUITE_P(BackwardKeys, BackwardCommandArticleTest, testing::Values('B', 'b', Ctl('b')));
+
+TEST_F(BackwardPagingArticleTest, repeatedPageBackUsesTheUpdatedTopLineAndHighlight)
+{
+    set_reading_position(4);
+    load_article();
+    g_top_line = ArticleLine{28};
+    g_marking = STANDOUT;
+
+    const std::string first_output = display('b');
+    const ArticleLine first_top = g_top_line;
+    const std::string second_output = display('b');
+
+    EXPECT_FALSE(first_output.empty());
+    EXPECT_FALSE(second_output.empty());
+    EXPECT_EQ(ArticleLine{20}, first_top);
+    expect_redraw(ArticleLine{12});
+    EXPECT_EQ(ArticleLine{12}, g_top_line);
+    EXPECT_EQ(ArticleLine{20}, g_highlight);
+    expect_target(12, "Line 12\n");
+}
+
+TEST_F(BackwardPagingArticleTest, longArticlePagingCrossesTheVirtualArrayWindowUsingSavedOffsets)
+{
+    set_reading_position(4);
+    load_article(300);
+    g_top_line = ArticleLine{260};
+
+    const std::string output = display('b');
+
+    EXPECT_FALSE(output.empty());
+    expect_redraw(ArticleLine{252});
+    EXPECT_EQ(ArticleLine{252}, g_top_line);
+    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    expect_target(252, "Line 252\n");
 }
 
 TEST_F(QuitCommandArticleTest, lowerCaseQuitRequestsTheNextNewsgroup)
