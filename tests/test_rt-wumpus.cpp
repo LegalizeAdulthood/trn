@@ -207,6 +207,38 @@ class UnderPrintScalarTest : public UnderPrintRenderingTest, public testing::Wit
 {
 };
 
+class UnderPrintControlTest : public UnderPrintRenderingTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_text;
+    std::string m_expected;
+};
+
+void UnderPrintControlTest::SetUp()
+{
+    UnderPrintRenderingTest::SetUp();
+    g_tc_US = "\x1B[4m";
+    g_tc_UE = "\x1B[24m";
+    g_tc_UC = GetParam() ? "<uc>" : "";
+    m_text = "\x1B[4m";
+    m_text += '\0';
+    m_text += "\x7F\xC2\x9B";
+    for (char ch : std::string_view{"^[[4m^@^?^["})
+    {
+        m_expected += ch;
+        if (GetParam())
+        {
+            m_expected += "\b<uc>";
+        }
+    }
+    if (!GetParam())
+    {
+        m_expected = "\x1B[4m" + m_expected + "\x1B[24m";
+    }
+}
+
 class ThreadTreeArticleTest : public TreeRenderingTest
 {
 protected:
@@ -692,37 +724,15 @@ INSTANTIATE_TEST_SUITE_P(ScalarKinds, UnderPrintScalarTest,
                                              "e\xCC\x81\xFFZ",
                                              "\xE7\x95\x8C\b\b<uc><uc>e\b<uc>\xCC\x81\xEF\xBF\xBD\b<uc>Z\b<uc>"}));
 
-TEST_F(TreeRenderingTest, underPrintDisplaysControlsWithoutExecutingThem)
+TEST_P(UnderPrintControlTest, displaysControlsWithoutExecutingThem)
 {
-    g_tc_US = "\x1B[4m";
-    g_tc_UE = "\x1B[24m";
-    std::string text{"\x1B[4m"};
-    text += '\0';
-    text += "\x7F\xC2\x9B";
-    for (const std::string_view capability : {std::string_view{}, std::string_view{"<uc>"}})
-    {
-        g_tc_UC = capability;
-        std::string expected;
-        for (char ch : std::string_view{"^[[4m^@^?^["})
-        {
-            expected += ch;
-            if (!capability.empty())
-            {
-                expected += "\b<uc>";
-            }
-        }
-        if (capability.empty())
-        {
-            expected = "\x1B[4m" + expected + "\x1B[24m";
-        }
+    under_print(m_text);
+    const std::string output = captured_output();
 
-        testing::internal::CaptureStdout();
-        under_print(text);
-        const std::string output = testing::internal::GetCapturedStdout();
-
-        EXPECT_EQ(expected, output);
-    }
+    EXPECT_EQ(m_expected, output);
 }
+
+INSTANTIATE_TEST_SUITE_P(UnderlineCapabilities, UnderPrintControlTest, testing::Bool());
 
 TEST_F(TreeRenderingTest, siblingBranchesAreRenderedOnSeparateLines)
 {
