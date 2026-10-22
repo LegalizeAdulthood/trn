@@ -4059,6 +4059,20 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     return output;
 }
 
+class DirectNumericEndArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void DirectNumericEndArticleTest::SetUp()
+{
+    DirectNavigationArticleTest::SetUp();
+    set_flags(1, CACHED);
+    position(GetParam() ? 13 : 12);
+    g_reread = false;
+}
+
 class DirectNumericStepArticleTest : public DirectNavigationArticleTest, public testing::WithParamInterface<char>
 {
 };
@@ -13505,19 +13519,15 @@ TEST_P(DirectNumericMissingArticleTest, numericStepRetainsAnAbsentNumberWithoutA
 
 INSTANTIATE_TEST_SUITE_P(AbsentDirection, DirectNumericMissingArticleTest, testing::Values('N', 'P'));
 
-TEST_F(DirectNavigationArticleTest, numericNextReachesGroupEndAndExplicitlyRestartsAtTheFirstNumber)
+TEST_P(DirectNumericEndArticleTest, advancesFromTheConfiguredNumericBoundary)
 {
-    set_flags(1, CACHED);
-    position(12);
+    const std::string output = navigate("_N", GetParam() ? 1 : 13, GetParam());
 
-    EXPECT_TRUE(navigate("_N", 13, false).empty());
-
-    position(13);
-    g_search_ahead = ArticleNum{3};
-
-    EXPECT_TRUE(navigate("_N", 1, true).empty());
+    EXPECT_TRUE(output.empty());
     EXPECT_EQ(CACHED, article_ptr(ArticleNum{1})->m_flags);
 }
+
+INSTANTIATE_TEST_SUITE_P(ReachEndOrRestart, DirectNumericEndArticleTest, testing::Bool());
 
 TEST_F(DirectNavigationArticleTest, numericPreviousFromGroupEndIncludesTheLastReadUnselectedArticle)
 {
