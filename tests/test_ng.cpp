@@ -3569,7 +3569,7 @@ protected:
     void        TearDown() override;
     void        set_reading_position(long current);
     std::string display(char command);
-    std::string display(std::string command, std::string_view input = {});
+    std::string display(std::string command, std::string_view input = {}, ArticleSwitchResult expected = AS_NORM);
     void        expect_unmoved_view();
 
 private:
@@ -3641,7 +3641,7 @@ std::string RereadArticleTest::display(char command)
     return display(std::string{command});
 }
 
-std::string RereadArticleTest::display(std::string command, std::string_view input)
+std::string RereadArticleTest::display(std::string command, std::string_view input, ArticleSwitchResult expected)
 {
     const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
     const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
@@ -3665,7 +3665,7 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
     const ArticleSwitchResult result = art_switch(std::move(command));
 
     const std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(AS_NORM, result);
+    EXPECT_EQ(expected, result);
     EXPECT_EQ(article, std::make_pair(g_art, g_artp));
     EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
     EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
@@ -3699,6 +3699,53 @@ void RereadArticleTest::expect_unmoved_view()
     EXPECT_EQ(12, g_term_line);
     EXPECT_EQ(9, g_term_col);
     EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
+}
+
+class InlineViewingArticleTest : public RereadArticleTest, public testing::WithParamInterface<long>
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string toggle_viewing();
+
+private:
+    bool            m_old_auto_view_inline{g_auto_view_inline};
+    ArticleLine     m_old_first_view{g_first_view};
+    ArticlePosition m_old_art_pos{g_art_pos};
+};
+
+void InlineViewingArticleTest::SetUp()
+{
+    RereadArticleTest::SetUp();
+    set_reading_position(GetParam());
+    g_art_pos = ArticlePosition{123};
+    g_first_view = ArticleLine{37};
+}
+
+void InlineViewingArticleTest::TearDown()
+{
+    g_auto_view_inline = m_old_auto_view_inline;
+    g_first_view = m_old_first_view;
+    g_art_pos = m_old_art_pos;
+    RereadArticleTest::TearDown();
+}
+
+std::string InlineViewingArticleTest::toggle_viewing()
+{
+    const std::string output = display("i", {}, AS_ASK);
+
+    EXPECT_EQ(ArticlePosition{123}, g_art_pos);
+    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_FALSE(g_reread);
+    EXPECT_FALSE(g_force_last);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_TRUE(g_do_hiding);
+    EXPECT_FALSE(g_rotate);
+    EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
+    EXPECT_EQ(14, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+    return output;
 }
 
 class RereadCurrentArticleTest : public RereadArticleTest, public testing::WithParamInterface<long>
@@ -10695,6 +10742,30 @@ TEST_F(SearchCommandArticleTest, correctedPatternFindsAnArticleAfterACompileErro
     EXPECT_EQ(article_ptr(g_art), g_artp);
     EXPECT_EQ("needle", g_last_pat);
 }
+
+TEST_P(InlineViewingArticleTest, enablingInlineViewingResetsTheFirstViewWithoutMovingArticles)
+{
+    g_auto_view_inline = false;
+
+    const std::string output = toggle_viewing();
+
+    EXPECT_EQ("\nAuto-View inlined mime is on\n", output);
+    EXPECT_TRUE(g_auto_view_inline);
+    EXPECT_EQ(ArticleLine{}, g_first_view);
+}
+
+TEST_P(InlineViewingArticleTest, disablingInlineViewingPreservesTheFirstViewWithoutMovingArticles)
+{
+    g_auto_view_inline = true;
+
+    const std::string output = toggle_viewing();
+
+    EXPECT_EQ("\nAuto-View inlined mime is off\n", output);
+    EXPECT_FALSE(g_auto_view_inline);
+    EXPECT_EQ(ArticleLine{37}, g_first_view);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingOrGroupEnd, InlineViewingArticleTest, testing::Values(4L, 8L));
 
 TEST_P(RereadCurrentArticleTest, viewingUnhiddenRereadsTheCurrentArticleWithoutDisablingRotation)
 {
