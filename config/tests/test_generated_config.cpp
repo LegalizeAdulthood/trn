@@ -906,35 +906,32 @@ INSTANTIATE_TEST_SUITE_P(RuntimeMetaconfigResidues, ObsoleteHelperTextTest,
                                                           GeneratedArtifactCase{TRN_TEST_GENERATED_SPELLER_FILE}),
                                           testing::ValuesIn(METACONFIG_RESIDUES)));
 
-TEST(GeneratedConfigTest, pnewsDistributionDefaultsMatchHistoricalFallbacks)
-{
-    const std::string name_type = std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\"";
-    const std::string local_dist = std::string{"loc=\""} + TRN_TEST_DEFAULT_LOCAL_DIST + "\"";
-    const std::string organization_dist = std::string{"org=\""} + TRN_TEST_DEFAULT_ORGANIZATION_DIST + "\"";
-    const std::string city_dist = std::string{"city=\""} + TRN_TEST_DEFAULT_CITY_DIST + "\"";
-    const std::string state_dist = std::string{"state=\""} + TRN_TEST_DEFAULT_STATE_DIST + "\"";
-    const std::string multistate_dist = std::string{"multistate=\""} + TRN_TEST_DEFAULT_MULTISTATE_DIST + "\"";
-    const std::string country_dist = std::string{"cntry=\""} + TRN_TEST_DEFAULT_COUNTRY_DIST + "\"";
-    const std::string continent_dist = std::string{"cont=\""} + TRN_TEST_DEFAULT_CONTINENT_DIST + "\"";
+INSTANTIATE_TEST_SUITE_P(
+    DistributionDefaults, GeneratedDefinitionTest,
+    testing::Values(GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"nametype=\""} + TRN_TEST_DEFAULT_NAME_TYPE + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"loc=\""} + TRN_TEST_DEFAULT_LOCAL_DIST + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"org=\""} + TRN_TEST_DEFAULT_ORGANIZATION_DIST + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"city=\""} + TRN_TEST_DEFAULT_CITY_DIST + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"state=\""} + TRN_TEST_DEFAULT_STATE_DIST + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"multistate=\""} + TRN_TEST_DEFAULT_MULTISTATE_DIST + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"cntry=\""} + TRN_TEST_DEFAULT_COUNTRY_DIST + "\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT,
+                                      std::string{"cont=\""} + TRN_TEST_DEFAULT_CONTINENT_DIST + "\""}));
 
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, name_type);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, local_dist);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, organization_dist);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, city_dist);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, state_dist);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, multistate_dist);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, country_dist);
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_DEFAULT_SCRIPT, continent_dist);
-}
-
-TEST(GeneratedConfigTest, pnewsDistributionConfiguredValuesAreEmitted)
-{
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "nametype=\"bsd\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "loc=\"local-test\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "org=\"org-test\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "city=\"city-test\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "state=\"state-test\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "multistate=\"multi-test\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "cntry=\"country-test\"");
-    expect_file_contains(TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "cont=\"continent-test\"");
-}
+INSTANTIATE_TEST_SUITE_P(
+    ConfiguredDistributions, GeneratedDefinitionTest,
+    testing::Values(GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "nametype=\"bsd\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "loc=\"local-test\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "org=\"org-test\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "city=\"city-test\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "state=\"state-test\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "multistate=\"multi-test\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "cntry=\"country-test\""},
+                    GeneratedTextCase{TRN_TEST_PNEWS_DISTRIBUTION_CONFIGURED_SCRIPT, "cont=\"continent-test\""}));
