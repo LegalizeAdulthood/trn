@@ -202,6 +202,31 @@ protected:
     std::string  m_old_decode_filename;
 };
 
+class MultipartDecodeTotalTest : public DecodePieceDirectoryTest
+{
+protected:
+    void SetUp() override;
+    void decode();
+
+    bool        m_result{};
+    std::string m_output;
+};
+
+void MultipartDecodeTotalTest::SetUp()
+{
+    DecodePieceDirectoryTest::SetUp();
+    m_section.m_part = 2;
+    m_section.m_total = 0;
+    set_article_text("second\nend payload\n");
+}
+
+void MultipartDecodeTotalTest::decode()
+{
+    testing::internal::CaptureStdout();
+    m_result = decode_piece(nullptr, {});
+    m_output = testing::internal::GetCapturedStdout();
+}
+
 } // namespace
 
 TEST_F(DecodeSubjectTest, extractsFilenameAndSlashPartTotal)
@@ -277,22 +302,23 @@ TEST_F(DecodePieceDirectoryTest, savesMultipartPieceInPieceDirectory)
     EXPECT_EQ("line one\nline two\n", file_contents(piece));
 }
 
-TEST_F(DecodePieceDirectoryTest, completesMultipartDecodeUsingSavedTotal)
+TEST_F(MultipartDecodeTotalTest, savesInferredTotalFromLastPart)
 {
-    m_section.m_part = 2;
-    m_section.m_total = 0;
-    set_article_text("second\nend payload\n");
+    decode();
 
-    testing::internal::CaptureStdout();
-    const bool        last_part_result = decode_piece(nullptr, {});
-    const std::string last_part_output = testing::internal::GetCapturedStdout();
-
-    ASSERT_TRUE(last_part_result);
-    EXPECT_EQ("Saving part 2 payload_bin", last_part_output);
+    ASSERT_TRUE(m_result);
+    EXPECT_EQ("Saving part 2 payload_bin", m_output);
     const fs::path total_file = find_file_named("CT");
     ASSERT_FALSE(total_file.empty());
     EXPECT_EQ("2\n", file_contents(total_file));
+}
 
+TEST_F(MultipartDecodeTotalTest, assemblesUsingSavedTotalWithTrailingText)
+{
+    decode();
+    ASSERT_TRUE(m_result);
+    const fs::path total_file = find_file_named("CT");
+    ASSERT_FALSE(total_file.empty());
     std::ofstream{total_file} << "2 extra\n";
     m_section.m_part = 1;
     set_article_text("first\n");
@@ -300,12 +326,10 @@ TEST_F(DecodePieceDirectoryTest, completesMultipartDecodeUsingSavedTotal)
     fs::current_path(m_output_dir, error);
     ASSERT_FALSE(error) << error.message();
 
-    testing::internal::CaptureStdout();
-    const bool        result = decode_piece(nullptr, {});
-    const std::string output = testing::internal::GetCapturedStdout();
+    decode();
 
-    EXPECT_TRUE(result);
-    EXPECT_EQ("Saving part 1 payload_binDecoding payload_bin", output);
+    EXPECT_TRUE(m_result);
+    EXPECT_EQ("Saving part 1 payload_binDecoding payload_bin", m_output);
     EXPECT_EQ("first\nsecond\nend payload\n", file_contents(m_output_dir / "payload_bin"));
     EXPECT_FALSE(fs::exists(total_file));
 }
