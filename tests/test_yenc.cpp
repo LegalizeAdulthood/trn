@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 namespace
 {
@@ -39,6 +40,41 @@ protected:
         m_header = GetParam();
     }
 };
+
+constexpr const char *YENC_MULTIPART_HEADER = "=ybegin part=2 total=2 line=128 size=11 name=hello.bin\n";
+
+class YencPartTest : public testing::Test
+{
+protected:
+    std::string m_text;
+};
+
+class MultipartYencPartTest : public YencPartTest
+{
+protected:
+    void SetUp() override;
+};
+
+void MultipartYencPartTest::SetUp()
+{
+    m_text = YENC_MULTIPART_HEADER;
+    m_text += "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n"
+              "=yend size=5 part=2 pcrc32=3a771143 crc32=8bd69e52\n";
+}
+
+using InvalidYencPartInput = std::pair<std::string_view, std::string_view>;
+
+class InvalidYencPartTest : public YencPartTest, public testing::WithParamInterface<InvalidYencPartInput>
+{
+protected:
+    void SetUp() override;
+};
+
+void InvalidYencPartTest::SetUp()
+{
+    m_text = GetParam().first;
+    m_text += GetParam().second;
+}
 
 } // namespace
 
@@ -98,40 +134,46 @@ TEST(YencDecodeTest, decodesCriticalEscapesNulAndHighBytes)
     EXPECT_EQ(std::string("\xD6\xE0\xE3\x13\0\xFF", 6), part->data);
 }
 
-TEST(YencDecodeTest, rejectsCorruptionAndTruncation)
+TEST_P(InvalidYencPartTest, rejectsTheEncodedPart)
 {
-    for (const std::string_view text : {"=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n",
-                                        "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n=yend size=2\n",
-                                        "=ybegin line=128 size=4 name=a\n\x6D\x8B\x9E\n=yend size=3\n",
-                                        "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n=yend size=3 crc32=00000000\n",
-                                        "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n=yend size=3 crc32=xyz\n",
-                                        "=ybegin line=128 size=1 name=a\n=\n=yend size=1\n"})
-    {
-        SCOPED_TRACE(text);
-        EXPECT_FALSE(yenc_decode(text));
-    }
+    const std::optional<YencPart> part = yenc_decode(m_text);
+
+    EXPECT_FALSE(part);
 }
 
-TEST(YencDecodeTest, checksMultipartRangePartNumberAndChecksum)
+INSTANTIATE_TEST_SUITE_P(
+    CorruptionAndTruncation, InvalidYencPartTest,
+    testing::Values(InvalidYencPartInput{"", "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n"},
+                    InvalidYencPartInput{"", "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n=yend size=2\n"},
+                    InvalidYencPartInput{"", "=ybegin line=128 size=4 name=a\n\x6D\x8B\x9E\n=yend size=3\n"},
+                    InvalidYencPartInput{"",
+                                         "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n=yend size=3 crc32=00000000\n"},
+                    InvalidYencPartInput{"", "=ybegin line=128 size=3 name=a\n\x6D\x8B\x9E\n=yend size=3 crc32=xyz\n"},
+                    InvalidYencPartInput{"", "=ybegin line=128 size=1 name=a\n=\n=yend size=1\n"}));
+
+TEST_F(MultipartYencPartTest, checksMultipartRangePartNumberAndChecksum)
 {
-    const std::string header{"=ybegin part=2 total=2 line=128 size=11 name=hello.bin\n"};
-    const std::optional<YencPart> part = yenc_decode(header + "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n"
-                                                              "=yend size=5 part=2 pcrc32=3a771143 crc32=8bd69e52\n");
+    const std::optional<YencPart> part = yenc_decode(m_text);
+
     ASSERT_TRUE(part);
     EXPECT_EQ("world", part->data);
     EXPECT_EQ(7U, part->begin);
     EXPECT_EQ(11U, part->end);
     EXPECT_EQ(0x8BD69E52U, part->crc32);
-    for (const std::string_view body :
-         {"\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n",
-          "=ypart begin=0 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n",
-          "=ypart begin=7 end=12\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n",
-          "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=1 pcrc32=3a771143\n",
-          "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=00000000\n"})
-    {
-        EXPECT_FALSE(yenc_decode(header + std::string{body}));
-    }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    MultipartMetadata, InvalidYencPartTest,
+    testing::Values(
+        InvalidYencPartInput{YENC_MULTIPART_HEADER, "\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n"},
+        InvalidYencPartInput{YENC_MULTIPART_HEADER,
+                             "=ypart begin=0 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n"},
+        InvalidYencPartInput{YENC_MULTIPART_HEADER,
+                             "=ypart begin=7 end=12\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=3a771143\n"},
+        InvalidYencPartInput{YENC_MULTIPART_HEADER,
+                             "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=1 pcrc32=3a771143\n"},
+        InvalidYencPartInput{YENC_MULTIPART_HEADER,
+                             "=ypart begin=7 end=11\n\xA1\x99\x9C\x96\x8E\n=yend size=5 part=2 pcrc32=00000000\n"}));
 
 TEST(YencDecodeTest, crcMatchesPublishedVectorAndIncrementalInput)
 {
