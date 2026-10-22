@@ -145,6 +145,27 @@ protected:
     fs::path                          m_output_dir;
 };
 
+class FoldedHeaderParseTest : public HeaderParseTest
+{
+protected:
+    void SetUp() override;
+
+    static constexpr const char *DATE = "Fri, 21 Nov 1997 09:55:06 -0600";
+};
+
+void FoldedHeaderParseTest::SetUp()
+{
+    HeaderParseTest::SetUp();
+    m_subject.m_str = "Re: first continuation";
+    article_ptr(TEST_ARTICLE)->m_flags |= AF_CACHED;
+    article_ptr(TEST_ARTICLE)->m_subj = &m_subject;
+    write_article(std::string{"From: writer@example.test\n"
+                              "Subject: first\n"
+                              " continuation\n"
+                              "Date: "} +
+                  DATE + "\n\nbody\n");
+}
+
 } // namespace
 
 TEST_P(HeaderNameCaseTest, findsKnownHeaderIgnoringCase)
@@ -203,20 +224,16 @@ TEST_F(HeaderParseTest, preservesHeaderOffsetsAcrossBufferGrowth)
     EXPECT_EQ(subject, fetch_lines(TEST_ARTICLE, SUBJ_LINE));
 }
 
-TEST_F(HeaderParseTest, parsesContinuationAndDateHeader)
+TEST_F(FoldedHeaderParseTest, parsesFoldedSubject)
 {
-    const std::string date = "Fri, 21 Nov 1997 09:55:06 -0600";
-    m_subject.m_str = "Re: first continuation";
-    article_ptr(TEST_ARTICLE)->m_flags |= AF_CACHED;
-    article_ptr(TEST_ARTICLE)->m_subj = &m_subject;
-    write_article("From: writer@example.test\n"
-                  "Subject: first\n"
-                  " continuation\n"
-                  "Date: " +
-                  date + "\n\nbody\n");
-
     ASSERT_TRUE(parse_header(TEST_ARTICLE));
 
     EXPECT_EQ("first\n continuation", fetch_lines(TEST_ARTICLE, SUBJ_LINE));
-    EXPECT_EQ(parsedate(date.c_str()), article_ptr(TEST_ARTICLE)->m_date);
+}
+
+TEST_F(FoldedHeaderParseTest, interpretsDateHeader)
+{
+    ASSERT_TRUE(parse_header(TEST_ARTICLE));
+
+    EXPECT_EQ(parsedate(DATE), article_ptr(TEST_ARTICLE)->m_date);
 }
