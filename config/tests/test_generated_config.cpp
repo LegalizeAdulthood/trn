@@ -9,6 +9,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 namespace
@@ -69,55 +70,68 @@ void GeneratedArtifactTest::SetUp()
     m_file.open(GetParam().filename, std::ios::binary);
 }
 
-void expect_helper_has_no_metaconfig_residue(const char *filename)
-{
-    static constexpr std::string_view residues[] = {
-        "@SHELL_START@",
-        "@DIFF_PROGRAM@",
-        "@ED_PROGRAM@",
-        "@ISPELL_PROGRAM@",
-        "@ISPELL_OPTIONS@",
-        "@SPELL_PROGRAM@",
-        "@PAGER@",
-        "@NEWS_LIB@",
-        "@PRIVATE_LIB@",
-        "@BIN_DIR@",
-        "@USE_INEWS@",
-        "@DEFAULT_EDITOR@",
-        "@NAME_TYPE@",
-        "@ORG_NAME@",
-        "@PNEWS_ORG_NAME@",
-        "@POSTING_ORG_NAME@",
-        "@LOCAL_DIST@",
-        "@ORGANIZATION_DIST@",
-        "@MULTISTATE_DIST@",
-        "@CITY_DIST@",
-        "@STATE_DIST@",
-        "@COUNTRY_DIST@",
-        "@CONTINENT_DIST@",
-        "spitshell",
-        "GROK",
-        "NO!SUBS",
-        "eunicefix",
-        "nidump",
-        "ypmatch",
-        "${mailer-",
-        "$test ",
-        "$sed ",
-        "$echo ",
-        "$cat ",
-        "$grep ",
-        "$egrep ",
-        "$cp ",
-        "$rm ",
-        "$sleep ",
-        "$who ",
-    };
+constexpr std::string_view METACONFIG_RESIDUES[] = {
+    "@SHELL_START@",
+    "@DIFF_PROGRAM@",
+    "@ED_PROGRAM@",
+    "@ISPELL_PROGRAM@",
+    "@ISPELL_OPTIONS@",
+    "@SPELL_PROGRAM@",
+    "@PAGER@",
+    "@NEWS_LIB@",
+    "@PRIVATE_LIB@",
+    "@BIN_DIR@",
+    "@USE_INEWS@",
+    "@DEFAULT_EDITOR@",
+    "@NAME_TYPE@",
+    "@ORG_NAME@",
+    "@PNEWS_ORG_NAME@",
+    "@POSTING_ORG_NAME@",
+    "@LOCAL_DIST@",
+    "@ORGANIZATION_DIST@",
+    "@MULTISTATE_DIST@",
+    "@CITY_DIST@",
+    "@STATE_DIST@",
+    "@COUNTRY_DIST@",
+    "@CONTINENT_DIST@",
+    "spitshell",
+    "GROK",
+    "NO!SUBS",
+    "eunicefix",
+    "nidump",
+    "ypmatch",
+    "${mailer-",
+    "$test ",
+    "$sed ",
+    "$echo ",
+    "$cat ",
+    "$grep ",
+    "$egrep ",
+    "$cp ",
+    "$rm ",
+    "$sleep ",
+    "$who ",
+};
 
-    for (const std::string_view residue : residues)
+using ObsoleteHelperCase = std::tuple<GeneratedArtifactCase, std::string_view>;
+
+class ObsoleteHelperTextTest : public testing::TestWithParam<ObsoleteHelperCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_contents;
+};
+
+void ObsoleteHelperTextTest::SetUp()
+{
+    const GeneratedArtifactCase &artifact = std::get<0>(GetParam());
+    if (!artifact.available)
     {
-        expect_file_not_contains(filename, residue);
+        GTEST_SKIP() << "This artifact is not generated on this platform.";
     }
+    m_contents = file_contents(artifact.filename);
+    ASSERT_FALSE(m_contents.empty()) << artifact.filename;
 }
 
 struct GeneratedTextCase
@@ -865,29 +879,32 @@ INSTANTIATE_TEST_SUITE_P(
         GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "ed=/test/bin/ed"},
         GeneratedTextCase{TRN_TEST_HELPER_TOOLS_CONFIGURED_SCRIPT, "spell=\"${SPELL_PROGRAM-/test/bin/spell}\""}));
 
-TEST(GeneratedConfigTest, helperFilesDoNotContainOldToolVariables)
+TEST_P(ObsoleteHelperTextTest, omitsTheObsoleteText)
 {
-    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@SHELL_START@");
-    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@DIFF_PROGRAM@");
-    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ED_PROGRAM@");
-    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ISPELL_PROGRAM@");
-    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@ISPELL_OPTIONS@");
-    expect_file_not_contains(TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT, "@SPELL_PROGRAM@");
-    expect_file_not_contains(TRN_TEST_GENERATED_MBOX_SAVER_FILE, "$sed");
+    const std::size_t position = m_contents.find(std::get<1>(GetParam()));
+
+    EXPECT_EQ(std::string::npos, position) << std::get<0>(GetParam()).filename;
 }
 
-TEST(GeneratedConfigTest, runtimeHelperFilesDoNotContainMetaconfigResidue)
-{
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_MBOX_SAVER_FILE);
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_NORM_SAVER_FILE);
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_FILE);
-    if (generated_pnews_header())
-    {
-        expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_PNEWS_HEADER_FILE);
-    }
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_RNMAIL_FILE);
-    expect_helper_has_no_metaconfig_residue(TRN_TEST_GENERATED_SPELLER_FILE);
-}
+INSTANTIATE_TEST_SUITE_P(
+    OldToolVariables, ObsoleteHelperTextTest,
+    testing::Values(ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT}, "@SHELL_START@"},
+                    ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT}, "@DIFF_PROGRAM@"},
+                    ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT}, "@ED_PROGRAM@"},
+                    ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT}, "@ISPELL_PROGRAM@"},
+                    ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT}, "@ISPELL_OPTIONS@"},
+                    ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_HELPER_TOOLS_DEFAULT_SCRIPT}, "@SPELL_PROGRAM@"},
+                    ObsoleteHelperCase{GeneratedArtifactCase{TRN_TEST_GENERATED_MBOX_SAVER_FILE}, "$sed"}));
+
+INSTANTIATE_TEST_SUITE_P(RuntimeMetaconfigResidues, ObsoleteHelperTextTest,
+                         testing::Combine(testing::Values(GeneratedArtifactCase{TRN_TEST_GENERATED_MBOX_SAVER_FILE},
+                                                          GeneratedArtifactCase{TRN_TEST_GENERATED_NORM_SAVER_FILE},
+                                                          GeneratedArtifactCase{TRN_TEST_GENERATED_PNEWS_FILE},
+                                                          GeneratedArtifactCase{TRN_TEST_GENERATED_PNEWS_HEADER_FILE,
+                                                                                generated_pnews_header()},
+                                                          GeneratedArtifactCase{TRN_TEST_GENERATED_RNMAIL_FILE},
+                                                          GeneratedArtifactCase{TRN_TEST_GENERATED_SPELLER_FILE}),
+                                          testing::ValuesIn(METACONFIG_RESIDUES)));
 
 TEST(GeneratedConfigTest, pnewsDistributionDefaultsMatchHistoricalFallbacks)
 {
