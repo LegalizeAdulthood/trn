@@ -23,6 +23,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 using namespace testing;
 
@@ -172,47 +173,48 @@ TEST(MimeDescriptionTest, describesTypeAndNormalizedFilename)
 namespace
 {
 
-MimeEncoding parse_encoding_for_test(std::string_view text)
+using MimeEncodingCase = std::pair<std::string_view, MimeEncoding>;
+
+class MimeParseEncodingTest : public TestWithParam<MimeEncodingCase>
 {
-    MimeSection section{};
-    section.m_encoding = MENCODE_UNHANDLED;
+protected:
+    void SetUp() override
+    {
+        m_section.m_encoding = MENCODE_UNHANDLED;
+    }
 
-    section.mime_parse_encoding(text);
-
-    return section.m_encoding;
-}
+    MimeSection m_section{};
+};
 
 } // namespace
 
-TEST(MimeParseEncodingTest, parsesNoEncodingValues)
+TEST_P(MimeParseEncodingTest, parsesOneEncodingValue)
 {
-    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test(""));
-    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test(" \t"));
-    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test("7bit"));
-    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test("8BIT"));
-    EXPECT_EQ(MENCODE_NONE, parse_encoding_for_test("binary"));
+    const MimeEncodingCase &input = GetParam();
+
+    m_section.mime_parse_encoding(input.first);
+
+    EXPECT_EQ(input.second, m_section.m_encoding);
 }
 
-TEST(MimeParseEncodingTest, parsesTransferEncodings)
-{
-    EXPECT_EQ(MENCODE_QPRINT, parse_encoding_for_test("quoted-printable"));
-    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64"));
-    EXPECT_EQ(MENCODE_UUE, parse_encoding_for_test("x-uue"));
-    EXPECT_EQ(MENCODE_UUE, parse_encoding_for_test("x-uuencode"));
-}
+INSTANTIATE_TEST_SUITE_P(NoEncoding, MimeParseEncodingTest,
+                         Values(MimeEncodingCase{"", MENCODE_NONE}, MimeEncodingCase{" \t", MENCODE_NONE},
+                                MimeEncodingCase{"7bit", MENCODE_NONE}, MimeEncodingCase{"8BIT", MENCODE_NONE},
+                                MimeEncodingCase{"binary", MENCODE_NONE}));
 
-TEST(MimeParseEncodingTest, permitsTokenTerminators)
-{
-    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64; charset=utf-8"));
-    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64 (comment)"));
-    EXPECT_EQ(MENCODE_BASE64, parse_encoding_for_test("base64 extra"));
-}
+INSTANTIATE_TEST_SUITE_P(TransferEncodings, MimeParseEncodingTest,
+                         Values(MimeEncodingCase{"quoted-printable", MENCODE_QPRINT},
+                                MimeEncodingCase{"base64", MENCODE_BASE64}, MimeEncodingCase{"x-uue", MENCODE_UUE},
+                                MimeEncodingCase{"x-uuencode", MENCODE_UUE}));
 
-TEST(MimeParseEncodingTest, rejectsUnknownEncodingsAndSuffixes)
-{
-    EXPECT_EQ(MENCODE_UNHANDLED, parse_encoding_for_test("rot13"));
-    EXPECT_EQ(MENCODE_UNHANDLED, parse_encoding_for_test("base64x"));
-}
+INSTANTIATE_TEST_SUITE_P(TokenTerminators, MimeParseEncodingTest,
+                         Values(MimeEncodingCase{"base64; charset=utf-8", MENCODE_BASE64},
+                                MimeEncodingCase{"base64 (comment)", MENCODE_BASE64},
+                                MimeEncodingCase{"base64 extra", MENCODE_BASE64}));
+
+INSTANTIATE_TEST_SUITE_P(UnknownAndInvalidSuffixes, MimeParseEncodingTest,
+                         Values(MimeEncodingCase{"rot13", MENCODE_UNHANDLED},
+                                MimeEncodingCase{"base64x", MENCODE_UNHANDLED}));
 
 namespace
 {
