@@ -508,6 +508,40 @@ void GroupUnreadArticleTest::TearDown()
     UnreadScopeArticleTest::TearDown();
 }
 
+class GroupUnreadCancelArticleTest : public GroupUnreadArticleTest,
+                                     public testing::WithParamInterface<std::tuple<char, long>>
+{
+protected:
+    void SetUp() override;
+
+    ArticleNum m_current{};
+};
+
+void GroupUnreadCancelArticleTest::SetUp()
+{
+    GroupUnreadArticleTest::SetUp();
+    set_scope({AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS | AF_YANK_BACK,
+               AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
+              3);
+    g_selected_only = true;
+    g_selected_subj_cnt = 2;
+    g_obj_count = ArticleNum{2};
+    g_dm_count = 1;
+    g_first_art = ArticleNum{2};
+    g_recent_art = ArticleNum{6};
+    g_recent_artp = article_ptr(g_recent_art);
+    g_parsed_art = ArticleNum{3};
+    g_reread = true;
+    g_force_last = true;
+    m_subjects[0].m_flags |= SF_SEL;
+    m_subjects[2].m_flags |= SF_SEL;
+    m_subjects[0].m_misc = 1;
+    m_subjects[2].m_misc = 1;
+    m_current = ArticleNum{std::get<1>(GetParam())};
+    g_art = m_current;
+    g_artp = m_current == ArticleNum{3} ? article_ptr(m_current) : nullptr;
+}
+
 class ThreadKillArticleTest : public GroupUnreadArticleTest
 {
 protected:
@@ -10202,64 +10236,38 @@ TEST_F(GroupUnreadArticleTest, leavesEmptyGroupEmpty)
     EXPECT_EQ(nullptr, g_curr_artp);
 }
 
-TEST_F(GroupUnreadArticleTest, cancellationPreservesArticleStateAndCountsWithOrWithoutCurrentArticle)
+TEST_P(GroupUnreadCancelArticleTest, cancellationPreservesArticleStateAndCounts)
 {
-    set_scope({AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS | AF_YANK_BACK,
-               AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS},
-              3);
-    g_selected_only = true;
-    g_selected_subj_cnt = 2;
-    g_obj_count = ArticleNum{2};
-    g_dm_count = 1;
-    g_first_art = ArticleNum{2};
-    g_recent_art = ArticleNum{6};
-    g_recent_artp = article_ptr(g_recent_art);
-    g_parsed_art = ArticleNum{3};
-    g_reread = true;
-    g_force_last = true;
-    m_subjects[0].m_flags |= SF_SEL;
-    m_subjects[2].m_flags |= SF_SEL;
-    m_subjects[0].m_misc = 1;
-    m_subjects[2].m_misc = 1;
-    struct PromptCase
-    {
-        long current;
-        char answer;
-    };
-    for (const PromptCase test_case : {PromptCase{3, 'n'}, PromptCase{3, 'q'}, PromptCase{8, 'n'}, PromptCase{8, 'q'}})
-    {
-        SCOPED_TRACE(testing::Message() << test_case.answer << " at " << test_case.current);
-        g_art = ArticleNum{test_case.current};
-        g_artp = test_case.current == 3 ? article_ptr(g_art) : nullptr;
+    mark_unread(std::get<0>(GetParam()), AS_ASK);
 
-        mark_unread(test_case.answer, AS_ASK);
-
-        expect_flags({AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS | AF_YANK_BACK,
-                      AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
-        EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
-        EXPECT_EQ(ArticleNum{2}, g_obj_count);
-        EXPECT_EQ(1, g_dm_count);
-        EXPECT_EQ(ArticleUnread{2}, g_selected_count);
-        EXPECT_EQ(2, g_selected_subj_cnt);
-        EXPECT_TRUE(g_selected_only);
-        EXPECT_EQ(ArticleNum{2}, g_first_art);
-        EXPECT_EQ(ArticleNum{test_case.current}, g_art);
-        EXPECT_EQ(test_case.current == 3 ? article_ptr(g_art) : nullptr, g_artp);
-        EXPECT_EQ(ArticleNum{3}, g_curr_art);
-        EXPECT_EQ(article_ptr(g_curr_art), g_curr_artp);
-        EXPECT_EQ(ArticleNum{6}, g_recent_art);
-        EXPECT_EQ(article_ptr(g_recent_art), g_recent_artp);
-        EXPECT_EQ(ArticleNum{3}, g_parsed_art);
-        EXPECT_TRUE(g_reread);
-        EXPECT_TRUE(g_force_last);
-        EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
-        EXPECT_EQ(SF_NONE, m_subjects[1].m_flags);
-        EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
-        EXPECT_EQ(1, m_subjects[0].m_misc);
-        EXPECT_EQ(0, m_subjects[1].m_misc);
-        EXPECT_EQ(1, m_subjects[2].m_misc);
-    }
+    expect_flags({AF_EXISTS | AF_DEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_NONE, AF_EXISTS | AF_YANK_BACK,
+                  AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
+    EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
+    EXPECT_EQ(ArticleNum{2}, g_obj_count);
+    EXPECT_EQ(1, g_dm_count);
+    EXPECT_EQ(ArticleUnread{2}, g_selected_count);
+    EXPECT_EQ(2, g_selected_subj_cnt);
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(ArticleNum{2}, g_first_art);
+    EXPECT_EQ(m_current, g_art);
+    EXPECT_EQ(m_current == ArticleNum{3} ? article_ptr(g_art) : nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(article_ptr(g_curr_art), g_curr_artp);
+    EXPECT_EQ(ArticleNum{6}, g_recent_art);
+    EXPECT_EQ(article_ptr(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_TRUE(g_reread);
+    EXPECT_TRUE(g_force_last);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
+    EXPECT_EQ(SF_NONE, m_subjects[1].m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
+    EXPECT_EQ(1, m_subjects[0].m_misc);
+    EXPECT_EQ(0, m_subjects[1].m_misc);
+    EXPECT_EQ(1, m_subjects[2].m_misc);
 }
+
+INSTANTIATE_TEST_SUITE_P(AnswerAndPosition, GroupUnreadCancelArticleTest,
+                         testing::Combine(testing::Values('n', 'q'), testing::Values(3L, 8L)));
 
 TEST_F(GroupUnreadArticleTest, helpThenCancelPreservesReadState)
 {
