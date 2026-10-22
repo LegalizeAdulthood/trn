@@ -14,9 +14,11 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <vector>
 
 namespace
 {
@@ -136,6 +138,39 @@ void RemoteModeratorFallbackTest::SetUp()
     {
         m_source.m_nntp_link.capabilities.available = true;
         m_source.m_nntp_link.capabilities.add("LIST ACTIVE");
+    }
+}
+
+struct ModeratorListCase
+{
+    const char              *name;
+    std::vector<std::string> lines;
+    std::string              expected;
+};
+
+void PrintTo(const ModeratorListCase &value, std::ostream *stream)
+{
+    *stream << value.name;
+}
+
+class ModeratorListTest : public ModeratorSourceTest, public testing::WithParamInterface<ModeratorListCase>
+{
+protected:
+    void SetUp() override;
+
+    std::vector<std::string> m_lines;
+};
+
+void ModeratorListTest::SetUp()
+{
+    ModeratorSourceTest::SetUp();
+    remote();
+    m_lines = GetParam().lines;
+    testing::InSequence sequence;
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST MODERATORS"), testing::_));
+    for (const std::string &line : m_lines)
+    {
+        EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return(line));
     }
 }
 
@@ -270,21 +305,20 @@ TEST_F(ModeratorSourceTest, incompleteRemoteListDoesNotPublishMatchingPrefix)
     EXPECT_EQ(nullptr, g_data_source);
 }
 
-TEST_F(ModeratorSourceTest, consumesLongRecordsAndEmptyLists)
+TEST_P(ModeratorListTest, consumesTheListAndReturnsItsMatchingRecipient)
 {
-    remote();
-    EXPECT_CALL(*m_connection, write_line(testing::StrEq("LIST MODERATORS"), testing::_)).Times(2);
-    EXPECT_CALL(*m_connection, read_line(testing::_))
-        .WillOnce(testing::Return("215 list follows"))
-        .WillOnce(testing::Return(std::string(900, 'x') + ":ignored@example.test"))
-        .WillOnce(testing::Return("comp.*:found@example.test"))
-        .WillOnce(testing::Return("."))
-        .WillOnce(testing::Return("215 empty list follows"))
-        .WillOnce(testing::Return("."));
+    const std::string recipient = m_source.find_moderator("comp.test");
 
-    EXPECT_EQ("found@example.test", m_source.find_moderator("comp.test"));
-    EXPECT_TRUE(m_source.find_moderator("comp.test").empty());
+    EXPECT_EQ(GetParam().expected, recipient);
 }
+
+INSTANTIATE_TEST_SUITE_P(LongRecordAndEmptyList, ModeratorListTest,
+                         testing::Values(ModeratorListCase{"LongRecord",
+                                                           {"215 list follows",
+                                                            std::string(900, 'x') + ":ignored@example.test",
+                                                            "comp.*:found@example.test", "."},
+                                                           "found@example.test"},
+                                         ModeratorListCase{"EmptyList", {"215 empty list follows", "."}, ""}));
 
 TEST_F(ModeratorSourceTest, disconnectedRemoteFallsBack)
 {
