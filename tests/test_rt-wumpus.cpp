@@ -28,6 +28,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <ostream>
 #include <string>
 #include <system_error>
 #include <utility>
@@ -148,6 +149,62 @@ protected:
     std::string_view m_old_tc_bc;
     int         m_old_fire_is_out{};
     bool        m_old_erase_screen{};
+};
+
+class UnderPrintRenderingTest : public TreeRenderingTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string captured_output();
+
+private:
+    std::string m_old_input;
+    std::string m_old_output;
+    bool        m_capturing{};
+};
+
+void UnderPrintRenderingTest::SetUp()
+{
+    TreeRenderingTest::SetUp();
+    m_old_input = input_charset_name();
+    m_old_output = output_charset_name();
+    utf_init("Latin1", "Latin1");
+    g_tc_UC = "<uc>";
+    testing::internal::CaptureStdout();
+    m_capturing = true;
+}
+
+void UnderPrintRenderingTest::TearDown()
+{
+    if (m_capturing)
+    {
+        testing::internal::GetCapturedStdout();
+    }
+    utf_init(m_old_input, m_old_output);
+    TreeRenderingTest::TearDown();
+}
+
+std::string UnderPrintRenderingTest::captured_output()
+{
+    m_capturing = false;
+    return testing::internal::GetCapturedStdout();
+}
+
+struct UnderPrintScalarCase
+{
+    const char      *name;
+    std::string_view input;
+    std::string_view expected;
+};
+
+void PrintTo(const UnderPrintScalarCase &value, std::ostream *stream)
+{
+    *stream << value.name;
+}
+
+class UnderPrintScalarTest : public UnderPrintRenderingTest, public testing::WithParamInterface<UnderPrintScalarCase>
+{
 };
 
 class ThreadTreeArticleTest : public TreeRenderingTest
@@ -617,21 +674,23 @@ TEST_F(TreeRenderingTest, underPrintPreservesIssue30SubjectAndRestoresAttributes
     EXPECT_EQ("\x1B[4m" + std::string{UNDERLINE_DECODED_SUBJECT} + "\x1B[24mAfter", output);
 }
 
-TEST_F(TreeRenderingTest, underPrintHandlesWideCombiningAndMalformedScalars)
+TEST_P(UnderPrintScalarTest, underlinesWholeScalarsAndReplacesMalformedInput)
 {
-    g_tc_UC = "<uc>";
-    const std::string old_input{input_charset_name()};
-    const std::string old_output{output_charset_name()};
-    utf_init("Latin1", "Latin1");
+    under_print(GetParam().input);
+    const std::string output = captured_output();
 
-    testing::internal::CaptureStdout();
-    under_print("\xE7\x95\x8C"
-                "e\xCC\x81\xFFZ");
-    const std::string output = testing::internal::GetCapturedStdout();
-    utf_init(old_input, old_output);
-
-    EXPECT_EQ("\xE7\x95\x8C\b\b<uc><uc>e\b<uc>\xCC\x81\xEF\xBF\xBD\b<uc>Z\b<uc>", output);
+    EXPECT_EQ(GetParam().expected, output);
 }
+
+INSTANTIATE_TEST_SUITE_P(ScalarKinds, UnderPrintScalarTest,
+                         testing::Values(UnderPrintScalarCase{"Wide", "\xE7\x95\x8C", "\xE7\x95\x8C\b\b<uc><uc>"},
+                                         UnderPrintScalarCase{"Combining", "e\xCC\x81", "e\b<uc>\xCC\x81"},
+                                         UnderPrintScalarCase{"Malformed", "\xFFZ", "\xEF\xBF\xBD\b<uc>Z\b<uc>"},
+                                         UnderPrintScalarCase{
+                                             "Mixed",
+                                             "\xE7\x95\x8C"
+                                             "e\xCC\x81\xFFZ",
+                                             "\xE7\x95\x8C\b\b<uc><uc>e\b<uc>\xCC\x81\xEF\xBF\xBD\b<uc>Z\b<uc>"}));
 
 TEST_F(TreeRenderingTest, underPrintDisplaysControlsWithoutExecutingThem)
 {
