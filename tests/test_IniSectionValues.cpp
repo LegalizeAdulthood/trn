@@ -27,6 +27,24 @@ IniSchema make_schema()
                      }};
 }
 
+class ResetSectionValuesTest : public testing::Test
+{
+protected:
+    void SetUp() override;
+
+    const IniSchema  m_schema{make_schema()};
+    std::string      m_alpha{"alpha"};
+    std::string      m_beta{"beta"};
+    IniSectionValues m_values;
+};
+
+void ResetSectionValuesTest::SetUp()
+{
+    const IniField *alpha_field = m_schema.find("Alpha Key");
+    ASSERT_NE(nullptr, alpha_field);
+    ASSERT_TRUE(m_values.set(*alpha_field, m_alpha));
+}
+
 } // namespace
 
 TEST(IniSectionValuesTest, storesOwnedValuesByFieldId)
@@ -49,29 +67,28 @@ TEST(IniSectionValuesTest, storesOwnedValuesByFieldId)
     EXPECT_FALSE(values.value(TF_BETA).has_value());
 }
 
-TEST(IniSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
+TEST_F(ResetSectionValuesTest, resetClearsValuesWithoutTouchingInputText)
 {
-    const IniSchema  schema = make_schema();
-    std::string      alpha{"alpha"};
-    std::string      beta{"beta"};
-    IniSectionValues values;
-    const IniField  *alpha_field = schema.find("Alpha Key");
-    const IniField  *beta_field = schema.find("Beta Key");
+    m_values.reset();
 
-    ASSERT_NE(nullptr, alpha_field);
+    EXPECT_EQ(std::string_view{"alpha"}, m_alpha);
+    EXPECT_FALSE(m_values.value(TF_ALPHA).has_value());
+    EXPECT_EQ(0U, m_values.size());
+}
+
+TEST_F(ResetSectionValuesTest, storesADifferentOwnedValueAfterReset)
+{
+    m_values.reset();
+    const IniField *beta_field = m_schema.find("Beta Key");
     ASSERT_NE(nullptr, beta_field);
-    ASSERT_TRUE(values.set(*alpha_field, alpha));
-    values.reset();
 
-    EXPECT_EQ(std::string_view{"alpha"}, alpha);
-    EXPECT_FALSE(values.value(TF_ALPHA).has_value());
-    EXPECT_EQ(0U, values.size());
+    const bool stored = m_values.set(*beta_field, m_beta);
 
-    ASSERT_TRUE(values.set(*beta_field, beta));
-    const std::optional<std::string_view> value = values.value(TF_BETA);
+    EXPECT_TRUE(stored);
+    const std::optional<std::string_view> value = m_values.value(TF_BETA);
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(std::string_view{"beta"}, *value);
-    EXPECT_NE(beta.data(), value->data());
+    EXPECT_NE(m_beta.data(), value->data());
 }
 
 TEST(IniSectionValuesTest, displayGroupsAreNotValues)
