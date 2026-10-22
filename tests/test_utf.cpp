@@ -591,41 +591,121 @@ TEST(CharSubstTest, unicodeProfileMapsPunctuationAndLatinScalars)
                                                        'u'));
 }
 
-TEST(UnicodeSubstitutionTest, userMappingsOverlayBuiltinsOnlyInUnicodeMode)
+class UnicodeProfileConfigTest : public Test
 {
-    UnicodeSubstitutionProfile profile;
-    ASSERT_TRUE(profile.configure(
-        IniSection{"unicode substitutions", {}, "U+1F60A = ':)'\nU+2019 = first\nU+00C4 = custom\nU+2019 = last\n"}));
-    const std::string text{"\xE2\x80\x99\xE2\x80\x94\xC3\x84\xF0\x9F\x98\x8A"};
-    EXPECT_EQ("last---custom:)", CharSubstitution('u', profile).substitute(text));
-    EXPECT_EQ(text, CharSubstitution('p', profile).substitute(text));
-    EXPECT_EQ("\xE2\x80\x99\xE2\x80\x94"
-              "Ae\xF0\x9F\x98\x8A",
-              CharSubstitution('a', profile).substitute(text));
+protected:
+    void configure(std::string_view body);
+
+    std::string                m_body;
+    UnicodeSubstitutionProfile m_profile;
+};
+
+void UnicodeProfileConfigTest::configure(std::string_view body)
+{
+    m_body = body;
+    ASSERT_TRUE(m_profile.configure(IniSection{"unicode substitutions", {}, m_body}));
 }
 
-TEST(UnicodeSubstitutionTest, decodesReplacementEscapesAndAllowsDeletionAndUtf8)
+using UnicodeOverlayCase = std::tuple<char, std::string_view>;
+
+class UnicodeOverlayTest : public UnicodeProfileConfigTest, public WithParamInterface<UnicodeOverlayCase>
 {
-    UnicodeSubstitutionProfile profile;
-    ASSERT_TRUE(profile.configure(IniSection{
-        "unicode substitutions", {}, "U+2019 = \"\\t\\n\\r\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xC3\xA9\n"}));
-    EXPECT_EQ("\t\n\r\\\"\xC3\xA9",
-              CharSubstitution('u', profile).substitute("\xE2\x80\x99\xE2\x80\x94\xF0\x9F\x98\x8A"));
+protected:
+    void SetUp() override;
+
+    const std::string m_text{"\xE2\x80\x99\xE2\x80\x94\xC3\x84\xF0\x9F\x98\x8A"};
+};
+
+void UnicodeOverlayTest::SetUp()
+{
+    ASSERT_NO_FATAL_FAILURE(configure("U+1F60A = ':)'\nU+2019 = last\nU+00C4 = custom\n"));
 }
 
-TEST(UnicodeSubstitutionTest, rejectsInvalidSectionsWithoutChangingPreviousMappings)
+TEST_P(UnicodeOverlayTest, overlaysBuiltinsOnlyInUnicodeMode)
 {
-    UnicodeSubstitutionProfile profile;
-    ASSERT_TRUE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = old\n"}));
-    for (const std::string_view invalid : {"0x91", "U+123", "U+1234567", "U+201G", "U+D800", "U+110000"})
-    {
-        const std::string body = "U+2019 = new\n" + std::string{invalid} + " = bad\n";
-        EXPECT_FALSE(profile.configure(IniSection{"unicode substitutions", {}, body})) << invalid;
-        EXPECT_EQ("old", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
-    }
-    EXPECT_FALSE(profile.configure(IniSection{"unicode substitutions", {}, "U+2019 = \xFF\n"}));
-    EXPECT_EQ("old", CharSubstitution('u', profile).substitute("\xE2\x80\x99"));
+    const std::string transformed = CharSubstitution(std::get<0>(GetParam()), m_profile).substitute(m_text);
+
+    EXPECT_EQ(std::get<1>(GetParam()), transformed);
 }
+
+INSTANTIATE_TEST_SUITE_P(UnicodePlainAndAscii, UnicodeOverlayTest,
+                         Values(UnicodeOverlayCase{'u', "last---custom:)"},
+                                UnicodeOverlayCase{'p', "\xE2\x80\x99\xE2\x80\x94\xC3\x84\xF0\x9F\x98\x8A"},
+                                UnicodeOverlayCase{'a', "\xE2\x80\x99\xE2\x80\x94"
+                                                        "Ae\xF0\x9F\x98\x8A"}));
+
+TEST_F(UnicodeProfileConfigTest, theLastDuplicateMappingWins)
+{
+    ASSERT_NO_FATAL_FAILURE(configure("U+2019 = first\nU+2019 = last\n"));
+
+    const std::string transformed = CharSubstitution('u', m_profile).substitute("\xE2\x80\x99");
+
+    EXPECT_EQ("last", transformed);
+}
+
+class EscapedReplacementProfileTest : public UnicodeProfileConfigTest
+{
+protected:
+    void SetUp() override;
+};
+
+void EscapedReplacementProfileTest::SetUp()
+{
+    ASSERT_NO_FATAL_FAILURE(configure("U+2019 = \"\\t\\n\\r\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xC3\xA9\n"));
+}
+
+using UnicodeReplacementCase = std::tuple<std::string_view, std::string_view>;
+
+class UnicodeReplacementTest : public EscapedReplacementProfileTest, public WithParamInterface<UnicodeReplacementCase>
+{
+};
+
+TEST_P(UnicodeReplacementTest, appliesTheConfiguredReplacement)
+{
+    const std::string transformed = CharSubstitution('u', m_profile).substitute(std::get<0>(GetParam()));
+
+    EXPECT_EQ(std::get<1>(GetParam()), transformed);
+}
+
+INSTANTIATE_TEST_SUITE_P(EscapesDeletionAndUtf8, UnicodeReplacementTest,
+                         Values(UnicodeReplacementCase{"\xE2\x80\x99", "\t\n\r\\\""},
+                                UnicodeReplacementCase{"\xE2\x80\x94", ""},
+                                UnicodeReplacementCase{"\xF0\x9F\x98\x8A", "\xC3\xA9"}));
+
+TEST_F(EscapedReplacementProfileTest, replacementNewlinesDoNotStopFollowingInput)
+{
+    const std::string transformed =
+        CharSubstitution('u', m_profile).substitute("\xE2\x80\x99\xE2\x80\x94\xF0\x9F\x98\x8A");
+
+    EXPECT_EQ("\t\n\r\\\"\xC3\xA9", transformed);
+}
+
+class InvalidUnicodeSectionTest : public UnicodeProfileConfigTest, public WithParamInterface<std::string_view>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_invalid_body;
+};
+
+void InvalidUnicodeSectionTest::SetUp()
+{
+    ASSERT_NO_FATAL_FAILURE(configure("U+2019 = old\n"));
+    m_invalid_body = GetParam();
+}
+
+TEST_P(InvalidUnicodeSectionTest, rejectsTheSectionWithoutChangingPreviousMappings)
+{
+    const bool configured = m_profile.configure(IniSection{"unicode substitutions", {}, m_invalid_body});
+
+    EXPECT_FALSE(configured);
+    EXPECT_EQ("old", CharSubstitution('u', m_profile).substitute("\xE2\x80\x99"));
+}
+
+INSTANTIATE_TEST_SUITE_P(InvalidKeysAndReplacement, InvalidUnicodeSectionTest,
+                         Values("U+2019 = new\n0x91 = bad\n", "U+2019 = new\nU+123 = bad\n",
+                                "U+2019 = new\nU+1234567 = bad\n", "U+2019 = new\nU+201G = bad\n",
+                                "U+2019 = new\nU+D800 = bad\n", "U+2019 = new\nU+110000 = bad\n", "U+2019 = \xFF\n"));
 
 TEST(UnicodeSubstitutionTest, instancesOwnTheirMappingSnapshot)
 {
@@ -679,21 +759,39 @@ void PrintTo(const UnicodeAsciiCase &value, std::ostream *out)
     *out << value.name;
 }
 
-class UnicodeAsciiMappingTest : public TestWithParam<UnicodeAsciiCase>
-{
-};
-} // namespace
+using UnicodeAsciiModeCase = std::tuple<UnicodeAsciiCase, char>;
 
-TEST_P(UnicodeAsciiMappingTest, shipsIssueMappingWithoutChangingPlainText)
+class UnicodeAsciiMappingTest : public UnicodeProfileConfigTest, public WithParamInterface<UnicodeAsciiModeCase>
 {
-    const UnicodeAsciiCase &value = GetParam();
-    const std::string       input = "before" + std::string{value.utf8} + "after";
-    EXPECT_EQ("before" + std::string{value.ascii} + "after", CharSubstitution('u', {}).substitute(input));
-    EXPECT_EQ(input, CharSubstitution('p', {}).substitute(input));
+protected:
+    void SetUp() override;
+
+    std::string m_input;
+    std::string m_expected;
+};
+
+void UnicodeAsciiMappingTest::SetUp()
+{
+    const auto &[value, mode] = GetParam();
+    m_input = "before" + std::string{value.utf8} + "after";
+    m_expected = "before" + std::string{mode == 'u' ? value.ascii : value.utf8} + "after";
 }
 
-INSTANTIATE_TEST_SUITE_P(Issue34, UnicodeAsciiMappingTest, ValuesIn(UNICODE_ASCII_CASES),
-                         [](const TestParamInfo<UnicodeAsciiCase> &info) { return info.param.name; });
+} // namespace
+
+TEST_P(UnicodeAsciiMappingTest, substitutesTheScalarForTheConfiguredMode)
+{
+    const std::string transformed = CharSubstitution(std::get<1>(GetParam()), m_profile).substitute(m_input);
+
+    EXPECT_EQ(m_expected, transformed);
+}
+
+INSTANTIATE_TEST_SUITE_P(Issue34, UnicodeAsciiMappingTest, Combine(ValuesIn(UNICODE_ASCII_CASES), Values('u', 'p')),
+                         [](const TestParamInfo<UnicodeAsciiModeCase> &info)
+                         {
+                             return std::string{std::get<0>(info.param).name} +
+                                    (std::get<1>(info.param) == 'u' ? "Unicode" : "Plain");
+                         });
 
 TEST(UnicodeSubstitutionTest, sourceBytesAreDecodedBeforeScalarSubstitution)
 {
