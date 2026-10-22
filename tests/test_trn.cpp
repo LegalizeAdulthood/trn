@@ -22,6 +22,7 @@
 #include <trn/nntp.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
+#include <trn/respond-internal.h>
 #include <trn/respond.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
@@ -930,7 +931,8 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     push_command(input);
     testing::internal::CaptureStdout();
 
-    const ArticleSwitchResult result = art_switch(std::string{command, FINISH_CMD});
+    ArticleSwitchResult result = AS_NORM;
+    EXPECT_NO_THROW(result = art_switch(std::string{command, FINISH_CMD}));
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
@@ -1014,6 +1016,60 @@ class PlainSaveArticleTest : public SaveArticleTest, public testing::WithParamIn
 class AppendSaveArticleTest : public SaveArticleTest, public testing::WithParamInterface<char>
 {
 };
+
+struct SaveFailureCase
+{
+    char command;
+    bool mailbox;
+    bool close_failure;
+};
+
+class FailedSaveArticleTest : public SaveArticleTest, public testing::WithParamInterface<SaveFailureCase>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+    bool m_closed{};
+    bool m_write_error{};
+
+private:
+    SaveFileOperations m_old_operations{g_save_file_operations};
+    std::FILE         *m_stream{};
+};
+
+void FailedSaveArticleTest::SetUp()
+{
+    SaveArticleTest::SetUp();
+    std::ofstream destination{m_destination};
+    ASSERT_TRUE(destination.is_open());
+    destination.close();
+    ASSERT_FALSE(destination.fail());
+    g_mbox_always = GetParam().mailbox;
+    g_save_file_operations.open = [this](const char *path, const char *mode)
+    {
+        m_stream = std::fopen(path, GetParam().close_failure ? mode : "r");
+        return m_stream;
+    };
+    g_save_file_operations.close = [this](std::FILE *stream)
+    {
+        m_write_error = std::ferror(stream) != 0;
+        const int result = std::fclose(stream);
+        m_stream = nullptr;
+        m_closed = true;
+        return GetParam().close_failure ? EOF : result;
+    };
+}
+
+void FailedSaveArticleTest::TearDown()
+{
+    if (m_stream)
+    {
+        std::fclose(m_stream);
+    }
+    g_save_file_operations = std::move(m_old_operations);
+    SaveArticleTest::TearDown();
+}
 
 std::string version_header()
 {
@@ -1116,6 +1172,30 @@ TEST_F(SaveArticleTest, reportsAnUnwritableDestinationAndReturnsToTheArticleProm
     EXPECT_FALSE(fs::exists(m_destination));
     EXPECT_TRUE(fs::is_regular_file(blocker));
 }
+
+TEST_P(FailedSaveArticleTest, reportsTheStreamFailureAndReturnsToTheArticlePrompt)
+{
+    const std::string input = m_destination.generic_string() + '\n';
+
+    const std::string output = save(GetParam().command, input);
+
+    EXPECT_NE(std::string::npos, output.find("Not saved"));
+    EXPECT_EQ(std::string::npos, output.find("Saved to "));
+    EXPECT_EQ(std::string::npos, output.find("Appended to "));
+    EXPECT_TRUE(m_closed);
+    EXPECT_EQ(!GetParam().close_failure, m_write_error);
+}
+
+INSTANTIATE_TEST_SUITE_P(StreamErrors, FailedSaveArticleTest,
+                         testing::Values(SaveFailureCase{'s', false, false}, SaveFailureCase{'w', false, false},
+                                         SaveFailureCase{'s', true, false}, SaveFailureCase{'w', true, false},
+                                         SaveFailureCase{'s', false, true}, SaveFailureCase{'w', false, true},
+                                         SaveFailureCase{'s', true, true}, SaveFailureCase{'w', true, true}),
+                         [](const testing::TestParamInfo<SaveFailureCase> &info)
+                         {
+                             return std::string{info.param.command} + (info.param.mailbox ? "Mailbox" : "Plain") +
+                                    (info.param.close_failure ? "Close" : "Write");
+                         });
 
 TEST_F(SaveArticleTest, anEmptyFilenameUsesTheConfiguredDirectoryAndArticleNumber)
 {

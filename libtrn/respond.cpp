@@ -49,6 +49,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -67,6 +68,8 @@ bool            g_mbox_always{};      // -M
 bool            g_norm_always{};      // -N
 std::string     g_priv_dir;           // private news directory
 std::string     g_indent_string{">"}; // indent for old article embedded in followup
+
+SaveFileOperations g_save_file_operations;
 
 static constexpr char s_empty_article[] = "\nEmpty article.\n";
 static std::FILE *s_tmp_fp{};
@@ -584,7 +587,7 @@ reask_save:
         }
         else
         {
-            s_tmp_fp = std::fopen(destination.c_str(), "r+");
+            s_tmp_fp = g_save_file_operations.open(destination.c_str(), "r+");
             if (!s_tmp_fp)
             {
                 mailbox = false;
@@ -616,7 +619,7 @@ reask_save:
         {
             if (s_tmp_fp)
             {
-                std::fclose(s_tmp_fp);
+                g_save_file_operations.close(s_tmp_fp);
             }
             if (g_data_source->m_flags & DF_REMOTE)
             {
@@ -629,47 +632,60 @@ reask_save:
             no_echo();           // make terminal do what we want
             cr_mode();
         }
-        else if (s_tmp_fp != nullptr || (s_tmp_fp = std::fopen(g_save_dest.c_str(), "a")) != nullptr)
+        else if (s_tmp_fp != nullptr || (s_tmp_fp = g_save_file_operations.open(g_save_dest.c_str(), "a")) != nullptr)
         {
-            bool quote_From = false;
-            std::fseek(s_tmp_fp, 0, 2);
-            if (mailbox)
+            i = 0;
+            try
             {
-#if MBOX_CHAR == '\001'
-                fmt::print(s_tmp_fp, "\001\001\001\001\n");
-#else
-                const std::string sender = do_interp("%t");
-                const std::time_t now = std::time(nullptr);
-                const std::tm     local = *std::localtime(&now);
-                fmt::print(s_tmp_fp, "From {} {:%a %b %e %H:%M:%S %Y}\n", sender, local);
-                quote_From = true;
-#endif
-            }
-            if (g_save_from == 0 && g_art != 0)
-            {
-                fmt::print(s_tmp_fp, "Article: {} of {}\n", g_art.value_of(), g_newsgroup_name);
-            }
-            seek_art(g_save_from);
-            std::string article_line;
-            article_line.reserve(LINE_BUF_LEN);
-            while (read_art(article_line))
-            {
-                const std::string_view line_text{article_line};
-                if (quote_From && string_case_equal(line_text.substr(0, 5), "from "))
+                bool quote_From = false;
+                std::fseek(s_tmp_fp, 0, 2);
+                if (mailbox)
                 {
-                    fmt::print(s_tmp_fp, ">");
-                }
-                fmt::print(s_tmp_fp, "{}", line_text);
-            }
-            fmt::print(s_tmp_fp, "\n\n");
 #if MBOX_CHAR == '\001'
-            if (mailbox)
-            {
-                fmt::print(s_tmp_fp, "\001\001\001\001\n");
-            }
+                    fmt::print(s_tmp_fp, "\001\001\001\001\n");
+#else
+                    const std::string sender = do_interp("%t");
+                    const std::time_t now = std::time(nullptr);
+                    const std::tm     local = *std::localtime(&now);
+                    fmt::print(s_tmp_fp, "From {} {:%a %b %e %H:%M:%S %Y}\n", sender, local);
+                    quote_From = true;
 #endif
-            std::fclose(s_tmp_fp);
-            i = 0; // TODO: set non-zero on write error
+                }
+                if (g_save_from == 0 && g_art != 0)
+                {
+                    fmt::print(s_tmp_fp, "Article: {} of {}\n", g_art.value_of(), g_newsgroup_name);
+                }
+                seek_art(g_save_from);
+                std::string article_line;
+                article_line.reserve(LINE_BUF_LEN);
+                while (read_art(article_line))
+                {
+                    const std::string_view line_text{article_line};
+                    if (quote_From && string_case_equal(line_text.substr(0, 5), "from "))
+                    {
+                        fmt::print(s_tmp_fp, ">");
+                    }
+                    fmt::print(s_tmp_fp, "{}", line_text);
+                }
+                fmt::print(s_tmp_fp, "\n\n");
+#if MBOX_CHAR == '\001'
+                if (mailbox)
+                {
+                    fmt::print(s_tmp_fp, "\001\001\001\001\n");
+                }
+#endif
+            }
+            catch (const std::system_error &)
+            {
+                i = 1;
+            }
+            const bool write_failed = std::ferror(s_tmp_fp) != 0;
+            const bool close_failed = g_save_file_operations.close(s_tmp_fp) != 0;
+            s_tmp_fp = nullptr;
+            if (write_failed || close_failed)
+            {
+                i = 1;
+            }
         }
         else
         {
