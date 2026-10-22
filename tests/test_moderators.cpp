@@ -106,6 +106,39 @@ void ModeratorSourceTest::remote()
     m_source.m_nntp_link.capabilities.add("LIST ACTIVE MODERATORS");
 }
 
+class LocalModeratorFallbackTest : public ModeratorSourceTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void LocalModeratorFallbackTest::SetUp()
+{
+    ModeratorSourceTest::SetUp();
+    if (GetParam())
+    {
+        std::ofstream{m_source.m_moderators_file} << "news.*:news@example.test\n";
+    }
+}
+
+class RemoteModeratorFallbackTest : public ModeratorSourceTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void RemoteModeratorFallbackTest::SetUp()
+{
+    ModeratorSourceTest::SetUp();
+    remote();
+    m_source.m_nntp_link.capabilities = {};
+    if (GetParam())
+    {
+        m_source.m_nntp_link.capabilities.available = true;
+        m_source.m_nntp_link.capabilities.add("LIST ACTIVE");
+    }
+}
+
 } // namespace
 
 TEST_P(ModeratorPatternTest, choosesTheExpectedRecipient)
@@ -157,12 +190,14 @@ TEST_F(ModeratorSourceTest, readsLocalFileAndSeesUpdates)
     EXPECT_EQ("second@example.test", m_source.find_moderator("comp.test"));
 }
 
-TEST_F(ModeratorSourceTest, missingFileAndNoMatchFallBack)
+TEST_P(LocalModeratorFallbackTest, fallsBackWithoutAMatchingLocalRule)
 {
-    EXPECT_TRUE(m_source.find_moderator("comp.test").empty());
-    std::ofstream{m_source.m_moderators_file} << "news.*:news@example.test\n";
-    EXPECT_TRUE(m_source.find_moderator("comp.test").empty());
+    const std::string recipient = m_source.find_moderator("comp.test");
+
+    EXPECT_TRUE(recipient.empty());
 }
+
+INSTANTIATE_TEST_SUITE_P(MissingAndUnmatchedFiles, LocalModeratorFallbackTest, testing::Bool());
 
 TEST_F(ModeratorSourceTest, advertisedRemoteListIsConsumedCompletely)
 {
@@ -179,15 +214,16 @@ TEST_F(ModeratorSourceTest, advertisedRemoteListIsConsumedCompletely)
     EXPECT_TRUE(m_source.m_nntp_link.flags & NNTP_NEW_CMD_OK);
 }
 
-TEST_F(ModeratorSourceTest, doesNotRequestUnadvertisedOrLegacyLists)
+TEST_P(RemoteModeratorFallbackTest, doesNotRequestAModeratorList)
 {
-    remote();
-    m_source.m_nntp_link.capabilities = {};
-    EXPECT_TRUE(m_source.find_moderator("comp.test").empty());
-    m_source.m_nntp_link.capabilities.available = true;
-    m_source.m_nntp_link.capabilities.add("LIST ACTIVE");
-    EXPECT_TRUE(m_source.find_moderator("comp.test").empty());
+    EXPECT_CALL(*m_connection, write_line(testing::_, testing::_)).Times(0);
+
+    const std::string recipient = m_source.find_moderator("comp.test");
+
+    EXPECT_TRUE(recipient.empty());
 }
+
+INSTANTIATE_TEST_SUITE_P(UnavailableAndUnadvertised, RemoteModeratorFallbackTest, testing::Bool());
 
 TEST_F(ModeratorSourceTest, explicitFileOverridesRemoteList)
 {
