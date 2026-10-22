@@ -15,9 +15,35 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <string_view>
+#include <tuple>
 
 namespace
 {
+
+using ModeratorPatternCase = std::tuple<std::string_view, std::string_view, std::string_view>;
+
+class ModeratorPatternTest : public testing::TestWithParam<ModeratorPatternCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_rules;
+    std::string m_group;
+    std::string m_expected;
+};
+
+void ModeratorPatternTest::SetUp()
+{
+    m_rules = std::get<0>(GetParam());
+    m_group = std::get<1>(GetParam());
+    m_expected = std::get<2>(GetParam());
+}
+
+constexpr const char *FIRST_MATCH_RULES = "# comment\n\ncomp.lang.[ac]*:specific@example.test\n"
+                                          "comp.*:general@example.test\n*:fallback@example.test\n";
+constexpr const char *PATTERN_LIST_RULES = "comp.*,!comp.test,news.announce:shared@example.test\n"
+                                           "*:other@example.test\n";
 
 class ModeratorSourceTest : public testing::Test
 {
@@ -68,31 +94,30 @@ void ModeratorSourceTest::remote()
 
 } // namespace
 
-TEST(ModeratorPatternTest, usesFirstMatchingWildmat)
+TEST_P(ModeratorPatternTest, choosesTheExpectedRecipient)
 {
-    const std::string rules{"# comment\n\ncomp.lang.[ac]*:specific@example.test\n"
-                            "comp.*:general@example.test\n*:fallback@example.test\n"};
+    const std::string recipient = moderator_address(m_group, m_rules);
 
-    EXPECT_EQ("specific@example.test", moderator_address("comp.lang.c++", rules));
-    EXPECT_EQ("general@example.test", moderator_address("comp.test", rules));
-    EXPECT_EQ("fallback@example.test", moderator_address("news.announce", rules));
-    EXPECT_TRUE(moderator_address("misc.test", "comp.*:only@example.test\n").empty());
+    EXPECT_EQ(m_expected, recipient);
 }
 
-TEST(ModeratorPatternTest, expandsGroupAndLiteralPercent)
-{
-    EXPECT_EQ("comp-lang-c++@example.test", moderator_address("comp.lang.c++", "*:%s@example.test\n"));
-    EXPECT_EQ("tag%comp-test@example.test", moderator_address("comp.test", "*:tag%%%s@example.test\n"));
-}
+INSTANTIATE_TEST_SUITE_P(
+    FirstMatchingRule, ModeratorPatternTest,
+    testing::Values(ModeratorPatternCase{FIRST_MATCH_RULES, "comp.lang.c++", "specific@example.test"},
+                    ModeratorPatternCase{FIRST_MATCH_RULES, "comp.test", "general@example.test"},
+                    ModeratorPatternCase{FIRST_MATCH_RULES, "news.announce", "fallback@example.test"},
+                    ModeratorPatternCase{"comp.*:only@example.test\n", "misc.test", ""}));
 
-TEST(ModeratorPatternTest, supportsPatternListsAndExclusions)
-{
-    const std::string rules{"comp.*,!comp.test,news.announce:shared@example.test\n*:other@example.test\n"};
+INSTANTIATE_TEST_SUITE_P(
+    PercentExpansion, ModeratorPatternTest,
+    testing::Values(ModeratorPatternCase{"*:%s@example.test\n", "comp.lang.c++", "comp-lang-c++@example.test"},
+                    ModeratorPatternCase{"*:tag%%%s@example.test\n", "comp.test", "tag%comp-test@example.test"}));
 
-    EXPECT_EQ("shared@example.test", moderator_address("comp.lang.apl", rules));
-    EXPECT_EQ("shared@example.test", moderator_address("news.announce", rules));
-    EXPECT_EQ("other@example.test", moderator_address("comp.test", rules));
-}
+INSTANTIATE_TEST_SUITE_P(
+    PatternListsAndExclusions, ModeratorPatternTest,
+    testing::Values(ModeratorPatternCase{PATTERN_LIST_RULES, "comp.lang.apl", "shared@example.test"},
+                    ModeratorPatternCase{PATTERN_LIST_RULES, "news.announce", "shared@example.test"},
+                    ModeratorPatternCase{PATTERN_LIST_RULES, "comp.test", "other@example.test"}));
 
 TEST(ModeratorPatternTest, ignoresMalformedRulesAndUnsafeAddresses)
 {
