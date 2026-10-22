@@ -1465,22 +1465,76 @@ TEST(UTFByteLengthTest, length_at_ascii)
     ASSERT_EQ(1, byte_length_at(ARBITRARY_ASCII));
 }
 
-TEST(UTFByteLengthTest, length_at_iso8859_1)
+class Utf8QueryTest : public Utf8ScalarTest
 {
-    ASSERT_EQ(2, byte_length_at(ARBITRARY_ISO8859D1_1));
-    ASSERT_EQ(2, byte_length_at(ARBITRARY_ISO8859D1_2));
+protected:
+    void SetUp() override;
+    void set_input(std::string_view text, std::size_t length = std::string_view::npos);
+
+    std::string      m_text;
+    std::string_view m_input;
+};
+
+void Utf8QueryTest::SetUp()
+{
+    Utf8ScalarTest::SetUp();
+    utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
 }
+
+void Utf8QueryTest::set_input(std::string_view text, std::size_t length)
+{
+    m_text = text;
+    m_input = std::string_view{m_text}.substr(0, length);
+}
+
+struct Utf8IntegerQueryCase
+{
+    const char      *name;
+    std::string_view text;
+    int              expected;
+    std::size_t      length{std::string_view::npos};
+};
+
+void PrintTo(const Utf8IntegerQueryCase &value, std::ostream *out)
+{
+    *out << value.name;
+}
+
+class Utf8IntegerQueryTest : public Utf8QueryTest, public WithParamInterface<Utf8IntegerQueryCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void Utf8IntegerQueryTest::SetUp()
+{
+    Utf8QueryTest::SetUp();
+    set_input(GetParam().text, GetParam().length);
+}
+
+class Utf8ByteQueryTest : public Utf8IntegerQueryTest
+{
+};
+
+TEST_P(Utf8ByteQueryTest, measuresTheFirstCharacterWithinTheView)
+{
+    const int length = byte_length_at(m_input);
+
+    EXPECT_EQ(GetParam().expected, length);
+}
+
+INSTANTIATE_TEST_SUITE_P(LatinCharacters, Utf8ByteQueryTest,
+                         Values(Utf8IntegerQueryCase{"AccentedA", ARBITRARY_ISO8859D1_1, 2},
+                                Utf8IntegerQueryCase{"LigatureAe", ARBITRARY_ISO8859D1_2, 2}));
 
 TEST(UTFByteLengthTest, byte_length_at_cjk_basic)
 {
     ASSERT_EQ(3, byte_length_at(ARBITRARY_CJK_BASIC));
 }
 
-TEST(UTFByteLengthTest, byte_length_at_bounded_cjk_view)
-{
-    ASSERT_EQ(3, byte_length_at(ARBITRARY_CJK_BASIC));
-    ASSERT_EQ(1, byte_length_at(std::string_view{ARBITRARY_CJK_BASIC.data(), 2}));
-}
+INSTANTIATE_TEST_SUITE_P(CompleteAndTruncatedCjk, Utf8ByteQueryTest,
+                         Values(Utf8IntegerQueryCase{"CompleteCjk", ARBITRARY_CJK_BASIC, 3},
+                                Utf8IntegerQueryCase{"TruncatedCjk", ARBITRARY_CJK_BASIC, 1, 2}));
 
 TEST(UTFAtNormalCharacterTest, emptyView)
 {
@@ -1512,11 +1566,27 @@ TEST(UTFAtNormalCharacterTest, DEL)
     ASSERT_FALSE(at_norm_char(ASCII_DEL));
 }
 
-TEST(UTFAtNormalCharacterTest, iso8859_1)
+class Utf8NormalCharacterTest : public Utf8QueryTest, public WithParamInterface<std::string_view>
 {
-    ASSERT_TRUE(at_norm_char(ARBITRARY_ISO8859D1_1));
-    ASSERT_TRUE(at_norm_char(ARBITRARY_ISO8859D1_2));
+protected:
+    void SetUp() override;
+};
+
+void Utf8NormalCharacterTest::SetUp()
+{
+    Utf8QueryTest::SetUp();
+    set_input(GetParam());
 }
+
+TEST_P(Utf8NormalCharacterTest, recognizesTheLatinCharacterAsNormal)
+{
+    const bool normal = at_norm_char(m_input);
+
+    EXPECT_TRUE(normal);
+}
+
+INSTANTIATE_TEST_SUITE_P(LatinCharacters, Utf8NormalCharacterTest,
+                         Values(ARBITRARY_ISO8859D1_1, ARBITRARY_ISO8859D1_2));
 
 TEST(UTFAtNormalCharacterTest, cjk_basic)
 {
@@ -1533,11 +1603,20 @@ TEST(UTFVisualWidthTest, ascii)
     ASSERT_EQ(1, visual_width_at(ARBITRARY_ASCII));
 }
 
-TEST(UTFVisualWidthTest, boundedCjkView)
+class Utf8WidthQueryTest : public Utf8IntegerQueryTest
 {
-    ASSERT_EQ(2, visual_width_at(ARBITRARY_CJK_BASIC));
-    ASSERT_EQ(0, visual_width_at(std::string_view{ARBITRARY_CJK_BASIC.data(), 2}));
+};
+
+TEST_P(Utf8WidthQueryTest, measuresTheFirstScalarWithinTheView)
+{
+    const int width = visual_width_at(m_input);
+
+    EXPECT_EQ(GetParam().expected, width);
 }
+
+INSTANTIATE_TEST_SUITE_P(CompleteAndTruncatedCjk, Utf8WidthQueryTest,
+                         Values(Utf8IntegerQueryCase{"CompleteCjk", ARBITRARY_CJK_BASIC, 2},
+                                Utf8IntegerQueryCase{"TruncatedCjk", ARBITRARY_CJK_BASIC, 0, 2}));
 
 TEST(UTFVisualAdvanceWidthTest, emptyView)
 {
@@ -1620,13 +1699,29 @@ TEST(UTFCodePointDecodingTest, shin)
     ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at("\327\251"));
 }
 
-TEST(UTFCodePointDecodingTest, boundedShinView)
-{
-    const char text[]{'\327', '\251'};
+using ShinViewCase = std::tuple<std::size_t, CodePoint>;
 
-    ASSERT_EQ(CJK_SHIN_CODE_POINT, code_point_at(std::string_view{text, sizeof text}));
-    ASSERT_EQ(INVALID_CODE_POINT, code_point_at(std::string_view{text, 1}));
+class ShinViewDecodingTest : public Utf8QueryTest, public WithParamInterface<ShinViewCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void ShinViewDecodingTest::SetUp()
+{
+    Utf8QueryTest::SetUp();
+    set_input(std::string_view{"\327\251", 2}, std::get<0>(GetParam()));
 }
+
+TEST_P(ShinViewDecodingTest, decodesOnlyTheBytesWithinTheView)
+{
+    const CodePoint scalar = code_point_at(m_input);
+
+    EXPECT_EQ(std::get<1>(GetParam()), scalar);
+}
+
+INSTANTIATE_TEST_SUITE_P(CompleteAndTruncated, ShinViewDecodingTest,
+                         Values(ShinViewCase{2, CJK_SHIN_CODE_POINT}, ShinViewCase{1, INVALID_CODE_POINT}));
 
 TEST(UTFCodePointDecodingTest, oy)
 {
@@ -1648,13 +1743,22 @@ TEST(UTFVisualLengthTest, ascii)
     ASSERT_EQ(3, visual_length_of("cat"));
 }
 
-TEST(UTFVisualLengthTest, iso_8859_1)
+class Utf8LengthQueryTest : public Utf8IntegerQueryTest
 {
-    ASSERT_EQ(7, visual_length_of("libert\303\251"));
-    ASSERT_EQ(4, visual_length_of("b\303\251b\303\251"));
-    ASSERT_EQ(4 /* combining acute */, visual_length_of("be\314\201be\314\201"));
-    ASSERT_EQ(0 /* combining acute */, visual_length_of("\314\201"));
+};
+
+TEST_P(Utf8LengthQueryTest, measuresTheInputVisualLength)
+{
+    const int length = visual_length_of(m_input);
+
+    EXPECT_EQ(GetParam().expected, length);
 }
+
+INSTANTIATE_TEST_SUITE_P(AccentedAndCombiningText, Utf8LengthQueryTest,
+                         Values(Utf8IntegerQueryCase{"AccentedSuffix", "libert\303\251", 7},
+                                Utf8IntegerQueryCase{"TwoAccents", "b\303\251b\303\251", 4},
+                                Utf8IntegerQueryCase{"CombiningSequences", "be\314\201be\314\201", 4},
+                                Utf8IntegerQueryCase{"CombiningMarkOnly", "\314\201", 0}));
 
 TEST(UTFVisualLengthTest, cjk)
 {
