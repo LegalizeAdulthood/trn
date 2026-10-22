@@ -28,6 +28,7 @@
 #include <fstream>
 #include <initializer_list>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -140,6 +141,37 @@ void StoredAddGroupTraversalTest::SetUp()
     StoredAddGroupsTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     ASSERT_EQ(m_first, add_to_list("comp.lang.c++", 99, '!'));
+}
+
+struct EmptyGroupQueryCase
+{
+    const char *name;
+    bool (*is_empty)(AddGroupTable &);
+};
+
+const EmptyGroupQueryCase EMPTY_GROUP_QUERY_CASES[]{
+    {"Empty", [](AddGroupTable &groups) { return groups.empty(); }},
+    {"Indices", [](AddGroupTable &groups) { return groups.indices().empty(); }},
+    {"First", [](AddGroupTable &groups) { return groups.first() == AddGroupIndex::None; }},
+    {"Last", [](AddGroupTable &groups) { return groups.last() == AddGroupIndex::None; }},
+    {"Next", [](AddGroupTable &groups) { return groups.next(AddGroupIndex::None) == AddGroupIndex::None; }},
+    {"Previous", [](AddGroupTable &groups) { return groups.prev(AddGroupIndex::None) == AddGroupIndex::None; }}};
+
+void PrintTo(const EmptyGroupQueryCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class EmptyAddGroupQueryTest : public AddGroupStorageTest, public testing::WithParamInterface<EmptyGroupQueryCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmptyAddGroupQueryTest::SetUp()
+{
+    AddGroupStorageTest::SetUp();
+    sort_add_groups();
 }
 
 class ScanActiveTest : public testing::Test
@@ -584,17 +616,15 @@ TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
     EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(third));
 }
 
-TEST_F(AddGroupStorageTest, emptyTableHasNoTraversal)
+TEST_P(EmptyAddGroupQueryTest, reportsNoStoredGroups)
 {
-    sort_add_groups();
+    const bool empty = GetParam().is_empty(g_add_groups);
 
-    EXPECT_TRUE(g_add_groups.empty());
-    EXPECT_TRUE(g_add_groups.indices().empty());
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.first());
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.last());
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(AddGroupIndex::None));
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.prev(AddGroupIndex::None));
+    EXPECT_TRUE(empty);
 }
+
+INSTANTIATE_TEST_SUITE_P(Query, EmptyAddGroupQueryTest, testing::ValuesIn(EMPTY_GROUP_QUERY_CASES),
+                         [](const testing::TestParamInfo<EmptyGroupQueryCase> &info) { return info.param.name; });
 
 TEST_F(AddGroupStorageTest, pageAndSelectionIdentitySurvivesGrowthAndSorting)
 {
