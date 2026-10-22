@@ -6,7 +6,6 @@ param([string] $WorkDirectory, [string] $Adapter = '',
     [string] $Helper = '', [string] $OnlyCase = '')
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
-[Console]::InputEncoding = [Text.UTF8Encoding]::new($true)
 $utf8 = [Text.UTF8Encoding]::new($false)
 $curl = (Get-Command curl.exe -CommandType Application | Select-Object -First 1).Source
 $curlVersion = @(& $curl --version)

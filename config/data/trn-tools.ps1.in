@@ -27,22 +27,6 @@ function ConvertTo-TrnArgument([string] $Argument) {
     return '"' + [regex]::Replace($quoted, '(\\+)$', '$1$1') + '"'
 }
 
-# Windows PowerShell's Process uses Console.InputEncoding for its stdin
-# writer. Suppress that writer's preamble before passing bytes directly.
-# Keep the reader because changing InputEncoding discards buffered input.
-function Start-TrnByteProcess([Diagnostics.Process] $Process) {
-    $encoding = [Console]::InputEncoding
-    $inputReader = [Console]::In
-    try {
-        [Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
-        [void] $Process.Start()
-    }
-    finally {
-        [Console]::InputEncoding = $encoding
-        [Console]::SetIn($inputReader)
-    }
-}
-
 # Console tools inherit the terminal. Streamed tools receive bytes directly,
 # without PowerShell's text pipeline or its implicit encoding conversions.
 function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
@@ -74,7 +58,7 @@ function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
         $process.StartInfo.UseShellExecute = $false
         $process.StartInfo.RedirectStandardInput = [bool] $InputPath
         $process.StartInfo.RedirectStandardOutput = [bool] $OutputPath
-        Start-TrnByteProcess $process
+        [void] $process.Start()
         $copy = $null
         if ($OutputPath) {
             $destination = [IO.File]::Create($OutputPath)
