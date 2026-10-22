@@ -751,17 +751,57 @@ TEST_F(NNTPGetStringTest, retriesEncryptionRequiredCommandAfterStartTls)
     EXPECT_EQ("211 1 1 1 comp.lang.apl", g_ser_line);
 }
 
-TEST_F(NNTPGetStringTest, requiresTlsBeforeAuthAndPosting)
+class RequiredTlsPolicyTest : public NNTPGetStringTest
 {
+protected:
+    void SetUp() override;
+};
+
+void RequiredTlsPolicyTest::SetUp()
+{
+    NNTPGetStringTest::SetUp();
     g_nntp_link.allow_starttls = false;
     g_nntp_link.require_tls_for_auth = true;
     g_nntp_link.require_tls_for_posting = true;
+}
+
+class CleartextTlsCommandTest : public RequiredTlsPolicyTest, public WithParamInterface<const char *>
+{
+};
+
+class ImplicitTlsPolicyTest : public RequiredTlsPolicyTest
+{
+protected:
+    void SetUp() override;
+};
+
+void ImplicitTlsPolicyTest::SetUp()
+{
+    RequiredTlsPolicyTest::SetUp();
+    g_nntp_link.security = NntpSecurity::ImplicitTls;
+}
+
+class ImplicitTlsCommandTest : public ImplicitTlsPolicyTest, public WithParamInterface<const char *>
+{
+};
+
+using TlsHelper = std::pair<const char *, int (*)()>;
+
+class ImplicitTlsHelperTest : public ImplicitTlsPolicyTest, public WithParamInterface<TlsHelper>
+{
+};
+
+TEST_P(CleartextTlsCommandTest, blocksTheCommandBeforeWriting)
+{
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
-    EXPECT_LT(nntp_command("AUTHINFO USER reader"), 0);
-    EXPECT_LT(nntp_command("AUTHINFO PASS secret"), 0);
-    EXPECT_LT(nntp_command("post"), 0);
+    const int result = nntp_command(GetParam());
+
+    EXPECT_LT(result, 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(AuthAndPosting, CleartextTlsCommandTest,
+                         Values("AUTHINFO USER reader", "AUTHINFO PASS secret", "post"));
 
 TEST_F(NNTPGetStringTest, restoresSelectedGroupAndArticleAfterStartTls)
 {
@@ -837,20 +877,29 @@ TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
     EXPECT_EQ(483, nntp_response_code(g_ser_line));
 }
 
-TEST_F(NNTPGetStringTest, acceptsImplicitTlsForRequiredOperations)
+TEST_P(ImplicitTlsCommandTest, sendsTheCommandThroughImplicitTls)
 {
-    g_nntp_link.security = NntpSecurity::ImplicitTls;
-    g_nntp_link.allow_starttls = false;
-    g_nntp_link.require_tls_for_auth = true;
-    g_nntp_link.require_tls_for_posting = true;
-    EXPECT_CALL(*m_connection, write_line(StrEq("AUTHINFO USER reader"), _));
-    EXPECT_CALL(*m_connection, write_line(StrEq("POST"), _));
+    EXPECT_CALL(*m_connection, write_line(StrEq(GetParam()), _));
 
-    EXPECT_EQ(1, nntp_require_tls());
-    EXPECT_EQ(1, nntp_start_tls());
-    EXPECT_EQ(1, nntp_command("AUTHINFO USER reader"));
-    EXPECT_EQ(1, nntp_command("POST"));
+    const int result = nntp_command(GetParam());
+
+    EXPECT_EQ(1, result);
 }
+
+INSTANTIATE_TEST_SUITE_P(AuthAndPosting, ImplicitTlsCommandTest,
+                         Values("AUTHINFO USER reader", "AUTHINFO PASS secret", "POST"));
+
+TEST_P(ImplicitTlsHelperTest, acceptsExistingImplicitTlsWithoutWriting)
+{
+    EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
+
+    const int result = GetParam().second();
+
+    EXPECT_EQ(1, result);
+}
+
+INSTANTIATE_TEST_SUITE_P(RequireAndStartTls, ImplicitTlsHelperTest,
+                         Values(TlsHelper{"require TLS", nntp_require_tls}, TlsHelper{"start TLS", nntp_start_tls}));
 
 class NntpAuthTest : public NNTPTest
 {
