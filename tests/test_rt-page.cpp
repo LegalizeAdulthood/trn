@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <initializer_list>
 #include <string>
 #include <tuple>
@@ -29,8 +30,9 @@ protected:
     std::vector<long> article_numbers() const;
     std::vector<long> articles_with_flag(ArticleFlags flag) const;
 
+    Subject m_subject{};
+
 private:
-    Subject                  m_subject{};
     decltype(g_article_list) m_old_articles{std::move(g_article_list)};
     decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
     Article                **m_old_art_ptr{g_art_ptr};
@@ -199,6 +201,151 @@ class ArticlePageReadingSelectionTest : public ArticlePageStateTest,
 {
 };
 
+class SubjectPageStateTest : public ArticlePageStateTest
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    void              prepare_groups(SelectionMode mode, bool rereading);
+    void              select_article(long number);
+    void              exclude_subject(Subject &subject);
+    void              initialize_page();
+    std::vector<long> subjects_with_flag(SubjectFlags flag) const;
+
+    Subject m_bravo{};
+    Subject m_charlie{};
+
+private:
+    int         m_old_subject_count{g_subject_count};
+    bool        m_old_threaded{g_threaded_group};
+    Subject    *m_old_next_sp{g_sel_next_sp};
+    int         m_old_item_index{g_sel_item_index};
+    int         m_old_term_line{g_term_line};
+    std::string m_old_display_mode{g_sel_art_display_mode};
+    std::size_t m_old_display_index{g_sel_art_display_mode_index};
+};
+
+void SubjectPageStateTest::SetUp()
+{
+    ArticlePageStateTest::SetUp();
+    g_subject_count = 3;
+    g_threaded_group = true;
+    g_sel_next_sp = nullptr;
+    g_sel_art_display_mode = "s";
+    g_sel_art_display_mode_index = 0;
+}
+
+void SubjectPageStateTest::TearDown()
+{
+    g_subject_count = m_old_subject_count;
+    g_threaded_group = m_old_threaded;
+    g_sel_next_sp = m_old_next_sp;
+    g_sel_item_index = m_old_item_index;
+    g_term_line = m_old_term_line;
+    g_sel_art_display_mode = m_old_display_mode;
+    g_sel_art_display_mode_index = m_old_display_index;
+    ArticlePageStateTest::TearDown();
+}
+
+void SubjectPageStateTest::prepare_groups(SelectionMode mode, bool rereading)
+{
+    prepare_articles(rereading, {AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_UNREAD, AF_EXISTS | AF_UNREAD,
+                                 AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS});
+    g_sel_mode = mode;
+    g_sel_sort = SS_DATE;
+    m_subject.m_str = "Re: Alpha";
+    m_bravo.m_str = "Re: Bravo";
+    m_charlie.m_str = "Re: Charlie";
+    m_subject.m_next = &m_bravo;
+    m_bravo.m_prev = &m_subject;
+    m_bravo.m_next = &m_charlie;
+    m_charlie.m_prev = &m_bravo;
+    g_last_subject = &m_charlie;
+    m_bravo.m_articles = article_ptr(ArticleNum{4});
+    m_charlie.m_articles = article_ptr(ArticleNum{7});
+    m_bravo.m_thread = m_bravo.m_articles;
+    m_charlie.m_thread = m_subject.m_thread;
+    m_subject.m_thread_link = &m_charlie;
+    m_bravo.m_thread_link = &m_bravo;
+    m_charlie.m_thread_link = &m_subject;
+    const std::array<Subject *, 9> subjects{&m_subject, &m_subject, &m_subject, &m_bravo,  &m_bravo,
+                                            &m_bravo,   &m_charlie, &m_charlie, &m_charlie};
+    for (std::size_t i = 0; i < subjects.size(); ++i)
+    {
+        article_ptr(ArticleNum{static_cast<long>(i + 1)})->m_subj = subjects[i];
+    }
+    article_ptr(ArticleNum{3})->m_subj_next = nullptr;
+    article_ptr(ArticleNum{6})->m_subj_next = nullptr;
+    article_ptr(ArticleNum{1})->m_child1 = article_ptr(ArticleNum{2});
+    article_ptr(ArticleNum{2})->m_parent = article_ptr(ArticleNum{1});
+    article_ptr(ArticleNum{2})->m_sibling = article_ptr(ArticleNum{3});
+    article_ptr(ArticleNum{3})->m_parent = article_ptr(ArticleNum{1});
+    article_ptr(ArticleNum{3})->m_sibling = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{1});
+    article_ptr(ArticleNum{7})->m_child1 = article_ptr(ArticleNum{8});
+    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{8})->m_sibling = article_ptr(ArticleNum{9});
+    article_ptr(ArticleNum{9})->m_parent = article_ptr(ArticleNum{7});
+    article_ptr(ArticleNum{4})->m_child1 = article_ptr(ArticleNum{5});
+    article_ptr(ArticleNum{5})->m_parent = article_ptr(ArticleNum{4});
+    article_ptr(ArticleNum{5})->m_sibling = article_ptr(ArticleNum{6});
+    article_ptr(ArticleNum{6})->m_parent = article_ptr(ArticleNum{4});
+    count_subjects(CS_UNSEL_STORE);
+}
+
+void SubjectPageStateTest::select_article(long number)
+{
+    article_ptr(ArticleNum{number})->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+    count_subjects(CS_UNSEL_STORE);
+}
+
+void SubjectPageStateTest::exclude_subject(Subject &subject)
+{
+    for (Article *article = subject.m_articles; article; article = article->m_subj_next)
+    {
+        if (g_sel_rereading)
+        {
+            article->m_flags |= AF_UNREAD;
+        }
+        else
+        {
+            article->m_flags &= ~AF_UNREAD;
+        }
+    }
+    count_subjects(CS_UNSEL_STORE);
+}
+
+void SubjectPageStateTest::initialize_page()
+{
+    init_pages(PRESERVE_PAGE);
+    Selection no_search{};
+    no_search.op = OI_NONE;
+    (void) calc_page(no_search);
+}
+
+std::vector<long> SubjectPageStateTest::subjects_with_flag(SubjectFlags flag) const
+{
+    std::vector<long> result;
+    for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    {
+        if (subject->m_flags & flag)
+        {
+            result.push_back(subject->m_articles->article_num().value_of());
+        }
+    }
+    return result;
+}
+
+class SubjectPageAggregationTest : public SubjectPageStateTest,
+                                   public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class SubjectPageSelectedThreadTest : public SubjectPageStateTest,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
+{
+};
+
 } // namespace
 
 TEST_P(ArticlePageEligibilityTest, selectionDoesNotOverrideExistenceOrReadScope)
@@ -318,6 +465,124 @@ INSTANTIATE_TEST_SUITE_P(ReadAndUnread, ArticlePageReadScopeTest, testing::Bool(
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndReadingSelection, ArticlePageReadingSelectionTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(SubjectPageAggregationTest, groupsEligibleArticlesIntoSubjectOrThreadRows)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    m_charlie.m_flags |= SF_INCLUDED;
+
+    initialize_page();
+
+    EXPECT_EQ(1, m_subject.m_misc);
+    EXPECT_EQ(rereading ? 1 : 2, m_bravo.m_misc);
+    EXPECT_EQ(rereading ? 2 : 1, m_charlie.m_misc);
+    EXPECT_EQ((mode == SM_THREAD ? std::vector<long>{1, 4} : std::vector<long>{1, 4, 7}),
+              subjects_with_flag(SF_INCLUDED));
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(mode == SM_THREAD ? 2 : 3, g_sel_page_item_cnt);
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+}
+
+TEST_P(SubjectPageSelectedThreadTest, exclusiveDisplayIncludesTheWholeScopeContainingASelectedArticle)
+{
+    const auto &[mode, rereading, select_reply] = GetParam();
+    prepare_groups(mode, rereading);
+    const long selected = rereading ? (select_reply ? 8 : 2) : (select_reply ? 7 : 1);
+    select_article(selected);
+    g_sel_exclusive = true;
+
+    initialize_page();
+
+    const int expected_articles = mode == SM_THREAD ? (rereading ? 3 : 2) : (rereading && select_reply ? 2 : 1);
+    EXPECT_EQ((mode == SM_THREAD || !select_reply ? std::vector<long>{1} : std::vector<long>{7}),
+              subjects_with_flag(SF_INCLUDED));
+    EXPECT_EQ(expected_articles, g_sel_total_obj_cnt);
+    EXPECT_EQ(expected_articles, g_sel_page_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    EXPECT_EQ((std::vector<long>{selected}), articles_with_flag(static_cast<ArticleFlags>(g_sel_mask)));
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_sel_exclusive);
+}
+
+TEST_P(SubjectPageAggregationTest, exclusiveDisplayExcludesUnselectedNeighboringThreads)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    select_article(rereading ? 6 : 4);
+    g_sel_exclusive = true;
+
+    initialize_page();
+
+    EXPECT_EQ((std::vector<long>{4}), subjects_with_flag(SF_INCLUDED));
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_TRUE(g_sel_exclusive);
+}
+
+TEST_P(SubjectPageAggregationTest, unselectedReadSubjectsReceivePendingCleanupMarks)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    select_article(rereading ? 8 : 7);
+
+    initialize_page();
+
+    EXPECT_EQ((rereading ? std::vector<long>{1, 4} : std::vector<long>{}), subjects_with_flag(SF_DEL));
+    EXPECT_EQ((std::vector<long>{7}), subjects_with_flag(static_cast<SubjectFlags>(g_sel_mask)));
+    EXPECT_EQ((rereading ? std::vector<long>{8} : std::vector<long>{7}),
+              articles_with_flag(static_cast<ArticleFlags>(g_sel_mask)));
+    EXPECT_TRUE(articles_with_flag(AF_DEL).empty());
+    EXPECT_EQ(1, g_selected_count);
+}
+
+TEST_P(SubjectPageAggregationTest, emptyOriginalSubjectDoesNotHideEligibleReplies)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    exclude_subject(m_subject);
+
+    initialize_page();
+
+    EXPECT_EQ(0, m_subject.m_misc);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(ArticleNum{3}, g_obj_count);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+}
+
+TEST_P(SubjectPageAggregationTest, groupsWithNoEligibleArticlesProduceNoRows)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    exclude_subject(m_subject);
+    exclude_subject(m_bravo);
+    exclude_subject(m_charlie);
+
+    initialize_page();
+
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(ArticleNum{}, g_obj_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadScope, SubjectPageAggregationTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndSelectedSubject, SubjectPageSelectedThreadTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(), testing::Bool()));
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
 {
