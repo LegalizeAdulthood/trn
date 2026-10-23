@@ -40,6 +40,7 @@
 #include <util/env.h>
 
 #include <config/fdio.h>
+#include <config/user_id.h>
 
 #ifdef I_UNISTD
 #include <unistd.h>
@@ -70,6 +71,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -2011,6 +2013,142 @@ void FollowupArticleTest::expect_news_retained(std::string_view draft) const
     EXPECT_EQ(edited, receiver_text("home/.article"));
 }
 
+class ArticleRevisionTest : public FollowupArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string revise(char command);
+    std::string revision_header(char command, std::string_view reply_to = {}) const;
+    std::string revision_draft(char command, std::string_view reply_to = {}) const;
+    void        expect_revision_posted(char command, std::string_view draft) const;
+
+private:
+    std::string m_old_login_name{g_login_name};
+    std::string m_old_host_name{g_host_name};
+#ifdef HAS_NEWS_ADMIN
+    int m_old_news_uid{g_news_uid};
+#endif
+};
+
+void ArticleRevisionTest::SetUp()
+{
+    FollowupArticleTest::SetUp();
+    g_login_name = "root";
+    g_host_name = "example.test";
+#ifdef HAS_NEWS_ADMIN
+    g_news_uid = -1;
+#endif
+    m_env.expect_no_envars({"CANCELHEADER", "SUPERSEDEHEADER"});
+    m_env.expect_env_repeatedly("CANCEL",
+#ifdef USE_SPAWN_SHELL
+                                "call "
+#endif
+                                "\"" TRN_TEST_PROCESS_TOOL "\" poster -h <\"%h\"");
+}
+
+void ArticleRevisionTest::TearDown()
+{
+    g_login_name = m_old_login_name;
+    g_host_name = m_old_host_name;
+#ifdef HAS_NEWS_ADMIN
+    g_news_uid = m_old_news_uid;
+#endif
+    FollowupArticleTest::TearDown();
+}
+
+std::string ArticleRevisionTest::revise(char command)
+{
+    const std::string output = respond_with(command);
+    EXPECT_FALSE(g_force_grow);
+    std::ifstream original{m_spool / "1"};
+    EXPECT_EQ(m_article_text,
+              (std::string{std::istreambuf_iterator<char>{original}, std::istreambuf_iterator<char>{}}));
+    return output;
+}
+
+std::string ArticleRevisionTest::revision_header(char command, std::string_view reply_to) const
+{
+    if (command == 'C')
+    {
+        return "Newsgroups: comp.lang.cpp\nSubject: cancel\nControl: cancel <root@example.test>\n"
+               "Distribution: world\n\n<root@example.test> was cancelled from within trn.\n";
+    }
+    return "Newsgroups: comp.lang.cpp\nSubject: Topic\nSummary: \nExpires: \n"
+           "References: <parent@example.test>\nFrom: Root <root@example.test>\nReply-To: " +
+           std::string{reply_to} +
+           "\nSupersedes: <root@example.test>\nSender: \nFollowup-To: \n"
+           "Distribution: world\nOrganization: Test Organization\nKeywords: example\n\n";
+}
+
+std::string ArticleRevisionTest::revision_draft(char command, std::string_view reply_to) const
+{
+    return revision_header(command, reply_to) + (command == 'Z' ? std::string{BODY} : "");
+}
+
+void ArticleRevisionTest::expect_revision_posted(char command, std::string_view draft) const
+{
+    if (command == 'C')
+    {
+        EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+        EXPECT_EQ(draft, receiver_text("posted"));
+        EXPECT_EQ("poster\n-h\n", receiver_text("tools.log"));
+        EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "editor-input"));
+        return;
+    }
+    expect_posted(draft);
+    EXPECT_THAT(receiver_text("posted"), testing::HasSubstr("Supersedes: <root@example.test>\n"));
+    EXPECT_THAT(receiver_text("posted"), testing::HasSubstr("From: Root <root@example.test>\n"));
+}
+
+class ArticleRevisionCommandTest : public ArticleRevisionTest, public testing::WithParamInterface<char>
+{
+};
+
+class ArticleRevisionDisplayTest : public ArticleRevisionTest,
+                                   public testing::WithParamInterface<std::tuple<char, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void ArticleRevisionDisplayTest::SetUp()
+{
+    ArticleRevisionTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+}
+
+class FailedCancelArticleTest : public ArticleRevisionTest, public testing::WithParamInterface<const char *>
+{
+};
+
+struct SupersedeFailureCase
+{
+    const char *name;
+    char        command;
+    const char *mode;
+    const char *input;
+    bool        poster_invoked;
+};
+
+void PrintTo(const SupersedeFailureCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class FailedSupersedeArticleTest : public ArticleRevisionTest, public testing::WithParamInterface<SupersedeFailureCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void FailedSupersedeArticleTest::SetUp()
+{
+    ArticleRevisionTest::SetUp();
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam().mode);
+    answers(GetParam().input);
+}
+
 struct FollowupCommandCase
 {
     const char *name;
@@ -3070,6 +3208,196 @@ TEST_P(DisplayedForwardHeaderArticleTest, displaysTheHeaderWhenTheComposerDoesNo
 
 INSTANTIATE_TEST_SUITE_P(HeaderDisplay, DisplayedForwardHeaderArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Verbose" : "Compact"; });
+
+TEST_P(ArticleRevisionCommandTest, postsTheRequestedRevisionOfTheCurrentArticle)
+{
+    const std::string output = revise(GetParam());
+
+    expect_revision_posted(GetParam(), revision_draft(GetParam()));
+    if (GetParam() == 'C')
+    {
+        EXPECT_THAT(output, testing::HasSubstr("Canceling..."));
+    }
+}
+
+TEST_P(ArticleRevisionCommandTest, usesTheConfiguredRevisionHeader)
+{
+    const std::string control = GetParam() == 'C' ? "Control: cancel " : "Supersedes: ";
+    const std::string header = "Newsgroups: comp.lang.cpp\nSubject: Replacement %S\nFrom: %[from]\n" + control +
+                               "%i\nX-Original-Article: %a\n\n";
+    m_env.expect_env_repeatedly(GetParam() == 'C' ? "CANCELHEADER" : "SUPERSEDEHEADER", header.c_str());
+
+    revise(GetParam());
+
+    const std::string draft =
+        "Newsgroups: comp.lang.cpp\nSubject: Replacement Topic\nFrom: Root <root@example.test>\n" + control +
+        "<root@example.test>\nX-Original-Article: 1\n\n" + (GetParam() == 'Z' ? std::string{BODY} : "");
+    expect_revision_posted(GetParam(), draft);
+}
+
+TEST_P(ArticleRevisionCommandTest, acceptsTheLocalAuthorsMatchingReplyTo)
+{
+    g_login_name = "alias";
+    article(BODY, std::string{NEWS_ARTICLE_HEADERS} + "Reply-To: alias@example.test\n");
+
+    revise(GetParam());
+
+    expect_revision_posted(GetParam(), revision_draft(GetParam(), "alias@example.test"));
+}
+
+TEST_P(ArticleRevisionCommandTest, rejectsTheSameLoginNameOnAnotherHost)
+{
+    if (current_user_id() == ROOT_UID)
+    {
+        GTEST_SKIP() << "root is permitted to revise other authors' articles";
+    }
+    g_host_name = "elsewhere.test";
+
+    const std::string output = revise(GetParam());
+
+    EXPECT_THAT(output, testing::HasSubstr(g_verbose ? "someone else's article" : "Not your article"));
+    EXPECT_FALSE(fs::exists(g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+TEST_P(ArticleRevisionCommandTest, aBlockedDraftDoesNotInvokeThePostingProgram)
+{
+    const fs::path blocker = fs::path{g_priv_dir} / "blocked";
+    std::ofstream{blocker} << "Keep this file\n";
+    g_head_name = (blocker / "revision").generic_string();
+
+    const std::string output = revise(GetParam());
+
+    EXPECT_THAT(output, testing::HasSubstr("Can't create " + g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+INSTANTIATE_TEST_SUITE_P(Commands, ArticleRevisionCommandTest, testing::Values('C', 'z', 'Z'),
+                         [](const testing::TestParamInfo<char> &info)
+                         { return info.param == 'C'   ? "Cancel"
+                                  : info.param == 'z' ? "Replace"
+                                                      : "EditOriginal"; });
+
+TEST_F(ArticleRevisionTest, aMatchingConfiguredFromAddressAuthorizesCancellation)
+{
+    g_login_name = "reader";
+    g_host_name = "elsewhere.test";
+    m_env.expect_env_repeatedly("FROM", "root <ROOT@EXAMPLE.TEST>");
+
+    revise('C');
+
+    expect_revision_posted('C', "Newsgroups: comp.lang.cpp\nSubject: cancel\nFrom: root <ROOT@EXAMPLE.TEST>\n"
+                                "Control: cancel <root@example.test>\nDistribution: world\n\n"
+                                "<root@example.test> was cancelled from within trn.\n");
+}
+
+TEST_F(ArticleRevisionTest, theDefaultCancelCommandInvokesInewsWithTheControlDraft)
+{
+    const fs::path tools = m_output_dir / "tools";
+    fs::create_directories(tools);
+    const fs::path inews = tools /
+#ifdef USE_SPAWN_SHELL
+                           "inews.exe";
+    const char separator = ';';
+#else
+                           "inews";
+    const char separator = ':';
+#endif
+    fs::copy_file(TRN_TEST_PROCESS_TOOL, inews);
+    const char       *old_path = std::getenv("PATH");
+    const std::string path = tools.generic_string() + separator + (old_path ? old_path : "");
+    m_env.expect_env_repeatedly("PATH", path.c_str());
+    m_env.expect_no_envars({"CANCEL"});
+
+    revise('C');
+
+    EXPECT_EQ(revision_draft('C'), receiver_text("posted"));
+    EXPECT_EQ("inews\n-h\n", receiver_text("tools.log"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "editor-input"));
+}
+
+TEST_P(ArticleRevisionDisplayTest, rejectsAnotherAuthorsArticleWithoutCreatingADraft)
+{
+    if (current_user_id() == ROOT_UID)
+    {
+        GTEST_SKIP() << "root is permitted to revise other authors' articles";
+    }
+    g_login_name = "reader";
+
+    const std::string output = revise(std::get<0>(GetParam()));
+
+    EXPECT_THAT(output, testing::HasSubstr(g_verbose ? "someone else's article" : "Not your article"));
+    EXPECT_FALSE(fs::exists(g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+TEST_P(ArticleRevisionDisplayTest, aMissingArticleDoesNotCreateARevisionDraft)
+{
+    const char            command = std::get<0>(GetParam());
+    const ArticlePosition position = g_art_pos;
+    art_close();
+    ASSERT_TRUE(fs::remove(m_spool / "1"));
+    push_char('n');
+    testing::internal::CaptureStdout();
+
+    const ArticleSwitchResult result = art_switch(std::string{command, FINISH_CMD});
+
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(AS_ASK, result);
+    const std::string message =
+        g_verbose ? command == 'C' ? "Can't cancel an empty article." : "Can't supersede an empty article."
+                  : "Empty article.";
+    EXPECT_THAT(output, testing::HasSubstr(message));
+    EXPECT_EQ(g_curr_art, g_art);
+    EXPECT_EQ(g_curr_artp, g_artp);
+    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(2, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_artp->m_flags & (AF_EXISTS | AF_UNREAD | AF_SEL));
+    EXPECT_TRUE(g_selected_only);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(m_spool, fs::current_path());
+    EXPECT_FALSE(fs::exists(g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandsAndVerbosity, ArticleRevisionDisplayTest,
+                         testing::Combine(testing::Values('C', 'z', 'Z'), testing::Bool()));
+
+TEST_P(FailedCancelArticleTest, aFailedCancelPostRetainsTheControlDraftAndReturnsToReading)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam());
+
+    revise('C');
+
+    EXPECT_EQ(revision_draft('C'), receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+    EXPECT_EQ("poster\n-h\n", receiver_text("tools.log"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ProcessExit, FailedCancelArticleTest, testing::Values("poster_failure", "poster_cancel"),
+                         [](const testing::TestParamInfo<const char *> &info)
+                         { return std::string{info.param} == "poster_failure" ? "Failure" : "Cancellation"; });
+
+TEST_P(FailedSupersedeArticleTest, retainsTheReplacementWhenPostingDoesNotComplete)
+{
+    revise(GetParam().command);
+
+    expect_news_retained(revision_draft(GetParam().command));
+    EXPECT_EQ(GetParam().poster_invoked, receiver_text("tools.log").find("poster\n-h\n") != std::string::npos);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CommandsAndOutcomes, FailedSupersedeArticleTest,
+    testing::Values(SupersedeFailureCase{"ReplaceAborted", 'z', "", "a\n", false},
+                    SupersedeFailureCase{"EditOriginalAborted", 'Z', "", "a\n", false},
+                    SupersedeFailureCase{"ReplacePostFailed", 'z', "poster_failure", "s\na\n", true},
+                    SupersedeFailureCase{"EditOriginalPostFailed", 'Z', "poster_failure", "s\na\n", true}),
+    [](const testing::TestParamInfo<SupersedeFailureCase> &info) { return info.param.name; });
 
 TEST_P(GroupedFollowupArticleTest, postsTheFollowupToTheRequestedGroups)
 {
