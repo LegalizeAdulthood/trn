@@ -865,6 +865,14 @@ reask_pager:
         {
             clear_rest();
         }
+        if (pager_command.size() > 1 && pager_command.front() == '_' && pager_command[1] == FINISH_CMD)
+        {
+            pager_command = finish_dbl_char("_");
+            if (pager_command.empty())
+            {
+                goto reask_pager;
+            }
+        }
         switch (page_switch(pager_command))
         {
         case PS_ASK:  // reprompt "--MORE--..."
