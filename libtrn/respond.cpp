@@ -715,6 +715,7 @@ s_bomb:
 
 SaveResult view_article()
 {
+    const ArticlePosition reading_position = g_art_pos;
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
@@ -788,6 +789,7 @@ SaveResult view_article()
             term_down(1);
         }
     }
+    g_art_pos = reading_position;
     chdir_news_dir();
     return SAVE_DONE;
 }

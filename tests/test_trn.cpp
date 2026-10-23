@@ -1405,6 +1405,115 @@ void ExtractOverrideTest::SetUp()
     }
 }
 
+class ViewArticleTest : public ExtractSaveArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        mailcap(std::string_view entries);
+    std::string view();
+    void        expect_viewed(const char *filename, std::string_view contents) const;
+
+    fs::path                          m_parts;
+    std::string                       m_viewer;
+    static constexpr std::string_view MIME_HEADERS =
+        "MIME-Version: 1.0\nContent-Type: application/octet-stream; name=image.bin\n"
+        "Content-Transfer-Encoding: base64\n";
+
+private:
+    fs::path    m_mailcap;
+    std::string m_old_tmp_dir{g_tmp_dir};
+    std::string m_old_login_name{g_login_name};
+};
+
+void ViewArticleTest::SetUp()
+{
+    ExtractSaveArticleTest::SetUp();
+    g_tmp_dir = (m_output_dir / "viewer temp").generic_string();
+    g_login_name = "view-user";
+#ifdef USE_WINDOWS_FILENAME_RULES
+    m_parts = fs::path{g_tmp_dir} / "parts";
+#else
+    m_parts = fs::path{g_tmp_dir} / "m-prts-view-user";
+#endif
+    m_mailcap = m_output_dir / "mailcap";
+    m_viewer =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" viewer \"%s\"";
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", g_priv_dir.c_str());
+    m_env.expect_env_repeatedly("MIMECAPS", m_mailcap.generic_string().c_str());
+    mailcap("application/octet-stream; " + m_viewer + "\nimage/jpeg; " + m_viewer + '\n');
+    article("QUJD\n", MIME_HEADERS);
+}
+
+void ViewArticleTest::TearDown()
+{
+    mime_final();
+    g_tmp_dir = m_old_tmp_dir;
+    g_login_name = m_old_login_name;
+    ExtractSaveArticleTest::TearDown();
+}
+
+void ViewArticleTest::mailcap(std::string_view entries)
+{
+    std::ofstream output{m_mailcap};
+    output << entries;
+    output.close();
+    ASSERT_FALSE(output.fail());
+    mime_init();
+}
+
+std::string ViewArticleTest::view()
+{
+    EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    g_art_pos = tell_art();
+    g_int_count = 1;
+    const std::string output = save('a', {});
+    EXPECT_FALSE(g_waiting);
+    if (fs::exists(m_parts))
+    {
+        EXPECT_TRUE(fs::is_empty(m_parts));
+    }
+    return output;
+}
+
+void ViewArticleTest::expect_viewed(const char *filename, std::string_view contents) const
+{
+    EXPECT_EQ(contents, receiver_text((std::string{"viewed-"} + filename).c_str()));
+    EXPECT_FALSE(fs::exists(m_parts / filename));
+}
+
+struct ViewAttachmentCase
+{
+    const char *name;
+    const char *headers;
+    const char *body;
+    const char *filename;
+};
+
+void PrintTo(const ViewAttachmentCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class EncodedViewArticleTest : public ViewArticleTest, public testing::WithParamInterface<ViewAttachmentCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void EncodedViewArticleTest::SetUp()
+{
+    ViewArticleTest::SetUp();
+    article(GetParam().body, GetParam().headers);
+}
+
+class FailedViewArticleTest : public ViewArticleTest, public testing::WithParamInterface<const char *>
+{
+};
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -1916,6 +2025,98 @@ TEST_F(ExternalExtractTest, defaultShellArchiveHandlerExtractsTheDetectedScript)
     EXPECT_EQ(1, std::distance(fs::directory_iterator{m_destination}, fs::directory_iterator{}));
 }
 #endif
+
+TEST_P(EncodedViewArticleTest, displaysTheDecodedAttachmentAndRemovesTheTemporaryFile)
+{
+    const std::string output = view();
+
+    expect_viewed(GetParam().filename, "ABC");
+    EXPECT_EQ("viewer\n" + std::string{GetParam().filename} + '\n', receiver_text("tools.log"));
+    EXPECT_NE(std::string::npos, output.find("Processing attachments..."));
+}
+
+INSTANTIATE_TEST_SUITE_P(AttachmentFormats, EncodedViewArticleTest,
+                         testing::Values(ViewAttachmentCase{"Mime",
+                                                            "MIME-Version: 1.0\n"
+                                                            "Content-Type: application/octet-stream; name=image.bin\n"
+                                                            "Content-Transfer-Encoding: base64\n",
+                                                            "QUJD\n", "image.bin"},
+                                         ViewAttachmentCase{"Uuencode", "",
+                                                            "Posted attachment follows\n\n"
+                                                            "begin 644 image.jpg\n#04)#\n`\nend\n",
+                                                            "image.jpg"}),
+                         [](const testing::TestParamInfo<ViewAttachmentCase> &info) { return info.param.name; });
+
+TEST_F(ViewArticleTest, displaysMultipartAttachmentsInOrderWithoutViewingTheText)
+{
+    article("--parts\nContent-Type: text/plain\n\nReadme text\n"
+            "--parts\nContent-Type: application/octet-stream; name=one.bin\n"
+            "Content-Transfer-Encoding: base64\n\nQUJD\n"
+            "--parts\nContent-Type: application/octet-stream; name=two.bin\n"
+            "Content-Transfer-Encoding: base64\n\nREVG\n--parts--\n",
+            "MIME-Version: 1.0\nContent-Type: multipart/mixed; boundary=parts\n");
+
+    view();
+
+    expect_viewed("one.bin", "ABC");
+    expect_viewed("two.bin", "DEF");
+    EXPECT_EQ("viewer\none.bin\nviewer\ntwo.bin\n", receiver_text("tools.log"));
+    EXPECT_EQ((m_parts / "two.bin").generic_string(), receiver_text("viewer-directory"));
+}
+
+TEST_P(FailedViewArticleTest, removesTheTemporaryAttachmentWhenTheViewerStops)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam());
+
+    view();
+
+    EXPECT_EQ("viewer\nimage.bin\n", receiver_text("tools.log"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "viewed-image.bin"));
+    EXPECT_FALSE(fs::exists(m_parts / "image.bin"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ViewerExit, FailedViewArticleTest, testing::Values("viewer_failure", "viewer_cancel"),
+                         [](const testing::TestParamInfo<const char *> &info)
+                         { return info.index == 0 ? "Failure" : "Cancellation"; });
+
+TEST_F(ViewArticleTest, reportsAnAttachmentWithoutAMatchingViewer)
+{
+    mailcap("image/jpeg; " + m_viewer + '\n');
+
+    const std::string output = view();
+
+    EXPECT_NE(std::string::npos, output.find("No view method for application/octet-stream -- skipping."));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+    EXPECT_FALSE(fs::exists(m_parts));
+}
+
+TEST_F(ViewArticleTest, reportsAnOrdinaryArticleWithoutInvokingAViewer)
+{
+    article(BODY);
+
+    const std::string output = view();
+
+    EXPECT_NE(std::string::npos, output.find("Unable to determine type of file."));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+    EXPECT_FALSE(fs::exists(m_parts));
+}
+
+TEST_F(ViewArticleTest, selectsTheNextViewerWhenAMailcapTestCommandFails)
+{
+    const std::string probe =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" pager";
+    mailcap("application/octet-stream; invalid-first-viewer; test=" + probe + '\n' + "application/octet-stream; " +
+            m_viewer + '\n');
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "pager_failure");
+
+    view();
+
+    expect_viewed("image.bin", "ABC");
+    EXPECT_EQ("pager\nviewer\nimage.bin\n", receiver_text("tools.log"));
+}
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {

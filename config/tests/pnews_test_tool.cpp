@@ -99,6 +99,17 @@ int main(int argc, char **argv)
         output.close();
         return input.bad() || output.fail() ? 11 : 0;
     }
+    if (role == "viewer")
+    {
+        if (argc != 3 || !std::filesystem::is_regular_file(argv[2]))
+        {
+            return 13;
+        }
+        const std::filesystem::path input = argv[2];
+        write_file(directory / ("viewed-" + input.filename().string()), read_file(input));
+        write_file(directory / "viewer-directory", std::filesystem::current_path().generic_string());
+        return 0;
+    }
     if (role == "editor")
     {
         for (int i = 2; i < argc; ++i)
