@@ -31,12 +31,19 @@
 #include <trn/rthread.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
+#include <trn/search.h>
 #include <trn/smisc.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
 #include <trn/util.h>
 #include <util/env.h>
+
+#include <config/fdio.h>
+
+#ifdef I_UNISTD
+#include <unistd.h>
+#endif
 
 #include <test_config.h>
 #include <test_process_config.h>
@@ -1514,23 +1521,17 @@ class FailedViewArticleTest : public ViewArticleTest, public testing::WithParamI
 {
 };
 
-class ReplyArticleTest : public ExtractSaveArticleTest
+class ResponseArticleTest : public ExtractSaveArticleTest
 {
 protected:
     void        SetUp() override;
     void        TearDown() override;
     void        answers(std::string_view input);
     std::string reply_with(char command);
-    std::string expected_header(std::string_view recipient = "root@example.test") const;
-    void        expect_sent(std::string_view draft) const;
-    void        expect_retained(std::string_view draft) const;
 
     fs::path                          m_home;
     fs::path                          m_answers;
     static constexpr std::string_view REPLY_HEADERS = "Newsgroups: comp.lang.cpp\nReferences: <parent@example.test>\n";
-    static constexpr std::string_view QUOTED_BODY =
-        "In article <root@example.test> you write:\n"
-        "> Root first line\n> Root next line\n> From a body line\n> Last line\n\n";
 
 private:
     std::string m_old_head_name{g_head_name};
@@ -1539,9 +1540,10 @@ private:
     char        m_old_wrapped_nl{g_wrapped_nl};
 };
 
-void ReplyArticleTest::SetUp()
+void ResponseArticleTest::SetUp()
 {
     ExtractSaveArticleTest::SetUp();
+    search_init();
     m_home = fs::path{g_priv_dir} / "home";
     fs::create_directories(m_home);
     const fs::path temporary = m_output_dir / "temporary";
@@ -1597,7 +1599,7 @@ void ReplyArticleTest::SetUp()
     article(BODY, REPLY_HEADERS);
 }
 
-void ReplyArticleTest::TearDown()
+void ResponseArticleTest::TearDown()
 {
     g_head_name = m_old_head_name;
     g_orig_dir = m_old_orig_dir;
@@ -1606,7 +1608,7 @@ void ReplyArticleTest::TearDown()
     ExtractSaveArticleTest::TearDown();
 }
 
-void ReplyArticleTest::answers(std::string_view input)
+void ResponseArticleTest::answers(std::string_view input)
 {
     std::ofstream output{m_answers};
     output << input;
@@ -1614,7 +1616,7 @@ void ReplyArticleTest::answers(std::string_view input)
     ASSERT_FALSE(output.fail());
 }
 
-std::string ReplyArticleTest::reply_with(char command)
+std::string ResponseArticleTest::reply_with(char command)
 {
     EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
     g_art_pos = tell_art();
@@ -1623,6 +1625,18 @@ std::string ReplyArticleTest::reply_with(char command)
     EXPECT_EQ(WRAPPED_NL, g_wrapped_nl);
     return output;
 }
+
+class ReplyArticleTest : public ResponseArticleTest
+{
+protected:
+    std::string expected_header(std::string_view recipient = "root@example.test") const;
+    void        expect_sent(std::string_view draft) const;
+    void        expect_retained(std::string_view draft) const;
+
+    static constexpr std::string_view QUOTED_BODY =
+        "In article <root@example.test> you write:\n"
+        "> Root first line\n> Root next line\n> From a body line\n> Last line\n\n";
+};
 
 std::string ReplyArticleTest::expected_header(std::string_view recipient) const
 {
@@ -1685,6 +1699,157 @@ void AddressedReplyArticleTest::SetUp()
     if (GetParam().reply_to)
     {
         article(BODY, std::string{REPLY_HEADERS} + "Reply-To: Reply Desk <desk@example.test>\n");
+    }
+}
+
+class FollowupArticleTest : public ResponseArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        prompt_answers(std::string_view input);
+    std::string follow_with(char command, std::string_view input = {});
+    std::string expected_news_header(std::string_view groups = "comp.lang.cpp", bool original_groups = false) const;
+    void        expect_posted(std::string_view draft) const;
+    void        expect_news_retained(std::string_view draft) const;
+
+    static constexpr std::string_view NEWS_ARTICLE_HEADERS =
+        "Newsgroups: comp.lang.cpp\nReferences: <parent@example.test>\n"
+        "Distribution: world\nKeywords: example\n";
+    static constexpr std::string_view QUOTED_ARTICLE =
+        "In article <root@example.test>, Root <root@example.test> wrote:\n"
+        "> Root first line\n> Root next line\n> From a body line\n> Last line\n\n";
+
+private:
+    bool m_old_force_grow{g_force_grow};
+    int  m_saved_stdin{-1};
+};
+
+void FollowupArticleTest::SetUp()
+{
+    ResponseArticleTest::SetUp();
+    const fs::path news = m_output_dir / "news";
+    fs::create_directories(news);
+    std::ofstream{news / "active"} << "comp.lang.cpp 3 1 y\ncomp.test 1 1 y\n";
+    std::ofstream{news / "newsgroups"} << "comp.lang.cpp C++\ncomp.test Test group\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(news / "active", "", ""));
+    m_env.expect_env_repeatedly("NEWSLIB", news.generic_string().c_str());
+    m_env.expect_env_repeatedly("NEWSACTIVE", (news / "active").generic_string().c_str());
+    m_env.expect_env_repeatedly("NEWSDESCRIPTIONS", (news / "newsgroups").generic_string().c_str());
+    m_env.expect_env_repeatedly("FAST_PNEWS", "yes");
+    m_env.expect_env_repeatedly("NETSPEED", "0");
+    m_env.expect_env_repeatedly("TRN_VERSION", "5.0");
+    m_env.expect_env_repeatedly("AUTHORCOPY", "none");
+    m_env.expect_env_repeatedly("NEWSSIGNATURE", (m_home / "missing-signature").generic_string().c_str());
+    m_env.expect_no_envars({"NEWSHEADER", "ATTRIBUTION"});
+#ifdef USE_SPAWN_SHELL
+    m_env.expect_env_repeatedly("INEWS", "\"" TRN_TEST_PROCESS_TOOL "\" poster");
+    m_env.expect_env_repeatedly("ARTCHECK", "\"" TRN_TEST_PROCESS_TOOL "\" artcheck");
+    const std::string poster = "< \"" + m_answers.generic_string() + "\" call \"" TRN_TEST_PNEWS "\" -h \"%h\"";
+#else
+    const std::string poster = "sh \"" TRN_TEST_PNEWS "\" -h \"%h\" < \"" + m_answers.generic_string() + '"';
+#endif
+    m_env.expect_env_repeatedly("NEWSPOSTER", poster.c_str());
+    article(BODY, NEWS_ARTICLE_HEADERS);
+    g_force_grow = false;
+}
+
+void FollowupArticleTest::TearDown()
+{
+    if (m_saved_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
+        close(m_saved_stdin);
+        std::clearerr(stdin);
+    }
+    g_force_grow = m_old_force_grow;
+    ResponseArticleTest::TearDown();
+}
+
+void FollowupArticleTest::prompt_answers(std::string_view input)
+{
+    const fs::path prompt_input = m_output_dir / "prompt-input";
+    std::ofstream{prompt_input} << input;
+    std::FILE *fp = std::fopen(prompt_input.string().c_str(), "r");
+    ASSERT_NE(nullptr, fp);
+    m_saved_stdin = dup(fileno(stdin));
+    EXPECT_GE(m_saved_stdin, 0);
+    EXPECT_GE(dup2(fileno(fp), fileno(stdin)), 0);
+    std::fclose(fp);
+    std::clearerr(stdin);
+}
+
+std::string FollowupArticleTest::follow_with(char command, std::string_view input)
+{
+    EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    g_art_pos = tell_art();
+    const std::string output = save(command, input);
+    EXPECT_TRUE(g_force_grow);
+    EXPECT_FALSE(g_waiting);
+    EXPECT_EQ(WRAPPED_NL, g_wrapped_nl);
+    return output;
+}
+
+std::string FollowupArticleTest::expected_news_header(std::string_view groups, bool original_groups) const
+{
+    const std::string original = original_groups ? "X-ORIGINAL-NEWSGROUPS: comp.lang.cpp\n" : "";
+    return original + "Newsgroups: " + std::string{groups} +
+           "\nSubject: Re: Topic\nSummary: \nExpires: \nReferences: <parent@example.test> <root@example.test>\n"
+           "Sender: \nFollowup-To: \nDistribution: world\nOrganization: Test Organization\nKeywords: example\nCc: \n\n";
+}
+
+void FollowupArticleTest::expect_posted(std::string_view draft) const
+{
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    EXPECT_EQ(std::string{draft} + '\n', receiver_text("editor-input"));
+    EXPECT_EQ(g_orig_dir, receiver_text("editor-directory"));
+    const std::string posted = receiver_text("posted");
+    const std::size_t body = draft.find("\n\n");
+    ASSERT_NE(std::string_view::npos, body);
+    EXPECT_NE(std::string::npos, posted.find(draft.substr(body + 2)));
+    EXPECT_NE(std::string::npos, posted.find("mispelled editor body\n"));
+    const std::string log = receiver_text("tools.log");
+    const std::size_t editor = log.find("editor\n");
+    const std::size_t poster = log.find("poster\n-h\n");
+    ASSERT_NE(std::string::npos, editor);
+    ASSERT_NE(std::string::npos, poster);
+    EXPECT_LT(editor, poster);
+    EXPECT_FALSE(fs::exists(m_home / "dead.article"));
+}
+
+void FollowupArticleTest::expect_news_retained(std::string_view draft) const
+{
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    const std::string edited = std::string{draft} + "\nmispelled editor body\n";
+    EXPECT_EQ(edited, receiver_text("home/dead.article"));
+    EXPECT_EQ(edited, receiver_text("home/.article"));
+}
+
+struct FollowupCommandCase
+{
+    const char *name;
+    char        command;
+    const char *followup_groups;
+};
+
+void PrintTo(const FollowupCommandCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class GroupedFollowupArticleTest : public FollowupArticleTest, public testing::WithParamInterface<FollowupCommandCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void GroupedFollowupArticleTest::SetUp()
+{
+    FollowupArticleTest::SetUp();
+    if (*GetParam().followup_groups)
+    {
+        article(BODY, std::string{NEWS_ARTICLE_HEADERS} + "Followup-To: " + GetParam().followup_groups + '\n');
     }
 }
 
@@ -2370,6 +2535,110 @@ TEST_F(ReplyArticleTest, quotesTheDecodedMimeText)
 
     expect_sent(expected_header() + "In article <root@example.test> you write:\n"
                                     "> Original body\n> Second line\n\n");
+}
+
+TEST_P(GroupedFollowupArticleTest, postsTheFollowupToTheRequestedGroups)
+{
+    const std::string groups = *GetParam().followup_groups ? GetParam().followup_groups : "comp.lang.cpp";
+    const std::string header = expected_news_header(groups, *GetParam().followup_groups != '\0');
+    const std::string quote = GetParam().command == 'F' ? std::string{QUOTED_ARTICLE} : std::string{};
+
+    follow_with(GetParam().command, GetParam().command == 'f' ? "n\n" : "");
+
+    expect_posted(header + quote);
+    const std::string posted = receiver_text("posted");
+    EXPECT_NE(std::string::npos, posted.find("Newsgroups: " + groups + '\n'));
+    EXPECT_NE(std::string::npos, posted.find("References: <parent@example.test> <root@example.test>\n"));
+    EXPECT_EQ(GetParam().command == 'F', posted.find("> Root first line") != std::string::npos);
+}
+
+INSTANTIATE_TEST_SUITE_P(FollowupCommands, GroupedFollowupArticleTest,
+                         testing::Values(FollowupCommandCase{"PlainCurrent", 'f', ""},
+                                         FollowupCommandCase{"QuotedCurrent", 'F', ""},
+                                         FollowupCommandCase{"PlainRedirected", 'f', "comp.test"},
+                                         FollowupCommandCase{"QuotedRedirected", 'F', "comp.test"}),
+                         [](const testing::TestParamInfo<FollowupCommandCase> &info) { return info.param.name; });
+
+TEST_F(FollowupArticleTest, quittingTheNewTopicPromptDoesNotCreateADraft)
+{
+    follow_with('f', "q\n");
+
+    EXPECT_FALSE(fs::exists(g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+TEST_F(FollowupArticleTest, aNewTopicStartsWithoutTheOriginalSubjectOrReferences)
+{
+    prompt_answers("New topic\n\n");
+
+    follow_with('f', "\n");
+
+    expect_posted("Newsgroups: comp.lang.cpp\nSubject: New topic\nSummary: \nExpires: \n"
+                  "Sender: \nFollowup-To: \nDistribution: \nOrganization: Test Organization\n"
+                  "Keywords: \nCc: \n\n");
+    const std::string posted = receiver_text("posted");
+    EXPECT_NE(std::string::npos, posted.find("Subject: New topic\n"));
+    EXPECT_EQ(std::string::npos, posted.find("References:"));
+    EXPECT_EQ(std::string::npos, posted.find("root@example.test"));
+}
+
+TEST_F(FollowupArticleTest, abortingPostingRetainsTheEditedFollowup)
+{
+    answers("a\n");
+
+    follow_with('F');
+
+    expect_news_retained(expected_news_header() + std::string{QUOTED_ARTICLE});
+    EXPECT_EQ(std::string::npos, receiver_text("tools.log").find("poster\n"));
+}
+
+TEST_F(FollowupArticleTest, aPosterFailureRetainsTheFollowupAndReturnsToReading)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "poster_failure");
+    answers("s\na\n");
+
+    follow_with('F');
+
+    expect_news_retained(expected_news_header() + std::string{QUOTED_ARTICLE});
+    EXPECT_NE(std::string::npos, receiver_text("tools.log").find("poster\n-h\n"));
+}
+
+TEST_F(FollowupArticleTest, aBlockedDraftDoesNotInvokeThePostingProgram)
+{
+    const fs::path blocker = fs::path{g_priv_dir} / "blocked";
+    std::ofstream{blocker} << "Keep this file\n";
+    g_head_name = (blocker / "followup").generic_string();
+
+    const std::string output = follow_with('F');
+
+    EXPECT_NE(std::string::npos, output.find("Can't create " + g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+TEST_F(FollowupArticleTest, usesConfiguredNewsHeadersAttributionAndQuotePrefix)
+{
+    m_env.expect_env_repeatedly("NEWSHEADER", "Newsgroups: comp.test\nSubject: Custom %S\nReferences: %R\n\n");
+    m_env.expect_env_repeatedly("ATTRIBUTION", "Followup to %i:");
+    g_indent_string = "| ";
+
+    follow_with('F');
+
+    expect_posted("Newsgroups: comp.test\nSubject: Custom Topic\n"
+                  "References: <parent@example.test> <root@example.test>\n\n"
+                  "Followup to <root@example.test>:\n| Root first line\n| Root next line\n"
+                  "| From a body line\n| Last line\n\n");
+}
+
+TEST_F(FollowupArticleTest, quotesTheDecodedMimeTextInThePostedFollowup)
+{
+    article("Original=20body\nSecond=20line\n", std::string{NEWS_ARTICLE_HEADERS} +
+                                                    "MIME-Version: 1.0\nContent-Type: text/plain; charset=us-ascii\n"
+                                                    "Content-Transfer-Encoding: quoted-printable\n");
+
+    follow_with('F');
+
+    expect_posted(expected_news_header() + "In article <root@example.test>, Root <root@example.test> wrote:\n"
+                                           "> Original body\n> Second line\n\n");
 }
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)

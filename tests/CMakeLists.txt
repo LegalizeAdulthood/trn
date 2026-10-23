@@ -115,6 +115,17 @@ if(MSVC)
 endif()
 get_directory_property(TRN_TEST_RNMAIL DIRECTORY "${PROJECT_SOURCE_DIR}/config"
     DEFINITION TRN_GENERATED_RNMAIL_FILE)
+get_directory_property(TRN_TEST_PNEWS DIRECTORY "${PROJECT_SOURCE_DIR}/config"
+    DEFINITION TRN_GENERATED_PNEWS_FILE)
+if(NOT WIN32)
+    file(READ "${TRN_TEST_PNEWS}" pnews_test_script)
+    string(REGEX REPLACE "artcheck=[^\n]*" "artcheck=\"$<TARGET_FILE:pnews-test-tool> artcheck\""
+        pnews_test_script "${pnews_test_script}")
+    string(REGEX REPLACE "inews=[^\n]*" "inews=\"$<TARGET_FILE:pnews-test-tool> poster\""
+        pnews_test_script "${pnews_test_script}")
+    set(TRN_TEST_PNEWS "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Pnews")
+    file(GENERATE OUTPUT "${TRN_TEST_PNEWS}" CONTENT "${pnews_test_script}")
+endif()
 configure_file(cmake/test_process_config.h.in test_process_config.h.in @ONLY)
 file(GENERATE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/test_process_config.h"
