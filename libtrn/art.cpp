@@ -1399,7 +1399,8 @@ go_forward:
             (g_page_stop.empty() || s_continuation || !g_page_compex.execute(pager_line)))
         {
             if (!s_special //
-                || (g_marking && (command_char != 'd' || (g_marking_areas & HALF_PAGE_MARKING))))
+                || (g_marking &&
+                    ((command_char != 'd' && command_char != Ctl('d')) || (g_marking_areas & HALF_PAGE_MARKING))))
             {
                 s_restart = s_a_line_begin;
                 --g_art_line_num;     // restart this line

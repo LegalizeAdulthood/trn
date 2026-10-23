@@ -55,9 +55,11 @@
 #include <filesystem>
 #include <iomanip>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <system_error>
+#include <vector>
 
 using namespace testing;
 
@@ -1721,6 +1723,163 @@ void write_article_body(const fs::path &article_file, std::string_view body, std
                                 << body;
 }
 
+struct ForwardPagerCase
+{
+    const char                    *name;
+    const char                    *commands;
+    int                            screen_lines;
+    bool                           erase_screen;
+    bool                           erase_each_line;
+    MarkingMode                    marking;
+    MarkingAreas                   marking_areas;
+    std::vector<std::vector<long>> pages;
+    long                           next_line;
+    long                           top_line;
+    long                           body_lines{40};
+};
+
+void PrintTo(const ForwardPagerCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class ForwardPagerArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<ForwardPagerCase>
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    void              advance();
+    std::vector<long> page_lines(std::size_t page) const;
+
+    ArticlePosition m_body_start{};
+
+private:
+    fs::path                     m_previous_directory;
+    ValueSaver<std::string>      m_group_dir{g_newsgroup_dir, g_newsgroup_dir};
+    ValueSaver<ArticleNum>       m_current_article{g_curr_art, g_curr_art};
+    ValueSaver<ArticleLine>      m_line{g_art_line_num, g_art_line_num};
+    ValueSaver<ArticlePosition>  m_position{g_art_pos, g_art_pos};
+    ValueSaver<HeaderLineType>   m_in_header{g_in_header, g_in_header};
+    ValueSaver<bool>             m_do_fseek{g_do_fseek, g_do_fseek};
+    ValueSaver<bool>             m_erase_screen{g_erase_screen, g_erase_screen};
+    ValueSaver<bool>             m_erase_each_line{g_erase_each_line, g_erase_each_line};
+    ValueSaver<MarkingMode>      m_marking{g_marking, g_marking};
+    ValueSaver<MarkingAreas>     m_marking_areas{g_marking_areas, g_marking_areas};
+    ValueSaver<ArticleLine>      m_highlight{g_highlight, g_highlight};
+    ValueSaver<ArticlePosition>  m_inner_search{g_inner_search, g_inner_search};
+    ValueSaver<ArticleLine>      m_inner_light{g_inner_light, g_inner_light};
+    ValueSaver<char>             m_hide_everything{g_hide_everything, g_hide_everything};
+    ValueSaver<std::string>      m_page_stop{g_page_stop, g_page_stop};
+    ValueSaver<int>              m_check_count{g_check_count, g_check_count};
+    ValueSaver<GeneralMode>      m_general_mode{g_general_mode, g_general_mode};
+    ValueSaver<MinorMode>        m_mode{g_mode, g_mode};
+    ValueSaver<std::string_view> m_clear{g_tc_CD, g_tc_CD};
+    ValueSaver<std::string_view> m_home{g_tc_HO, g_tc_HO};
+    ValueSaver<std::string_view> m_up{g_tc_UP, g_tc_UP};
+};
+
+void ForwardPagerArticleTest::SetUp()
+{
+    ArticleHeaderPresentationTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    m_previous_directory = fs::current_path();
+    fs::current_path(m_output.path());
+    g_newsgroup_dir = ".";
+    art_close();
+    {
+        std::ofstream article{std::to_string(g_art.value_of())};
+        article << "Subject: pager advancement\n\n";
+        m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
+        for (long line = 0; line < GetParam().body_lines; ++line)
+        {
+            article << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
+        }
+        ASSERT_TRUE(article.good());
+    }
+    g_parsed_art = ArticleNum{};
+    ASSERT_TRUE(parse_header(g_art));
+    mime_set_article();
+    clear_art_buf();
+    set_art_buf_seek(m_body_start);
+    ASSERT_EQ(0, seek_art(m_body_start));
+    g_art_pos = m_body_start;
+    g_art_line_num = ArticleLine{};
+    g_top_line = ArticleLine{};
+    g_in_header = PAST_HEADER;
+    g_do_fseek = false;
+    g_highlight = ArticleLine{-1};
+    g_inner_search = ArticlePosition{};
+    g_inner_light = ArticleLine{};
+    g_hide_everything = 0;
+    g_page_stop.clear();
+    g_check_count = 0;
+    g_curr_art = g_art;
+    g_tc_LINES = GetParam().screen_lines;
+    g_erase_screen = GetParam().erase_screen;
+    g_erase_each_line = GetParam().erase_each_line;
+    g_marking = GetParam().marking;
+    g_marking_areas = GetParam().marking_areas;
+    g_tc_CD = "<clear>";
+    g_tc_HO = "<home>";
+    g_tc_UP = "<up>";
+    virtual_write(ArticleLine{}, m_body_start);
+    set_mode(GM_READ, MM_ARTICLE);
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+}
+
+void ForwardPagerArticleTest::TearDown()
+{
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+    back_page_final();
+    if (!m_previous_directory.empty())
+    {
+        fs::current_path(m_previous_directory);
+    }
+    ArticleHeaderPresentationTest::TearDown();
+}
+
+void ForwardPagerArticleTest::advance()
+{
+    push_char('q');
+    push_string(GetParam().commands, 0);
+    render_article();
+}
+
+std::vector<long> ForwardPagerArticleTest::page_lines(std::size_t page) const
+{
+    std::string_view text{m_rendered};
+    for (std::size_t index = 0; index < page; ++index)
+    {
+        const std::size_t prompt = text.find("--MORE--(");
+        EXPECT_NE(std::string_view::npos, prompt);
+        if (prompt == std::string_view::npos)
+        {
+            return {};
+        }
+        const std::size_t end = text.find(')', prompt);
+        EXPECT_NE(std::string_view::npos, end);
+        if (end == std::string_view::npos)
+        {
+            return {};
+        }
+        text.remove_prefix(end + 1);
+    }
+    text = text.substr(0, text.find("--MORE--("));
+    std::vector<long> lines;
+    for (std::size_t position = text.find("Body "); position != std::string_view::npos;
+         position = text.find("Body ", position + 5))
+    {
+        lines.push_back(std::stol(std::string{text.substr(position + 5, 3)}));
+    }
+    return lines;
+}
+
 } // namespace
 
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
@@ -2483,6 +2642,81 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
               g_prompt);
 }
+
+TEST_P(ForwardPagerArticleTest, advancesToTheExpectedBodyLinesAndPosition)
+{
+    advance();
+
+    const ForwardPagerCase &scenario = GetParam();
+    const bool              at_end = scenario.next_line == scenario.body_lines;
+    EXPECT_EQ(at_end ? DA_NORM : DA_TO_END, m_result);
+    std::vector<long> first_page(static_cast<std::size_t>(scenario.screen_lines - 1));
+    std::iota(first_page.begin(), first_page.end(), 0L);
+    EXPECT_EQ(first_page, page_lines(0));
+    for (std::size_t index = 0; index < scenario.pages.size(); ++index)
+    {
+        EXPECT_EQ(scenario.pages[index], page_lines(index + 1)) << "Page " << index + 1;
+    }
+    EXPECT_EQ(ArticleLine{scenario.next_line}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{scenario.top_line}, g_top_line);
+    EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line}, g_art_pos);
+    EXPECT_EQ(g_art_pos, art_buf_article_pos());
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(at_end, macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CommandsAndDisplayModes, ForwardPagerArticleTest,
+    Values(
+        ForwardPagerCase{
+            "ScrollingSpace", " ", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
+        ForwardPagerCase{
+            "ScrollingY", "y", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
+        ForwardPagerCase{
+            "ClearedPage", " ", 10, true, false, NO_MARKING, NONE, {{8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
+        ForwardPagerCase{
+            "HomeAndErase", " ", 10, true, true, NO_MARKING, NONE, {{8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
+        ForwardPagerCase{
+            "MarkedFullPage", " ", 10, false, false, STANDOUT, NONE, {{8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
+        ForwardPagerCase{"HalfPageD", "d", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4},
+        ForwardPagerCase{"HalfPageControlD", "\004", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4},
+        ForwardPagerCase{
+            "MarkedHalfPage", "d", 10, false, false, STANDOUT, HALF_PAGE_MARKING, {{8, 9, 10, 11, 12}}, 13, 4},
+        ForwardPagerCase{
+            "HalfPageMarkingDisabledD", "d", 10, false, false, STANDOUT, BACK_PAGE_MARKING, {{9, 10, 11, 12}}, 13, 4},
+        ForwardPagerCase{"HalfPageMarkingDisabledControlD",
+                         "\004",
+                         10,
+                         false,
+                         false,
+                         STANDOUT,
+                         BACK_PAGE_MARKING,
+                         {{9, 10, 11, 12}},
+                         13,
+                         4},
+        ForwardPagerCase{"OddHeightHalfPage", "d", 9, false, false, NO_MARKING, NONE, {{8, 9, 10}}, 11, 3},
+        ForwardPagerCase{"RepeatedOddHeightHalfPages",
+                         "dd",
+                         9,
+                         false,
+                         false,
+                         NO_MARKING,
+                         NONE,
+                         {{8, 9, 10}, {11, 12, 13, 14}},
+                         15,
+                         7},
+        ForwardPagerCase{"SingleLineNewline", "\n", 10, false, false, NO_MARKING, NONE, {{9}}, 10, 1},
+        ForwardPagerCase{"SingleLineReturn", "\r", 10, false, false, NO_MARKING, NONE, {{9}}, 10, 1},
+        ForwardPagerCase{"FinalPartialPage", " ", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4, 13}),
+    [](const TestParamInfo<ForwardPagerCase> &info) { return info.param.name; });
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
