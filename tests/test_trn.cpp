@@ -675,6 +675,8 @@ protected:
     void                 prepare_groups();
     InputNewsgroupResult run_command(std::string_view command);
 
+    std::string m_output;
+
 private:
     NewsgroupData *m_old_recent{g_recent_newsgroup};
 };
@@ -704,7 +706,7 @@ InputNewsgroupResult InputNewsgroupNavigationTest::run_command(std::string_view 
     push_command(command);
     testing::internal::CaptureStdout();
     const InputNewsgroupResult result = input_newsgroup();
-    (void) testing::internal::GetCapturedStdout();
+    m_output = testing::internal::GetCapturedStdout();
     return result;
 }
 
@@ -726,6 +728,58 @@ class InputNewsgroupFirstTest : public InputNewsgroupNavigationTest,
 };
 
 class InputNewsgroupPositionTest : public InputNewsgroupNavigationTest, public testing::WithParamInterface<bool>
+{
+};
+
+class InputNewsgroupLookupTest : public InputNewsgroupNavigationTest
+{
+protected:
+    void SetUp() override;
+    void start_at_end();
+};
+
+void InputNewsgroupLookupTest::SetUp()
+{
+    InputNewsgroupNavigationTest::SetUp();
+    prepare_groups();
+    m_newsrc.flags |= RF_ADD_GROUPS;
+}
+
+void InputNewsgroupLookupTest::start_at_end()
+{
+    g_newsgroup_ptr = nullptr;
+    g_current_newsgroup = nullptr;
+}
+
+using NumericNewsgroupTarget = std::pair<std::string_view, std::size_t>;
+
+class InputNewsgroupNumericLookupTest : public InputNewsgroupLookupTest,
+                                        public testing::WithParamInterface<NumericNewsgroupTarget>
+{
+};
+
+class InputNewsgroupInvalidNumberTest : public InputNewsgroupLookupTest,
+                                        public testing::WithParamInterface<std::string_view>
+{
+};
+
+using NewsgroupNameFailure = std::pair<std::string_view, std::string_view>;
+
+class InputNewsgroupNameFailureTest : public InputNewsgroupLookupTest,
+                                      public testing::WithParamInterface<std::tuple<NewsgroupNameFailure, bool>>
+{
+};
+
+class InputNewsgroupEmptyTargetTest : public InputNewsgroupLookupTest,
+                                      public testing::WithParamInterface<std::tuple<std::string_view, bool>>
+{
+};
+
+class InputNewsgroupSubscriptionLookupTest : public InputNewsgroupLookupTest, public testing::WithParamInterface<bool>
+{
+};
+
+class InputNewsgroupLookupCancelTest : public InputNewsgroupLookupTest, public testing::WithParamInterface<char>
 {
 };
 
@@ -4693,6 +4747,155 @@ INSTANTIATE_TEST_SUITE_P(TraversalPolicy, InputNewsgroupFirstTest,
                                          NewsgroupNavigationCommand{'1', ING_SPECIAL}));
 
 INSTANTIATE_TEST_SUITE_P(FromGroupOrEnd, InputNewsgroupPositionTest, testing::Bool());
+
+TEST_P(InputNewsgroupNumericLookupTest, selectsTheRequestedNumericPosition)
+{
+    const auto &[target, index] = GetParam();
+
+    const InputNewsgroupResult result = run_command("g " + std::string{target} + '\n');
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[index], g_newsgroup_ptr);
+    EXPECT_EQ(g_newsgroup_data[index].rc_name(), g_newsgroup_name);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+}
+
+TEST_P(InputNewsgroupInvalidNumberTest, invalidPositionsPreserveTheCurrentGroupAndAskAgain)
+{
+    const std::string_view target = GetParam();
+
+    const InputNewsgroupResult result = run_command("g " + std::string{target} + '\n');
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_THAT(m_output, testing::HasSubstr("Only 3 groups. Try again."));
+}
+
+TEST_P(InputNewsgroupEmptyTargetTest, aMissingTargetDoesNotSelectGroupZero)
+{
+    const auto &[spaces, at_end] = GetParam();
+    if (at_end)
+    {
+        start_at_end();
+    }
+    NewsgroupData *original = g_newsgroup_ptr;
+
+    const InputNewsgroupResult result = run_command("g" + std::string{spaces} + '\n');
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_THAT(m_output, testing::HasSubstr("Newsgroup name or number required."));
+}
+
+TEST_P(InputNewsgroupNameFailureTest, aFailedNamedLookupPreservesTheCurrentGroup)
+{
+    const auto &[failure, at_end] = GetParam();
+    const auto &[target, diagnostic] = failure;
+    if (at_end)
+    {
+        start_at_end();
+    }
+    NewsgroupData *original = g_newsgroup_ptr;
+    g_add_new_by_default = ADDNEW_SUB;
+
+    const InputNewsgroupResult result = run_command("g " + std::string{target} + '\n');
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr(diagnostic));
+    EXPECT_EQ(ADDNEW_ASK, g_add_new_by_default);
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_count);
+}
+
+TEST_P(InputNewsgroupSubscriptionLookupTest, decliningResubscriptionPreservesTheCurrentGroup)
+{
+    if (GetParam())
+    {
+        start_at_end();
+    }
+    NewsgroupData *original = g_newsgroup_ptr;
+    g_newsgroup_data[0].m_subscribe_char = '!';
+    g_newsgroup_data[0].m_to_read = TR_UNSUB;
+
+    const InputNewsgroupResult result = run_command("g comp.alpha\nn");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_EQ('!', g_newsgroup_data[0].m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[0].m_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_P(InputNewsgroupSubscriptionLookupTest, acceptingResubscriptionSelectsTheRequestedGroup)
+{
+    if (GetParam())
+    {
+        start_at_end();
+    }
+    g_newsgroup_data[0].m_subscribe_char = '!';
+    g_newsgroup_data[0].m_to_read = TR_UNSUB;
+
+    const InputNewsgroupResult result = run_command("g comp.alpha\ny");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ("comp.alpha", g_newsgroup_name);
+    EXPECT_EQ(':', g_newsgroup_data[0].m_subscribe_char);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[0].m_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_P(InputNewsgroupLookupCancelTest, erasingTheLookupCommandPreservesTheCurrentGroup)
+{
+    const char erase = GetParam();
+
+    const InputNewsgroupResult result = run_command(std::string{"g"} + erase);
+
+    EXPECT_EQ(ING_INPUT, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+}
+
+TEST_F(InputNewsgroupLookupTest, numericLookupUsesTheDisplayedGroupNumberAfterReordering)
+{
+    ASSERT_TRUE(move_newsgroup_order(&g_newsgroup_data[2], NewsgroupNum{0}));
+
+    const InputNewsgroupResult result = run_command("g 0\n");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ("comp.charlie", g_newsgroup_name);
+}
+
+TEST_F(InputNewsgroupNavigationTest, numericLookupInAnEmptyCatalogAsksAgain)
+{
+    const InputNewsgroupResult result = run_command("g 0\n");
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Only 0 groups. Try again."));
+}
+
+INSTANTIATE_TEST_SUITE_P(ValidPositions, InputNewsgroupNumericLookupTest,
+                         testing::Values(NumericNewsgroupTarget{"0", 0}, NumericNewsgroupTarget{"2", 2},
+                                         NumericNewsgroupTarget{"0002", 2}));
+
+INSTANTIATE_TEST_SUITE_P(OutOfRangePositions, InputNewsgroupInvalidNumberTest,
+                         testing::Values("3", "99", "2147483647", "2147483648", "999999999999999999999999999999"));
+
+INSTANTIATE_TEST_SUITE_P(FailureAndPosition, InputNewsgroupNameFailureTest,
+                         testing::Combine(testing::Values(NewsgroupNameFailure{"comp.missing", "No comp.missing!"},
+                                                          NewsgroupNameFailure{"comp/invalid", "Bad newsgroup name."}),
+                                          testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(WhitespaceAndPosition, InputNewsgroupEmptyTargetTest,
+                         testing::Combine(testing::Values<std::string_view>("", "   "), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(FromGroupOrEnd, InputNewsgroupSubscriptionLookupTest, testing::Bool());
+
+INSTANTIATE_TEST_SUITE_P(EraseAndKill, InputNewsgroupLookupCancelTest, testing::Values('\b', Ctl('u')));
 
 TEST_F(InputNewsgroupTest, gotoExplicitGroupName)
 {

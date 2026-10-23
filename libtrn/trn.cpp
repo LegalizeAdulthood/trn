@@ -74,14 +74,15 @@
 #include <fmt/format.h>
 
 #include <algorithm>
-#include <charconv>
 #include <cctype>
+#include <charconv>
 #include <ctime>
 #include <filesystem>
 #include <iterator>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 std::string g_newsgroup_name;                             // name of current newsgroup
 std::string g_newsgroup_dir;                              // same thing in directory name form
@@ -702,6 +703,12 @@ do_command:
             {
                 target = g_newsgroup_name;
             }
+            if (target.empty())
+            {
+                fmt::print("\nNewsgroup name or number required.\n");
+                term_down(2);
+                return ING_ASK;
+            }
             if (target.find_first_not_of("0123456789") != std::string_view::npos)
             {
                 // found non-digit before hitting end
@@ -710,8 +717,9 @@ do_command:
             else
             {
                 int rcnum{};
-                std::from_chars(target.data(), target.data() + target.size(), rcnum);
-                for (g_newsgroup_ptr = newsgroup_first(); g_newsgroup_ptr;
+                const std::from_chars_result parsed =
+                    std::from_chars(target.data(), target.data() + target.size(), rcnum);
+                for (g_newsgroup_ptr = parsed.ec == std::errc{} ? newsgroup_first() : nullptr; g_newsgroup_ptr;
                      g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
                 {
                     if (g_newsgroup_ptr->m_num.value_of() == rcnum)

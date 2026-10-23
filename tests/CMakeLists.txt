@@ -112,7 +112,7 @@ add_executable(trn-test
 source_group("CMake Scripts" REGULAR_EXPRESSION "^.*\\.cmake$")
 source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 if(MSVC)
-    set_source_files_properties(test_ng.cpp PROPERTIES COMPILE_OPTIONS /bigobj)
+    set_source_files_properties(test_ng.cpp test_trn.cpp PROPERTIES COMPILE_OPTIONS /bigobj)
 endif()
 get_directory_property(TRN_TEST_RNMAIL DIRECTORY "${PROJECT_SOURCE_DIR}/config"
     DEFINITION TRN_GENERATED_RNMAIL_FILE)
