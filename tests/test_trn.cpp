@@ -28,6 +28,7 @@
 #include <trn/rcstuff.h>
 #include <trn/respond-internal.h>
 #include <trn/respond.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -990,6 +991,133 @@ void LocalSpoolArticleTest::open_group(bool cache_all)
     ASSERT_FALSE(g_threaded_group);
     ASSERT_EQ(AF_NONE, g_curr_artp->m_flags & AF_THREADED);
 }
+
+class InputNewsgroupReadingTest : public LocalSpoolArticleTest
+{
+protected:
+    void                 SetUp() override;
+    void                 TearDown() override;
+    InputNewsgroupResult run_command(std::string_view command);
+
+    std::string m_output;
+
+private:
+    bool                               m_old_doing_ng{g_doing_ng};
+    DoNewsgroupResult                  m_old_exit_code{g_newsgroup_exit_code};
+    std::string                        m_old_sel_chars{g_sel_chars};
+    SelectionMode                      m_old_default_mode{g_sel_default_mode};
+    ArticleLine                        m_old_init_lines{g_init_lines};
+    Article                          **m_old_page_app{g_sel_page_app};
+    Article                          **m_old_next_app{g_sel_next_app};
+    Article                           *m_old_last_ap{g_sel_last_ap};
+    Subject                           *m_old_page_sp{g_sel_page_sp};
+    Subject                           *m_old_next_sp{g_sel_next_sp};
+    Subject                           *m_old_last_sp{g_sel_last_sp};
+    int                                m_old_total{g_sel_total_obj_cnt};
+    int                                m_old_prior{g_sel_prior_obj_cnt};
+    int                                m_old_page_objects{g_sel_page_obj_cnt};
+    int                                m_old_page_items{g_sel_page_item_cnt};
+    int                                m_old_item_index{g_sel_item_index};
+    int                                m_old_last_line{g_sel_last_line};
+    bool                               m_old_at_end{g_sel_at_end};
+    std::array<SelectionItem, MAX_SEL> m_old_items;
+};
+
+void InputNewsgroupReadingTest::SetUp()
+{
+    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    LocalSpoolArticleTest::SetUp();
+    const fs::path group_dir = m_output_dir / "comp/lang/cpp";
+    fs::create_directories(group_dir);
+    for (const char *name : {"1", "2", "3"})
+    {
+        fs::copy_file(m_output_dir / name, group_dir / name);
+    }
+    m_data_source.m_spool_dir = m_output_dir.generic_string();
+    add_newsgroup("comp.previous", "1-2");
+    add_newsgroup("comp.lang.cpp", "1", ArticleNum{1}, ArticleNum{3});
+    add_newsgroup("comp.next", "1-2");
+    const fs::path active_file = m_output_dir / "active";
+    std::ofstream{active_file, std::ios::binary} << "comp.previous 3 1 y\ncomp.lang.cpp 3 1 y\ncomp.next 3 1 y\n";
+    m_data_source.m_act_sf.close();
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_file, "", ""));
+    set_current_newsgroup(1);
+    g_in_ng = false;
+    g_mode = MM_NEWSGROUP_LIST;
+    g_sel_chars = "abcdefghijklmnopqrstuvwxyz";
+    g_sel_default_mode = SM_ARTICLE;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_sel_page_app = g_sel_next_app = nullptr;
+    g_sel_last_ap = nullptr;
+    g_sel_page_sp = g_sel_next_sp = g_sel_last_sp = nullptr;
+}
+
+void InputNewsgroupReadingTest::TearDown()
+{
+    LocalSpoolArticleTest::TearDown();
+    g_doing_ng = m_old_doing_ng;
+    g_newsgroup_exit_code = m_old_exit_code;
+    g_sel_chars = m_old_sel_chars;
+    g_sel_default_mode = m_old_default_mode;
+    g_init_lines = m_old_init_lines;
+    g_sel_page_app = m_old_page_app;
+    g_sel_next_app = m_old_next_app;
+    g_sel_last_ap = m_old_last_ap;
+    g_sel_page_sp = m_old_page_sp;
+    g_sel_next_sp = m_old_next_sp;
+    g_sel_last_sp = m_old_last_sp;
+    g_sel_total_obj_cnt = m_old_total;
+    g_sel_prior_obj_cnt = m_old_prior;
+    g_sel_page_obj_cnt = m_old_page_objects;
+    g_sel_page_item_cnt = m_old_page_items;
+    g_sel_item_index = m_old_item_index;
+    g_sel_last_line = m_old_last_line;
+    g_sel_at_end = m_old_at_end;
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+}
+
+InputNewsgroupResult InputNewsgroupReadingTest::run_command(std::string_view command)
+{
+    push_command(command);
+    testing::internal::CaptureStdout();
+    const InputNewsgroupResult result = input_newsgroup();
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_FALSE(macro_pending());
+    return result;
+}
+
+class InputNewsgroupNormalEntryTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<char>
+{
+};
+
+class InputNewsgroupDefaultEntryTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<char>
+{
+};
+
+class InputNewsgroupSelectorExitTest
+    : public InputNewsgroupReadingTest,
+      public testing::WithParamInterface<std::tuple<char, InputNewsgroupResult, std::size_t>>
+{
+};
+
+class InputNewsgroupExplicitArticleTest
+    : public InputNewsgroupReadingTest,
+      public testing::WithParamInterface<std::tuple<char, std::string_view, ArticleUnread>>
+{
+};
+
+class InputNewsgroupStartingCommandCancelTest : public InputNewsgroupReadingTest,
+                                                public testing::WithParamInterface<std::string_view>
+{
+};
+
+class InputNewsgroupNoReadingGroupTest : public InputNewsgroupNavigationTest, public testing::WithParamInterface<char>
+{
+};
 
 class OnDemandThreadArticleTest : public LocalSpoolArticleTest
 {
@@ -5074,6 +5202,176 @@ INSTANTIATE_TEST_SUITE_P(DirectionAndPosition, InputNewsgroupSearchDirectionTest
                          testing::Combine(testing::Values('/', '?'), testing::Bool()));
 
 INSTANTIATE_TEST_SUITE_P(ForwardAndBackward, InputNewsgroupSearchWrapTest, testing::Values('/', '?'));
+
+TEST_P(InputNewsgroupNormalEntryTest, normalEntryReadsTheFirstUnreadArticleAndBypassesTheAutomaticSelector)
+{
+    g_use_news_selector = 0;
+
+    const InputNewsgroupResult result = run_command(std::string{GetParam()} + 'q');
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Root first line")));
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_P(InputNewsgroupDefaultEntryTest, defaultEntryUsesTheSelectorAtTheConfiguredUnreadThreshold)
+{
+    g_use_news_selector = 2;
+    g_default_cmd = "+npq";
+
+    const InputNewsgroupResult result = run_command(std::string{GetParam()} + 'Q');
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_P(InputNewsgroupSelectorExitTest, selectorExitPreservesTheRequestedGroupDestination)
+{
+    const auto &[command, expected, index] = GetParam();
+
+    const InputNewsgroupResult result = run_command(std::string{"+"} + command);
+
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(&g_newsgroup_data[index], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_P(InputNewsgroupExplicitArticleTest, anExplicitStartingCommandReadsTheRequestedArticle)
+{
+    const auto &[number, body, unread] = GetParam();
+
+    const InputNewsgroupResult result = run_command(std::string{"."} + number + "\nq");
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr(body));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ(unread, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_P(InputNewsgroupStartingCommandCancelTest, cancellingTheStartingCommandDoesNotEnterTheGroup)
+{
+    const InputNewsgroupResult result = run_command(GetParam());
+
+    EXPECT_EQ(ING_INPUT, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(ArticleNum{}, g_last_art);
+}
+
+TEST_P(InputNewsgroupNoReadingGroupTest, entryWithoutACurrentGroupAsksAgain)
+{
+    const InputNewsgroupResult result = run_command(std::string{GetParam()});
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Not on a newsgroup."));
+}
+
+TEST_F(InputNewsgroupReadingTest, defaultEntryBelowTheUnreadThresholdDoesNotEnterTheSelector)
+{
+    g_use_news_selector = 3;
+    g_default_cmd = "ynpq";
+
+    const InputNewsgroupResult result = run_command(" Q");
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply")));
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(NG_ASK, g_newsgroup_exit_code);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_F(InputNewsgroupReadingTest, readSelectorEntryListsPreviouslyReadArticles)
+{
+    const InputNewsgroupResult result = run_command("U+Q");
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Root"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply")));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Root first line")));
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    EXPECT_FALSE(g_sel_rereading);
+}
+
+TEST_F(InputNewsgroupReadingTest, anEmptyStartingCommandUsesTheConfiguredSelector)
+{
+    g_use_news_selector = 0;
+
+    const InputNewsgroupResult result = run_command(".\nQ");
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_F(InputNewsgroupReadingTest, theSubjectListingCommandRunsBeforeArticleReading)
+{
+    const InputNewsgroupResult result = run_command("=q");
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Topic"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_F(InputNewsgroupReadingTest, quittingBackToTheGroupPromptKeepsTheCurrentGroup)
+{
+    const InputNewsgroupResult result = run_command("yQ");
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[1].m_to_read);
+}
+
+TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
+{
+    m_data_source.m_spool_dir = (m_output_dir / "missing").generic_string();
+    const std::string original_numbers{g_newsgroup_data[1].rc_numbers()};
+
+    const InputNewsgroupResult result = run_command("y");
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory"));
+    EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ForcedReading, InputNewsgroupNormalEntryTest, testing::Values('y', 'Y', '\t'));
+
+INSTANTIATE_TEST_SUITE_P(DefaultCommands, InputNewsgroupDefaultEntryTest, testing::Values(' ', '\r', '\n'));
+
+INSTANTIATE_TEST_SUITE_P(GroupDestinations, InputNewsgroupSelectorExitTest,
+                         testing::Values(std::make_tuple('Q', ING_ASK, std::size_t{1}),
+                                         std::make_tuple('q', ING_NORM, std::size_t{2}),
+                                         std::make_tuple('N', ING_NORM, std::size_t{2}),
+                                         std::make_tuple('P', ING_NORM, std::size_t{0})));
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnreadArticles, InputNewsgroupExplicitArticleTest,
+                         testing::Values(std::make_tuple('1', std::string_view{"Root first line"}, ArticleUnread{2}),
+                                         std::make_tuple('3', std::string_view{"Branch body"}, ArticleUnread{1})));
+
+INSTANTIATE_TEST_SUITE_P(EraseAndKill, InputNewsgroupStartingCommandCancelTest,
+                         testing::Values<std::string_view>(".\b", ".3\025"));
+
+INSTANTIATE_TEST_SUITE_P(ReadingCommands, InputNewsgroupNoReadingGroupTest,
+                         testing::Values('y', '+', 'U', '.', '=', ';'));
 
 TEST_F(InputNewsgroupTest, gotoExplicitGroupName)
 {

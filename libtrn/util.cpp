@@ -271,6 +271,9 @@ int eaccess(const fs::path &filename, int mod)
     errno = EACCES;
     return -1;
 #else
+#ifdef _WIN32
+    mod &= 6; // The CRT supports read/write checks, without an execute bit.
+#endif
     return access(filename.string().c_str(), mod);
 #endif
 }
