@@ -1723,6 +1723,8 @@ void write_article_body(const fs::path &article_file, std::string_view body, std
                                 << body;
 }
 
+using PagerBodyPrefix = std::pair<long, std::string_view>;
+
 struct PagerMovementCase
 {
     const char                    *name;
@@ -1742,6 +1744,9 @@ struct PagerMovementCase
     bool                           can_insert_line{};
     bool                           can_home{true};
     int                            insertions{};
+    int                            search_context{3};
+    std::vector<PagerBodyPrefix>   line_prefixes;
+    int                            not_found_count{};
 };
 
 void PrintTo(const PagerMovementCase &value, std::ostream *output)
@@ -1757,13 +1762,33 @@ PagerMovementCase with_line_insertion(PagerMovementCase scenario, int insertions
     return scenario;
 }
 
+PagerMovementCase search_case(const char *name, const char *commands, std::vector<std::vector<long>> pages,
+                              long next_line, long top_line, std::vector<long> highlighted_lines = {}, int context = 3,
+                              int not_found_count = 0)
+{
+    PagerMovementCase scenario{name, commands, 10, false, false, STANDOUT, NONE, std::move(pages), next_line, top_line};
+    scenario.highlighted_lines = std::move(highlighted_lines);
+    scenario.search_context = context;
+    scenario.not_found_count = not_found_count;
+    return scenario;
+}
+
+PagerMovementCase with_body_prefix(PagerMovementCase scenario, long first, long last, std::string_view prefix)
+{
+    for (long line = first; line <= last; ++line)
+    {
+        scenario.line_prefixes.emplace_back(line, prefix);
+    }
+    return scenario;
+}
+
 class PagerMovementArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerMovementCase>
 {
 protected:
     void              SetUp() override;
     void              TearDown() override;
     void              read_pages();
-    std::vector<long> page_lines(std::size_t page, std::string_view prefix = "Body ") const;
+    std::vector<long> page_lines(std::size_t page, bool highlighted_only = false) const;
 
     ArticlePosition m_body_start{};
 
@@ -1785,6 +1810,8 @@ private:
     ValueSaver<char>             m_hide_everything{g_hide_everything, g_hide_everything};
     ValueSaver<std::string>      m_page_stop{g_page_stop, g_page_stop};
     ValueSaver<int>              m_check_count{g_check_count, g_check_count};
+    ValueSaver<int>              m_search_context{g_g_line, g_g_line};
+    ValueSaver<char>             m_erase_char{g_erase_char, g_erase_char};
     ValueSaver<GeneralMode>      m_general_mode{g_general_mode, g_general_mode};
     ValueSaver<MinorMode>        m_mode{g_mode, g_mode};
     ValueSaver<std::string_view> m_clear{g_tc_CD, g_tc_CD};
@@ -1813,6 +1840,13 @@ void PagerMovementArticleTest::SetUp()
             {
                 article << '\f';
             }
+            for (const PagerBodyPrefix &prefix : GetParam().line_prefixes)
+            {
+                if (prefix.first == line)
+                {
+                    article << prefix.second;
+                }
+            }
             article << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
         }
         ASSERT_TRUE(article.good());
@@ -1834,6 +1868,8 @@ void PagerMovementArticleTest::SetUp()
     g_hide_everything = 0;
     g_page_stop.clear();
     g_check_count = 0;
+    g_g_line = GetParam().search_context;
+    g_erase_char = '\b';
     g_curr_art = g_art;
     g_tc_LINES = GetParam().screen_lines;
     g_init_lines = ArticleLine{g_tc_LINES};
@@ -1872,11 +1908,15 @@ void PagerMovementArticleTest::TearDown()
 void PagerMovementArticleTest::read_pages()
 {
     push_char('q');
-    push_string(GetParam().commands, 0);
+    const std::string_view commands{GetParam().commands};
+    for (auto character = commands.rbegin(); character != commands.rend(); ++character)
+    {
+        push_char(*character);
+    }
     render_article();
 }
 
-std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, std::string_view prefix) const
+std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool highlighted_only) const
 {
     std::string_view text{m_rendered};
     for (std::size_t index = 0; index < page; ++index)
@@ -1897,10 +1937,16 @@ std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, std::st
     }
     text = text.substr(0, text.find("--MORE--("));
     std::vector<long> lines;
+    constexpr std::string_view prefix{"Body "};
     for (std::size_t position = text.find(prefix); position != std::string_view::npos;
          position = text.find(prefix, position + prefix.size()))
     {
-        lines.push_back(std::stol(std::string{text.substr(position + prefix.size(), 3)}));
+        const std::size_t line_start = text.rfind('\n', position);
+        const std::size_t start = line_start == std::string_view::npos ? 0 : line_start + 1;
+        if (!highlighted_only || text.substr(start, position - start).find("<mark>") != std::string_view::npos)
+        {
+            lines.push_back(std::stol(std::string{text.substr(position + prefix.size(), 3)}));
+        }
     }
     return lines;
 }
@@ -2672,6 +2718,7 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
 {
     read_pages();
 
+    SCOPED_TRACE(m_rendered);
     const PagerMovementCase &scenario = GetParam();
     const bool              at_end = scenario.next_line == scenario.body_lines;
     EXPECT_EQ(at_end ? DA_NORM : DA_TO_END, m_result);
@@ -2685,7 +2732,7 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
     {
         EXPECT_EQ(scenario.pages[index], page_lines(index + 1)) << "Page " << index + 1;
     }
-    EXPECT_EQ(scenario.highlighted_lines, page_lines(scenario.pages.size(), "<mark>Body "));
+    EXPECT_EQ(scenario.highlighted_lines, page_lines(scenario.pages.size(), true));
     int insertions = 0;
     for (std::size_t position = m_rendered.find("<insert>"); position != std::string::npos;
          position = m_rendered.find("<insert>", position + 8))
@@ -2693,10 +2740,25 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
         ++insertions;
     }
     EXPECT_EQ(scenario.insertions, insertions);
+    int not_found_count = 0;
+    for (std::size_t position = m_rendered.find("(Not found)"); position != std::string::npos;
+         position = m_rendered.find("(Not found)", position + 11))
+    {
+        ++not_found_count;
+    }
+    EXPECT_EQ(scenario.not_found_count, not_found_count);
     EXPECT_EQ(ArticleLine{scenario.next_line + scenario.header_lines}, g_art_line_num);
     EXPECT_EQ(ArticleLine{scenario.top_line}, g_top_line);
     const long form_feeds = scenario.page_break_line >= 0 && scenario.page_break_line < scenario.next_line ? 1 : 0;
-    EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line + form_feeds}, g_art_pos);
+    long       prefix_bytes = 0;
+    for (const PagerBodyPrefix &prefix : scenario.line_prefixes)
+    {
+        if (prefix.first < scenario.next_line)
+        {
+            prefix_bytes += static_cast<long>(prefix.second.size());
+        }
+    }
+    EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line + form_feeds + prefix_bytes}, g_art_pos);
     EXPECT_EQ(g_art_pos, art_buf_article_pos());
     const ArticlePosition saved_position = virtual_read(g_art_line_num);
     EXPECT_EQ(g_art_pos, saved_position < 0 ? -saved_position : saved_position);
@@ -2708,6 +2770,8 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_FALSE(g_do_fseek);
     EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(ArticlePosition{}, g_inner_search);
+    EXPECT_EQ(0, g_hide_everything);
     EXPECT_EQ(at_end, macro_pending());
 }
 
@@ -3033,6 +3097,41 @@ INSTANTIATE_TEST_SUITE_P(BackwardSingleLine, PagerMovementArticleTest,
                                                                       0,
                                                                       7})),
                          [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
+
+INSTANTIATE_TEST_SUITE_P(
+    InArticleSearch, PagerMovementArticleTest,
+    Values(search_case("MatchOnTheCurrentPage", "g006\n", {{3, 4, 5, 6, 7, 8, 9, 10, 11}}, 12, 3, {6}),
+           search_case("MatchAtTheCurrentBottom", "g008\n", {{5, 6, 7, 8, 9, 10, 11, 12, 13}}, 14, 5, {8}),
+           search_case("MatchBeyondTheCurrentPage", "g012\n", {{9, 10, 11, 12, 13, 14, 15, 16, 17}}, 18, 9, {12}),
+           search_case("CaseInsensitiveRegularExpression", "g ^b.*01[2]$\n", {{9, 10, 11, 12, 13, 14, 15, 16, 17}}, 18,
+                       9, {12}),
+           search_case("RepeatedSearchFindsTheNextMatch", "g0[12]2\nG",
+                       {{9, 10, 11, 12, 13, 14, 15, 16, 17}, {19, 20, 21, 22, 23, 24, 25, 26, 27}}, 28, 19, {22}),
+           search_case("RepeatedSearchPastTheLastMatch", "g032\nG", {{29, 30, 31, 32, 33, 34, 35, 36, 37}, {}}, 38, 29,
+                       {}, 3, 1),
+           search_case("MissingMatchPreservesPosition", "gmissing\n", {{}}, 9, 0, {}, 3, 1),
+           search_case("ForwardPagingAfterAMissingMatch", "gmissing\n ", {{}, {8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17,
+                       8, {8}, 3, 1),
+           search_case("MalformedPatternPreservesPosition", "g[\n", {{}}, 9, 0),
+           search_case("ErasingTheSearchCommandCancelsIt", "g\b", {{}}, 9, 0),
+           search_case("ZeroContextPutsTheMatchAtTheTop", "g012\n", {{12, 13, 14, 15, 16, 17, 18, 19, 20}}, 21, 12,
+                       {12}, 0),
+           search_case("ExcessiveContextIsClamped", "g012\n", {{4, 5, 6, 7, 8, 9, 10, 11, 12}}, 13, 4, {12}, 100),
+           search_case("NegativeContextIsClamped", "g012\n", {{4, 5, 6, 7, 8, 9, 10, 11, 12}}, 13, 4, {12}, -1),
+           with_body_prefix(search_case("DigestSubjectSearch", "\007", {{9, 10, 11, 12, 13, 14, 15, 16, 17}}, 18, 9,
+                                        {12}),
+                            12, 12, "Subject: "),
+           with_body_prefix(with_body_prefix(search_case("RepeatedDigestSubjectSearch", "\007G",
+                                                         {{9, 10, 11, 12, 13, 14, 15, 16, 17},
+                                                          {21, 22, 23, 24, 25, 26, 27, 28, 29}},
+                                                         30, 21, {24}),
+                                             12, 12, "Subject: "),
+                            24, 24, "Subject: "),
+           with_body_prefix(search_case("TabSkipsTheQuotedBlock", "\t", {{9, 10, 11, 12, 13, 14, 15, 16, 17}}, 18, 9,
+                                        {12}),
+                            0, 11, "> "),
+           search_case("TabWithoutAChangedPrefixPreservesPosition", "\t", {{}}, 9, 0, {}, 3, 1)),
+    [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
