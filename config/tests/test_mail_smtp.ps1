@@ -189,11 +189,14 @@ foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', '
             $inputMessage = Join-Path $directory 'draft.eml'
             [IO.File]::WriteAllText($inputMessage, $text.Insert($text.IndexOf('Subject:'), "Bcc: hidden@example.test`r`n"), $utf8)
             $success = $false
+            $inputEncoding = [Console]::InputEncoding
             try {
+                [Console]::InputEncoding = [Text.UTF8Encoding]::new($true)
                 Send-TrnMail $inputMessage
                 $success = $true
             }
             catch { if ($expectAccepted) { throw } }
+            finally { [Console]::InputEncoding = $inputEncoding }
             if ($expectAccepted -ne $success) { throw "Incorrect adapter outcome: $case" }
             if (![IO.File]::Exists($inputMessage)) { throw 'Adapter removed the draft.' }
         }

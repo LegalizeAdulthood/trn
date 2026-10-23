@@ -173,7 +173,7 @@ function Send-TrnMail([string] $Path, [string] $To = '') {
         $process.StartInfo.RedirectStandardInput = $true
         $process.StartInfo.RedirectStandardOutput = $true
         $process.StartInfo.RedirectStandardError = $true
-        [void] $process.Start()
+        Start-TrnProcess $process
         $started = $true
         $output = $process.StandardOutput.ReadToEndAsync()
         $errors = $process.StandardError.ReadToEndAsync()

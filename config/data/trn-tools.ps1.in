@@ -27,6 +27,24 @@ function ConvertTo-TrnArgument([string] $Argument) {
     return '"' + [regex]::Replace($quoted, '(\\+)$', '$1$1') + '"'
 }
 
+function Start-TrnProcess([Diagnostics.Process] $Process) {
+    $inputEncoding = [Console]::InputEncoding
+    $inputReader = [Console]::In
+    try {
+        # .NET Framework otherwise adds a UTF-8 preamble to redirected stdin.
+        if ($inputEncoding.CodePage -eq 65001) {
+            [Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
+        }
+        [void] $Process.Start()
+    }
+    finally {
+        if ($inputEncoding.CodePage -eq 65001) {
+            [Console]::InputEncoding = $inputEncoding
+            [Console]::SetIn($inputReader)
+        }
+    }
+}
+
 # Console tools inherit the terminal. Streamed tools receive bytes directly,
 # without PowerShell's text pipeline or its implicit encoding conversions.
 function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
@@ -58,7 +76,7 @@ function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
         $process.StartInfo.UseShellExecute = $false
         $process.StartInfo.RedirectStandardInput = [bool] $InputPath
         $process.StartInfo.RedirectStandardOutput = [bool] $OutputPath
-        [void] $process.Start()
+        Start-TrnProcess $process
         $copy = $null
         if ($OutputPath) {
             $destination = [IO.File]::Create($OutputPath)
@@ -70,7 +88,7 @@ function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
             $process.StandardInput.Close()
         }
         $process.WaitForExit()
-        if ($null -ne $copy) { $copy.GetAwaiter().GetResult() }
+        if ($null -ne $copy) { $null = $copy.GetAwaiter().GetResult() }
         if ($process.ExitCode -ne 0) { throw "$program exited with status $($process.ExitCode)." }
     }
     finally {

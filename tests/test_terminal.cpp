@@ -13,6 +13,10 @@
 #include <trn/univ.h>
 #include <trn/util.h>
 
+#ifdef I_UNISTD
+#include <unistd.h>
+#endif
+
 #include <test_config.h>
 
 #include <gtest/gtest.h>
@@ -488,6 +492,22 @@ TEST_F(TerminalTest, pushStringExpandsInInputOrderWithMacroBits)
     command = read_tty_char();
     EXPECT_EQ(static_cast<unsigned char>('\002' ^ 0200), static_cast<unsigned char>(command));
 }
+
+#if defined(PENDING) && defined(FIONREAD) && defined(I_UNISTD)
+TEST_F(TerminalTest, aFailedTerminalQueryDoesNotReportPendingInput)
+{
+    const int saved_stdin = dup(0);
+    ASSERT_GE(saved_stdin, 0);
+    EXPECT_EQ(0, close(0));
+
+    const bool pending = input_pending();
+
+    EXPECT_FALSE(pending);
+
+    EXPECT_EQ(0, dup2(saved_stdin, 0));
+    EXPECT_EQ(0, close(saved_stdin));
+}
+#endif
 
 TEST_F(TerminalTest, saveTypeaheadCopiesPendingInput)
 {

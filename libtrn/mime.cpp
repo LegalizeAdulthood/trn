@@ -264,10 +264,9 @@ static std::string mime_parse_entry_value(std::string_view text)
         return std::string{text};
     }
 
-    text.remove_prefix(1);
     std::string result;
     result.reserve(text.size());
-    for (std::size_t pos = 0; pos < text.size(); pos++)
+    for (std::size_t pos = 1; pos < text.size(); pos++)
     {
         if (text[pos] == '\\' && pos + 1 < text.size() && text[pos + 1] == '"')
         {
@@ -275,6 +274,10 @@ static std::string mime_parse_entry_value(std::string_view text)
         }
         else if (text[pos] == '"')
         {
+            if (pos + 1 != text.size())
+            {
+                return std::string{text};
+            }
             break;
         }
         result.push_back(text[pos]);

@@ -76,6 +76,17 @@ TEST_F(MimeTest, escapedPercentBecomesInterpolatorLiteralPercent)
     ASSERT_EQ(MCF_NONE, cap->flags);
 }
 
+TEST_F(MimeTest, preservesAQuotedTestExecutableAndItsArguments)
+{
+    constexpr std::string_view command = "\"/mailcap probe/viewer\" --probe";
+    EXPECT_CALL(m_exec, Call(_, StrEq(command))).WillOnce(Return(0));
+
+    MimeCapEntry *cap = mime_find_mimecap_entry("application/x-quoted-probe", MCF_NONE);
+
+    ASSERT_NE(nullptr, cap);
+    EXPECT_EQ(command, cap->test_command);
+}
+
 TEST_F(MimeTest, imageWildcardWithLabel)
 {
     MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);

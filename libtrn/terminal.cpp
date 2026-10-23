@@ -914,9 +914,8 @@ bool finput_pending(bool check_term)
     if (check_term)
     {
 # ifdef FIONREAD
-        long iocount;
-        ioctl(0, FIONREAD, &iocount);
-        return (int)iocount;
+        int iocount{};
+        return ioctl(0, FIONREAD, &iocount) == 0 && iocount > 0;
 # else // !FIONREAD
 #  ifdef HAS_RDCHK
         return rdchk(0);

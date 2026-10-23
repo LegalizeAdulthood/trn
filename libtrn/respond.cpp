@@ -188,6 +188,15 @@ void respond_init()
     g_extract_dest.clear();
 }
 
+static void write_save_text(std::FILE *stream, std::string_view text)
+{
+    // Honor stream modes and read/write transitions through the stdio API.
+    if (std::fwrite(text.data(), 1, text.size(), stream) != text.size())
+    {
+        throw std::system_error{std::make_error_code(std::errc::io_error)};
+    }
+}
+
 SaveResult save_article(std::string_view command)
 {
     std::string completed_command;
@@ -645,18 +654,18 @@ reask_save:
                 if (mailbox)
                 {
 #if MBOX_CHAR == '\001'
-                    fmt::print(s_tmp_fp, "\001\001\001\001\n");
+                    write_save_text(s_tmp_fp, "\001\001\001\001\n");
 #else
                     const std::string sender = do_interp("%t");
                     const std::time_t now = std::time(nullptr);
                     const std::tm     local = *std::localtime(&now);
-                    fmt::print(s_tmp_fp, "From {} {:%a %b %e %H:%M:%S %Y}\n", sender, local);
+                    write_save_text(s_tmp_fp, fmt::format("From {} {:%a %b %e %H:%M:%S %Y}\n", sender, local));
                     quote_From = true;
 #endif
                 }
                 if (g_save_from == 0 && g_art != 0)
                 {
-                    fmt::print(s_tmp_fp, "Article: {} of {}\n", g_art.value_of(), g_newsgroup_name);
+                    write_save_text(s_tmp_fp, fmt::format("Article: {} of {}\n", g_art.value_of(), g_newsgroup_name));
                 }
                 seek_art(g_save_from);
                 std::string article_line;
@@ -666,15 +675,15 @@ reask_save:
                     const std::string_view line_text{article_line};
                     if (quote_From && string_case_equal(line_text.substr(0, 5), "from "))
                     {
-                        fmt::print(s_tmp_fp, ">");
+                        write_save_text(s_tmp_fp, ">");
                     }
-                    fmt::print(s_tmp_fp, "{}", line_text);
+                    write_save_text(s_tmp_fp, line_text);
                 }
-                fmt::print(s_tmp_fp, "\n\n");
+                write_save_text(s_tmp_fp, "\n\n");
 #if MBOX_CHAR == '\001'
                 if (mailbox)
                 {
-                    fmt::print(s_tmp_fp, "\001\001\001\001\n");
+                    write_save_text(s_tmp_fp, "\001\001\001\001\n");
                 }
 #endif
             }
