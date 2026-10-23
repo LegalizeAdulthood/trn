@@ -274,6 +274,306 @@ void ArticleSelectorCommandTest::rebuild_page()
     init_pages(FILL_LAST_PAGE);
 }
 
+class SelectorInputTest : public ArticleSelectorCommandTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_input(SelectionMode mode, bool rereading);
+    char run_input(std::string_view commands);
+
+    std::string m_output;
+
+private:
+    Subject                            m_second{};
+    std::array<SelectionItem, MAX_SEL> m_old_items{};
+    int                                m_old_term_scrolled{g_term_scrolled};
+    int                                m_old_page_line{g_page_line};
+    bool                               m_old_chase_phrase{g_output_chase_phrase};
+    std::string_view                   m_old_tc_vb{g_tc_VB};
+    int                                m_old_subject_count{g_subject_count};
+    std::string_view                   m_old_tc_so{g_tc_SO};
+    std::string_view                   m_old_tc_se{g_tc_SE};
+    std::string_view                   m_old_tc_cr{g_tc_CR};
+    std::string_view                   m_old_tc_ce{g_tc_CE};
+    int                                m_old_errno{errno};
+    int                                m_old_index{g_sel_item_index};
+    int                                m_old_last_line{g_sel_last_line};
+    int                                m_old_term_col{g_term_col};
+    int                                m_old_mouse_count{g_mouse_bar_cnt};
+    bool                               m_old_at_end{g_sel_at_end};
+    bool                               m_old_numeric{g_use_sel_num};
+    bool                               m_old_can_home{g_can_home};
+    bool                               m_old_default{g_s_default_cmd};
+    bool                               m_old_univ_default{g_univ_default_cmd};
+    bool                               m_old_verify{g_verify};
+    GeneralMode                        m_old_general_mode{g_general_mode};
+    MinorMode                          m_old_minor_mode{g_mode};
+    std::string_view                   m_old_mode_string{g_sel_mode_string};
+    std::string_view                   m_old_sort_string{g_sel_sort_string};
+};
+
+void SelectorInputTest::SetUp()
+{
+    ArticleSelectorCommandTest::SetUp();
+    g_tc_VB = "";
+    g_subject_count = 2;
+    g_tc_SO = "";
+    g_tc_SE = "";
+    g_tc_CR = "\r";
+    g_tc_CE = "";
+    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    drain_input();
+    errno = 0;
+    g_sel_chars = "abc";
+    g_use_sel_num = false;
+    g_can_home = false;
+    g_mouse_bar_cnt = 0;
+    g_s_default_cmd = false;
+    g_univ_default_cmd = false;
+    g_verify = false;
+    g_general_mode = GM_SELECTOR;
+    g_mode = MM_THREAD_SELECTOR;
+    g_sel_mode_string = "articles";
+    g_sel_sort_string = "natural";
+}
+
+void SelectorInputTest::prepare_input(SelectionMode mode, bool rereading)
+{
+    article_ptr(ArticleNum{1})->m_flags = ArticleFlags{};
+    article_ptr(ArticleNum{2})->m_flags = ArticleFlags{};
+    Article *first = article_ptr(ArticleNum{3});
+    Article *second = article_ptr(ArticleNum{4});
+    m_subject.m_articles = first;
+    m_subject.m_thread = first;
+    m_subject.m_next = &m_second;
+    first->m_subj_next = nullptr;
+    second->m_subj = &m_second;
+    m_second.m_str = "Re: Second topic";
+    m_second.m_articles = second;
+    m_second.m_thread = second;
+    m_second.m_thread_link = &m_second;
+    m_second.m_prev = &m_subject;
+    g_last_subject = &m_second;
+    if (rereading)
+    {
+        first->m_flags &= ~AF_UNREAD;
+        second->m_flags &= ~AF_UNREAD;
+        m_newsgroup.m_to_read = 0;
+    }
+    prepare_page(mode, rereading);
+    g_sel_chars = "abc";
+    g_sel_page_item_cnt = 2;
+    g_sel_item_index = 0;
+    g_sel_last_line = 10;
+    g_sel_at_end = true;
+    g_term_line = 0;
+    for (int index = 0; index < 2; ++index)
+    {
+        g_sel_items[index] = {};
+        g_sel_items[index].line = index + 1;
+        if (mode == SM_ARTICLE)
+        {
+            g_sel_items[index].u.ap = index ? second : first;
+        }
+        else
+        {
+            g_sel_items[index].u.sp = index ? &m_second : &m_subject;
+        }
+    }
+}
+
+void SelectorInputTest::TearDown()
+{
+    drain_input();
+    g_term_scrolled = m_old_term_scrolled;
+    g_page_line = m_old_page_line;
+    g_output_chase_phrase = m_old_chase_phrase;
+    g_tc_VB = m_old_tc_vb;
+    g_subject_count = m_old_subject_count;
+    g_tc_SO = m_old_tc_so;
+    g_tc_SE = m_old_tc_se;
+    g_tc_CR = m_old_tc_cr;
+    g_tc_CE = m_old_tc_ce;
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    errno = m_old_errno;
+    g_sel_item_index = m_old_index;
+    g_sel_last_line = m_old_last_line;
+    g_term_col = m_old_term_col;
+    g_mouse_bar_cnt = m_old_mouse_count;
+    g_sel_at_end = m_old_at_end;
+    g_use_sel_num = m_old_numeric;
+    g_can_home = m_old_can_home;
+    g_s_default_cmd = m_old_default;
+    g_univ_default_cmd = m_old_univ_default;
+    g_verify = m_old_verify;
+    g_general_mode = m_old_general_mode;
+    g_mode = m_old_minor_mode;
+    g_sel_mode_string = m_old_mode_string;
+    g_sel_sort_string = m_old_sort_string;
+    ArticleSelectorCommandTest::TearDown();
+}
+
+char SelectorInputTest::run_input(std::string_view commands)
+{
+    push_string(std::string(commands) + "q", 0200);
+    testing::internal::CaptureStdout();
+    const char result = sel_input();
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+class SelectorLetterInputTest : public SelectorInputTest,
+                                public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorLetterInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    const auto [mode, rereading] = GetParam();
+    prepare_input(mode, rereading);
+}
+
+TEST_P(SelectorLetterInputTest, letterSelectsItsRowAndAdvancesToTheNextItem)
+{
+    g_sel_item_index = 1;
+
+    ASSERT_EQ('Q', run_input("a"));
+
+    EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(0, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+TEST_P(SelectorLetterInputTest, lastLetterSelectsItsRowAndWrapsToTheFirstItem)
+{
+    ASSERT_EQ('Q', run_input("b"));
+
+    EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(0, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+TEST_P(SelectorLetterInputTest, repeatingALetterDeselectsTheRow)
+{
+    ASSERT_EQ('Q', run_input("aa"));
+
+    EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(0, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+TEST_P(SelectorLetterInputTest, selectingAnotherLetterRetainsThePreviousSelection)
+{
+    ASSERT_EQ('Q', run_input("ab"));
+
+    EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+TEST_P(SelectorLetterInputTest, deselectingALetterRetainsTheOtherSelection)
+{
+    ASSERT_EQ('Q', run_input("aba"));
+
+    EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+TEST_P(SelectorLetterInputTest, letterBeyondThePageRetainsSelectionAndPosition)
+{
+    ASSERT_EQ('Q', run_input("ac"));
+
+    EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(0, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_NE(std::string::npos, m_output.find("No item 'c' on this page."));
+}
+
+TEST_P(SelectorLetterInputTest, letterCanReselectADeselectedRow)
+{
+    ASSERT_EQ('Q', run_input("aaa"));
+
+    EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & AF_DEL);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, SelectorLetterInputTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+class SelectorCurrentInputTest : public SelectorInputTest,
+                                 public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorCurrentInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_input(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    g_sel_item_index = 1;
+}
+
+TEST_P(SelectorCurrentInputTest, toggleSelectsTheCurrentRow)
+{
+    const char command = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(0, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(command == Ctl('t') ? 1 : 0, g_sel_item_index);
+}
+
+TEST_P(SelectorCurrentInputTest, toggleDeselectsTheCurrentSelectedRow)
+{
+    article_ptr(ArticleNum{4})->select_article(AUTO_KILL_NONE);
+    g_sel_items[1].sel = 1;
+    const char command = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_sel_items[0].sel);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[1].sel);
+    EXPECT_EQ(command == Ctl('t') ? 1 : 0, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorCurrentInputTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('.', 'y', Ctl('t'))));
+
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
 class ArticleSelectorToggleTest : public ArticleSelectorCommandTest,

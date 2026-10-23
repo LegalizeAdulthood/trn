@@ -26,6 +26,7 @@ enum DisplayState
 };
 
 DisplayState article_commands(char_int ch);
+char         sel_input();
 
 std::string read_selector_command_for_test(char page_command, char end_command, bool at_end);
 char        read_selector_escaped_command_for_test();

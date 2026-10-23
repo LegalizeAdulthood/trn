@@ -261,7 +261,6 @@ static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
 static void                sel_display();
 static void                sel_status_msg(std::string_view cp);
-static char                sel_input();
 static void                sel_prompt();
 static bool                select_item(Selection u);
 static bool                delay_return_item(Selection u);
@@ -1245,7 +1244,7 @@ static void sel_status_msg(std::string_view cp)
 /// - g_sel_item_index: Updated to track the currently selected item index.
 /// - s_sel_ret: Updated to store the return character from the selector.
 ///
-static char sel_input()
+char sel_input()
 {
     int j;
     int sel_number;
