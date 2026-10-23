@@ -1471,8 +1471,7 @@ reinp_selector:
         if ((j < 0) || (j >= g_sel_page_item_cnt))
         {
             dingaling();
-            sel_status_msg(
-                fmt::format("No item {}{} on this page.", static_cast<char>(ch_num1), static_cast<char>(ch)));
+            sel_status_msg(fmt::format("No item {} on this page.", sel_number));
             goto position_selector;
         }
         else if (got_goto || (g_sel_num_goto && !got_dash))

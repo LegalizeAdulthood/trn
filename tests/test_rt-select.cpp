@@ -1150,6 +1150,307 @@ INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorObjectCurrentInputTest,
                          testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
                                           testing::Values('.', 'y', '*', Ctl('t'))));
 
+class SelectorNumericInputState : public SelectorInputTest
+{
+protected:
+    void TearDown() override;
+    void prepare_numeric(bool rereading, int page_size = 12);
+    void select_rows(std::initializer_list<int> indices);
+    void expect_numeric(const std::vector<int> &selected, int current) const;
+
+private:
+    Article *row_article(int index) const;
+
+    bool m_rereading{};
+    bool m_old_numeric_goto{g_sel_num_goto};
+    char m_old_erase{g_erase_char};
+    char m_old_kill{g_kill_char};
+};
+
+void SelectorNumericInputState::TearDown()
+{
+    g_sel_num_goto = m_old_numeric_goto;
+    g_erase_char = m_old_erase;
+    g_kill_char = m_old_kill;
+    SelectorInputTest::TearDown();
+}
+
+void SelectorNumericInputState::prepare_numeric(bool rereading, int page_size)
+{
+    m_rereading = rereading;
+    g_use_sel_num = true;
+    g_sel_num_goto = false;
+    g_sel_mode = SM_ARTICLE;
+    g_sel_rereading = rereading;
+    g_sel_mask = rereading ? AGF_DEL_SEL : AGF_SEL;
+    g_erase_char = '\b';
+    g_kill_char = Ctl('u');
+    g_article_list.clear();
+    g_art_ptr_list.clear();
+    g_art_ptr = nullptr;
+    g_abs_first = ArticleNum{100};
+    g_last_art = ArticleNum{100 + MAX_SEL};
+    g_first_art = rereading ? article_after(g_last_art) : g_abs_first;
+    g_first_cached = g_abs_first;
+    g_last_cached = g_last_art;
+    m_subject = {};
+    m_subject.m_str = "Re: Numeric selection";
+    m_subject.m_thread_link = &m_subject;
+    m_subject.m_misc = MAX_SEL + 1;
+    m_newsgroup.m_to_read = rereading ? 0 : MAX_SEL + 1;
+    Article *previous = nullptr;
+    for (int index = 0; index <= MAX_SEL; ++index)
+    {
+        Article *article = row_article(index);
+        article->m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
+        article->m_flags |= rereading ? AF_SEL | AF_DEL : AF_DEL_SEL | AF_UNREAD;
+        article->m_subj = &m_subject;
+        if (previous)
+        {
+            previous->m_subj_next = article;
+        }
+        previous = article;
+        if (index < page_size)
+        {
+            article->m_flags |= AF_INCLUDED;
+            g_sel_items[index] = {};
+            g_sel_items[index].u.ap = article;
+            g_sel_items[index].line = index + 1;
+            g_sel_items[index].sel = rereading ? 2 : 0;
+        }
+    }
+    m_subject.m_articles = row_article(0);
+    m_subject.m_thread = m_subject.m_articles;
+    g_first_subject = &m_subject;
+    g_last_subject = &m_subject;
+    g_subject_count = 1;
+    g_selected_count = 0;
+    g_selected_subj_cnt = 0;
+    g_sel_item_index = 0;
+    g_sel_total_obj_cnt = MAX_SEL + 1;
+    g_sel_prior_obj_cnt = 0;
+    g_sel_page_obj_cnt = page_size;
+    g_sel_page_item_cnt = page_size;
+    g_sel_at_end = false;
+    g_sel_last_line = page_size + 2;
+    g_tc_LINES = page_size + 7;
+    g_term_line = 0;
+}
+
+Article *SelectorNumericInputState::row_article(int index) const
+{
+    return article_ptr(ArticleNum{100 + index});
+}
+
+void SelectorNumericInputState::select_rows(std::initializer_list<int> indices)
+{
+    for (int index : indices)
+    {
+        row_article(index)->select_article(AUTO_KILL_NONE);
+        if (index < g_sel_page_item_cnt)
+        {
+            g_sel_items[index].sel = 1;
+        }
+    }
+}
+
+void SelectorNumericInputState::expect_numeric(const std::vector<int> &selected, int current) const
+{
+    std::vector<int> actual;
+    for (int index = 0; index <= MAX_SEL; ++index)
+    {
+        const bool   is_selected = std::find(selected.begin(), selected.end(), index) != selected.end();
+        ArticleFlags expected = AF_EXISTS | AF_CACHED | AF_THREADED;
+        expected |= m_rereading ? AF_SEL : AF_DEL_SEL | AF_UNREAD;
+        if (is_selected)
+        {
+            expected |= static_cast<ArticleFlags>(g_sel_mask);
+        }
+        else if (m_rereading)
+        {
+            expected |= AF_DEL;
+        }
+        if (index < g_sel_page_item_cnt)
+        {
+            expected |= AF_INCLUDED;
+            EXPECT_EQ(is_selected ? 1 : m_rereading ? 2 : 0, g_sel_items[index].sel) << index;
+        }
+        const Article *article = row_article(index);
+        EXPECT_EQ(expected, article->m_flags) << index;
+        if (article->m_flags & g_sel_mask)
+        {
+            actual.push_back(index);
+        }
+    }
+    EXPECT_EQ(selected, actual);
+    EXPECT_EQ(selected.size(), g_selected_count);
+    EXPECT_EQ(current, g_sel_item_index);
+    EXPECT_EQ(m_rereading, g_sel_rereading);
+    EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(m_rereading ? 0 : MAX_SEL + 1, m_newsgroup.m_to_read);
+}
+
+using NumericPosition = std::pair<std::string_view, int>;
+
+class SelectorNumericPositionInputTest : public SelectorNumericInputState,
+                                         public testing::WithParamInterface<std::tuple<bool, NumericPosition>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericPositionInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+}
+
+TEST_P(SelectorNumericPositionInputTest, numberSelectsThePagePositionAndAdvances)
+{
+    const auto &[input, index] = std::get<1>(GetParam());
+    select_rows({MAX_SEL});
+    g_sel_item_index = 4;
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric({index, MAX_SEL}, (index + 1) % g_sel_page_item_cnt);
+}
+
+TEST_P(SelectorNumericPositionInputTest, numberDeselectsItsSelectedRowAndRetainsHiddenSelections)
+{
+    const auto &[input, index] = std::get<1>(GetParam());
+    select_rows({index, MAX_SEL});
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric({MAX_SEL}, (index + 1) % g_sel_page_item_cnt);
+}
+
+TEST_P(SelectorNumericPositionInputTest, numericGotoMovesWithoutChangingSelections)
+{
+    const auto &[input, index] = std::get<1>(GetParam());
+    select_rows({0, MAX_SEL});
+    g_sel_num_goto = true;
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric({0, MAX_SEL}, index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndPosition, SelectorNumericPositionInputTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(NumericPosition{"1", 0}, NumericPosition{"9", 8},
+                                                          NumericPosition{"01", 0}, NumericPosition{"09", 8},
+                                                          NumericPosition{"10", 9}, NumericPosition{"12", 11})));
+
+using InvalidNumericPosition = std::pair<std::string_view, std::string_view>;
+
+class SelectorNumericInvalidInputTest : public SelectorNumericInputState,
+                                        public testing::WithParamInterface<std::tuple<bool, InvalidNumericPosition>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericInvalidInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+}
+
+TEST_P(SelectorNumericInvalidInputTest, invalidNumberReportsItsPositionAndRetainsSelectionsAndCursor)
+{
+    const auto &[input, message] = std::get<1>(GetParam());
+    select_rows({0, MAX_SEL});
+    g_sel_item_index = 4;
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric({0, MAX_SEL}, 4);
+    EXPECT_NE(std::string::npos, m_output.find(message));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndInvalidPosition, SelectorNumericInvalidInputTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(InvalidNumericPosition{"0", "No item 0 on this page."},
+                                                          InvalidNumericPosition{"00", "No item 0 on this page."},
+                                                          InvalidNumericPosition{"13", "No item 13 on this page."},
+                                                          InvalidNumericPosition{"99", "No item 99 on this page."})));
+
+class SelectorNumericReadInputTest : public SelectorNumericInputState, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericReadInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(GetParam());
+}
+
+TEST_P(SelectorNumericReadInputTest, nonDigitContinuationExecutesAsTheNextCommand)
+{
+    ASSERT_EQ('Q', run_input("1."));
+
+    expect_numeric({0, 1}, 2);
+}
+
+TEST_P(SelectorNumericReadInputTest, aThirdDigitStartsTheNextNumber)
+{
+    ASSERT_EQ('Q', run_input("123"));
+
+    expect_numeric({2, 11}, 3);
+}
+
+TEST_P(SelectorNumericReadInputTest, aSingleDigitPreservesTheFollowingQuitAndQueuedInput)
+{
+    ASSERT_EQ('Q', run_input("1qZ"));
+
+    expect_numeric({0}, 1);
+    ASSERT_TRUE(macro_pending());
+    const std::string next = get_cmd();
+    ASSERT_FALSE(next.empty());
+    EXPECT_EQ('Z', next.front());
+}
+
+TEST_P(SelectorNumericReadInputTest, maximumTwoDigitPositionSelectsTheLastRowAndWraps)
+{
+    prepare_numeric(GetParam(), MAX_SEL);
+    select_rows({MAX_SEL});
+
+    ASSERT_EQ('Q', run_input("99"));
+
+    expect_numeric({MAX_SEL - 1, MAX_SEL}, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorNumericReadInputTest, testing::Bool());
+
+class SelectorNumericCancelInputTest : public SelectorNumericInputState,
+                                       public testing::WithParamInterface<std::tuple<bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericCancelInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+}
+
+TEST_P(SelectorNumericCancelInputTest, cancellingTheFirstDigitAllowsAFreshNumber)
+{
+    const std::string input = std::string("1") + std::get<1>(GetParam()) + "2";
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric({1}, 2);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndCancelKey, SelectorNumericCancelInputTest,
+                         testing::Combine(testing::Bool(), testing::Values('\b', Ctl('u'))));
+
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
 class ArticleSelectorToggleTest : public ArticleSelectorCommandTest,
