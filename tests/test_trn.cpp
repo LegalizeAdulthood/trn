@@ -1354,7 +1354,6 @@ protected:
     void TearDown() override;
 
     bool m_closed{};
-    bool m_write_error{};
 
 private:
     SaveFileOperations m_old_operations{g_save_file_operations};
@@ -1376,7 +1375,6 @@ void FailedSaveArticleTest::SetUp()
     };
     g_save_file_operations.close = [this](std::FILE *stream)
     {
-        m_write_error = std::ferror(stream) != 0;
         const int result = std::fclose(stream);
         m_stream = nullptr;
         m_closed = true;
@@ -3095,7 +3093,18 @@ TEST_P(FailedSaveArticleTest, reportsTheStreamFailureAndReturnsToTheArticlePromp
     EXPECT_EQ(std::string::npos, output.find("Saved to "));
     EXPECT_EQ(std::string::npos, output.find("Appended to "));
     EXPECT_TRUE(m_closed);
-    EXPECT_EQ(!GetParam().close_failure, m_write_error);
+    if (!GetParam().close_failure)
+    {
+        EXPECT_TRUE(saved_text().empty());
+    }
+    else if (GetParam().mailbox)
+    {
+        expect_mailbox(GetParam().command);
+    }
+    else
+    {
+        EXPECT_EQ(expected_text(GetParam().command), saved_text());
+    }
 }
 
 INSTANTIATE_TEST_SUITE_P(StreamErrors, FailedSaveArticleTest,
