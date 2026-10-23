@@ -1723,7 +1723,7 @@ void write_article_body(const fs::path &article_file, std::string_view body, std
                                 << body;
 }
 
-struct ForwardPagerCase
+struct PagerMovementCase
 {
     const char                    *name;
     const char                    *commands;
@@ -1736,20 +1736,23 @@ struct ForwardPagerCase
     long                           next_line;
     long                           top_line;
     long                           body_lines{40};
+    long                           header_lines{};
+    long                           page_break_line{-1};
+    std::vector<long>              highlighted_lines;
 };
 
-void PrintTo(const ForwardPagerCase &value, std::ostream *output)
+void PrintTo(const PagerMovementCase &value, std::ostream *output)
 {
     *output << value.name;
 }
 
-class ForwardPagerArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<ForwardPagerCase>
+class PagerMovementArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerMovementCase>
 {
 protected:
     void              SetUp() override;
     void              TearDown() override;
-    void              advance();
-    std::vector<long> page_lines(std::size_t page) const;
+    void              read_pages();
+    std::vector<long> page_lines(std::size_t page, std::string_view prefix = "Body ") const;
 
     ArticlePosition m_body_start{};
 
@@ -1776,9 +1779,11 @@ private:
     ValueSaver<std::string_view> m_clear{g_tc_CD, g_tc_CD};
     ValueSaver<std::string_view> m_home{g_tc_HO, g_tc_HO};
     ValueSaver<std::string_view> m_up{g_tc_UP, g_tc_UP};
+    ValueSaver<std::string_view> m_standout{g_tc_SO, g_tc_SO};
+    ValueSaver<std::string_view> m_end_standout{g_tc_SE, g_tc_SE};
 };
 
-void ForwardPagerArticleTest::SetUp()
+void PagerMovementArticleTest::SetUp()
 {
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
@@ -1792,6 +1797,10 @@ void ForwardPagerArticleTest::SetUp()
         m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
         for (long line = 0; line < GetParam().body_lines; ++line)
         {
+            if (line == GetParam().page_break_line)
+            {
+                article << '\f';
+            }
             article << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
         }
         ASSERT_TRUE(article.good());
@@ -1815,6 +1824,7 @@ void ForwardPagerArticleTest::SetUp()
     g_check_count = 0;
     g_curr_art = g_art;
     g_tc_LINES = GetParam().screen_lines;
+    g_init_lines = ArticleLine{g_tc_LINES};
     g_erase_screen = GetParam().erase_screen;
     g_erase_each_line = GetParam().erase_each_line;
     g_marking = GetParam().marking;
@@ -1822,6 +1832,8 @@ void ForwardPagerArticleTest::SetUp()
     g_tc_CD = "<clear>";
     g_tc_HO = "<home>";
     g_tc_UP = "<up>";
+    g_tc_SO = "<mark>";
+    g_tc_SE = "</mark>";
     virtual_write(ArticleLine{}, m_body_start);
     set_mode(GM_READ, MM_ARTICLE);
     while (macro_pending())
@@ -1830,7 +1842,7 @@ void ForwardPagerArticleTest::SetUp()
     }
 }
 
-void ForwardPagerArticleTest::TearDown()
+void PagerMovementArticleTest::TearDown()
 {
     while (macro_pending())
     {
@@ -1844,14 +1856,14 @@ void ForwardPagerArticleTest::TearDown()
     ArticleHeaderPresentationTest::TearDown();
 }
 
-void ForwardPagerArticleTest::advance()
+void PagerMovementArticleTest::read_pages()
 {
     push_char('q');
     push_string(GetParam().commands, 0);
     render_article();
 }
 
-std::vector<long> ForwardPagerArticleTest::page_lines(std::size_t page) const
+std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, std::string_view prefix) const
 {
     std::string_view text{m_rendered};
     for (std::size_t index = 0; index < page; ++index)
@@ -1872,10 +1884,10 @@ std::vector<long> ForwardPagerArticleTest::page_lines(std::size_t page) const
     }
     text = text.substr(0, text.find("--MORE--("));
     std::vector<long> lines;
-    for (std::size_t position = text.find("Body "); position != std::string_view::npos;
-         position = text.find("Body ", position + 5))
+    for (std::size_t position = text.find(prefix); position != std::string_view::npos;
+         position = text.find(prefix, position + prefix.size()))
     {
-        lines.push_back(std::stol(std::string{text.substr(position + 5, 3)}));
+        lines.push_back(std::stol(std::string{text.substr(position + prefix.size(), 3)}));
     }
     return lines;
 }
@@ -2643,23 +2655,28 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
               g_prompt);
 }
 
-TEST_P(ForwardPagerArticleTest, advancesToTheExpectedBodyLinesAndPosition)
+TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
 {
-    advance();
+    read_pages();
 
-    const ForwardPagerCase &scenario = GetParam();
+    const PagerMovementCase &scenario = GetParam();
     const bool              at_end = scenario.next_line == scenario.body_lines;
     EXPECT_EQ(at_end ? DA_NORM : DA_TO_END, m_result);
-    std::vector<long> first_page(static_cast<std::size_t>(scenario.screen_lines - 1));
+    const long        first_page_lines = scenario.page_break_line < 0
+                                             ? scenario.screen_lines - 1
+                                             : std::min<long>(scenario.screen_lines - 1, scenario.page_break_line + 1);
+    std::vector<long> first_page(static_cast<std::size_t>(first_page_lines));
     std::iota(first_page.begin(), first_page.end(), 0L);
     EXPECT_EQ(first_page, page_lines(0));
     for (std::size_t index = 0; index < scenario.pages.size(); ++index)
     {
         EXPECT_EQ(scenario.pages[index], page_lines(index + 1)) << "Page " << index + 1;
     }
-    EXPECT_EQ(ArticleLine{scenario.next_line}, g_art_line_num);
+    EXPECT_EQ(scenario.highlighted_lines, page_lines(scenario.pages.size(), "<mark>Body "));
+    EXPECT_EQ(ArticleLine{scenario.next_line + scenario.header_lines}, g_art_line_num);
     EXPECT_EQ(ArticleLine{scenario.top_line}, g_top_line);
-    EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line}, g_art_pos);
+    const long form_feeds = scenario.page_break_line >= 0 && scenario.page_break_line < scenario.next_line ? 1 : 0;
+    EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line + form_feeds}, g_art_pos);
     EXPECT_EQ(g_art_pos, art_buf_article_pos());
     EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
     EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
@@ -2674,49 +2691,195 @@ TEST_P(ForwardPagerArticleTest, advancesToTheExpectedBodyLinesAndPosition)
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    CommandsAndDisplayModes, ForwardPagerArticleTest,
+    CommandsAndDisplayModes, PagerMovementArticleTest,
     Values(
-        ForwardPagerCase{
+        PagerMovementCase{
             "ScrollingSpace", " ", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
-        ForwardPagerCase{
+        PagerMovementCase{
             "ScrollingY", "y", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
-        ForwardPagerCase{
+        PagerMovementCase{
             "ClearedPage", " ", 10, true, false, NO_MARKING, NONE, {{8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
-        ForwardPagerCase{
+        PagerMovementCase{
             "HomeAndErase", " ", 10, true, true, NO_MARKING, NONE, {{8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
-        ForwardPagerCase{
-            "MarkedFullPage", " ", 10, false, false, STANDOUT, NONE, {{8, 9, 10, 11, 12, 13, 14, 15, 16}}, 17, 8},
-        ForwardPagerCase{"HalfPageD", "d", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4},
-        ForwardPagerCase{"HalfPageControlD", "\004", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4},
-        ForwardPagerCase{
-            "MarkedHalfPage", "d", 10, false, false, STANDOUT, HALF_PAGE_MARKING, {{8, 9, 10, 11, 12}}, 13, 4},
-        ForwardPagerCase{
+        PagerMovementCase{"MarkedFullPage",
+                          " ",
+                          10,
+                          false,
+                          false,
+                          STANDOUT,
+                          NONE,
+                          {{8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                          17,
+                          8,
+                          40,
+                          0,
+                          -1,
+                          {8}},
+        PagerMovementCase{"HalfPageD", "d", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4},
+        PagerMovementCase{"HalfPageControlD", "\004", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4},
+        PagerMovementCase{"MarkedHalfPage",
+                          "d",
+                          10,
+                          false,
+                          false,
+                          STANDOUT,
+                          HALF_PAGE_MARKING,
+                          {{8, 9, 10, 11, 12}},
+                          13,
+                          4,
+                          40,
+                          0,
+                          -1,
+                          {8}},
+        PagerMovementCase{
             "HalfPageMarkingDisabledD", "d", 10, false, false, STANDOUT, BACK_PAGE_MARKING, {{9, 10, 11, 12}}, 13, 4},
-        ForwardPagerCase{"HalfPageMarkingDisabledControlD",
-                         "\004",
-                         10,
-                         false,
-                         false,
-                         STANDOUT,
-                         BACK_PAGE_MARKING,
-                         {{9, 10, 11, 12}},
-                         13,
-                         4},
-        ForwardPagerCase{"OddHeightHalfPage", "d", 9, false, false, NO_MARKING, NONE, {{8, 9, 10}}, 11, 3},
-        ForwardPagerCase{"RepeatedOddHeightHalfPages",
-                         "dd",
-                         9,
-                         false,
-                         false,
-                         NO_MARKING,
-                         NONE,
-                         {{8, 9, 10}, {11, 12, 13, 14}},
-                         15,
-                         7},
-        ForwardPagerCase{"SingleLineNewline", "\n", 10, false, false, NO_MARKING, NONE, {{9}}, 10, 1},
-        ForwardPagerCase{"SingleLineReturn", "\r", 10, false, false, NO_MARKING, NONE, {{9}}, 10, 1},
-        ForwardPagerCase{"FinalPartialPage", " ", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4, 13}),
-    [](const TestParamInfo<ForwardPagerCase> &info) { return info.param.name; });
+        PagerMovementCase{"HalfPageMarkingDisabledControlD",
+                          "\004",
+                          10,
+                          false,
+                          false,
+                          STANDOUT,
+                          BACK_PAGE_MARKING,
+                          {{9, 10, 11, 12}},
+                          13,
+                          4},
+        PagerMovementCase{"OddHeightHalfPage", "d", 9, false, false, NO_MARKING, NONE, {{8, 9, 10}}, 11, 3},
+        PagerMovementCase{"RepeatedOddHeightHalfPages",
+                          "dd",
+                          9,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{8, 9, 10}, {11, 12, 13, 14}},
+                          15,
+                          7},
+        PagerMovementCase{"SingleLineNewline", "\n", 10, false, false, NO_MARKING, NONE, {{9}}, 10, 1},
+        PagerMovementCase{"SingleLineReturn", "\r", 10, false, false, NO_MARKING, NONE, {{9}}, 10, 1},
+        PagerMovementCase{"FinalPartialPage", " ", 10, false, false, NO_MARKING, NONE, {{9, 10, 11, 12}}, 13, 4, 13}),
+    [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
+
+INSTANTIATE_TEST_SUITE_P(
+    BackwardPaging, PagerMovementArticleTest,
+    Values(PagerMovementCase{"PreviousPageB",
+                             " b",
+                             10,
+                             false,
+                             false,
+                             NO_MARKING,
+                             NONE,
+                             {{9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5, 6, 7, 8}},
+                             9,
+                             0},
+           PagerMovementCase{"PreviousPageControlB",
+                             " \002",
+                             10,
+                             false,
+                             false,
+                             NO_MARKING,
+                             NONE,
+                             {{9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5, 6, 7, 8}},
+                             9,
+                             0},
+           PagerMovementCase{"PreviousPageWithLineErasing",
+                             " b",
+                             10,
+                             true,
+                             true,
+                             NO_MARKING,
+                             NONE,
+                             {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5, 6, 7, 8}},
+                             9,
+                             0},
+           PagerMovementCase{"PreviousPageMarking",
+                             " b",
+                             10,
+                             false,
+                             false,
+                             STANDOUT,
+                             BACK_PAGE_MARKING,
+                             {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5, 6, 7, 8}},
+                             9,
+                             0,
+                             40,
+                             0,
+                             -1,
+                             {8}},
+           PagerMovementCase{"PreviousPageMarkingDisabled",
+                             " b",
+                             10,
+                             false,
+                             false,
+                             STANDOUT,
+                             HALF_PAGE_MARKING,
+                             {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5, 6, 7, 8}},
+                             9,
+                             0},
+           PagerMovementCase{"PreviousPageAfterHalfPage",
+                             " db",
+                             10,
+                             false,
+                             false,
+                             NO_MARKING,
+                             NONE,
+                             {{9, 10, 11, 12, 13, 14, 15, 16}, {17, 18, 19, 20}, {4, 5, 6, 7, 8, 9, 10, 11, 12}},
+                             13,
+                             4},
+           PagerMovementCase{"BeginningB", "b", 10, false, false, NO_MARKING, NONE, {{0, 1, 2, 3, 4, 5}}, 6, -1, 40, 2},
+           PagerMovementCase{
+               "BeginningControlB", "\002", 10, false, false, NO_MARKING, NONE, {{0, 1, 2, 3, 4, 5}}, 6, -1, 40, 2},
+           PagerMovementCase{"RepeatedBackAtBeginning",
+                             "bb",
+                             10,
+                             false,
+                             false,
+                             NO_MARKING,
+                             NONE,
+                             {{0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5}},
+                             6,
+                             -1,
+                             40,
+                             2},
+           PagerMovementCase{"RepeatedBackPages",
+                             "  bb",
+                             10,
+                             false,
+                             false,
+                             NO_MARKING,
+                             NONE,
+                             {{9, 10, 11, 12, 13, 14, 15, 16},
+                              {17, 18, 19, 20, 21, 22, 23, 24},
+                              {8, 9, 10, 11, 12, 13, 14, 15, 16},
+                              {0, 1, 2, 3, 4, 5, 6, 7, 8}},
+                             9,
+                             0},
+           PagerMovementCase{
+               "ForwardAfterBack",
+               " b ",
+               10,
+               false,
+               false,
+               NO_MARKING,
+               NONE,
+               {{9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {9, 10, 11, 12, 13, 14, 15, 16}},
+               17,
+               8},
+           PagerMovementCase{"BackStopsAfterFormFeed",
+                             "  b",
+                             10,
+                             false,
+                             false,
+                             NO_MARKING,
+                             NONE,
+                             {{8, 9, 10, 11, 12, 13, 14, 15, 16},
+                              {17, 18, 19, 20, 21, 22, 23, 24},
+                              {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                             17,
+                             8,
+                             40,
+                             0,
+                             7}),
+    [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
