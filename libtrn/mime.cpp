@@ -824,7 +824,7 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
                 }
                 line += input_line;
             }
-            if (line.front() == '\n')
+            if (line.front() == '\n' || std::string_view{line}.substr(0, 2) == "\r\n")
             {
                 break;
             }
@@ -935,6 +935,10 @@ bool mime_set_state(std::string_view bp)
 
 int mime_end_of_section(std::string_view bp)
 {
+    if (bp.size() >= 2 && bp.substr(bp.size() - 2) == "\r\n")
+    {
+        bp.remove_suffix(2);
+    }
     MimeSection *mp = g_mime_section->m_prev;
     while (mp && !mp->m_boundary_len)
     {

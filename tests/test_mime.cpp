@@ -248,20 +248,29 @@ protected:
 
 } // namespace
 
-TEST_F(MimeBoundaryTest, detectsBoundaryLine)
+class MimeBoundaryLineTest : public MimeBoundaryTest, public testing::WithParamInterface<const char *>
 {
-    EXPECT_EQ(1, end_of_section("--part-boundary\n"));
+};
+
+TEST_P(MimeBoundaryLineTest, detectsBoundaryLine)
+{
+    const std::string line = "--part-boundary" + std::string{GetParam()};
+
+    EXPECT_EQ(1, end_of_section(line));
 }
 
-TEST_F(MimeBoundaryTest, detectsBoundaryAtEndOfString)
+TEST_P(MimeBoundaryLineTest, detectsFinalBoundaryLine)
 {
-    EXPECT_EQ(1, end_of_section("--part-boundary"));
+    const std::string line = "--part-boundary--" + std::string{GetParam()};
+
+    EXPECT_EQ(2, end_of_section(line));
 }
 
-TEST_F(MimeBoundaryTest, detectsFinalBoundaryLine)
-{
-    EXPECT_EQ(2, end_of_section("--part-boundary--\n"));
-}
+INSTANTIATE_TEST_SUITE_P(LineEndings, MimeBoundaryLineTest, testing::Values("\n", "\r\n", ""),
+                         [](const testing::TestParamInfo<const char *> &info)
+                         { return info.index == 0   ? "Lf"
+                                  : info.index == 1 ? "Crlf"
+                                                    : "EndOfString"; });
 
 TEST_F(MimeBoundaryTest, rejectsBoundaryPrefix)
 {
@@ -456,6 +465,20 @@ TEST_F(MimeSubHeaderTest, parsesSuppliedFirstHeaderLine)
     EXPECT_EQ(MENCODE_BASE64, m_mime_section.m_encoding);
     ASSERT_TRUE(m_mime_section.m_type_name);
     EXPECT_EQ("text/html", *m_mime_section.m_type_name);
+}
+
+TEST_F(MimeSubHeaderTest, aCrlfBlankLineLeavesTheFirstPayloadLineUnread)
+{
+    constexpr std::string_view input = "Content-Type: application/octet-stream\r\n"
+                                       "Content-Transfer-Encoding: base64\r\n\r\nQUJD\r\n";
+    ASSERT_EQ(input.size(), std::fwrite(input.data(), 1, input.size(), m_input));
+    std::rewind(m_input);
+
+    mime_parse_sub_header(m_input, {});
+
+    std::string payload(6, '\0');
+    EXPECT_EQ(payload.size(), std::fread(payload.data(), 1, payload.size(), m_input));
+    EXPECT_EQ("QUJD\r\n", payload);
 }
 
 TEST_F(MimeSubHeaderTest, parsesContentNameHeader)

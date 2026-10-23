@@ -11,6 +11,7 @@
 #include <trn/backpage.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
+#include <trn/decode.h>
 #include <trn/final.h>
 #include <trn/hash.h>
 #include <trn/head.h>
@@ -1210,6 +1211,125 @@ class FailedPipeSaveArticleTest : public PipeSaveArticleTest, public testing::Wi
 {
 };
 
+class ExtractSaveArticleTest : public ExternalSaveArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        article(std::string_view body, std::string_view headers = {});
+    std::string extracted_text(const char *filename) const;
+    std::string custom_input() const;
+    void        expect_custom_receiver() const;
+
+    std::string m_article_text;
+    std::string m_receiver;
+
+    static constexpr std::string_view YENC = "Posted attachment follows\n\n"
+                                             "=ybegin line=128 size=3 name=attachment.bin\n"
+                                             "klm\n=yend size=3 crc32=a3830348\n";
+
+private:
+    std::string      m_old_extract_dest{g_extract_dest};
+    std::string      m_old_extract_prog{g_extract_prog};
+    std::string      m_old_decode_filename{g_decode_filename};
+    std::string      m_old_art_line{std::move(g_art_line)};
+    std::string_view m_old_mime_getc_line{g_mime_getc_line};
+};
+
+void ExtractSaveArticleTest::SetUp()
+{
+    ExternalSaveArticleTest::SetUp();
+    m_destination = fs::path{g_priv_dir} / "attachments";
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", ".");
+    m_env.expect_env_repeatedly("CUSTOMSAVER", "< \"%A\" %e");
+    m_receiver = "\"" TRN_TEST_PROCESS_TOOL "\" poster -h";
+    g_extract_dest.clear();
+    g_extract_prog.clear();
+    g_mime_getc_line = {};
+}
+
+void ExtractSaveArticleTest::TearDown()
+{
+    ExternalSaveArticleTest::TearDown();
+    g_extract_dest = m_old_extract_dest;
+    g_extract_prog = m_old_extract_prog;
+    g_decode_filename = m_old_decode_filename;
+    g_art_line = std::move(m_old_art_line);
+    g_mime_getc_line = m_old_mime_getc_line;
+}
+
+void ExtractSaveArticleTest::article(std::string_view body, std::string_view headers)
+{
+    ASSERT_EQ(0, std::fclose(g_art_fp));
+    g_art_fp = nullptr;
+    g_open_art = {};
+    g_parsed_art = {};
+    m_article_text = HEADER;
+    m_article_text.pop_back();
+    m_article_text += headers;
+    m_article_text += '\n';
+    m_article_text += body;
+    std::ofstream output{m_spool / "1"};
+    output << m_article_text;
+    output.close();
+    ASSERT_FALSE(output.fail());
+    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_NE(nullptr, art_open(g_art, ArticlePosition{}));
+    ASSERT_EQ(0, std::fseek(g_art_fp, 0, SEEK_END));
+    g_art_pos = tell_art();
+}
+
+std::string ExtractSaveArticleTest::extracted_text(const char *filename) const
+{
+    std::ifstream input{m_destination / filename};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+std::string ExtractSaveArticleTest::custom_input() const
+{
+    return "attachments |   " + m_receiver + '\n';
+}
+
+void ExtractSaveArticleTest::expect_custom_receiver() const
+{
+    EXPECT_EQ("poster\n-h\n", extracted_text("tools.log"));
+    EXPECT_EQ(m_receiver, g_extract_prog);
+    EXPECT_EQ(m_destination.generic_string(), g_extract_dest);
+    EXPECT_FALSE(g_waiting);
+}
+
+struct EncodedExtractCase
+{
+    const char *name;
+    const char *headers;
+    const char *body;
+    const char *options;
+    const char *announcement;
+};
+
+void PrintTo(const EncodedExtractCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class EncodedExtractSaveArticleTest : public ExtractSaveArticleTest,
+                                      public testing::WithParamInterface<EncodedExtractCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void EncodedExtractSaveArticleTest::SetUp()
+{
+    ExtractSaveArticleTest::SetUp();
+    article(GetParam().body, GetParam().headers);
+}
+
+class FailedExtractSaveArticleTest : public ExtractSaveArticleTest, public testing::WithParamInterface<const char *>
+{
+};
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -1466,6 +1586,197 @@ TEST_P(FailedPipeSaveArticleTest, returnsToThePromptAfterTheReceiverStopsWithout
 INSTANTIATE_TEST_SUITE_P(ReceiverExit, FailedPipeSaveArticleTest, testing::Values("poster_failure", "poster_cancel"),
                          [](const testing::TestParamInfo<const char *> &info)
                          { return std::string{info.index == 0 ? "Failure" : "Interruption"}; });
+
+TEST_P(EncodedExtractSaveArticleTest, decodesTheAttachmentIntoTheRequestedDirectory)
+{
+    g_int_count = 1;
+
+    const std::string output = save('e', std::string{GetParam().options} + "attachments\n");
+
+    EXPECT_EQ("ABC", extracted_text("attachment.bin"));
+    EXPECT_EQ(m_destination.generic_string(), g_extract_dest);
+    EXPECT_NE(std::string::npos, output.find(GetParam().announcement));
+    EXPECT_EQ(1, std::distance(fs::directory_iterator{m_destination}, fs::directory_iterator{}));
+}
+
+INSTANTIATE_TEST_SUITE_P(AttachmentFormats, EncodedExtractSaveArticleTest,
+                         testing::Values(EncodedExtractCase{"Mime",
+                                                            "MIME-Version: 1.0\n"
+                                                            "Content-Type: application/octet-stream; "
+                                                            "name=attachment.bin\n"
+                                                            "Content-Transfer-Encoding: base64\n",
+                                                            "QUJD\n", "", "Extracting MIME article"},
+                                         EncodedExtractCase{"MultipartMime",
+                                                            "MIME-Version: 1.0\n"
+                                                            "Content-Type: multipart/mixed; boundary=parts\n",
+                                                            "Multipart message\n--parts\n"
+                                                            "Content-Type: text/plain\n\nReadme text\n"
+                                                            "--parts\nContent-Type: application/octet-stream; "
+                                                            "name=attachment.bin\n"
+                                                            "Content-Transfer-Encoding: base64\n"
+                                                            "Content-Disposition: attachment; "
+                                                            "filename=attachment.bin\n\nQUJD\n--parts--\n",
+                                                            "", "Extracting MIME article"},
+                                         EncodedExtractCase{"Uuencode", "",
+                                                            "Posted attachment follows\n\n \n"
+                                                            "begin 644 attachment.bin\n#04)#\n`\nend\n",
+                                                            "-1/1 ", "Extracting uuencoded file"},
+                                         EncodedExtractCase{"Yenc", "",
+                                                            "Posted attachment follows\n\n"
+                                                            "=ybegin line=128 size=3 name=attachment.bin\n"
+                                                            "klm\n=yend size=3 crc32=a3830348\n",
+                                                            "", "Extracting yEnc file"}),
+                         [](const testing::TestParamInfo<EncodedExtractCase> &info) { return info.param.name; });
+
+TEST_F(ExtractSaveArticleTest, rejectsACorruptYencAttachmentWithoutReplacingAnExistingFile)
+{
+    article("=ybegin line=128 size=3 name=attachment.bin\nklm\n=yend size=3 crc32=00000000\n");
+    fs::create_directories(m_destination);
+    std::ofstream{m_destination / "attachment.bin"} << "Keep this file";
+
+    const std::string output = save('e', "attachments\n");
+
+    EXPECT_EQ("Keep this file", extracted_text("attachment.bin"));
+    EXPECT_FALSE(g_msg.empty());
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_F(ExtractSaveArticleTest, reportsAnUnrecognizedArticleWithoutCreatingAnAttachment)
+{
+    article("This article has no encoded attachment.\n");
+
+    const std::string output = save('e', "attachments\n");
+
+    EXPECT_TRUE(fs::is_empty(m_destination));
+    EXPECT_NE(std::string::npos, output.find("Unable to determine type of file."));
+}
+
+TEST_F(ExtractSaveArticleTest, reportsAnUnsupportedMimeEncodingWithoutCreatingAnAttachment)
+{
+    article("QUJD\n", "MIME-Version: 1.0\n"
+                      "Content-Type: application/octet-stream; name=attachment.bin\n"
+                      "Content-Transfer-Encoding: x-unsupported\n");
+
+    const std::string output = save('e', "attachments\n");
+
+    EXPECT_TRUE(fs::is_empty(m_destination));
+    EXPECT_EQ("Unhandled encoding type -- aborting.", g_msg);
+    EXPECT_NE(std::string::npos, output.find(g_msg));
+}
+
+TEST_F(ExtractSaveArticleTest, aBlockedDestinationReturnsToTheReadingDirectory)
+{
+    article(YENC);
+    std::ofstream{fs::path{g_priv_dir} / "blocker"} << "Keep this file";
+    m_destination = fs::path{g_priv_dir} / "blocker" / "attachments";
+    g_int_count = 1;
+
+    save('e', "blocker/attachments\n");
+
+    EXPECT_FALSE(fs::exists(m_destination));
+    EXPECT_TRUE(fs::is_regular_file(fs::path{g_priv_dir} / "blocker"));
+}
+
+TEST_F(ExtractSaveArticleTest, erasingTheExtractCommandCancelsBeforeCreatingADirectory)
+{
+    const std::string old_destination = g_extract_dest;
+
+    save('e', "\b", AS_INP);
+
+    EXPECT_FALSE(fs::exists(m_destination));
+    EXPECT_EQ(old_destination, g_extract_dest);
+    EXPECT_EQ("Save aborted at article 1", g_msg);
+}
+
+TEST_F(ExtractSaveArticleTest, anEmptyDestinationReusesThePreviousExtractionDirectory)
+{
+    article(YENC);
+    save('e', "attachments\n");
+    ASSERT_TRUE(fs::remove(m_destination / "attachment.bin"));
+
+    save('e', "\n");
+
+    EXPECT_EQ("ABC", extracted_text("attachment.bin"));
+    EXPECT_EQ(m_destination.generic_string(), g_extract_dest);
+}
+
+TEST_F(ExtractSaveArticleTest, passesTheArticleToTheConfiguredExtractionCommandInTheDestination)
+{
+    article(BODY);
+
+    const std::string output = save('e', custom_input());
+
+    expect_custom_receiver();
+    EXPECT_EQ(m_article_text, extracted_text("posted"));
+    EXPECT_NE(std::string::npos, output.find("Extracting article into " + m_destination.generic_string()));
+}
+
+TEST_P(FailedExtractSaveArticleTest, returnsToThePromptAfterTheExtractionProcessStopsWithoutOutput)
+{
+    article(BODY);
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam());
+    g_int_count = 1;
+
+    save('e', custom_input());
+
+    expect_custom_receiver();
+    EXPECT_FALSE(fs::exists(m_destination / "posted"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ExtractorExit, FailedExtractSaveArticleTest,
+                         testing::Values("poster_failure", "poster_cancel"),
+                         [](const testing::TestParamInfo<const char *> &info)
+                         { return std::string{info.index == 0 ? "Failure" : "Interruption"}; });
+
+TEST_F(ExtractSaveArticleTest, anEmptyCommandReusesThePreviousCustomExtractor)
+{
+    article(BODY);
+    save('e', custom_input());
+    ASSERT_TRUE(fs::remove(m_destination / "posted"));
+
+    save('e', "\n");
+
+    EXPECT_EQ(m_article_text, extracted_text("posted"));
+    EXPECT_EQ("poster\n-h\nposter\n-h\n", extracted_text("tools.log"));
+    EXPECT_EQ(m_receiver, g_extract_prog);
+    EXPECT_EQ(m_destination.generic_string(), g_extract_dest);
+}
+
+TEST_F(ExtractSaveArticleTest, anExplicitDirectoryReturnsToAutomaticAttachmentDetection)
+{
+    article(BODY);
+    save('e', custom_input());
+    article(YENC);
+    m_destination = fs::path{g_priv_dir} / "decoded";
+
+    const std::string output = save('e', "decoded\n");
+
+    EXPECT_EQ("ABC", extracted_text("attachment.bin"));
+    EXPECT_EQ(m_destination.generic_string(), g_extract_dest);
+    EXPECT_NE(std::string::npos, output.find("Extracting yEnc file"));
+    EXPECT_FALSE(fs::exists(m_destination / "tools.log"));
+}
+
+TEST_F(ExtractSaveArticleTest, passesTheDetectedShellArchiveOffsetToTheConfiguredHandler)
+{
+    constexpr std::string_view archive = "#!/bin/sh\necho controlled archive input\n";
+    article(std::string{"Posted archive follows\n\n"} + std::string{archive});
+    const std::string saver =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" article-saver \"%A\" %B \"shar source\" %a %C";
+    m_env.expect_env_repeatedly("SHARSAVER", saver.c_str());
+
+    const std::string output = save('e', "attachments\n");
+
+    EXPECT_EQ(archive, extracted_text("shar source"));
+    EXPECT_EQ("article-saver\n" + (m_spool / "1").generic_string() + '\n' + std::to_string(g_save_from.value_of()) +
+                  "\nshar source\n1\ncomp.lang.cpp\n",
+              extracted_text("article-saver.log"));
+    EXPECT_NE(std::string::npos, output.find("Extracting shar into "));
+    EXPECT_FALSE(g_waiting);
+}
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {

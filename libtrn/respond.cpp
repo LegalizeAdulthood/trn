@@ -210,6 +210,7 @@ SaveResult save_article(std::string_view command)
     {
         cmd = static_cast<char>(std::tolower(static_cast<unsigned char>(cmd)));
     }
+    const ArticlePosition reading_position = g_art_pos;
     parse_header(g_art);
     mime_set_article();
     clear_art_buf();
@@ -326,7 +327,7 @@ SaveResult save_article(std::string_view command)
         if (make_dir(g_extract_dest, MD_DIR)) // ensure directory exists
         {
             g_int_count++;
-            return SAVE_DONE;
+            goto s_bomb;
         }
         if (change_dir(g_extract_dest))
         {
@@ -705,6 +706,7 @@ reask_save:
         }
     }
 s_bomb:
+    g_art_pos = reading_position;
     chdir_news_dir();
     return SAVE_DONE;
 }
