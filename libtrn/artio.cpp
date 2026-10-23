@@ -30,6 +30,7 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <utility>
 
 ArticlePosition g_art_pos{};              // byte position in article file
 ArticleLine     g_art_line_num{};         // current line number in article file
@@ -45,6 +46,23 @@ static std::string     s_art_buf;
 static ArticlePosition s_art_buf_pos{};
 static ArticlePosition s_art_buf_seek{};
 static ArticlePosition s_art_buf_len{};
+
+PreserveArticleBuffer::PreserveArticleBuffer() :
+    m_buffer{std::move(s_art_buf)},
+    m_position{s_art_buf_pos},
+    m_seek{s_art_buf_seek},
+    m_length{s_art_buf_len}
+{
+    clear_art_buf();
+}
+
+PreserveArticleBuffer::~PreserveArticleBuffer()
+{
+    s_art_buf = std::move(m_buffer);
+    s_art_buf_pos = m_position;
+    s_art_buf_seek = m_seek;
+    s_art_buf_len = m_length;
+}
 
 static char *read_art_buf_raw(bool view_inline);
 static char *art_buf_data();

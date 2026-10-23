@@ -650,6 +650,7 @@ void entire_tree(Article* ap)
         return;
     }
 
+    const PreserveArticleBuffer saved_buffer;
     const auto restore_position = [position = g_art_pos, number = g_art_fp ? g_open_art : ArticleNum{},
                                    offset = g_art_fp ? tell_art() : ArticlePosition{}]
     {

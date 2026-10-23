@@ -32,6 +32,7 @@
 #include <trn/respond.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
+#include <trn/rt-wumpus.h>
 #include <trn/rthread.h>
 #include <trn/search.h>
 #include <trn/terminal.h>
@@ -2082,6 +2083,150 @@ std::string PagerExitArticleTest::pending_input()
     return input;
 }
 
+struct PagerTreeCase
+{
+    const char *name;
+    bool        threaded;
+    bool        quoted_printable;
+    const char *commands;
+    long        next_line;
+    int         displays{1};
+};
+
+void PrintTo(const PagerTreeCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class PagerTreeArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerTreeCase>
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    void              read_with_tree();
+    std::vector<long> displayed_body_lines() const;
+
+    ArticlePosition              m_body_start{};
+    std::vector<ArticlePosition> m_raw_positions;
+
+private:
+    PushDir                      m_private_group;
+    ValueSaver<std::string>      m_group_dir{g_newsgroup_dir, g_newsgroup_dir};
+    ValueSaver<ArticleNum>       m_current_article{g_curr_art, g_curr_art};
+    ValueSaver<ArticleNum>       m_abs_first{g_abs_first, g_abs_first};
+    ValueSaver<bool>             m_threaded{g_threaded_group, g_threaded_group};
+    ValueSaver<bool>             m_thread_always{g_thread_always, g_thread_always};
+    ValueSaver<int>              m_tree_lines{g_max_tree_lines, g_max_tree_lines};
+    ValueSaver<GeneralMode>      m_general_mode{g_general_mode, g_general_mode};
+    ValueSaver<MinorMode>        m_mode{g_mode, g_mode};
+    ValueSaver<std::string_view> m_standout{g_tc_SO, g_tc_SO};
+    ValueSaver<std::string_view> m_end_standout{g_tc_SE, g_tc_SE};
+};
+
+void PagerTreeArticleTest::SetUp()
+{
+    ArticleHeaderPresentationTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    art_close();
+    close_cache();
+    m_private_group.push(m_output.path());
+    g_newsgroup_dir = ".";
+    g_data_source->m_flags &= ~DF_TRY_OVERVIEW;
+    g_abs_first = g_art;
+    g_last_art = article_after(g_art);
+    g_newsgroup_ptr->m_abs_first = g_abs_first;
+    g_newsgroup_ptr->m_ng_max = g_last_art;
+    g_newsgroup_ptr->m_rc_line.resize(g_newsgroup_ptr->m_num_offset);
+    g_newsgroup_ptr->m_rc_line += "1-" + std::to_string(article_before(g_abs_first).value_of());
+    g_threaded_group = GetParam().threaded;
+    g_thread_always = true;
+    g_max_tree_lines = 0;
+    {
+        std::ofstream article{std::to_string(g_art.value_of())};
+        article << "Subject: Pager thread\nMessage-ID: <pager-root@example.test>\n";
+        if (GetParam().quoted_printable)
+        {
+            article << "MIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n"
+                       "Content-Transfer-Encoding: quoted-printable\n";
+        }
+        article << '\n';
+        m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
+        m_raw_positions.push_back(m_body_start);
+        for (long line = 0; line < 40; ++line)
+        {
+            article << (GetParam().quoted_printable ? "=42ody " : "Body ") << std::setw(3) << std::setfill('0') << line
+                    << '\n';
+            m_raw_positions.emplace_back(static_cast<long>(article.tellp()));
+        }
+        ASSERT_TRUE(article.good());
+        std::ofstream reply{std::to_string(g_last_art.value_of())};
+        reply << "Subject: Re: Pager thread\nMessage-ID: <pager-reply@example.test>\n"
+                 "References: <pager-root@example.test>\n\nOther article\n";
+        ASSERT_TRUE(reply.good());
+    }
+    build_cache();
+    g_artp = g_curr_artp = article_ptr(g_art);
+    g_curr_art = g_art;
+    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(g_artp->m_flags & AF_UNREAD);
+    ASSERT_TRUE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
+    ASSERT_EQ(ArticleUnread{2}, g_newsgroup_ptr->m_to_read);
+    mime_set_article();
+    clear_art_buf();
+    set_art_buf_seek(m_body_start);
+    ASSERT_EQ(0, seek_art(m_body_start));
+    g_art_pos = m_body_start;
+    g_art_line_num = ArticleLine{};
+    g_top_line = ArticleLine{};
+    g_in_header = PAST_HEADER;
+    g_do_fseek = false;
+    g_tc_LINES = 10;
+    g_init_lines = ArticleLine{10};
+    g_tc_SO = "<mark>";
+    g_tc_SE = "</mark>";
+    virtual_write(ArticleLine{}, m_body_start);
+    set_mode(GM_READ, MM_ARTICLE);
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+}
+
+void PagerTreeArticleTest::TearDown()
+{
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+    art_close();
+    close_cache();
+    back_page_final();
+    m_private_group.pop();
+    ArticleHeaderPresentationTest::TearDown();
+}
+
+void PagerTreeArticleTest::read_with_tree()
+{
+    push_char('q');
+    const std::string_view commands{GetParam().commands};
+    for (auto character = commands.rbegin(); character != commands.rend(); ++character)
+    {
+        push_char(*character);
+    }
+    render_article();
+}
+
+std::vector<long> PagerTreeArticleTest::displayed_body_lines() const
+{
+    std::vector<long> lines;
+    for (std::size_t position = m_rendered.find("Body "); position != std::string::npos;
+         position = m_rendered.find("Body ", position + 5))
+    {
+        lines.push_back(std::stol(m_rendered.substr(position + 5, 3)));
+    }
+    return lines;
+}
+
 } // namespace
 
 TEST_F(InterpolatorNewsgroupTest, absoluteNewsgroupDirSet)
@@ -3508,6 +3653,68 @@ INSTANTIATE_TEST_SUITE_P(
            PagerExitCase{"QuitOnlyThePager", "q", "", AF_UNREAD, AF_UNREAD, 0, DA_TO_END, true},
            PagerExitCase{"ErasingSelectorPrefixStaysInPager", "_\b", "", AF_UNREAD, AF_UNREAD, 0, DA_TO_END, true, ""}),
     [](const TestParamInfo<PagerExitCase> &info) { return info.param.name; });
+
+TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
+{
+    read_with_tree();
+
+    SCOPED_TRACE(m_rendered);
+    const PagerTreeCase &scenario = GetParam();
+    EXPECT_EQ(DA_TO_END, m_result);
+    EXPECT_TRUE(m_article_command.empty());
+    std::vector<long> expected(static_cast<std::size_t>(scenario.next_line));
+    std::iota(expected.begin(), expected.end(), 0L);
+    EXPECT_EQ(expected, displayed_body_lines());
+    int displays = 0;
+    for (std::size_t position = m_rendered.find("[1] Pager thread"); position != std::string::npos;
+         position = m_rendered.find("[1] Pager thread", position + 16))
+    {
+        ++displays;
+    }
+    EXPECT_EQ(scenario.displays, displays);
+    EXPECT_THAT(m_rendered, HasSubstr("<mark>[1]</mark>"));
+    EXPECT_EQ(!scenario.threaded, m_rendered.find("Threading the group.") != std::string::npos);
+    EXPECT_TRUE(g_threaded_group);
+    EXPECT_TRUE(g_artp->m_flags & AF_THREADED);
+    EXPECT_EQ(article_ptr(g_last_art), g_artp->m_child1);
+    EXPECT_EQ(g_artp, article_ptr(g_last_art)->m_parent);
+    EXPECT_TRUE(g_artp->m_flags & AF_UNREAD);
+    EXPECT_TRUE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(ArticleUnread{}, g_selected_count);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_art, g_open_art);
+    EXPECT_EQ(g_art, g_parsed_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleLine{scenario.next_line}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line}, g_art_pos);
+    EXPECT_EQ(g_art_pos, art_buf_article_pos());
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_FALSE(art_buf_empty());
+    EXPECT_EQ(m_raw_positions[static_cast<std::size_t>(scenario.next_line + 1)], tell_art());
+    EXPECT_EQ(scenario.quoted_printable ? TEXT_MIME : NOT_MIME, g_mime_state);
+    EXPECT_EQ(scenario.quoted_printable ? MENCODE_QPRINT : MENCODE_NONE, g_mime_section->m_encoding);
+    EXPECT_EQ(scenario.quoted_printable, g_is_mime);
+    EXPECT_TRUE(g_mime_section->m_decoder_pending.empty());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(ThreadingAndBodyEncoding, PagerTreeArticleTest,
+                         Values(PagerTreeCase{"ThreadedPlainText", true, false, "t ", 17},
+                                PagerTreeCase{"UnthreadedPlainText", false, false, "t ", 17},
+                                PagerTreeCase{"ThreadedQuotedPrintable", true, true, "t ", 17},
+                                PagerTreeCase{"UnthreadedQuotedPrintable", false, true, "t ", 17},
+                                PagerTreeCase{"UnthreadedSingleLineContinuation", false, true, "t\n", 10},
+                                PagerTreeCase{"RepeatedTreeDisplay", false, true, "tt ", 17, 2},
+                                PagerTreeCase{"ThreadedTreeRetainsTheBufferedPage", true, true, "t", 9},
+                                PagerTreeCase{"UnthreadedTreeRetainsTheBufferedPage", false, true, "t", 9}),
+                         [](const TestParamInfo<PagerTreeCase> &info) { return info.param.name; });
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {

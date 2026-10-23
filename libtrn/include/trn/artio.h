@@ -28,6 +28,21 @@ extern ArticleNum      g_open_art;     // the article number we have open
 extern char            g_wrapped_nl;
 extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 
+class PreserveArticleBuffer
+{
+public:
+    PreserveArticleBuffer();
+    ~PreserveArticleBuffer();
+    PreserveArticleBuffer(const PreserveArticleBuffer &) = delete;
+    PreserveArticleBuffer &operator=(const PreserveArticleBuffer &) = delete;
+
+private:
+    std::string     m_buffer;
+    ArticlePosition m_position;
+    ArticlePosition m_seek;
+    ArticlePosition m_length;
+};
+
 void art_io_init();
 void art_io_final();
 std::FILE *art_open(ArticleNum art_num, ArticlePosition pos);
