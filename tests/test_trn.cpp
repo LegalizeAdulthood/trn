@@ -5,6 +5,7 @@
 
 #include <nntp/nntpclient.h>
 #include <nntp/nntpinit.h>
+#include <trn/addng.h>
 #include <trn/art.h>
 #include <trn/artio.h>
 #include <trn/artstate.h>
@@ -21,6 +22,7 @@
 #include <trn/ng-internal.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/ngsrch.h>
 #include <trn/nntp.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
@@ -780,6 +782,84 @@ class InputNewsgroupSubscriptionLookupTest : public InputNewsgroupLookupTest, pu
 };
 
 class InputNewsgroupLookupCancelTest : public InputNewsgroupLookupTest, public testing::WithParamInterface<char>
+{
+};
+
+class InputNewsgroupSearchTest : public InputNewsgroupNavigationTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void set_search_origin(bool at_end);
+
+private:
+    AddGroupTable              m_old_add_groups;
+    bool                       m_old_sel_rereading{g_sel_rereading};
+    int                        m_old_perform_count{g_perform_count};
+    bool                       m_old_error_occurred{g_error_occurred};
+    std::optional<std::string> m_old_subj_line{g_subj_line};
+    int                        m_old_page_line{g_page_line};
+    bool                       m_old_performed_article_loop{g_performed_article_loop};
+    int                        m_old_spin_count{g_spin_count};
+};
+
+void InputNewsgroupSearchTest::SetUp()
+{
+    InputNewsgroupNavigationTest::SetUp();
+    prepare_groups();
+    m_old_add_groups = std::move(g_add_groups);
+    g_add_groups = {};
+    g_sel_rereading = false;
+    search_init();
+    newsgroup_search_init();
+}
+
+void InputNewsgroupSearchTest::TearDown()
+{
+    newsgroup_search_init();
+    g_add_groups = std::move(m_old_add_groups);
+    g_sel_rereading = m_old_sel_rereading;
+    g_perform_count = m_old_perform_count;
+    g_error_occurred = m_old_error_occurred;
+    g_subj_line = m_old_subj_line;
+    g_page_line = m_old_page_line;
+    g_performed_article_loop = m_old_performed_article_loop;
+    g_spin_count = m_old_spin_count;
+    InputNewsgroupNavigationTest::TearDown();
+}
+
+void InputNewsgroupSearchTest::set_search_origin(bool at_end)
+{
+    if (at_end)
+    {
+        g_newsgroup_ptr = nullptr;
+        g_current_newsgroup = nullptr;
+    }
+}
+
+class InputNewsgroupSearchMissTest : public InputNewsgroupSearchTest,
+                                     public testing::WithParamInterface<std::tuple<char, bool, bool>>
+{
+};
+
+using NewsgroupSearchError = std::pair<std::string_view, std::string_view>;
+
+class InputNewsgroupSearchErrorTest : public InputNewsgroupSearchTest,
+                                      public testing::WithParamInterface<std::tuple<char, bool, NewsgroupSearchError>>
+{
+};
+
+class InputNewsgroupSearchCancelTest : public InputNewsgroupSearchTest,
+                                       public testing::WithParamInterface<std::tuple<char, bool, std::string_view>>
+{
+};
+
+class InputNewsgroupSearchDirectionTest : public InputNewsgroupSearchTest,
+                                          public testing::WithParamInterface<std::tuple<char, bool>>
+{
+};
+
+class InputNewsgroupSearchWrapTest : public InputNewsgroupSearchTest, public testing::WithParamInterface<char>
 {
 };
 
@@ -4896,6 +4976,104 @@ INSTANTIATE_TEST_SUITE_P(WhitespaceAndPosition, InputNewsgroupEmptyTargetTest,
 INSTANTIATE_TEST_SUITE_P(FromGroupOrEnd, InputNewsgroupSubscriptionLookupTest, testing::Bool());
 
 INSTANTIATE_TEST_SUITE_P(EraseAndKill, InputNewsgroupLookupCancelTest, testing::Values('\b', Ctl('u')));
+
+TEST_P(InputNewsgroupSearchMissTest, aMissPreservesTheCurrentGroupOrEndPrompt)
+{
+    const auto &[direction, at_end, verbose] = GetParam();
+    set_search_origin(at_end);
+    NewsgroupData *original = g_current_newsgroup;
+    g_verbose = verbose;
+
+    const InputNewsgroupResult result = run_command(std::string{direction} + "missing\n");
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_EQ(original, g_current_newsgroup);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_THAT(m_output, testing::HasSubstr("Searching..."));
+    EXPECT_THAT(m_output, testing::HasSubstr(verbose ? "Not found -- use a or g to add newsgroups\n" : "Not found\n"));
+}
+
+TEST_P(InputNewsgroupSearchErrorTest, anInvalidExpressionAsksAgainAtTheOriginalPosition)
+{
+    const auto &[direction, at_end, error] = GetParam();
+    const auto &[pattern, diagnostic] = error;
+    set_search_origin(at_end);
+    NewsgroupData *original = g_current_newsgroup;
+
+    const InputNewsgroupResult result = run_command(std::string{direction} + std::string{pattern} + '\n');
+
+    EXPECT_EQ(ING_ASK, result);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_EQ(original, g_current_newsgroup);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_THAT(m_output, testing::HasSubstr(diagnostic));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Searching...")));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Not found")));
+}
+
+TEST_P(InputNewsgroupSearchCancelTest, cancellingSearchInputPreservesTheOriginalPosition)
+{
+    const auto &[direction, at_end, input] = GetParam();
+    set_search_origin(at_end);
+    NewsgroupData *original = g_current_newsgroup;
+
+    const InputNewsgroupResult result = run_command(std::string{direction} + std::string{input});
+
+    EXPECT_EQ(ING_INPUT, result);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_EQ(original, g_current_newsgroup);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Searching...")));
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_P(InputNewsgroupSearchDirectionTest, aMatchSelectsTheNextGroupInTheRequestedDirection)
+{
+    const auto &[direction, at_end] = GetParam();
+    set_search_origin(at_end);
+    NewsgroupData    *original = g_current_newsgroup;
+    const std::size_t expected = direction == '/' ? (at_end ? 0 : 2) : (at_end ? 2 : 0);
+
+    const InputNewsgroupResult result = run_command(std::string{direction} + "comp\n");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[expected], g_newsgroup_ptr);
+    EXPECT_EQ(original, g_current_newsgroup);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Not found")));
+}
+
+TEST_P(InputNewsgroupSearchWrapTest, searchingPastTheListBoundaryWrapsToTheOtherEnd)
+{
+    const char direction = GetParam();
+    set_current_newsgroup(direction == '/' ? 2 : 0);
+    NewsgroupData *original = g_current_newsgroup;
+
+    const InputNewsgroupResult result = run_command(std::string{direction} + "comp\n");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[direction == '/' ? 0 : 2], g_newsgroup_ptr);
+    EXPECT_EQ(original, g_current_newsgroup);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(DirectionPositionAndVerbosity, InputNewsgroupSearchMissTest,
+                         testing::Combine(testing::Values('/', '?'), testing::Bool(), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(DirectionPositionAndError, InputNewsgroupSearchErrorTest,
+                         testing::Combine(testing::Values('/', '?'), testing::Bool(),
+                                          testing::Values(NewsgroupSearchError{"[abc", "Missing ]"},
+                                                          NewsgroupSearchError{"", "No previous search pattern"})));
+
+INSTANTIATE_TEST_SUITE_P(DirectionPositionAndCancellation, InputNewsgroupSearchCancelTest,
+                         testing::Combine(testing::Values('/', '?'), testing::Bool(),
+                                          testing::Values<std::string_view>("\b", "needle\025")));
+
+INSTANTIATE_TEST_SUITE_P(DirectionAndPosition, InputNewsgroupSearchDirectionTest,
+                         testing::Combine(testing::Values('/', '?'), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ForwardAndBackward, InputNewsgroupSearchWrapTest, testing::Values('/', '?'));
 
 TEST_F(InputNewsgroupTest, gotoExplicitGroupName)
 {

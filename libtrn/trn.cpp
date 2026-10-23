@@ -680,6 +680,7 @@ do_command:
                 fmt::print("\n\nNot found\n");
             }
             term_down(3);
+            set_newsgroup(g_current_newsgroup);
             return ING_ASK;
 
         case NGS_DONE:
