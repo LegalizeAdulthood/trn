@@ -8,6 +8,7 @@
 
 #include <config/common.h>
 #include <config/env.h>
+#include <config/fdio.h>
 #include <trn/art.h>
 #include <trn/cache.h>
 #include <trn/color.h>
@@ -1316,15 +1317,20 @@ static int read_tty(char *addr, int size)
         return 1;
     }
 #ifdef USE_CONIO_TERMINAL_INPUT
-    *addr = static_cast<char>(_getch());
-    if (*addr == '\0')
+    if (isatty(0))
     {
-        *addr = Ctl('\035');
+        *addr = static_cast<char>(_getch());
+        if (*addr == '\0')
+        {
+            *addr = Ctl('\035');
+        }
+        size = 1;
     }
-    size = 1;
-#else
-    size = read(0,addr,size);
+    else
 #endif
+    {
+        size = read(0, addr, size);
+    }
 #ifdef RAWONLY
     *addr &= 0177;
 #endif

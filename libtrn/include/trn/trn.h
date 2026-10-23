@@ -1,6 +1,7 @@
 /* trn/trn.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_TRN_H
 #define TRN_TRN_H
 
@@ -32,6 +33,7 @@ extern bool        g_use_univ_selector;      //
 extern bool        g_use_newsrc_selector;    //
 extern bool        g_use_newsgroup_selector; //
 extern int         g_use_news_selector;      //
+extern bool        g_restore_old_newsrc;     // restore backups when leaving
 
 void                 trn_init();
 void                 do_multirc();

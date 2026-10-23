@@ -191,6 +191,7 @@ protected:
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_newsgroup_dir = g_newsgroup_dir;
         m_old_default_cmd = g_default_cmd;
+        m_old_restore_old_newsrc = g_restore_old_newsrc;
         m_old_add_new_by_default = g_add_new_by_default;
         m_old_fuzzy_get = g_fuzzy_get;
         m_old_novice_delays = g_novice_delays;
@@ -299,6 +300,7 @@ protected:
         g_newsgroup_name.clear();
         g_newsgroup_dir.clear();
         g_default_cmd = "npq";
+        g_restore_old_newsrc = false;
         g_add_new_by_default = ADDNEW_ASK;
         g_fuzzy_get = false;
         g_novice_delays = false;
@@ -429,6 +431,7 @@ protected:
         g_newsgroup_name = std::move(m_old_newsgroup_name);
         g_newsgroup_dir = std::move(m_old_newsgroup_dir);
         g_default_cmd = std::move(m_old_default_cmd);
+        g_restore_old_newsrc = m_old_restore_old_newsrc;
         g_add_new_by_default = m_old_add_new_by_default;
         g_fuzzy_get = m_old_fuzzy_get;
         g_novice_delays = m_old_novice_delays;
@@ -606,6 +609,7 @@ protected:
     std::string                       m_old_newsgroup_dir;
     std::string                       m_old_tmp_dir;
     std::string                       m_old_default_cmd;
+    bool                              m_old_restore_old_newsrc{};
     AddNewType                        m_old_add_new_by_default{};
     bool                              m_old_fuzzy_get{};
     bool                              m_old_novice_delays{};
@@ -712,6 +716,131 @@ InputNewsgroupResult InputNewsgroupNavigationTest::run_command(std::string_view 
     m_output = testing::internal::GetCapturedStdout();
     return result;
 }
+
+class InputNewsgroupConfirmationTest : public InputNewsgroupNavigationTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void set_exit_origin(bool at_end);
+    void expect_changes_preserved();
+    void expect_files_unchanged();
+    void prompt_answer(std::string_view answer);
+
+private:
+    int  m_saved_stdin{-1};
+    bool m_old_allow_typeahead{g_allow_typeahead};
+};
+
+void InputNewsgroupConfirmationTest::SetUp()
+{
+    InputNewsgroupNavigationTest::SetUp();
+    prepare_groups();
+    for (NewsgroupData &group : g_newsgroup_data)
+    {
+        group.set_to_read(ST_LAX);
+    }
+    g_newsgroup_to_read = NewsgroupNum{3};
+    m_newsrc.name = m_output_dir / "newsrc";
+    m_newsrc.old_name = m_output_dir / "old-newsrc";
+    m_newsrc.new_name = m_output_dir / "newsrc.new";
+    m_newsrc.flags |= RF_RC_CHANGED;
+    std::ofstream{m_newsrc.name} << "comp.alpha: 1-2\ncomp.bravo: 1-2\ncomp.charlie: 1-2\n";
+    std::ofstream{m_newsrc.old_name} << "comp.alpha: 1\ncomp.bravo: 1\ncomp.charlie: 1\n";
+    g_mode = MM_NEWSGROUP_LIST;
+}
+
+void InputNewsgroupConfirmationTest::TearDown()
+{
+    if (m_saved_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
+        close(m_saved_stdin);
+        std::clearerr(stdin);
+    }
+    g_allow_typeahead = m_old_allow_typeahead;
+    InputNewsgroupNavigationTest::TearDown();
+}
+
+void InputNewsgroupConfirmationTest::set_exit_origin(bool at_end)
+{
+    if (at_end)
+    {
+        g_newsgroup_ptr = nullptr;
+        g_current_newsgroup = nullptr;
+    }
+}
+
+void InputNewsgroupConfirmationTest::expect_changes_preserved()
+{
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        EXPECT_EQ(" 1-2", group.rc_numbers());
+        EXPECT_EQ(ArticleUnread{1}, group.m_to_read);
+        EXPECT_EQ(':', group.m_subscribe_char);
+    }
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+void InputNewsgroupConfirmationTest::expect_files_unchanged()
+{
+    std::ifstream current{m_newsrc.name};
+    std::ifstream previous{m_newsrc.old_name};
+    EXPECT_EQ("comp.alpha: 1-2\ncomp.bravo: 1-2\ncomp.charlie: 1-2\n",
+              (std::string{std::istreambuf_iterator<char>{current}, std::istreambuf_iterator<char>{}}));
+    EXPECT_EQ("comp.alpha: 1\ncomp.bravo: 1\ncomp.charlie: 1\n",
+              (std::string{std::istreambuf_iterator<char>{previous}, std::istreambuf_iterator<char>{}}));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(macro_pending());
+}
+
+void InputNewsgroupConfirmationTest::prompt_answer(std::string_view answer)
+{
+    const fs::path input_file = m_output_dir / "prompt-input";
+    std::ofstream{input_file} << answer;
+    std::FILE *fp = std::fopen(input_file.string().c_str(), "r");
+    ASSERT_NE(nullptr, fp);
+    m_saved_stdin = dup(fileno(stdin));
+    EXPECT_GE(m_saved_stdin, 0);
+    EXPECT_GE(dup2(fileno(fp), fileno(stdin)), 0);
+    std::fclose(fp);
+    std::clearerr(stdin);
+    g_allow_typeahead = true;
+}
+
+using NewsgroupExitInput = std::tuple<char, bool>;
+
+class InputNewsgroupQuitTest : public InputNewsgroupConfirmationTest,
+                               public testing::WithParamInterface<NewsgroupExitInput>
+{
+};
+
+class InputNewsgroupExitCancelTest : public InputNewsgroupConfirmationTest,
+                                     public testing::WithParamInterface<NewsgroupExitInput>
+{
+};
+
+class InputNewsgroupExitConfirmTest : public InputNewsgroupConfirmationTest,
+                                      public testing::WithParamInterface<NewsgroupExitInput>
+{
+};
+
+class InputNewsgroupAbandonCancelTest : public InputNewsgroupConfirmationTest,
+                                        public testing::WithParamInterface<NewsgroupExitInput>
+{
+};
+
+class InputNewsgroupAbandonConfirmTest : public InputNewsgroupConfirmationTest,
+                                         public testing::WithParamInterface<NewsgroupExitInput>
+{
+};
+
+class InputNewsgroupAbandonPromptTest : public InputNewsgroupConfirmationTest, public testing::WithParamInterface<bool>
+{
+};
 
 using NewsgroupNavigationCommand = std::pair<char, InputNewsgroupResult>;
 
@@ -5419,33 +5548,165 @@ TEST_F(InputNewsgroupTest, searchFindsNamedGroup)
     EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
 }
 
-TEST_F(InputNewsgroupTest, exitAbandonConfirmationQuits)
+TEST_P(InputNewsgroupQuitTest, normalQuitKeepsTheCurrentChanges)
 {
-    push_command("xy");
+    const auto &[command, at_end] = GetParam();
+    set_exit_origin(at_end);
+    NewsgroupData *original = g_newsgroup_ptr;
 
-    testing::internal::CaptureStdout();
-    const InputNewsgroupResult result = input_newsgroup();
-    testing::internal::GetCapturedStdout();
+    const InputNewsgroupResult result = run_command(std::string{command});
 
     EXPECT_EQ(ING_QUIT, result);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Confirm:")));
+    expect_changes_preserved();
+    expect_files_unchanged();
 }
 
-TEST_F(InputNewsgroupTest, abandonCurrentNewsgroupConfirmed)
+TEST_P(InputNewsgroupExitCancelTest, decliningAbandonExitKeepsReadingAtTheSamePosition)
 {
-    add_test_newsgroups();
-    set_current_newsgroup(0);
-    m_newsrc.old_name = m_output_dir / "old-newsrc";
-    std::ofstream{m_newsrc.old_name} << "comp.lang.apl: 2-3\n";
-    push_command("Ay");
+    const auto &[answer, at_end] = GetParam();
+    set_exit_origin(at_end);
+    NewsgroupData *original = g_newsgroup_ptr;
 
-    testing::internal::CaptureStdout();
-    const InputNewsgroupResult result = input_newsgroup();
-    testing::internal::GetCapturedStdout();
+    const InputNewsgroupResult result = run_command(std::string{"x"} + answer);
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Confirm: exit and abandon newsrc changes?"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("The abandoned changes are in")));
+    expect_changes_preserved();
+    expect_files_unchanged();
+}
+
+TEST_P(InputNewsgroupExitConfirmTest, confirmingAbandonExitRequestsRestorationOnQuit)
+{
+    const auto &[answer, at_end] = GetParam();
+    set_exit_origin(at_end);
+    NewsgroupData *original = g_newsgroup_ptr;
+
+    const InputNewsgroupResult result = run_command(std::string{"x"} + answer);
+
+    EXPECT_EQ(ING_QUIT, result);
+    EXPECT_TRUE(g_restore_old_newsrc);
+    EXPECT_EQ(original, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("The abandoned changes are in newsrc.new."));
+    expect_changes_preserved();
+    expect_files_unchanged();
+}
+
+TEST_P(InputNewsgroupAbandonCancelTest, decliningGroupAbandonmentPreservesTheCurrentChanges)
+{
+    const auto &[answer, verbose] = GetParam();
+    g_verbose = verbose;
+
+    const InputNewsgroupResult result = run_command(std::string{"A"} + answer);
 
     EXPECT_EQ(ING_SPECIAL, result);
-    EXPECT_EQ("comp.lang.apl", std::string{g_newsgroup_data[0].rc_name()});
-    EXPECT_EQ(" 2-3", std::string{g_newsgroup_data[0].rc_numbers()});
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    EXPECT_THAT(m_output, testing::HasSubstr(verbose ? "Abandon changes to current newsgroup?" : "Abandon?"));
+    expect_changes_preserved();
+    expect_files_unchanged();
 }
+
+TEST_P(InputNewsgroupAbandonConfirmTest, confirmingGroupAbandonmentRestoresOnlyTheCurrentGroup)
+{
+    const auto &[answer, verbose] = GetParam();
+    g_verbose = verbose;
+
+    const InputNewsgroupResult result = run_command(std::string{"A"} + answer);
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_EQ(" 1", g_newsgroup_data[1].rc_numbers());
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ(" 1-2", g_newsgroup_data[2].rc_numbers());
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[0].m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[2].m_to_read);
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_files_unchanged();
+}
+
+TEST_P(InputNewsgroupAbandonPromptTest, helpReturnsToTheAbandonPromptWithoutDiscardingChanges)
+{
+    g_verbose = GetParam();
+
+    const InputNewsgroupResult result = run_command("Ahn");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Type y or SP to abandon the changes to this group"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Type n to leave the group as it is."));
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_changes_preserved();
+    expect_files_unchanged();
+}
+
+TEST_P(InputNewsgroupAbandonPromptTest, invalidInputAsksAgainWithoutDiscardingChanges)
+{
+    g_verbose = GetParam();
+    prompt_answer("n");
+
+    const InputNewsgroupResult result = run_command("A?");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::HasSubstr("Type h for help."));
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_changes_preserved();
+    expect_files_unchanged();
+}
+
+TEST_P(InputNewsgroupAbandonPromptTest, refreshingThePromptDoesNotConfirmAbandonment)
+{
+    g_verbose = GetParam();
+
+    const InputNewsgroupResult result = run_command("A\fn");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_changes_preserved();
+    expect_files_unchanged();
+}
+
+TEST_F(InputNewsgroupConfirmationTest, abandoningAtTheEndPromptHasNoCurrentGroupToChange)
+{
+    set_exit_origin(true);
+
+    const InputNewsgroupResult result = run_command("A");
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Abandon?")));
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_changes_preserved();
+    expect_files_unchanged();
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndPosition, InputNewsgroupQuitTest,
+                         testing::Combine(testing::Values('q', 'Q'), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(AnswerAndPosition, InputNewsgroupExitCancelTest,
+                         testing::Combine(testing::Values('n', 'q', '\033'), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ExplicitOrDefaultAndPosition, InputNewsgroupExitConfirmTest,
+                         testing::Combine(testing::Values('y', ' '), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(AnswerAndVerbosity, InputNewsgroupAbandonCancelTest,
+                         testing::Combine(testing::Values('n', 'q'), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ExplicitOrDefaultAndVerbosity, InputNewsgroupAbandonConfirmTest,
+                         testing::Combine(testing::Values('y', ' '), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(TerseAndVerbose, InputNewsgroupAbandonPromptTest, testing::Bool());
 
 TEST_F(InputNewsgroupTest, readsRemoteArticleFromMockServer)
 {

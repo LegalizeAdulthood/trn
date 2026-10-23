@@ -94,7 +94,7 @@ bool        g_use_newsrc_selector{};              //
 bool        g_use_newsgroup_selector{true};       //
 int         g_use_news_selector{SELECT_INIT - 1}; //
 
-static bool s_restore_old_newsrc{};
+bool        g_restore_old_newsrc{};
 static bool s_go_forward{true};
 
 static std::string get_newsgroup_dir(std::string_view newsgroup_name);
@@ -174,9 +174,9 @@ void do_multirc()
             // now write the newsrc(s) back out
             if (!write_newsrcs(g_multirc))
             {
-                s_restore_old_newsrc = true; // TODO: ask to retry!
+                g_restore_old_newsrc = true; // TODO: ask to retry!
             }
-            if (s_restore_old_newsrc)
+            if (g_restore_old_newsrc)
             {
                 get_old_newsrcs(g_multirc);
             }
@@ -428,9 +428,9 @@ bug_out:
     // now write the newsrc(s) back out
     if (!write_newsrcs(g_multirc))
     {
-        s_restore_old_newsrc = true; // TODO: ask to retry!
+        g_restore_old_newsrc = true; // TODO: ask to retry!
     }
-    if (s_restore_old_newsrc)
+    if (g_restore_old_newsrc)
     {
         get_old_newsrcs(g_multirc);
     }
@@ -594,7 +594,7 @@ do_command:
         }
         fmt::print("\nThe abandoned changes are in {}.new.\n", g_multirc->multirc_name());
         term_down(2);
-        s_restore_old_newsrc = true;
+        g_restore_old_newsrc = true;
         return ING_QUIT;
     }
 
