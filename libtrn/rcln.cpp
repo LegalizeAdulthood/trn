@@ -534,7 +534,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
         if (hyphen != std::string_view::npos) // find - in range, if any
         {
             newmax = parse_article_num(range.substr(hyphen + 1));
-            unread -= newmax - article_after(parse_article_num(range));
+            unread -= newmax - parse_article_num(range);
         }
         else
         {

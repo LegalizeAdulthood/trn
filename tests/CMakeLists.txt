@@ -61,6 +61,7 @@ add_executable(trn-test
     test_respond.cpp
     test_rthread.cpp
     test_rt-page.cpp
+    test_rt-page-newsgroups.cpp
     test_rt-ov.cpp
     test_rt-process.cpp
     test_rt-select.cpp

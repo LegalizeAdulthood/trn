@@ -4438,7 +4438,8 @@ TEST_F(InputNewsgroupTest, gotoNumericGroup)
 
 TEST_F(InputNewsgroupTest, searchFindsNamedGroup)
 {
-    add_test_newsgroups();
+    add_newsgroup("comp.lang.apl", "1-3");
+    add_newsgroup("comp.lang.cpp", "1-2");
     set_current_newsgroup(0);
     push_command("/cpp\n");
 
@@ -4448,6 +4449,7 @@ TEST_F(InputNewsgroupTest, searchFindsNamedGroup)
 
     EXPECT_EQ(ING_SPECIAL, result);
     EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
 }
 
 TEST_F(InputNewsgroupTest, exitAbandonConfirmationQuits)
