@@ -128,6 +128,20 @@ int main(int argc, char **argv)
         }
         return 4;
     }
+    if (role == "score-editor")
+    {
+        if (argc != 3)
+        {
+            return 15;
+        }
+        const std::filesystem::path path = argv[2];
+        write_file(directory / "score-editor-input", read_file(path));
+        write_file(directory / "score-editor-directory", std::filesystem::current_path().generic_string());
+        std::ofstream output{path, std::ios::binary | std::ios::app};
+        output << "25 subject: topic\n";
+        output.close();
+        return output.fail() ? 15 : 0;
+    }
     if (role == "handoff")
     {
         if (argc != 3 || !std::filesystem::is_regular_file(argv[2]))

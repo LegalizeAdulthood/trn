@@ -1149,6 +1149,147 @@ void DeferredScoreArticleTest::SetUp()
     g_sc_delay = true;
 }
 
+class EditScoreArticleTest : public ScoreArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string edit_score(std::string_view input);
+    std::string editor_text(const char *name) const;
+    void        expect_edited(const fs::path &file, std::string_view before, std::string_view argument = {}) const;
+
+    fs::path                          m_editor_output;
+    std::string                       m_editor_command;
+    static constexpr std::string_view EDITED_RULE = "25 subject: topic\n";
+
+private:
+    bool m_old_waiting{g_waiting};
+};
+
+void EditScoreArticleTest::SetUp()
+{
+    ScoreArticleTest::SetUp();
+    m_editor_output = m_output_dir / "score-editor";
+    fs::create_directories(m_editor_output);
+    m_editor_command =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" score-editor";
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", m_editor_output.generic_string().c_str());
+    m_env.expect_no_envars({"PNEWS_TEST_MODE"});
+    m_env.expect_env_repeatedly("VISUAL", m_editor_command.c_str());
+    m_env.expect_env_repeatedly("EDITOR", "missing-editor");
+    g_waiting = false;
+}
+
+void EditScoreArticleTest::TearDown()
+{
+    g_waiting = m_old_waiting;
+    ScoreArticleTest::TearDown();
+}
+
+std::string EditScoreArticleTest::edit_score(std::string_view input)
+{
+    const std::string output = score('\'', input);
+    EXPECT_FALSE(g_waiting);
+    return output;
+}
+
+std::string EditScoreArticleTest::editor_text(const char *name) const
+{
+    std::ifstream input{m_editor_output / name};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void EditScoreArticleTest::expect_edited(const fs::path &file, std::string_view before, std::string_view argument) const
+{
+    EXPECT_EQ("score-editor\n" + (argument.empty() ? file.generic_string() : std::string{argument}) + '\n',
+              editor_text("tools.log"));
+    EXPECT_EQ(before, editor_text("score-editor-input"));
+    EXPECT_EQ(m_spool.generic_string(), editor_text("score-editor-directory"));
+    std::ifstream edited{file};
+    ASSERT_TRUE(edited.is_open());
+    EXPECT_EQ(std::string{before} + std::string{EDITED_RULE},
+              (std::string{std::istreambuf_iterator<char>{edited}, std::istreambuf_iterator<char>{}}));
+    expect_scores({10, 10, 0});
+    EXPECT_FALSE(g_s_order_changed);
+}
+
+struct EditScoreCase
+{
+    const char *name;
+    const char *input;
+    const char *filename;
+    bool        spaced_directory;
+    bool        existing;
+    bool        absolute;
+};
+
+void PrintTo(const EditScoreCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class ChosenEditScoreArticleTest : public EditScoreArticleTest, public testing::WithParamInterface<EditScoreCase>
+{
+protected:
+    void SetUp() override;
+
+    fs::path    m_chosen_file;
+    std::string m_before;
+    std::string m_input;
+    std::string m_argument;
+};
+
+void ChosenEditScoreArticleTest::SetUp()
+{
+    EditScoreArticleTest::SetUp();
+    if (GetParam().spaced_directory)
+    {
+        m_scores = m_output_dir / "score files";
+        fs::create_directories(m_scores);
+        std::ofstream{m_scores / "global"} << GLOBAL_RULES;
+        m_env.expect_env_repeatedly("SCOREDIR", m_scores.generic_string().c_str());
+    }
+    const fs::path base = GetParam().absolute                                                         ? m_output_dir
+                          : std::string_view{GetParam().filename}.find('/') == std::string_view::npos ? m_scores
+                                                                                                      : m_spool;
+    m_chosen_file = base / GetParam().filename;
+    m_argument = base == m_spool ? GetParam().filename : m_chosen_file.generic_string();
+    fs::create_directories(m_chosen_file.parent_path());
+    if (std::string_view{GetParam().filename} == "global")
+    {
+        m_before = GLOBAL_RULES;
+    }
+    else if (GetParam().existing)
+    {
+        m_before = "# Existing score rules\n";
+        std::ofstream{m_chosen_file} << m_before;
+    }
+    sf_append("!file @ custom-score");
+    m_input = GetParam().input;
+    const std::size_t target = m_input.find("TARGET");
+    if (target != std::string::npos)
+    {
+        m_input.replace(target, 6, GetParam().absolute ? m_chosen_file.generic_string() : GetParam().filename);
+    }
+}
+
+class FailedEditScoreArticleTest : public EditScoreArticleTest, public testing::WithParamInterface<const char *>
+{
+protected:
+    void SetUp() override;
+};
+
+void FailedEditScoreArticleTest::SetUp()
+{
+    EditScoreArticleTest::SetUp();
+    std::ofstream{m_scores / "comp.lang.cpp"} << "# Keep these rules\n";
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam());
+}
+
 std::string SaveArticleTest::saved_text() const
 {
     std::ifstream input{m_destination};
@@ -2823,6 +2964,88 @@ TEST_F(DeferredScoreArticleTest, explainingTheCurrentScoreInitializesDeferredSco
     EXPECT_TRUE(article_scored(g_art));
     EXPECT_EQ(10, g_artp->m_score);
     EXPECT_THAT(output, testing::HasSubstr("Total score is 10\n"));
+}
+
+TEST_P(ChosenEditScoreArticleTest, editsTheChosenScoreFileAndReturnsToReading)
+{
+    edit_score(m_input);
+
+    expect_edited(m_chosen_file, m_before, m_argument);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    FileChoices, ChosenEditScoreArticleTest,
+    testing::Values(EditScoreCase{"DefaultLocal", "e\n", "comp.lang.cpp", false, true, false},
+                    EditScoreCase{"WhitespaceDefault", "e \t\n", "comp.lang.cpp", false, true, false},
+                    EditScoreCase{"MenuLocal", "\n4", "comp.lang.cpp", false, true, false},
+                    EditScoreCase{"ExplicitLocal", "e \"\n", "comp.lang.cpp", false, true, false},
+                    EditScoreCase{"Global", "e *\n", "global", false, true, false},
+                    EditScoreCase{"NamedFile", "e TARGET\n", "custom-score", false, true, false},
+                    EditScoreCase{"Abbreviation", "e @\n", "custom-score", false, true, false},
+                    EditScoreCase{"NewLocalFile", "e\n", "comp.lang.cpp", false, false, false},
+                    EditScoreCase{"NestedFile", "e TARGET\n", "nested/custom-score", false, true, false},
+                    EditScoreCase{"Apostrophe", "e TARGET\n", "custom'score", false, true, false},
+                    EditScoreCase{"Ampersand", "e TARGET\n", "custom&score", false, true, false},
+                    EditScoreCase{"SpacedScoreDirectory", "e\n", "comp.lang.cpp", true, true, false},
+                    EditScoreCase{"AbsoluteSpacedFile", "e TARGET\n", "other rules/custom score", false, true, true}),
+    [](const testing::TestParamInfo<EditScoreCase> &info) { return info.param.name; });
+
+TEST_F(EditScoreArticleTest, usesTheEditorSettingWhenVisualIsUnset)
+{
+    m_env.expect_no_envars({"VISUAL"});
+    m_env.expect_env_repeatedly("EDITOR", m_editor_command.c_str());
+
+    edit_score("e\n");
+
+    expect_edited(m_scores / "comp.lang.cpp", "");
+}
+
+TEST_F(EditScoreArticleTest, rescoringUsesTheEditorsChangedRules)
+{
+    edit_score("e\n");
+
+    score('\'', "r\n", false);
+
+    expect_scores({35, 35, 0});
+    EXPECT_TRUE(g_s_order_changed);
+    EXPECT_EQ(EDITED_RULE, score_file());
+}
+
+TEST_P(FailedEditScoreArticleTest, aFailedEditorLeavesTheRulesAndScoresUnchanged)
+{
+    edit_score("e\n");
+
+    EXPECT_EQ("# Keep these rules\n", score_file());
+    expect_scores({10, 10, 0});
+    EXPECT_FALSE(g_s_order_changed);
+    EXPECT_EQ("score-editor\n" + (m_scores / "comp.lang.cpp").generic_string() + '\n', editor_text("tools.log"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ProcessExit, FailedEditScoreArticleTest,
+                         testing::Values("score-editor_failure", "score-editor_cancel"));
+
+TEST_F(EditScoreArticleTest, anUnknownFileAbbreviationDoesNotInvokeTheEditor)
+{
+    const std::string output = edit_score("e ?\n");
+
+    EXPECT_THAT(output, testing::HasSubstr("Bad file abbreviation: ?"));
+    EXPECT_FALSE(fs::exists(m_editor_output / "tools.log"));
+    EXPECT_EQ(GLOBAL_RULES, score_file("global"));
+    expect_scores({10, 10, 0});
+}
+
+TEST_F(EditScoreArticleTest, aBlockedParentDirectoryDoesNotInvokeTheEditor)
+{
+    const fs::path blocker = m_output_dir / "blocked";
+    std::ofstream{blocker} << "Keep this file\n";
+    const fs::path target = blocker / "score";
+
+    const std::string output = edit_score("e " + target.generic_string() + '\n');
+
+    EXPECT_THAT(output, testing::HasSubstr("Can't make " + target.generic_string()));
+    EXPECT_FALSE(fs::exists(m_editor_output / "tools.log"));
+    EXPECT_EQ(GLOBAL_RULES, score_file("global"));
+    expect_scores({10, 10, 0});
 }
 
 TEST_F(SaveArticleTest, erasingTheSaveCommandCancelsBeforeOpeningADestination)

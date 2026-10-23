@@ -748,8 +748,25 @@ int edit_file(std::string_view fname)
         return r;
     }
 
-    const std::string command = fmt::format(
-        "{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), file_exp(fname));
+#ifdef USE_SPAWN_SHELL
+    const std::string filename = fmt::format("\"{}\"", file_exp(fname));
+#else
+    std::string filename{"'"};
+    for (const char character : file_exp(fname))
+    {
+        if (character == '\'')
+        {
+            filename += "'\\''";
+        }
+        else
+        {
+            filename += character;
+        }
+    }
+    filename += '\'';
+#endif
+    const std::string command =
+        fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), filename);
     term_down(3);
     reset_tty();                  // make sure tty is friendly
     r = do_shell(SH, command);          // invoke the shell
