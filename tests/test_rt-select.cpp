@@ -488,6 +488,116 @@ class ArticleSelectorHelpSortTest : public ArticleSelectorSortTest,
 {
 };
 
+class ArticleSelectorExclusiveStateTest : public ArticleSelectorSortTest
+{
+protected:
+    void              TearDown() override;
+    void              prepare_exclusive(SelectionMode mode, bool rereading, bool exclusive);
+    void              clear_selections();
+    std::vector<long> included_items() const;
+    void              expect_first_page(int total) const;
+
+private:
+    int m_old_item_index{g_sel_item_index};
+};
+
+void ArticleSelectorExclusiveStateTest::TearDown()
+{
+    g_sel_item_index = m_old_item_index;
+    ArticleSelectorSortTest::TearDown();
+}
+
+void ArticleSelectorExclusiveStateTest::prepare_exclusive(SelectionMode mode, bool rereading, bool exclusive)
+{
+    prepare_sort(mode, rereading);
+    g_sel_exclusive = exclusive;
+    rebuild_page();
+    if (mode == SM_ARTICLE)
+    {
+        g_sel_page_app = article_ptr_list_end() - 1;
+    }
+    else if (!exclusive)
+    {
+        g_sel_page_sp = &m_charlie;
+    }
+    g_sel_item_index = exclusive && mode != SM_ARTICLE ? 0 : 1;
+}
+
+void ArticleSelectorExclusiveStateTest::clear_selections()
+{
+    for (auto &[number, article] : g_article_list)
+    {
+        article.m_flags &= ~(AF_SEL | AF_DEL_SEL);
+    }
+    for (Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    {
+        subject->m_flags &= ~(SF_SEL | SF_DEL_SEL);
+    }
+}
+
+std::vector<long> ArticleSelectorExclusiveStateTest::included_items() const
+{
+    std::vector<long> result;
+    if (g_sel_mode == SM_ARTICLE)
+    {
+        for (const Article *article : g_art_ptr_list)
+        {
+            if (article->m_flags & AF_INCLUDED)
+            {
+                result.push_back(article->article_num().value_of());
+            }
+        }
+    }
+    else
+    {
+        for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+        {
+            if (subject->m_flags & SF_INCLUDED)
+            {
+                result.push_back(subject->m_articles->article_num().value_of());
+            }
+        }
+    }
+    return result;
+}
+
+void ArticleSelectorExclusiveStateTest::expect_first_page(int total) const
+{
+    EXPECT_EQ(total, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(SS_DATE, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    if (g_sel_mode == SM_ARTICLE)
+    {
+        EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+    }
+    else
+    {
+        EXPECT_EQ(g_first_subject, g_sel_page_sp);
+    }
+}
+
+class ArticleSelectorExclusiveToggleTest : public ArticleSelectorExclusiveStateTest,
+                                           public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
+{
+};
+
+class ArticleSelectorExclusivePopulationTest : public ArticleSelectorExclusiveStateTest,
+                                               public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class ArticleSelectorExclusiveCleanupTest : public ArticleSelectorExclusiveStateTest,
+                                            public testing::WithParamInterface<SelectionMode>
+{
+};
+
+class ArticleSelectorExclusiveThreadTest : public ArticleSelectorExclusiveStateTest,
+                                           public testing::WithParamInterface<bool>
+{
+};
+
 } // namespace
 
 TEST_F(SelectorCommandInputTest, readsCommandText)
@@ -922,3 +1032,110 @@ INSTANTIATE_TEST_SUITE_P(ModeAndTerminal, ArticleSelectorCancelSortTest,
 
 INSTANTIATE_TEST_SUITE_P(ModeAndVerbosity, ArticleSelectorHelpSortTest,
                          testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+TEST_P(ArticleSelectorExclusiveToggleTest, togglesTheFilterAndRebuildsFromTheFirstItem)
+{
+    const auto &[mode, rereading, exclusive] = GetParam();
+    prepare_exclusive(mode, rereading, exclusive);
+    const std::vector<long> all_items = displayed_order();
+    const std::vector<long> selected_items = mode == SM_ARTICLE ? std::vector<long>{1, 4} : std::vector<long>{1};
+
+    const DisplayState result = run_command('E');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(!exclusive, g_sel_exclusive);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(exclusive ? all_items : selected_items, included_items());
+    expect_first_page(exclusive ? 4 : 2);
+    expect_selection_preserved(rereading);
+}
+
+TEST_P(ArticleSelectorExclusivePopulationTest, noSelectionsFallsBackToTheWholePopulation)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_exclusive(mode, rereading, false);
+    clear_selections();
+    rebuild_page();
+    const std::vector<long> all_items = displayed_order();
+
+    const DisplayState result = run_command('E');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(all_items, included_items());
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? 0 : 4, m_newsgroup.m_to_read);
+    expect_first_page(4);
+}
+
+TEST_P(ArticleSelectorExclusiveCleanupTest, commitsPendingReadMarksBeforeFiltering)
+{
+    prepare_exclusive(GetParam(), false, false);
+    if (GetParam() == SM_ARTICLE)
+    {
+        article_ptr(ArticleNum{2})->m_flags |= AF_DEL;
+    }
+    else
+    {
+        m_bravo.m_flags |= SF_DEL;
+    }
+
+    const DisplayState result = run_command('E');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_FALSE(article_ptr(ArticleNum{2})->m_flags & (AF_UNREAD | AF_DEL));
+    EXPECT_TRUE(article_ptr(ArticleNum{3})->m_flags & AF_UNREAD);
+    EXPECT_TRUE(article_ptr(ArticleNum{1})->m_flags & AF_SEL);
+    EXPECT_TRUE(article_ptr(ArticleNum{4})->m_flags & AF_SEL);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(3, m_newsgroup.m_to_read);
+    EXPECT_EQ(GetParam() == SM_ARTICLE ? (std::vector<long>{1, 4}) : (std::vector<long>{1}), included_items());
+    expect_first_page(2);
+}
+
+TEST_P(ArticleSelectorExclusiveThreadTest, selectedReplyIncludesTheWholeThread)
+{
+    const bool rereading = GetParam();
+    prepare_exclusive(SM_THREAD, rereading, false);
+    clear_selections();
+    article_ptr(ArticleNum{3})->m_flags |= rereading ? AF_DEL_SEL : AF_SEL;
+    m_charlie.m_flags |= rereading ? SF_DEL_SEL : SF_SEL;
+    m_charlie.m_thread = m_subject.m_thread;
+    m_subject.m_thread_link = &m_charlie;
+    m_charlie.m_thread_link = &m_subject;
+    rebuild_page();
+
+    const DisplayState result = run_command('E');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<long>{1}), included_items());
+    EXPECT_TRUE(m_subject.m_flags & SF_INCLUDED);
+    EXPECT_FALSE(m_charlie.m_flags & SF_INCLUDED);
+    EXPECT_FALSE(m_bravo.m_flags & SF_INCLUDED);
+    EXPECT_TRUE(article_ptr(ArticleNum{3})->m_flags & g_sel_mask);
+    EXPECT_FALSE(article_ptr(ArticleNum{1})->m_flags & g_sel_mask);
+    EXPECT_FALSE(article_ptr(ArticleNum{4})->m_flags & g_sel_mask);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? 0 : 4, m_newsgroup.m_to_read);
+    expect_first_page(3);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModePopulationAndFilter, ArticleSelectorExclusiveToggleTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndPopulation, ArticleSelectorExclusivePopulationTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorExclusiveCleanupTest,
+                         testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, ArticleSelectorExclusiveThreadTest, testing::Bool());
