@@ -2911,7 +2911,8 @@ reask_sort:
                 }
                 else
                 {
-                    fmt::print("Type c to order the items by count.\n");
+                    fmt::print("Type c to order the items by count.\n"
+                               "Type l to order the items by lines.\n");
                 }
                 fmt::print("Typing your selection in upper case it will reverse the selected order.\n"
                            "Type q to leave things as they are.\n\n");
@@ -2925,11 +2926,13 @@ reask_sort:
                 if (g_sel_mode == SM_ARTICLE)
                 {
                     fmt::print("a sorts by author.\n"
+                               "n sorts by number.\n"
                                "g sorts in subject-groups by date.\n");
                 }
                 else
                 {
-                    fmt::print("c sorts by count.\n");
+                    fmt::print("c sorts by count.\n"
+                               "l sorts by lines.\n");
                 }
                 fmt::print("Upper case reverses the sort.\n"
                            "q does nothing.\n"

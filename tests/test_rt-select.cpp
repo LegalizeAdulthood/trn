@@ -9,16 +9,22 @@
 #include <trn/rt-page.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
+#include <trn/score.h>
 #include <trn/smisc.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
+#include <trn/trn.h>
 #include <trn/univ.h>
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <array>
+#include <cctype>
 #include <cerrno>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace
 {
@@ -274,6 +280,214 @@ class ArticleSelectorModeTest : public ArticleSelectorCommandTest, public testin
 {
 };
 
+class ArticleSelectorSortTest : public ArticleSelectorCommandTest
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    void              prepare_sort(SelectionMode mode, bool rereading = false, int direction = 1);
+    DisplayState      run_command(char command, std::string_view input = {});
+    std::vector<long> displayed_order() const;
+    void              expect_selection_preserved(bool rereading) const;
+
+    Subject     m_bravo{};
+    Subject     m_charlie{};
+    std::string m_output;
+
+private:
+    int               m_old_errno{errno};
+    int               m_old_subject_count{g_subject_count};
+    SelectionMode     m_old_thread_mode{g_sel_thread_mode};
+    SelectionSortMode m_old_art_sort{g_sel_art_sort};
+    SelectionSortMode m_old_thread_sort{g_sel_thread_sort};
+    std::string_view  m_old_mode_string{g_sel_mode_string};
+    std::string_view  m_old_sort_string{g_sel_sort_string};
+    bool              m_old_sc_initialized{g_sc_initialized};
+    bool              m_old_default_cmd{g_s_default_cmd};
+    bool              m_old_univ_default_cmd{g_univ_default_cmd};
+    bool              m_old_verify{g_verify};
+    bool              m_old_verbose{g_verbose};
+    bool              m_old_can_home{g_can_home};
+    int               m_old_mouse_bar_cnt{g_mouse_bar_cnt};
+    int               m_old_term_col{g_term_col};
+    GeneralMode       m_old_general_mode{g_general_mode};
+    MinorMode         m_old_minor_mode{g_mode};
+    std::string_view  m_old_tc_cr{g_tc_CR};
+    std::string_view  m_old_tc_ce{g_tc_CE};
+};
+
+void ArticleSelectorSortTest::SetUp()
+{
+    ArticleSelectorCommandTest::SetUp();
+    drain_input();
+    errno = 0;
+    g_subject_count = 3;
+    g_sc_initialized = true;
+    g_s_default_cmd = false;
+    g_univ_default_cmd = false;
+    g_verify = false;
+    g_verbose = false;
+    g_can_home = false;
+    g_mouse_bar_cnt = 0;
+    g_general_mode = GM_SELECTOR;
+    g_mode = MM_THREAD_SELECTOR;
+    g_tc_CR = "\r";
+    g_tc_CE = "";
+    m_subject.m_str = "Re: Alpha";
+    m_bravo.m_str = "Re: Bravo";
+    m_charlie.m_str = "Re: Charlie";
+    m_subject.m_next = &m_bravo;
+    m_bravo.m_prev = &m_subject;
+    m_bravo.m_next = &m_charlie;
+    m_charlie.m_prev = &m_bravo;
+    g_last_subject = &m_charlie;
+    const std::array<Subject *, 4>    subjects{&m_subject, &m_bravo, &m_charlie, &m_subject};
+    const std::array<std::time_t, 4>  dates{10, 30, 20, 40};
+    const std::array<const char *, 4> authors{"Delta", "Charlie", "Bravo", "Alpha"};
+    const std::array<long, 4>         lines{30, 10, 20, 40};
+    const std::array<int, 4>          scores{20, 10, 50, 40};
+    for (std::size_t i = 0; i < subjects.size(); ++i)
+    {
+        Article *article = article_ptr(ArticleNum{static_cast<long>(i + 1)});
+        article->m_subj = subjects[i];
+        article->m_subj_next = nullptr;
+        article->m_date = dates[i];
+        article->m_from = authors[i];
+        article->m_lines = lines[i];
+        article->m_score = scores[i];
+        article->m_score_flags = SFLAG_SCORED;
+        subjects[i]->m_thread_link = subjects[i];
+        if (!subjects[i]->m_articles)
+        {
+            subjects[i]->m_articles = article;
+            subjects[i]->m_thread = article;
+        }
+    }
+    article_ptr(ArticleNum{1})->m_subj_next = article_ptr(ArticleNum{4});
+}
+
+void ArticleSelectorSortTest::TearDown()
+{
+    drain_input();
+    errno = m_old_errno;
+    g_subject_count = m_old_subject_count;
+    g_sel_thread_mode = m_old_thread_mode;
+    g_sel_art_sort = m_old_art_sort;
+    g_sel_thread_sort = m_old_thread_sort;
+    g_sel_mode_string = m_old_mode_string;
+    g_sel_sort_string = m_old_sort_string;
+    g_sc_initialized = m_old_sc_initialized;
+    g_s_default_cmd = m_old_default_cmd;
+    g_univ_default_cmd = m_old_univ_default_cmd;
+    g_verify = m_old_verify;
+    g_verbose = m_old_verbose;
+    g_can_home = m_old_can_home;
+    g_mouse_bar_cnt = m_old_mouse_bar_cnt;
+    g_term_col = m_old_term_col;
+    g_general_mode = m_old_general_mode;
+    g_mode = m_old_minor_mode;
+    g_tc_CR = m_old_tc_cr;
+    g_tc_CE = m_old_tc_ce;
+    ArticleSelectorCommandTest::TearDown();
+}
+
+void ArticleSelectorSortTest::prepare_sort(SelectionMode mode, bool rereading, int direction)
+{
+    const ArticleFlags selected = rereading ? AF_DEL_SEL : AF_SEL;
+    for (auto &[number, article] : g_article_list)
+    {
+        article.m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
+        if (!rereading)
+        {
+            article.m_flags |= AF_UNREAD;
+        }
+        if (number == ArticleNum{1} || number == ArticleNum{4})
+        {
+            article.m_flags |= selected;
+        }
+    }
+    m_subject.m_flags = static_cast<SubjectFlags>(selected);
+    m_newsgroup.m_to_read = rereading ? 0 : 4;
+    set_selector(mode, static_cast<SelectionSortMode>(SS_DATE * direction));
+    prepare_page(mode, rereading);
+}
+
+DisplayState ArticleSelectorSortTest::run_command(char command, std::string_view input)
+{
+    push_string(input, 0200);
+    testing::internal::CaptureStdout();
+    const DisplayState result = article_commands(command);
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+std::vector<long> ArticleSelectorSortTest::displayed_order() const
+{
+    std::vector<long> result;
+    if (g_sel_mode == SM_ARTICLE)
+    {
+        for (const Article *article : g_art_ptr_list)
+        {
+            result.push_back(article->article_num().value_of());
+        }
+    }
+    else
+    {
+        for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+        {
+            result.push_back(subject->m_articles->article_num().value_of());
+        }
+    }
+    return result;
+}
+
+void ArticleSelectorSortTest::expect_selection_preserved(bool rereading) const
+{
+    std::vector<long> selected;
+    for (const auto &[number, article] : g_article_list)
+    {
+        if (article.m_flags & g_sel_mask)
+        {
+            selected.push_back(number.value_of());
+        }
+    }
+    EXPECT_EQ((std::vector<long>{1, 4}), selected);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(rereading ? 0 : 4, m_newsgroup.m_to_read);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+}
+
+using SelectorSortCase = std::tuple<char, SelectionSortMode, std::vector<long>>;
+using SelectorSortParameters = std::tuple<SelectionMode, SelectorSortCase, bool>;
+
+class ArticleSelectorSortCommandTest : public ArticleSelectorSortTest,
+                                       public testing::WithParamInterface<SelectorSortParameters>
+{
+};
+
+class ArticleSelectorReverseSortTest : public ArticleSelectorSortTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, int>>
+{
+};
+
+class ArticleSelectorReadSortTest : public ArticleSelectorSortTest, public testing::WithParamInterface<SelectionMode>
+{
+};
+
+class ArticleSelectorCancelSortTest : public ArticleSelectorSortTest,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class ArticleSelectorHelpSortTest : public ArticleSelectorSortTest,
+                                    public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
 } // namespace
 
 TEST_F(SelectorCommandInputTest, readsCommandText)
@@ -522,3 +736,189 @@ INSTANTIATE_TEST_SUITE_P(ModeAndPopulation, ArticleSelectorToggleTest,
 
 INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorModeTest,
                          testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+TEST_P(ArticleSelectorSortCommandTest, ordersThePopulationWithoutChangingSelections)
+{
+    const auto &[mode, sort_case, reverse] = GetParam();
+    const auto &[key, sort, ascending] = sort_case;
+    prepare_sort(mode);
+    const char        input = reverse ? static_cast<char>(std::toupper(static_cast<unsigned char>(key))) : key;
+    std::vector<long> expected = ascending;
+    if (reverse)
+    {
+        std::reverse(expected.begin(), expected.end());
+    }
+
+    const DisplayState result = run_command('O', std::string(1, input));
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(sort, g_sel_sort);
+    EXPECT_EQ(reverse ? -1 : 1, g_sel_direction);
+    EXPECT_EQ(expected, displayed_order());
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    if (mode == SM_ARTICLE)
+    {
+        EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+    }
+    else
+    {
+        EXPECT_EQ(g_first_subject, g_sel_page_sp);
+    }
+    expect_selection_preserved(false);
+}
+
+TEST_P(ArticleSelectorReverseSortTest, reversesTheCurrentOrderWithoutChangingSelections)
+{
+    const auto &[mode, rereading, direction] = GetParam();
+    prepare_sort(mode, rereading, direction);
+    std::vector<long> expected = displayed_order();
+    std::reverse(expected.begin(), expected.end());
+
+    const DisplayState result = run_command('R');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(SS_DATE, g_sel_sort);
+    EXPECT_EQ(-direction, g_sel_direction);
+    EXPECT_EQ(expected, displayed_order());
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    expect_selection_preserved(rereading);
+}
+
+TEST_P(ArticleSelectorReadSortTest, reordersReadArticlesWithoutRestoringPendingSelections)
+{
+    prepare_sort(GetParam(), true);
+
+    const DisplayState result = run_command('O', "S");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(GetParam(), g_sel_mode);
+    EXPECT_EQ(SS_STRING, g_sel_sort);
+    EXPECT_EQ(-1, g_sel_direction);
+    EXPECT_EQ(GetParam() == SM_ARTICLE ? (std::vector<long>{3, 2, 4, 1}) : (std::vector<long>{3, 2, 1}),
+              displayed_order());
+    expect_selection_preserved(true);
+}
+
+TEST_F(ArticleSelectorSortTest, blankSortChoiceUsesForwardDateOrder)
+{
+    prepare_sort(SM_ARTICLE);
+    set_selector(SM_ARTICLE, static_cast<SelectionSortMode>(-SS_STRING));
+    rebuild_page();
+
+    const DisplayState result = run_command('O', " ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(SS_DATE, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ((std::vector<long>{1, 3, 2, 4}), displayed_order());
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    expect_selection_preserved(false);
+}
+
+TEST_P(ArticleSelectorCancelSortTest, cancellationRetainsTheOrderAndPageAnchor)
+{
+    const auto &[mode, can_home] = GetParam();
+    prepare_sort(mode);
+    g_can_home = can_home;
+    const std::vector<long> before = displayed_order();
+    Article **const         page_app = g_sel_page_app;
+    Subject *const          page_sp = g_sel_page_sp;
+
+    const DisplayState result = run_command('O', "q");
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(SS_DATE, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ(before, displayed_order());
+    EXPECT_EQ(page_app, g_sel_page_app);
+    EXPECT_EQ(page_sp, g_sel_page_sp);
+    expect_selection_preserved(false);
+}
+
+TEST_P(ArticleSelectorHelpSortTest, helpListsTheAvailableSortKeysAndReturnsToThePrompt)
+{
+    const auto &[mode, verbose] = GetParam();
+    prepare_sort(mode);
+    g_verbose = verbose;
+    const std::vector<long> before = displayed_order();
+
+    const DisplayState result = run_command('O', verbose ? "Hq" : "hq");
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(before, displayed_order());
+    EXPECT_EQ(SS_DATE, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type d or SP" : "d or SP sorts"));
+    if (mode == SM_ARTICLE)
+    {
+        EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type a" : "a sorts"));
+        EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type n" : "n sorts"));
+        EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type g" : "g sorts"));
+    }
+    else
+    {
+        EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type c" : "c sorts"));
+        EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type l" : "l sorts"));
+    }
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type q" : "q does nothing"));
+    const std::size_t first_prompt = m_output.find("Order by");
+    ASSERT_NE(std::string::npos, first_prompt);
+    EXPECT_NE(std::string::npos, m_output.find("Order by", first_prompt + 1));
+    expect_selection_preserved(false);
+}
+
+TEST_F(ArticleSelectorSortTest, sortingThreadsKeepsRelatedSubjectsTogether)
+{
+    prepare_sort(SM_THREAD);
+    m_charlie.m_thread = m_subject.m_thread;
+    m_subject.m_thread_link = &m_charlie;
+    m_charlie.m_thread_link = &m_subject;
+    rebuild_page();
+
+    const DisplayState result = run_command('O', "S");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ((std::vector<long>{2, 3, 1}), displayed_order());
+    EXPECT_EQ(&m_charlie, m_subject.m_thread_link);
+    EXPECT_EQ(&m_subject, m_charlie.m_thread_link);
+    EXPECT_EQ(&m_bravo, m_bravo.m_thread_link);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    expect_selection_preserved(false);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleKeys, ArticleSelectorSortCommandTest,
+                         testing::Combine(testing::Values(SM_ARTICLE),
+                                          testing::Values(SelectorSortCase{'d', SS_DATE, {1, 3, 2, 4}},
+                                                          SelectorSortCase{'s', SS_STRING, {1, 4, 2, 3}},
+                                                          SelectorSortCase{'a', SS_AUTHOR, {4, 3, 2, 1}},
+                                                          SelectorSortCase{'n', SS_NATURAL, {1, 2, 3, 4}},
+                                                          SelectorSortCase{'g', SS_GROUPS, {1, 4, 3, 2}},
+                                                          SelectorSortCase{'p', SS_SCORE, {3, 4, 1, 2}}),
+                                          testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(SubjectAndThreadKeys, ArticleSelectorSortCommandTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD),
+                                          testing::Values(SelectorSortCase{'d', SS_DATE, {1, 3, 2}},
+                                                          SelectorSortCase{'s', SS_STRING, {1, 2, 3}},
+                                                          SelectorSortCase{'c', SS_COUNT, {3, 2, 1}},
+                                                          SelectorSortCase{'l', SS_LINES, {2, 3, 1}},
+                                                          SelectorSortCase{'p', SS_SCORE, {3, 1, 2}}),
+                                          testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModePopulationAndDirection, ArticleSelectorReverseSortTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(1, -1)));
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorReadSortTest,
+                         testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndTerminal, ArticleSelectorCancelSortTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndVerbosity, ArticleSelectorHelpSortTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
