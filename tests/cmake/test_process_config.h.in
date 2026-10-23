@@ -1,0 +1,8 @@
+// This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
+#ifndef TRN_TEST_PROCESS_CONFIG_H
+#define TRN_TEST_PROCESS_CONFIG_H
+
+#define TRN_TEST_PROCESS_TOOL R"trn($<TARGET_FILE:pnews-test-tool>)trn"
+
+#endif

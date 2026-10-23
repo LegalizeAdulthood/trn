@@ -33,9 +33,11 @@
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
+#include <trn/util.h>
 #include <util/env.h>
 
 #include <test_config.h>
+#include <test_process_config.h>
 
 #include "mock_env.h"
 #include "support/MockNntpServer.h"
@@ -45,6 +47,7 @@
 
 #include <algorithm>
 #include <array>
+#include <csignal>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -844,6 +847,7 @@ protected:
 
     fs::path m_destination;
     fs::path m_spool;
+    trn::testing::MockEnvironment m_env;
 
     static constexpr std::string_view HEADER = "From: Root <root@example.test>\n"
                                                "Subject: Topic\n"
@@ -852,7 +856,6 @@ protected:
     static constexpr std::string_view BODY = "Root first line\nRoot next line\nFrom a body line\nLast line\n";
 
 private:
-    trn::testing::MockEnvironment m_env;
     std::string                   m_old_priv_dir{g_priv_dir};
     std::string                   m_old_save_dest{g_save_dest};
     ArticlePosition               m_old_save_from{g_save_from};
@@ -1071,6 +1074,102 @@ void FailedSaveArticleTest::TearDown()
     SaveArticleTest::TearDown();
 }
 
+struct ConfiguredSaverCase
+{
+    char command;
+    bool mailbox;
+};
+
+class ConfiguredSaveArticleTest : public SaveArticleTest, public testing::WithParamInterface<ConfiguredSaverCase>
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string receiver_text(const char *filename) const;
+    std::string requested_text() const;
+    void        expect_receiver() const;
+
+private:
+    using SignalHandler = void (*)(int);
+    std::vector<std::pair<int, SignalHandler>> m_signals;
+    bool                                       m_old_waiting{g_waiting};
+    bool                                       m_old_no_wait_fork{g_no_wait_fork};
+};
+
+void ConfiguredSaveArticleTest::SetUp()
+{
+    SaveArticleTest::SetUp();
+    for (const int number : {
+             SIGINT,
+#ifdef SIGQUIT
+             SIGQUIT,
+#endif
+#ifdef SIGTSTP
+             SIGTSTP,
+             SIGTTOU,
+             SIGTTIN,
+#endif
+         })
+    {
+        m_signals.emplace_back(number, std::signal(number, SIG_IGN));
+    }
+    g_waiting = g_no_wait_fork = false;
+    m_env.expect_no_envars({"NNTPSERVER", "NNTP_FORCE_AUTH", "NEWSACTIVE", "NEWSDESCRIPTIONS", "QUOTECHARS"});
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", g_priv_dir.c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "");
+    m_env.expect_env_repeatedly("SHELL", TRN_TEST_PROCESS_TOOL);
+    const std::string saver =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" article-saver \"%A\" %B \"%b\" %a %C";
+    m_env.expect_env_repeatedly(GetParam().mailbox ? "MBOXSAVER" : "NORMSAVER", saver.c_str());
+    g_mbox_always = GetParam().mailbox;
+    g_norm_always = !GetParam().mailbox;
+}
+
+void ConfiguredSaveArticleTest::TearDown()
+{
+    for (const std::pair<int, SignalHandler> &signal : m_signals)
+    {
+        std::signal(signal.first, signal.second);
+    }
+    g_waiting = m_old_waiting;
+    g_no_wait_fork = m_old_no_wait_fork;
+    SaveArticleTest::TearDown();
+}
+
+std::string ConfiguredSaveArticleTest::receiver_text(const char *filename) const
+{
+    std::ifstream input{fs::path{g_priv_dir} / filename};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+std::string ConfiguredSaveArticleTest::requested_text() const
+{
+    return GetParam().command == 's' || GetParam().command == 'S' ? std::string{HEADER} + std::string{BODY}
+                                                                  : std::string{BODY};
+}
+
+void ConfiguredSaveArticleTest::expect_receiver() const
+{
+    const std::string arguments = "article-saver\n" + (m_spool / "1").generic_string() + '\n' +
+                                  std::to_string(g_save_from.value_of()) + '\n' + m_destination.generic_string() +
+                                  "\n1\ncomp.lang.cpp\n";
+    EXPECT_EQ(arguments, receiver_text("article-saver.log"));
+    const bool preferred = GetParam().command == 'S' || GetParam().command == 'W';
+    EXPECT_EQ(preferred, fs::exists(fs::path{g_priv_dir} / "shell-used"));
+    if (preferred)
+    {
+#ifdef USE_SPAWN_SHELL
+        EXPECT_EQ("/c", receiver_text("shell-used"));
+#else
+        EXPECT_EQ("-c", receiver_text("shell-used"));
+#endif
+    }
+}
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -1206,6 +1305,61 @@ TEST_F(SaveArticleTest, anEmptyFilenameUsesTheConfiguredDirectoryAndArticleNumbe
     EXPECT_EQ(expected_text('s'), saved_text());
     EXPECT_NE(std::string::npos, output.find("Saved to file " + m_destination.generic_string()));
 }
+
+TEST_P(ConfiguredSaveArticleTest, runsTheConfiguredSaverWithTheRequestedArticleContent)
+{
+    const char command = GetParam().command;
+
+    const std::string output = save(command, m_destination.generic_string() + '\n');
+
+    expect_receiver();
+    EXPECT_EQ(requested_text(), saved_text());
+    EXPECT_NE(std::string::npos, output.find(GetParam().mailbox ? "Saved to mailbox " : "Saved to file "));
+}
+
+TEST_P(ConfiguredSaveArticleTest, closesTheProbeAndAppendsUsingTheDetectedDestinationFormat)
+{
+#if MBOX_CHAR == '\001'
+    const std::string prefix = GetParam().mailbox ? "\001\001\001\001\nPrevious message\n" : "Existing text\n";
+#else
+    const std::string prefix =
+        GetParam().mailbox ? "From old@example.test Wed Oct 21 00:00:00 2026\nPrevious message\n" : "Existing text\n";
+#endif
+    std::ofstream{m_destination} << prefix;
+    g_mbox_always = !GetParam().mailbox;
+    g_norm_always = GetParam().mailbox;
+
+    const std::string output = save(GetParam().command, m_destination.generic_string() + '\n');
+
+    expect_receiver();
+    EXPECT_EQ(prefix + requested_text(), saved_text());
+    EXPECT_NE(std::string::npos, output.find(GetParam().mailbox ? "Appended to mailbox " : "Appended to file "));
+}
+
+TEST_P(ConfiguredSaveArticleTest, reportsTheSaverProcessFailureAndReturnsToTheArticlePrompt)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "article-saver_failure");
+
+    const std::string output = save(GetParam().command, m_destination.generic_string() + '\n');
+
+    expect_receiver();
+    EXPECT_NE(std::string::npos, output.find("Not saved"));
+    EXPECT_EQ(std::string::npos, output.find("Saved to "));
+    EXPECT_FALSE(fs::exists(m_destination));
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandsAndFormats, ConfiguredSaveArticleTest,
+                         testing::Values(ConfiguredSaverCase{'s', false}, ConfiguredSaverCase{'w', false},
+                                         ConfiguredSaverCase{'S', false}, ConfiguredSaverCase{'W', false},
+                                         ConfiguredSaverCase{'s', true}, ConfiguredSaverCase{'w', true},
+                                         ConfiguredSaverCase{'S', true}, ConfiguredSaverCase{'W', true}),
+                         [](const testing::TestParamInfo<ConfiguredSaverCase> &info)
+                         {
+                             return std::string{info.param.command == 'S' || info.param.command == 'W' ? "Preferred"
+                                                                                                       : "Default"} +
+                                    (info.param.command == 's' || info.param.command == 'S' ? "Headers" : "Body") +
+                                    (info.param.mailbox ? "Mailbox" : "Plain");
+                         });
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {

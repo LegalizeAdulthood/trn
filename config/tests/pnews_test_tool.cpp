@@ -14,6 +14,7 @@
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
+#include <windows.h>
 #endif
 
 namespace
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
     const std::string           role = std::string{argv[1]} == "--disable" && argc > 2 ? argv[2] : argv[1];
     const std::string           mode = environment("PNEWS_TEST_MODE");
     const std::filesystem::path directory = environment("PNEWS_TEST_DIRECTORY");
-    std::ofstream               log(directory / "tools.log", std::ios::app);
+    std::ofstream log(directory / (role == "article-saver" ? "article-saver.log" : "tools.log"), std::ios::app);
     log << role << '\n';
     for (int i = 2; i < argc; ++i)
     {
@@ -60,6 +61,43 @@ int main(int argc, char **argv)
     if (mode == role + "_failure" || mode == role + "_cancel")
     {
         return mode == role + "_cancel" ? 130 : 3;
+    }
+    if (role == "/c" || role == "-c")
+    {
+#ifdef _WIN32
+        const std::string command_line = GetCommandLineA();
+        const std::size_t start = command_line.find(" /c ");
+        if (start == std::string::npos)
+        {
+            return 12;
+        }
+        const char *command = command_line.c_str() + start + 4;
+#else
+        if (argc != 3)
+        {
+            return 12;
+        }
+        const char *command = argv[2];
+#endif
+        write_file(directory / "shell-used", role);
+        return std::system(command) == 0 ? 0 : 3;
+    }
+    if (role == "article-saver")
+    {
+        if (argc != 7)
+        {
+            return 11;
+        }
+        std::ifstream input{argv[2], std::ios::binary};
+        input.seekg(std::stoll(argv[3]));
+        std::ofstream output{argv[4], std::ios::binary | std::ios::app};
+        if (!input || !output)
+        {
+            return 11;
+        }
+        output << input.rdbuf();
+        output.close();
+        return input.bad() || output.fail() ? 11 : 0;
     }
     if (role == "editor")
     {

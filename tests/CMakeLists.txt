@@ -113,9 +113,13 @@ source_group("CMake Templates" REGULAR_EXPRESSION "^.*\\.in$")
 if(MSVC)
     set_source_files_properties(test_ng.cpp PROPERTIES COMPILE_OPTIONS /bigobj)
 endif()
-target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" .)
+file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/test_process_config.h"
+    INPUT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_process_config.h.in")
+target_include_directories(trn-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>" "${CMAKE_CURRENT_BINARY_DIR}" .)
 target_link_libraries(trn-test PUBLIC libtrn GTest::gmock_main GTest::gtest)
 target_link_libraries(trn-test PRIVATE OpenSSL::SSL)
+add_dependencies(trn-test pnews-test-tool)
 target_folder(trn-test "Tests")
 gtest_discover_tests(trn-test PROPERTIES LABELS trn)
 
