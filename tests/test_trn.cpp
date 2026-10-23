@@ -1530,7 +1530,10 @@ protected:
     void        SetUp() override;
     void        TearDown() override;
     void        answers(std::string_view input);
-    std::string reply_with(char command);
+    void        prompt_answers(std::string_view input);
+    std::string respond_with(char command);
+    void        expect_sent(std::string_view draft, bool old_article = true) const;
+    void        expect_retained(std::string_view draft) const;
 
     fs::path                          m_home;
     fs::path                          m_answers;
@@ -1541,6 +1544,7 @@ private:
     std::string m_old_orig_dir{g_orig_dir};
     std::string m_old_indent_string{g_indent_string};
     char        m_old_wrapped_nl{g_wrapped_nl};
+    int         m_saved_stdin{-1};
 };
 
 void ResponseArticleTest::SetUp()
@@ -1604,6 +1608,12 @@ void ResponseArticleTest::SetUp()
 
 void ResponseArticleTest::TearDown()
 {
+    if (m_saved_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
+        close(m_saved_stdin);
+        std::clearerr(stdin);
+    }
     g_head_name = m_old_head_name;
     g_orig_dir = m_old_orig_dir;
     g_indent_string = m_old_indent_string;
@@ -1619,7 +1629,7 @@ void ResponseArticleTest::answers(std::string_view input)
     ASSERT_FALSE(output.fail());
 }
 
-std::string ResponseArticleTest::reply_with(char command)
+std::string ResponseArticleTest::respond_with(char command)
 {
     EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
     g_art_pos = tell_art();
@@ -1633,8 +1643,6 @@ class ReplyArticleTest : public ResponseArticleTest
 {
 protected:
     std::string expected_header(std::string_view recipient = "root@example.test") const;
-    void        expect_sent(std::string_view draft) const;
-    void        expect_retained(std::string_view draft) const;
 
     static constexpr std::string_view QUOTED_BODY =
         "In article <root@example.test> you write:\n"
@@ -1649,7 +1657,7 @@ std::string ReplyArticleTest::expected_header(std::string_view recipient) const
            "Organization: Test Organization\nCc: \nBcc: \n\n";
 }
 
-void ReplyArticleTest::expect_sent(std::string_view draft) const
+void ResponseArticleTest::expect_sent(std::string_view draft, bool old_article) const
 {
     EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
     EXPECT_EQ(std::string{draft} + '\n', receiver_text("editor-input"));
@@ -1665,11 +1673,11 @@ void ReplyArticleTest::expect_sent(std::string_view draft) const
     ASSERT_NE(std::string::npos, editor);
     ASSERT_NE(std::string::npos, mailer);
     EXPECT_LT(editor, mailer);
-    EXPECT_NE(std::string::npos, log.find('\n' + (m_spool / "1").generic_string() + '\n'));
+    EXPECT_EQ(old_article, log.find('\n' + (m_spool / "1").generic_string() + '\n') != std::string::npos);
     EXPECT_FALSE(fs::exists(m_home / "dead.letter"));
 }
 
-void ReplyArticleTest::expect_retained(std::string_view draft) const
+void ResponseArticleTest::expect_retained(std::string_view draft) const
 {
     EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "mailed"));
     EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
@@ -1705,12 +1713,193 @@ void AddressedReplyArticleTest::SetUp()
     }
 }
 
+class ForwardArticleTest : public ResponseArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string forward_article();
+    std::string default_draft() const;
+    std::string mime_draft(std::string_view header, std::string_view boundary,
+                           std::string_view introduction = "Content-Type: text/plain\n") const;
+    std::string plain_draft(std::string_view introduction = "------- start of forwarded message -------",
+                            std::string_view ending = "------- end of forwarded message -------") const;
+    void        use_plain_header();
+
+    static constexpr std::string_view PLAIN_HEADER = "To: desk@example.test\nSubject: Forwarded Topic\n\n";
+
+private:
+    bool m_old_force_grow{g_force_grow};
+};
+
+void ForwardArticleTest::SetUp()
+{
+    ResponseArticleTest::SetUp();
+    m_env.expect_no_envars({"FORWARDHEADER", "FORWARDMSG", "FORWARDMSGEND"});
+    const std::string poster =
+#ifdef USE_SPAWN_SHELL
+        "< \"" + m_answers.generic_string() + "\" call \"" TRN_TEST_RNMAIL "\" -h \"%h\"";
+#else
+        "sh \"" TRN_TEST_RNMAIL "\" -h \"%h\" < \"" + m_answers.generic_string() + '"';
+#endif
+    m_env.expect_env_repeatedly("FORWARDPOSTER", poster.c_str());
+    prompt_answers("desk@example.test\n");
+    g_force_grow = false;
+}
+
+void ForwardArticleTest::TearDown()
+{
+    g_force_grow = m_old_force_grow;
+    ResponseArticleTest::TearDown();
+}
+
+std::string ForwardArticleTest::forward_article()
+{
+    const std::string output = respond_with(Ctl('f'));
+    EXPECT_FALSE(g_force_grow);
+    return output;
+}
+
+std::string ForwardArticleTest::mime_draft(std::string_view header, std::string_view boundary,
+                                           std::string_view introduction) const
+{
+    const std::string delimiter = "--" + std::string{boundary};
+    return std::string{header} + delimiter + '\n' + std::string{introduction} +
+           "\n[Replace this with your comments.]\n\n" + delimiter + "\nContent-Type: message/rfc822\n\n" +
+           m_article_text + '\n' + delimiter + "--\n";
+}
+
+std::string ForwardArticleTest::default_draft() const
+{
+    const std::string draft = receiver_text(fs::path{g_head_name}.filename().string().c_str());
+    std::smatch       match;
+    const bool        found = std::regex_search(draft, match, std::regex{"boundary=\"(=[0-9]+=--)\""});
+    EXPECT_TRUE(found);
+    if (!found)
+    {
+        return {};
+    }
+    const std::string boundary = match[1];
+    EXPECT_EQ(0, boundary.find("=" + std::to_string(g_our_pid)));
+    const std::string header = "To: desk@example.test\nSubject: Topic (fwd)\nX-Newsgroups: comp.lang.cpp\n"
+                               "In-Reply-To: <root@example.test>\nReferences: <parent@example.test>\n"
+                               "Organization: Test Organization\nMime-Version: 1.0\n"
+                               "Content-Type: multipart/mixed; boundary=\"" +
+                               boundary + "\"\nCc: \nBcc: \n\n";
+    return mime_draft(header, boundary);
+}
+
+std::string ForwardArticleTest::plain_draft(std::string_view introduction, std::string_view ending) const
+{
+    return std::string{PLAIN_HEADER} + (introduction.empty() ? "" : std::string{introduction} + '\n') + m_article_text +
+           (ending.empty() ? "" : std::string{ending} + '\n');
+}
+
+void ForwardArticleTest::use_plain_header()
+{
+    m_env.expect_env_repeatedly("FORWARDHEADER", std::string{PLAIN_HEADER}.c_str());
+}
+
+class OriginalForwardArticleTest : public ForwardArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void OriginalForwardArticleTest::SetUp()
+{
+    ForwardArticleTest::SetUp();
+    if (GetParam())
+    {
+        article("--original\nContent-Type: text/plain\n\nOriginal body\n"
+                "--original\nContent-Type: application/octet-stream\n"
+                "Content-Transfer-Encoding: base64\nContent-Disposition: attachment; filename=image.bin\n\n"
+                "QUJD\n--original--\n",
+                std::string{REPLY_HEADERS} + "MIME-Version: 1.0\nContent-Type: multipart/mixed; boundary=original\n");
+    }
+}
+
+struct ForwardMimeHeaderCase
+{
+    const char *name;
+    const char *content_type;
+    const char *introduction;
+};
+
+void PrintTo(const ForwardMimeHeaderCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class ConfiguredMimeForwardArticleTest : public ForwardArticleTest,
+                                         public testing::WithParamInterface<ForwardMimeHeaderCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void ConfiguredMimeForwardArticleTest::SetUp()
+{
+    ForwardArticleTest::SetUp();
+    const std::string header =
+        "To: desk@example.test\nSubject: Forwarded Topic\n" + std::string{GetParam().content_type} + "\n\n";
+    m_env.expect_env_repeatedly("FORWARDHEADER", header.c_str());
+    m_env.expect_env_repeatedly("FORWARDMSG", GetParam().introduction);
+}
+
+struct ForwardFailureCase
+{
+    const char *name;
+    const char *mode;
+    const char *input;
+    bool        mailer_invoked;
+};
+
+void PrintTo(const ForwardFailureCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class FailedForwardArticleTest : public ForwardArticleTest, public testing::WithParamInterface<ForwardFailureCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void FailedForwardArticleTest::SetUp()
+{
+    ForwardArticleTest::SetUp();
+    use_plain_header();
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam().mode);
+    answers(GetParam().input);
+}
+
+class DisplayedForwardHeaderArticleTest : public ForwardArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void DisplayedForwardHeaderArticleTest::SetUp()
+{
+    ForwardArticleTest::SetUp();
+    use_plain_header();
+    m_env.expect_env_repeatedly("FORWARD_DRAFT", g_head_name.c_str());
+    const std::string poster =
+#ifdef USE_SPAWN_SHELL
+        "< \"" + m_answers.generic_string() + "\" call \"" TRN_TEST_RNMAIL "\" -h \"%{FORWARD_DRAFT}\"";
+#else
+        "sh \"" TRN_TEST_RNMAIL "\" -h \"%{FORWARD_DRAFT}\" < \"" + m_answers.generic_string() + '"';
+#endif
+    m_env.expect_env_repeatedly("FORWARDPOSTER", poster.c_str());
+    g_verbose = GetParam();
+}
+
 class FollowupArticleTest : public ResponseArticleTest
 {
 protected:
     void        SetUp() override;
     void        TearDown() override;
-    void        prompt_answers(std::string_view input);
     std::string follow_with(char command, std::string_view input = {});
     std::string expected_news_header(std::string_view groups = "comp.lang.cpp", bool original_groups = false) const;
     void        expect_posted(std::string_view draft) const;
@@ -1725,7 +1914,6 @@ protected:
 
 private:
     bool m_old_force_grow{g_force_grow};
-    int  m_saved_stdin{-1};
 };
 
 void FollowupArticleTest::SetUp()
@@ -1759,17 +1947,11 @@ void FollowupArticleTest::SetUp()
 
 void FollowupArticleTest::TearDown()
 {
-    if (m_saved_stdin >= 0)
-    {
-        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
-        close(m_saved_stdin);
-        std::clearerr(stdin);
-    }
     g_force_grow = m_old_force_grow;
     ResponseArticleTest::TearDown();
 }
 
-void FollowupArticleTest::prompt_answers(std::string_view input)
+void ResponseArticleTest::prompt_answers(std::string_view input)
 {
     const fs::path prompt_input = m_output_dir / "prompt-input";
     std::ofstream{prompt_input} << input;
@@ -2704,7 +2886,7 @@ TEST_P(AddressedReplyArticleTest, sendsThePreparedReplyToTheArticleRecipient)
     const std::string header = expected_header(GetParam().reply_to ? "desk@example.test" : "root@example.test");
     const std::string quote = GetParam().command == 'R' ? std::string{QUOTED_BODY} : std::string{};
 
-    reply_with(GetParam().command);
+    respond_with(GetParam().command);
 
     expect_sent(header + quote);
     const std::string mailed = receiver_text("mailed");
@@ -2724,7 +2906,7 @@ TEST_F(ReplyArticleTest, abortingTheReplyRetainsTheDraftWithoutSendingMail)
 {
     answers("a\n");
 
-    reply_with('R');
+    respond_with('R');
 
     expect_retained(expected_header() + std::string{QUOTED_BODY});
     EXPECT_NE(std::string::npos, receiver_text("tools.log").find("editor\n"));
@@ -2736,7 +2918,7 @@ TEST_F(ReplyArticleTest, aMailerFailureRetainsTheDraftAndReturnsToReading)
     m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "mailer_failure");
     answers("s\na\n");
 
-    reply_with('R');
+    respond_with('R');
 
     expect_retained(expected_header() + std::string{QUOTED_BODY});
     EXPECT_NE(std::string::npos, receiver_text("tools.log").find("mailer\n"));
@@ -2748,7 +2930,7 @@ TEST_F(ReplyArticleTest, aBlockedDraftDoesNotInvokeTheReplyProgram)
     std::ofstream{blocker} << "Keep this file\n";
     g_head_name = (blocker / "reply").generic_string();
 
-    const std::string output = reply_with('r');
+    const std::string output = respond_with('r');
 
     EXPECT_NE(std::string::npos, output.find("Can't create " + g_head_name));
     EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
@@ -2760,7 +2942,7 @@ TEST_F(ReplyArticleTest, usesConfiguredHeadersAttributionAndQuotePrefix)
     m_env.expect_env_repeatedly("YOUSAID", "Reply to %i:");
     g_indent_string = "| ";
 
-    reply_with('R');
+    respond_with('R');
 
     expect_sent("To: custom@example.test\nSubject: Custom Topic\n\n"
                 "Reply to <root@example.test>:\n| Root first line\n| Root next line\n"
@@ -2773,11 +2955,121 @@ TEST_F(ReplyArticleTest, quotesTheDecodedMimeText)
                                                     "MIME-Version: 1.0\nContent-Type: text/plain; charset=us-ascii\n"
                                                     "Content-Transfer-Encoding: quoted-printable\n");
 
-    reply_with('R');
+    respond_with('R');
 
     expect_sent(expected_header() + "In article <root@example.test> you write:\n"
                                     "> Original body\n> Second line\n\n");
 }
+
+TEST_P(OriginalForwardArticleTest, mailsTheCompleteOriginalArticleAsAMimeAttachment)
+{
+    const std::string output = forward_article();
+
+    expect_sent(default_draft(), false);
+    EXPECT_THAT(output, testing::HasSubstr("To: "));
+    EXPECT_THAT(receiver_text("mailed"), testing::HasSubstr(m_article_text));
+    EXPECT_THAT(receiver_text("mailed"), testing::HasSubstr("Subject: Topic (fwd)\n"));
+}
+
+INSTANTIATE_TEST_SUITE_P(OriginalContent, OriginalForwardArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Multipart" : "Plain"; });
+
+TEST_P(ConfiguredMimeForwardArticleTest, usesTheConfiguredMimeBoundaryAndCommentHeaders)
+{
+    const std::string header =
+        "To: desk@example.test\nSubject: Forwarded Topic\n" + std::string{GetParam().content_type} + "\n\n";
+
+    forward_article();
+
+    expect_sent(mime_draft(header, "forward-boundary", GetParam().introduction), false);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    MimeHeaders, ConfiguredMimeForwardArticleTest,
+    testing::Values(
+        ForwardMimeHeaderCase{"OneLine", "Content-Type: multipart/mixed; boundary=\"forward-boundary\"",
+                              "Content-Type: text/html\n"},
+        ForwardMimeHeaderCase{"FoldedSpace", "Content-Type: multipart/mixed;\n boundary=\"forward-boundary\"",
+                              "Content-Type: text/html\n"},
+        ForwardMimeHeaderCase{"FoldedTab", "Content-Type: multipart/mixed;\n\tboundary=\"forward-boundary\"",
+                              "Content-Type: text/html\n"},
+        ForwardMimeHeaderCase{"LowercaseType", "content-type: multipart/mixed; boundary=\"forward-boundary\"",
+                              "Content-Type: text/html\n"}),
+    [](const testing::TestParamInfo<ForwardMimeHeaderCase> &info) { return info.param.name; });
+
+TEST_F(ForwardArticleTest, usesConfiguredPlainForwardingMarkers)
+{
+    use_plain_header();
+    m_env.expect_env_repeatedly("FORWARDMSG", "Begin %i");
+    m_env.expect_env_repeatedly("FORWARDMSGEND", "End %S");
+
+    forward_article();
+
+    expect_sent(plain_draft("Begin <root@example.test>", "End Topic"), false);
+}
+
+TEST_F(ForwardArticleTest, omitsEmptyInterpolatedPlainForwardingMarkers)
+{
+    use_plain_header();
+    m_env.expect_env_repeatedly("FORWARDMSG", "%{FORWARD_EMPTY}");
+    m_env.expect_env_repeatedly("FORWARDMSGEND", "%{FORWARD_EMPTY}");
+    m_env.expect_no_envars({"FORWARD_EMPTY"});
+
+    forward_article();
+
+    expect_sent(plain_draft("", ""), false);
+}
+
+TEST_F(ForwardArticleTest, escapesDashLeadingLinesInThePlainForwardedDraft)
+{
+    use_plain_header();
+    article("- First line\n-- signature\nLast line\n", REPLY_HEADERS);
+    std::string draft = plain_draft();
+    draft.insert(draft.find("- First line"), "- ");
+    draft.insert(draft.find("-- signature"), "- ");
+
+    const std::string output = forward_article();
+
+    expect_sent(draft, false);
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("- ")));
+}
+
+TEST_P(FailedForwardArticleTest, retainsTheForwardedDraftAndReturnsToReading)
+{
+    forward_article();
+
+    expect_retained(plain_draft());
+    EXPECT_EQ(GetParam().mailer_invoked, receiver_text("tools.log").find("mailer\n") != std::string::npos);
+}
+
+INSTANTIATE_TEST_SUITE_P(DeliveryOutcomes, FailedForwardArticleTest,
+                         testing::Values(ForwardFailureCase{"Abort", "", "a\n", false},
+                                         ForwardFailureCase{"MailerFailure", "mailer_failure", "s\na\n", true}),
+                         [](const testing::TestParamInfo<ForwardFailureCase> &info) { return info.param.name; });
+
+TEST_F(ForwardArticleTest, aBlockedDraftDoesNotInvokeTheMailComposer)
+{
+    const fs::path blocker = fs::path{g_priv_dir} / "blocked";
+    std::ofstream{blocker} << "Keep this file\n";
+    g_head_name = (blocker / "forward").generic_string();
+
+    const std::string output = forward_article();
+
+    EXPECT_THAT(output, testing::HasSubstr("Can't create " + g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+TEST_P(DisplayedForwardHeaderArticleTest, displaysTheHeaderWhenTheComposerDoesNotReferenceTheHeaderPlaceholder)
+{
+    const std::string output = forward_article();
+
+    const std::string description = GetParam() ? "(Above lines saved in file " : "(Header in ";
+    EXPECT_THAT(output, testing::HasSubstr(std::string{PLAIN_HEADER} + '\n' + description + g_head_name + ")\n"));
+    expect_sent(plain_draft(), false);
+}
+
+INSTANTIATE_TEST_SUITE_P(HeaderDisplay, DisplayedForwardHeaderArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Verbose" : "Compact"; });
 
 TEST_P(GroupedFollowupArticleTest, postsTheFollowupToTheRequestedGroups)
 {

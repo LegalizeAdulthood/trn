@@ -1222,7 +1222,7 @@ void forward()
     {
         const std::size_t      eol = header_lines.find('\n');
         const std::string_view line = header_lines.substr(0, eol == std::string_view::npos ? header_lines.size() : eol);
-        if (!line.empty() && line.front() == 'C' && line.size() >= content_type_prefix.size() &&
+        if (line.size() >= content_type_prefix.size() &&
             string_case_equal(line.substr(0, content_type_prefix.size()), content_type_prefix))
         {
             std::string_view content_type = header_lines.substr(content_type_prefix.size());
@@ -1248,7 +1248,8 @@ void forward()
                  param_start = content_type.find(';', param_start))
             {
                 ++param_start;
-                while (param_start < content_type.size() && content_type[param_start] == ' ')
+                while (param_start < content_type.size() &&
+                       std::isspace(static_cast<unsigned char>(content_type[param_start])))
                 {
                     ++param_start;
                 }
@@ -1313,7 +1314,7 @@ void forward()
             const std::string_view line_text{article_line};
             if (!mime_boundary && !line_text.empty() && line_text.front() == '-')
             {
-                fmt::print(stdout, "- ");
+                fmt::print(header, "- ");
             }
             fmt::print(header, "{}", line_text);
         }
