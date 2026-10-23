@@ -3025,13 +3025,18 @@ reask_sort:
                 {
                     sp = g_first_subject;
                 }
+                const Subject *group_sp = sp;
                 while (sp)
                 {
+                    if (g_sel_mode != SM_THREAD || sp->m_thread != group_sp->m_thread)
+                    {
+                        group_sp = sp;
+                    }
                     if (((!(sp->m_flags & SF_SEL) ^ (ch == 'J')) && sp->m_misc) //
                         || (sp->m_flags & SF_DEL))
                     {
                         if (ch == 'J' || !g_sel_exclusive //
-                            || (sp->m_flags & SF_INCLUDED))
+                            || (group_sp->m_flags & SF_INCLUDED))
                         {
                             sp->kill_subject(ch=='J'? AFFECT_ALL:AFFECT_UNSEL);
                         }

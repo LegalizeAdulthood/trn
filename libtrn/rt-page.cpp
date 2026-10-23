@@ -892,9 +892,10 @@ try_again:
             ap = nullptr;
             for (app = g_sel_page_app; app < limit; app++)
             {
-                ap = *app;
-                if ((ap->m_flags & (AF_EXISTS|AF_UNREAD)) == desired_flags)
+                Article *candidate = *app;
+                if ((candidate->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
                 {
+                    ap = candidate;
                     break;
                 }
             }

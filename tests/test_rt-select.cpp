@@ -22,6 +22,7 @@
 #include <array>
 #include <cctype>
 #include <cerrno>
+#include <initializer_list>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -598,6 +599,133 @@ class ArticleSelectorExclusiveThreadTest : public ArticleSelectorExclusiveStateT
 {
 };
 
+class ArticleSelectorBulkStateTest : public ArticleSelectorExclusiveStateTest
+{
+protected:
+    void       SetUp() override;
+    void       TearDown() override;
+    void       prepare_bulk(SelectionMode mode, bool rereading = false, bool selected = true);
+    void       calculate_page();
+    void       select_all();
+    void       join_reply_thread();
+    ArticleNum page_article() const;
+    void       expect_articles(std::initializer_list<long> unread, std::initializer_list<long> selected) const;
+
+private:
+    bool        m_old_use_sel_num{g_use_sel_num};
+    std::string m_old_display_mode{g_sel_art_display_mode};
+    std::size_t m_old_display_index{g_sel_art_display_mode_index};
+};
+
+void ArticleSelectorBulkStateTest::SetUp()
+{
+    ArticleSelectorExclusiveStateTest::SetUp();
+    g_tc_LINES = 6;
+    g_use_sel_num = false;
+    g_sel_art_display_mode = "s";
+    g_sel_art_display_mode_index = 0;
+}
+
+void ArticleSelectorBulkStateTest::TearDown()
+{
+    g_use_sel_num = m_old_use_sel_num;
+    g_sel_art_display_mode = m_old_display_mode;
+    g_sel_art_display_mode_index = m_old_display_index;
+    ArticleSelectorExclusiveStateTest::TearDown();
+}
+
+void ArticleSelectorBulkStateTest::prepare_bulk(SelectionMode mode, bool rereading, bool selected)
+{
+    prepare_sort(mode, rereading);
+    if (!selected)
+    {
+        clear_selections();
+    }
+    g_sel_page_app = nullptr;
+    g_sel_page_sp = nullptr;
+    rebuild_page();
+    calculate_page();
+}
+
+void ArticleSelectorBulkStateTest::calculate_page()
+{
+    Selection no_search{};
+    no_search.op = OI_NONE;
+    (void) calc_page(no_search);
+    g_sel_item_index = 0;
+}
+
+void ArticleSelectorBulkStateTest::select_all()
+{
+    for (auto &[number, article] : g_article_list)
+    {
+        article.m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+    }
+    for (Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    {
+        subject->m_flags |= static_cast<SubjectFlags>(g_sel_mask);
+    }
+    rebuild_page();
+    calculate_page();
+}
+
+void ArticleSelectorBulkStateTest::join_reply_thread()
+{
+    m_charlie.m_thread = m_subject.m_thread;
+    m_subject.m_thread_link = &m_charlie;
+    m_charlie.m_thread_link = &m_subject;
+    g_sel_exclusive = true;
+    g_sel_page_sp = nullptr;
+    rebuild_page();
+    calculate_page();
+}
+
+ArticleNum ArticleSelectorBulkStateTest::page_article() const
+{
+    return g_sel_mode == SM_ARTICLE ? (*g_sel_page_app)->article_num() : g_sel_page_sp->m_articles->article_num();
+}
+
+void ArticleSelectorBulkStateTest::expect_articles(std::initializer_list<long> unread,
+                                                   std::initializer_list<long> selected) const
+{
+    std::vector<long> actual_unread;
+    std::vector<long> actual_selected;
+    for (const auto &[number, article] : g_article_list)
+    {
+        if (article.m_flags & AF_UNREAD)
+        {
+            actual_unread.push_back(number.value_of());
+        }
+        if (article.m_flags & g_sel_mask)
+        {
+            actual_selected.push_back(number.value_of());
+        }
+    }
+    EXPECT_EQ(std::vector<long>(unread), actual_unread);
+    EXPECT_EQ(std::vector<long>(selected), actual_selected);
+    EXPECT_EQ(static_cast<ArticleUnread>(unread.size()), m_newsgroup.m_to_read);
+    EXPECT_EQ(static_cast<ArticleUnread>(selected.size()), g_selected_count);
+}
+
+class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
+                                    public testing::WithParamInterface<SelectionMode>
+{
+};
+
+class ArticleSelectorBulkCommandTest : public ArticleSelectorBulkStateTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, char>>
+{
+};
+
+class ArticleSelectorBulkExclusiveTest : public ArticleSelectorBulkStateTest,
+                                         public testing::WithParamInterface<std::tuple<SelectionMode, char>>
+{
+};
+
+class ArticleSelectorBulkThreadTest : public ArticleSelectorBulkStateTest, public testing::WithParamInterface<char>
+{
+};
+
 } // namespace
 
 TEST_F(SelectorCommandInputTest, readsCommandText)
@@ -1139,3 +1267,224 @@ INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorExclusiveCleanu
                          testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
 
 INSTANTIATE_TEST_SUITE_P(ReadAndUnread, ArticleSelectorExclusiveThreadTest, testing::Bool());
+
+TEST_P(ArticleSelectorBulkModeTest, groupCommandMarksUnselectedItemsReadAcrossPages)
+{
+    prepare_bulk(GetParam());
+    ASSERT_TRUE(next_page());
+    calculate_page();
+    ASSERT_EQ(ArticleNum{3}, page_article());
+
+    const DisplayState result = run_command('X');
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_articles({1, 4}, {1, 4});
+    EXPECT_EQ(ArticleNum{2}, g_obj_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(GetParam(), g_sel_mode);
+}
+
+TEST_P(ArticleSelectorBulkModeTest, junkCommandMarksSelectedItemsReadAndRedisplaysSurvivors)
+{
+    prepare_bulk(GetParam());
+
+    const DisplayState result = run_command('J');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2, 3}, {});
+    EXPECT_EQ(ArticleNum{2}, g_obj_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(ArticleNum{3}, page_article());
+}
+
+TEST_P(ArticleSelectorBulkModeTest, pageCommandPreservesUnselectedItemsOnOtherPages)
+{
+    prepare_bulk(GetParam());
+    ASSERT_TRUE(next_page());
+    calculate_page();
+    ASSERT_EQ(ArticleNum{3}, page_article());
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+
+    const DisplayState result = run_command('D');
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_articles({1, 2, 4}, {1, 4});
+    EXPECT_EQ(ArticleNum{3}, g_obj_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorBulkModeTest, pageCommandWithoutSelectionsContinuesAtTheNextPage)
+{
+    prepare_bulk(GetParam(), false, false);
+    ASSERT_TRUE(next_page());
+    calculate_page();
+    ASSERT_EQ(ArticleNum{3}, page_article());
+
+    const DisplayState result = run_command('D');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 4}, {});
+    EXPECT_EQ(ArticleNum{3}, g_obj_count);
+    EXPECT_EQ(ArticleNum{2}, page_article());
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+TEST_P(ArticleSelectorBulkModeTest, deletingTheLastPageRepairsThePageAnchor)
+{
+    prepare_bulk(GetParam(), false, false);
+    ASSERT_TRUE(last_page());
+    calculate_page();
+    ASSERT_EQ(ArticleNum{GetParam() == SM_ARTICLE ? 4 : 2}, page_article());
+
+    const DisplayState result = run_command('D');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    if (GetParam() == SM_ARTICLE)
+    {
+        expect_articles({1, 2, 3}, {});
+        EXPECT_EQ(ArticleNum{2}, page_article());
+    }
+    else
+    {
+        expect_articles({1, 3, 4}, {});
+        EXPECT_EQ(ArticleNum{3}, page_article());
+    }
+    EXPECT_EQ(ArticleNum{3}, g_obj_count);
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+TEST_P(ArticleSelectorBulkModeTest, junkCommandWithNoSelectionsLeavesUnreadArticlesAlone)
+{
+    prepare_bulk(GetParam(), false, false);
+
+    const DisplayState result = run_command('J');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 3, 4}, {});
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorBulkModeTest, junkCommandAlsoCommitsPendingReadMarks)
+{
+    prepare_bulk(GetParam());
+    if (GetParam() == SM_ARTICLE)
+    {
+        article_ptr(ArticleNum{3})->m_flags |= AF_DEL;
+    }
+    else
+    {
+        m_charlie.m_flags |= SF_DEL;
+    }
+
+    const DisplayState result = run_command('J');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2}, {});
+    EXPECT_EQ(ArticleNum{1}, g_obj_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorBulkCommandTest, readingAllTargetedArticlesExitsTheSelector)
+{
+    const auto &[mode, command] = GetParam();
+    g_tc_LINES = 24;
+    prepare_bulk(mode, false, command == 'J');
+    if (command == 'J')
+    {
+        select_all();
+    }
+
+    const DisplayState result = run_command(command);
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_articles({}, {});
+    EXPECT_EQ(ArticleNum{}, g_obj_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorBulkCommandTest, readModeKeepsArticlesReadAndOnlyJunkClearsSelections)
+{
+    const auto &[mode, command] = GetParam();
+    prepare_bulk(mode, true);
+
+    const DisplayState result = run_command(command);
+
+    EXPECT_EQ(command == 'J' ? DS_DISPLAY : DS_QUIT, result);
+    if (command == 'J')
+    {
+        expect_articles({}, {});
+        EXPECT_EQ(0, g_selected_subj_cnt);
+    }
+    else
+    {
+        expect_articles({}, {1, 4});
+        EXPECT_EQ(1, g_selected_subj_cnt);
+    }
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    EXPECT_TRUE(g_sel_rereading);
+    EXPECT_EQ(AGF_DEL_SEL, g_sel_mask);
+    EXPECT_EQ(mode, g_sel_mode);
+}
+
+TEST_P(ArticleSelectorBulkExclusiveTest, exclusiveCommandsPreserveHiddenUnselectedItems)
+{
+    const auto &[mode, command] = GetParam();
+    prepare_bulk(mode);
+    g_sel_exclusive = true;
+    rebuild_page();
+    calculate_page();
+
+    const DisplayState result = run_command(command);
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_articles({1, 2, 3, 4}, {1, 4});
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    EXPECT_TRUE(g_sel_exclusive);
+}
+
+TEST_P(ArticleSelectorBulkThreadTest, exclusiveCommandsIncludeUnselectedRepliesInTheDisplayedThread)
+{
+    prepare_bulk(SM_THREAD);
+    join_reply_thread();
+    ASSERT_EQ(3, g_sel_page_obj_cnt);
+    ASSERT_EQ(&m_bravo, g_sel_next_sp);
+
+    const DisplayState result = run_command(GetParam());
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_articles({1, 2, 4}, {1, 4});
+    EXPECT_EQ(ArticleNum{3}, g_obj_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+}
+
+TEST_F(ArticleSelectorBulkStateTest, junkCommandIncludesSelectedRepliesBelowAnUnselectedThreadRoot)
+{
+    prepare_bulk(SM_THREAD);
+    clear_selections();
+    article_ptr(ArticleNum{3})->m_flags |= AF_SEL;
+    m_charlie.m_flags |= SF_SEL;
+    join_reply_thread();
+
+    const DisplayState result = run_command('J');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 4}, {});
+    EXPECT_EQ(ArticleNum{3}, g_obj_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_FALSE(g_sel_exclusive);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorBulkModeTest,
+                         testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndCommand, ArticleSelectorBulkCommandTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values('X', 'D', 'J')));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndCommand, ArticleSelectorBulkExclusiveTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values('X', 'D')));
+
+INSTANTIATE_TEST_SUITE_P(GroupAndPage, ArticleSelectorBulkThreadTest, testing::Values('X', 'D'));
