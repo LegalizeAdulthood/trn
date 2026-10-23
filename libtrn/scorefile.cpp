@@ -77,7 +77,6 @@ static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(std::string_view name);
-static void sf_file_clear();
 static void  sf_grow();
 static int sf_check_extra_headers(std::string_view head);
 static void sf_add_extra_header(std::string_view head);
@@ -1369,7 +1368,7 @@ static int sf_open_file(std::string_view name)
     return static_cast<int>(i);
 }
 
-static void sf_file_clear()
+void sf_file_clear()
 {
     s_sf_files.clear();
 }

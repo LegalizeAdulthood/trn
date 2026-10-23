@@ -31,8 +31,11 @@
 #include <trn/rthread.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
+#include <trn/scorefile.h>
+#include <trn/scoresave.h>
 #include <trn/search.h>
 #include <trn/smisc.h>
+#include <trn/sorder.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/univ.h>
@@ -854,7 +857,8 @@ class SaveArticleTest : public LocalSpoolArticleTest
 protected:
     void        SetUp() override;
     void        TearDown() override;
-    std::string save(char command, std::string_view input, ArticleSwitchResult expected = AS_ASK);
+    std::string save(char command, std::string_view input, ArticleSwitchResult expected = AS_ASK,
+                     bool next_command = true);
     std::string saved_text() const;
     std::string expected_text(char command, bool mailbox = false) const;
     void        expect_mailbox(char command, std::string_view prefix = {});
@@ -930,7 +934,7 @@ void SaveArticleTest::TearDown()
     LocalSpoolArticleTest::TearDown();
 }
 
-std::string SaveArticleTest::save(char command, std::string_view input, ArticleSwitchResult expected)
+std::string SaveArticleTest::save(char command, std::string_view input, ArticleSwitchResult expected, bool next_command)
 {
     const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
     const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
@@ -939,12 +943,18 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     const ArticleLine                      top = g_top_line;
     const ArticleNum                       first = g_first_art;
     const SubjectFlags                     subject_flags = g_curr_artp->m_subj->m_flags;
+    const ArticleUnread                    unread = g_newsgroup_ptr->m_to_read;
+    const ArticleUnread                    selected = g_selected_count;
+    const int                              selected_subjects = g_selected_subj_cnt;
     std::vector<ArticleFlags>              flags;
     for (long number = 1; number <= 3; ++number)
     {
         flags.push_back(article_ptr(ArticleNum{number})->m_flags);
     }
-    push_char('n');
+    if (next_command)
+    {
+        push_char('n');
+    }
     push_command(input);
     testing::internal::CaptureStdout();
 
@@ -963,9 +973,9 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     EXPECT_EQ(g_curr_art, g_parsed_art);
     EXPECT_EQ(g_curr_art, g_open_art);
     EXPECT_EQ(subject_flags, g_curr_artp->m_subj->m_flags);
-    EXPECT_EQ(3, g_newsgroup_ptr->m_to_read);
-    EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(selected, g_selected_count);
+    EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
     EXPECT_TRUE(g_selected_only);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
@@ -978,10 +988,165 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     {
         EXPECT_EQ(flags[number - 1], article_ptr(ArticleNum{number})->m_flags);
     }
-    EXPECT_TRUE(macro_pending());
-    EXPECT_EQ('n', read_tty_char());
+    EXPECT_EQ(next_command, macro_pending());
+    if (next_command)
+    {
+        EXPECT_EQ('n', read_tty_char());
+    }
     EXPECT_FALSE(macro_pending());
     return output;
+}
+
+class ScoreArticleTest : public SaveArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string score(char command, std::string_view input, bool next_command = true);
+    std::string score_file(std::string_view name = "comp.lang.cpp") const;
+    void        expect_scores(std::array<int, 3> expected) const;
+
+    fs::path                          m_scores;
+    static constexpr std::string_view GLOBAL_RULES = "savescores off\n10 subject: topic\n";
+
+private:
+    bool       m_old_sc_delay{g_sc_delay};
+    bool       m_old_sc_scoring{g_sc_scoring};
+    bool       m_old_sc_saves_cores{g_sc_saves_cores};
+    ArticleNum m_old_sc_fill_max{g_sc_fill_max};
+    bool       m_old_sc_fill_read{g_sc_fill_read};
+    int        m_old_sc_loaded_count{g_sc_loaded_count};
+    bool       m_old_sf_verbose{g_sf_verbose};
+    int        m_old_sf_score_verbose{g_sf_score_verbose};
+    bool       m_old_kill_thresh_active{g_kill_thresh_active};
+    int        m_old_kill_thresh{g_kill_thresh};
+    bool       m_old_s_order_changed{g_s_order_changed};
+};
+
+void ScoreArticleTest::SetUp()
+{
+    SaveArticleTest::SetUp();
+    const ArticlePosition position = g_art_pos;
+    m_scores = m_output_dir / "scores";
+    fs::create_directories(m_scores);
+    std::ofstream{m_scores / "global"} << GLOBAL_RULES;
+    m_env.expect_env_repeatedly("SCOREDIR", m_scores.generic_string().c_str());
+    m_env.expect_env_repeatedly("SAVESCOREFILE", (m_output_dir / "saved-scores").generic_string().c_str());
+    g_sc_delay = false;
+    g_sf_verbose = false;
+    g_sf_score_verbose = 0;
+    sf_file_clear();
+    sc_init(false);
+    ASSERT_TRUE(g_sc_initialized);
+    for (long number = 1; number <= 3; ++number)
+    {
+        (void) sc_score_art(ArticleNum{number}, true);
+    }
+    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_NE(nullptr, art_open(g_art, position));
+    g_art_pos = position;
+    g_s_order_changed = false;
+    expect_scores({10, 10, 0});
+}
+
+void ScoreArticleTest::TearDown()
+{
+    g_sc_saves_cores = false;
+    sc_cleanup();
+    sf_file_clear();
+    g_sc_delay = m_old_sc_delay;
+    g_sc_scoring = m_old_sc_scoring;
+    g_sc_saves_cores = m_old_sc_saves_cores;
+    g_sc_fill_max = m_old_sc_fill_max;
+    g_sc_fill_read = m_old_sc_fill_read;
+    g_sc_loaded_count = m_old_sc_loaded_count;
+    g_sf_verbose = m_old_sf_verbose;
+    g_sf_score_verbose = m_old_sf_score_verbose;
+    g_kill_thresh_active = m_old_kill_thresh_active;
+    g_kill_thresh = m_old_kill_thresh;
+    g_s_order_changed = m_old_s_order_changed;
+    SaveArticleTest::TearDown();
+}
+
+std::string ScoreArticleTest::score(char command, std::string_view input, bool next_command)
+{
+    const ArticlePosition position = tell_art();
+    const std::string     output = save(command, input, AS_ASK, next_command);
+    EXPECT_EQ(position, tell_art());
+    EXPECT_TRUE(g_sc_initialized);
+    return output;
+}
+
+std::string ScoreArticleTest::score_file(std::string_view name) const
+{
+    std::ifstream input{m_scores / name};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void ScoreArticleTest::expect_scores(std::array<int, 3> expected) const
+{
+    for (long number = 1; number <= 3; ++number)
+    {
+        EXPECT_TRUE(article_scored(ArticleNum{number}));
+        EXPECT_EQ(expected[number - 1], article_ptr(ArticleNum{number})->m_score);
+    }
+}
+
+struct AppendScoreCase
+{
+    const char *name;
+    char        command;
+    const char *input;
+    const char *filename;
+    const char *line;
+};
+
+void PrintTo(const AppendScoreCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class AppendScoreArticleTest : public ScoreArticleTest, public testing::WithParamInterface<AppendScoreCase>
+{
+};
+
+struct UnchangedScoreCase
+{
+    const char *name;
+    char        command;
+    const char *input;
+    const char *message;
+};
+
+void PrintTo(const UnchangedScoreCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class UnchangedScoreArticleTest : public ScoreArticleTest, public testing::WithParamInterface<UnchangedScoreCase>
+{
+};
+
+class TemporaryScoreArticleTest : public ScoreArticleTest, public testing::WithParamInterface<const char *>
+{
+};
+
+class ExecuteScoreArticleTest : public ScoreArticleTest, public testing::WithParamInterface<bool>
+{
+};
+
+class DeferredScoreArticleTest : public ScoreArticleTest
+{
+protected:
+    void SetUp() override;
+};
+
+void DeferredScoreArticleTest::SetUp()
+{
+    ScoreArticleTest::SetUp();
+    sc_cleanup();
+    g_sc_delay = true;
 }
 
 std::string SaveArticleTest::saved_text() const
@@ -2479,6 +2644,186 @@ TEST_P(AppendSaveArticleTest, detectsAndAppendsToAnExistingMailbox)
 }
 
 INSTANTIATE_TEST_SUITE_P(HeadersOrBody, AppendSaveArticleTest, testing::Values('s', 'w'));
+
+TEST_P(AppendScoreArticleTest, appendsTheRequestedRuleWithoutChangingCurrentScores)
+{
+    const std::string output = score(GetParam().command, GetParam().input);
+
+    const std::string prefix = std::string_view{GetParam().filename} == "global" ? std::string{GLOBAL_RULES} : "";
+    EXPECT_EQ(prefix + GetParam().line + '\n', score_file(GetParam().filename));
+    expect_scores({10, 10, 0});
+    EXPECT_FALSE(g_s_order_changed);
+    EXPECT_THAT(output, testing::HasSubstr("type RETURN for a menu"));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EntryMethods, AppendScoreArticleTest,
+    testing::Values(
+        AppendScoreCase{"TypedLocalRule", '"', "\" 25 subject: Topic\n", "comp.lang.cpp", "25 subject: topic"},
+        AppendScoreCase{"SubjectShortcut", '"', "\" 25 S\n", "comp.lang.cpp", "25 subject: topic"},
+        AppendScoreCase{"GlobalRule", '"', "* 12 subject: Topic\n", "global", "12 subject: topic"},
+        AppendScoreCase{"SubjectMenu", '"', "\n3115\n1", "comp.lang.cpp", "15 subject: topic"},
+        AppendScoreCase{"AuthorMenu", '"', "\n31-6\n2", "comp.lang.cpp", "-6 from: root <root@example.test>"},
+        AppendScoreCase{"CommentMenu", '"', "\n32# Reader note\n", "comp.lang.cpp", "# Reader note"},
+        AppendScoreCase{"CommandMenuAppend", '\'', "\n13115\n1", "comp.lang.cpp", "15 subject: topic"}),
+    [](const testing::TestParamInfo<AppendScoreCase> &info) { return info.param.name; });
+
+TEST_P(UnchangedScoreArticleTest, returnsToReadingWithoutChangingRulesOrScores)
+{
+    const std::string output = score(GetParam().command, GetParam().input);
+
+    EXPECT_THAT(output, testing::HasSubstr(GetParam().message));
+    EXPECT_FALSE(fs::exists(m_scores / "comp.lang.cpp"));
+    EXPECT_EQ(GLOBAL_RULES, score_file("global"));
+    expect_scores({10, 10, 0});
+    EXPECT_FALSE(g_s_order_changed);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CancelledOrRejectedInput, UnchangedScoreArticleTest,
+    testing::Values(UnchangedScoreCase{"EraseAppendPrompt", '"', "\b", "Enter score append command"},
+                    UnchangedScoreCase{"EraseExecutePrompt", '\'', "\b", "Enter scoring command"},
+                    UnchangedScoreCase{"ExitAppendMenu", '"', "\n0", "Scorefile easy append mode."},
+                    UnchangedScoreCase{"ExitExecuteMenu", '\'', "\n0", "Scoring easy command mode."},
+                    UnchangedScoreCase{"ExitRuleTypeMenu", '"', "\n30", "What type of line do you want to add?"},
+                    UnchangedScoreCase{"CancelMissingScore", '"', "\" subject: Topic\n\b", "Score entry aborted."},
+                    UnchangedScoreCase{"InvalidRule", '"', "\" 20 unknown-header: topic\n", "Bad score line (ignored)"},
+                    UnchangedScoreCase{"UnknownFile", '"', "@ 25 subject: topic\n", "Bad file abbreviation: @"},
+                    UnchangedScoreCase{"UnknownCommand", '\'', "x\n", "Unknown scoring command |x|"}),
+    [](const testing::TestParamInfo<UnchangedScoreCase> &info) { return info.param.name; });
+
+TEST_P(TemporaryScoreArticleTest, immediatelyAppliesTheRuleWithoutPersistingIt)
+{
+    const std::string output = score('"', GetParam());
+
+    expect_scores({50, 50, 0});
+    EXPECT_TRUE(g_s_order_changed);
+    EXPECT_FALSE(fs::exists(m_scores / "comp.lang.cpp"));
+    EXPECT_EQ(GLOBAL_RULES, score_file("global"));
+    EXPECT_THAT(output, testing::HasSubstr("Rescoring articles..."));
+    EXPECT_THAT(output, testing::HasSubstr("Done."));
+}
+
+INSTANTIATE_TEST_SUITE_P(TypedOrMenu, TemporaryScoreArticleTest, testing::Values("! 40 subject: Topic\n", "\n5140\n1"));
+
+TEST_P(ExecuteScoreArticleTest, explainsTheCurrentArticlesMatchingRulesAndTotal)
+{
+    const std::string output = score('\'', GetParam() ? "\n3" : "s\n");
+
+    EXPECT_THAT(output, testing::HasSubstr("10 subject: topic"));
+    EXPECT_THAT(output, testing::HasSubstr("Scorefile total score: 10\n"));
+    EXPECT_THAT(output, testing::HasSubstr("Total score is 10\n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Other scoring total:")));
+    expect_scores({10, 10, 0});
+    EXPECT_FALSE(g_s_order_changed);
+}
+
+TEST_P(ExecuteScoreArticleTest, rescoringAppliesChangesToPersistedRules)
+{
+    std::ofstream{m_scores / "comp.lang.cpp"} << "25 subject: topic\n";
+
+    const std::string output = score('\'', GetParam() ? "\n2" : "r\n", false);
+
+    expect_scores({35, 35, 0});
+    EXPECT_TRUE(g_s_order_changed);
+    EXPECT_THAT(output, testing::HasSubstr("Rescoring articles..."));
+    EXPECT_EQ("25 subject: topic\n", score_file());
+}
+
+TEST_P(ExecuteScoreArticleTest, continuesScoringUnscoredArticles)
+{
+    article_ptr(ArticleNum{2})->m_score_flags = SFLAG_NONE;
+    article_ptr(ArticleNum{3})->m_score_flags = SFLAG_NONE;
+    g_sc_fill_max = ArticleNum{1};
+
+    const std::string output = score('\'', GetParam() ? "\n5" : "f\n", false);
+
+    expect_scores({10, 10, 0});
+    EXPECT_TRUE(g_s_order_changed);
+    EXPECT_EQ(ArticleNum{3}, g_sc_fill_max);
+    EXPECT_THAT(output, testing::HasSubstr("Scoring more articles..."));
+}
+
+INSTANTIATE_TEST_SUITE_P(TypedOrMenu, ExecuteScoreArticleTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Menu" : "Typed"; });
+
+TEST_F(ScoreArticleTest, queuedInputDefersFurtherScoringAndRemainsAvailableToReading)
+{
+#ifndef PENDING
+    GTEST_SKIP() << "this build does not defer scoring for pending input";
+#endif
+    article_ptr(ArticleNum{2})->m_score_flags = SFLAG_NONE;
+    article_ptr(ArticleNum{3})->m_score_flags = SFLAG_NONE;
+    g_sc_fill_max = ArticleNum{1};
+
+    const std::string output = score('\'', "f\n");
+
+    EXPECT_TRUE(article_scored(ArticleNum{1}));
+    EXPECT_FALSE(article_scored(ArticleNum{2}));
+    EXPECT_FALSE(article_scored(ArticleNum{3}));
+    EXPECT_EQ(ArticleNum{1}, g_sc_fill_max);
+    EXPECT_FALSE(g_s_order_changed);
+    EXPECT_THAT(output, testing::HasSubstr("Scoring more articles..."));
+}
+
+TEST_F(ScoreArticleTest, anUnwritableScoreFileReturnsToReadingWithoutApplyingTheRule)
+{
+    fs::create_directory(m_scores / "comp.lang.cpp");
+
+    const std::string output = score('"', "\" 25 subject: Topic\n");
+
+    EXPECT_THAT(output, testing::HasSubstr("Could not open (for append) file " +
+                                           (m_scores / "comp.lang.cpp").generic_string()));
+    expect_scores({10, 10, 0});
+    EXPECT_FALSE(g_s_order_changed);
+    EXPECT_EQ(GLOBAL_RULES, score_file("global"));
+}
+
+TEST_F(ScoreArticleTest, rescoringClearsAuthorMatchesFromRemovedRules)
+{
+    sf_append("! 5 from: root@example.test");
+    g_artp->m_score_flags = SFLAG_NONE;
+    ASSERT_EQ(15, sc_score_art(g_art, true));
+    ASSERT_NE(0, g_artp->m_score_flags & SFLAG_AUTHOR);
+    std::ofstream{m_scores / "comp.lang.cpp"} << "newauthor=7\n";
+
+    score('\'', "r\n", false);
+
+    expect_scores({17, 17, 7});
+    EXPECT_EQ(0, g_artp->m_score_flags & SFLAG_AUTHOR);
+}
+
+TEST_F(ScoreArticleTest, interruptedRescoringInvalidatesOldScoresForLaterOnDemandScoring)
+{
+#ifndef PENDING
+    GTEST_SKIP() << "this build does not defer scoring for pending input";
+#endif
+    std::ofstream{m_scores / "comp.lang.cpp"} << "25 subject: topic\n";
+
+    score('\'', "r\n");
+
+    EXPECT_FALSE(article_scored(g_art));
+    EXPECT_EQ(35, sc_score_art(g_art, true));
+    EXPECT_TRUE(article_scored(g_art));
+}
+
+TEST_F(DeferredScoreArticleTest, appendingARuleInitializesDeferredScoring)
+{
+    score('"', "\" 25 subject: Topic\n");
+
+    EXPECT_FALSE(g_sc_delay);
+    EXPECT_EQ("25 subject: topic\n", score_file());
+}
+
+TEST_F(DeferredScoreArticleTest, explainingTheCurrentScoreInitializesDeferredScoring)
+{
+    const std::string output = score('\'', "s\n");
+
+    EXPECT_FALSE(g_sc_delay);
+    EXPECT_TRUE(article_scored(g_art));
+    EXPECT_EQ(10, g_artp->m_score);
+    EXPECT_THAT(output, testing::HasSubstr("Total score is 10\n"));
+}
 
 TEST_F(SaveArticleTest, erasingTheSaveCommandCancelsBeforeOpeningADestination)
 {

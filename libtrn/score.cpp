@@ -530,6 +530,11 @@ void sc_rescore()
 {
     s_sc_rescoring = true; // in case routines need to know
     sc_cleanup();        // get rid of the old
+    sf_file_clear();
+    for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
+    {
+        article_ptr(a)->m_score_flags = SFLAG_NONE;
+    }
     sc_init(true);       // enter the new... (wait for rescore)
     if (g_sa_initialized)
     {

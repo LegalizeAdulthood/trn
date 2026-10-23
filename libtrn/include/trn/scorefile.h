@@ -45,6 +45,7 @@ extern bool g_sf_verbose;       // if true print more stuff while loading
 
 void sf_init();
 void sf_clean();
+void sf_file_clear();
 
 int   sf_score(ArticleNum a);
 void  sf_append(std::string_view line);
