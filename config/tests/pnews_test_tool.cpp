@@ -118,6 +118,8 @@ int main(int argc, char **argv)
             if (path.filename().string().find(".article.") == 0 || path.filename().string().find(".letter.") == 0)
             {
                 std::string text = read_file(path);
+                write_file(directory / "editor-input", text);
+                write_file(directory / "editor-directory", std::filesystem::current_path().generic_string());
                 text += "mispelled editor body\n";
                 write_file(path, text);
                 return 0;

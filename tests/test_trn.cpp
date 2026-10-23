@@ -1514,6 +1514,180 @@ class FailedViewArticleTest : public ViewArticleTest, public testing::WithParamI
 {
 };
 
+class ReplyArticleTest : public ExtractSaveArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        answers(std::string_view input);
+    std::string reply_with(char command);
+    std::string expected_header(std::string_view recipient = "root@example.test") const;
+    void        expect_sent(std::string_view draft) const;
+    void        expect_retained(std::string_view draft) const;
+
+    fs::path                          m_home;
+    fs::path                          m_answers;
+    static constexpr std::string_view REPLY_HEADERS = "Newsgroups: comp.lang.cpp\nReferences: <parent@example.test>\n";
+    static constexpr std::string_view QUOTED_BODY =
+        "In article <root@example.test> you write:\n"
+        "> Root first line\n> Root next line\n> From a body line\n> Last line\n\n";
+
+private:
+    std::string m_old_head_name{g_head_name};
+    std::string m_old_orig_dir{g_orig_dir};
+    std::string m_old_indent_string{g_indent_string};
+    char        m_old_wrapped_nl{g_wrapped_nl};
+};
+
+void ReplyArticleTest::SetUp()
+{
+    ExtractSaveArticleTest::SetUp();
+    m_home = fs::path{g_priv_dir} / "home";
+    fs::create_directories(m_home);
+    const fs::path temporary = m_output_dir / "temporary";
+    fs::create_directories(temporary);
+    g_orig_dir = (m_output_dir / "origin").generic_string();
+    fs::create_directories(g_orig_dir);
+    g_head_name = (fs::path{g_priv_dir} /
+#ifdef USE_SPAWN_SHELL
+                   "reply header"
+#else
+                   "reply-header"
+#endif
+                   )
+                      .generic_string();
+    g_indent_string = "> ";
+    g_wrapped_nl = WRAPPED_NL;
+    m_answers = m_output_dir / "answers";
+    answers("s\n");
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", g_priv_dir.c_str());
+    for (const char *name : {"HOME", "LOGDIR", "DOTDIR"})
+    {
+        m_env.expect_env_repeatedly(name, m_home.generic_string().c_str());
+    }
+    for (const char *name : {"TMP", "TMPDIR"})
+    {
+        m_env.expect_env_repeatedly(name, temporary.generic_string().c_str());
+    }
+    m_env.expect_no_envars({"MAILHEADER", "YOUSAID", "FROM", "REPLYTO"});
+    m_env.expect_env_repeatedly("NEWSORG", "Test Organization");
+    m_env.expect_env_repeatedly("FAST_RNMAIL", "yes");
+    m_env.expect_env_repeatedly("MAILRECORD", "none");
+    m_env.expect_env_repeatedly("MAILSIGNATURE", (m_home / "missing-signature").generic_string().c_str());
+    const std::string tool =
+#ifdef USE_SPAWN_SHELL
+        "\"" TRN_TEST_PROCESS_TOOL "\"";
+#else
+        TRN_TEST_PROCESS_TOOL;
+#endif
+    m_env.expect_env_repeatedly("VISUAL", (tool + " editor").c_str());
+    m_env.expect_env_repeatedly("EDITOR", "missing-editor");
+    m_env.expect_env_repeatedly("PGPCOMMAND", (tool + " pgp").c_str());
+    m_env.expect_env_repeatedly("RNMAILER", (tool + " mailer").c_str());
+#ifdef USE_SPAWN_SHELL
+    const fs::path account = m_output_dir / "account.json";
+    std::ofstream{account}
+        << R"({"url":"smtps://smtp.example.test:465","sender":"reader@example.test","timeoutSeconds":3})";
+    m_env.expect_env_repeatedly("RNMAILER_CONFIG", account.generic_string().c_str());
+    const std::string poster = "< \"" + m_answers.generic_string() + "\" call \"" TRN_TEST_RNMAIL "\" -h \"%h\" \"%A\"";
+#else
+    const std::string poster = "sh \"" TRN_TEST_RNMAIL "\" -h \"%h\" \"%A\" < \"" + m_answers.generic_string() + '"';
+#endif
+    m_env.expect_env_repeatedly("MAILPOSTER", poster.c_str());
+    article(BODY, REPLY_HEADERS);
+}
+
+void ReplyArticleTest::TearDown()
+{
+    g_head_name = m_old_head_name;
+    g_orig_dir = m_old_orig_dir;
+    g_indent_string = m_old_indent_string;
+    g_wrapped_nl = m_old_wrapped_nl;
+    ExtractSaveArticleTest::TearDown();
+}
+
+void ReplyArticleTest::answers(std::string_view input)
+{
+    std::ofstream output{m_answers};
+    output << input;
+    output.close();
+    ASSERT_FALSE(output.fail());
+}
+
+std::string ReplyArticleTest::reply_with(char command)
+{
+    EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    g_art_pos = tell_art();
+    const std::string output = save(command, {});
+    EXPECT_FALSE(g_waiting);
+    EXPECT_EQ(WRAPPED_NL, g_wrapped_nl);
+    return output;
+}
+
+std::string ReplyArticleTest::expected_header(std::string_view recipient) const
+{
+    return "To: " + std::string{recipient} +
+           "\nSubject: Re: Topic\nX-Newsgroups: comp.lang.cpp\n"
+           "In-Reply-To: <root@example.test>\nReferences: <parent@example.test>\n"
+           "Organization: Test Organization\nCc: \nBcc: \n\n";
+}
+
+void ReplyArticleTest::expect_sent(std::string_view draft) const
+{
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    EXPECT_EQ(std::string{draft} + '\n', receiver_text("editor-input"));
+    EXPECT_EQ(g_orig_dir, receiver_text("editor-directory"));
+    const std::string mailed = receiver_text("mailed");
+    EXPECT_NE(std::string::npos, mailed.find("mispelled editor body\n"));
+    const std::size_t body = draft.find("\n\n");
+    ASSERT_NE(std::string_view::npos, body);
+    EXPECT_NE(std::string::npos, mailed.find(draft.substr(body + 2)));
+    const std::string log = receiver_text("tools.log");
+    const std::size_t editor = log.find("editor\n");
+    const std::size_t mailer = log.find("mailer\n");
+    ASSERT_NE(std::string::npos, editor);
+    ASSERT_NE(std::string::npos, mailer);
+    EXPECT_LT(editor, mailer);
+    EXPECT_NE(std::string::npos, log.find('\n' + (m_spool / "1").generic_string() + '\n'));
+    EXPECT_FALSE(fs::exists(m_home / "dead.letter"));
+}
+
+void ReplyArticleTest::expect_retained(std::string_view draft) const
+{
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "mailed"));
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    const std::string edited = std::string{draft} + "\nmispelled editor body\n";
+    EXPECT_EQ(edited, receiver_text("home/dead.letter"));
+    EXPECT_EQ(edited, receiver_text("home/.letter"));
+}
+
+struct ReplyCommandCase
+{
+    const char *name;
+    char        command;
+    bool        reply_to;
+};
+
+void PrintTo(const ReplyCommandCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class AddressedReplyArticleTest : public ReplyArticleTest, public testing::WithParamInterface<ReplyCommandCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void AddressedReplyArticleTest::SetUp()
+{
+    ReplyArticleTest::SetUp();
+    if (GetParam().reply_to)
+    {
+        article(BODY, std::string{REPLY_HEADERS} + "Reply-To: Reply Desk <desk@example.test>\n");
+    }
+}
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -2116,6 +2290,86 @@ TEST_F(ViewArticleTest, selectsTheNextViewerWhenAMailcapTestCommandFails)
 
     expect_viewed("image.bin", "ABC");
     EXPECT_EQ("pager\nviewer\nimage.bin\n", receiver_text("tools.log"));
+}
+
+TEST_P(AddressedReplyArticleTest, sendsThePreparedReplyToTheArticleRecipient)
+{
+    const std::string header = expected_header(GetParam().reply_to ? "desk@example.test" : "root@example.test");
+    const std::string quote = GetParam().command == 'R' ? std::string{QUOTED_BODY} : std::string{};
+
+    reply_with(GetParam().command);
+
+    expect_sent(header + quote);
+    const std::string mailed = receiver_text("mailed");
+    EXPECT_NE(std::string::npos, mailed.find(header.substr(0, header.find('\n'))));
+    EXPECT_NE(std::string::npos, mailed.find("Subject: Re: Topic"));
+    EXPECT_EQ(GetParam().command == 'R', mailed.find("> Root first line") != std::string::npos);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReplyCommands, AddressedReplyArticleTest,
+                         testing::Values(ReplyCommandCase{"PlainFrom", 'r', false},
+                                         ReplyCommandCase{"QuotedFrom", 'R', false},
+                                         ReplyCommandCase{"PlainReplyTo", 'r', true},
+                                         ReplyCommandCase{"QuotedReplyTo", 'R', true}),
+                         [](const testing::TestParamInfo<ReplyCommandCase> &info) { return info.param.name; });
+
+TEST_F(ReplyArticleTest, abortingTheReplyRetainsTheDraftWithoutSendingMail)
+{
+    answers("a\n");
+
+    reply_with('R');
+
+    expect_retained(expected_header() + std::string{QUOTED_BODY});
+    EXPECT_NE(std::string::npos, receiver_text("tools.log").find("editor\n"));
+    EXPECT_EQ(std::string::npos, receiver_text("tools.log").find("mailer\n"));
+}
+
+TEST_F(ReplyArticleTest, aMailerFailureRetainsTheDraftAndReturnsToReading)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "mailer_failure");
+    answers("s\na\n");
+
+    reply_with('R');
+
+    expect_retained(expected_header() + std::string{QUOTED_BODY});
+    EXPECT_NE(std::string::npos, receiver_text("tools.log").find("mailer\n"));
+}
+
+TEST_F(ReplyArticleTest, aBlockedDraftDoesNotInvokeTheReplyProgram)
+{
+    const fs::path blocker = fs::path{g_priv_dir} / "blocked";
+    std::ofstream{blocker} << "Keep this file\n";
+    g_head_name = (blocker / "reply").generic_string();
+
+    const std::string output = reply_with('r');
+
+    EXPECT_NE(std::string::npos, output.find("Can't create " + g_head_name));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+}
+
+TEST_F(ReplyArticleTest, usesConfiguredHeadersAttributionAndQuotePrefix)
+{
+    m_env.expect_env_repeatedly("MAILHEADER", "To: custom@example.test\nSubject: Custom %S\n\n");
+    m_env.expect_env_repeatedly("YOUSAID", "Reply to %i:");
+    g_indent_string = "| ";
+
+    reply_with('R');
+
+    expect_sent("To: custom@example.test\nSubject: Custom Topic\n\n"
+                "Reply to <root@example.test>:\n| Root first line\n| Root next line\n"
+                "| From a body line\n| Last line\n\n");
+}
+
+TEST_F(ReplyArticleTest, quotesTheDecodedMimeText)
+{
+    article("Original=20body\nSecond=20line\n", std::string{REPLY_HEADERS} +
+                                                    "MIME-Version: 1.0\nContent-Type: text/plain; charset=us-ascii\n"
+                                                    "Content-Transfer-Encoding: quoted-printable\n");
+
+    reply_with('R');
+
+    expect_sent(expected_header() + "In article <root@example.test> you write:\n"
+                                    "> Original body\n> Second line\n\n");
 }
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
