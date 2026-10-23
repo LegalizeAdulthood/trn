@@ -1528,7 +1528,7 @@ reinp_selector:
         else
         {
             Article *ap = g_sel_items[g_sel_item_index].u.ap;
-            if (g_sel_items[g_sel_item_index].sel)
+            if (g_sel_items[g_sel_item_index].sel == 1)
             {
                 ap->m_subj->deselect_subject();
             }

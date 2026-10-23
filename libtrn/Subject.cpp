@@ -86,7 +86,7 @@ void Subject::select_subject(AutoKillFlags auto_flags)
     {
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD | g_sel_mask)) == desired_flags)
         {
-            ap->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+            ap->m_flags = (ap->m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
             g_selected_count++;
         }
         if (auto_flags)
@@ -123,6 +123,10 @@ void Subject::deselect_subject()
             {
                 g_selected_count = 0;
             }
+        }
+        if (g_sel_rereading && g_sel_mode == SM_ARTICLE && (ap->m_flags & (AF_EXISTS | AF_UNREAD)) == AF_EXISTS)
+        {
+            ap->m_flags |= AF_DEL;
         }
     }
     if (m_flags & g_sel_mask)

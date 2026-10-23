@@ -574,6 +574,318 @@ INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorCurrentInputTest,
                          testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
                                           testing::Values('.', 'y', Ctl('t'))));
 
+class SelectorGroupedInputState : public SelectorInputTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_grouped(SelectionMode mode, bool rereading);
+    void select_articles(std::initializer_list<long> numbers);
+    void sync_page();
+    void expect_selected(const std::vector<long> &numbers, int subjects) const;
+
+private:
+    Subject          m_reply{};
+    Subject          m_unrelated{};
+    ArticleFlags     m_opposite_flags{};
+    std::string_view m_old_tc_home{g_tc_HO};
+    std::string_view m_old_tc_up{g_tc_UP};
+    std::string_view m_old_tc_cm{g_tc_CM};
+};
+
+void SelectorGroupedInputState::SetUp()
+{
+    SelectorInputTest::SetUp();
+    g_tc_HO = "";
+    g_tc_UP = "";
+    g_tc_CM = "";
+}
+
+void SelectorGroupedInputState::TearDown()
+{
+    g_tc_HO = m_old_tc_home;
+    g_tc_UP = m_old_tc_up;
+    g_tc_CM = m_old_tc_cm;
+    SelectorInputTest::TearDown();
+}
+
+void SelectorGroupedInputState::prepare_grouped(SelectionMode mode, bool rereading)
+{
+    g_subject_count = 3;
+    g_last_art = ArticleNum{5};
+    g_last_cached = g_last_art;
+    m_newsgroup.m_to_read = rereading ? 1 : 4;
+    Article *root = article_ptr(ArticleNum{1});
+    Article *same_subject = article_ptr(ArticleNum{2});
+    Article *reply = article_ptr(ArticleNum{3});
+    Article *unrelated = article_ptr(ArticleNum{4});
+    Article *opposite_scope = article_ptr(ArticleNum{5});
+    for (long number = 1; number <= 5; ++number)
+    {
+        Article *article = article_ptr(ArticleNum{number});
+        article->m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
+        article->m_date = number;
+        if ((number != 5) != rereading)
+        {
+            article->m_flags |= AF_UNREAD;
+        }
+        article->m_subj_next = nullptr;
+    }
+    m_subject.m_articles = root;
+    m_subject.m_thread = root;
+    m_subject.m_next = &m_reply;
+    m_subject.m_thread_link = &m_reply;
+    root->m_subj_next = same_subject;
+    same_subject->m_subj_next = opposite_scope;
+    opposite_scope->m_subj = &m_subject;
+    root->m_child1 = same_subject;
+    same_subject->m_parent = root;
+    same_subject->m_sibling = reply;
+    reply->m_parent = root;
+    reply->m_sibling = opposite_scope;
+    opposite_scope->m_parent = root;
+    reply->m_subj = &m_reply;
+    m_reply.m_str = "Re: Changed subject in the same thread";
+    m_reply.m_articles = reply;
+    m_reply.m_thread = root;
+    m_reply.m_thread_link = &m_subject;
+    m_reply.m_prev = &m_subject;
+    m_reply.m_next = &m_unrelated;
+    unrelated->m_subj = &m_unrelated;
+    m_unrelated.m_str = "Re: Unrelated thread";
+    m_unrelated.m_articles = unrelated;
+    m_unrelated.m_thread = unrelated;
+    m_unrelated.m_thread_link = &m_unrelated;
+    m_unrelated.m_prev = &m_reply;
+    g_last_subject = &m_unrelated;
+    opposite_scope->m_flags |= rereading ? AF_SEL : AF_DEL_SEL;
+    prepare_page(mode, rereading);
+    m_opposite_flags = opposite_scope->m_flags;
+    g_sel_chars = "abcde";
+    g_sel_page_item_cnt = mode == SM_ARTICLE ? 4 : mode == SM_SUBJECT ? 3 : 2;
+    const std::array<Subject *, 3> subjects{&m_subject, &m_reply, &m_unrelated};
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        g_sel_items[index] = {};
+        g_sel_items[index].line = index + 1;
+        if (mode == SM_ARTICLE)
+        {
+            g_sel_items[index].u.ap = article_ptr(ArticleNum{index + 1});
+        }
+        else
+        {
+            g_sel_items[index].u.sp = mode == SM_THREAD && index ? &m_unrelated : subjects[index];
+        }
+    }
+    g_sel_page_obj_cnt = 4;
+    g_sel_last_line = 10;
+    g_sel_at_end = true;
+    sync_page();
+}
+
+void SelectorGroupedInputState::select_articles(std::initializer_list<long> numbers)
+{
+    for (long number : numbers)
+    {
+        article_ptr(ArticleNum{number})->select_article(AUTO_KILL_NONE);
+    }
+    sync_page();
+}
+
+void SelectorGroupedInputState::sync_page()
+{
+    testing::internal::CaptureStdout();
+    update_page();
+    (void) testing::internal::GetCapturedStdout();
+    g_sel_item_index = g_sel_mode == SM_ARTICLE ? 1 : 0;
+    g_term_line = 0;
+    g_term_col = 0;
+}
+
+void SelectorGroupedInputState::expect_selected(const std::vector<long> &numbers, int subjects) const
+{
+    std::vector<long> selected;
+    for (const auto &[number, article] : g_article_list)
+    {
+        if (article.m_flags & g_sel_mask)
+        {
+            selected.push_back(number.value_of());
+        }
+        EXPECT_EQ((number != ArticleNum{5}) != g_sel_rereading, !!(article.m_flags & AF_UNREAD));
+    }
+    EXPECT_EQ(numbers, selected);
+    EXPECT_EQ(numbers.size(), g_selected_count);
+    EXPECT_EQ(subjects, g_selected_subj_cnt);
+    EXPECT_EQ(m_opposite_flags, article_ptr(ArticleNum{5})->m_flags);
+    EXPECT_EQ(g_sel_rereading ? 1 : 4, m_newsgroup.m_to_read);
+}
+
+class SelectorGroupedInputTest : public SelectorGroupedInputState,
+                                 public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorGroupedInputTest::SetUp()
+{
+    SelectorGroupedInputState::SetUp();
+    prepare_grouped(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+TEST_P(SelectorGroupedInputTest, selectingARowCountsEveryEligibleArticle)
+{
+    select_articles({4});
+    const char command = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_selected(g_sel_mode == SM_SUBJECT ? std::vector<long>{1, 2, 4} : std::vector<long>{1, 2, 3, 4},
+                    g_sel_mode == SM_SUBJECT ? 2 : 3);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+TEST_P(SelectorGroupedInputTest, togglingAFullySelectedRowRetainsSelectionsOutsideItsScope)
+{
+    select_articles({1, 2, 3, 4});
+    const char command = std::get<2>(GetParam());
+    ASSERT_EQ(1, g_sel_items[0].sel);
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_selected(g_sel_mode == SM_SUBJECT ? std::vector<long>{3, 4} : std::vector<long>{4},
+                    g_sel_mode == SM_SUBJECT ? 2 : 1);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+TEST_P(SelectorGroupedInputTest, togglingAPartiallySelectedRowCompletesItsSelection)
+{
+    select_articles({1, 4});
+    const char command = std::get<2>(GetParam());
+    ASSERT_EQ(3, g_sel_items[0].sel);
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_selected(g_sel_mode == SM_SUBJECT ? std::vector<long>{1, 2, 4} : std::vector<long>{1, 2, 3, 4},
+                    g_sel_mode == SM_SUBJECT ? 2 : 3);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorGroupedInputTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('a', '*')));
+
+class SelectorPartialThreadInputTest : public SelectorGroupedInputState, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorPartialThreadInputTest::SetUp()
+{
+    SelectorGroupedInputState::SetUp();
+    prepare_grouped(SM_THREAD, GetParam());
+}
+
+TEST_P(SelectorPartialThreadInputTest, selectingAThreadWithOnlyASelectedReplyAlsoSelectsItsOriginalSubject)
+{
+    select_articles({3, 4});
+    ASSERT_EQ(3, g_sel_items[0].sel);
+
+    ASSERT_EQ('Q', run_input("a"));
+
+    expect_selected({1, 2, 3, 4}, 3);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorPartialThreadInputTest, testing::Bool());
+
+class SelectorArticleStarInputTest : public SelectorGroupedInputState, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorArticleStarInputTest::SetUp()
+{
+    SelectorGroupedInputState::SetUp();
+    prepare_grouped(SM_ARTICLE, GetParam());
+}
+
+TEST_P(SelectorArticleStarInputTest, starSelectsTheCurrentSubjectWithoutSelectingOtherSubjectsInItsThread)
+{
+    select_articles({4});
+
+    ASSERT_EQ('Q', run_input("*"));
+
+    expect_selected({1, 2, 4}, 2);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(0, article_ptr(ArticleNum{1})->m_flags & AF_DEL);
+    EXPECT_EQ(0, article_ptr(ArticleNum{2})->m_flags & AF_DEL);
+    EXPECT_EQ(2, g_sel_item_index);
+}
+
+TEST_P(SelectorArticleStarInputTest, starOnASelectedArticleDeselectsTheWholeSubject)
+{
+    select_articles({1, 2, 3, 4});
+
+    ASSERT_EQ('Q', run_input("*"));
+
+    expect_selected({3, 4}, 2);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[1].sel);
+    EXPECT_EQ(2, g_sel_item_index);
+}
+
+TEST_P(SelectorArticleStarInputTest, starOnAnUnselectedArticleCompletesAPartialSubjectSelection)
+{
+    select_articles({1, 4});
+
+    ASSERT_EQ('Q', run_input("*"));
+
+    expect_selected({1, 2, 4}, 2);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(2, g_sel_item_index);
+}
+
+TEST_P(SelectorArticleStarInputTest, starOnASelectedArticleClearsAPartialSubjectSelection)
+{
+    select_articles({2, 4});
+
+    ASSERT_EQ('Q', run_input("*"));
+
+    expect_selected({4}, 1);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[1].sel);
+    EXPECT_EQ(2, g_sel_item_index);
+}
+
+TEST_P(SelectorArticleStarInputTest, starAlsoSelectsMatchingArticlesOutsideTheDisplayedPage)
+{
+    select_articles({3, 4});
+    std::move(std::begin(g_sel_items) + 1, std::begin(g_sel_items) + 4, std::begin(g_sel_items));
+    g_sel_page_item_cnt = 3;
+    g_sel_page_obj_cnt = 3;
+    g_sel_prior_obj_cnt = 1;
+    g_sel_item_index = 0;
+
+    ASSERT_EQ('Q', run_input("*"));
+
+    expect_selected({1, 2, 3, 4}, 3);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_items[2].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorArticleStarInputTest, testing::Bool());
+
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
 class ArticleSelectorToggleTest : public ArticleSelectorCommandTest,
