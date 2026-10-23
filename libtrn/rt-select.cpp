@@ -51,18 +51,6 @@
 #include <utility>
 #include <variant>
 
-enum DisplayState
-{
-    DS_ASK = 1,
-    DS_UPDATE,
-    DS_DISPLAY,
-    DS_RESTART,
-    DS_STATUS,
-    DS_QUIT,
-    DS_DO_COMMAND,
-    DS_ERROR
-};
-
 enum UniversalReadResult
 {
     UR_NORM = 1,
@@ -284,7 +272,6 @@ static bool                mark_del_as_read(Article &article, int arg);
 static DisplayState        sel_command(char_int ch);
 static bool                sel_perform_change(long cnt, std::string_view obj_type);
 static char                another_command(char_int ch);
-static DisplayState        article_commands(char_int ch);
 static DisplayState        newsgroup_commands(char_int ch);
 static DisplayState        add_group_commands(char_int ch);
 static DisplayState        unsubscribed_group_commands(char_int ch);
@@ -2758,7 +2745,7 @@ static char another_command(char_int ch)
 /// - s_removed_prompt: Set to RP_ALL for prompt erasure.
 /// - s_sel_ret: Set to the quit or special command character.
 ///
-static DisplayState article_commands(char_int ch)
+DisplayState article_commands(char_int ch)
 {
     switch (ch)
     {

@@ -13,6 +13,20 @@
 
 // Internal entry points for testing purposes.
 
+enum DisplayState
+{
+    DS_ASK = 1,
+    DS_UPDATE,
+    DS_DISPLAY,
+    DS_RESTART,
+    DS_STATUS,
+    DS_QUIT,
+    DS_DO_COMMAND,
+    DS_ERROR
+};
+
+DisplayState article_commands(char_int ch);
+
 std::string read_selector_command_for_test(char page_command, char end_command, bool at_end);
 char        read_selector_escaped_command_for_test();
 char        read_selector_numeric_continuation_for_test();
