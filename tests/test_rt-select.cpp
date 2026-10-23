@@ -886,6 +886,270 @@ TEST_P(SelectorArticleStarInputTest, starAlsoSelectsMatchingArticlesOutsideTheDi
 
 INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorArticleStarInputTest, testing::Bool());
 
+class SelectorObjectInputState : public SelectorInputTest
+{
+protected:
+    void TearDown() override;
+    void prepare_objects(SelectionMode mode, bool rereading);
+    void select_objects(std::initializer_list<int> indices);
+    void expect_objects(std::initializer_list<int> selected, int current) const;
+
+private:
+    int  object_flags(int index) const;
+    void set_object_flags(int index, int flags);
+
+    std::array<NewsgroupData, 3>          m_groups{};
+    std::array<UniversalItem, 3>          m_items{};
+    const std::array<std::string_view, 3> m_names{"comp.alpha", "comp.beta", "comp.hidden"};
+    SelectionMode                         m_selector_mode{};
+    bool                                  m_rereading{};
+    int                                   m_preserved_flags{};
+    int                                   m_delete_mask{};
+    std::string                           m_old_name{g_newsgroup_name};
+    std::string                           m_old_directory{g_newsgroup_dir};
+    bool                                  m_old_in_ng{g_in_ng};
+};
+
+void SelectorObjectInputState::TearDown()
+{
+    g_newsgroup_name = m_old_name;
+    g_newsgroup_dir = m_old_directory;
+    g_in_ng = m_old_in_ng;
+    SelectorInputTest::TearDown();
+}
+
+void SelectorObjectInputState::prepare_objects(SelectionMode mode, bool rereading)
+{
+    m_selector_mode = mode;
+    m_rereading = rereading;
+    g_sel_mode = mode;
+    g_sel_rereading = rereading;
+    g_sel_mask = rereading ? AGF_DEL_SEL : AGF_SEL;
+    g_mode = mode == SM_NEWSGROUP ? MM_NEWSGROUP_SELECTOR : MM_UNIVERSAL;
+    g_sel_mode_string = mode == SM_NEWSGROUP ? "newsgroups" : "items";
+    g_in_ng = false;
+    g_selected_count = 0;
+    g_sel_total_obj_cnt = 3;
+    g_sel_prior_obj_cnt = 0;
+    g_sel_page_obj_cnt = 2;
+    g_sel_page_item_cnt = 2;
+    g_sel_at_end = false;
+    g_sel_last_line = 10;
+    g_sel_item_index = 0;
+    g_term_line = 0;
+    m_delete_mask = mode == SM_NEWSGROUP ? static_cast<int>(NF_DEL) : static_cast<int>(UF_DEL);
+    m_preserved_flags =
+        mode == SM_NEWSGROUP ? static_cast<int>(NF_INCLUDED | NF_UNTHREADED) : static_cast<int>(UF_INCLUDED);
+    m_preserved_flags |= rereading ? static_cast<int>(AGF_SEL) : static_cast<int>(AGF_DEL_SEL);
+    for (int index = 0; index < 3; ++index)
+    {
+        m_groups[index].m_rc_line = m_names[index];
+        m_groups[index].m_to_read = rereading ? 0 : index + 2;
+        m_items[index].m_num = index + 1;
+        m_items[index].m_desc = m_names[index];
+        m_items[index].m_data = UniversalNewsgroup{std::string(m_names[index])};
+        set_object_flags(index, m_preserved_flags | (rereading ? m_delete_mask : 0));
+        if (index < g_sel_page_item_cnt)
+        {
+            g_sel_items[index] = {};
+            g_sel_items[index].line = index + 1;
+            g_sel_items[index].sel = rereading ? 2 : 0;
+            if (mode == SM_NEWSGROUP)
+            {
+                g_sel_items[index].u.np = &m_groups[index];
+            }
+            else
+            {
+                g_sel_items[index].u.un = &m_items[index];
+            }
+        }
+    }
+}
+
+int SelectorObjectInputState::object_flags(int index) const
+{
+    return m_selector_mode == SM_NEWSGROUP ? static_cast<int>(m_groups[index].m_flags)
+                                           : static_cast<int>(m_items[index].m_flags);
+}
+
+void SelectorObjectInputState::set_object_flags(int index, int flags)
+{
+    if (m_selector_mode == SM_NEWSGROUP)
+    {
+        m_groups[index].m_flags = static_cast<NewsgroupFlags>(flags);
+    }
+    else
+    {
+        m_items[index].m_flags = static_cast<UniversalItemFlags>(flags);
+    }
+}
+
+void SelectorObjectInputState::select_objects(std::initializer_list<int> indices)
+{
+    for (int index : indices)
+    {
+        set_object_flags(index, (object_flags(index) & ~m_delete_mask) | g_sel_mask);
+        ++g_selected_count;
+        if (index < g_sel_page_item_cnt)
+        {
+            g_sel_items[index].sel = 1;
+        }
+    }
+}
+
+void SelectorObjectInputState::expect_objects(std::initializer_list<int> selected, int current) const
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        const bool is_selected = std::find(selected.begin(), selected.end(), index) != selected.end();
+        const int  expected = m_preserved_flags | (is_selected ? static_cast<int>(g_sel_mask) : 0) |
+                              (m_rereading && !is_selected ? m_delete_mask : 0);
+        EXPECT_EQ(expected, object_flags(index)) << index;
+        if (index < g_sel_page_item_cnt)
+        {
+            EXPECT_EQ(is_selected ? 1 : m_rereading ? 2 : 0, g_sel_items[index].sel) << index;
+        }
+        if (m_selector_mode == SM_NEWSGROUP)
+        {
+            EXPECT_EQ(m_rereading ? 0 : index + 2, m_groups[index].m_to_read);
+            EXPECT_EQ(m_names[index], m_groups[index].m_rc_line);
+        }
+        else
+        {
+            EXPECT_EQ(m_names[index], m_items[index].group().ng);
+            EXPECT_EQ(m_names[index], m_items[index].m_desc);
+            EXPECT_EQ(index + 1, m_items[index].m_num);
+            EXPECT_EQ(UIS_NORMAL, m_items[index].m_state);
+        }
+    }
+    EXPECT_EQ(selected.size(), g_selected_count);
+    EXPECT_EQ(current, g_sel_item_index);
+    EXPECT_EQ(m_selector_mode, g_sel_mode);
+    EXPECT_EQ(m_rereading, g_sel_rereading);
+    EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    if (m_selector_mode == SM_NEWSGROUP)
+    {
+        EXPECT_EQ(&m_groups[current], g_newsgroup_ptr);
+        EXPECT_EQ(m_names[current], g_newsgroup_name);
+    }
+    else
+    {
+        EXPECT_EQ(&m_newsgroup, g_newsgroup_ptr);
+        EXPECT_EQ(m_old_name, g_newsgroup_name);
+        EXPECT_EQ(m_old_directory, g_newsgroup_dir);
+    }
+}
+
+class SelectorObjectLetterInputTest : public SelectorObjectInputState,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorObjectLetterInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+TEST_P(SelectorObjectLetterInputTest, letterSelectsItsObjectRatherThanTheCurrentRow)
+{
+    g_sel_item_index = 1;
+
+    ASSERT_EQ('Q', run_input("a"));
+
+    expect_objects({0}, 1);
+}
+
+TEST_P(SelectorObjectLetterInputTest, lastLetterSelectsItsObjectAndWrapsToTheFirstRow)
+{
+    ASSERT_EQ('Q', run_input("b"));
+
+    expect_objects({1}, 0);
+}
+
+TEST_P(SelectorObjectLetterInputTest, repeatingALetterDeselectsItsObject)
+{
+    ASSERT_EQ('Q', run_input("aa"));
+
+    expect_objects({}, 1);
+}
+
+TEST_P(SelectorObjectLetterInputTest, selectingAnotherLetterRetainsTheFirstSelection)
+{
+    ASSERT_EQ('Q', run_input("ab"));
+
+    expect_objects({0, 1}, 0);
+}
+
+TEST_P(SelectorObjectLetterInputTest, deselectingALetterRetainsOtherVisibleAndHiddenSelections)
+{
+    select_objects({0, 1, 2});
+
+    ASSERT_EQ('Q', run_input("a"));
+
+    expect_objects({1, 2}, 1);
+}
+
+TEST_P(SelectorObjectLetterInputTest, aDeselectedObjectCanBeReselected)
+{
+    ASSERT_EQ('Q', run_input("aaa"));
+
+    expect_objects({0}, 1);
+}
+
+TEST_P(SelectorObjectLetterInputTest, aLetterBeyondThePageRetainsSelectionsAndTheCurrentRow)
+{
+    select_objects({0, 2});
+    g_sel_item_index = 1;
+
+    ASSERT_EQ('Q', run_input("c"));
+
+    expect_objects({0, 2}, 1);
+    EXPECT_NE(std::string::npos, m_output.find("No item 'c' on this page."));
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadState, SelectorObjectLetterInputTest,
+                         testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool()));
+
+class SelectorObjectCurrentInputTest : public SelectorObjectInputState,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorObjectCurrentInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    g_sel_item_index = 1;
+}
+
+TEST_P(SelectorObjectCurrentInputTest, toggleSelectsTheCurrentObject)
+{
+    const char command = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_objects({1}, command == Ctl('t') ? 1 : 0);
+}
+
+TEST_P(SelectorObjectCurrentInputTest, toggleDeselectsTheCurrentObjectAndRetainsHiddenSelections)
+{
+    select_objects({1, 2});
+    const char command = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_objects({2}, command == Ctl('t') ? 1 : 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorObjectCurrentInputTest,
+                         testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
+                                          testing::Values('.', 'y', '*', Ctl('t'))));
+
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
 class ArticleSelectorToggleTest : public ArticleSelectorCommandTest,
