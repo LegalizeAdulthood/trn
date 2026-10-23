@@ -1739,11 +1739,22 @@ struct PagerMovementCase
     long                           header_lines{};
     long                           page_break_line{-1};
     std::vector<long>              highlighted_lines;
+    bool                           can_insert_line{};
+    bool                           can_home{true};
+    int                            insertions{};
 };
 
 void PrintTo(const PagerMovementCase &value, std::ostream *output)
 {
     *output << value.name;
+}
+
+PagerMovementCase with_line_insertion(PagerMovementCase scenario, int insertions = 1, bool can_home = true)
+{
+    scenario.can_insert_line = true;
+    scenario.can_home = can_home;
+    scenario.insertions = insertions;
+    return scenario;
 }
 
 class PagerMovementArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerMovementCase>
@@ -1781,6 +1792,7 @@ private:
     ValueSaver<std::string_view> m_up{g_tc_UP, g_tc_UP};
     ValueSaver<std::string_view> m_standout{g_tc_SO, g_tc_SO};
     ValueSaver<std::string_view> m_end_standout{g_tc_SE, g_tc_SE};
+    ValueSaver<std::string_view> m_insert_line{g_tc_IL, g_tc_IL};
 };
 
 void PagerMovementArticleTest::SetUp()
@@ -1830,10 +1842,11 @@ void PagerMovementArticleTest::SetUp()
     g_marking = GetParam().marking;
     g_marking_areas = GetParam().marking_areas;
     g_tc_CD = "<clear>";
-    g_tc_HO = "<home>";
+    g_tc_HO = GetParam().can_home ? "<home>" : "";
     g_tc_UP = "<up>";
     g_tc_SO = "<mark>";
     g_tc_SE = "</mark>";
+    g_tc_IL = GetParam().can_insert_line ? "<insert>" : "";
     virtual_write(ArticleLine{}, m_body_start);
     set_mode(GM_READ, MM_ARTICLE);
     while (macro_pending())
@@ -2673,12 +2686,20 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
         EXPECT_EQ(scenario.pages[index], page_lines(index + 1)) << "Page " << index + 1;
     }
     EXPECT_EQ(scenario.highlighted_lines, page_lines(scenario.pages.size(), "<mark>Body "));
+    int insertions = 0;
+    for (std::size_t position = m_rendered.find("<insert>"); position != std::string::npos;
+         position = m_rendered.find("<insert>", position + 8))
+    {
+        ++insertions;
+    }
+    EXPECT_EQ(scenario.insertions, insertions);
     EXPECT_EQ(ArticleLine{scenario.next_line + scenario.header_lines}, g_art_line_num);
     EXPECT_EQ(ArticleLine{scenario.top_line}, g_top_line);
     const long form_feeds = scenario.page_break_line >= 0 && scenario.page_break_line < scenario.next_line ? 1 : 0;
     EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line + form_feeds}, g_art_pos);
     EXPECT_EQ(g_art_pos, art_buf_article_pos());
-    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    const ArticlePosition saved_position = virtual_read(g_art_line_num);
+    EXPECT_EQ(g_art_pos, saved_position < 0 ? -saved_position : saved_position);
     EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
     EXPECT_EQ(g_art, g_curr_art);
     EXPECT_EQ(article_ptr(g_art), g_artp);
@@ -2880,6 +2901,138 @@ INSTANTIATE_TEST_SUITE_P(
                              0,
                              7}),
     [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
+
+INSTANTIATE_TEST_SUITE_P(BackwardSingleLine, PagerMovementArticleTest,
+                         Values(with_line_insertion(PagerMovementCase{"InsertPreviousLine",
+                                                                      " B",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{9, 10, 11, 12, 13, 14, 15, 16}, {7}},
+                                                                      16,
+                                                                      7}),
+                                with_line_insertion(PagerMovementCase{"RepeatedInsertion",
+                                                                      " BB",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{9, 10, 11, 12, 13, 14, 15, 16}, {7}, {6}},
+                                                                      15,
+                                                                      6},
+                                                    2),
+                                with_line_insertion(PagerMovementCase{
+                                    "ForwardAfterInsertion",
+                                    " B ",
+                                    10,
+                                    false,
+                                    false,
+                                    NO_MARKING,
+                                    NONE,
+                                    {{9, 10, 11, 12, 13, 14, 15, 16}, {7}, {16, 17, 18, 19, 20, 21, 22, 23}},
+                                    24,
+                                    15}),
+                                with_line_insertion(PagerMovementCase{"LineBackDoesNotAddPageMarking",
+                                                                      " B",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      STANDOUT,
+                                                                      BACK_PAGE_MARKING,
+                                                                      {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {7}},
+                                                                      16,
+                                                                      7}),
+                                PagerMovementCase{"MissingInsertRedrawsThePage",
+                                                  " B",
+                                                  10,
+                                                  false,
+                                                  false,
+                                                  NO_MARKING,
+                                                  NONE,
+                                                  {{9, 10, 11, 12, 13, 14, 15, 16}, {7, 8, 9, 10, 11, 12, 13, 14, 15}},
+                                                  16,
+                                                  7},
+                                with_line_insertion(PagerMovementCase{"MissingHomeRedrawsThePage",
+                                                                      " B",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{9, 10, 11, 12, 13, 14, 15, 16},
+                                                                       {7, 8, 9, 10, 11, 12, 13, 14, 15}},
+                                                                      16,
+                                                                      7},
+                                                    0, false),
+                                with_line_insertion(PagerMovementCase{"BeginningIgnoresLineBack",
+                                                                      "bB",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{0, 1, 2, 3, 4, 5}, {}},
+                                                                      6,
+                                                                      -1,
+                                                                      40,
+                                                                      2},
+                                                    0),
+                                with_line_insertion(PagerMovementCase{"ReachingTheHeaderRedrawsTheFirstPage",
+                                                                      "B",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{0, 1, 2, 3, 4, 5}},
+                                                                      6,
+                                                                      -1,
+                                                                      40,
+                                                                      2}),
+                                with_line_insertion(PagerMovementCase{"RepeatedInsertionCrossesAFormFeed",
+                                                                      " BB",
+                                                                      10,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {7}, {6}},
+                                                                      15,
+                                                                      6,
+                                                                      40,
+                                                                      0,
+                                                                      7},
+                                                    2),
+                                with_line_insertion(PagerMovementCase{"FormFeedAtTheRestoredBottomPosition",
+                                                                      "  B",
+                                                                      5,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{4, 5, 6}, {7}, {3}},
+                                                                      7,
+                                                                      3,
+                                                                      40,
+                                                                      0,
+                                                                      7}),
+                                with_line_insertion(PagerMovementCase{"FormFeedBeforeTheRestoredBottomPosition",
+                                                                      " \nB",
+                                                                      6,
+                                                                      false,
+                                                                      false,
+                                                                      NO_MARKING,
+                                                                      NONE,
+                                                                      {{5, 6, 7}, {8}, {3}},
+                                                                      8,
+                                                                      3,
+                                                                      40,
+                                                                      0,
+                                                                      7})),
+                         [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
