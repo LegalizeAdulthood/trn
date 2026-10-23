@@ -1747,6 +1747,10 @@ struct PagerMovementCase
     int                            search_context{3};
     std::vector<PagerBodyPrefix>   line_prefixes;
     int                            not_found_count{};
+    std::vector<std::size_t>       rotated_pages;
+    bool                           expected_rotate{};
+    char                           expected_subst{'p'};
+    std::string_view               expected_text;
 };
 
 void PrintTo(const PagerMovementCase &value, std::ostream *output)
@@ -1782,12 +1786,29 @@ PagerMovementCase with_body_prefix(PagerMovementCase scenario, long first, long 
     return scenario;
 }
 
+PagerMovementCase with_rotated_pages(PagerMovementCase scenario, std::vector<std::size_t> pages, bool rotated)
+{
+    scenario.rotated_pages = std::move(pages);
+    scenario.expected_rotate = rotated;
+    return scenario;
+}
+
+PagerMovementCase with_character_conversion(PagerMovementCase scenario, char mode, std::string_view text)
+{
+    scenario.header_lines = 2;
+    scenario.expected_subst = mode;
+    scenario.expected_text = text;
+    const long last_line = scenario.body_lines - 1;
+    return with_body_prefix(std::move(scenario), 0, last_line, "\"a ");
+}
+
 class PagerMovementArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerMovementCase>
 {
 protected:
     void              SetUp() override;
     void              TearDown() override;
     void              read_pages();
+    std::string_view  page_text(std::size_t page) const;
     std::vector<long> page_lines(std::size_t page, bool highlighted_only = false) const;
 
     ArticlePosition m_body_start{};
@@ -1812,6 +1833,7 @@ private:
     ValueSaver<int>              m_check_count{g_check_count, g_check_count};
     ValueSaver<int>              m_search_context{g_g_line, g_g_line};
     ValueSaver<char>             m_erase_char{g_erase_char, g_erase_char};
+    ValueSaver<bool>             m_rotate{g_rotate, g_rotate};
     ValueSaver<GeneralMode>      m_general_mode{g_general_mode, g_general_mode};
     ValueSaver<MinorMode>        m_mode{g_mode, g_mode};
     ValueSaver<std::string_view> m_clear{g_tc_CD, g_tc_CD};
@@ -1826,6 +1848,9 @@ void PagerMovementArticleTest::SetUp()
 {
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
+    g_charsets = "pt";
+    set_char_subst_mode('p');
+    g_rotate = false;
     m_previous_directory = fs::current_path();
     fs::current_path(m_output.path());
     g_newsgroup_dir = ".";
@@ -1916,7 +1941,7 @@ void PagerMovementArticleTest::read_pages()
     render_article();
 }
 
-std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool highlighted_only) const
+std::string_view PagerMovementArticleTest::page_text(std::size_t page) const
 {
     std::string_view text{m_rendered};
     for (std::size_t index = 0; index < page; ++index)
@@ -1935,9 +1960,16 @@ std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool hi
         }
         text.remove_prefix(end + 1);
     }
-    text = text.substr(0, text.find("--MORE--("));
+    return text.substr(0, text.find("--MORE--("));
+}
+
+std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool highlighted_only) const
+{
+    const std::string_view          text = page_text(page);
     std::vector<long> lines;
-    constexpr std::string_view prefix{"Body "};
+    const std::vector<std::size_t> &rotated = GetParam().rotated_pages;
+    const std::string_view          prefix =
+        std::find(rotated.begin(), rotated.end(), page) == rotated.end() ? "Body " : "Obql ";
     for (std::size_t position = text.find(prefix); position != std::string_view::npos;
          position = text.find(prefix, position + prefix.size()))
     {
@@ -2733,6 +2765,12 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
         EXPECT_EQ(scenario.pages[index], page_lines(index + 1)) << "Page " << index + 1;
     }
     EXPECT_EQ(scenario.highlighted_lines, page_lines(scenario.pages.size(), true));
+    if (!scenario.expected_text.empty())
+    {
+        EXPECT_THAT(page_text(scenario.pages.size()), HasSubstr(scenario.expected_text));
+    }
+    EXPECT_EQ(scenario.expected_rotate, g_rotate);
+    EXPECT_EQ(scenario.expected_subst, current_char_subst_mode());
     int insertions = 0;
     for (std::size_t position = m_rendered.find("<insert>"); position != std::string::npos;
          position = m_rendered.find("<insert>", position + 8))
@@ -3131,6 +3169,188 @@ INSTANTIATE_TEST_SUITE_P(
                                         {12}),
                             0, 11, "> "),
            search_case("TabWithoutAChangedPrefixPreservesPosition", "\t", {{}}, 9, 0, {}, 3, 1)),
+    [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
+
+INSTANTIATE_TEST_SUITE_P(
+    RefreshCommands, PagerMovementArticleTest,
+    Values(
+        PagerMovementCase{"ControlLRedrawsTheCurrentPage",
+                          " \f",
+                          10,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                          17,
+                          8},
+        PagerMovementCase{"LowercaseLRedrawsTheCurrentPage",
+                          " l",
+                          10,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                          17,
+                          8},
+        PagerMovementCase{
+            "RepeatedRefreshRetainsTheSamePage",
+            " \fl",
+            10,
+            false,
+            false,
+            NO_MARKING,
+            NONE,
+            {{9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+            17,
+            8},
+        PagerMovementCase{
+            "RefreshAtTheFirstBodyPage", "\f", 10, false, false, NO_MARKING, NONE, {{0, 1, 2, 3, 4, 5, 6, 7, 8}}, 9, 0},
+        PagerMovementCase{"FirstArticlePageRefreshIncludesHeaders",
+                          "b\f",
+                          10,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5}},
+                          6,
+                          -1,
+                          40,
+                          2},
+        PagerMovementCase{
+            "PagingContinuesAfterRefresh",
+            " \f ",
+            10,
+            false,
+            false,
+            NO_MARKING,
+            NONE,
+            {{9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}, {17, 18, 19, 20, 21, 22, 23, 24}},
+            25,
+            16},
+        PagerMovementCase{"RefreshAfterGoingBack",
+                          "  b\f",
+                          10,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{9, 10, 11, 12, 13, 14, 15, 16},
+                           {17, 18, 19, 20, 21, 22, 23, 24},
+                           {8, 9, 10, 11, 12, 13, 14, 15, 16},
+                           {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                          17,
+                          8},
+        PagerMovementCase{"RefreshOnClearingTerminal",
+                          " \f",
+                          10,
+                          true,
+                          true,
+                          NO_MARKING,
+                          NONE,
+                          {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                          17,
+                          8},
+        PagerMovementCase{"RefreshAfterFormFeed",
+                          " \f",
+                          10,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                          17,
+                          8,
+                          40,
+                          0,
+                          7},
+        PagerMovementCase{"RefreshFromPageStartingAtFormFeed",
+                          " B\f",
+                          10,
+                          false,
+                          false,
+                          NO_MARKING,
+                          NONE,
+                          {{8, 9, 10, 11, 12, 13, 14, 15, 16}, {7}, {7}},
+                          8,
+                          7,
+                          40,
+                          0,
+                          7},
+        with_rotated_pages(PagerMovementCase{"Rot13RefreshKeepsTheCurrentPage",
+                                             " X",
+                                             10,
+                                             false,
+                                             false,
+                                             NO_MARKING,
+                                             NONE,
+                                             {{9, 10, 11, 12, 13, 14, 15, 16}, {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                                             17,
+                                             8},
+                           {2}, true),
+        with_rotated_pages(PagerMovementCase{"RefreshRetainsRot13Mode",
+                                             " X\f",
+                                             10,
+                                             false,
+                                             false,
+                                             NO_MARKING,
+                                             NONE,
+                                             {{9, 10, 11, 12, 13, 14, 15, 16},
+                                              {8, 9, 10, 11, 12, 13, 14, 15, 16},
+                                              {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                                             17,
+                                             8},
+                           {2, 3}, true),
+        with_rotated_pages(PagerMovementCase{"SecondRot13RefreshRestoresPlainText",
+                                             " XX",
+                                             10,
+                                             false,
+                                             false,
+                                             NO_MARKING,
+                                             NONE,
+                                             {{9, 10, 11, 12, 13, 14, 15, 16},
+                                              {8, 9, 10, 11, 12, 13, 14, 15, 16},
+                                              {8, 9, 10, 11, 12, 13, 14, 15, 16}},
+                                             17,
+                                             8},
+                           {2}, false),
+        with_character_conversion(PagerMovementCase{"CharacterConversionRestartsTheArticle",
+                                                    " _C",
+                                                    10,
+                                                    false,
+                                                    false,
+                                                    NO_MARKING,
+                                                    NONE,
+                                                    {{9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5}},
+                                                    6,
+                                                    -1},
+                                  't', "\xC3\xA4 Body 005"),
+        with_character_conversion(
+            PagerMovementCase{"CharacterConversionRetainsModeOnRefresh",
+                              " _C\f",
+                              10,
+                              false,
+                              false,
+                              NO_MARKING,
+                              NONE,
+                              {{9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5}},
+                              6,
+                              -1},
+            't', "\xC3\xA4 Body 005"),
+        with_character_conversion(
+            PagerMovementCase{"CharacterConversionCyclesBackToPlain",
+                              " _C_C",
+                              10,
+                              false,
+                              false,
+                              NO_MARKING,
+                              NONE,
+                              {{9, 10, 11, 12, 13, 14, 15, 16}, {0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5}},
+                              6,
+                              -1},
+            'p', "\"a Body 005")),
     [](const TestParamInfo<PagerMovementCase> &info) { return info.param.name; });
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
