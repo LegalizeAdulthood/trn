@@ -998,9 +998,11 @@ encapsulated.
 If a \*(L"cut here\*(R" line is found, the first non-blank line after it
 must be either the start of a shar header, or the \*(L"begin\*(R"
 or \*(L"table\*(R" line of a uuencoded binary.
-The default for extracting shars is to send the data portion of the file
+On Unix, the default for extracting shars is to send the archive data
 to /bin/sh, but that can be overridden with the UNSHAR variable (see the
 ENVIRONMENT section).
+The Windows default reports that shell archives are unsupported;
+configure UNSHAR to use an available handler.
 Uudecoding is done internally by a decoder that can handle the data
 being split up over multiple articles, and extracted one piece at a time.
 To decode a multi-article file, either execute the \*(L'e\*(R'
@@ -2137,10 +2139,16 @@ The name of your editor, if VISUAL is undefined.
 .Sp
 Default: whatever your news administrator compiled in, usually vi.
 .Ip "EXSAVER (%)" 8
-The shell command to execute in order to extract data to either /bin/sh
-or a user-specified command.
+The shell command used for an explicit extraction command (%e).
+The Unix default sends the article body to that command.
+The Windows default sends the complete article, including headers.
+CUSTOMSAVER is a fallback alias; EXSAVER takes precedence when both are set.
+Templates may use %A for the article path and %B for the zero-based byte
+offset of the selected data.
 .Sp
-Default: tail +%Bc %A | %e
+Unix default: tail -c +$((%B + 1)) "%A" | %e
+.Sp
+Windows default: < "%A" %e
 .Ip "FIRSTLINE (%)" 8
 Controls the format of the line displayed at the top of an article.
 Warning: this may go away.
@@ -2566,8 +2574,12 @@ Default: %./.trn/macros
 .Ip "UNSHAR (~)" 8
 The shell command to execute in order to accomplish the unshar'ing of a
 shell archive.
+SHARSAVER is a fallback alias; UNSHAR takes precedence when both are set.
+The template uses the same substitutions as EXSAVER.
 .Sp
-Default: /bin/sh
+Unix default: tail -c +$((%B + 1)) "%A" | /bin/sh
+.Sp
+The Windows default reports that shell archives are unsupported.
 .Ip USER 8
 Your login name.
 May be interpolated using \*(L"%L\*(R".

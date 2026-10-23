@@ -1330,6 +1330,81 @@ class FailedExtractSaveArticleTest : public ExtractSaveArticleTest, public testi
 {
 };
 
+class ExternalExtractTest : public ExtractSaveArticleTest
+{
+protected:
+    void        SetUp() override;
+    std::string source_bytes() const;
+    std::string delivered_bytes(const char *filename) const;
+
+    static constexpr std::string_view SHAR =
+        "Posted archive follows\n\n#!/bin/sh\nprintf 'Extracted archive\\n' > 'archive output'\n";
+};
+
+void ExternalExtractTest::SetUp()
+{
+    ExtractSaveArticleTest::SetUp();
+    m_env.expect_no_envars({"EXSAVER", "CUSTOMSAVER", "UNSHAR", "SHARSAVER"});
+    const fs::path spool = m_output_dir / "spool with spaces";
+    fs::copy(m_output_dir / "spool", spool, fs::copy_options::recursive);
+    m_spool = spool / "comp" / "lang" / "cpp";
+    m_data_source.m_spool_dir = spool.generic_string();
+    fs::current_path(m_spool);
+    article(BODY);
+}
+
+std::string ExternalExtractTest::source_bytes() const
+{
+    std::ifstream input{m_spool / "1", std::ios::binary};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+std::string ExternalExtractTest::delivered_bytes(const char *filename) const
+{
+    std::ifstream input{m_destination / filename, std::ios::binary};
+    EXPECT_TRUE(input.is_open());
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+struct ExtractOverrideCase
+{
+    const char *name;
+    const char *variable;
+    bool        legacy_also_set;
+    bool        shell_archive;
+};
+
+void PrintTo(const ExtractOverrideCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class ExtractOverrideTest : public ExternalExtractTest, public testing::WithParamInterface<ExtractOverrideCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void ExtractOverrideTest::SetUp()
+{
+    ExternalExtractTest::SetUp();
+    if (GetParam().shell_archive)
+    {
+        article(SHAR);
+    }
+    const std::string saver =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" article-saver \"%A\" %B payload %a %C";
+    m_env.expect_env_repeatedly(GetParam().variable, saver.c_str());
+    if (GetParam().legacy_also_set)
+    {
+        m_env.expect_env_repeatedly(GetParam().shell_archive ? "SHARSAVER" : "CUSTOMSAVER", "invalid-legacy-handler");
+    }
+}
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -1777,6 +1852,70 @@ TEST_F(ExtractSaveArticleTest, passesTheDetectedShellArchiveOffsetToTheConfigure
     EXPECT_NE(std::string::npos, output.find("Extracting shar into "));
     EXPECT_FALSE(g_waiting);
 }
+
+TEST_F(ExternalExtractTest, defaultCustomHandlerDeliversTheArticleInput)
+{
+    const std::string source = source_bytes();
+#ifdef USE_SPAWN_SHELL
+    const std::string expected = source;
+#else
+    const std::string expected = source.substr(source.find("\n\n") + 2);
+#endif
+
+    save('e', custom_input());
+
+    EXPECT_EQ(expected, delivered_bytes("posted"));
+    expect_custom_receiver();
+}
+
+TEST_P(ExtractOverrideTest, configuredHandlerReceivesTheSelectedByteRange)
+{
+    const std::string source = source_bytes();
+    const std::size_t offset = source.find(GetParam().shell_archive ? "#!/bin/sh" : "Root first line");
+    ASSERT_NE(std::string::npos, offset);
+
+    save('e', GetParam().shell_archive ? "attachments\n" : custom_input());
+
+    EXPECT_EQ(source.substr(offset), delivered_bytes("payload"));
+    EXPECT_EQ(offset, g_save_from.value_of());
+    EXPECT_EQ("article-saver\n" + (m_spool / "1").generic_string() + '\n' + std::to_string(offset) +
+                  "\npayload\n1\ncomp.lang.cpp\n",
+              extracted_text("article-saver.log"));
+    EXPECT_FALSE(g_waiting);
+}
+
+INSTANTIATE_TEST_SUITE_P(Environment, ExtractOverrideTest,
+                         testing::Values(ExtractOverrideCase{"CustomDocumented", "EXSAVER", false, false},
+                                         ExtractOverrideCase{"CustomLegacy", "CUSTOMSAVER", false, false},
+                                         ExtractOverrideCase{"CustomPrecedence", "EXSAVER", true, false},
+                                         ExtractOverrideCase{"SharDocumented", "UNSHAR", false, true},
+                                         ExtractOverrideCase{"SharLegacy", "SHARSAVER", false, true},
+                                         ExtractOverrideCase{"SharPrecedence", "UNSHAR", true, true}),
+                         [](const testing::TestParamInfo<ExtractOverrideCase> &info) { return info.param.name; });
+
+#ifdef USE_SPAWN_SHELL
+TEST_F(ExternalExtractTest, defaultShellArchiveHandlerReportsUnsupported)
+{
+    article(SHAR);
+    testing::internal::CaptureStderr();
+
+    save('e', "attachments\n");
+
+    const std::string error = testing::internal::GetCapturedStderr();
+    EXPECT_THAT(error, testing::HasSubstr("SHARSAVER is unsupported on Windows"));
+    EXPECT_TRUE(fs::is_empty(m_destination));
+}
+#else
+TEST_F(ExternalExtractTest, defaultShellArchiveHandlerExtractsTheDetectedScript)
+{
+    article(SHAR);
+
+    save('e', "attachments\n");
+
+    EXPECT_EQ("Extracted archive\n", delivered_bytes("archive output"));
+    EXPECT_EQ(1, std::distance(fs::directory_iterator{m_destination}, fs::directory_iterator{}));
+}
+#endif
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {

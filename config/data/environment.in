@@ -180,8 +180,12 @@ The variables:
       Default: @DEFAULT_EDITOR@
 
  EXSAVER (%)
-      The shell command to execute in order to extract data to either
-      the configured shell archive handler or a user-specified command.
+      The shell command used for an explicit extraction command (%e).
+      On Unix, the default sends the article body to that command. On
+      Windows, it sends the complete article, including headers. Article
+      paths are quoted. CUSTOMSAVER is a fallback alias; EXSAVER takes
+      precedence when both are set. Templates may use %A for the article
+      path and %B for the zero-based byte offset of the selected data.
 
       Default: @CUSTOM_SAVER@
 
@@ -629,7 +633,11 @@ The variables:
 
  UNSHAR (~)
       The shell command to execute in order to accomplish the unshar'ing of
-      a shell archive.
+      a shell archive. On Unix, the default sends data from the detected
+      archive header to /bin/sh. The Windows default reports that shell
+      archives are unsupported; configure a handler to enable them.
+      SHARSAVER is a fallback alias; UNSHAR takes precedence when both
+      are set. The template uses the same substitutions as EXSAVER.
 
       Default: @SHAR_SAVER@
 

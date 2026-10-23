@@ -338,7 +338,8 @@ SaveResult save_article(std::string_view command)
         {
             fmt::print("Extracting article into {} using {}\n", fs::current_path().generic_string(), g_extract_prog);
             term_down(1);
-            const std::string saver_command = do_interp(get_env_var("CUSTOMSAVER", CUSTOM_SAVER));
+            const std::string saver_command =
+                do_interp(get_env_var("EXSAVER", get_env_var("CUSTOMSAVER", CUSTOM_SAVER)));
             invoke(saver_command.c_str(), nullptr);
         }
         else if (g_is_mime)
@@ -410,7 +411,8 @@ SaveResult save_article(std::string_view command)
                 fmt::print("Extracting shar into {}:\n", fs::current_path().generic_string());
                 term_down(1);
                 {
-                    const std::string saver_command = do_interp(get_env_var("SHARSAVER", SHAR_SAVER));
+                    const std::string saver_command =
+                        do_interp(get_env_var("UNSHAR", get_env_var("SHARSAVER", SHAR_SAVER)));
                     invoke(saver_command.c_str(), nullptr);
                 }
                 break;

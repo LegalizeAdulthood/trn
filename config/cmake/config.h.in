@@ -487,13 +487,13 @@
 // SHAR_SAVER:
 //      The shell command to execute to extract a shell archive.
 //
-#define SHAR_SAVER "@SHAR_SAVER@"
+#define SHAR_SAVER R"trn(@SHAR_SAVER@)trn"
 
 // CUSTOM_SAVER:
 //      The shell command to execute to extract data with a user-specified
 //      command.
 //
-#define CUSTOM_SAVER "@CUSTOM_SAVER@"
+#define CUSTOM_SAVER R"trn(@CUSTOM_SAVER@)trn"
 
 // VERIFY_RIPEM:
 //      The shell command to verify a RIPEM signature.
