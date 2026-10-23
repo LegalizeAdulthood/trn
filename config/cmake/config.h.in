@@ -482,7 +482,7 @@
 //      or "w | command").  The command typed by the user is substituted
 //      in as %b.
 //
-#define PIPE_SAVER "@PIPE_SAVER@"
+#define PIPE_SAVER R"trn(@PIPE_SAVER@)trn"
 
 // SHAR_SAVER:
 //      The shell command to execute to extract a shell archive.

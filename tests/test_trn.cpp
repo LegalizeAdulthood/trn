@@ -15,6 +15,7 @@
 #include <trn/hash.h>
 #include <trn/head.h>
 #include <trn/init.h>
+#include <trn/intrp.h>
 #include <trn/mime.h>
 #include <trn/ng-internal.h>
 #include <trn/ng.h>
@@ -1080,14 +1081,12 @@ struct ConfiguredSaverCase
     bool mailbox;
 };
 
-class ConfiguredSaveArticleTest : public SaveArticleTest, public testing::WithParamInterface<ConfiguredSaverCase>
+class ExternalSaveArticleTest : public SaveArticleTest
 {
 protected:
     void        SetUp() override;
     void        TearDown() override;
     std::string receiver_text(const char *filename) const;
-    std::string requested_text() const;
-    void        expect_receiver() const;
 
 private:
     using SignalHandler = void (*)(int);
@@ -1096,7 +1095,7 @@ private:
     bool                                       m_old_no_wait_fork{g_no_wait_fork};
 };
 
-void ConfiguredSaveArticleTest::SetUp()
+void ExternalSaveArticleTest::SetUp()
 {
     SaveArticleTest::SetUp();
     for (const int number : {
@@ -1118,17 +1117,9 @@ void ConfiguredSaveArticleTest::SetUp()
     m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", g_priv_dir.c_str());
     m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "");
     m_env.expect_env_repeatedly("SHELL", TRN_TEST_PROCESS_TOOL);
-    const std::string saver =
-#ifdef USE_SPAWN_SHELL
-        "call "
-#endif
-        "\"" TRN_TEST_PROCESS_TOOL "\" article-saver \"%A\" %B \"%b\" %a %C";
-    m_env.expect_env_repeatedly(GetParam().mailbox ? "MBOXSAVER" : "NORMSAVER", saver.c_str());
-    g_mbox_always = GetParam().mailbox;
-    g_norm_always = !GetParam().mailbox;
 }
 
-void ConfiguredSaveArticleTest::TearDown()
+void ExternalSaveArticleTest::TearDown()
 {
     for (const std::pair<int, SignalHandler> &signal : m_signals)
     {
@@ -1139,11 +1130,33 @@ void ConfiguredSaveArticleTest::TearDown()
     SaveArticleTest::TearDown();
 }
 
-std::string ConfiguredSaveArticleTest::receiver_text(const char *filename) const
+std::string ExternalSaveArticleTest::receiver_text(const char *filename) const
 {
     std::ifstream input{fs::path{g_priv_dir} / filename};
     EXPECT_TRUE(input.is_open());
     return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+class ConfiguredSaveArticleTest : public ExternalSaveArticleTest,
+                                  public testing::WithParamInterface<ConfiguredSaverCase>
+{
+protected:
+    void        SetUp() override;
+    std::string requested_text() const;
+    void        expect_receiver() const;
+};
+
+void ConfiguredSaveArticleTest::SetUp()
+{
+    ExternalSaveArticleTest::SetUp();
+    const std::string saver =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" article-saver \"%A\" %B \"%b\" %a %C";
+    m_env.expect_env_repeatedly(GetParam().mailbox ? "MBOXSAVER" : "NORMSAVER", saver.c_str());
+    g_mbox_always = GetParam().mailbox;
+    g_norm_always = !GetParam().mailbox;
 }
 
 std::string ConfiguredSaveArticleTest::requested_text() const
@@ -1169,6 +1182,33 @@ void ConfiguredSaveArticleTest::expect_receiver() const
 #endif
     }
 }
+
+class PipeSaveArticleTest : public ExternalSaveArticleTest
+{
+protected:
+    void        SetUp() override;
+    void        expect_receiver() const;
+    std::string m_receiver;
+};
+
+void PipeSaveArticleTest::SetUp()
+{
+    ExternalSaveArticleTest::SetUp();
+    m_env.expect_no_envars({"PIPESAVER"});
+    m_receiver = "\"" TRN_TEST_PROCESS_TOOL "\" poster -h";
+}
+
+void PipeSaveArticleTest::expect_receiver() const
+{
+    EXPECT_EQ("poster\n-h\n", receiver_text("tools.log"));
+    EXPECT_EQ(m_receiver, g_save_dest);
+    EXPECT_FALSE(g_waiting);
+    EXPECT_FALSE(fs::exists(m_destination));
+}
+
+class FailedPipeSaveArticleTest : public PipeSaveArticleTest, public testing::WithParamInterface<const char *>
+{
+};
 
 std::string version_header()
 {
@@ -1360,6 +1400,72 @@ INSTANTIATE_TEST_SUITE_P(CommandsAndFormats, ConfiguredSaveArticleTest,
                                     (info.param.command == 's' || info.param.command == 'S' ? "Headers" : "Body") +
                                     (info.param.mailbox ? "Mailbox" : "Plain");
                          });
+
+TEST_F(PipeSaveArticleTest, pipesTheWholeArticleFromTheBeginningAndReturnsToThePrompt)
+{
+    g_int_count = 1;
+
+    save('|', "   " + m_receiver + '\n');
+
+    SCOPED_TRACE(do_interp(PIPE_SAVER));
+    expect_receiver();
+    EXPECT_EQ(std::string{HEADER} + std::string{BODY}, receiver_text("posted"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "shell-used"));
+}
+
+TEST_F(PipeSaveArticleTest, usesTheConfiguredPipeSaverToDeliverTheArticle)
+{
+    m_env.expect_env_repeatedly("PIPESAVER", "(\"" TRN_TEST_PROCESS_TOOL "\" %b) < \"%A\"");
+    m_receiver = "poster -h";
+
+    save('|', m_receiver + '\n');
+
+    expect_receiver();
+    EXPECT_EQ(std::string{HEADER} + std::string{BODY}, receiver_text("posted"));
+}
+
+TEST_F(PipeSaveArticleTest, anUppercaseSavePipeUsesThePreferredShell)
+{
+    save('S', "| " + m_receiver + '\n');
+
+    SCOPED_TRACE(do_interp(PIPE_SAVER));
+    EXPECT_EQ(std::string{HEADER} + std::string{BODY}, receiver_text("posted"));
+#ifdef USE_SPAWN_SHELL
+    EXPECT_EQ("/c", receiver_text("shell-used"));
+#else
+    EXPECT_EQ("-c", receiver_text("shell-used"));
+#endif
+    EXPECT_EQ(m_receiver, g_save_dest);
+    EXPECT_FALSE(g_waiting);
+    EXPECT_FALSE(fs::exists(m_destination));
+}
+
+TEST_F(PipeSaveArticleTest, erasingThePipeCommandCancelsBeforeLaunchingAReceiver)
+{
+    const std::string old_destination = g_save_dest;
+
+    save('|', "\b", AS_INP);
+
+    EXPECT_EQ(old_destination, g_save_dest);
+    EXPECT_EQ("Save aborted at article 1", g_msg);
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "tools.log"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+}
+
+TEST_P(FailedPipeSaveArticleTest, returnsToThePromptAfterTheReceiverStopsWithoutAcceptingTheArticle)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam());
+    g_int_count = 1;
+
+    save('|', m_receiver + '\n');
+
+    expect_receiver();
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReceiverExit, FailedPipeSaveArticleTest, testing::Values("poster_failure", "poster_cancel"),
+                         [](const testing::TestParamInfo<const char *> &info)
+                         { return std::string{info.index == 0 ? "Failure" : "Interruption"}; });
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {
