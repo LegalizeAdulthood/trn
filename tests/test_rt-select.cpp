@@ -3,6 +3,7 @@
 
 #include <trn/rt-select-internal.h>
 
+#include <trn/artsrch.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
@@ -849,6 +850,96 @@ class ArticleSelectorInlineScopeTest : public ArticleSelectorInlineStateTest,
 
 class ArticleSelectorInlinePendingMarkTest : public ArticleSelectorInlineStateTest,
                                              public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class ArticleSelectorSearchStateTest : public ArticleSelectorInlineStateTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    void         remember_search(std::string_view command);
+    DisplayState run_search(std::string_view input, std::string_view followup = "\n");
+    void         expect_search_selection(std::initializer_list<long> selected, bool rereading = false) const;
+
+private:
+    HeaderType     m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderType     m_old_from_header{g_header_type[FROM_LINE]};
+    std::string    m_old_pattern{g_last_pat};
+    CompiledRegex  m_old_regex{*g_bra_compex};
+    ArtScope       m_old_scope{g_art_how_much};
+    HeaderLineType m_old_header{g_art_srch_hdr};
+    bool           m_old_do_read{g_art_do_read};
+    bool           m_old_novice_delays{g_novice_delays};
+    bool           m_old_mouse_down{g_mouse_is_down};
+    ArticleNum     m_old_search_ahead{g_search_ahead};
+};
+
+void ArticleSelectorSearchStateTest::SetUp()
+{
+    ArticleSelectorInlineStateTest::SetUp();
+    g_header_type[SUBJ_LINE].flags |= HT_CACHED;
+    g_header_type[FROM_LINE].flags |= HT_CACHED;
+    g_parsed_art = ArticleNum{};
+    g_last_pat.clear();
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_srch_hdr = SOME_LINE;
+    g_art_do_read = false;
+    g_novice_delays = false;
+    g_search_ahead = ArticleNum{};
+    search_init();
+    art_search_init();
+}
+
+void ArticleSelectorSearchStateTest::TearDown()
+{
+    g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_header_type[FROM_LINE] = m_old_from_header;
+    g_last_pat = m_old_pattern;
+    *g_bra_compex = m_old_regex;
+    g_art_how_much = m_old_scope;
+    g_art_srch_hdr = m_old_header;
+    g_art_do_read = m_old_do_read;
+    g_novice_delays = m_old_novice_delays;
+    g_mouse_is_down = m_old_mouse_down;
+    g_search_ahead = m_old_search_ahead;
+    ArticleSelectorInlineStateTest::TearDown();
+}
+
+void ArticleSelectorSearchStateTest::remember_search(std::string_view command)
+{
+    g_general_mode = GM_READ;
+    g_art = article_after(g_last_art);
+    EXPECT_EQ(SRCH_FOUND, art_search(command, false));
+    g_general_mode = GM_SELECTOR;
+}
+
+DisplayState ArticleSelectorSearchStateTest::run_search(std::string_view input, std::string_view followup)
+{
+    return run_command('/', std::string(input) + "\n" + std::string(followup));
+}
+
+void ArticleSelectorSearchStateTest::expect_search_selection(std::initializer_list<long> selected, bool rereading) const
+{
+    expect_articles(rereading ? std::initializer_list<long>{} : std::initializer_list<long>{1, 2, 3, 4}, selected);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+}
+
+class ArticleSelectorSearchModeTest : public ArticleSelectorSearchStateTest,
+                                      public testing::WithParamInterface<SelectionMode>
+{
+};
+
+class ArticleSelectorSearchReadTest : public ArticleSelectorSearchStateTest,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class ArticleSelectorSearchCancelTest : public ArticleSelectorSearchStateTest,
+                                        public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
 {
 };
 
@@ -1844,3 +1935,186 @@ INSTANTIATE_TEST_SUITE_P(ModeAndSelection, ArticleSelectorInlineScopeTest,
 
 INSTANTIATE_TEST_SUITE_P(ModeAndReadState, ArticleSelectorInlinePendingMarkTest,
                          testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+TEST_P(ArticleSelectorSearchReadTest, matchingSearchAddsSelectionsStartingAtTheBeginningOfTheGroup)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_inline(mode, rereading);
+    ASSERT_TRUE(last_page());
+    calculate_page();
+    g_art = ArticleNum{4};
+    g_artp = article_ptr(g_art);
+
+    const DisplayState result = run_search("Bravo/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({1, 2, 4}, rereading);
+    EXPECT_EQ(2, g_selected_subj_cnt);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("Bravo", g_last_pat);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(mode, g_sel_mode);
+}
+
+TEST_P(ArticleSelectorSearchReadTest, noMatchesRetainSelectionAndReportNoArticlesAffected)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_inline(mode, rereading);
+
+    const DisplayState result = run_search("Absent/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_selection_preserved(rereading);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ("No articles affected.", g_msg);
+    EXPECT_NE(std::string::npos, m_output.find("No articles affected."));
+}
+
+TEST_P(ArticleSelectorSearchReadTest, malformedPatternReportsAnErrorAndRetainsSelection)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_inline(mode, rereading);
+
+    const DisplayState result = run_search("[/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_selection_preserved(rereading);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_NE(std::string::npos, m_output.find("Missing ]"));
+    EXPECT_FALSE(g_error_occurred);
+}
+
+TEST_P(ArticleSelectorSearchReadTest, blankSearchReusesThePreviousPattern)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_inline(mode, rereading);
+    remember_search(rereading ? "/Bravo/r" : "/Bravo/");
+
+    const DisplayState result = run_search("");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({1, 2, 4}, rereading);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ("Bravo", g_last_pat);
+}
+
+TEST_P(ArticleSelectorSearchModeTest, authorMatchesSelectTheScopeChosenByTheSelectorMode)
+{
+    const SelectionMode mode = GetParam();
+    prepare_inline(mode);
+    join_inline_thread();
+    clear_selections();
+    article_ptr(ArticleNum{2})->select_article(AUTO_KILL_NONE);
+    rebuild_page();
+
+    const DisplayState result = run_search("Delta/f");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    if (mode == SM_ARTICLE)
+    {
+        expect_search_selection({1, 2});
+    }
+    else if (mode == SM_SUBJECT)
+    {
+        expect_search_selection({1, 2, 4});
+    }
+    else
+    {
+        expect_search_selection({1, 2, 3, 4});
+    }
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(ARTSCOPE_FROM, g_art_how_much);
+}
+
+TEST_P(ArticleSelectorSearchModeTest, explicitJunkCommandVisitsEveryMatchAcrossTheGroup)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_search("Alpha/j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2, 3}, {});
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorSearchModeTest, unreadSearchSkipsMatchingReadArticles)
+{
+    prepare_inline(GetParam());
+    article_ptr(ArticleNum{2})->one_less();
+    rebuild_page();
+
+    const DisplayState result = run_search("Bravo/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 3, 4}, {1, 4});
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ("No articles affected.", g_msg);
+}
+
+TEST_P(ArticleSelectorSearchModeTest, matchingSearchIncludesNewSelectionsInTheExclusiveDisplay)
+{
+    const SelectionMode mode = GetParam();
+    prepare_inline(mode);
+    g_sel_exclusive = true;
+    rebuild_page();
+
+    const DisplayState result = run_search("Bravo/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({1, 2, 4});
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ((mode == SM_ARTICLE ? std::vector<long>{1, 2, 4} : std::vector<long>{1, 2}), included_items());
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+}
+
+TEST_P(ArticleSelectorSearchModeTest, followupCommandReturnsToSelectorCommandDispatch)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_search("Bravo/", "q");
+
+    EXPECT_EQ(DS_DO_COMMAND, result);
+    expect_search_selection({1, 2, 4});
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_P(ArticleSelectorSearchModeTest, blankSearchWithoutAPreviousPatternReportsAnError)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_search("");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_selection_preserved(false);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_NE(std::string::npos, m_output.find("Null search string"));
+}
+
+TEST_P(ArticleSelectorSearchCancelTest, cancellingSearchRetainsThePreviousPatternSelectionAndPosition)
+{
+    const auto &[mode, rereading, cancel] = GetParam();
+    prepare_inline(mode, rereading);
+    remember_search(rereading ? "/Bravo/r" : "/Bravo/");
+    g_art = ArticleNum{4};
+    g_artp = article_ptr(g_art);
+
+    const DisplayState result = run_search(std::string(1, cancel));
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_selection_preserved(rereading);
+    EXPECT_EQ("Bravo", g_last_pat);
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_artp);
+    EXPECT_EQ(0, g_perform_count);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorSearchModeTest,
+                         testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadState, ArticleSelectorSearchReadTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndEraseKey, ArticleSelectorSearchCancelTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('\b', Ctl('u'))));
