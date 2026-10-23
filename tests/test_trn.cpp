@@ -667,6 +667,68 @@ protected:
     char                              m_empty_tc[1]{};
 };
 
+class InputNewsgroupNavigationTest : public InputNewsgroupTest
+{
+protected:
+    void                 SetUp() override;
+    void                 TearDown() override;
+    void                 prepare_groups();
+    InputNewsgroupResult run_command(std::string_view command);
+
+private:
+    NewsgroupData *m_old_recent{g_recent_newsgroup};
+};
+
+void InputNewsgroupNavigationTest::SetUp()
+{
+    InputNewsgroupTest::SetUp();
+    g_recent_newsgroup = nullptr;
+}
+
+void InputNewsgroupNavigationTest::TearDown()
+{
+    InputNewsgroupTest::TearDown();
+    g_recent_newsgroup = m_old_recent;
+}
+
+void InputNewsgroupNavigationTest::prepare_groups()
+{
+    add_newsgroup("comp.alpha", "1-2");
+    add_newsgroup("comp.bravo", "1-2");
+    add_newsgroup("comp.charlie", "1-2");
+    set_current_newsgroup(1);
+}
+
+InputNewsgroupResult InputNewsgroupNavigationTest::run_command(std::string_view command)
+{
+    push_command(command);
+    testing::internal::CaptureStdout();
+    const InputNewsgroupResult result = input_newsgroup();
+    (void) testing::internal::GetCapturedStdout();
+    return result;
+}
+
+using NewsgroupNavigationCommand = std::pair<char, InputNewsgroupResult>;
+
+class InputNewsgroupForwardTest : public InputNewsgroupNavigationTest,
+                                  public testing::WithParamInterface<NewsgroupNavigationCommand>
+{
+};
+
+class InputNewsgroupBackwardTest : public InputNewsgroupNavigationTest,
+                                   public testing::WithParamInterface<NewsgroupNavigationCommand>
+{
+};
+
+class InputNewsgroupFirstTest : public InputNewsgroupNavigationTest,
+                                public testing::WithParamInterface<NewsgroupNavigationCommand>
+{
+};
+
+class InputNewsgroupPositionTest : public InputNewsgroupNavigationTest, public testing::WithParamInterface<bool>
+{
+};
+
 class LocalSpoolArticleTest : public InputNewsgroupTest
 {
 protected:
@@ -4405,6 +4467,232 @@ TEST_F(TrnVersionTest, displaysNewsSourceDetails)
                                  HELP_TEXT;
     EXPECT_EQ(expected, output);
 }
+
+TEST_P(InputNewsgroupForwardTest, advancesToTheNextGroupWithTheRequestedTraversalPolicy)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+}
+
+TEST_P(InputNewsgroupForwardTest, advancingFromTheLastGroupMovesPastTheEnd)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+    set_current_newsgroup(2);
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[2], g_current_newsgroup);
+}
+
+TEST_P(InputNewsgroupForwardTest, advancingWhenAlreadyPastTheEndBreaksTraversal)
+{
+    const char command = GetParam().first;
+    prepare_groups();
+    g_newsgroup_ptr = nullptr;
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(ING_BREAK, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupForwardTest, advancingFollowsTheCurrentGroupOrder)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+    ASSERT_TRUE(move_newsgroup_order(&g_newsgroup_data[2], NewsgroupNum{1}));
+    set_current_newsgroup(0);
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[0], g_current_newsgroup);
+}
+
+TEST_P(InputNewsgroupBackwardTest, retreatsToThePreviousGroupWithTheRequestedTraversalPolicy)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+}
+
+TEST_P(InputNewsgroupBackwardTest, retreatingFromTheFirstGroupStaysAtTheFirstGroup)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+    set_current_newsgroup(0);
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupBackwardTest, retreatingFromPastTheEndStartsWithTheLastGroup)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+    g_newsgroup_ptr = nullptr;
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupBackwardTest, retreatingInAnEmptyCatalogHasNoTarget)
+{
+    const auto &[command, expected_result] = GetParam();
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupBackwardTest, retreatingFollowsTheCurrentGroupOrder)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+    ASSERT_TRUE(move_newsgroup_order(&g_newsgroup_data[2], NewsgroupNum{1}));
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+}
+
+TEST_P(InputNewsgroupFirstTest, jumpsFromTheCurrentGroupToTheFirstGroup)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupFirstTest, jumpsFromPastTheEndToTheFirstGroup)
+{
+    const auto &[command, expected_result] = GetParam();
+    prepare_groups();
+    g_newsgroup_ptr = nullptr;
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupFirstTest, jumpingToFirstInAnEmptyCatalogHasNoTarget)
+{
+    const auto &[command, expected_result] = GetParam();
+
+    const InputNewsgroupResult result = run_command(std::string(1, command));
+
+    EXPECT_EQ(expected_result, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupPositionTest, jumpingToEndLeavesTraversalPastTheLastGroup)
+{
+    prepare_groups();
+    if (GetParam())
+    {
+        g_newsgroup_ptr = nullptr;
+    }
+
+    const InputNewsgroupResult result = run_command("$");
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+}
+
+TEST_P(InputNewsgroupPositionTest, recallsTheRecentGroupFromTheCurrentPosition)
+{
+    prepare_groups();
+    g_recent_newsgroup = &g_newsgroup_data[0];
+    g_add_new_by_default = ADDNEW_SUB;
+    if (GetParam())
+    {
+        g_newsgroup_ptr = nullptr;
+    }
+
+    const InputNewsgroupResult result = run_command("-");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ("comp.alpha", g_newsgroup_name);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(ADDNEW_ASK, g_add_new_by_default);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+}
+
+TEST_F(InputNewsgroupNavigationTest, jumpingToEndInAnEmptyCatalogHasNoTarget)
+{
+    const InputNewsgroupResult result = run_command("$");
+
+    EXPECT_EQ(ING_NORM, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+}
+
+TEST_F(InputNewsgroupNavigationTest, recallingWithoutARecentGroupHasNoTarget)
+{
+    prepare_groups();
+
+    const InputNewsgroupResult result = run_command("-");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+}
+
+TEST_F(InputNewsgroupNavigationTest, decliningToResubscribeTheRecentGroupRestoresTheCurrentGroup)
+{
+    prepare_groups();
+    g_recent_newsgroup = &g_newsgroup_data[0];
+    g_recent_newsgroup->m_subscribe_char = '!';
+    g_recent_newsgroup->m_to_read = TR_UNSUB;
+
+    const InputNewsgroupResult result = run_command("-n");
+
+    EXPECT_EQ(ING_SPECIAL, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ("comp.bravo", g_newsgroup_name);
+    EXPECT_EQ('!', g_recent_newsgroup->m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_recent_newsgroup->m_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(TraversalPolicy, InputNewsgroupForwardTest,
+                         testing::Values(NewsgroupNavigationCommand{'n', ING_NORM},
+                                         NewsgroupNavigationCommand{'N', ING_SPECIAL}));
+
+INSTANTIATE_TEST_SUITE_P(TraversalPolicy, InputNewsgroupBackwardTest,
+                         testing::Values(NewsgroupNavigationCommand{'p', ING_NORM},
+                                         NewsgroupNavigationCommand{'P', ING_SPECIAL}));
+
+INSTANTIATE_TEST_SUITE_P(TraversalPolicy, InputNewsgroupFirstTest,
+                         testing::Values(NewsgroupNavigationCommand{'^', ING_NORM},
+                                         NewsgroupNavigationCommand{'1', ING_SPECIAL}));
+
+INSTANTIATE_TEST_SUITE_P(FromGroupOrEnd, InputNewsgroupPositionTest, testing::Bool());
 
 TEST_F(InputNewsgroupTest, gotoExplicitGroupName)
 {
