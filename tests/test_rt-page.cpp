@@ -209,7 +209,7 @@ protected:
     void              prepare_groups(SelectionMode mode, bool rereading);
     void              select_article(long number);
     void              exclude_subject(Subject &subject);
-    void              initialize_page();
+    void              initialize_page(bool fill_last_page = PRESERVE_PAGE);
     std::vector<long> subjects_with_flag(SubjectFlags flag) const;
 
     Subject m_bravo{};
@@ -315,9 +315,9 @@ void SubjectPageStateTest::exclude_subject(Subject &subject)
     count_subjects(CS_UNSEL_STORE);
 }
 
-void SubjectPageStateTest::initialize_page()
+void SubjectPageStateTest::initialize_page(bool fill_last_page)
 {
-    init_pages(PRESERVE_PAGE);
+    init_pages(fill_last_page);
     Selection no_search{};
     no_search.op = OI_NONE;
     (void) calc_page(no_search);
@@ -343,6 +343,24 @@ class SubjectPageAggregationTest : public SubjectPageStateTest,
 
 class SubjectPageSelectedThreadTest : public SubjectPageStateTest,
                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
+{
+};
+
+class SelectorPageAnchorTest : public SubjectPageStateTest, public testing::WithParamInterface<bool>
+{
+};
+
+class ArticlePageFillTest : public SubjectPageStateTest, public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class SubjectPageAnchorTest : public SubjectPageStateTest,
+                              public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class SubjectPageFillTest : public SubjectPageStateTest,
+                            public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
 {
 };
 
@@ -582,6 +600,255 @@ INSTANTIATE_TEST_SUITE_P(ModeAndReadScope, SubjectPageAggregationTest,
                          testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool()));
 
 INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndSelectedSubject, SubjectPageSelectedThreadTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(), testing::Bool()));
+
+TEST_P(SelectorPageAnchorTest, reversingSortKeepsTheSameArticleAtThePageAnchor)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_ARTICLE, rereading);
+    initialize_page();
+    g_sel_page_app = article_ptr_list_begin() + 1;
+    Article *anchor = *g_sel_page_app;
+    g_sel_direction = -1;
+
+    initialize_page();
+
+    EXPECT_EQ((rereading ? std::vector<long>{9, 8, 6, 2} : std::vector<long>{7, 5, 4, 1}), article_numbers());
+    ASSERT_EQ(article_ptr_list_begin() + 2, g_sel_page_app);
+    EXPECT_EQ(anchor, *g_sel_page_app);
+    EXPECT_EQ(2, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, removingTheAnchorAdvancesToTheNextEligibleArticle)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_ARTICLE, rereading);
+    initialize_page();
+    g_sel_page_app = article_ptr_list_begin() + 1;
+    (*g_sel_page_app)->m_flags &= ~AF_EXISTS;
+    count_subjects(CS_UNSEL_STORE);
+
+    initialize_page();
+
+    EXPECT_EQ((rereading ? std::vector<long>{2, 8, 9} : std::vector<long>{1, 5, 7}), article_numbers());
+    ASSERT_EQ(article_ptr_list_begin() + 1, g_sel_page_app);
+    EXPECT_EQ(ArticleNum{rereading ? 8 : 5}, (*g_sel_page_app)->article_num());
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, removingEarlierArticlesKeepsTheAnchorAndRecountsItsPosition)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_ARTICLE, rereading);
+    initialize_page();
+    g_sel_page_app = article_ptr_list_begin() + 1;
+    Article *anchor = *g_sel_page_app;
+    exclude_subject(m_subject);
+
+    initialize_page();
+
+    ASSERT_EQ(article_ptr_list_begin(), g_sel_page_app);
+    EXPECT_EQ(anchor, *g_sel_page_app);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, switchingFromSubjectsStartsWithTheAnchoredSubjectsFirstEligibleArticle)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_SUBJECT, rereading);
+    initialize_page();
+    g_sel_page_sp = &m_bravo;
+    g_sel_mode = SM_ARTICLE;
+
+    initialize_page();
+
+    ASSERT_EQ(article_ptr_list_begin() + 1, g_sel_page_app);
+    EXPECT_EQ(ArticleNum{rereading ? 6 : 4}, (*g_sel_page_app)->article_num());
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, anEmptySubjectAnchorAdvancesToTheNextEligibleSubject)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_SUBJECT, rereading);
+    g_tc_LINES = 6;
+    initialize_page();
+    exclude_subject(m_subject);
+
+    initialize_page();
+
+    EXPECT_EQ(&m_bravo, g_sel_page_sp);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, anEmptyThreadAnchorAdvancesPastAllItsSubjects)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_THREAD, rereading);
+    g_tc_LINES = 6;
+    initialize_page();
+    exclude_subject(m_subject);
+    exclude_subject(m_charlie);
+
+    initialize_page();
+
+    EXPECT_EQ(&m_bravo, g_sel_page_sp);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, switchingToThreadsMapsAReplySubjectAnchorToTheThreadRow)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_SUBJECT, rereading);
+    g_tc_LINES = 6;
+    initialize_page();
+    g_sel_page_sp = &m_charlie;
+    g_sel_mode = SM_THREAD;
+
+    initialize_page();
+
+    EXPECT_EQ(&m_subject, g_sel_page_sp);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 3 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+}
+
+TEST_P(SelectorPageAnchorTest, fillingAnArticlePageBeforeTheEndKeepsItsAnchor)
+{
+    prepare_groups(SM_ARTICLE, GetParam());
+    g_tc_LINES = 7;
+    initialize_page();
+    g_sel_page_app = article_ptr_list_begin() + 1;
+
+    initialize_page(FILL_LAST_PAGE);
+
+    EXPECT_EQ(article_ptr_list_begin() + 1, g_sel_page_app);
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(article_ptr_list_end() - 1, g_sel_next_app);
+}
+
+TEST_P(SelectorPageAnchorTest, fillingASubjectPageBeforeTheEndKeepsItsAnchor)
+{
+    const bool rereading = GetParam();
+    prepare_groups(SM_SUBJECT, rereading);
+    g_tc_LINES = 6;
+    initialize_page();
+    g_sel_page_sp = &m_bravo;
+
+    initialize_page(FILL_LAST_PAGE);
+
+    EXPECT_EQ(&m_bravo, g_sel_page_sp);
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(&m_charlie, g_sel_next_sp);
+}
+
+TEST_P(ArticlePageFillTest, theFillPolicyControlsWhetherTheFinalArticlePagePullsInEarlierRows)
+{
+    const auto &[rereading, fill_last_page] = GetParam();
+    prepare_groups(SM_ARTICLE, rereading);
+    g_tc_LINES = 7;
+    initialize_page();
+    g_sel_page_app = article_ptr_list_end() - 1;
+
+    initialize_page(fill_last_page);
+
+    EXPECT_EQ(article_ptr_list_end() - (fill_last_page ? 2 : 1), g_sel_page_app);
+    EXPECT_EQ(fill_last_page ? 2 : 3, g_sel_prior_obj_cnt);
+    EXPECT_EQ(fill_last_page ? 2 : 1, g_sel_page_item_cnt);
+    EXPECT_EQ(fill_last_page ? 2 : 1, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(article_ptr_list_end(), g_sel_next_app);
+}
+
+TEST_P(SubjectPageAnchorTest, reversingSortKeepsTheSameGroupAtThePageAnchor)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    g_tc_LINES = 6;
+    initialize_page();
+    g_sel_page_sp = &m_bravo;
+    g_sel_direction = -1;
+
+    initialize_page();
+
+    EXPECT_EQ(&m_bravo, g_sel_page_sp);
+    EXPECT_EQ(mode == SM_THREAD ? 0 : (rereading ? 2 : 1), g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+}
+
+TEST_P(SubjectPageAnchorTest, removingEarlierArticlesKeepsTheGroupAnchorAndRecountsItsPosition)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_groups(mode, rereading);
+    g_tc_LINES = 6;
+    initialize_page();
+    g_sel_page_sp = &m_bravo;
+    exclude_subject(m_subject);
+
+    initialize_page();
+
+    EXPECT_EQ(&m_bravo, g_sel_page_sp);
+    EXPECT_EQ(mode == SM_THREAD ? &m_bravo : &m_subject, g_first_subject);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 1 : 2, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+}
+
+TEST_P(SubjectPageFillTest, theFillPolicyControlsWhetherTheFinalGroupPagePullsInEarlierRows)
+{
+    const auto &[mode, rereading, fill_last_page] = GetParam();
+    prepare_groups(mode, rereading);
+    g_tc_LINES = 8;
+    g_sel_direction = mode == SM_THREAD ? -1 : 1;
+    initialize_page();
+    g_sel_page_sp = mode == SM_THREAD ? &m_charlie : &m_bravo;
+
+    initialize_page(fill_last_page);
+
+    Subject *expected_anchor =
+        fill_last_page ? (mode == SM_THREAD ? &m_bravo : &m_subject) : (mode == SM_THREAD ? &m_charlie : &m_bravo);
+    const int earlier_articles = mode == SM_THREAD ? (rereading ? 1 : 2) : 1;
+    EXPECT_EQ(expected_anchor, g_sel_page_sp);
+    EXPECT_EQ(fill_last_page ? 0 : earlier_articles, g_sel_prior_obj_cnt);
+    EXPECT_EQ(fill_last_page ? 4 : 4 - earlier_articles, g_sel_page_obj_cnt);
+    EXPECT_EQ((mode == SM_THREAD ? 1 : 2) + (fill_last_page ? 1 : 0), g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, SelectorPageAnchorTest, testing::Bool());
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndFillPolicy, ArticlePageFillTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadScope, SubjectPageAnchorTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndFillPolicy, SubjectPageFillTest,
                          testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(), testing::Bool()));
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
