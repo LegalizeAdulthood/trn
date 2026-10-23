@@ -547,7 +547,7 @@
 // CALL_INEWS:
 //      how to cancel an article
 //
-#define CALL_INEWS "@CALL_INEWS@"
+#define CALL_INEWS R"trn(@CALL_INEWS@)trn"
 
 // NEWS_POSTER:
 //      command to submit a followup article

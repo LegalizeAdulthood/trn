@@ -49,6 +49,7 @@
 #include <test_process_config.h>
 
 #include "mock_env.h"
+#include "MockNNTPConnection.h"
 #include "support/MockNntpServer.h"
 
 #include <gmock/gmock.h>
@@ -58,10 +59,12 @@
 #include <array>
 #include <csignal>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <optional>
 #include <regex>
 #include <string>
@@ -1853,6 +1856,245 @@ void GroupedFollowupArticleTest::SetUp()
     }
 }
 
+struct EmailFollowupCase
+{
+    const char *name;
+    const char *route;
+    const char *reply_to;
+    const char *recipient;
+};
+
+void PrintTo(const EmailFollowupCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class EmailFollowupArticleTest : public FollowupArticleTest, public testing::WithParamInterface<EmailFollowupCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmailFollowupArticleTest::SetUp()
+{
+    FollowupArticleTest::SetUp();
+    std::string headers = std::string{NEWS_ARTICLE_HEADERS} + "Followup-To: " + GetParam().route + '\n';
+    if (*GetParam().reply_to)
+    {
+        headers += std::string{"Reply-To: "} + GetParam().reply_to + '\n';
+    }
+    article(BODY, headers);
+}
+
+class ModeratedFollowupArticleTest : public FollowupArticleTest
+{
+protected:
+    void        SetUp() override;
+    std::string moderated_draft(std::string_view groups, std::string_view recipients) const;
+    void        expect_mailed(std::string_view draft) const;
+    void        expect_mail_retained(std::string_view draft) const;
+};
+
+void ModeratedFollowupArticleTest::SetUp()
+{
+    FollowupArticleTest::SetUp();
+    const fs::path active = m_output_dir / "news" / "active";
+    m_data_source.m_act_sf.close();
+    std::ofstream{active} << "comp.lang.cpp 3 1 m\nlist.shared 1 1 m\ncomp.test 1 1 m\nopen.test 1 1 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active, "", ""));
+    m_data_source.m_moderators_file = (m_output_dir / "news" / "moderators").generic_string();
+    std::ofstream{m_data_source.m_moderators_file}
+        << "comp.lang.cpp,list.shared:z-moderator@example.test\ncomp.test:a-moderator@example.test\n";
+    m_env.expect_env_repeatedly("NEWSHEADER", "Newsgroups: %F\nTo: obsolete@example.test\n"
+                                              " obsolete-copy@example.test\nSubject: Re: %S\nReferences: %R\n\n");
+}
+
+std::string ModeratedFollowupArticleTest::moderated_draft(std::string_view groups, std::string_view recipients) const
+{
+    return "To: " + std::string{recipients} + "\nNewsgroups: " + std::string{groups} +
+           "\nSubject: Re: Topic\nReferences: <parent@example.test> <root@example.test>\n\n" +
+           std::string{QUOTED_ARTICLE};
+}
+
+void ModeratedFollowupArticleTest::expect_mailed(std::string_view draft) const
+{
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    EXPECT_EQ(std::string{draft} + '\n', receiver_text("editor-input"));
+    EXPECT_EQ(g_orig_dir, receiver_text("editor-directory"));
+    const std::string mailed = receiver_text("mailed");
+    EXPECT_THAT(mailed, testing::HasSubstr(draft.substr(0, draft.find('\n'))));
+    EXPECT_THAT(mailed, testing::HasSubstr(QUOTED_ARTICLE));
+    EXPECT_THAT(mailed, testing::HasSubstr("mispelled editor body\n"));
+    EXPECT_THAT(mailed, testing::Not(testing::HasSubstr("obsolete")));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+    EXPECT_FALSE(fs::exists(m_home / "dead.letter"));
+}
+
+void ModeratedFollowupArticleTest::expect_mail_retained(std::string_view draft) const
+{
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    const std::string edited = std::string{draft} + "\nmispelled editor body\n";
+    EXPECT_EQ(edited, receiver_text("home/dead.letter"));
+    EXPECT_EQ(edited, receiver_text("home/.letter"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "mailed"));
+}
+
+struct ModeratorFollowupCase
+{
+    const char *name;
+    const char *groups;
+    const char *recipients;
+};
+
+void PrintTo(const ModeratorFollowupCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class CrosspostedFollowupArticleTest : public ModeratedFollowupArticleTest,
+                                       public testing::WithParamInterface<ModeratorFollowupCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void CrosspostedFollowupArticleTest::SetUp()
+{
+    ModeratedFollowupArticleTest::SetUp();
+    article(BODY, std::string{NEWS_ARTICLE_HEADERS} + "Followup-To: " + GetParam().groups + '\n');
+}
+
+struct FailedModeratorFollowupCase
+{
+    const char *name;
+    const char *mode;
+    const char *input;
+    bool        mailer_invoked;
+};
+
+void PrintTo(const FailedModeratorFollowupCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class FailedModeratorFollowupArticleTest : public ModeratedFollowupArticleTest,
+                                           public testing::WithParamInterface<FailedModeratorFollowupCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void FailedModeratorFollowupArticleTest::SetUp()
+{
+    ModeratedFollowupArticleTest::SetUp();
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam().mode);
+    answers(GetParam().input);
+}
+
+class LegacyFollowupArticleTest : public FollowupArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_handoff(std::string_view draft) const;
+
+private:
+    std::string m_old_dot_dir{g_dot_dir};
+};
+
+void LegacyFollowupArticleTest::SetUp()
+{
+    FollowupArticleTest::SetUp();
+    g_dot_dir = m_home.generic_string();
+    const fs::path inews = fs::path{g_orig_dir} /
+#ifdef USE_SPAWN_SHELL
+                           "inews.exe";
+    const char separator = ';';
+#else
+                           "inews";
+    const char separator = ':';
+#endif
+    fs::copy_file(TRN_TEST_PROCESS_TOOL, inews);
+    const char       *old_path = std::getenv("PATH");
+    const std::string path = g_orig_dir + separator + (old_path ? old_path : "");
+    m_env.expect_env_repeatedly("PATH", path.c_str());
+    const std::string poster =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" handoff \"%h\"";
+    m_env.expect_env_repeatedly("NEWSPOSTER", poster.c_str());
+}
+
+void LegacyFollowupArticleTest::TearDown()
+{
+    g_dot_dir = m_old_dot_dir;
+    FollowupArticleTest::TearDown();
+}
+
+void LegacyFollowupArticleTest::expect_handoff(std::string_view draft) const
+{
+    EXPECT_EQ(draft, receiver_text("handoff-input"));
+    EXPECT_EQ(g_orig_dir, receiver_text("handoff-directory"));
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+}
+
+class LegacyDraftPathFollowupArticleTest : public LegacyFollowupArticleTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void LegacyDraftPathFollowupArticleTest::SetUp()
+{
+    LegacyFollowupArticleTest::SetUp();
+    g_head_name = (fs::path{g_priv_dir} / (GetParam() ? "followup draft" : "followup")).generic_string();
+}
+
+struct RemoteFollowupCase
+{
+    const char *name;
+    const char *response;
+    bool        accepted;
+};
+
+void PrintTo(const RemoteFollowupCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class RemoteLegacyFollowupArticleTest : public LegacyFollowupArticleTest,
+                                        public testing::WithParamInterface<RemoteFollowupCase>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    std::string m_old_server_line{g_ser_line};
+    std::string m_old_last_command{g_last_command};
+};
+
+void RemoteLegacyFollowupArticleTest::SetUp()
+{
+    LegacyFollowupArticleTest::SetUp();
+    const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.connection = connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    m_data_source.m_flags = DF_REMOTE;
+    m_data_source.m_spool_dir = m_spool.generic_string();
+    EXPECT_CALL(*connection, write_line(testing::StrEq("DATE"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return(GetParam().response));
+}
+
+void RemoteLegacyFollowupArticleTest::TearDown()
+{
+    g_ser_line = m_old_server_line;
+    g_last_command = m_old_last_command;
+    LegacyFollowupArticleTest::TearDown();
+}
+
 std::string version_header()
 {
     return "\nTrn version: test-version.\nConfigured for "
@@ -2640,6 +2882,174 @@ TEST_F(FollowupArticleTest, quotesTheDecodedMimeTextInThePostedFollowup)
     expect_posted(expected_news_header() + "In article <root@example.test>, Root <root@example.test> wrote:\n"
                                            "> Original body\n> Second line\n\n");
 }
+
+TEST_P(EmailFollowupArticleTest, honorsTheRequestedEmailFollowupRoute)
+{
+    const std::string recipient = GetParam().recipient;
+    std::string       header = expected_news_header(GetParam().route, true);
+    header.replace(header.find("Cc: \n"), 5, "Cc: " + recipient + '\n');
+    std::string quote{QUOTED_ARTICLE};
+    if (*GetParam().reply_to)
+    {
+        const std::string          address = std::string{"<"} + GetParam().reply_to + "> wrote:";
+        constexpr std::string_view original = "<root@example.test> wrote:";
+        quote.replace(quote.find(original), original.size(), address);
+    }
+    const std::string draft = header + quote;
+
+    const std::string output = follow_with('F');
+
+    EXPECT_EQ(draft, receiver_text(fs::path{g_head_name}.filename().string().c_str()));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+#ifdef USE_SPAWN_SHELL
+    EXPECT_EQ(recipient + '\n', receiver_text("recipients"));
+    EXPECT_THAT(receiver_text("mailed"), testing::HasSubstr(quote));
+    EXPECT_EQ(draft + '\n', receiver_text("editor-input"));
+    EXPECT_FALSE(fs::exists(m_home / "dead.article"));
+#else
+    EXPECT_THAT(output, testing::HasSubstr("mail your reply instead?"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "mailed"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "editor-input"));
+#endif
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EmailRoutes, EmailFollowupArticleTest,
+    testing::Values(EmailFollowupCase{"PosterFrom", "poster", "", "root@example.test"},
+                    EmailFollowupCase{"PosterReplyTo", "poster", "desk@example.test", "desk@example.test"},
+                    EmailFollowupCase{"ExplicitAddress", "desk@example.test", "", "desk@example.test"}),
+    [](const testing::TestParamInfo<EmailFollowupCase> &info) { return info.param.name; });
+
+#ifdef USE_SPAWN_SHELL
+TEST_F(FollowupArticleTest, aFailedEmailFollowupRetainsTheDraftWithoutPostingNews)
+{
+    article(BODY, std::string{NEWS_ARTICLE_HEADERS} + "Followup-To: poster\n");
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "mailer_failure");
+    answers("s\na\n");
+    std::string header = expected_news_header("poster", true);
+    header.replace(header.find("Cc: \n"), 5, "Cc: root@example.test\n");
+
+    follow_with('F');
+
+    expect_news_retained(header + std::string{QUOTED_ARTICLE});
+    EXPECT_THAT(receiver_text("tools.log"), testing::HasSubstr("mailer\n"));
+    EXPECT_THAT(receiver_text("tools.log"), testing::Not(testing::HasSubstr("poster\n")));
+}
+#endif
+
+TEST_P(CrosspostedFollowupArticleTest, mailsTheFollowupToItsDistinctModerators)
+{
+    const std::string draft = moderated_draft(GetParam().groups, GetParam().recipients);
+
+    follow_with('F');
+
+    expect_mailed(draft);
+    EXPECT_THAT(receiver_text("tools.log"), testing::HasSubstr("mailer\n"));
+    EXPECT_THAT(receiver_text("tools.log"), testing::Not(testing::HasSubstr("poster\n")));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeratorRoutes, CrosspostedFollowupArticleTest,
+    testing::Values(ModeratorFollowupCase{"SingleGroup", "comp.lang.cpp", "z-moderator@example.test"},
+                    ModeratorFollowupCase{"SharedModerator", "comp.lang.cpp,list.shared", "z-moderator@example.test"},
+                    ModeratorFollowupCase{"DistinctModerators", "comp.lang.cpp,comp.test",
+                                          "a-moderator@example.test, z-moderator@example.test"},
+                    ModeratorFollowupCase{"MixedGroups", "open.test,comp.lang.cpp", "z-moderator@example.test"}),
+    [](const testing::TestParamInfo<ModeratorFollowupCase> &info) { return info.param.name; });
+
+TEST_P(FailedModeratorFollowupArticleTest, retainsTheModeratedDraftWithoutFallingBackToNews)
+{
+    follow_with('F');
+
+    expect_mail_retained(moderated_draft("comp.lang.cpp", "z-moderator@example.test"));
+    EXPECT_EQ(GetParam().mailer_invoked, receiver_text("tools.log").find("mailer\n") != std::string::npos);
+    EXPECT_THAT(receiver_text("tools.log"), testing::Not(testing::HasSubstr("poster\n")));
+}
+
+INSTANTIATE_TEST_SUITE_P(MailOutcomes, FailedModeratorFollowupArticleTest,
+                         testing::Values(FailedModeratorFollowupCase{"Abort", "", "a\n", false},
+                                         FailedModeratorFollowupCase{"MailerFailure", "mailer_failure", "s\na\n",
+                                                                     true}),
+                         [](const testing::TestParamInfo<FailedModeratorFollowupCase> &info)
+                         { return info.param.name; });
+
+TEST_F(ModeratedFollowupArticleTest, anApprovedFollowupIsPostedWithoutModeratorMail)
+{
+    m_env.expect_env_repeatedly("NEWSHEADER", "Newsgroups: %F\nSubject: Re: %S\nApproved: editor@example.test\n\n");
+
+    follow_with('F');
+
+    expect_posted("Newsgroups: comp.lang.cpp\nSubject: Re: Topic\nApproved: editor@example.test\n\n" +
+                  std::string{QUOTED_ARTICLE});
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "mailed"));
+}
+
+TEST_P(LegacyDraftPathFollowupArticleTest, postsTheDraftWhenTheComposerRequestsAnInewsHandoff)
+{
+    follow_with('F');
+
+    const std::string draft = expected_news_header() + std::string{QUOTED_ARTICLE};
+    expect_handoff(draft);
+    EXPECT_EQ(draft, receiver_text("posted"));
+    EXPECT_THAT(receiver_text("tools.log"), testing::HasSubstr("inews\n-h\n"));
+    EXPECT_FALSE(fs::exists(m_home / "dead.article"));
+}
+
+INSTANTIATE_TEST_SUITE_P(DraftPaths, LegacyDraftPathFollowupArticleTest, testing::Values(false, true),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "Spaces" : "Plain"; });
+
+TEST_F(LegacyFollowupArticleTest, aFailedInewsHandoffAppendsTheDraftToTheRecoveryFile)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "inews_failure");
+    std::ofstream{m_home / "dead.article"} << "An older draft\n";
+
+    const std::string output = follow_with('F');
+
+    const std::string draft = expected_news_header() + std::string{QUOTED_ARTICLE};
+    expect_handoff(draft);
+    EXPECT_EQ("An older draft\n" + draft, receiver_text("home/dead.article"));
+    EXPECT_THAT(output, testing::HasSubstr("Article appended to "));
+    EXPECT_THAT(receiver_text("tools.log"), testing::HasSubstr("inews\n-h\n"));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+}
+
+TEST_F(LegacyFollowupArticleTest, aBlockedRecoveryFileLeavesTheOriginalDraftAvailable)
+{
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "inews_failure");
+    fs::create_directory(m_home / "dead.article");
+
+    const std::string output = follow_with('F');
+
+    expect_handoff(expected_news_header() + std::string{QUOTED_ARTICLE});
+    EXPECT_THAT(output, testing::HasSubstr("Unable to append article to "));
+    EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+}
+
+TEST_P(RemoteLegacyFollowupArticleTest, checksTheServerBeforeHandingTheDraftToInews)
+{
+    const std::string output = follow_with('F');
+
+    const std::string draft = expected_news_header() + std::string{QUOTED_ARTICLE};
+    expect_handoff(draft);
+    if (GetParam().accepted)
+    {
+        EXPECT_EQ(draft, receiver_text("posted"));
+        EXPECT_FALSE(fs::exists(m_home / "dead.article"));
+    }
+    else
+    {
+        EXPECT_EQ(draft, receiver_text("home/dead.article"));
+        EXPECT_THAT(output, testing::HasSubstr("Article appended to "));
+        EXPECT_FALSE(fs::exists(fs::path{g_priv_dir} / "posted"));
+        EXPECT_THAT(receiver_text("tools.log"), testing::Not(testing::HasSubstr("inews\n")));
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ServerStatus, RemoteLegacyFollowupArticleTest,
+                         testing::Values(RemoteFollowupCase{"DateAccepted", "111 20261022100000", true},
+                                         RemoteFollowupCase{"DateUnsupported", "500 Unknown command", true},
+                                         RemoteFollowupCase{"AccessDenied", "502 Permission denied", false}),
+                         [](const testing::TestParamInfo<RemoteFollowupCase> &info) { return info.param.name; });
 
 TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSelectionState)
 {

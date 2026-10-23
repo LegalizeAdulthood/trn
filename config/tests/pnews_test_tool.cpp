@@ -48,12 +48,13 @@ int main(int argc, char **argv)
     {
         return 2;
     }
-    const std::string           role = std::string{argv[1]} == "--disable" && argc > 2 ? argv[2] : argv[1];
-    const std::string           mode = environment("PNEWS_TEST_MODE");
+    const bool        inews = std::filesystem::path{argv[0]}.stem() == "inews";
+    const std::string role = inews ? "inews" : std::string{argv[1]} == "--disable" && argc > 2 ? argv[2] : argv[1];
+    const std::string mode = environment("PNEWS_TEST_MODE");
     const std::filesystem::path directory = environment("PNEWS_TEST_DIRECTORY");
     std::ofstream log(directory / (role == "article-saver" ? "article-saver.log" : "tools.log"), std::ios::app);
     log << role << '\n';
-    for (int i = 2; i < argc; ++i)
+    for (int i = inews ? 1 : 2; i < argc; ++i)
     {
         log << argv[i] << '\n';
     }
@@ -127,9 +128,19 @@ int main(int argc, char **argv)
         }
         return 4;
     }
-    if (role == "poster")
+    if (role == "handoff")
     {
-        if (argc != 3 || std::string{argv[2]} != "-h")
+        if (argc != 3 || !std::filesystem::is_regular_file(argv[2]))
+        {
+            return 14;
+        }
+        write_file(directory / "handoff-input", read_file(argv[2]));
+        write_file(directory / "handoff-directory", std::filesystem::current_path().generic_string());
+        return 42;
+    }
+    if (role == "poster" || inews)
+    {
+        if (argc != (inews ? 2 : 3) || std::string{argv[inews ? 1 : 2]} != "-h")
         {
             return 5;
         }
