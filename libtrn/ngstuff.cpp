@@ -461,7 +461,7 @@ int thread_perform(std::string_view command)
             {
                 continue;
             }
-            g_artp = sp->first_art();
+            g_artp = g_sel_mode == SM_SUBJECT ? sp->m_articles : sp->first_art();
             if (g_artp)
             {
                 g_art = g_artp->article_num();
@@ -535,7 +535,8 @@ int thread_perform(std::string_view command)
             }
             for (; sp; sp = next_subject(sp, bits))
             {
-                for (ap = sp->first_art(); ap; ap = ap->next_article())
+                for (ap = g_sel_mode == SM_SUBJECT ? sp->m_articles : sp->first_art(); ap;
+                     ap = g_sel_mode == SM_SUBJECT ? ap->m_subj_next : ap->next_article())
                 {
                     if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
                         && !(ap->m_flags & g_sel_mask) ^ !!bits)

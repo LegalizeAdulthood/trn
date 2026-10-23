@@ -6,6 +6,8 @@
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
+#include <trn/intrp.h>
+#include <trn/ng.h>
 #include <trn/rt-page.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -23,6 +25,7 @@
 #include <cctype>
 #include <cerrno>
 #include <initializer_list>
+#include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -723,6 +726,129 @@ class ArticleSelectorBulkExclusiveTest : public ArticleSelectorBulkStateTest,
 };
 
 class ArticleSelectorBulkThreadTest : public ArticleSelectorBulkStateTest, public testing::WithParamInterface<char>
+{
+};
+
+class ArticleSelectorInlineStateTest : public ArticleSelectorBulkStateTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    void         prepare_inline(SelectionMode mode, bool rereading = false, bool selected = true);
+    void         set_current_item();
+    void         join_inline_thread();
+    DisplayState run_inline(std::string_view input);
+
+private:
+    Article                   *m_old_article{g_artp};
+    ArticleNum                 m_old_article_number{g_art};
+    SelectionItem              m_old_item{g_sel_items[0]};
+    int                        m_old_page_line{g_page_line};
+    int                        m_old_perform_count{g_perform_count};
+    bool                       m_old_performed_loop{g_performed_article_loop};
+    bool                       m_old_error{g_error_occurred};
+    bool                       m_old_breadth_first{g_breadth_first};
+    char                       m_old_erase{g_erase_char};
+    char                       m_old_kill{g_kill_char};
+    std::string_view           m_old_standout{g_tc_SO};
+    std::string_view           m_old_end_standout{g_tc_SE};
+    std::string_view           m_old_backspace{g_tc_BC};
+    std::string                m_old_message{g_msg};
+    std::optional<std::string> m_old_subject_line{g_subj_line};
+};
+
+void ArticleSelectorInlineStateTest::SetUp()
+{
+    ArticleSelectorBulkStateTest::SetUp();
+    g_artp = nullptr;
+    g_art = ArticleNum{};
+    g_page_line = 1;
+    g_perform_count = 0;
+    g_error_occurred = false;
+    g_breadth_first = false;
+    g_erase_char = '\b';
+    g_kill_char = Ctl('u');
+    g_tc_SO = "";
+    g_tc_SE = "";
+    g_tc_BC = "\b";
+    article_ptr(ArticleNum{1})->m_child1 = article_ptr(ArticleNum{4});
+    article_ptr(ArticleNum{4})->m_parent = article_ptr(ArticleNum{1});
+}
+
+void ArticleSelectorInlineStateTest::TearDown()
+{
+    g_artp = m_old_article;
+    g_art = m_old_article_number;
+    g_sel_items[0] = m_old_item;
+    g_page_line = m_old_page_line;
+    g_perform_count = m_old_perform_count;
+    g_performed_article_loop = m_old_performed_loop;
+    g_error_occurred = m_old_error;
+    g_breadth_first = m_old_breadth_first;
+    g_erase_char = m_old_erase;
+    g_kill_char = m_old_kill;
+    g_tc_SO = m_old_standout;
+    g_tc_SE = m_old_end_standout;
+    g_tc_BC = m_old_backspace;
+    g_msg = m_old_message;
+    g_subj_line = m_old_subject_line;
+    ArticleSelectorBulkStateTest::TearDown();
+}
+
+void ArticleSelectorInlineStateTest::prepare_inline(SelectionMode mode, bool rereading, bool selected)
+{
+    prepare_bulk(mode, rereading, selected);
+    set_current_item();
+}
+
+void ArticleSelectorInlineStateTest::set_current_item()
+{
+    if (g_sel_mode == SM_ARTICLE)
+    {
+        g_sel_items[0].u.ap = *g_sel_page_app;
+    }
+    else
+    {
+        g_sel_items[0].u.sp = g_sel_page_sp;
+    }
+}
+
+void ArticleSelectorInlineStateTest::join_inline_thread()
+{
+    m_charlie.m_thread = m_subject.m_thread;
+    m_subject.m_thread_link = &m_charlie;
+    m_charlie.m_thread_link = &m_subject;
+    Article *reply = article_ptr(ArticleNum{3});
+    reply->m_parent = m_subject.m_articles;
+    article_ptr(ArticleNum{4})->m_sibling = reply;
+    g_sel_page_sp = nullptr;
+    rebuild_page();
+    calculate_page();
+    set_current_item();
+}
+
+DisplayState ArticleSelectorInlineStateTest::run_inline(std::string_view input)
+{
+    return run_command(':', std::string(input) + "\n\n");
+}
+
+class ArticleSelectorInlineModeTest : public ArticleSelectorInlineStateTest,
+                                      public testing::WithParamInterface<SelectionMode>
+{
+};
+
+class ArticleSelectorInlineCancelTest : public ArticleSelectorInlineStateTest,
+                                        public testing::WithParamInterface<std::tuple<SelectionMode, char>>
+{
+};
+
+class ArticleSelectorInlineScopeTest : public ArticleSelectorInlineStateTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+class ArticleSelectorInlinePendingMarkTest : public ArticleSelectorInlineStateTest,
+                                             public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
 {
 };
 
@@ -1488,3 +1614,233 @@ INSTANTIATE_TEST_SUITE_P(ModeAndCommand, ArticleSelectorBulkExclusiveTest,
                                           testing::Values('X', 'D')));
 
 INSTANTIATE_TEST_SUITE_P(GroupAndPage, ArticleSelectorBulkThreadTest, testing::Values('X', 'D'));
+
+TEST_P(ArticleSelectorInlineModeTest, junkCommandAppliesToSelectedArticlesAcrossPages)
+{
+    prepare_inline(GetParam());
+    ASSERT_TRUE(next_page());
+    calculate_page();
+    set_current_item();
+
+    const DisplayState result = run_inline("j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2, 3}, {});
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(GetParam(), g_sel_mode);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, doubledColonJunksUnselectedArticlesAndRetainsSelection)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_inline(":j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 4}, {1, 4});
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, deselectCommandKeepsArticlesUnread)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_inline("-");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 3, 4}, {});
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, doubledColonSelectsPreviouslyUnselectedArticles)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_inline(":+");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 3, 4}, {1, 2, 3, 4});
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(3, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, selectedCommandWithNoSelectionLeavesArticlesAlone)
+{
+    prepare_inline(GetParam(), false, false);
+
+    const DisplayState result = run_inline("j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 3, 4}, {});
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ("No articles affected.", g_msg);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, readModeJunkCommandClearsSelectedReadArticles)
+{
+    prepare_inline(GetParam(), true);
+
+    const DisplayState result = run_inline("j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({}, {});
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_TRUE(g_sel_rereading);
+    EXPECT_EQ(AGF_DEL_SEL, g_sel_mask);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, emptyCommandRetainsSelection)
+{
+    prepare_inline(GetParam());
+
+    const DisplayState result = run_inline("");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_selection_preserved(false);
+    EXPECT_EQ(0, g_perform_count);
+}
+
+TEST_P(ArticleSelectorInlineModeTest, selectedUnreadCommandSkipsAlreadyReadArticles)
+{
+    prepare_inline(GetParam());
+    article_ptr(ArticleNum{4})->one_less();
+    rebuild_page();
+    calculate_page();
+    set_current_item();
+
+    const DisplayState result = run_inline("j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2, 3}, {});
+    EXPECT_EQ(1, g_perform_count);
+}
+
+TEST_P(ArticleSelectorInlineCancelTest, erasedCommandRetainsSelection)
+{
+    const auto &[mode, cancel] = GetParam();
+    prepare_inline(mode);
+
+    const DisplayState result = run_inline(std::string(1, cancel));
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_selection_preserved(false);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
+    EXPECT_EQ(ArticleNum{1}, g_art);
+}
+
+TEST_P(ArticleSelectorInlineScopeTest, dotCommandLimitsJunkingToCurrentSubjectOrThread)
+{
+    const auto &[mode, unselected] = GetParam();
+    prepare_inline(mode);
+    article_ptr(ArticleNum{2})->m_flags |= AF_SEL;
+    if (!unselected)
+    {
+        article_ptr(ArticleNum{3})->m_flags |= AF_SEL;
+    }
+    else
+    {
+        article_ptr(ArticleNum{4})->m_flags &= ~AF_SEL;
+    }
+    join_inline_thread();
+
+    const DisplayState result = run_inline(unselected ? ":.j" : ".j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    if (mode == SM_SUBJECT)
+    {
+        if (unselected)
+        {
+            expect_articles({1, 2, 3}, {1, 2});
+        }
+        else
+        {
+            expect_articles({2, 3}, {2, 3});
+        }
+    }
+    else if (unselected)
+    {
+        expect_articles({1, 2}, {1, 2});
+    }
+    else
+    {
+        expect_articles({2}, {2});
+    }
+}
+
+TEST_F(ArticleSelectorInlineStateTest, threadCommandFindsTheFirstSubjectWithUnreadArticles)
+{
+    prepare_inline(SM_THREAD);
+    article_ptr(ArticleNum{1})->m_flags &= ~(AF_UNREAD | AF_SEL);
+    article_ptr(ArticleNum{4})->m_flags &= ~(AF_UNREAD | AF_SEL);
+    article_ptr(ArticleNum{3})->m_flags |= AF_SEL;
+    m_charlie.m_flags |= SF_SEL;
+    m_newsgroup.m_to_read = 2;
+    join_inline_thread();
+    ASSERT_EQ(0, m_subject.m_misc);
+    ASSERT_EQ(&m_subject, g_sel_items[0].u.sp);
+
+    const DisplayState result = run_inline(".j");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2}, {});
+    EXPECT_EQ(1, g_perform_count);
+}
+
+TEST_F(ArticleSelectorInlineStateTest, currentSubjectSelectionDoesNotSelectItsThreadRoot)
+{
+    prepare_inline(SM_SUBJECT);
+    join_inline_thread();
+    ASSERT_TRUE(next_page());
+    calculate_page();
+    set_current_item();
+    ASSERT_EQ(&m_charlie, g_sel_items[0].u.sp);
+
+    const DisplayState result = run_inline(":.++");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({1, 2, 3, 4}, {1, 3, 4});
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(2, g_selected_subj_cnt);
+}
+
+TEST_P(ArticleSelectorInlinePendingMarkTest, completedCommandCommitsPendingReadMarksOnlyInUnreadMode)
+{
+    const auto &[mode, rereading] = GetParam();
+    prepare_inline(mode, rereading);
+    join_inline_thread();
+    m_charlie.m_flags |= SF_DEL;
+
+    const DisplayState result = run_inline("+");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    if (rereading)
+    {
+        expect_articles({}, {1, 4});
+        EXPECT_TRUE(m_charlie.m_flags & SF_DEL);
+    }
+    else
+    {
+        expect_articles({1, 2, 4}, {1, 4});
+        EXPECT_FALSE(m_charlie.m_flags & SF_DEL);
+    }
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(rereading, g_sel_rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorInlineModeTest,
+                         testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndEraseKey, ArticleSelectorInlineCancelTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values('\b', Ctl('u'))));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndSelection, ArticleSelectorInlineScopeTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadState, ArticleSelectorInlinePendingMarkTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool()));
