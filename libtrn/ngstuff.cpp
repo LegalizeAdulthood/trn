@@ -960,7 +960,7 @@ deselect:
             if (g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask))
             {
                 g_newsgroup_ptr->m_flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
-                if (g_sel_rereading)
+                if (g_sel_rereading && g_newsgroup_ptr->m_to_read != TR_UNSUB)
                 {
                     g_newsgroup_ptr->m_flags |= NF_DEL;
                 }
@@ -974,11 +974,13 @@ deselect:
                 fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_ptr->rc_name());
                 term_down(1);
             }
+            if (g_newsgroup_ptr->m_to_read >= g_newsgroup_min_to_read)
+            {
+                --g_newsgroup_to_read;
+            }
             g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
             g_newsgroup_ptr->m_to_read = TR_UNSUB;
             g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
-            g_newsgroup_ptr->m_flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
-            --g_newsgroup_to_read;
             goto deselect;
 
         default:

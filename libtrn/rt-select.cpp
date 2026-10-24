@@ -3371,7 +3371,7 @@ DisplayState newsgroup_commands(char_int ch)
                 if (((!(np->m_flags & NF_SEL) ^ (ch == 'J')) && np->m_to_read != TR_UNSUB) //
                     || (np->m_flags & NF_DEL))
                 {
-                    if (ch == 'J' || (np->m_flags & NF_INCLUDED))
+                    if (np->m_to_read != TR_UNSUB && (ch == 'J' || (np->m_flags & NF_INCLUDED)))
                     {
                         np->catch_up(0, 0);
                     }
