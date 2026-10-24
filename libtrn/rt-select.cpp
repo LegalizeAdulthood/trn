@@ -3554,7 +3554,7 @@ reask_sort:
                 case NGS_DONE:
                     break;
                 }
-                g_newsgroup_ptr = g_current_newsgroup;
+                set_newsgroup(g_current_newsgroup);
             }
             if (!command_group)
             {

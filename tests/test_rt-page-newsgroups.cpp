@@ -5,10 +5,12 @@
 
 #include <config/common.h>
 #include <config/fdio.h>
+#include <trn/addng.h>
 #include <trn/datasrc.h>
 #include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/ngsrch.h>
 #include <trn/ngstuff.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
@@ -27,6 +29,7 @@
 #include <unistd.h>
 #endif
 
+#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <cstdio>
@@ -1257,6 +1260,138 @@ void NewsgroupSelectorDotScopeTest::expect_dot_context(int cursor) const
     EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
     EXPECT_EQ(cursor, g_sel_item_index);
 }
+
+class NewsgroupSelectorSearchStateTest : public NewsgroupSelectorInlineStateTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    void         prepare_search(bool rereading);
+    void         prepare_mixed_search(bool rereading);
+    void         seed_search(bool rereading, std::string_view input);
+    DisplayState run_search(std::string_view input);
+    void         expect_search_context() const;
+    void         expect_search_selection(const std::vector<int> &matches) const;
+
+private:
+    AddGroupTable m_old_add_groups{std::move(g_add_groups)};
+    std::string   m_old_directory{g_newsgroup_dir};
+};
+
+void NewsgroupSelectorSearchStateTest::SetUp()
+{
+    NewsgroupSelectorInlineStateTest::SetUp();
+    g_add_groups = {};
+    newsgroup_search_init();
+}
+
+void NewsgroupSelectorSearchStateTest::TearDown()
+{
+    newsgroup_search_init();
+    g_add_groups = std::move(m_old_add_groups);
+    g_newsgroup_dir = m_old_directory;
+    NewsgroupSelectorInlineStateTest::TearDown();
+}
+
+void NewsgroupSelectorSearchStateTest::prepare_search(bool rereading)
+{
+    prepare_inline(rereading);
+    g_current_newsgroup = m_groups[PAGE_UNSELECTED];
+    set_newsgroup(m_groups[PAGE_SELECTED]);
+}
+
+void NewsgroupSelectorSearchStateTest::prepare_mixed_search(bool rereading)
+{
+    prepare_search(rereading);
+    NewsgroupData &opposite = *m_groups[PAGE_UNSELECTED];
+    opposite.m_to_read = rereading ? 7 : 0;
+    opposite.m_rc_line.resize(opposite.m_num_offset);
+    opposite.m_rc_line += rereading ? " 1-3" : " 1-10";
+    m_groups[AFTER_UNSELECTED]->m_to_read = TR_BOGUS;
+    g_newsgroup_to_read = NewsgroupNum{rereading ? 1 : 4};
+    initialize_page();
+    remember_groups();
+}
+
+void NewsgroupSelectorSearchStateTest::seed_search(bool rereading, std::string_view input)
+{
+    prepare_mixed_search(rereading);
+    ASSERT_EQ(DS_DISPLAY, run_search(input));
+    clear_selections();
+    set_newsgroup(m_groups[PAGE_SELECTED]);
+}
+
+DisplayState NewsgroupSelectorSearchStateTest::run_search(std::string_view input)
+{
+    const std::string command = std::string{input} + "\n\n";
+    for (auto ch = command.rbegin(); ch != command.rend(); ++ch)
+    {
+        push_char(static_cast<unsigned char>(*ch) | 0200);
+    }
+    return run_command('/');
+}
+
+void NewsgroupSelectorSearchStateTest::expect_search_context() const
+{
+    expect_context();
+    EXPECT_EQ(m_groups[PAGE_UNSELECTED], g_current_newsgroup);
+    EXPECT_EQ(m_groups[BEFORE_SELECTED], g_recent_newsgroup);
+    EXPECT_EQ(g_current_newsgroup, g_newsgroup_ptr);
+    EXPECT_EQ(g_current_newsgroup->rc_name(), g_newsgroup_name);
+    EXPECT_EQ("comp/page-unselected", g_newsgroup_dir);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+void NewsgroupSelectorSearchStateTest::expect_search_selection(const std::vector<int> &matches) const
+{
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        const bool matched = std::find(matches.begin(), matches.end(), index) != matches.end();
+        if (matched && !(m_flags[index] & static_cast<NewsgroupFlags>(g_sel_mask)))
+        {
+            expect_preserved(index, NF_DEL, static_cast<NewsgroupFlags>(g_sel_mask) | NF_INCLUDED);
+        }
+        else
+        {
+            expect_preserved(index);
+        }
+    }
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+struct NewsgroupSearchPattern
+{
+    std::string_view input;
+    std::vector<int> matches;
+    int              selected_count;
+};
+
+void PrintTo(const NewsgroupSearchPattern &pattern, std::ostream *output)
+{
+    *output << pattern.input;
+}
+
+class NewsgroupSelectorSearchPatternTest : public NewsgroupSelectorSearchStateTest,
+                                           public testing::WithParamInterface<std::tuple<bool, NewsgroupSearchPattern>>
+{
+};
+
+class NewsgroupSelectorSearchReadScopeTest : public NewsgroupSelectorSearchStateTest,
+                                             public testing::WithParamInterface<bool>
+{
+};
+
+class NewsgroupSelectorSearchModifierTest : public NewsgroupSelectorSearchStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class NewsgroupSelectorSearchDisplayTest : public NewsgroupSelectorSearchStateTest,
+                                           public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
 
 class NewsgroupPageInvalidTest : public NewsgroupPageStateTest,
                                  public testing::WithParamInterface<std::tuple<ArticleUnread, bool>>
@@ -3245,6 +3380,200 @@ TEST_P(NewsgroupSelectorDotScopeTest, aSingleGroupCatalogHasNoOtherGroupTargets)
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadAndOtherGroupScope, NewsgroupSelectorDotScopeTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorSearchPatternTest, aDefaultSearchSelectsEligibleMatchesAcrossPages)
+{
+    const auto &[rereading, pattern] = GetParam();
+    prepare_search(rereading);
+
+    const DisplayState result = run_search(pattern.input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection(pattern.matches);
+    EXPECT_EQ(pattern.selected_count, g_selected_count);
+    EXPECT_EQ(pattern.matches.size(), g_perform_count) << m_output;
+    EXPECT_EQ(6, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{6}, g_newsgroup_to_read);
+    expect_search_context();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPattern, NewsgroupSelectorSearchPatternTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(NewsgroupSearchPattern{"comp*", {0, 2, 4, 6}, 5},
+                                                          NewsgroupSearchPattern{"selected/", {0, 1, 2, 4, 5, 6}, 6},
+                                                          NewsgroupSearchPattern{"^comp.page-selected$/", {4}, 3},
+                                                          NewsgroupSearchPattern{"^comp.page-?nselected$/", {2}, 4},
+                                                          NewsgroupSearchPattern{"*page*/", {2, 4}, 4},
+                                                          NewsgroupSearchPattern{"^comp.[ap]*-selected$/", {4, 6}, 3},
+                                                          NewsgroupSearchPattern{"^COMP.PAGE-SELECTED$/", {4}, 3},
+                                                          NewsgroupSearchPattern{"^missing$/", {}, 3})));
+
+TEST_P(NewsgroupSelectorSearchModifierTest, theReadModifierIncludesOppositeScopeGroupsWithoutSelectingInvalidGroups)
+{
+    const auto [rereading, include_read] = GetParam();
+    prepare_mixed_search(rereading);
+
+    const DisplayState result = run_search(include_read ? "comp*/r" : "comp*/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection(include_read ? std::vector<int>{0, 2, 4, 6} : std::vector<int>{0, 4, 6});
+    EXPECT_EQ(include_read ? 5 : 4, g_selected_count);
+    EXPECT_EQ(include_read ? 4 : 3, g_perform_count);
+    EXPECT_EQ(include_read ? 5 : 4, g_sel_total_obj_cnt);
+    EXPECT_EQ(NewsgroupNum{rereading ? 1 : 4}, g_newsgroup_to_read);
+    EXPECT_EQ(include_read ? "4 newsgroups matched, 2 selected." : "3 newsgroups matched, 1 selected.", g_msg);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, anEmptyPatternReusesThePreviousGroupPattern)
+{
+    const bool rereading = GetParam();
+    seed_search(rereading, "comp*/");
+
+    const DisplayState result = run_search("/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({0, 4, 6});
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+    EXPECT_EQ("3 newsgroups selected.", g_msg);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, aRepeatedPatternRetainsItsReadModifier)
+{
+    const bool rereading = GetParam();
+    seed_search(rereading, "comp*/r");
+
+    const DisplayState result = run_search("/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({0, 2, 4, 6});
+    EXPECT_EQ(4, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ("4 newsgroups selected.", g_msg);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, aNewPatternResetsThePreviousReadModifier)
+{
+    const bool rereading = GetParam();
+    seed_search(rereading, "alt*/r");
+
+    const DisplayState result = run_search("comp*/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({0, 4, 6});
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(3, g_perform_count);
+    EXPECT_EQ("3 newsgroups selected.", g_msg);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchDisplayTest, aSearchSelectsMatchingGroupsWhileRetainingTheDisplayFilter)
+{
+    const auto [rereading, restricted] = GetParam();
+    prepare_search(rereading);
+    if (restricted)
+    {
+        set_newsgroup_to_do("comp.*");
+    }
+    else
+    {
+        g_sel_exclusive = true;
+    }
+    initialize_page();
+    remember_groups();
+
+    const DisplayState result = run_search("comp*/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({0, 2, 4, 6});
+    EXPECT_EQ(restricted ? 4 : 5, g_selected_count);
+    EXPECT_EQ(restricted ? 4 : 5, g_sel_total_obj_cnt);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(!restricted, g_sel_exclusive);
+    const std::vector<std::string> included =
+        restricted ? std::vector<std::string>{"comp.before-unselected", "comp.page-unselected", "comp.page-selected",
+                                              "comp.after-selected"}
+                   : std::vector<std::string>{"comp.before-unselected", "alt.before-selected", "comp.page-unselected",
+                                              "comp.page-selected", "comp.after-selected"};
+    EXPECT_EQ(included, groups_with_flag(NF_INCLUDED));
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, anExplicitPatternCanSelectGroupsOutsideADisplayRestriction)
+{
+    prepare_search(GetParam());
+    set_newsgroup_to_do("comp.*");
+    initialize_page();
+    remember_groups();
+
+    const DisplayState result = run_search("alt*/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        expect_preserved(index, index == AFTER_UNSELECTED ? NF_DEL : NF_NONE,
+                         index == AFTER_UNSELECTED ? static_cast<NewsgroupFlags>(g_sel_mask) : NF_NONE);
+    }
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ("2 newsgroups matched, 1 selected.", g_msg);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, anEmptyCatalogReportsNoAffectedGroups)
+{
+    const bool rereading = GetParam();
+    set_read_scope(rereading);
+    initialize_page();
+
+    const DisplayState result = run_search("missing/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(nullptr, g_current_newsgroup);
+    EXPECT_EQ(nullptr, g_recent_newsgroup);
+    EXPECT_EQ("No newsgroups affected.", g_msg);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, aSearchBeforeAnyGroupVisitKeepsTheCurrentGroupAbsent)
+{
+    const bool rereading = GetParam();
+    prepare_search(rereading);
+    g_current_newsgroup = nullptr;
+    g_recent_newsgroup = nullptr;
+
+    const DisplayState result = run_search("comp*/");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_search_selection({0, 2, 4, 6});
+    EXPECT_EQ(5, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(nullptr, g_current_newsgroup);
+    EXPECT_EQ(nullptr, g_recent_newsgroup);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, NewsgroupSelectorSearchReadScopeTest, testing::Bool());
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndModifier, NewsgroupSelectorSearchModifierTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndDisplay, NewsgroupSelectorSearchDisplayTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
