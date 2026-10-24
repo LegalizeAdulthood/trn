@@ -433,6 +433,250 @@ char SelectorInputTest::run_input(std::string_view commands)
     return result;
 }
 
+class SelectorSessionInputState : public SelectorInputTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    char run_selector(std::string_view commands, bool rereading = false);
+    void expect_next_command(char command);
+
+private:
+    ArticleNum        m_old_art{g_art};
+    Article          *m_old_artp{g_artp};
+    ArticleNum        m_old_current{g_curr_art};
+    Article          *m_old_currentp{g_curr_artp};
+    ArticleNum        m_old_search_ahead{g_search_ahead};
+    SelectionMode     m_old_default_mode{g_sel_default_mode};
+    SelectionSortMode m_old_article_sort{g_sel_art_sort};
+    std::string       m_old_commands{g_news_sel_cmds};
+    std::string       m_old_display_mode{g_sel_art_display_mode};
+    std::size_t       m_old_display_index{g_sel_art_display_mode_index};
+    std::string       m_old_message{g_msg};
+    std::string_view  m_old_home{g_tc_HO};
+    std::string_view  m_old_up{g_tc_UP};
+    std::string_view  m_old_motion{g_tc_CM};
+    bool              m_old_bos{g_bos_on_stop};
+    bool              m_old_in_ng{g_in_ng};
+    bool              m_old_erase_screen{g_erase_screen};
+    bool              m_old_erase_line{g_erase_each_line};
+    char              m_old_erase{g_erase_char};
+    char              m_old_kill{g_kill_char};
+    int               m_old_added{g_added_articles};
+    int               m_old_static{g_keep_the_group_static};
+};
+
+void SelectorSessionInputState::SetUp()
+{
+    SelectorInputTest::SetUp();
+    g_curr_art = ArticleNum{3};
+    g_curr_artp = article_ptr(g_curr_art);
+    g_art = g_curr_art;
+    g_artp = g_curr_artp;
+    g_sel_default_mode = SM_ARTICLE;
+    g_sel_art_sort = SS_NATURAL;
+    g_news_sel_cmds = "Z>";
+    g_sel_art_display_mode = "s";
+    g_sel_art_display_mode_index = 0;
+    g_tc_HO = "";
+    g_tc_UP = "";
+    g_tc_CM = "";
+    g_erase_screen = false;
+    g_erase_each_line = false;
+    g_erase_char = Ctl('_');
+    g_kill_char = Ctl('u');
+    g_added_articles = 0;
+    g_keep_the_group_static = 0;
+    g_in_ng = true;
+    prepare_page(SM_ARTICLE, false);
+}
+
+void SelectorSessionInputState::TearDown()
+{
+    g_art = m_old_art;
+    g_artp = m_old_artp;
+    g_curr_art = m_old_current;
+    g_curr_artp = m_old_currentp;
+    g_search_ahead = m_old_search_ahead;
+    g_sel_default_mode = m_old_default_mode;
+    g_sel_art_sort = m_old_article_sort;
+    g_news_sel_cmds = m_old_commands;
+    g_sel_art_display_mode = m_old_display_mode;
+    g_sel_art_display_mode_index = m_old_display_index;
+    g_msg = m_old_message;
+    g_tc_HO = m_old_home;
+    g_tc_UP = m_old_up;
+    g_tc_CM = m_old_motion;
+    g_bos_on_stop = m_old_bos;
+    g_in_ng = m_old_in_ng;
+    g_erase_screen = m_old_erase_screen;
+    g_erase_each_line = m_old_erase_line;
+    g_erase_char = m_old_erase;
+    g_kill_char = m_old_kill;
+    g_added_articles = m_old_added;
+    g_keep_the_group_static = m_old_static;
+    SelectorInputTest::TearDown();
+}
+
+char SelectorSessionInputState::run_selector(std::string_view commands, bool rereading)
+{
+    push_string(std::string(commands) + "q", 0200);
+    return article_selector(rereading ? 'U' : 'a');
+}
+
+void SelectorSessionInputState::expect_next_command(char command)
+{
+    ASSERT_TRUE(macro_pending());
+    const std::string next = get_cmd();
+    ASSERT_FALSE(next.empty());
+    EXPECT_EQ(command, next.front());
+    EXPECT_FALSE(macro_pending());
+}
+
+using SelectorExitCommand = std::pair<char, char>;
+
+class SelectorExitInputTest : public SelectorSessionInputState,
+                              public testing::WithParamInterface<std::tuple<SelectorExitCommand, bool>>
+{
+};
+
+TEST_P(SelectorExitInputTest, returnsExitCommandWithoutConsumingTheFollowingCommand)
+{
+    const auto [exit_command, rereading] = GetParam();
+    const auto [command, expected] = exit_command;
+
+    const char result = run_selector(std::string(1, command), rereading);
+
+    EXPECT_EQ(expected, result);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ExitCommands, SelectorExitInputTest,
+    testing::Combine(testing::Values(SelectorExitCommand{'q', 'q'}, SelectorExitCommand{'Q', 'Q'},
+                                     SelectorExitCommand{'+', '+'}, SelectorExitCommand{'`', 'Q'},
+                                     SelectorExitCommand{'\033', '+'}, SelectorExitCommand{Ctl('q'), '+'},
+                                     SelectorExitCommand{'Z', 'Z'}, SelectorExitCommand{'\t', '\t'},
+                                     SelectorExitCommand{'\r', '\r'}, SelectorExitCommand{'\n', '\n'},
+                                     SelectorExitCommand{'\b', '\b'}, SelectorExitCommand{'\177', '\177'},
+                                     SelectorExitCommand{'N', 'N'}, SelectorExitCommand{'P', 'P'}),
+                     testing::Bool()));
+
+class SelectorDefaultInputTest : public SelectorSessionInputState
+{
+};
+
+TEST_F(SelectorDefaultInputTest, spaceUsesTheConfiguredEndCommandOnTheLastPage)
+{
+    g_news_sel_cmds = "N>";
+
+    const char result = run_selector(" ");
+
+    EXPECT_EQ('N', result);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorDefaultInputTest, readModeUsesItsOwnEndCommand)
+{
+    g_news_sel_cmds = "Nq";
+
+    const char result = run_selector(" ", true);
+
+    EXPECT_EQ('Z', result);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorDefaultInputTest, spaceUsesTheConfiguredPageCommandBeforeTheLastPage)
+{
+    g_news_sel_cmds = "NZ";
+    g_tc_LINES = 6;
+
+    const char result = run_selector(" ");
+
+    EXPECT_EQ('Z', result);
+    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorDefaultInputTest, spaceAdvancesThePageBeforeTheNextSelectionCommand)
+{
+    g_tc_LINES = 6;
+
+    const char result = run_selector(" aq");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_FALSE(article_ptr(ArticleNum{3})->m_flags & AF_SEL);
+    EXPECT_TRUE(article_ptr(ArticleNum{4})->m_flags & AF_SEL);
+    EXPECT_TRUE(g_sel_at_end);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorDefaultInputTest, repeatedSpacesAdvanceThenAcceptAtTheEnd)
+{
+    g_tc_LINES = 6;
+
+    const char result = run_selector("  ");
+
+    EXPECT_EQ('Z', result);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[0].u.ap);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorDefaultInputTest, readModeUsesItsOwnPageCommand)
+{
+    g_news_sel_cmds = "Nq";
+    g_tc_LINES = 6;
+
+    const char result = run_selector(" q", true);
+
+    EXPECT_EQ('q', result);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_sel_items[0].u.ap);
+    expect_next_command('q');
+}
+
+using SelectorRestartCase = std::pair<bool, int>;
+
+class SelectorRestartInputTest : public SelectorSessionInputState,
+                                 public testing::WithParamInterface<SelectorRestartCase>
+{
+};
+
+TEST_P(SelectorRestartInputTest, restartRebuildsTheScopeBeforeReadingTheExitCommand)
+{
+    const auto [rereading, restarts] = GetParam();
+    const bool final_read_scope = rereading != (restarts % 2 != 0);
+
+    const char result = run_selector(std::string(restarts, 'U') + "q", rereading);
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(article_ptr(ArticleNum{final_read_scope ? 1 : 3}), g_sel_items[0].u.ap);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(2, m_newsgroup.m_to_read);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopes, SelectorRestartInputTest,
+                         testing::Values(SelectorRestartCase{false, 1}, SelectorRestartCase{true, 1},
+                                         SelectorRestartCase{false, 2}, SelectorRestartCase{true, 2}));
+
 class SelectorLetterInputTest : public SelectorInputTest,
                                 public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
 {
