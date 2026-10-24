@@ -2170,7 +2170,10 @@ reask_catchup:
     {
         g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
         g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
-        --g_newsgroup_to_read;
+        if (g_in_ng || g_newsgroup_ptr->m_to_read > TR_NONE || g_newsgroup_min_to_read <= TR_NONE)
+        {
+            --g_newsgroup_to_read;
+        }
         newline();
         fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_name);
         fmt::print("(If you meant to hit 'y' instead of 'u', press '-'.)\n");
