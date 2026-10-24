@@ -522,6 +522,99 @@ class NewsgroupSelectorEmptySortTest : public NewsgroupSelectorSortStateTest,
 {
 };
 
+class NewsgroupSelectorExclusiveTest : public NewsgroupSelectorCommandStateTest,
+                                       public testing::WithParamInterface<bool>
+{
+protected:
+    void           SetUp() override;
+    NewsgroupData &add_exclusive_group(std::string_view name, ArticleUnread unread, NewsgroupFlags flags = NF_NONE);
+    void           prepare_groups(bool selected = true, bool exclusive = false);
+    DisplayState   toggle_exclusive();
+    void           expect_group_preserved(int index) const;
+    void           expect_read_state_preserved() const;
+
+    std::array<NewsgroupData *, 6> m_objects{};
+
+private:
+    std::array<NewsgroupFlags, 6> m_flags{};
+    std::array<ArticleUnread, 6>  m_counts{};
+};
+
+void NewsgroupSelectorExclusiveTest::SetUp()
+{
+    NewsgroupSelectorCommandStateTest::SetUp();
+    set_read_scope(GetParam());
+    g_tc_LINES = 7;
+}
+
+NewsgroupData &NewsgroupSelectorExclusiveTest::add_exclusive_group(std::string_view name, ArticleUnread unread,
+                                                                   NewsgroupFlags flags)
+{
+    NewsgroupData &group = add_selector_group(name, unread, flags);
+    group.m_rc_line.resize(group.m_num_offset);
+    group.m_rc_line += unread == TR_NONE ? " 1-10" : " 1-3";
+    return group;
+}
+
+void NewsgroupSelectorExclusiveTest::prepare_groups(bool selected, bool exclusive)
+{
+    const std::array<std::string_view, 6> names{"comp.alpha", "comp.bravo", "comp.charlie",
+                                                "comp.delta", "comp.echo",  "comp.hidden"};
+    for (int index = 0; index < 6; ++index)
+    {
+        m_counts[index] = index == 5 ? (GetParam() ? 7 : 0) : (GetParam() ? 0 : 7);
+        m_flags[index] = (GetParam() ? NF_SEL : NF_DEL_SEL) | NF_VISIT | NF_UNTHREADED;
+        if (selected && (index == 1 || index == 3 || index == 4))
+        {
+            m_flags[index] |= static_cast<NewsgroupFlags>(g_sel_mask);
+        }
+        m_objects[index] = &add_exclusive_group(names[index], m_counts[index], m_flags[index]);
+    }
+    g_sel_exclusive = exclusive;
+    g_sel_page_np = m_objects[3];
+    initialize_page();
+    g_sel_item_index = 1;
+}
+
+DisplayState NewsgroupSelectorExclusiveTest::toggle_exclusive()
+{
+    const DisplayState result = newsgroup_commands('E');
+    Selection          no_search{};
+    no_search.op = OI_NONE;
+    (void) calc_page(no_search);
+    return result;
+}
+
+void NewsgroupSelectorExclusiveTest::expect_group_preserved(int index) const
+{
+    const NewsgroupData &group = *m_objects[index];
+    EXPECT_EQ(m_flags[index], group.m_flags & ~(NF_INCLUDED | NF_DEL)) << index;
+    EXPECT_EQ(m_counts[index], group.m_to_read) << index;
+    EXPECT_EQ(m_counts[index] ? " 1-3" : " 1-10", group.rc_numbers()) << index;
+    EXPECT_EQ(NewsgroupNum{index}, group.m_num);
+    EXPECT_EQ(':', group.m_subscribe_char);
+    EXPECT_EQ(&m_newsrc, group.m_rc);
+    EXPECT_EQ(index ? m_objects[index - 1] : nullptr, group.m_prev);
+    EXPECT_EQ(index + 1 < 6 ? m_objects[index + 1] : nullptr, group.m_next);
+}
+
+void NewsgroupSelectorExclusiveTest::expect_read_state_preserved() const
+{
+    for (int index = 0; index < 6; ++index)
+    {
+        expect_group_preserved(index);
+    }
+    EXPECT_EQ(GetParam(), g_sel_rereading);
+    EXPECT_EQ(GetParam() ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(GetParam() ? NewsgroupNum{1} : NewsgroupNum{5}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    EXPECT_EQ(SM_NEWSGROUP, g_sel_mode);
+    EXPECT_EQ(SS_NATURAL, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ(m_objects.front(), g_first_newsgroup);
+    EXPECT_EQ(m_objects.back(), g_last_newsgroup);
+}
+
 class NewsgroupPageInvalidTest : public NewsgroupPageStateTest,
                                  public testing::WithParamInterface<std::tuple<ArticleUnread, bool>>
 {
@@ -928,6 +1021,210 @@ TEST_P(NewsgroupSelectorEmptySortTest, sortingAnEmptyCatalogRetainsAnEmptyPageAn
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndCommand, NewsgroupSelectorEmptySortTest,
                          testing::Combine(testing::Bool(), testing::Values('O', 'R')));
+
+TEST_P(NewsgroupSelectorExclusiveTest, enablingExclusiveDisplayRebuildsTheFirstPageWithOnlyActiveSelections)
+{
+    prepare_groups();
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.bravo", "comp.delta", "comp.echo"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_objects[1], g_sel_page_np);
+    EXPECT_EQ(m_objects[4], g_sel_next_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(GetParam() ? (std::vector<std::string>{"comp.alpha", "comp.charlie"}) : std::vector<std::string>{},
+              groups_with_flag(NF_DEL));
+    expect_read_state_preserved();
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, disablingExclusiveDisplayRestoresUnselectedGroupsFromTheFirstPage)
+{
+    prepare_groups(true, true);
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.alpha", "comp.bravo", "comp.charlie", "comp.delta", "comp.echo"}),
+              groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_objects[0], g_sel_page_np);
+    EXPECT_EQ(m_objects[2], g_sel_next_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(GetParam() ? (std::vector<std::string>{"comp.alpha", "comp.charlie"}) : std::vector<std::string>{},
+              groups_with_flag(NF_DEL));
+    expect_read_state_preserved();
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, selectionsInTheInactiveScopeDoNotPreventFallbackToNormalDisplay)
+{
+    prepare_groups(false);
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.alpha", "comp.bravo", "comp.charlie", "comp.delta", "comp.echo"}),
+              groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_objects[0], g_sel_page_np);
+    EXPECT_EQ(m_objects[2], g_sel_next_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    expect_read_state_preserved();
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, activeSelectionRetainsAGroupOutsideTheCurrentReadScope)
+{
+    NewsgroupData &selected =
+        add_exclusive_group("comp.selected", GetParam() ? 7 : 0, static_cast<NewsgroupFlags>(g_sel_mask));
+    initialize_page();
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.selected"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{1}, g_obj_count);
+    EXPECT_EQ(&selected, g_sel_page_np);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(GetParam() ? 7 : 0, selected.m_to_read);
+    EXPECT_EQ(GetParam() ? " 1-3" : " 1-10", selected.rc_numbers());
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, selectedGroupsOutsideARestrictionDoNotPreventFallbackWithinIt)
+{
+    prepare_groups();
+    set_newsgroup_to_do("comp.alpha");
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.alpha"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{1}, g_obj_count);
+    EXPECT_EQ(m_objects[0], g_sel_page_np);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ("comp.alpha", newsgroup_restriction(0));
+    expect_read_state_preserved();
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, anUnsubscribedSelectionDoesNotPreventFallbackToEligibleGroups)
+{
+    NewsgroupData &eligible = add_exclusive_group("comp.eligible", GetParam() ? 0 : 7);
+    NewsgroupData &unsubscribed =
+        add_exclusive_group("comp.unsubscribed", TR_UNSUB, static_cast<NewsgroupFlags>(g_sel_mask));
+    unsubscribed.m_subscribe_char = '!';
+    initialize_page();
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.eligible"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{1}, g_obj_count);
+    EXPECT_EQ(&eligible, g_sel_page_np);
+    EXPECT_EQ(TR_UNSUB, unsubscribed.m_to_read);
+    EXPECT_EQ('!', unsubscribed.m_subscribe_char);
+    EXPECT_EQ(static_cast<NewsgroupFlags>(g_sel_mask), unsubscribed.m_flags);
+    EXPECT_EQ(" 1-3", unsubscribed.rc_numbers());
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, togglingAppliesPendingCatchupOnlyInUnreadMode)
+{
+    prepare_groups();
+    m_objects[0]->m_flags |= NF_DEL;
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ((std::vector<std::string>{"comp.bravo", "comp.delta", "comp.echo"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(TR_NONE, m_objects[0]->m_to_read);
+    EXPECT_EQ(" 1-10", m_objects[0]->rc_numbers());
+    EXPECT_EQ((GetParam() ? NF_SEL | NF_DEL : NF_DEL_SEL) | NF_VISIT | NF_UNTHREADED, m_objects[0]->m_flags);
+    EXPECT_EQ(GetParam() ? NewsgroupNum{1} : NewsgroupNum{4}, g_newsgroup_to_read);
+    EXPECT_EQ(GetParam() ? RF_NONE : RF_RC_CHANGED, m_newsrc.flags);
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(GetParam() ? ArticleNum{5} : ArticleNum{4}, g_obj_count);
+    EXPECT_EQ(GetParam(), g_sel_rereading);
+    EXPECT_EQ(GetParam() ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    for (int index = 1; index < 6; ++index)
+    {
+        expect_group_preserved(index);
+    }
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, anEmptyCatalogFallsBackToAnEmptyNormalDisplay)
+{
+    initialize_page();
+    g_sel_item_index = 1;
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{}, g_obj_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+TEST_P(NewsgroupSelectorExclusiveTest, aCatalogWithOnlyIneligibleGroupsFallsBackToAnEmptyNormalDisplay)
+{
+    NewsgroupData &other_scope = add_exclusive_group("comp.other-scope", GetParam() ? 7 : 0);
+    initialize_page();
+    g_sel_item_index = 1;
+
+    const DisplayState result = toggle_exclusive();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_TRUE(groups_with_flag(NF_INCLUDED).empty());
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{}, g_obj_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(GetParam() ? 7 : 0, other_scope.m_to_read);
+    EXPECT_EQ(GetParam() ? " 1-3" : " 1-10", other_scope.rc_numbers());
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, NewsgroupSelectorExclusiveTest, testing::Bool());
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {
