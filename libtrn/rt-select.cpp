@@ -3545,7 +3545,10 @@ reask_sort:
                     break;
 
                 case NGS_INTR:
-                    error_msg("Interrupted");
+                    if (!g_error_occurred)
+                    {
+                        error_msg("Interrupted");
+                    }
                     break;
 
                 case NGS_FOUND:

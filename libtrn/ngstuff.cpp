@@ -870,6 +870,7 @@ int newsgroup_sel_perform(std::string_view command)
     bool                 dot_scope = false;
     NewsgroupData *const current_group = g_newsgroup_ptr;
 
+    perform_status_init(g_newsgroup_to_read.value_of());
     if (command.size() <= 1)
     {
         return -1;
@@ -890,8 +891,6 @@ int newsgroup_sel_perform(std::string_view command)
         len++;
     }
     std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
-
-    perform_status_init(g_newsgroup_to_read.value_of());
 
     if (dot_scope)
     {

@@ -7,6 +7,7 @@
 #include <config/fdio.h>
 #include <trn/addng.h>
 #include <trn/datasrc.h>
+#include <trn/final.h>
 #include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
@@ -1463,6 +1464,101 @@ class NewsgroupSelectorSearchActionModifierTest : public NewsgroupSelectorSearch
 
 class NewsgroupSelectorSearchActionFallbackTest : public NewsgroupSelectorSearchActionStateTest,
                                                   public testing::WithParamInterface<bool>
+{
+};
+
+class NewsgroupSelectorRecoveryStateTest : public NewsgroupSelectorSearchActionStateTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    void         prepare_prompt(char command, bool rereading, bool clean);
+    DisplayState run_prompt(char command, std::string_view input);
+    void         expect_catalog_preserved() const;
+
+private:
+    char             m_old_erase{g_erase_char};
+    char             m_old_kill{g_kill_char};
+    char             m_old_interrupts{g_int_count};
+    std::string_view m_old_backspace{g_tc_BC};
+};
+
+void NewsgroupSelectorRecoveryStateTest::SetUp()
+{
+    NewsgroupSelectorSearchActionStateTest::SetUp();
+    g_erase_char = '\b';
+    g_kill_char = Ctl('u');
+    g_int_count = 0;
+    g_tc_BC = "\b";
+}
+
+void NewsgroupSelectorRecoveryStateTest::TearDown()
+{
+    g_erase_char = m_old_erase;
+    g_kill_char = m_old_kill;
+    g_int_count = m_old_interrupts;
+    g_tc_BC = m_old_backspace;
+    NewsgroupSelectorSearchActionStateTest::TearDown();
+}
+
+void NewsgroupSelectorRecoveryStateTest::prepare_prompt(char command, bool rereading, bool clean)
+{
+    prepare_actions(rereading, clean);
+    if (command == ':')
+    {
+        g_current_newsgroup = m_groups[PAGE_SELECTED];
+    }
+}
+
+DisplayState NewsgroupSelectorRecoveryStateTest::run_prompt(char command, std::string_view input)
+{
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
+    {
+        push_char(static_cast<unsigned char>(*ch) | 0200);
+    }
+    return run_command(command);
+}
+
+void NewsgroupSelectorRecoveryStateTest::expect_catalog_preserved() const
+{
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    expect_context();
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+}
+
+class NewsgroupSelectorPromptCancelTest : public NewsgroupSelectorRecoveryStateTest,
+                                          public testing::WithParamInterface<std::tuple<char, std::string_view>>
+{
+};
+
+class NewsgroupSelectorPromptCompletionTest : public NewsgroupSelectorRecoveryStateTest,
+                                              public testing::WithParamInterface<std::tuple<char, bool>>
+{
+};
+
+class NewsgroupSelectorPromptErrorTest : public NewsgroupSelectorRecoveryStateTest,
+                                         public testing::WithParamInterface<std::tuple<char, bool>>
+{
+};
+
+class NewsgroupSelectorSearchPromptErrorTest
+    : public NewsgroupSelectorRecoveryStateTest,
+      public testing::WithParamInterface<std::tuple<bool, std::pair<std::string_view, std::string_view>>>
+{
+};
+
+class NewsgroupSelectorInlineRecoveryTest : public NewsgroupSelectorRecoveryStateTest,
+                                            public testing::WithParamInterface<bool>
+{
+};
+
+class NewsgroupSelectorPromptFollowupTest : public NewsgroupSelectorRecoveryStateTest,
+                                            public testing::WithParamInterface<std::tuple<char, char>>
 {
 };
 
@@ -3955,6 +4051,277 @@ INSTANTIATE_TEST_SUITE_P(ReadScopeAndScreen, NewsgroupSelectorSearchActionTest,
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndModifier, NewsgroupSelectorSearchActionModifierTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorPromptCancelTest, cancellingThePromptLeavesTheNextCommandQueued)
+{
+    const auto [command, editing] = GetParam();
+    prepare_prompt(command, false, true);
+
+    const DisplayState result = run_prompt(command, std::string{editing} + "q");
+
+    EXPECT_EQ(DS_ASK, result);
+    expect_catalog_preserved();
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(m_groups[PAGE_SELECTED], g_newsgroup_ptr);
+    EXPECT_EQ('q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndEditing, NewsgroupSelectorPromptCancelTest,
+                         testing::Combine(testing::Values(':', '/'), testing::Values("\b", "partial\025")));
+
+TEST_P(NewsgroupSelectorPromptCompletionTest, anEditedCommandRunsOnlyAfterCarriageReturn)
+{
+    const auto [command, rereading] = GetParam();
+    prepare_prompt(command, rereading, true);
+    const std::string input = command == ':' ? "+\b-\rQ" : "comp.page*/:+\b-\rQ";
+
+    const DisplayState result = run_prompt(command, input);
+
+    EXPECT_EQ(DS_UPDATE, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        const bool deselected = command == ':'
+                                    ? index == BEFORE_SELECTED || index == PAGE_SELECTED || index == AFTER_SELECTED
+                                    : index == PAGE_SELECTED;
+        expect_preserved(index, deselected ? static_cast<NewsgroupFlags>(g_sel_mask) : NF_NONE,
+                         deselected && rereading ? NF_DEL : NF_NONE);
+    }
+    EXPECT_EQ(command == ':' ? 0 : 2, g_selected_count);
+    EXPECT_EQ(command == ':' ? 3 : 2, g_perform_count);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    if (command == '/')
+    {
+        expect_search_context();
+    }
+    else
+    {
+        expect_inline_context();
+    }
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_P(NewsgroupSelectorPromptCompletionTest, aScreenRefreshDuringEntryPreservesThePartialCommand)
+{
+    const auto [command, rereading] = GetParam();
+    prepare_prompt(command, rereading, false);
+    const std::string input = command == ':' ? "-\f\n\nQ" : "comp.page*/:-\f\n\nQ";
+
+    const DisplayState result = run_prompt(command, input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        const bool deselected = command == ':'
+                                    ? index == BEFORE_SELECTED || index == PAGE_SELECTED || index == AFTER_SELECTED
+                                    : index == PAGE_SELECTED;
+        expect_preserved(index, deselected ? static_cast<NewsgroupFlags>(g_sel_mask) : NF_NONE,
+                         deselected && rereading ? NF_DEL : NF_NONE);
+    }
+    EXPECT_EQ(command == ':' ? 0 : 2, g_selected_count);
+    EXPECT_EQ(command == ':' ? 3 : 2, g_perform_count);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndReadScope, NewsgroupSelectorPromptCompletionTest,
+                         testing::Combine(testing::Values(':', '/'), testing::Bool()));
+
+TEST_P(NewsgroupSelectorSearchPromptErrorTest, anInvalidSearchReportsItsDiagnosticWithoutChangingGroups)
+{
+    const auto [clean, scenario] = GetParam();
+    const auto [input, diagnostic] = scenario;
+    prepare_actions(false, clean);
+
+    const DisplayState result = run_prompt('/', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find(diagnostic));
+    EXPECT_EQ(std::string::npos, m_output.find("Interrupted"));
+    expect_catalog_preserved();
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ("No newsgroups affected.", g_msg);
+    EXPECT_FALSE(g_error_occurred);
+    expect_search_context();
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(ScreenAndPattern, NewsgroupSelectorSearchPromptErrorTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(std::pair<std::string_view, std::string_view>{"[abc/\n\nQ",
+                                                                                                        "Missing ]"},
+                                                          std::pair<std::string_view, std::string_view>{
+                                                              "\n\nQ", "No previous search pattern"})));
+
+TEST_P(NewsgroupSelectorPromptErrorTest, anUnknownActionRetainsCompletedEffectsAndItsSpecificDiagnostic)
+{
+    const auto [command, clean] = GetParam();
+    prepare_prompt(command, false, clean);
+    const int         target = command == ':' ? BEFORE_SELECTED : PAGE_UNSELECTED;
+    const std::string input = command == ':' ? "-:X:+\n\nQ" : "comp.page*/:+:X:-\n\nQ";
+
+    const DisplayState result = run_prompt(command, input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find(command == ':' ? "Unknown command: X:+" : "Unknown command: X:-"));
+    EXPECT_EQ(std::string::npos, m_output.find("Interrupted"));
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        expect_preserved(index, index == target && command == ':' ? NF_SEL : NF_NONE,
+                         index == target && command == '/' ? NF_SEL : NF_NONE);
+    }
+    EXPECT_EQ(command == ':' ? 2 : 4, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    EXPECT_FALSE(g_error_occurred);
+    EXPECT_EQ(0, g_sel_item_index);
+    if (command == '/')
+    {
+        expect_search_context();
+    }
+    else
+    {
+        expect_inline_context();
+    }
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndScreen, NewsgroupSelectorPromptErrorTest,
+                         testing::Combine(testing::Values(':', '/'), testing::Bool()));
+
+TEST_F(NewsgroupSelectorRecoveryStateTest, aSearchCanBeRetriedAfterAnInvalidPattern)
+{
+    prepare_actions(false, true);
+    ASSERT_EQ(DS_DISPLAY, run_prompt('/', "[abc/\n\n"));
+    prepare_screen(true);
+
+    const DisplayState result = run_prompt('/', "comp.page*/\nQ");
+
+    EXPECT_EQ(DS_UPDATE, result);
+    expect_search_selection({PAGE_UNSELECTED, PAGE_SELECTED});
+    EXPECT_EQ(4, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(std::string::npos, m_output.find("Missing ]"));
+    EXPECT_FALSE(g_error_occurred);
+    expect_search_context();
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_P(NewsgroupSelectorInlineRecoveryTest, anEmptyInlineCommandDoesNotRepeatThePreviousStatus)
+{
+    prepare_prompt(':', GetParam(), true);
+    ASSERT_EQ(DS_UPDATE, run_prompt(':', "-\n"));
+    remember_groups();
+    prepare_screen(true);
+
+    const DisplayState result = run_prompt(':', "\nQ");
+
+    EXPECT_EQ(DS_UPDATE, result);
+    expect_catalog_preserved();
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(GetParam() ? NewsgroupNum{} : NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ("No newsgroups affected.", g_msg);
+    expect_inline_context();
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_P(NewsgroupSelectorInlineRecoveryTest, cancellingAfterAnInterruptedListRetainsCompletedActions)
+{
+    const bool rereading = GetParam();
+    prepare_prompt(':', rereading, true);
+    g_int_count = 1;
+
+    const int performed = newsgroup_sel_perform(":c");
+    initialize_page();
+    const DisplayState result = run_prompt(':', "\bQ");
+
+    EXPECT_EQ(1, performed);
+    EXPECT_EQ(DS_ASK, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        if (index == BEFORE_SELECTED)
+        {
+            expect_read_target(index, rereading);
+        }
+        else
+        {
+            expect_preserved(index);
+        }
+    }
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{5}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_context();
+    EXPECT_EQ(m_groups[PAGE_SELECTED], g_current_newsgroup);
+    EXPECT_EQ(m_groups[BEFORE_SELECTED], g_newsgroup_ptr);
+    EXPECT_EQ(m_groups[BEFORE_SELECTED], g_recent_newsgroup);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, NewsgroupSelectorInlineRecoveryTest, testing::Bool());
+
+TEST_P(NewsgroupSelectorPromptFollowupTest, aScrolledCommandRetainsTheFollowingSelectorInput)
+{
+    const auto [command, followup] = GetParam();
+    prepare_actions(false, false);
+    const std::string input = std::string{command == ':' ? "+\n" : "comp.page*/\n"} + followup + "Q";
+
+    const DisplayState result = run_prompt(command, input);
+
+    EXPECT_EQ(followup == 'q' ? DS_DO_COMMAND : DS_DISPLAY, result);
+    EXPECT_EQ(command == ':' ? 3 : 4, g_selected_count);
+    EXPECT_EQ(command == ':' ? 3 : 2, g_perform_count);
+    EXPECT_EQ(NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    if (followup != 'q')
+    {
+        EXPECT_EQ(followup, read_tty_char() & 0177);
+    }
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndFollowup, NewsgroupSelectorPromptFollowupTest,
+                         testing::Combine(testing::Values(':', '/'), testing::Values('q', 'a')));
+
+TEST_F(NewsgroupSelectorRecoveryStateTest, cancellingAfterAScrolledCommandPreservesItsCompletedChanges)
+{
+    prepare_actions(false, false);
+    ASSERT_EQ(DS_DISPLAY, run_prompt(':', "-\n\n"));
+    remember_groups();
+
+    const DisplayState result = run_prompt('/', "\b\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_catalog_preserved();
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {
