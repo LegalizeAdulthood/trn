@@ -268,7 +268,6 @@ static bool                deselect_item(Selection u);
 static bool                select_option(OptionIndex i);
 static void                sel_cleanup();
 static bool                mark_del_as_read(Article &article, int arg);
-static DisplayState        sel_command(char_int ch);
 static bool                sel_perform_change(long cnt, std::string_view obj_type);
 static char                another_command(char_int ch);
 static DisplayState        add_group_commands(char_int ch);
@@ -2291,7 +2290,7 @@ static bool mark_del_as_read(Article &article, int arg)
 /// - `s_sel_ret`
 /// - `g_msg`
 ///
-static DisplayState sel_command(char_int ch)
+DisplayState sel_command(char_int ch)
 {
     DisplayState ret;
     if (g_can_home)
@@ -3561,9 +3560,20 @@ reask_sort:
                 g_sel_item_index = 0;
             }
 
+            const int            prior_population = g_sel_total_obj_cnt;
+            NewsgroupData *const prior_page = g_sel_page_np;
             if (sel_perform_change(g_newsgroup_to_read.value_of(), "newsgroup"))
             {
-                return DS_UPDATE;
+                const int term_line = g_term_line;
+                init_pages(PRESERVE_PAGE);
+                if (g_sel_total_obj_cnt == prior_population && g_sel_page_np == prior_page)
+                {
+                    Selection no_search{};
+                    no_search.op = OI_NONE;
+                    (void) calc_page(no_search);
+                    g_term_line = term_line;
+                    return DS_UPDATE;
+                }
             }
             if (command_group)
             {

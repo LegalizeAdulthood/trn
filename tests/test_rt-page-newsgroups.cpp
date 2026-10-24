@@ -1393,6 +1393,79 @@ class NewsgroupSelectorSearchDisplayTest : public NewsgroupSelectorSearchStateTe
 {
 };
 
+class NewsgroupSelectorSearchActionStateTest : public NewsgroupSelectorSearchStateTest
+{
+protected:
+    void TearDown() override;
+    void prepare_actions(bool rereading, bool clean, bool exclusive = false);
+    void prepare_screen(bool clean);
+    void expect_read_target(int index, bool rereading) const;
+
+private:
+    int              m_old_last_line{g_sel_last_line};
+    int              m_old_scrolled{g_term_scrolled};
+    bool             m_old_chase_phrase{g_output_chase_phrase};
+    std::string_view m_old_up{g_tc_UP};
+};
+
+void NewsgroupSelectorSearchActionStateTest::TearDown()
+{
+    g_sel_last_line = m_old_last_line;
+    g_term_scrolled = m_old_scrolled;
+    g_output_chase_phrase = m_old_chase_phrase;
+    g_tc_UP = m_old_up;
+    NewsgroupSelectorSearchStateTest::TearDown();
+}
+
+void NewsgroupSelectorSearchActionStateTest::prepare_actions(bool rereading, bool clean, bool exclusive)
+{
+    prepare_search(rereading);
+    g_sel_exclusive = exclusive;
+    initialize_page();
+    remember_groups();
+    prepare_screen(clean);
+}
+
+void NewsgroupSelectorSearchActionStateTest::prepare_screen(bool clean)
+{
+    g_tc_UP = "";
+    g_sel_item_index = g_sel_page_item_cnt;
+    ASSERT_EQ(DS_DISPLAY, sel_command(Ctl('l')));
+    g_sel_item_index = 1;
+    set_newsgroup(m_groups[PAGE_SELECTED]);
+    g_sel_last_line = 3;
+    g_term_line = clean ? 3 : 1;
+    g_term_scrolled = 0;
+}
+
+void NewsgroupSelectorSearchActionStateTest::expect_read_target(int index, bool rereading) const
+{
+    if (rereading)
+    {
+        const bool selected = m_flags[index] & NF_DEL_SEL;
+        expect_preserved(index, selected ? NF_DEL_SEL : NF_NONE, selected ? NF_DEL : NF_NONE);
+    }
+    else
+    {
+        expect_caught_up(index, false);
+    }
+}
+
+class NewsgroupSelectorSearchActionTest : public NewsgroupSelectorSearchActionStateTest,
+                                          public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class NewsgroupSelectorSearchActionModifierTest : public NewsgroupSelectorSearchActionStateTest,
+                                                  public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class NewsgroupSelectorSearchActionFallbackTest : public NewsgroupSelectorSearchActionStateTest,
+                                                  public testing::WithParamInterface<bool>
+{
+};
+
 class NewsgroupPageInvalidTest : public NewsgroupPageStateTest,
                                  public testing::WithParamInterface<std::tuple<ArticleUnread, bool>>
 {
@@ -3574,6 +3647,313 @@ INSTANTIATE_TEST_SUITE_P(ReadScopeAndModifier, NewsgroupSelectorSearchModifierTe
                          testing::Combine(testing::Bool(), testing::Bool()));
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndDisplay, NewsgroupSelectorSearchDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorSearchActionTest, explicitSelectionChangesOnlyMatchingGroups)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+
+    const DisplayState result = run_search("comp*/:+");
+
+    EXPECT_EQ(clean ? DS_UPDATE : DS_DISPLAY, result);
+    expect_search_selection({0, 2, 4, 6});
+    EXPECT_EQ(5, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(6, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(clean ? 3 : 2, g_term_line);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ("4 newsgroups matched, 2 selected.", g_msg);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, explicitDeselectionRetainsNonmatchesAndSavedRanges)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+    const NewsgroupFlags selection = static_cast<NewsgroupFlags>(g_sel_mask);
+
+    const DisplayState result = run_search("comp*/:-");
+
+    EXPECT_EQ(clean ? DS_UPDATE : DS_DISPLAY, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        const bool deselected = index == PAGE_SELECTED || index == AFTER_SELECTED;
+        expect_preserved(index, deselected ? selection : NF_NONE, rereading && deselected ? NF_DEL : NF_NONE);
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(6, g_sel_total_obj_cnt);
+    EXPECT_EQ("4 newsgroups matched, 2 deselected.", g_msg);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, catchupUpdatesOnlyMatchingReadRangesAndSelections)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+
+    const DisplayState result = run_search("comp*/:c");
+
+    EXPECT_EQ(clean && rereading ? DS_UPDATE : DS_DISPLAY, result);
+    for (int index : {BEFORE_UNSELECTED, PAGE_UNSELECTED, PAGE_SELECTED, AFTER_SELECTED})
+    {
+        expect_read_target(index, rereading);
+    }
+    for (int index : {BEFORE_SELECTED, UNSUBSCRIBED, AFTER_UNSELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(rereading ? 6 : 2, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(rereading ? "4 newsgroups matched, 2 deselected." : "4 newsgroups less, 2 deselected.", g_msg);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, unsubscribeRemovesMatchingRowsAndPreservesTheirReadRanges)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+
+    const DisplayState result = run_search("comp*/:u");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index : {BEFORE_UNSELECTED, PAGE_UNSELECTED, PAGE_SELECTED, AFTER_SELECTED})
+    {
+        expect_unsubscribed(index);
+    }
+    for (int index : {BEFORE_SELECTED, UNSUBSCRIBED, AFTER_UNSELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, catchupThenUnsubscribeMarksReadBeforeRemovingMatchingRows)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+    const NewsgroupFlags selection = static_cast<NewsgroupFlags>(g_sel_mask);
+
+    const DisplayState result = run_search("comp*/:c : u");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index : {BEFORE_UNSELECTED, PAGE_UNSELECTED, PAGE_SELECTED, AFTER_SELECTED})
+    {
+        const bool selected = m_flags[index] & selection;
+        EXPECT_EQ(TR_UNSUB, m_groups[index]->m_to_read);
+        EXPECT_EQ(" 1-10", m_groups[index]->rc_numbers());
+        EXPECT_EQ(((m_flags[index] | (rereading && selected ? NF_DEL : NF_NONE)) & ~(selection | NF_INCLUDED)),
+                  m_groups[index]->m_flags);
+        expect_identity(index, true);
+    }
+    for (int index : {BEFORE_SELECTED, UNSUBSCRIBED, AFTER_UNSELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, catchupThenSelectionKeepsTheOriginalMatchesAvailable)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+
+    const DisplayState result = run_search("comp*/:c:+");
+
+    EXPECT_EQ(clean && rereading ? DS_UPDATE : DS_DISPLAY, result);
+    for (int index : {BEFORE_UNSELECTED, PAGE_UNSELECTED, PAGE_SELECTED, AFTER_SELECTED})
+    {
+        EXPECT_EQ(TR_NONE, m_groups[index]->m_to_read);
+        EXPECT_EQ(" 1-10", m_groups[index]->rc_numbers());
+        EXPECT_EQ((m_flags[index] & ~NF_DEL) | static_cast<NewsgroupFlags>(g_sel_mask) | NF_INCLUDED,
+                  m_groups[index]->m_flags);
+        expect_identity(index);
+    }
+    for (int index : {BEFORE_SELECTED, UNSUBSCRIBED, AFTER_UNSELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(5, g_selected_count);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(6, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, aMissDoesNotApplyItsUnsubscribeAction)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean);
+
+    const DisplayState result = run_search("missing/:u");
+
+    EXPECT_EQ(clean ? DS_UPDATE : DS_DISPLAY, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(6, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{6}, g_newsgroup_to_read);
+    EXPECT_EQ("No newsgroups affected.", g_msg);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionTest, deselectionRebuildsAnExclusiveDisplayAfterMatchingRowsDisappear)
+{
+    const auto [rereading, clean] = GetParam();
+    prepare_actions(rereading, clean, true);
+    const NewsgroupFlags selection = static_cast<NewsgroupFlags>(g_sel_mask);
+
+    const DisplayState result = run_search("comp*/:-");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index = 0; index < GROUP_COUNT; ++index)
+    {
+        const bool deselected = index == PAGE_SELECTED || index == AFTER_SELECTED;
+        expect_preserved(index, deselected ? selection | NF_INCLUDED : NF_NONE,
+                         rereading && deselected ? NF_DEL : NF_NONE);
+    }
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(4, g_perform_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionModifierTest, onlyEligibleMatchingGroupsReceiveTheUnsubscribeAction)
+{
+    const auto [rereading, include_read] = GetParam();
+    prepare_mixed_search(rereading);
+    prepare_screen(false);
+
+    const DisplayState result = run_search(include_read ? "comp*/r:u" : "comp*/:u");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index : {BEFORE_UNSELECTED, PAGE_SELECTED, AFTER_SELECTED})
+    {
+        expect_unsubscribed(index);
+    }
+    if (include_read)
+    {
+        expect_unsubscribed(PAGE_UNSELECTED);
+    }
+    else
+    {
+        expect_preserved(PAGE_UNSELECTED);
+    }
+    for (int index : {BEFORE_SELECTED, UNSUBSCRIBED, AFTER_UNSELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(include_read ? 4 : 3, g_perform_count);
+    EXPECT_EQ(NewsgroupNum{rereading && include_read ? 0 : 1}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchReadScopeTest, aCatchupActionCanAddressGroupsHiddenByADisplayRestriction)
+{
+    const bool rereading = GetParam();
+    prepare_search(rereading);
+    set_newsgroup_to_do("comp.*");
+    initialize_page();
+    remember_groups();
+
+    const DisplayState result = run_search("alt*/:c");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index : {BEFORE_SELECTED, AFTER_UNSELECTED})
+    {
+        if (rereading)
+        {
+            expect_preserved(index, index == BEFORE_SELECTED ? NF_DEL_SEL : NF_NONE,
+                             index == BEFORE_SELECTED ? NF_DEL : NF_NONE);
+        }
+        else
+        {
+            expect_caught_up(index, false);
+        }
+    }
+    for (int index : {BEFORE_UNSELECTED, PAGE_UNSELECTED, UNSUBSCRIBED, PAGE_SELECTED, AFTER_SELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(rereading ? NewsgroupNum{} : NewsgroupNum{4}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+TEST_P(NewsgroupSelectorSearchActionFallbackTest,
+       replacingAnEmptyRestrictionRedrawsEvenWhenThePopulationSizeIsUnchanged)
+{
+    prepare_search(true);
+    for (int index : {BEFORE_UNSELECTED, AFTER_SELECTED})
+    {
+        NewsgroupData &group = *m_groups[index];
+        group.m_to_read = 7;
+        group.m_rc_line.resize(group.m_num_offset);
+        group.m_rc_line += " 1-3";
+        group.m_flags &= ~NF_DEL_SEL;
+    }
+    g_newsgroup_to_read = NewsgroupNum{2};
+    set_newsgroup_to_do("comp.page*");
+    initialize_page();
+    remember_groups();
+    prepare_screen(GetParam());
+
+    const DisplayState result = run_search("comp.page*/:u");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_unsubscribed(PAGE_UNSELECTED);
+    expect_unsubscribed(PAGE_SELECTED);
+    expect_preserved(BEFORE_SELECTED, NF_NONE, NF_INCLUDED);
+    expect_preserved(AFTER_UNSELECTED, NF_NONE, NF_INCLUDED | NF_DEL);
+    for (int index : {BEFORE_UNSELECTED, UNSUBSCRIBED, AFTER_SELECTED})
+    {
+        expect_preserved(index);
+    }
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(m_groups[BEFORE_SELECTED], g_sel_page_np);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_search_context();
+}
+
+INSTANTIATE_TEST_SUITE_P(Screen, NewsgroupSelectorSearchActionFallbackTest, testing::Bool());
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndScreen, NewsgroupSelectorSearchActionTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndModifier, NewsgroupSelectorSearchActionModifierTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
