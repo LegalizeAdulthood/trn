@@ -8,6 +8,7 @@
 #include <trn/ngdata.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
+#include <trn/rt-select-internal.h>
 #include <trn/rthread.h>
 #include <trn/search.h>
 #include <trn/terminal.h>
@@ -194,6 +195,96 @@ class NewsgroupPageReadScopeTest : public NewsgroupPageStateTest, public testing
 {
 };
 
+class NewsgroupSelectorCommandStateTest : public NewsgroupPageStateTest
+{
+protected:
+    void           SetUp() override;
+    void           TearDown() override;
+    NewsgroupData &add_selector_group(std::string_view name, ArticleUnread unread, NewsgroupFlags flags = NF_NONE);
+    void           restart_page();
+
+    Newsrc m_newsrc{};
+
+private:
+    DataSource   m_source{};
+    Multirc     *m_old_multirc{g_multirc};
+    NewsgroupNum m_old_to_read{g_newsgroup_to_read};
+    bool         m_old_in_ng{g_in_ng};
+};
+
+void NewsgroupSelectorCommandStateTest::SetUp()
+{
+    NewsgroupPageStateTest::SetUp();
+    g_multirc = nullptr;
+    g_in_ng = true;
+    g_newsgroup_to_read = NewsgroupNum{};
+    m_source.m_flags = DF_REMOTE;
+    m_source.m_act_sf.m_refetch_secs = 1;
+    ASSERT_EQ(1, m_source.m_act_sf.open({}, "", ""));
+    m_newsrc.data_source = &m_source;
+}
+
+void NewsgroupSelectorCommandStateTest::TearDown()
+{
+    m_source.m_act_sf.close();
+    g_multirc = m_old_multirc;
+    g_newsgroup_to_read = m_old_to_read;
+    g_in_ng = m_old_in_ng;
+    NewsgroupPageStateTest::TearDown();
+}
+
+NewsgroupData &NewsgroupSelectorCommandStateTest::add_selector_group(std::string_view name, ArticleUnread unread,
+                                                                     NewsgroupFlags flags)
+{
+    NewsgroupData &group = add_group(name, unread, flags);
+    group.m_rc = &m_newsrc;
+    group.m_rc_line.append("1-3");
+    group.m_ng_max = ArticleNum{10};
+    (void) m_source.m_act_sf.append(std::string{name} + " 10 1 y\n", static_cast<int>(name.size()));
+    if (unread > TR_NONE)
+    {
+        ++g_newsgroup_to_read;
+    }
+    return group;
+}
+
+void NewsgroupSelectorCommandStateTest::restart_page()
+{
+    g_sel_mask = g_sel_rereading ? AGF_DEL_SEL : AGF_SEL;
+    initialize_page();
+}
+
+class NewsgroupSelectorToggleTest : public NewsgroupSelectorCommandStateTest, public testing::WithParamInterface<bool>
+{
+};
+
+class NewsgroupSelectorCatchupToggleTest : public NewsgroupSelectorCommandStateTest,
+                                           public testing::WithParamInterface<bool>
+{
+};
+
+struct NewsgroupReadSelection
+{
+    std::string_view name;
+    NewsgroupFlags   flags;
+};
+
+void PrintTo(const NewsgroupReadSelection &selection, std::ostream *output)
+{
+    *output << selection.name;
+}
+
+const NewsgroupReadSelection NEWSGROUP_READ_SELECTIONS[] = {{"unmarked", NF_NONE},
+                                                            {"pending deletion", NF_DEL},
+                                                            {"reread selection", NF_DEL_SEL},
+                                                            {"unread selection", NF_SEL},
+                                                            {"selected in both scopes", NF_SEL | NF_DEL_SEL}};
+
+class NewsgroupSelectorReadCleanupTest : public NewsgroupSelectorCommandStateTest,
+                                         public testing::WithParamInterface<std::tuple<NewsgroupReadSelection, bool>>
+{
+};
+
 class NewsgroupPageInvalidTest : public NewsgroupPageStateTest,
                                  public testing::WithParamInterface<std::tuple<ArticleUnread, bool>>
 {
@@ -259,6 +350,197 @@ NewsgroupData &NewsgroupPageLoadingTest::add_pending_group(std::string_view name
 }
 
 } // namespace
+
+TEST_P(NewsgroupSelectorToggleTest, toggleRequestsRestartInTheOtherReadScopeWithoutRebuildingThePage)
+{
+    const bool rereading = GetParam();
+    set_read_scope(rereading);
+    NewsgroupData &group = add_group("comp.anchor", TR_NONE, NF_SEL | NF_DEL_SEL | NF_UNTHREADED);
+    g_sel_page_np = &group;
+    g_sel_exclusive = true;
+    g_selected_count = 1;
+    const AddGroupFlags mask = g_sel_mask;
+
+    const DisplayState result = newsgroup_commands('U');
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(!rereading, g_sel_rereading);
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(mask, g_sel_mask);
+    EXPECT_EQ(SM_NEWSGROUP, g_sel_mode);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(TR_NONE, group.m_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, NewsgroupSelectorToggleTest, testing::Bool());
+
+TEST_P(NewsgroupSelectorToggleTest, toggleRestartsAnEmptyCatalogWithoutInventingRowsOrSelections)
+{
+    const bool rereading = GetParam();
+    set_read_scope(rereading);
+    initialize_page();
+
+    const DisplayState result = newsgroup_commands('U');
+    restart_page();
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(!rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_SEL : AGF_DEL_SEL, g_sel_mask);
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+TEST_P(NewsgroupSelectorToggleTest, restartRebuildsTheNewReadScopeAndRecountsItsSelections)
+{
+    const bool rereading = GetParam();
+    set_read_scope(rereading);
+    NewsgroupData &unread = add_selector_group("comp.unread", 7, NF_SEL | NF_UNTHREADED);
+    NewsgroupData &read = add_selector_group("comp.read", TR_NONE, NF_VISIT);
+    initialize_page();
+    ASSERT_EQ(rereading ? &read : &unread, g_sel_page_np);
+
+    const DisplayState result = newsgroup_commands('U');
+    restart_page();
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(!rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_SEL : AGF_DEL_SEL, g_sel_mask);
+    EXPECT_EQ(rereading ? &unread : &read, g_sel_page_np);
+    const std::vector<std::string> expected =
+        rereading ? std::vector<std::string>{"comp.unread"} : std::vector<std::string>{"comp.read"};
+    EXPECT_EQ(expected, groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(rereading ? 1 : 0, g_selected_count);
+    EXPECT_EQ(7, unread.m_to_read);
+    EXPECT_EQ(TR_NONE, read.m_to_read);
+    EXPECT_EQ(" 1-3", unread.rc_numbers());
+    EXPECT_EQ(" 1-3", read.rc_numbers());
+    EXPECT_EQ(NF_SEL | NF_UNTHREADED | (rereading ? NF_INCLUDED : NF_NONE), unread.m_flags);
+    EXPECT_EQ(rereading ? NF_VISIT : NF_VISIT | NF_INCLUDED | NF_DEL, read.m_flags);
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+TEST_P(NewsgroupSelectorCatchupToggleTest, leavingUnreadModeAppliesCatchupMarksAcrossTheCatalog)
+{
+    const bool     included = GetParam();
+    NewsgroupData &marked =
+        add_selector_group("comp.marked", 7, NF_DEL | NF_UNTHREADED | NF_VISIT | (included ? NF_INCLUDED : NF_NONE));
+    NewsgroupData &kept = add_selector_group("comp.kept", 7, NF_SEL | NF_INCLUDED);
+    g_sel_page_np = included ? &marked : &kept;
+    g_sel_exclusive = !included;
+    g_selected_count = 1;
+
+    const DisplayState result = newsgroup_commands('U');
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_TRUE(g_sel_rereading);
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(NF_UNTHREADED | NF_VISIT | (included ? NF_INCLUDED : NF_NONE), marked.m_flags);
+    EXPECT_EQ(TR_NONE, marked.m_to_read);
+    EXPECT_EQ(" 1-10", marked.rc_numbers());
+    EXPECT_EQ(NF_SEL | NF_INCLUDED, kept.m_flags);
+    EXPECT_EQ(7, kept.m_to_read);
+    EXPECT_EQ(" 1-3", kept.rc_numbers());
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(NormalAndExclusiveDisplay, NewsgroupSelectorCatchupToggleTest, testing::Bool());
+
+TEST_P(NewsgroupSelectorReadCleanupTest, leavingReadModePromotesSelectionsAndClearsPendingDeletion)
+{
+    const auto [selection, included] = GetParam();
+    const NewsgroupFlags flags = selection.flags;
+    set_read_scope(true);
+    const NewsgroupFlags preserved = NF_UNTHREADED | NF_VISIT | (included ? NF_INCLUDED : NF_NONE);
+    NewsgroupData       &read = add_selector_group("comp.read", TR_NONE, flags | preserved);
+    NewsgroupData       &kept = add_selector_group("comp.kept", TR_NONE, NF_SEL | NF_DEL | NF_INCLUDED);
+    g_sel_page_np = included ? &read : &kept;
+    g_selected_count = flags & NF_DEL_SEL ? 1 : 0;
+    const bool selected = flags & (NF_SEL | NF_DEL_SEL);
+
+    const DisplayState result = newsgroup_commands('U');
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(preserved | (selected ? NF_SEL : NF_NONE), read.m_flags);
+    EXPECT_EQ(TR_NONE, read.m_to_read);
+    EXPECT_EQ(" 1-3", read.rc_numbers());
+    EXPECT_EQ(NF_SEL | NF_INCLUDED, kept.m_flags);
+    EXPECT_EQ(TR_NONE, kept.m_to_read);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(SelectionFlagsAndInclusion, NewsgroupSelectorReadCleanupTest,
+                         testing::Combine(testing::ValuesIn(NEWSGROUP_READ_SELECTIONS), testing::Bool()));
+
+TEST_F(NewsgroupSelectorCommandStateTest, restartPromotesRereadSelectionsAlongsideExistingUnreadSelections)
+{
+    set_read_scope(true);
+    NewsgroupData &unread = add_selector_group("comp.unread", 7, NF_SEL | NF_UNTHREADED);
+    NewsgroupData &read = add_selector_group("comp.read", TR_NONE, NF_DEL_SEL | NF_VISIT);
+    initialize_page();
+
+    const DisplayState result = newsgroup_commands('U');
+    restart_page();
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    EXPECT_EQ((std::vector<std::string>{"comp.unread", "comp.read"}), groups_with_flag(NF_SEL));
+    EXPECT_EQ((std::vector<std::string>{"comp.unread", "comp.read"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(&unread, g_sel_page_np);
+    EXPECT_EQ(NF_SEL | NF_INCLUDED | NF_UNTHREADED, unread.m_flags);
+    EXPECT_EQ(NF_SEL | NF_INCLUDED | NF_VISIT, read.m_flags);
+    EXPECT_EQ(7, unread.m_to_read);
+    EXPECT_EQ(TR_NONE, read.m_to_read);
+    EXPECT_EQ(" 1-3", read.rc_numbers());
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+TEST_F(NewsgroupSelectorCommandStateTest, roundTripRetainsNormalAndRereadSelectionsWithoutDoubleCounting)
+{
+    NewsgroupData &unread = add_selector_group("comp.unread", 7, NF_SEL);
+    NewsgroupData &read = add_selector_group("comp.read", TR_NONE, NF_SEL | NF_DEL_SEL);
+    initialize_page();
+
+    const DisplayState to_read = newsgroup_commands('U');
+    restart_page();
+    const DisplayState to_unread = newsgroup_commands('U');
+    restart_page();
+
+    EXPECT_EQ(DS_RESTART, to_read);
+    EXPECT_EQ(DS_RESTART, to_unread);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    EXPECT_EQ((std::vector<std::string>{"comp.unread", "comp.read"}), groups_with_flag(NF_SEL));
+    EXPECT_EQ((std::vector<std::string>{"comp.unread", "comp.read"}), groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(NF_SEL | NF_INCLUDED, unread.m_flags);
+    EXPECT_EQ(NF_SEL | NF_INCLUDED, read.m_flags);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(&unread, g_sel_page_np);
+    EXPECT_EQ(7, unread.m_to_read);
+    EXPECT_EQ(TR_NONE, read.m_to_read);
+    EXPECT_EQ(" 1-3", read.rc_numbers());
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {

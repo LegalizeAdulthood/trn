@@ -271,7 +271,6 @@ static bool                mark_del_as_read(Article &article, int arg);
 static DisplayState        sel_command(char_int ch);
 static bool                sel_perform_change(long cnt, std::string_view obj_type);
 static char                another_command(char_int ch);
-static DisplayState        newsgroup_commands(char_int ch);
 static DisplayState        add_group_commands(char_int ch);
 static DisplayState        unsubscribed_group_commands(char_int ch);
 static DisplayState        multirc_commands(char_int ch);
@@ -3332,7 +3331,7 @@ reask_sort:
 /// - g_recent_newsgroup: Updated when switching newsgroups.
 /// - g_current_newsgroup: Updated when switching newsgroups.
 ///
-static DisplayState newsgroup_commands(char_int ch)
+DisplayState newsgroup_commands(char_int ch)
 {
     switch (ch)
     {
