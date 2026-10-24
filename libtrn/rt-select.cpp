@@ -1318,7 +1318,7 @@ reinp_selector:
         {
             if (!input_pending())
             {
-                j = range_start >= 0 ? range_start : (g_sel_item_index > 0 ? g_sel_item_index : g_sel_page_item_cnt);
+                j = range_start >= 0 ? range_start : g_sel_item_index + 1;
                 if (g_use_sel_num)
                 {
                     sel_status_msg(fmt::format("Range: {}-", j));
@@ -1388,7 +1388,7 @@ reinp_selector:
         {
             if (got_dash)
             {
-                j = range_start >= 0 ? range_start : (g_sel_item_index > 0 ? g_sel_item_index : g_sel_page_item_cnt);
+                j = range_start >= 0 ? range_start : g_sel_item_index + 1;
                 sel_status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
             }
             else
@@ -1434,7 +1434,7 @@ reinp_selector:
             //
             if (got_dash)
             {
-                j = range_start >= 0 ? range_start : (g_sel_item_index > 0 ? g_sel_item_index : g_sel_page_item_cnt);
+                j = range_start >= 0 ? range_start : g_sel_item_index + 1;
                 sel_status_msg(fmt::format("Range: {}- ", j));
                 goto reinp_selector;
             }
@@ -1674,7 +1674,7 @@ reinp_selector:
     }
     else
     {
-        const int after_start = range_start >= 0 ? range_start : g_sel_item_index;
+        const int after_start = range_start >= 0 ? range_start : g_sel_item_index + 1;
         if (j < after_start)
         {
             g_sel_item_index = j;

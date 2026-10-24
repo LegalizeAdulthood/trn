@@ -2165,6 +2165,278 @@ TEST_P(SelectorNumericInvertInputTest, inversionIncludesBothEndsOfTheLargestPage
 
 INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorNumericInvertInputTest, testing::Bool());
 
+struct CursorMove
+{
+    char command;
+    int  cursor;
+    int  page_size;
+    int  destination;
+};
+
+void PrintTo(const CursorMove &move, std::ostream *output)
+{
+    *output << move.command << " from " << move.cursor << " on " << move.page_size << " rows";
+}
+
+const CursorMove CURSOR_MOVES[] = {{'p', 4, 12, 3},  {'[', 4, 12, 3},  {'n', 4, 12, 5},  {']', 4, 12, 5},
+                                   {'p', 0, 12, 11}, {'[', 0, 12, 11}, {'n', 11, 12, 0}, {']', 11, 12, 0},
+                                   {'p', 0, 1, 0},   {'n', 0, 1, 0},   {'p', 0, 0, 0},   {'n', 0, 0, 0}};
+
+class SelectorCursorInputTest : public SelectorNumericInputState,
+                                public testing::WithParamInterface<std::tuple<bool, bool, CursorMove>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorCursorInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()), std::get<2>(GetParam()).page_size);
+    g_use_sel_num = std::get<1>(GetParam());
+    g_sel_chars = "abcdefghijkl";
+    g_sel_item_index = std::get<2>(GetParam()).cursor;
+    select_rows({0, MAX_SEL});
+}
+
+TEST_P(SelectorCursorInputTest, movementRetainsVisibleAndHiddenSelections)
+{
+    const CursorMove &move = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, move.command)));
+
+    expect_numeric({0, MAX_SEL}, move.destination);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeAndMovement, SelectorCursorInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::ValuesIn(CURSOR_MOVES)));
+
+struct CursorGoto
+{
+    std::string_view letter;
+    std::string_view number;
+    int              destination;
+    bool             invalid;
+};
+
+void PrintTo(const CursorGoto &position, std::ostream *output)
+{
+    *output << position.letter << '/' << position.number;
+}
+
+const CursorGoto CURSOR_GOTOS[] = {
+    {"a", "01", 0, false}, {"f", "06", 5, false}, {"l", "12", 11, false}, {"d", "04", 3, false}, {"m", "13", 3, true}};
+
+class SelectorCursorGotoInputTest : public SelectorNumericInputState,
+                                    public testing::WithParamInterface<std::tuple<bool, bool, CursorGoto>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorCursorGotoInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_use_sel_num = std::get<1>(GetParam());
+    g_sel_chars = "abcdefghijklm";
+    g_sel_item_index = 3;
+    select_rows({0, 4, MAX_SEL});
+}
+
+TEST_P(SelectorCursorGotoInputTest, explicitGotoRetainsSelectionsAndRejectsAbsentRows)
+{
+    const CursorGoto &position = std::get<2>(GetParam());
+    const std::string commands =
+        std::string(1, Ctl('g')) + std::string(g_use_sel_num ? position.number : position.letter);
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_numeric({0, 4, MAX_SEL}, position.destination);
+    EXPECT_EQ(position.invalid, m_output.find("No item") != std::string::npos) << m_output;
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeAndDestination, SelectorCursorGotoInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::ValuesIn(CURSOR_GOTOS)));
+
+class SelectorGroupedCursorInputTest : public SelectorGroupedInputState,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorGroupedCursorInputTest::SetUp()
+{
+    SelectorGroupedInputState::SetUp();
+    prepare_grouped(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    select_articles({1, 4});
+}
+
+TEST_P(SelectorGroupedCursorInputTest, movementPreservesPartialGroupsAndOppositeScopeSelections)
+{
+    const char       command = std::get<2>(GetParam());
+    const int        destination = command == 'p' || command == '[' ? g_sel_page_item_cnt - 1 : 1;
+    std::vector<int> markers;
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        markers.push_back(g_sel_items[index].sel);
+    }
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_selected({1, 4}, 2);
+    EXPECT_EQ(destination, g_sel_item_index);
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        EXPECT_EQ(markers[index], g_sel_items[index].sel) << index;
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndMovement, SelectorGroupedCursorInputTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('p', '[', 'n', ']')));
+
+struct ObjectCursorMove
+{
+    std::string_view commands;
+    int              cursor;
+    int              destination;
+    bool             invalid;
+};
+
+void PrintTo(const ObjectCursorMove &move, std::ostream *output)
+{
+    *output << testing::PrintToString(move.commands) << " from " << move.cursor;
+}
+
+const ObjectCursorMove OBJECT_CURSOR_MOVES[] = {{"p", 0, 1, false}, {"[", 0, 1, false},     {"n", 1, 0, false},
+                                                {"]", 1, 0, false}, {"\007b", 0, 1, false}, {"\007c", 0, 0, true}};
+
+class SelectorObjectCursorInputTest
+    : public SelectorObjectInputState,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, ObjectCursorMove>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorObjectCursorInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    select_objects({0, 2});
+    g_sel_item_index = std::get<2>(GetParam()).cursor;
+}
+
+TEST_P(SelectorObjectCursorInputTest, movementPreservesObjectsAndHiddenSelections)
+{
+    const ObjectCursorMove &move = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(move.commands));
+
+    expect_objects({0, 2}, move.destination);
+    EXPECT_EQ(move.invalid, m_output.find("No item 'c' on this page.") != std::string::npos) << m_output;
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndMovement, SelectorObjectCursorInputTest,
+                         testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
+                                          testing::ValuesIn(OBJECT_CURSOR_MOVES)));
+
+struct CursorRange
+{
+    std::string_view name;
+    int              cursor;
+    std::string_view movement;
+    int              endpoint;
+    std::vector<int> selected;
+    int              after;
+};
+
+void PrintTo(const CursorRange &range, std::ostream *output)
+{
+    *output << range.name;
+}
+
+const CursorRange CURSOR_RANGES[] = {
+    {"initial forward", 3, "", 6, {3, 4, 5, 6}, 7}, {"initial backward", 6, "", 3, {3, 4, 5, 6}, 7},
+    {"initial last row", 11, "", 10, {10, 11}, 0},  {"initial first row", 0, "", 3, {0, 1, 2, 3}, 4},
+    {"moved forward", 2, "n", 6, {3, 4, 5, 6}, 7},  {"moved backward", 7, "p", 3, {3, 4, 5, 6}, 7},
+    {"wrapped backward", 0, "[", 10, {10, 11}, 0},  {"wrapped forward", 11, "]", 3, {0, 1, 2, 3}, 4},
+};
+
+class SelectorCursorRangeInputTest : public SelectorNumericInputState,
+                                     public testing::WithParamInterface<std::tuple<bool, bool, CursorRange>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorCursorRangeInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_use_sel_num = std::get<1>(GetParam());
+    g_sel_chars = "abcdefghijkl";
+    g_sel_item_index = std::get<2>(GetParam()).cursor;
+    select_rows({MAX_SEL});
+}
+
+TEST_P(SelectorCursorRangeInputTest, rangeIncludesTheUnmarkedCursorAndItsDestination)
+{
+    const CursorRange &range = std::get<2>(GetParam());
+    const std::string  destination =
+        g_use_sel_num ? std::to_string(range.endpoint + 1) : std::string(1, g_sel_chars[range.endpoint]);
+    const std::string commands = std::string(range.movement) + '-' + destination;
+    std::vector<int>  selected = range.selected;
+    selected.push_back(MAX_SEL);
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_numeric(selected, range.after);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeAndCursor, SelectorCursorRangeInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::ValuesIn(CURSOR_RANGES)));
+
+class SelectorCursorRangeResetInputTest : public SelectorNumericInputState,
+                                          public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorCursorRangeResetInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_use_sel_num = std::get<1>(GetParam());
+    g_sel_chars = "abcdefghijkl";
+    if (std::get<2>(GetParam()))
+    {
+        select_rows({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL});
+    }
+    else
+    {
+        select_rows({MAX_SEL});
+    }
+}
+
+TEST_P(SelectorCursorRangeResetInputTest, movementStartsTheNextRangeAtTheNewCursorAndRetainsItsAction)
+{
+    const std::string      commands = g_use_sel_num ? "03n-03" : "cn-c";
+    const std::vector<int> selected = std::get<2>(GetParam()) ? std::vector<int>{0, 1, 5, 6, 7, 8, 9, 10, 11, MAX_SEL}
+                                                              : std::vector<int>{2, 3, 4, MAX_SEL};
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_numeric(selected, 5);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeAndDeselection, SelectorCursorRangeResetInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
 using NumericPosition = std::pair<std::string_view, int>;
 
 class SelectorNumericPositionInputTest : public SelectorNumericInputState,
@@ -2489,6 +2761,111 @@ void SelectorNumericPromptState::expect_prompt_cleared(std::string_view prompt, 
     EXPECT_NE(std::string::npos, m_output.find(trace)) << m_output;
 }
 
+struct CursorRangePrompt
+{
+    int              cursor;
+    std::string_view movement;
+    int              origin;
+};
+
+void PrintTo(const CursorRangePrompt &prompt, std::ostream *output)
+{
+    *output << "cursor " << prompt.cursor << ", movement " << prompt.movement << ", origin " << prompt.origin;
+}
+
+const CursorRangePrompt CURSOR_RANGE_PROMPTS[] = {
+    {0, "", 1},
+    {4, "", 5},
+    {2, "n", 4},
+    {0, "p", 12},
+};
+
+class SelectorCursorRangePromptInputTest : public SelectorNumericPromptState,
+                                           public testing::WithParamInterface<std::tuple<bool, CursorRangePrompt>>
+{
+protected:
+    void SetUp() override;
+    void expect_completed_range() const;
+    void expect_range_prompt(std::string_view suffix) const;
+};
+
+void SelectorCursorRangePromptInputTest::SetUp()
+{
+    SelectorNumericPromptState::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_sel_item_index = std::get<1>(GetParam()).cursor;
+    select_rows({MAX_SEL});
+}
+
+void SelectorCursorRangePromptInputTest::expect_completed_range() const
+{
+    const int        origin = std::get<1>(GetParam()).origin;
+    std::vector<int> selected;
+    for (int index = origin - 1; index < 12; ++index)
+    {
+        selected.push_back(index);
+    }
+    selected.push_back(MAX_SEL);
+    expect_numeric(selected, 0);
+}
+
+void SelectorCursorRangePromptInputTest::expect_range_prompt(std::string_view suffix) const
+{
+    const int         origin = std::get<1>(GetParam()).origin;
+    const std::string label = g_use_sel_num ? std::to_string(origin) : std::string(1, g_sel_chars[origin - 1]);
+    const std::string prompt = "Range: " + label + std::string(suffix);
+    const std::string trace = prompt + tgoto_string(g_tc_CM, 0, g_sel_items[origin - 1].line);
+    EXPECT_NE(std::string::npos, m_output.find(trace)) << m_output;
+}
+
+TEST_P(SelectorCursorRangePromptInputTest, rangePromptNamesTheCurrentCursorBeforeDestinationInput)
+{
+    const CursorRangePrompt &range = std::get<1>(GetParam());
+    const std::string        commands = std::string(range.movement) + '-';
+
+    ASSERT_EQ('Q', answer_after_prompt(commands, {{"Range: ", "12q"}}));
+
+    expect_completed_range();
+    expect_range_prompt("-");
+}
+
+TEST_P(SelectorCursorRangePromptInputTest, letterRangePromptNamesTheCurrentCursorBeforeDestinationInput)
+{
+    g_use_sel_num = false;
+    g_sel_chars = "abcdefghijkl";
+    const std::string commands = std::string(std::get<1>(GetParam()).movement) + '-';
+
+    ASSERT_EQ('Q', answer_after_prompt(commands, {{"Range: ", "lq"}}));
+
+    expect_completed_range();
+    expect_range_prompt("-");
+}
+
+TEST_P(SelectorCursorRangePromptInputTest, rangePromptNamesTheCurrentCursorWhileReadingADestination)
+{
+    const CursorRangePrompt &range = std::get<1>(GetParam());
+    const std::string        commands = std::string(range.movement) + "-1";
+
+    ASSERT_EQ('Q', answer_after_prompt(commands, {{"Range: ", "2q"}}));
+
+    expect_completed_range();
+    expect_range_prompt("-1");
+}
+
+TEST_P(SelectorCursorRangePromptInputTest, erasingTheDestinationRetainsTheCurrentCursorInTheRangePrompt)
+{
+    const CursorRangePrompt &range = std::get<1>(GetParam());
+    const std::string        commands = std::string(range.movement) + "-1";
+
+    ASSERT_EQ('Q', answer_after_prompt(commands, {{"Range: ", "\b"}, {"Range: ", "12q"}}));
+
+    expect_completed_range();
+    expect_range_prompt("- ");
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndCursor, SelectorCursorRangePromptInputTest,
+                         testing::Combine(testing::Bool(), testing::ValuesIn(CURSOR_RANGE_PROMPTS)));
+
 struct NumericPrompt
 {
     std::string_view commands;
@@ -2507,8 +2884,8 @@ void PrintTo(const NumericPrompt &prompt, std::ostream *output)
 const NumericPrompt NUMERIC_PROMPTS[] = {
     {"1", "1", "", 0, {11}, 0},
     {"\0071", "Go to number: 1", "Go to number?  ", 0, {}, 11},
-    {"-1", "Range: 12-1", "Range: 12- ", 0, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, 0},
-    {"-1", "Range: 4-1", "Range: 4- ", 4, {4, 5, 6, 7, 8, 9, 10, 11}, 0},
+    {"-1", "Range: 1-1", "Range: 1- ", 0, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, 0},
+    {"-1", "Range: 5-1", "Range: 5- ", 4, {4, 5, 6, 7, 8, 9, 10, 11}, 0},
 };
 
 class SelectorNumericPromptInputTest : public SelectorNumericPromptState,
