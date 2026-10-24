@@ -24,11 +24,15 @@
 #include <trn/ngdata.h>
 #include <trn/ngsrch.h>
 #include <trn/nntp.h>
+#include <trn/only.h>
+#include <trn/opt.h>
+#include <trn/OptionCatalog.h>
 #include <trn/rcln.h>
 #include <trn/rcstuff.h>
 #include <trn/respond-internal.h>
 #include <trn/respond.h>
 #include <trn/rt-page.h>
+#include <trn/rt-select-internal.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -1245,6 +1249,213 @@ class InputNewsgroupStartingCommandCancelTest : public InputNewsgroupReadingTest
 };
 
 class InputNewsgroupNoReadingGroupTest : public InputNewsgroupNavigationTest, public testing::WithParamInterface<char>
+{
+};
+
+class NewsgroupSelectorDelegationStateTest : public InputNewsgroupReadingTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    void         prepare_selector(bool rereading = false);
+    DisplayState run_delegated(char command, std::string_view input);
+    char         run_selector_session(std::string_view input);
+    void         expect_selector_context(bool rereading = false, int direction = 1) const;
+    void         expect_groups_preserved() const;
+    void         expect_next_command(char command);
+
+private:
+    void queue_input(std::string_view input);
+
+    std::array<std::string, 3>    m_numbers;
+    std::array<ArticleUnread, 3>  m_counts{};
+    std::array<NewsgroupFlags, 3> m_flags{};
+    NewsgroupData                *m_old_page{g_sel_page_np};
+    NewsgroupData                *m_old_next{g_sel_next_np};
+    NewsgroupData                *m_old_recent{g_recent_newsgroup};
+    SelectionSortMode             m_old_group_sort{g_sel_newsgroup_sort};
+    std::string                   m_old_display{g_sel_grp_display_mode};
+    std::size_t                   m_old_display_index{g_sel_grp_display_mode_index};
+    std::string                   m_old_group_commands{g_newsgroup_sel_cmds};
+    std::string                   m_old_option_commands{g_option_sel_cmds};
+    OptionFlags                  *m_old_options{g_option_flags};
+    int                           m_old_option_page{g_sel_page_op};
+    bool                          m_old_can_home{g_can_home};
+    bool                          m_old_numbered{g_use_sel_num};
+    bool                          m_old_bos{g_bos_on_stop};
+    int                           m_old_mouse_count{g_mouse_bar_cnt};
+    int                           m_old_mouse_width{g_mouse_bar_width};
+    std::vector<OptionFlags>      m_options;
+};
+
+void NewsgroupSelectorDelegationStateTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    g_sel_page_np = g_sel_next_np = nullptr;
+    g_recent_newsgroup = &g_newsgroup_data[0];
+    g_sel_newsgroup_sort = SS_STRING;
+    g_sel_grp_display_mode = "s";
+    g_sel_grp_display_mode_index = 0;
+    g_newsgroup_sel_cmds = g_option_sel_cmds = "Z>";
+    g_can_home = false;
+    g_use_sel_num = false;
+    g_mouse_bar_cnt = g_mouse_bar_width = 0;
+    const OptionCatalog catalog;
+    m_options.assign(catalog.row_count() + 1, OF_NONE);
+    g_option_flags = m_options.data();
+    search_init();
+    push_only();
+}
+
+void NewsgroupSelectorDelegationStateTest::TearDown()
+{
+    pop_only();
+    g_sel_page_np = m_old_page;
+    g_sel_next_np = m_old_next;
+    g_recent_newsgroup = m_old_recent;
+    g_sel_newsgroup_sort = m_old_group_sort;
+    g_sel_grp_display_mode = m_old_display;
+    g_sel_grp_display_mode_index = m_old_display_index;
+    g_newsgroup_sel_cmds = m_old_group_commands;
+    g_option_sel_cmds = m_old_option_commands;
+    g_option_flags = m_old_options;
+    g_sel_page_op = m_old_option_page;
+    g_can_home = m_old_can_home;
+    g_use_sel_num = m_old_numbered;
+    g_bos_on_stop = m_old_bos;
+    g_mouse_bar_cnt = m_old_mouse_count;
+    g_mouse_bar_width = m_old_mouse_width;
+    InputNewsgroupReadingTest::TearDown();
+}
+
+void NewsgroupSelectorDelegationStateTest::prepare_selector(bool rereading)
+{
+    g_general_mode = GM_SELECTOR;
+    g_mode = MM_NEWSGROUP_SELECTOR;
+    g_sel_rereading = rereading;
+    g_sel_exclusive = false;
+    g_sel_mask = rereading ? AGF_DEL_SEL : AGF_SEL;
+    g_newsgroup_min_to_read = TR_ONE;
+    g_newsgroup_to_read = NewsgroupNum{rereading ? 0 : 3};
+    for (int index = 0; index < 3; ++index)
+    {
+        NewsgroupData &group = g_newsgroup_data[index];
+        group.m_to_read = rereading ? 0 : (index == 1 ? 2 : 1);
+        group.m_flags = index == 1 ? static_cast<NewsgroupFlags>(g_sel_mask) : NF_NONE;
+        if (rereading)
+        {
+            group.m_rc_line.resize(group.m_num_offset);
+            group.m_rc_line += " 1-3";
+        }
+    }
+    set_selector(SM_NEWSGROUP, SS_STRING);
+    g_sel_page_np = &g_newsgroup_data[1];
+    init_pages(PRESERVE_PAGE);
+    Selection no_search{};
+    no_search.op = OI_NONE;
+    (void) calc_page(no_search);
+    g_sel_item_index = g_sel_page_item_cnt;
+    ASSERT_EQ(DS_DISPLAY, sel_command(Ctl('l')));
+    g_sel_item_index = 0;
+    set_newsgroup(&g_newsgroup_data[1]);
+    g_sel_last_line = 3;
+    g_term_line = 3;
+    for (int index = 0; index < 3; ++index)
+    {
+        m_numbers[index] = g_newsgroup_data[index].rc_numbers();
+        m_counts[index] = g_newsgroup_data[index].m_to_read;
+        m_flags[index] = g_newsgroup_data[index].m_flags;
+    }
+}
+
+void NewsgroupSelectorDelegationStateTest::queue_input(std::string_view input)
+{
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
+    {
+        push_char(static_cast<unsigned char>(*ch) | 0200);
+    }
+}
+
+DisplayState NewsgroupSelectorDelegationStateTest::run_delegated(char command, std::string_view input)
+{
+    queue_input(input);
+    testing::internal::CaptureStdout();
+    const DisplayState result = newsgroup_commands(command);
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+char NewsgroupSelectorDelegationStateTest::run_selector_session(std::string_view input)
+{
+    queue_input(input);
+    testing::internal::CaptureStdout();
+    const char result = newsgroup_selector();
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void NewsgroupSelectorDelegationStateTest::expect_selector_context(bool rereading, int direction) const
+{
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    EXPECT_EQ(SM_NEWSGROUP, g_sel_mode);
+    EXPECT_EQ(SS_STRING, g_sel_sort);
+    EXPECT_EQ(direction, g_sel_direction);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+}
+
+void NewsgroupSelectorDelegationStateTest::expect_groups_preserved() const
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        EXPECT_EQ(m_numbers[index], g_newsgroup_data[index].rc_numbers()) << index;
+        EXPECT_EQ(m_counts[index], g_newsgroup_data[index].m_to_read) << index;
+        EXPECT_EQ(m_flags[index], g_newsgroup_data[index].m_flags) << index;
+        EXPECT_EQ(':', g_newsgroup_data[index].m_subscribe_char) << index;
+    }
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(1, g_selected_count);
+}
+
+void NewsgroupSelectorDelegationStateTest::expect_next_command(char command)
+{
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ(command, read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+class NewsgroupSelectorDelegatedEntryTest : public NewsgroupSelectorDelegationStateTest,
+                                            public testing::WithParamInterface<std::tuple<char, bool>>
+{
+};
+
+class NewsgroupSelectorDelegatedRetryTest : public NewsgroupSelectorDelegationStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, std::string_view>>
+{
+};
+
+struct DelegatedReadingEntry
+{
+    char             command;
+    std::string_view input;
+    std::string_view content;
+    ArticleUnread    unread;
+};
+
+void PrintTo(const DelegatedReadingEntry &entry, std::ostream *output)
+{
+    *output << entry.command << ", " << entry.content;
+}
+
+class NewsgroupSelectorDelegatedReadingTest : public NewsgroupSelectorDelegationStateTest,
+                                              public testing::WithParamInterface<DelegatedReadingEntry>
+{
+};
+
+class NewsgroupSelectorDelegatedOptionsTest : public NewsgroupSelectorDelegationStateTest,
+                                              public testing::WithParamInterface<bool>
 {
 };
 
@@ -5480,6 +5691,164 @@ TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
     EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
     EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory"));
     EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorDelegatedEntryTest, fallbackCommandsUseTheCurrentGroupOrEndPrompt)
+{
+    const auto [command, at_end] = GetParam();
+    prepare_selector();
+    if (at_end)
+    {
+        g_newsgroup_ptr = nullptr;
+    }
+
+    const DisplayState result = run_delegated(command, command == '\\' ? "v\nQ" : "\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_THAT(m_output, testing::HasSubstr(at_end ? "[*End*] Cmd: " : "[comp.lang.cpp] Cmd: "));
+    EXPECT_THAT(m_output, testing::HasSubstr("trn"));
+    expect_groups_preserved();
+    expect_selector_context();
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(at_end ? nullptr : &g_newsgroup_data[1], g_newsgroup_ptr);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndPosition, NewsgroupSelectorDelegatedEntryTest,
+                         testing::Combine(testing::Values('v', '\\'), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedRetryTest, erasedCommandsKeepRequestingInputWithinTheSameDelegatedPrompt)
+{
+    const auto [rereading, erase] = GetParam();
+    prepare_selector(rereading);
+    const std::string input = std::string{erase} + "g" + std::string{erase} + "v\nQ";
+
+    const DisplayState result = run_delegated('g', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    const std::size_t prompt = m_output.find("[comp.lang.cpp] Cmd: ");
+    ASSERT_NE(std::string::npos, prompt);
+    EXPECT_EQ(std::string::npos, m_output.find("[comp.lang.cpp] Cmd: ", prompt + 1));
+    EXPECT_THAT(m_output, testing::HasSubstr("trn"));
+    expect_groups_preserved();
+    expect_selector_context(rereading);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndEditing, NewsgroupSelectorDelegatedRetryTest,
+                         testing::Combine(testing::Bool(), testing::Values("\b", "unused\025")));
+
+TEST_P(NewsgroupSelectorDelegatedReadingTest, returningFromReadingRestoresTheGroupSelectorContext)
+{
+    const DelegatedReadingEntry &entry = GetParam();
+    prepare_selector();
+    g_use_news_selector = 0;
+
+    const DisplayState result = run_delegated(entry.command, entry.input);
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_THAT(m_output, testing::HasSubstr(entry.content));
+    expect_selector_context();
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & NF_SEL);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[2].m_flags & NF_SEL);
+    EXPECT_EQ(entry.unread, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(SS_STRING, g_sel_newsgroup_sort);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Entry, NewsgroupSelectorDelegatedReadingTest,
+                         testing::Values(DelegatedReadingEntry{'y', "QQ", "Reply body", ArticleUnread{1}},
+                                         DelegatedReadingEntry{'.', "3\nQQ", "Branch body", ArticleUnread{1}},
+                                         DelegatedReadingEntry{'+', "QQ", "Reply", ArticleUnread{2}},
+                                         DelegatedReadingEntry{'\\', "U+QQ", "Root", ArticleUnread{2}}));
+
+TEST_F(NewsgroupSelectorDelegationStateTest, aSingleEscapeRunsAFallbackCommandWithinTheSelectorSession)
+{
+    prepare_selector();
+
+    const char result = run_selector_session("\\g\bv\nqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("[comp.lang.cpp] Cmd: "));
+    EXPECT_THAT(m_output, testing::HasSubstr("trn"));
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+TEST_F(NewsgroupSelectorDelegationStateTest, aSingleEscapeTriesTheSelectorCommandBeforeTheGroupListCommand)
+{
+    prepare_selector();
+
+    const char result = run_selector_session("\\RqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("reverse group name order"));
+    expect_groups_preserved();
+    expect_selector_context(false, -1);
+    EXPECT_EQ(-SS_STRING, g_sel_newsgroup_sort);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDelegatedOptionsTest, aForcedOptionCommandRestoresTheGroupCallbackAndDisplayScope)
+{
+    const bool rereading = GetParam();
+    prepare_selector();
+    if (rereading)
+    {
+        g_newsgroup_to_read = NewsgroupNum{};
+        for (NewsgroupData &group : g_newsgroup_data)
+        {
+            group.m_to_read = TR_NONE;
+            group.m_flags = NF_NONE;
+            group.m_rc_line.resize(group.m_num_offset);
+            group.m_rc_line += " 1-3";
+        }
+    }
+    const std::string input = std::string{rereading ? "Ua" : ""} + "E\\\\&\nqRqQ";
+
+    const char result = run_selector_session(input);
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Cmd: "));
+    EXPECT_THAT(m_output, testing::HasSubstr("an option to change"));
+    expect_selector_context(rereading, -1);
+    EXPECT_TRUE(g_sel_exclusive);
+    EXPECT_EQ(-SS_STRING, g_sel_newsgroup_sort);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & (NF_SEL | NF_DEL_SEL));
+    for (int index = 0; index < 3; ++index)
+    {
+        EXPECT_EQ(rereading ? ArticleUnread{0} : ArticleUnread{index == 1 ? 2 : 1}, g_newsgroup_data[index].m_to_read);
+        EXPECT_EQ(rereading ? " 1-3" : (index == 1 ? " 1" : " 1-2"), g_newsgroup_data[index].rc_numbers());
+    }
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, NewsgroupSelectorDelegatedOptionsTest, testing::Bool());
+
+TEST_F(NewsgroupSelectorDelegationStateTest, returningFromANestedArticleSelectorRestoresGroupCommandDispatch)
+{
+    prepare_selector();
+
+    const char result = run_selector_session("\\\\+QRqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("[comp.lang.cpp] Cmd: "));
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply"));
+    expect_selector_context(false, -1);
+    EXPECT_EQ(-SS_STRING, g_sel_newsgroup_sort);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    expect_next_command('Q');
 }
 
 INSTANTIATE_TEST_SUITE_P(ForcedReading, InputNewsgroupNormalEntryTest, testing::Values('y', 'Y', '\t'));
