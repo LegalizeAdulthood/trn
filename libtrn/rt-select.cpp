@@ -3529,6 +3529,9 @@ reask_sort:
         }
         else
         {
+            const bool current_group_command =
+                search_command.compare(0, 2, ":.") == 0 || search_command.compare(0, 3, "::.") == 0;
+            NewsgroupData *const command_group = ch == ':' && current_group_command ? g_newsgroup_ptr : nullptr;
             if (ch == ':')
             {
                 newsgroup_sel_perform(search_command);
@@ -3553,11 +3556,27 @@ reask_sort:
                 }
                 g_newsgroup_ptr = g_current_newsgroup;
             }
-            g_sel_item_index = 0;
+            if (!command_group)
+            {
+                g_sel_item_index = 0;
+            }
 
             if (sel_perform_change(g_newsgroup_to_read.value_of(), "newsgroup"))
             {
                 return DS_UPDATE;
+            }
+            if (command_group)
+            {
+                if (command_group->m_flags & NF_INCLUDED)
+                {
+                    Selection target{};
+                    target.np = command_group;
+                    (void) calc_page(target);
+                }
+                else
+                {
+                    g_sel_item_index = 0;
+                }
             }
             if (s_clean_screen)
             {

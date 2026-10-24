@@ -867,7 +867,8 @@ int perform(std::string_view command_list, int output_level)
 int newsgroup_sel_perform(std::string_view command)
 {
     NewsgroupFlags bits;
-    bool one_group = false;
+    bool                 dot_scope = false;
+    NewsgroupData *const current_group = g_newsgroup_ptr;
 
     if (command.size() <= 1)
     {
@@ -885,33 +886,40 @@ int newsgroup_sel_perform(std::string_view command)
     }
     if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
-        if (!g_newsgroup_ptr)
-        {
-            return -1;
-        }
-        one_group = true;
+        dot_scope = true;
         len++;
     }
     std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
 
     perform_status_init(g_newsgroup_to_read.value_of());
 
-    if (one_group)
+    if (dot_scope)
     {
-        newsgroup_perform(cmdstr, 0);
-        goto break_out;
+        if (!current_group)
+        {
+            return -1;
+        }
+        if (bits != NF_NONE)
+        {
+            newsgroup_perform(cmdstr, 0);
+            goto break_out;
+        }
     }
 
     for (g_newsgroup_ptr = newsgroup_first(); g_newsgroup_ptr; g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
     {
+        if (dot_scope && g_newsgroup_ptr == current_group)
+        {
+            continue;
+        }
         if (g_sel_rereading? g_newsgroup_ptr->m_to_read != TR_NONE
                          : g_newsgroup_ptr->m_to_read < g_newsgroup_min_to_read)
         {
             continue;
         }
         set_newsgroup(g_newsgroup_ptr);
-        if ((g_newsgroup_ptr->m_flags & bits) == bits //
-            && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits))
+        if (dot_scope || ((g_newsgroup_ptr->m_flags & bits) == bits //
+                          && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits)))
         {
             if (newsgroup_perform(cmdstr, 0) < 0)
             {
@@ -922,6 +930,10 @@ int newsgroup_sel_perform(std::string_view command)
     }
 
 break_out:
+    if (dot_scope)
+    {
+        set_newsgroup(current_group);
+    }
     return 1;
 }
 
