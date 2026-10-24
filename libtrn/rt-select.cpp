@@ -1990,6 +1990,10 @@ static bool deselect_item(Selection u)
         {
             u.np->m_flags |= NF_DEL;
         }
+        else
+        {
+            u.np->m_flags &= ~NF_DEL;
+        }
         break;
 
     case SM_OPTIONS:
@@ -2018,10 +2022,18 @@ static bool deselect_item(Selection u)
         {
             u.un->m_flags |= UF_DEL;
         }
+        else
+        {
+            u.un->m_flags &= ~UF_DEL;
+        }
         break;
 
     default:
         u.ap->deselect_article(AUTO_KILL_NONE);
+        if (!g_sel_rereading)
+        {
+            u.ap->m_flags &= ~AF_DEL;
+        }
         break;
     }
     return true;

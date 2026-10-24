@@ -4,6 +4,7 @@
 #include <trn/rt-select-internal.h>
 
 #include <trn/artsrch.h>
+#include <trn/bits.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/final.h>
@@ -974,6 +975,273 @@ void SelectorGroupedInputState::expect_selected(const std::vector<long> &numbers
     EXPECT_EQ(g_sel_rereading ? 1 : 4, m_newsgroup.m_to_read);
 }
 
+class SelectorMarkInputState : public SelectorGroupedInputState
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_marks(SelectionMode mode, bool rereading);
+    void expect_current_deselected() const;
+    void expect_current_mark(bool killed, bool delayed) const;
+    void expect_pending(const std::vector<long> &articles, const std::vector<long> &subjects,
+                        const std::vector<long> &delayed = {}) const;
+    int  target_index() const;
+
+private:
+    int  m_old_delayed_count{g_dm_count};
+    bool m_old_in_ng{g_in_ng};
+    bool m_old_numeric_goto{g_sel_num_goto};
+};
+
+void SelectorMarkInputState::SetUp()
+{
+    SelectorGroupedInputState::SetUp();
+    g_dm_count = 0;
+    g_in_ng = true;
+    g_sel_num_goto = false;
+}
+
+void SelectorMarkInputState::TearDown()
+{
+    g_dm_count = m_old_delayed_count;
+    g_in_ng = m_old_in_ng;
+    g_sel_num_goto = m_old_numeric_goto;
+    SelectorGroupedInputState::TearDown();
+}
+
+void SelectorMarkInputState::prepare_marks(SelectionMode mode, bool rereading)
+{
+    prepare_grouped(mode, rereading);
+    select_articles({1, 2, 3, 4});
+}
+
+int SelectorMarkInputState::target_index() const
+{
+    return g_sel_mode == SM_ARTICLE ? 1 : 0;
+}
+
+void SelectorMarkInputState::expect_current_deselected() const
+{
+    switch (g_sel_mode)
+    {
+    case SM_ARTICLE:
+        expect_selected({1, 3, 4}, 3);
+        break;
+    case SM_SUBJECT:
+        expect_selected({3, 4}, 2);
+        break;
+    default:
+        expect_selected({4}, 1);
+        break;
+    }
+    EXPECT_EQ((target_index() + 1) % g_sel_page_item_cnt, g_sel_item_index);
+    EXPECT_EQ(g_sel_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+}
+
+void SelectorMarkInputState::expect_current_mark(bool killed, bool delayed) const
+{
+    const std::vector<long> affected = g_sel_mode == SM_ARTICLE   ? std::vector<long>{2}
+                                       : g_sel_mode == SM_SUBJECT ? std::vector<long>{1, 2}
+                                                                  : std::vector<long>{1, 2, 3};
+    const std::vector<long> subjects = g_sel_mode == SM_SUBJECT  ? std::vector<long>{1}
+                                       : g_sel_mode == SM_THREAD ? std::vector<long>{1, 3}
+                                                                 : std::vector<long>{};
+
+    expect_current_deselected();
+    expect_pending(killed && g_sel_mode == SM_ARTICLE ? affected : std::vector<long>{},
+                   killed ? subjects : std::vector<long>{}, delayed ? affected : std::vector<long>{});
+    EXPECT_EQ(killed ? 2 : 0, g_sel_items[target_index()].sel);
+}
+
+void SelectorMarkInputState::expect_pending(const std::vector<long> &articles, const std::vector<long> &subjects,
+                                            const std::vector<long> &delayed) const
+{
+    std::vector<long> actual_articles;
+    std::vector<long> actual_subjects;
+    std::vector<long> actual_delayed;
+    for (long number = 1; number <= 4; ++number)
+    {
+        const Article *article = article_ptr(ArticleNum{number});
+        if (article->m_flags & AF_DEL)
+        {
+            actual_articles.push_back(number);
+        }
+        if (article->m_flags & AF_YANK_BACK)
+        {
+            actual_delayed.push_back(number);
+        }
+    }
+    for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    {
+        if (subject->m_flags & SF_DEL)
+        {
+            actual_subjects.push_back(subject->m_articles->article_num().value_of());
+        }
+    }
+    EXPECT_EQ(articles, actual_articles);
+    EXPECT_EQ(subjects, actual_subjects);
+    EXPECT_EQ(delayed, actual_delayed);
+    EXPECT_EQ(delayed.size(), g_dm_count);
+}
+
+class SelectorUnmarkInputTest : public SelectorMarkInputState,
+                                public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorUnmarkInputTest::SetUp()
+{
+    SelectorMarkInputState::SetUp();
+    prepare_marks(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+TEST_P(SelectorUnmarkInputTest, unmarkCancelsTheCurrentPendingKill)
+{
+    const std::string commands = std::string("k") + Ctl('g') + g_sel_chars[target_index()] + std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_current_deselected();
+    expect_pending({}, {});
+    EXPECT_EQ(0, g_sel_items[target_index()].sel);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndCommand, SelectorUnmarkInputTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('m', '|')));
+
+using SelectorMarkCommand = std::tuple<char, bool, bool>;
+
+class SelectorMarkInputTest : public SelectorMarkInputState,
+                              public testing::WithParamInterface<std::tuple<SelectionMode, bool, SelectorMarkCommand>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorMarkInputTest::SetUp()
+{
+    SelectorMarkInputState::SetUp();
+    prepare_marks(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+TEST_P(SelectorMarkInputTest, commandMarksOnlyTheCurrentRow)
+{
+    const auto [command, killed, delayed] = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_current_mark(killed, delayed);
+}
+
+TEST_P(SelectorMarkInputTest, repeatingTheCommandPreservesCountsAndPendingMarks)
+{
+    const auto [command, killed, delayed] = std::get<2>(GetParam());
+    const std::string commands = std::string(1, command) + Ctl('g') + g_sel_chars[target_index()] + command;
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_current_mark(killed, delayed);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeReadStateAndCommand, SelectorMarkInputTest,
+    testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                     testing::Values(SelectorMarkCommand{'m', false, false}, SelectorMarkCommand{'|', false, false},
+                                     SelectorMarkCommand{'k', true, false}, SelectorMarkCommand{'j', true, false},
+                                     SelectorMarkCommand{',', true, false}, SelectorMarkCommand{'M', true, true})));
+
+using SelectorMarkRange = std::tuple<SelectionMode, bool, bool>;
+
+class SelectorMarkRangeInputTest
+    : public SelectorMarkInputState,
+      public testing::WithParamInterface<std::tuple<SelectorMarkRange, bool, SelectorMarkCommand>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorMarkRangeInputTest::SetUp()
+{
+    SelectorMarkInputState::SetUp();
+    const auto [mode, numeric, reverse] = std::get<0>(GetParam());
+    prepare_marks(mode, std::get<1>(GetParam()));
+    g_use_sel_num = numeric;
+    if (mode != SM_THREAD)
+    {
+        --g_sel_page_item_cnt;
+        g_sel_at_end = false;
+    }
+    g_sel_item_index = reverse ? g_sel_page_item_cnt - 1 : 0;
+}
+
+TEST_P(SelectorMarkRangeInputTest, rangeRepeatsTheMarkingActionAndRetainsSelectionsOutsideIt)
+{
+    const auto [mode, numeric, reverse] = std::get<0>(GetParam());
+    const auto [command, killed, delayed] = std::get<2>(GetParam());
+    const int         endpoint = reverse ? 0 : g_sel_page_item_cnt - 1;
+    const std::string destination = numeric ? std::to_string(endpoint + 1) : std::string(1, g_sel_chars[endpoint]);
+    const std::string commands = std::string(1, command) + '-' + destination;
+    const std::vector<long> affected = mode == SM_THREAD ? std::vector<long>{1, 2, 3, 4} : std::vector<long>{1, 2, 3};
+    const std::vector<long> subjects = mode == SM_THREAD ? std::vector<long>{1, 3, 4} : std::vector<long>{1, 3};
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_selected(mode == SM_THREAD ? std::vector<long>{} : std::vector<long>{4}, mode == SM_ARTICLE   ? 3
+                                                                                    : mode == SM_SUBJECT ? 1
+                                                                                                         : 0);
+    expect_pending(killed && mode == SM_ARTICLE ? affected : std::vector<long>{},
+                   killed && mode != SM_ARTICLE ? subjects : std::vector<long>{},
+                   delayed ? affected : std::vector<long>{});
+    EXPECT_EQ(0, g_sel_item_index);
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        EXPECT_EQ(killed ? 2 : 0, g_sel_items[index].sel) << index;
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeInputDirectionReadStateAndCommand, SelectorMarkRangeInputTest,
+    testing::Combine(
+        testing::Values(SelectorMarkRange{SM_ARTICLE, false, false}, SelectorMarkRange{SM_ARTICLE, false, true},
+                        SelectorMarkRange{SM_ARTICLE, true, false}, SelectorMarkRange{SM_ARTICLE, true, true},
+                        SelectorMarkRange{SM_SUBJECT, false, false}, SelectorMarkRange{SM_SUBJECT, false, true},
+                        SelectorMarkRange{SM_THREAD, false, false}, SelectorMarkRange{SM_THREAD, false, true}),
+        testing::Bool(),
+        testing::Values(SelectorMarkCommand{'m', false, false}, SelectorMarkCommand{'k', true, false},
+                        SelectorMarkCommand{'M', true, true})));
+
+class SelectorEmptyMarkInputTest : public SelectorMarkInputState,
+                                   public testing::WithParamInterface<std::tuple<bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorEmptyMarkInputTest::SetUp()
+{
+    SelectorMarkInputState::SetUp();
+    prepare_marks(SM_ARTICLE, std::get<0>(GetParam()));
+    g_sel_page_item_cnt = 0;
+    g_sel_item_index = 0;
+}
+
+TEST_P(SelectorEmptyMarkInputTest, markingAnEmptyPagePreservesSelectionsAndPendingCounts)
+{
+    const char command = std::get<1>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_selected({1, 2, 3, 4}, 3);
+    expect_pending({}, {});
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndCommand, SelectorEmptyMarkInputTest,
+                         testing::Combine(testing::Bool(), testing::Values('m', 'k', 'M')));
+
 class SelectorGroupedInputTest : public SelectorGroupedInputState,
                                  public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
 {
@@ -1146,7 +1414,8 @@ protected:
     void TearDown() override;
     void prepare_objects(SelectionMode mode, bool rereading);
     void select_objects(std::initializer_list<int> indices);
-    void expect_objects(std::initializer_list<int> selected, int current) const;
+    void expect_objects(std::initializer_list<int> selected, int current,
+                        const std::optional<std::vector<int>> &deleted = std::nullopt) const;
 
 private:
     int  object_flags(int index) const;
@@ -1251,17 +1520,20 @@ void SelectorObjectInputState::select_objects(std::initializer_list<int> indices
     }
 }
 
-void SelectorObjectInputState::expect_objects(std::initializer_list<int> selected, int current) const
+void SelectorObjectInputState::expect_objects(std::initializer_list<int> selected, int current,
+                                              const std::optional<std::vector<int>> &deleted) const
 {
     for (int index = 0; index < 3; ++index)
     {
         const bool is_selected = std::find(selected.begin(), selected.end(), index) != selected.end();
-        const int  expected = m_preserved_flags | (is_selected ? static_cast<int>(g_sel_mask) : 0) |
-                              (m_rereading && !is_selected ? m_delete_mask : 0);
+        const bool is_deleted = deleted ? std::find(deleted->begin(), deleted->end(), index) != deleted->end()
+                                        : m_rereading && !is_selected;
+        const int  expected =
+            m_preserved_flags | (is_selected ? static_cast<int>(g_sel_mask) : 0) | (is_deleted ? m_delete_mask : 0);
         EXPECT_EQ(expected, object_flags(index)) << index;
         if (index < g_sel_page_item_cnt)
         {
-            EXPECT_EQ(is_selected ? 1 : m_rereading ? 2 : 0, g_sel_items[index].sel) << index;
+            EXPECT_EQ(is_selected ? 1 : is_deleted ? 2 : 0, g_sel_items[index].sel) << index;
         }
         if (m_selector_mode == SM_NEWSGROUP)
         {
@@ -1293,6 +1565,86 @@ void SelectorObjectInputState::expect_objects(std::initializer_list<int> selecte
         EXPECT_EQ(m_old_directory, g_newsgroup_dir);
     }
 }
+
+class SelectorObjectUnmarkInputTest : public SelectorObjectInputState,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorObjectUnmarkInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    select_objects({0, 1, 2});
+}
+
+TEST_P(SelectorObjectUnmarkInputTest, unmarkCancelsTheCurrentPendingKill)
+{
+    const std::string commands = std::string("k") + Ctl('g') + 'a' + std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_objects({1, 2}, 1, std::vector<int>{});
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndCommand, SelectorObjectUnmarkInputTest,
+                         testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
+                                          testing::Values('m', '|')));
+
+using SelectorObjectMarkCommand = std::pair<char, bool>;
+
+class SelectorObjectMarkInputTest
+    : public SelectorObjectInputState,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, SelectorObjectMarkCommand>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorObjectMarkInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    select_objects({0, 1, 2});
+}
+
+TEST_P(SelectorObjectMarkInputTest, commandMarksOnlyTheCurrentObject)
+{
+    const auto [command, killed] = std::get<2>(GetParam());
+
+    ASSERT_EQ('Q', run_input(std::string(1, command)));
+
+    expect_objects({1, 2}, 1, killed ? std::vector<int>{0} : std::vector<int>{});
+}
+
+TEST_P(SelectorObjectMarkInputTest, repeatingTheCommandPreservesCountsAndPendingMarks)
+{
+    const auto [command, killed] = std::get<2>(GetParam());
+    const std::string commands = std::string(1, command) + Ctl('g') + 'a' + command;
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_objects({1, 2}, 1, killed ? std::vector<int>{0} : std::vector<int>{});
+}
+
+TEST_P(SelectorObjectMarkInputTest, rangeRepeatsTheMarkingActionAndPreservesHiddenSelections)
+{
+    const auto [command, killed] = std::get<2>(GetParam());
+    const std::string commands = std::string(1, command) + "-b";
+
+    ASSERT_EQ('Q', run_input(commands));
+
+    expect_objects({2}, 0, killed ? std::vector<int>{0, 1} : std::vector<int>{});
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeReadStateAndCommand, SelectorObjectMarkInputTest,
+    testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
+                     testing::Values(SelectorObjectMarkCommand{'m', false}, SelectorObjectMarkCommand{'|', false},
+                                     SelectorObjectMarkCommand{'k', true}, SelectorObjectMarkCommand{'j', true},
+                                     SelectorObjectMarkCommand{',', true})));
 
 class SelectorObjectLetterInputTest : public SelectorObjectInputState,
                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
