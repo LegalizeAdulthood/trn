@@ -19,14 +19,24 @@
 #include <trn/trn.h>
 #include <trn/univ.h>
 
+#include <config/fdio.h>
+
+#ifdef I_UNISTD
+#include <unistd.h>
+#else
+#include <fcntl.h>
+#endif
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cerrno>
+#include <functional>
 #include <initializer_list>
 #include <optional>
+#include <thread>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -1450,6 +1460,227 @@ TEST_P(SelectorNumericCancelInputTest, cancellingTheFirstDigitAllowsAFreshNumber
 
 INSTANTIATE_TEST_SUITE_P(ReadStateAndCancelKey, SelectorNumericCancelInputTest,
                          testing::Combine(testing::Bool(), testing::Values('\b', Ctl('u'))));
+
+using PromptReply = std::pair<std::string, std::string>;
+
+class SelectorNumericPromptState : public SelectorNumericInputState
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    char        answer_after_prompt(std::string_view commands, const std::vector<PromptReply> &replies);
+    std::string prompt_output(std::string_view prompt, int cursor) const;
+    void        expect_prompt_cleared(std::string_view prompt, int cursor) const;
+
+private:
+    void read_output(const std::vector<PromptReply> &replies);
+
+    std::array<int, 2> m_input_pipe{-1, -1};
+    std::array<int, 2> m_output_pipe{-1, -1};
+    int                m_saved_stdin{-1};
+    std::size_t        m_answers{};
+    bool               m_write_failed{};
+    bool               m_old_allow_typeahead{g_allow_typeahead};
+    bool               m_old_muck_up_clear{g_muck_up_clear};
+    std::string_view   m_old_tc_cm{g_tc_CM};
+    std::string_view   m_old_tc_ho{g_tc_HO};
+    std::string_view   m_old_tc_up{g_tc_UP};
+};
+
+void SelectorNumericPromptState::SetUp()
+{
+    SelectorInputTest::SetUp();
+#ifdef I_UNISTD
+    ASSERT_EQ(0, pipe(m_input_pipe.data()));
+    ASSERT_EQ(0, pipe(m_output_pipe.data()));
+#else
+    ASSERT_EQ(0, _pipe(m_input_pipe.data(), 4096, _O_BINARY));
+    ASSERT_EQ(0, _pipe(m_output_pipe.data(), 4096, _O_BINARY));
+#endif
+    m_saved_stdin = dup(fileno(stdin));
+    ASSERT_GE(m_saved_stdin, 0);
+    ASSERT_GE(dup2(m_input_pipe[0], fileno(stdin)), 0);
+    std::clearerr(stdin);
+    g_allow_typeahead = true;
+    g_can_home = true;
+    g_muck_up_clear = false;
+    g_tc_CM = "[%d]";
+    g_tc_HO = "";
+    g_tc_UP = "";
+    g_tc_CE = "<erase>";
+}
+
+void SelectorNumericPromptState::TearDown()
+{
+    if (m_saved_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
+        close(m_saved_stdin);
+        std::clearerr(stdin);
+    }
+    for (int fd : {m_input_pipe[0], m_input_pipe[1], m_output_pipe[0], m_output_pipe[1]})
+    {
+        if (fd >= 0)
+        {
+            close(fd);
+        }
+    }
+    g_allow_typeahead = m_old_allow_typeahead;
+    g_muck_up_clear = m_old_muck_up_clear;
+    g_tc_CM = m_old_tc_cm;
+    g_tc_HO = m_old_tc_ho;
+    g_tc_UP = m_old_tc_up;
+    SelectorNumericInputState::TearDown();
+}
+
+void SelectorNumericPromptState::read_output(const std::vector<PromptReply> &replies)
+{
+    char ch;
+    while (read(m_output_pipe[0], &ch, 1) == 1)
+    {
+        m_output += ch;
+        if (m_answers < replies.size() && m_output.size() >= replies[m_answers].first.size() &&
+            m_output.compare(m_output.size() - replies[m_answers].first.size(), replies[m_answers].first.size(),
+                             replies[m_answers].first) == 0)
+        {
+            std::string input = replies[m_answers].second;
+            for (char &key : input)
+            {
+                key ^= 0200;
+            }
+            m_write_failed |= write(m_input_pipe[1], input.data(), input.size()) != static_cast<int>(input.size());
+            ++m_answers;
+        }
+    }
+}
+
+char SelectorNumericPromptState::answer_after_prompt(std::string_view commands, const std::vector<PromptReply> &replies)
+{
+    push_string(commands, 0200);
+    std::fflush(stdout);
+    const int saved_stdout = dup(fileno(stdout));
+    EXPECT_GE(saved_stdout, 0);
+    EXPECT_GE(dup2(m_output_pipe[1], fileno(stdout)), 0);
+    close(m_output_pipe[1]);
+    m_output_pipe[1] = -1;
+    std::thread responder(&SelectorNumericPromptState::read_output, this, std::cref(replies));
+    const char  result = sel_input();
+    std::fflush(stdout);
+    EXPECT_GE(dup2(saved_stdout, fileno(stdout)), 0);
+    close(saved_stdout);
+    responder.join();
+    EXPECT_FALSE(m_write_failed);
+    EXPECT_EQ(replies.size(), m_answers);
+    return result;
+}
+
+std::string SelectorNumericPromptState::prompt_output(std::string_view prompt, int cursor) const
+{
+    return tgoto_string(g_tc_CM, 0, g_sel_last_line + 1) + std::string(prompt) +
+           tgoto_string(g_tc_CM, 0, g_sel_items[cursor].line);
+}
+
+void SelectorNumericPromptState::expect_prompt_cleared(std::string_view prompt, int cursor) const
+{
+    const std::string trace = std::string(prompt) + tgoto_string(g_tc_CM, 0, g_sel_items[cursor].line) +
+                              tgoto_string(g_tc_CM, 0, g_sel_last_line + 1) + "\r<erase>\r";
+    EXPECT_NE(std::string::npos, m_output.find(trace)) << m_output;
+}
+
+struct NumericPrompt
+{
+    std::string_view commands;
+    std::string_view prompt;
+    std::string_view erased;
+    int              cursor;
+    std::vector<int> completed_rows;
+    int              completed_cursor;
+};
+
+void PrintTo(const NumericPrompt &prompt, std::ostream *output)
+{
+    *output << prompt.prompt << " at cursor " << prompt.cursor;
+}
+
+const NumericPrompt NUMERIC_PROMPTS[] = {
+    {"1", "1", "", 0, {11}, 0},
+    {"\0071", "Go to number: 1", "Go to number?  ", 0, {}, 11},
+    {"-1", "Range: 12-1", "Range: 12- ", 0, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, 0},
+    {"-1", "Range: 4-1", "Range: 4- ", 4, {4, 5, 6, 7, 8, 9, 10, 11}, 0},
+};
+
+class SelectorNumericPromptInputTest : public SelectorNumericPromptState,
+                                       public testing::WithParamInterface<std::tuple<bool, NumericPrompt>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericPromptInputTest::SetUp()
+{
+    SelectorNumericPromptState::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_sel_item_index = std::get<1>(GetParam()).cursor;
+}
+
+TEST_P(SelectorNumericPromptInputTest, completingTheNumberClearsTheDisplayedFirstDigit)
+{
+    const NumericPrompt &scenario = std::get<1>(GetParam());
+    select_rows({MAX_SEL});
+    std::vector<int> selected = scenario.completed_rows;
+    selected.push_back(MAX_SEL);
+
+    ASSERT_EQ('Q', answer_after_prompt(scenario.commands, {{prompt_output(scenario.prompt, scenario.cursor), "2q"}}));
+
+    expect_numeric(selected, scenario.completed_cursor);
+    expect_prompt_cleared(scenario.prompt, scenario.cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndPrompt, SelectorNumericPromptInputTest,
+                         testing::Combine(testing::Bool(), testing::ValuesIn(NUMERIC_PROMPTS)));
+
+class SelectorNumericPromptCancelInputTest : public SelectorNumericPromptState,
+                                             public testing::WithParamInterface<std::tuple<bool, NumericPrompt, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericPromptCancelInputTest::SetUp()
+{
+    SelectorNumericPromptState::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_sel_item_index = std::get<1>(GetParam()).cursor;
+}
+
+TEST_P(SelectorNumericPromptCancelInputTest, cancellingTheNumberClearsItsDigitAndPreservesSelections)
+{
+    const auto &[rereading, scenario, cancel] = GetParam();
+    select_rows({MAX_SEL});
+    const std::string input = std::string(1, cancel) + 'q';
+
+    ASSERT_EQ('Q', answer_after_prompt(scenario.commands, {{prompt_output(scenario.prompt, scenario.cursor), input}}));
+
+    expect_numeric({MAX_SEL}, scenario.cursor);
+    expect_prompt_cleared(scenario.prompt, scenario.cursor);
+    if (!scenario.erased.empty())
+    {
+        if (cancel == g_erase_char)
+        {
+            expect_prompt_cleared(scenario.erased, scenario.cursor);
+        }
+        else
+        {
+            EXPECT_EQ(std::string::npos, m_output.find(scenario.erased));
+        }
+    }
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStatePromptAndCancel, SelectorNumericPromptCancelInputTest,
+                         testing::Combine(testing::Bool(), testing::ValuesIn(NUMERIC_PROMPTS),
+                                          testing::Values('\b', Ctl('u'))));
 
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
