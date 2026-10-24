@@ -1084,6 +1084,186 @@ void SelectorMarkInputState::expect_pending(const std::vector<long> &articles, c
     EXPECT_EQ(delayed.size(), g_dm_count);
 }
 
+class SelectorInvertInputTest : public SelectorMarkInputState,
+                                public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+protected:
+    void SetUp() override;
+    void expect_full_selection() const;
+    void expect_scope() const;
+    void prepare_mixed_page();
+};
+
+void SelectorInvertInputTest::SetUp()
+{
+    SelectorMarkInputState::SetUp();
+    prepare_grouped(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+void SelectorInvertInputTest::expect_scope() const
+{
+    EXPECT_EQ(std::get<0>(GetParam()), g_sel_mode);
+    EXPECT_EQ(std::get<1>(GetParam()), g_sel_rereading);
+    EXPECT_EQ(std::get<1>(GetParam()) ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(0, g_sel_item_index);
+}
+
+void SelectorInvertInputTest::expect_full_selection() const
+{
+    expect_selected({1, 2, 3, 4}, 3);
+    expect_pending({}, {});
+    expect_scope();
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        EXPECT_EQ(1, g_sel_items[index].sel) << index;
+    }
+}
+
+void SelectorInvertInputTest::prepare_mixed_page()
+{
+    switch (g_sel_mode)
+    {
+    case SM_ARTICLE:
+        select_articles({1, 4});
+        break;
+    case SM_SUBJECT:
+        select_articles({1, 2, 4});
+        break;
+    default:
+        select_articles({1, 2, 3});
+        break;
+    }
+    if (g_sel_mode != SM_THREAD)
+    {
+        --g_sel_page_item_cnt;
+        g_sel_at_end = false;
+    }
+    g_sel_item_index = g_sel_page_item_cnt - 1;
+}
+
+TEST_P(SelectorInvertInputTest, inversionSelectsAnExplicitlyUnmarkedRow)
+{
+    ASSERT_EQ('Q', run_input("m@"));
+
+    expect_full_selection();
+}
+
+TEST_P(SelectorInvertInputTest, inversionExchangesVisibleSelectionsAndRetainsHiddenSelections)
+{
+    prepare_mixed_page();
+
+    ASSERT_EQ('Q', run_input("@"));
+
+    expect_selected(g_sel_mode == SM_ARTICLE   ? std::vector<long>{2, 3, 4}
+                    : g_sel_mode == SM_SUBJECT ? std::vector<long>{3, 4}
+                                               : std::vector<long>{4},
+                    g_sel_mode == SM_ARTICLE   ? 3
+                    : g_sel_mode == SM_SUBJECT ? 2
+                                               : 1);
+    expect_pending(g_sel_rereading && g_sel_mode == SM_ARTICLE ? std::vector<long>{1} : std::vector<long>{},
+                   !g_sel_rereading || g_sel_mode == SM_ARTICLE ? std::vector<long>{}
+                   : g_sel_mode == SM_SUBJECT                   ? std::vector<long>{1}
+                                                                : std::vector<long>{1, 3});
+    expect_scope();
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    for (int index = 1; index < g_sel_page_item_cnt; ++index)
+    {
+        EXPECT_EQ(1, g_sel_items[index].sel) << index;
+    }
+}
+
+TEST_P(SelectorInvertInputTest, inversionPreservesUnreadKillsAndSelectsReadKills)
+{
+    ASSERT_EQ('Q', run_input("k@"));
+
+    if (g_sel_rereading)
+    {
+        expect_full_selection();
+    }
+    else
+    {
+        expect_selected(g_sel_mode == SM_ARTICLE   ? std::vector<long>{1, 3, 4}
+                        : g_sel_mode == SM_SUBJECT ? std::vector<long>{3, 4}
+                                                   : std::vector<long>{4},
+                        g_sel_mode == SM_ARTICLE   ? 3
+                        : g_sel_mode == SM_SUBJECT ? 2
+                                                   : 1);
+        expect_pending(g_sel_mode == SM_ARTICLE ? std::vector<long>{2} : std::vector<long>{},
+                       g_sel_mode == SM_SUBJECT  ? std::vector<long>{1}
+                       : g_sel_mode == SM_THREAD ? std::vector<long>{1, 3}
+                                                 : std::vector<long>{});
+        expect_scope();
+        for (int index = 0; index < g_sel_page_item_cnt; ++index)
+        {
+            EXPECT_EQ(index == target_index() ? 2 : 1, g_sel_items[index].sel) << index;
+        }
+    }
+}
+
+TEST_P(SelectorInvertInputTest, repeatingInversionRestoresVisibleSelectionsAndRetainsHiddenSelections)
+{
+    prepare_mixed_page();
+
+    ASSERT_EQ('Q', run_input("@@"));
+
+    expect_selected(g_sel_mode == SM_ARTICLE   ? std::vector<long>{1, 4}
+                    : g_sel_mode == SM_SUBJECT ? std::vector<long>{1, 2, 4}
+                                               : std::vector<long>{1, 2, 3},
+                    g_sel_mode == SM_ARTICLE ? 3 : 2);
+    expect_pending(g_sel_rereading && g_sel_mode == SM_ARTICLE ? std::vector<long>{2, 3} : std::vector<long>{},
+                   !g_sel_rereading || g_sel_mode == SM_ARTICLE ? std::vector<long>{}
+                   : g_sel_mode == SM_SUBJECT                   ? std::vector<long>{3}
+                                                                : std::vector<long>{4});
+    expect_scope();
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    for (int index = 1; index < g_sel_page_item_cnt; ++index)
+    {
+        EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[index].sel) << index;
+    }
+}
+
+TEST_P(SelectorInvertInputTest, invertingAnEmptyPagePreservesSelectionsAndPendingMarks)
+{
+    select_articles({1, 4});
+    std::array<ArticleFlags, 4> flags{};
+    for (int index = 0; index < 4; ++index)
+    {
+        flags[index] = article_ptr(ArticleNum{index + 1})->m_flags;
+    }
+    g_sel_page_item_cnt = 0;
+    g_sel_item_index = 0;
+
+    ASSERT_EQ('Q', run_input("@"));
+
+    expect_selected({1, 4}, 2);
+    expect_scope();
+    for (int index = 0; index < 4; ++index)
+    {
+        EXPECT_EQ(flags[index], article_ptr(ArticleNum{index + 1})->m_flags) << index;
+    }
+    EXPECT_EQ(0, g_dm_count);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadState, SelectorInvertInputTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+class SelectorPartialInvertInputTest : public SelectorInvertInputTest
+{
+};
+
+TEST_P(SelectorPartialInvertInputTest, inversionCompletesAPartiallySelectedRow)
+{
+    select_articles({1});
+    ASSERT_EQ(3, g_sel_items[0].sel);
+
+    ASSERT_EQ('Q', run_input("@"));
+
+    expect_full_selection();
+}
+
+INSTANTIATE_TEST_SUITE_P(GroupedModesAndReadState, SelectorPartialInvertInputTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool()));
+
 class SelectorUnmarkInputTest : public SelectorMarkInputState,
                                 public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
 {
@@ -1566,6 +1746,64 @@ void SelectorObjectInputState::expect_objects(std::initializer_list<int> selecte
     }
 }
 
+class SelectorObjectInvertInputTest : public SelectorObjectInputState,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorObjectInvertInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    select_objects({2});
+}
+
+TEST_P(SelectorObjectInvertInputTest, inversionSelectsAnExplicitlyUnmarkedObject)
+{
+    ASSERT_EQ('Q', run_input("m@"));
+
+    expect_objects({0, 1, 2}, 0);
+}
+
+TEST_P(SelectorObjectInvertInputTest, inversionExchangesVisibleSelectionsAndRetainsHiddenSelections)
+{
+    select_objects({0});
+    g_sel_item_index = 1;
+
+    ASSERT_EQ('Q', run_input("@"));
+
+    expect_objects({1, 2}, 0);
+}
+
+TEST_P(SelectorObjectInvertInputTest, inversionPreservesUnreadKillsAndSelectsReadKills)
+{
+    ASSERT_EQ('Q', run_input("k@"));
+
+    if (g_sel_rereading)
+    {
+        expect_objects({0, 1, 2}, 0);
+    }
+    else
+    {
+        expect_objects({1, 2}, 0, std::vector<int>{0});
+    }
+}
+
+TEST_P(SelectorObjectInvertInputTest, repeatingInversionRestoresVisibleSelectionsAndRetainsHiddenSelections)
+{
+    select_objects({0});
+    g_sel_item_index = 1;
+
+    ASSERT_EQ('Q', run_input("@@"));
+
+    expect_objects({0, 2}, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadState, SelectorObjectInvertInputTest,
+                         testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool()));
+
 class SelectorObjectUnmarkInputTest : public SelectorObjectInputState,
                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
 {
@@ -1895,6 +2133,37 @@ void SelectorNumericInputState::expect_numeric(const std::vector<int> &selected,
     EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
     EXPECT_EQ(m_rereading ? 0 : MAX_SEL + 1, m_newsgroup.m_to_read);
 }
+
+class SelectorNumericInvertInputTest : public SelectorNumericInputState, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericInvertInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(GetParam(), MAX_SEL);
+}
+
+TEST_P(SelectorNumericInvertInputTest, inversionIncludesBothEndsOfTheLargestPageAndRetainsHiddenSelection)
+{
+    select_rows({0, MAX_SEL - 1, MAX_SEL});
+    g_sel_num_goto = true;
+    g_sel_item_index = MAX_SEL - 1;
+    std::vector<int> selected;
+    for (int index = 1; index < MAX_SEL - 1; ++index)
+    {
+        selected.push_back(index);
+    }
+    selected.push_back(MAX_SEL);
+
+    ASSERT_EQ('Q', run_input("@"));
+
+    expect_numeric(selected, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorNumericInvertInputTest, testing::Bool());
 
 using NumericPosition = std::pair<std::string_view, int>;
 

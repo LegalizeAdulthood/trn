@@ -1699,13 +1699,9 @@ reinp_selector:
             {
                 ch = (g_sel_rereading ? '+' : ' ');
             }
-            else if (g_sel_rereading)
-            {
-                ch = 'k';
-            }
             else if (sel == 1)
             {
-                ch = '-';
+                ch = g_sel_rereading ? 'k' : '-';
             }
             else
             {
