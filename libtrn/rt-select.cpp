@@ -1257,6 +1257,7 @@ char sel_input()
     // the following will be the default action.
     //
     int action = '+';
+    int range_start = -1; // One-based origin; -1 uses the current cursor.
 reask_selector:
     // Prompt the user
     sel_prompt();
@@ -1317,7 +1318,7 @@ reinp_selector:
         {
             if (!input_pending())
             {
-                j = (g_sel_item_index > 0? g_sel_item_index : g_sel_page_item_cnt);
+                j = range_start >= 0 ? range_start : (g_sel_item_index > 0 ? g_sel_item_index : g_sel_page_item_cnt);
                 if (g_use_sel_num)
                 {
                     sel_status_msg(fmt::format("Range: {}-", j));
@@ -1387,14 +1388,7 @@ reinp_selector:
         {
             if (got_dash)
             {
-                if (g_sel_item_index > 0)
-                {
-                    j = g_sel_item_index;  // -1, +1 to print
-                }
-                else  // wrap around from the bottom
-                {
-                    j = g_sel_page_item_cnt;
-                }
+                j = range_start >= 0 ? range_start : (g_sel_item_index > 0 ? g_sel_item_index : g_sel_page_item_cnt);
                 sel_status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
             }
             else
@@ -1440,14 +1434,7 @@ reinp_selector:
             //
             if (got_dash)
             {
-                if (g_sel_item_index > 0)
-                {
-                    j = g_sel_item_index;  // -1, +1 to print
-                }
-                else // wrap around from the bottom
-                {
-                    j = g_sel_page_item_cnt;
-                }
+                j = range_start >= 0 ? range_start : (g_sel_item_index > 0 ? g_sel_item_index : g_sel_page_item_cnt);
                 sel_status_msg(fmt::format("Range: {}- ", j));
                 goto reinp_selector;
             }
@@ -1478,6 +1465,7 @@ reinp_selector:
         {
             // (but only do always-goto if there was not a dash)
             g_sel_item_index = j;
+            range_start = j + 1;
             goto position_selector;
         }
         else if (got_dash)
@@ -1504,6 +1492,7 @@ reinp_selector:
         else if (got_goto)
         {
             g_sel_item_index = j;
+            range_start = j + 1;
             goto position_selector;
         }
         else if (got_dash)
@@ -1526,6 +1515,7 @@ reinp_selector:
         }
         else
         {
+            range_start = -1;
             Article *ap = g_sel_items[g_sel_item_index].u.ap;
             if (g_sel_items[g_sel_item_index].sel == 1)
             {
@@ -1572,6 +1562,7 @@ reinp_selector:
     }
     else if (ch == '@')
     {
+        range_start = -1;
         g_sel_item_index = 0;
         j = g_sel_page_item_cnt-1;
         got_dash = 1;
@@ -1579,6 +1570,7 @@ reinp_selector:
     }
     else if (ch == '[' || ch == 'p')
     {
+        range_start = -1;
         if (--g_sel_item_index < 0)
         {
             g_sel_item_index = g_sel_page_item_cnt ? g_sel_page_item_cnt - 1 : 0;
@@ -1587,6 +1579,7 @@ reinp_selector:
     }
     else if (ch == ']' || ch == 'n')
     {
+        range_start = -1;
         if (++g_sel_item_index >= g_sel_page_item_cnt)
         {
             g_sel_item_index = 0;
@@ -1595,6 +1588,7 @@ reinp_selector:
     }
     else
     {
+        range_start = -1;
         s_sel_ret = ch;
         switch (sel_command(ch))
         {
@@ -1680,11 +1674,11 @@ reinp_selector:
     }
     else
     {
-        if (j < g_sel_item_index)
+        const int after_start = range_start >= 0 ? range_start : g_sel_item_index;
+        if (j < after_start)
         {
-            ch = g_sel_item_index-1;
             g_sel_item_index = j;
-            j = ch;
+            j = after_start - 1;
         }
     }
 
@@ -1767,6 +1761,7 @@ reinp_selector:
             g_sel_item_index = 0;
         }
     } while (g_sel_item_index != j);
+    range_start = g_sel_item_index ? g_sel_item_index : g_sel_page_item_cnt;
     if (s_force_sel_pos >= 0)
     {
         g_sel_item_index = s_force_sel_pos;

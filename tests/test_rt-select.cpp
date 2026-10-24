@@ -1434,6 +1434,43 @@ TEST_P(SelectorNumericReadInputTest, maximumTwoDigitPositionSelectsTheLastRowAnd
     expect_numeric({MAX_SEL - 1, MAX_SEL}, 0);
 }
 
+TEST_P(SelectorNumericReadInputTest, aRangeSelectsItsEndpointWhenNumericGotoIsEnabled)
+{
+    select_rows({MAX_SEL});
+    g_sel_num_goto = true;
+
+    ASSERT_EQ('Q', run_input("02.-05"));
+
+    expect_numeric({1, 2, 3, 4, MAX_SEL}, 5);
+}
+
+TEST_P(SelectorNumericReadInputTest, aSingleDigitRangeEndpointPreservesTheFollowingCommand)
+{
+    select_rows({MAX_SEL});
+
+    ASSERT_EQ('Q', run_input("02-5."));
+
+    expect_numeric({1, 2, 3, 4, 5, MAX_SEL}, 6);
+}
+
+TEST_P(SelectorNumericReadInputTest, chainedRangesRetainTheLastSelectionAction)
+{
+    select_rows({MAX_SEL});
+
+    ASSERT_EQ('Q', run_input("02-05-08"));
+
+    expect_numeric({1, 2, 3, 4, 5, 6, 7, MAX_SEL}, 8);
+}
+
+TEST_P(SelectorNumericReadInputTest, chainedRangesRetainTheLastDeselectionAction)
+{
+    select_rows({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL});
+
+    ASSERT_EQ('Q', run_input("02-05-08"));
+
+    expect_numeric({0, 8, 9, 10, 11, MAX_SEL}, 8);
+}
+
 INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorNumericReadInputTest, testing::Bool());
 
 class SelectorNumericCancelInputTest : public SelectorNumericInputState,
@@ -1681,6 +1718,252 @@ TEST_P(SelectorNumericPromptCancelInputTest, cancellingTheNumberClearsItsDigitAn
 INSTANTIATE_TEST_SUITE_P(ReadStatePromptAndCancel, SelectorNumericPromptCancelInputTest,
                          testing::Combine(testing::Bool(), testing::ValuesIn(NUMERIC_PROMPTS),
                                           testing::Values('\b', Ctl('u'))));
+
+struct SelectionRange
+{
+    std::string_view letters;
+    std::string_view numbers;
+    std::vector<int> rows;
+    int              cursor;
+};
+
+void PrintTo(const SelectionRange &range, std::ostream *output)
+{
+    *output << range.letters;
+}
+
+const SelectionRange SELECTION_RANGES[] = {
+    {"b-f", "02-06", {1, 2, 3, 4, 5}, 6},
+    {"f-b", "06-02", {1, 2, 3, 4, 5}, 6},
+    {"f-f", "06-06", {5}, 6},
+    {"e-f", "05-06", {4, 5}, 6},
+    {"f-e", "06-05", {4, 5}, 6},
+    {"a-l", "01-12", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, 0},
+    {"l-a", "12-01", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, 0},
+    {"l-l", "12-12", {11}, 0},
+    {"l-k", "12-11", {10, 11}, 0},
+    {"k-l", "11-12", {10, 11}, 0},
+};
+
+class SelectorRangeInputTest : public SelectorNumericInputState,
+                               public testing::WithParamInterface<std::tuple<bool, bool, SelectionRange>>
+{
+protected:
+    void             SetUp() override;
+    std::string_view commands() const;
+    void             prepare_range_selection();
+};
+
+void SelectorRangeInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_use_sel_num = std::get<1>(GetParam());
+    g_sel_chars = "abcdefghijkl";
+}
+
+std::string_view SelectorRangeInputTest::commands() const
+{
+    const SelectionRange &range = std::get<2>(GetParam());
+    return g_use_sel_num ? range.numbers : range.letters;
+}
+
+void SelectorRangeInputTest::prepare_range_selection()
+{
+    const SelectionRange &range = std::get<2>(GetParam());
+    select_rows({MAX_SEL});
+    if (range.letters.front() != range.letters.back())
+    {
+        select_rows({range.letters.back() - 'a'});
+    }
+}
+
+TEST_P(SelectorRangeInputTest, rangeRepeatsSelectionAcrossItsInclusiveEndpoints)
+{
+    prepare_range_selection();
+    const SelectionRange &range = std::get<2>(GetParam());
+    std::vector<int>      selected = range.rows;
+    selected.push_back(MAX_SEL);
+
+    ASSERT_EQ('Q', run_input(commands()));
+
+    expect_numeric(selected, range.cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+TEST_P(SelectorRangeInputTest, rangeRepeatsDeselectionAndPreservesSelectionsOutsideIt)
+{
+    select_rows({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL});
+    const SelectionRange &range = std::get<2>(GetParam());
+    std::vector<int>      selected;
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        if (std::find(range.rows.begin(), range.rows.end(), index) == range.rows.end())
+        {
+            selected.push_back(index);
+        }
+    }
+    selected.push_back(MAX_SEL);
+
+    ASSERT_EQ('Q', run_input(commands()));
+
+    expect_numeric(selected, range.cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeAndEndpoints, SelectorRangeInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::ValuesIn(SELECTION_RANGES)));
+
+class SelectorGotoRangeInputTest : public SelectorRangeInputTest
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorGotoRangeInputTest::SetUp()
+{
+    SelectorRangeInputTest::SetUp();
+    g_sel_num_goto = g_use_sel_num;
+}
+
+TEST_P(SelectorGotoRangeInputTest, aRangeFromAnUnmarkedGotoDestinationIncludesBothEndpoints)
+{
+    select_rows({MAX_SEL});
+    const SelectionRange &range = std::get<2>(GetParam());
+    const std::string     input =
+        g_use_sel_num ? std::string(commands()) : std::string(1, Ctl('g')) + std::string(commands());
+    std::vector<int> selected = range.rows;
+    selected.push_back(MAX_SEL);
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric(selected, range.cursor);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeAndEndpoints, SelectorGotoRangeInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::ValuesIn(SELECTION_RANGES)));
+
+class SelectorGotoRangePromptInputTest : public SelectorNumericPromptState, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorGotoRangePromptInputTest::SetUp()
+{
+    SelectorNumericPromptState::SetUp();
+    prepare_numeric(GetParam());
+    g_sel_num_goto = true;
+}
+
+TEST_P(SelectorGotoRangePromptInputTest, theRangePromptNamesTheUnmarkedGotoDestination)
+{
+    select_rows({MAX_SEL});
+
+    ASSERT_EQ('Q', answer_after_prompt("04-1", {{prompt_output("Range: 4-1", 3), "2q"}}));
+
+    expect_numeric({3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL}, 0);
+    expect_prompt_cleared("Range: 4-1", 3);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorGotoRangePromptInputTest, testing::Bool());
+
+class SelectorGroupedRangeInputTest : public SelectorGroupedInputState,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
+{
+protected:
+    void        SetUp() override;
+    std::string commands() const;
+};
+
+void SelectorGroupedRangeInputTest::SetUp()
+{
+    SelectorGroupedInputState::SetUp();
+    prepare_grouped(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+std::string SelectorGroupedRangeInputTest::commands() const
+{
+    return std::get<2>(GetParam()) ? "b-a" : "a-b";
+}
+
+TEST_P(SelectorGroupedRangeInputTest, rangeSelectsAllEligibleArticlesInItsSubjectOrThreadRows)
+{
+    select_articles({1});
+
+    ASSERT_EQ('Q', run_input(commands()));
+
+    expect_selected(g_sel_mode == SM_SUBJECT ? std::vector<long>{1, 2, 3} : std::vector<long>{1, 2, 3, 4},
+                    g_sel_mode == SM_SUBJECT ? 2 : 3);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    if (g_sel_mode == SM_SUBJECT)
+    {
+        EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[2].sel);
+    }
+    EXPECT_EQ(g_sel_mode == SM_SUBJECT ? 2 : 0, g_sel_item_index);
+}
+
+TEST_P(SelectorGroupedRangeInputTest, rangeDeselectsWholeRowsAndPreservesOtherSubjectsAndReadScopes)
+{
+    select_articles({1, 2, 3, 4});
+
+    ASSERT_EQ('Q', run_input(commands()));
+
+    expect_selected(g_sel_mode == SM_SUBJECT ? std::vector<long>{4} : std::vector<long>{},
+                    g_sel_mode == SM_SUBJECT ? 1 : 0);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(g_sel_rereading ? 2 : 0, g_sel_items[1].sel);
+    if (g_sel_mode == SM_SUBJECT)
+    {
+        EXPECT_EQ(1, g_sel_items[2].sel);
+    }
+    EXPECT_EQ(g_sel_mode == SM_SUBJECT ? 2 : 0, g_sel_item_index);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndDirection, SelectorGroupedRangeInputTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(), testing::Bool()));
+
+class SelectorObjectRangeInputTest : public SelectorObjectInputState,
+                                     public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
+{
+protected:
+    void        SetUp() override;
+    std::string commands() const;
+};
+
+void SelectorObjectRangeInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+std::string SelectorObjectRangeInputTest::commands() const
+{
+    return std::get<2>(GetParam()) ? "b-a" : "a-b";
+}
+
+TEST_P(SelectorObjectRangeInputTest, rangeSelectsItsGroupsOrItemsAndRetainsHiddenSelections)
+{
+    select_objects({2});
+
+    ASSERT_EQ('Q', run_input(commands()));
+
+    expect_objects({0, 1, 2}, 0);
+}
+
+TEST_P(SelectorObjectRangeInputTest, rangeDeselectsItsGroupsOrItemsAndRetainsHiddenSelections)
+{
+    select_objects({0, 1, 2});
+
+    ASSERT_EQ('Q', run_input(commands()));
+
+    expect_objects({2}, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadStateAndDirection, SelectorObjectRangeInputTest,
+                         testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
+                                          testing::Bool()));
 
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
