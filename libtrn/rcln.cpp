@@ -53,7 +53,7 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
                 fmt::print("\nAll but {} marked as read.\n", leave_count);
             }
         }
-        check_expired(get_newsgroup_size() - ArticleNum{leave_count + 1});
+        check_expired(article_after(get_newsgroup_size() - ArticleNum{leave_count}));
         set_to_read(ST_STRICT);
     }
     else

@@ -4,6 +4,7 @@
 #include <trn/rt-page.h>
 
 #include <config/common.h>
+#include <config/fdio.h>
 #include <trn/datasrc.h>
 #include <trn/ngdata.h>
 #include <trn/only.h>
@@ -18,8 +19,13 @@
 
 #include <gtest/gtest.h>
 
+#ifdef I_UNISTD
+#include <unistd.h>
+#endif
+
 #include <array>
 #include <cerrno>
+#include <cstdio>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -682,6 +688,173 @@ class NewsgroupSelectorReadCatchupTest : public NewsgroupSelectorCatchupStateTes
                                          public testing::WithParamInterface<char>
 {
 };
+
+class NewsgroupSelectorNumericCatchupStateTest : public NewsgroupSelectorCatchupStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_catchup(ArticleUnread unread, std::string_view numbers) const;
+    void expect_cancelled() const;
+    void expect_repeated_prompt() const;
+
+private:
+    char             m_old_erase{g_erase_char};
+    char             m_old_kill{g_kill_char};
+    std::string_view m_old_backspace{g_tc_BC};
+    std::string_view m_old_bell{g_tc_VB};
+    bool             m_old_mouse_down{g_mouse_is_down};
+};
+
+void NewsgroupSelectorNumericCatchupStateTest::SetUp()
+{
+    NewsgroupSelectorCatchupStateTest::SetUp();
+    g_erase_char = '\b';
+    g_kill_char = Ctl('u');
+    g_tc_BC = "\b";
+    g_tc_VB = "";
+    g_mouse_is_down = false;
+    prepare_groups();
+}
+
+void NewsgroupSelectorNumericCatchupStateTest::TearDown()
+{
+    g_erase_char = m_old_erase;
+    g_kill_char = m_old_kill;
+    g_tc_BC = m_old_backspace;
+    g_tc_VB = m_old_bell;
+    g_mouse_is_down = m_old_mouse_down;
+    NewsgroupSelectorCatchupStateTest::TearDown();
+}
+
+void NewsgroupSelectorNumericCatchupStateTest::expect_catchup(ArticleUnread unread, std::string_view numbers) const
+{
+    EXPECT_EQ(unread, m_target->m_to_read);
+    EXPECT_EQ(numbers, m_target->rc_numbers());
+    EXPECT_EQ(':', m_target->m_subscribe_char);
+    EXPECT_EQ(unread ? NewsgroupNum{3} : NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
+    expect_target_current(m_first);
+    expect_other_groups_preserved();
+    expect_page_preserved();
+}
+
+void NewsgroupSelectorNumericCatchupStateTest::expect_cancelled() const
+{
+    EXPECT_EQ(7, m_target->m_to_read);
+    EXPECT_EQ(" 1-3", m_target->rc_numbers());
+    EXPECT_EQ(':', m_target->m_subscribe_char);
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    expect_target_current(m_first);
+    expect_other_groups_preserved();
+    expect_page_preserved();
+}
+
+void NewsgroupSelectorNumericCatchupStateTest::expect_repeated_prompt() const
+{
+    const std::size_t first_prompt = m_output.find("Catchup comp.target?");
+    ASSERT_NE(std::string::npos, first_prompt);
+    EXPECT_NE(std::string::npos, m_output.find("Catchup comp.target?", first_prompt + 1));
+}
+
+class NewsgroupSelectorCatchupTailTest : public NewsgroupSelectorNumericCatchupStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, std::string>>
+{
+};
+
+struct NewsgroupCatchupTail
+{
+    std::string_view input;
+    ArticleUnread    unread;
+    std::string_view numbers;
+};
+
+void PrintTo(const NewsgroupCatchupTail &tail, std::ostream *output)
+{
+    *output << tail.input.substr(0, tail.input.find('\n'));
+}
+
+class NewsgroupSelectorCatchupTailBoundaryTest : public NewsgroupSelectorNumericCatchupStateTest,
+                                                 public testing::WithParamInterface<NewsgroupCatchupTail>
+{
+};
+
+class NewsgroupSelectorCatchupZeroTest : public NewsgroupSelectorNumericCatchupStateTest,
+                                         public testing::WithParamInterface<std::string>
+{
+};
+
+using NewsgroupCatchupEdit = std::pair<std::string_view, std::string_view>;
+
+class NewsgroupSelectorCatchupEditTest : public NewsgroupSelectorNumericCatchupStateTest,
+                                         public testing::WithParamInterface<NewsgroupCatchupEdit>
+{
+};
+
+class NewsgroupSelectorCatchupRetryTest : public NewsgroupSelectorNumericCatchupStateTest,
+                                          public testing::WithParamInterface<std::string_view>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void set_answers(std::string_view answers);
+    void expect_next_command() const;
+
+private:
+    std::array<int, 2> m_input{-1, -1};
+    int                m_saved_stdin{-1};
+    bool               m_old_typeahead{g_allow_typeahead};
+};
+
+void NewsgroupSelectorCatchupRetryTest::SetUp()
+{
+    NewsgroupSelectorNumericCatchupStateTest::SetUp();
+#ifdef I_UNISTD
+    ASSERT_EQ(0, pipe(m_input.data()));
+#else
+    ASSERT_EQ(0, _pipe(m_input.data(), 4096, _O_BINARY));
+#endif
+    m_saved_stdin = dup(fileno(stdin));
+    ASSERT_GE(m_saved_stdin, 0);
+    ASSERT_GE(dup2(m_input[0], fileno(stdin)), 0);
+    std::clearerr(stdin);
+    g_allow_typeahead = true;
+    ASSERT_EQ('Q', read_tty_char());
+    ASSERT_FALSE(macro_pending());
+}
+
+void NewsgroupSelectorCatchupRetryTest::TearDown()
+{
+    if (m_saved_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
+        close(m_saved_stdin);
+        std::clearerr(stdin);
+    }
+    for (int fd : m_input)
+    {
+        if (fd >= 0)
+        {
+            close(fd);
+        }
+    }
+    g_allow_typeahead = m_old_typeahead;
+    NewsgroupSelectorNumericCatchupStateTest::TearDown();
+}
+
+void NewsgroupSelectorCatchupRetryTest::set_answers(std::string_view answers)
+{
+    ASSERT_EQ(static_cast<int>(answers.size()), write(m_input[1], answers.data(), answers.size()));
+    close(m_input[1]);
+    m_input[1] = -1;
+}
+
+void NewsgroupSelectorCatchupRetryTest::expect_next_command() const
+{
+    EXPECT_EQ('Q', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
 
 class NewsgroupSelectorExclusiveTest : public NewsgroupSelectorCommandStateTest,
                                        public testing::WithParamInterface<bool>
@@ -1574,6 +1747,124 @@ TEST_P(NewsgroupSelectorReadCatchupTest, catchingUpAnAlreadyReadGroupPreservesTh
 }
 
 INSTANTIATE_TEST_SUITE_P(Answer, NewsgroupSelectorReadCatchupTest, testing::Values('y', 'u'));
+
+TEST_P(NewsgroupSelectorCatchupTailTest, numericInputMarksOlderArticlesReadAndKeepsTheRequestedTail)
+{
+    const auto &[verbose, input] = GetParam();
+    g_verbose = verbose;
+
+    const DisplayState result = run_command('c', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Marking all but 3 articles in comp.target as read."
+                                                       : "All but 3 marked as read."));
+    expect_catchup(3, " 1-7");
+    expect_input_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndInput, NewsgroupSelectorCatchupTailTest,
+                         testing::Combine(testing::Bool(), testing::Values(std::string{"3\n"}, std::string{"#3\n"},
+                                                                           std::string{"04\b3\n"})));
+
+TEST_P(NewsgroupSelectorCatchupTailBoundaryTest, theRequestedTailDoesNotMarkAlreadyReadArticlesUnread)
+{
+    const NewsgroupCatchupTail &tail = GetParam();
+
+    const DisplayState result = run_command('c', tail.input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_catchup(tail.unread, tail.numbers);
+    expect_input_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(TailSize, NewsgroupSelectorCatchupTailBoundaryTest,
+                         testing::Values(NewsgroupCatchupTail{"1\n", 1, " 1-9"}, NewsgroupCatchupTail{"7\n", 7, " 1-3"},
+                                         NewsgroupCatchupTail{"10\n", 7, " 1-3"},
+                                         NewsgroupCatchupTail{"99\n", 7, " 1-3"}));
+
+TEST_F(NewsgroupSelectorNumericCatchupStateTest, partialCatchupPreservesExistingReadRangesWithinTheTail)
+{
+    m_target->m_rc_line.resize(m_target->m_num_offset);
+    m_target->m_rc_line += " 1-3,9-10";
+    m_target->m_to_read = 5;
+
+    const DisplayState result = run_command('c', "3\n");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_catchup(1, " 1-7,9-10");
+    expect_input_preserved();
+}
+
+TEST_P(NewsgroupSelectorCatchupZeroTest, zeroOrTheDefaultNumericAnswerMarksTheWholeGroupRead)
+{
+    const DisplayState result = run_command('c', GetParam());
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find("Marked read"));
+    expect_catchup(TR_NONE, " 1-10");
+    expect_input_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(Input, NewsgroupSelectorCatchupZeroTest,
+                         testing::Values(std::string{"0\n"}, std::string{"#0"}, std::string{"# "}));
+
+TEST_P(NewsgroupSelectorCatchupEditTest, erasingTheNumericAnswerReturnsToConfirmationAndAllowsRefusal)
+{
+    const auto &[prefix, edit] = GetParam();
+    const std::string input = std::string{prefix} + std::string{edit} + 'n';
+
+    const DisplayState result = run_command('c', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_repeated_prompt();
+    expect_cancelled();
+    expect_input_preserved();
+}
+
+TEST_P(NewsgroupSelectorCatchupEditTest, replacingAnErasedNumericAnswerUsesTheNewTailCount)
+{
+    const auto &[prefix, edit] = GetParam();
+    const std::string input = std::string{prefix} + std::string{edit} + "3\n";
+
+    const DisplayState result = run_command('c', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_repeated_prompt();
+    expect_catchup(3, " 1-7");
+    expect_input_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(InputAndEditing, NewsgroupSelectorCatchupEditTest,
+                         testing::Values(NewsgroupCatchupEdit{"4", "\b"}, NewsgroupCatchupEdit{"42", "\x15"},
+                                         NewsgroupCatchupEdit{"#4", "\b"}, NewsgroupCatchupEdit{"#42", "\x15"}));
+
+TEST_P(NewsgroupSelectorCatchupRetryTest, anInvalidReplyRepeatsConfirmationAndAllowsRefusal)
+{
+    set_answers(std::string{GetParam()} + "nQ");
+
+    const DisplayState result = run_command('c');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find("Type h for help."));
+    expect_repeated_prompt();
+    expect_cancelled();
+    expect_next_command();
+}
+
+TEST_P(NewsgroupSelectorCatchupRetryTest, anInvalidReplyRepeatsConfirmationAndAllowsCatchup)
+{
+    set_answers(std::string{GetParam()} + "yQ");
+
+    const DisplayState result = run_command('c');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find("Type h for help."));
+    expect_repeated_prompt();
+    expect_catchup(TR_NONE, " 1-10");
+    expect_next_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(InvalidReply, NewsgroupSelectorCatchupRetryTest, testing::Values("x", "#x"));
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {
