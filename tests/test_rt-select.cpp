@@ -1965,6 +1965,185 @@ INSTANTIATE_TEST_SUITE_P(ModeReadStateAndDirection, SelectorObjectRangeInputTest
                          testing::Combine(testing::Values(SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
                                           testing::Bool()));
 
+using SelectorCancelKey = std::pair<char, bool>;
+
+class SelectorPrefixCancelInputTest
+    : public SelectorNumericPromptState,
+      public testing::WithParamInterface<std::tuple<bool, bool, SelectorCancelKey, char>>
+{
+protected:
+    void             SetUp() override;
+    std::string      prefix() const;
+    std::string      prompt() const;
+    std::string      fresh_selection() const;
+    std::vector<int> retained_selections() const;
+    int              retained_cursor() const;
+    char             cancel_key() const;
+};
+
+void SelectorPrefixCancelInputTest::SetUp()
+{
+    SelectorNumericPromptState::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    g_use_sel_num = std::get<1>(GetParam());
+    g_sel_chars = "abcdefghijkl";
+    const auto [key, kill] = std::get<2>(GetParam());
+    if (kill)
+    {
+        g_kill_char = key;
+    }
+    else
+    {
+        g_erase_char = key;
+    }
+    select_rows({0, 3, MAX_SEL});
+    g_sel_item_index = 4;
+}
+
+std::string SelectorPrefixCancelInputTest::prefix() const
+{
+    return std::get<3>(GetParam()) == '-' ? (g_use_sel_num ? "02-" : "b-") : std::string(1, Ctl('g'));
+}
+
+std::string SelectorPrefixCancelInputTest::prompt() const
+{
+    return std::get<3>(GetParam()) == '-' ? (g_use_sel_num ? "Range: 2-" : "Range: b-")
+                                          : (g_use_sel_num ? "Go to number?" : "Go to letter?");
+}
+
+std::string SelectorPrefixCancelInputTest::fresh_selection() const
+{
+    return g_use_sel_num ? "06" : "f";
+}
+
+std::vector<int> SelectorPrefixCancelInputTest::retained_selections() const
+{
+    return std::get<3>(GetParam()) == '-' ? std::vector<int>{0, 1, 3, MAX_SEL} : std::vector<int>{0, 3, MAX_SEL};
+}
+
+int SelectorPrefixCancelInputTest::retained_cursor() const
+{
+    return std::get<3>(GetParam()) == '-' ? 2 : 4;
+}
+
+char SelectorPrefixCancelInputTest::cancel_key() const
+{
+    return std::get<2>(GetParam()).first;
+}
+
+TEST_P(SelectorPrefixCancelInputTest, cancellingBeforeADestinationRetainsTheCursorAndExistingSelections)
+{
+    ASSERT_EQ('Q', run_input(prefix() + cancel_key()));
+
+    expect_numeric(retained_selections(), retained_cursor());
+}
+
+TEST_P(SelectorPrefixCancelInputTest, cancellationAllowsTheNextInputToSelectASingleRow)
+{
+    std::vector<int> selected = retained_selections();
+    selected.insert(selected.end() - 1, 5);
+
+    ASSERT_EQ('Q', run_input(prefix() + cancel_key() + fresh_selection()));
+
+    expect_numeric(selected, 6);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+TEST_P(SelectorPrefixCancelInputTest, cancellingADisplayedPrefixClearsItsPromptBeforeTheNextSelection)
+{
+    const std::string message = prompt();
+    const int         cursor = retained_cursor();
+    std::vector<int>  selected = retained_selections();
+    selected.insert(selected.end() - 1, 5);
+    const std::string answer = std::string(1, cancel_key()) + fresh_selection() + 'q';
+
+    ASSERT_EQ('Q', answer_after_prompt(prefix(), {{prompt_output(message, cursor), answer}}));
+
+    expect_numeric(selected, 6);
+    expect_prompt_cleared(message, cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateInputModeKeyAndPrefix, SelectorPrefixCancelInputTest,
+                         testing::Combine(testing::Bool(), testing::Bool(),
+                                          testing::Values(SelectorCancelKey{'\b', false},
+                                                          SelectorCancelKey{'\177', false},
+                                                          SelectorCancelKey{Ctl('u'), true}),
+                                          testing::Values('-', Ctl('g'))));
+
+struct SelectorNumericEdit
+{
+    std::string_view prefix;
+    std::string_view replacement;
+    std::vector<int> resumed;
+    int              resumed_cursor;
+    std::vector<int> cancelled;
+    int              cancelled_cursor;
+};
+
+void PrintTo(const SelectorNumericEdit &edit, std::ostream *output)
+{
+    *output << testing::PrintToString(std::string(edit.prefix)) << " then " << edit.replacement;
+}
+
+const SelectorNumericEdit NUMERIC_EDITS[] = {
+    {"02-1", "06", {0, 1, 2, 3, 4, 5, MAX_SEL}, 6, {0, 1, 5, MAX_SEL}, 6},
+    {"06-1", "02", {0, 1, 2, 3, 4, 5, MAX_SEL}, 6, {0, 1, 5, MAX_SEL}, 2},
+    {"12-1", "02", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL}, 0, {0, 1, 11, MAX_SEL}, 2},
+    {"\0071", "06", {0, MAX_SEL}, 5, {0, 5, MAX_SEL}, 6},
+};
+
+class SelectorNumericEditInputTest : public SelectorNumericInputState,
+                                     public testing::WithParamInterface<std::tuple<bool, SelectorNumericEdit>>
+{
+protected:
+    void SetUp() override;
+};
+
+void SelectorNumericEditInputTest::SetUp()
+{
+    SelectorInputTest::SetUp();
+    prepare_numeric(std::get<0>(GetParam()));
+    select_rows({0, MAX_SEL});
+    g_sel_item_index = 4;
+}
+
+TEST_P(SelectorNumericEditInputTest, erasingTheFirstDigitAllowsTheRangeOrGotoDestinationToBeReplaced)
+{
+    const SelectorNumericEdit &edit = std::get<1>(GetParam());
+    const std::string          input = std::string(edit.prefix) + g_erase_char + std::string(edit.replacement);
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric(edit.resumed, edit.resumed_cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+TEST_P(SelectorNumericEditInputTest, erasingTheDigitAndThenThePrefixAllowsAFreshSelection)
+{
+    const SelectorNumericEdit &edit = std::get<1>(GetParam());
+    const std::string input = std::string(edit.prefix) + std::string(2, g_erase_char) + std::string(edit.replacement);
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric(edit.cancelled, edit.cancelled_cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+TEST_P(SelectorNumericEditInputTest, killingThePartialNumberCancelsItsPrefixAndAllowsAFreshSelection)
+{
+    const SelectorNumericEdit &edit = std::get<1>(GetParam());
+    const std::string          input = std::string(edit.prefix) + g_kill_char + std::string(edit.replacement);
+
+    ASSERT_EQ('Q', run_input(input));
+
+    expect_numeric(edit.cancelled, edit.cancelled_cursor);
+    EXPECT_EQ(std::string::npos, m_output.find("No item"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadStateAndPartialDestination, SelectorNumericEditInputTest,
+                         testing::Combine(testing::Bool(), testing::ValuesIn(NUMERIC_EDITS)));
+
 using ArticleSelectorToggle = std::tuple<SelectionMode, bool>;
 
 class ArticleSelectorToggleTest : public ArticleSelectorCommandTest,
