@@ -11,11 +11,15 @@
 #include <trn/rt-select-internal.h>
 #include <trn/rthread.h>
 #include <trn/search.h>
+#include <trn/smisc.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <trn/univ.h>
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cerrno>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -285,6 +289,239 @@ class NewsgroupSelectorReadCleanupTest : public NewsgroupSelectorCommandStateTes
 {
 };
 
+struct NewsgroupSortChoice
+{
+    char               key;
+    SelectionSortMode  sort;
+    int                direction;
+    std::array<int, 4> unread_order;
+    std::array<int, 4> read_order;
+    std::string_view   label;
+};
+
+void PrintTo(const NewsgroupSortChoice &choice, std::ostream *output)
+{
+    *output << choice.key;
+}
+
+const NewsgroupSortChoice NEWSGROUP_SORT_CHOICES[] = {{'n', SS_NATURAL, 1, {0, 1, 2, 3}, {0, 1, 2, 3}, "natural"},
+                                                      {'N', SS_NATURAL, -1, {3, 2, 1, 0}, {3, 2, 1, 0}, "natural"},
+                                                      {'g', SS_STRING, 1, {2, 0, 1, 3}, {2, 0, 1, 3}, "group name"},
+                                                      {'G', SS_STRING, -1, {3, 1, 0, 2}, {3, 1, 0, 2}, "group name"},
+                                                      {'c', SS_COUNT, 1, {1, 2, 0, 3}, {0, 1, 2, 3}, "count"},
+                                                      {'C', SS_COUNT, -1, {3, 0, 2, 1}, {0, 1, 2, 3}, "count"}};
+
+class NewsgroupSelectorSortStateTest : public NewsgroupSelectorCommandStateTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    void         prepare_sort(bool rereading, SelectionSortMode initial);
+    DisplayState run_command(char command, std::string_view input = {});
+    void         expect_group_preserved(int index) const;
+    void         expect_selections_preserved() const;
+    void         expect_sorted(const NewsgroupSortChoice &choice) const;
+
+    std::array<NewsgroupData *, 5> m_objects{};
+    std::string                    m_output;
+
+private:
+    std::array<NewsgroupFlags, 5> m_flags{};
+    std::array<ArticleUnread, 5>  m_counts{};
+    std::array<std::string, 5>    m_numbers;
+    bool                          m_rereading{};
+    int                           m_old_errno{errno};
+    SelectionSortMode             m_old_group_sort{g_sel_newsgroup_sort};
+    std::string_view              m_old_mode_string{g_sel_mode_string};
+    std::string_view              m_old_sort_string{g_sel_sort_string};
+    bool                          m_old_default_cmd{g_s_default_cmd};
+    bool                          m_old_univ_default_cmd{g_univ_default_cmd};
+    bool                          m_old_verify{g_verify};
+    bool                          m_old_can_home{g_can_home};
+    int                           m_old_mouse_bar_count{g_mouse_bar_cnt};
+    int                           m_old_term_col{g_term_col};
+    GeneralMode                   m_old_general_mode{g_general_mode};
+    MinorMode                     m_old_minor_mode{g_mode};
+    std::string_view              m_old_tc_cr{g_tc_CR};
+    std::string_view              m_old_tc_ce{g_tc_CE};
+};
+
+void NewsgroupSelectorSortStateTest::SetUp()
+{
+    NewsgroupSelectorCommandStateTest::SetUp();
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+    errno = 0;
+    g_s_default_cmd = false;
+    g_univ_default_cmd = false;
+    g_verify = false;
+    g_can_home = false;
+    g_mouse_bar_cnt = 0;
+    g_term_col = 0;
+    g_general_mode = GM_SELECTOR;
+    g_mode = MM_NEWSGROUP_SELECTOR;
+    g_tc_CR = "\r";
+    g_tc_CE = "";
+    g_tc_LINES = 7;
+}
+
+void NewsgroupSelectorSortStateTest::TearDown()
+{
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+    errno = m_old_errno;
+    g_sel_newsgroup_sort = m_old_group_sort;
+    g_sel_mode_string = m_old_mode_string;
+    g_sel_sort_string = m_old_sort_string;
+    g_s_default_cmd = m_old_default_cmd;
+    g_univ_default_cmd = m_old_univ_default_cmd;
+    g_verify = m_old_verify;
+    g_can_home = m_old_can_home;
+    g_mouse_bar_cnt = m_old_mouse_bar_count;
+    g_term_col = m_old_term_col;
+    g_general_mode = m_old_general_mode;
+    g_mode = m_old_minor_mode;
+    g_tc_CR = m_old_tc_cr;
+    g_tc_CE = m_old_tc_ce;
+    NewsgroupSelectorCommandStateTest::TearDown();
+}
+
+void NewsgroupSelectorSortStateTest::prepare_sort(bool rereading, SelectionSortMode initial)
+{
+    m_rereading = rereading;
+    set_read_scope(rereading);
+    const std::array<std::string_view, 5> names{"comp.Bravo", "comp.charlie", "comp.alpha", "comp.delta",
+                                                "comp.hidden"};
+    const std::array<ArticleUnread, 5>    counts{7, 2, 4, 9, 0};
+    const NewsgroupFlags                  inactive = rereading ? NF_SEL : NF_DEL_SEL;
+    for (int index = 0; index < 5; ++index)
+    {
+        const ArticleUnread count = index == 4 ? (rereading ? 7 : 0) : (rereading ? 0 : counts[index]);
+        NewsgroupFlags      flags = inactive | NF_VISIT | NF_UNTHREADED;
+        if (index == 0 || index == 2 || index == 3)
+        {
+            flags |= static_cast<NewsgroupFlags>(g_sel_mask);
+        }
+        NewsgroupData &group = add_selector_group(names[index], count, flags);
+        group.m_rc_line.resize(group.m_num_offset);
+        group.m_rc_line += " 1-" + std::to_string(10 - count);
+        m_objects[index] = &group;
+    }
+    set_selector(SM_NEWSGROUP, initial);
+    g_sel_page_np = m_objects[2];
+    initialize_page();
+    for (int index = 0; index < 5; ++index)
+    {
+        m_flags[index] = m_objects[index]->m_flags;
+        m_counts[index] = m_objects[index]->m_to_read;
+        m_numbers[index] = m_objects[index]->rc_numbers();
+    }
+}
+
+DisplayState NewsgroupSelectorSortStateTest::run_command(char command, std::string_view input)
+{
+    push_string(input, 0200);
+    testing::internal::CaptureStdout();
+    const DisplayState result = newsgroup_commands(command);
+    if (result == DS_DISPLAY)
+    {
+        Selection no_search{};
+        no_search.op = OI_NONE;
+        (void) calc_page(no_search);
+    }
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void NewsgroupSelectorSortStateTest::expect_group_preserved(int index) const
+{
+    const NewsgroupData &group = *m_objects[index];
+    EXPECT_EQ(m_flags[index], group.m_flags) << index;
+    EXPECT_EQ(m_counts[index], group.m_to_read) << index;
+    EXPECT_EQ(m_numbers[index], group.rc_numbers()) << index;
+    EXPECT_EQ(NewsgroupNum{index}, group.m_num);
+    EXPECT_EQ(':', group.m_subscribe_char);
+    EXPECT_EQ(&m_newsrc, group.m_rc);
+}
+
+void NewsgroupSelectorSortStateTest::expect_selections_preserved() const
+{
+    for (int index = 0; index < 5; ++index)
+    {
+        expect_group_preserved(index);
+    }
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_rereading, g_sel_rereading);
+    EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(m_rereading ? NewsgroupNum{1} : NewsgroupNum{4}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+    EXPECT_EQ(SM_NEWSGROUP, g_sel_mode);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    for (std::size_t index = 0; index < g_newsgroup_order.size(); ++index)
+    {
+        EXPECT_EQ(index ? g_newsgroup_order[index - 1] : nullptr, g_newsgroup_order[index]->m_prev);
+        EXPECT_EQ(index + 1 < g_newsgroup_order.size() ? g_newsgroup_order[index + 1] : nullptr,
+                  g_newsgroup_order[index]->m_next);
+    }
+    EXPECT_EQ(g_newsgroup_order.front(), g_first_newsgroup);
+    EXPECT_EQ(g_newsgroup_order.back(), g_last_newsgroup);
+}
+
+void NewsgroupSelectorSortStateTest::expect_sorted(const NewsgroupSortChoice &choice) const
+{
+    const std::array<int, 4> &order = m_rereading ? choice.read_order : choice.unread_order;
+    std::vector<std::string>  expected;
+    for (int index : order)
+    {
+        expected.emplace_back(m_objects[index]->rc_name());
+    }
+    EXPECT_EQ(expected, groups_with_flag(NF_INCLUDED));
+    EXPECT_EQ(choice.sort, g_sel_sort);
+    EXPECT_EQ(choice.direction, g_sel_direction);
+    EXPECT_EQ(static_cast<SelectionSortMode>(choice.sort * choice.direction), g_sel_newsgroup_sort);
+    EXPECT_EQ(choice.label, g_sel_sort_string);
+    EXPECT_EQ(m_objects[order[0]], g_sel_page_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(m_objects[order[2]], g_sel_next_np);
+    expect_selections_preserved();
+}
+
+class NewsgroupSelectorSortChoiceTest : public NewsgroupSelectorSortStateTest,
+                                        public testing::WithParamInterface<std::tuple<bool, NewsgroupSortChoice>>
+{
+};
+
+class NewsgroupSelectorSortPromptTest : public NewsgroupSelectorSortStateTest, public testing::WithParamInterface<bool>
+{
+};
+
+class NewsgroupSelectorSortCancelTest : public NewsgroupSelectorSortStateTest,
+                                        public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class NewsgroupSelectorSortHelpTest : public NewsgroupSelectorSortStateTest,
+                                      public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class NewsgroupSelectorSortCleanupTest : public NewsgroupSelectorSortStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class NewsgroupSelectorEmptySortTest : public NewsgroupSelectorSortStateTest,
+                                       public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
 class NewsgroupPageInvalidTest : public NewsgroupPageStateTest,
                                  public testing::WithParamInterface<std::tuple<ArticleUnread, bool>>
 {
@@ -541,6 +778,156 @@ TEST_F(NewsgroupSelectorCommandStateTest, roundTripRetainsNormalAndRereadSelecti
     EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
     EXPECT_EQ(RF_NONE, m_newsrc.flags);
 }
+
+TEST_P(NewsgroupSelectorSortChoiceTest, choosingAnOrderRebuildsTheFirstPageWithoutChangingSelections)
+{
+    const auto &[rereading, choice] = GetParam();
+    prepare_sort(rereading, static_cast<SelectionSortMode>(-SS_COUNT));
+
+    const DisplayState result = run_command('O', std::string(1, choice.key));
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_sorted(choice);
+    EXPECT_FALSE(g_s_default_cmd);
+    EXPECT_FALSE(g_univ_default_cmd);
+}
+
+TEST_P(NewsgroupSelectorSortChoiceTest, reverseFlipsTheCurrentDirectionWithoutChangingSelections)
+{
+    const auto &[rereading, choice] = GetParam();
+    prepare_sort(rereading, static_cast<SelectionSortMode>(-choice.sort * choice.direction));
+
+    const DisplayState result = run_command('R');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_sorted(choice);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndOrder, NewsgroupSelectorSortChoiceTest,
+                         testing::Combine(testing::Bool(), testing::ValuesIn(NEWSGROUP_SORT_CHOICES)));
+
+TEST_P(NewsgroupSelectorSortPromptTest, blankChoiceUsesForwardNewsrcOrder)
+{
+    prepare_sort(GetParam(), static_cast<SelectionSortMode>(-SS_STRING));
+
+    const DisplayState result = run_command('O', " ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_sorted(NEWSGROUP_SORT_CHOICES[0]);
+    EXPECT_TRUE(g_s_default_cmd);
+    EXPECT_TRUE(g_univ_default_cmd);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadAndUnread, NewsgroupSelectorSortPromptTest, testing::Bool());
+
+TEST_P(NewsgroupSelectorSortCancelTest, rejectedChoicesRetainTheOrderAndPageAnchor)
+{
+    const auto [rereading, key] = GetParam();
+    prepare_sort(rereading, static_cast<SelectionSortMode>(-SS_STRING));
+    g_can_home = true;
+    const std::vector<NewsgroupData *> order = g_newsgroup_order;
+    const NewsgroupData               *anchor = g_sel_page_np;
+    const int                          prior = g_sel_prior_obj_cnt;
+    const int                          rows = g_sel_page_item_cnt;
+
+    const DisplayState result = run_command('O', std::string(1, key));
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(order, g_newsgroup_order);
+    EXPECT_EQ(anchor, g_sel_page_np);
+    EXPECT_EQ(prior, g_sel_prior_obj_cnt);
+    EXPECT_EQ(rows, g_sel_page_item_cnt);
+    EXPECT_EQ(SS_STRING, g_sel_sort);
+    EXPECT_EQ(-1, g_sel_direction);
+    EXPECT_EQ(static_cast<SelectionSortMode>(-SS_STRING), g_sel_newsgroup_sort);
+    expect_selections_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndResponse, NewsgroupSelectorSortCancelTest,
+                         testing::Combine(testing::Bool(), testing::Values('q', '\b', 'x')));
+
+TEST_P(NewsgroupSelectorSortHelpTest, helpDescribesEachOrderAndAcceptsAChoiceAtTheRepeatedPrompt)
+{
+    const auto [rereading, verbose] = GetParam();
+    prepare_sort(rereading, SS_NATURAL);
+    g_verbose = verbose;
+
+    const DisplayState result = run_command('O', verbose ? "Hg" : "hg");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_sorted(NEWSGROUP_SORT_CHOICES[2]);
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type n or SP" : "n or SP sorts"));
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type g" : "g sorts"));
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type c" : "c sorts"));
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "upper case" : "Upper case"));
+    EXPECT_NE(std::string::npos, m_output.find(verbose ? "Type q" : "q does nothing"));
+    const std::size_t first_prompt = m_output.find("Order by Newsrc, Group name, or Count?");
+    ASSERT_NE(std::string::npos, first_prompt);
+    EXPECT_NE(std::string::npos, m_output.find("Order by Newsrc, Group name, or Count?", first_prompt + 1));
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndVerbosity, NewsgroupSelectorSortHelpTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorSortCleanupTest, sortingAppliesPendingCatchupOnlyInUnreadMode)
+{
+    const auto [rereading, command] = GetParam();
+    prepare_sort(rereading, SS_NATURAL);
+    m_objects[1]->m_flags |= NF_DEL;
+
+    const DisplayState result = run_command(command, command == 'O' ? "n" : "");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    for (int index : {0, 2, 3, 4})
+    {
+        expect_group_preserved(index);
+    }
+    if (rereading)
+    {
+        expect_group_preserved(1);
+    }
+    else
+    {
+        EXPECT_EQ(NF_DEL_SEL | NF_UNTHREADED | NF_VISIT, m_objects[1]->m_flags);
+    }
+    EXPECT_EQ(TR_NONE, m_objects[1]->m_to_read);
+    EXPECT_EQ(" 1-10", m_objects[1]->rc_numbers());
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(rereading ? 4 : 3, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? NewsgroupNum{1} : NewsgroupNum{3}, g_newsgroup_to_read);
+    EXPECT_EQ(rereading ? RF_NONE : RF_RC_CHANGED, m_newsrc.flags);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndCommand, NewsgroupSelectorSortCleanupTest,
+                         testing::Combine(testing::Bool(), testing::Values('O', 'R')));
+
+TEST_P(NewsgroupSelectorEmptySortTest, sortingAnEmptyCatalogRetainsAnEmptyPageAndNoSelections)
+{
+    const auto [rereading, command] = GetParam();
+    set_read_scope(rereading);
+    set_selector(SM_NEWSGROUP, static_cast<SelectionSortMode>(-SS_STRING));
+    initialize_page();
+
+    const DisplayState result = run_command(command, command == 'O' ? "c" : "");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(command == 'O' ? SS_COUNT : SS_STRING, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndCommand, NewsgroupSelectorEmptySortTest,
+                         testing::Combine(testing::Bool(), testing::Values('O', 'R')));
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {

@@ -423,7 +423,7 @@ thread_subj_sort:
         break;
 
     case SS_STRING:
-        g_sel_sort_string = g_sel_mode == SM_ADD_GROUP ? "group name" : "subject";
+        g_sel_sort_string = g_sel_mode == SM_ADD_GROUP || g_sel_mode == SM_NEWSGROUP ? "group name" : "subject";
         break;
 
     case SS_AUTHOR:
