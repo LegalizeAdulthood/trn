@@ -1637,6 +1637,218 @@ void NewsgroupEndReadingStateTest::expect_end_heading() const
     EXPECT_THAT(m_output, testing::HasSubstr("What next? [npq]"));
 }
 
+enum class ReadingServerFailure
+{
+    EOF_RESPONSE,
+    CONNECTION_RESET,
+    SERVER_ERROR
+};
+
+class RemoteNewsgroupFailureReadingTest : public NewsgroupEndReadingStateTest,
+                                          public testing::WithParamInterface<std::tuple<ReadingServerFailure, bool>>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_command(std::string command, std::vector<std::string> response);
+    void expect_header(int number, bool missing_parent = false);
+    void expect_body(int number);
+    void expect_entry(bool threaded = false);
+    void expect_failure(std::string command);
+    void expect_saved_range(std::string_view range, ArticleUnread unread) const;
+
+private:
+    std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
+    testing::Sequence                                        m_protocol;
+    bool                                                     m_old_allow_timeout{g_nntp_allow_timeout};
+    bool                                                     m_old_force_grow{g_force_grow};
+    ArticleNum                                               m_old_go_article{g_ng_go_art_num};
+    std::string                                              m_old_server_line{g_ser_line};
+    std::string                                              m_old_last_command{g_last_command};
+};
+
+void RemoteNewsgroupFailureReadingTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+    g_nntp_allow_timeout = false;
+    g_force_grow = false;
+    m_data_source.m_flags = DF_REMOTE | DF_NO_XREFS;
+    m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.connection = m_connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    m_data_source.m_nntp_link = g_nntp_link;
+}
+
+void RemoteNewsgroupFailureReadingTest::TearDown()
+{
+    g_nntp_allow_timeout = m_old_allow_timeout;
+    g_force_grow = m_old_force_grow;
+    g_ng_go_art_num = m_old_go_article;
+    g_ser_line = m_old_server_line;
+    g_last_command = m_old_last_command;
+    NewsgroupEndReadingStateTest::TearDown();
+}
+
+void RemoteNewsgroupFailureReadingTest::expect_command(std::string command, std::vector<std::string> response)
+{
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq(command), testing::_)).InSequence(m_protocol);
+    for (const std::string &line : response)
+    {
+        EXPECT_CALL(*m_connection, read_line(testing::_)).InSequence(m_protocol).WillOnce(testing::Return(line));
+    }
+}
+
+void RemoteNewsgroupFailureReadingTest::expect_header(int number, bool missing_parent)
+{
+    std::ifstream            article{m_output_dir / std::to_string(number)};
+    std::vector<std::string> lines{"221 Header follows"};
+    for (std::string line; std::getline(article, line) && !line.empty();)
+    {
+        if (missing_parent && line.find("References:") == 0)
+        {
+            line = "References: <missing@example.test>";
+        }
+        lines.push_back(std::move(line));
+    }
+    lines.emplace_back(".");
+    expect_command("HEAD " + std::to_string(number), std::move(lines));
+}
+
+void RemoteNewsgroupFailureReadingTest::expect_body(int number)
+{
+    expect_command("BODY " + std::to_string(number),
+                   {"222 Body follows", number == 2 ? "Reply body" : "Branch body", "."});
+}
+
+void RemoteNewsgroupFailureReadingTest::expect_entry(bool threaded)
+{
+    g_use_threads = g_thread_always = g_threaded_group = threaded;
+    expect_command("GROUP comp.lang.cpp", {"211 3 1 3 comp.lang.cpp"});
+    expect_command("LISTGROUP", {"211 Article numbers follow", "1", "2", "3", "."});
+    if (threaded)
+    {
+        expect_header(1);
+    }
+    expect_header(2, threaded);
+    if (threaded)
+    {
+        expect_header(3);
+        expect_header(2, true);
+        g_ng_go_art_num = ArticleNum{2};
+    }
+    expect_body(2);
+    expect_header(3);
+}
+
+void RemoteNewsgroupFailureReadingTest::expect_failure(std::string command)
+{
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq(command), testing::_)).InSequence(m_protocol);
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .InSequence(m_protocol)
+        .WillOnce(
+            [failure = std::get<0>(GetParam())](error_code_t &error)
+            {
+                if (failure == ReadingServerFailure::SERVER_ERROR)
+                {
+                    return std::string{"503 Service unavailable"};
+                }
+                error = failure == ReadingServerFailure::EOF_RESPONSE
+                            ? boost::asio::error::make_error_code(boost::asio::error::eof)
+                            : boost::asio::error::make_error_code(boost::asio::error::connection_reset);
+                return std::string{};
+            });
+}
+
+void RemoteNewsgroupFailureReadingTest::expect_saved_range(std::string_view range, ArticleUnread unread) const
+{
+    EXPECT_EQ(range, g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(TR_NONE, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_NE(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_P(RemoteNewsgroupFailureReadingTest, serverLossAtExhaustionReturnsToTheCallerAfterSavingReadMarks)
+{
+    expect_entry();
+    expect_body(3);
+    expect_failure("GROUP comp.lang.cpp");
+
+    const DoNewsgroupResult result = run_reading({"n", "n"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NO_SERVER, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(ArticleNum{3}, m_states[1].article);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    expect_saved_range(" 1-3", TR_NONE);
+}
+
+TEST_P(RemoteNewsgroupFailureReadingTest, serverLossAfterAnEndJumpPreservesSkippedUnreadArticles)
+{
+    expect_entry();
+    expect_failure("GROUP comp.lang.cpp");
+
+    const DoNewsgroupResult result = run_reading({"$"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NO_SERVER, result);
+    ASSERT_EQ(1U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_TRUE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    expect_saved_range(" 1-2", ArticleUnread{1});
+}
+
+TEST_P(RemoteNewsgroupFailureReadingTest, serverLossDuringRefreshClosesTheCurrentArticle)
+{
+    expect_entry();
+    expect_failure("GROUP comp.lang.cpp");
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [reading_input](char *buffer, int size)
+    {
+        EXPECT_NE(nullptr, g_art_fp);
+        g_force_grow = true;
+        return reading_input(buffer, size);
+    };
+
+    const DoNewsgroupResult result = run_reading({"\x12"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NO_SERVER, result);
+    ASSERT_EQ(1U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(ArticleNum{2}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+    expect_saved_range(" 1-2", ArticleUnread{1});
+}
+
+TEST_P(RemoteNewsgroupFailureReadingTest, serverLossResolvingAMissingParentReturnsToTheCaller)
+{
+    expect_entry(true);
+    expect_failure("STAT <missing@example.test>");
+
+    const DoNewsgroupResult result = run_reading({"["});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NO_SERVER, result);
+    ASSERT_EQ(1U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_EQ(ArticleNum{2}, g_recent_art);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_recent_artp);
+    expect_saved_range(" 1-2", ArticleUnread{1});
+}
+
+INSTANTIATE_TEST_SUITE_P(TransportAndDisplay, RemoteNewsgroupFailureReadingTest,
+                         testing::Combine(testing::Values(ReadingServerFailure::EOF_RESPONSE,
+                                                          ReadingServerFailure::CONNECTION_RESET,
+                                                          ReadingServerFailure::SERVER_ERROR),
+                                          testing::Bool()));
+
 class NewsgroupEndReadingTest : public NewsgroupEndReadingStateTest,
                                 public testing::WithParamInterface<std::tuple<bool, bool>>
 {
