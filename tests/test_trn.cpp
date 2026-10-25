@@ -1570,6 +1570,123 @@ void NewsgroupSelectorDelegatedExitStateTest::expect_exit_files_unchanged() cons
     EXPECT_FALSE(fs::exists(m_newsrc.new_name));
 }
 
+class NewsgroupSelectorDisplayStateTest : public NewsgroupSelectorDelegatedExitStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_display(bool rereading, std::string_view modes = "slm", std::size_t index = 0);
+    void prepare_display_session(bool rereading, std::string_view modes = "slm");
+    void load_descriptions();
+    void expect_display_preserved(bool rereading) const;
+    void expect_session_preserved(bool rereading) const;
+};
+
+void NewsgroupSelectorDisplayStateTest::SetUp()
+{
+    NewsgroupSelectorDelegatedExitStateTest::SetUp();
+    m_data_source.m_flags |= DF_OPEN | DF_ACTIVE;
+    m_data_source.m_group_desc = (m_output_dir / "newsgroups").generic_string();
+    std::ofstream{m_data_source.m_group_desc} << "comp.previous Previous discussion\n"
+                                                 "comp.lang.cpp Cplusplus discussion\n"
+                                                 "comp.next Next discussion\n";
+}
+
+void NewsgroupSelectorDisplayStateTest::TearDown()
+{
+    m_data_source.m_desc_sf.close();
+    NewsgroupSelectorDelegatedExitStateTest::TearDown();
+}
+
+void NewsgroupSelectorDisplayStateTest::prepare_display(bool rereading, std::string_view modes, std::size_t index)
+{
+    prepare_exit(rereading, true);
+    g_sel_grp_display_mode = modes;
+    g_sel_grp_display_mode_index = index;
+}
+
+void NewsgroupSelectorDisplayStateTest::load_descriptions()
+{
+    ASSERT_EQ("Cplusplus discussion\n", m_data_source.find_group_desc("comp.lang.cpp"));
+    ASSERT_NE(nullptr, m_data_source.m_desc_sf.m_hp);
+}
+
+void NewsgroupSelectorDisplayStateTest::prepare_display_session(bool rereading, std::string_view modes)
+{
+    prepare_display(rereading, modes);
+    g_tc_LINES = 24;
+    g_newsgroup_data[1].m_flags = (g_newsgroup_data[1].m_flags & ~NF_DEL_SEL) | NF_SEL;
+    m_original_newsrc = newsrc_text(m_newsrc);
+    std::ofstream{m_newsrc.name} << m_original_newsrc;
+    std::ofstream{m_newsrc.old_name} << m_original_newsrc;
+    m_newsrc.flags &= ~RF_RC_CHANGED;
+}
+
+void NewsgroupSelectorDisplayStateTest::expect_display_preserved(bool rereading) const
+{
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_selector_context(rereading);
+    expect_page(true, 1);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[0], g_recent_newsgroup);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
+}
+
+void NewsgroupSelectorDisplayStateTest::expect_session_preserved(bool rereading) const
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        const NewsgroupData &group = g_newsgroup_data[index];
+        EXPECT_EQ(rereading ? " 1-3" : index == 1 ? " 1" : " 1-2", group.rc_numbers()) << index;
+        EXPECT_EQ(ArticleUnread{rereading ? 0 : index == 1 ? 2 : 1}, group.m_to_read) << index;
+        EXPECT_EQ(':', group.m_subscribe_char) << index;
+        EXPECT_EQ(index == 1 ? NF_SEL : NF_NONE, group.m_flags & (NF_SEL | NF_DEL_SEL | NF_DEL)) << index;
+        EXPECT_EQ(ArticleNum{1}, group.m_abs_first) << index;
+        EXPECT_EQ(ArticleNum{3}, group.m_ng_max) << index;
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
+    EXPECT_FALSE(g_sel_exclusive);
+    expect_exit_files_unchanged();
+    expect_selector_context(rereading);
+}
+
+struct GroupDisplayChoice
+{
+    std::string_view modes;
+    std::size_t      before;
+    std::size_t      after;
+    std::string_view style;
+};
+
+void PrintTo(const GroupDisplayChoice &choice, std::ostream *output)
+{
+    *output << choice.modes << '[' << choice.before << "] -> " << choice.style;
+}
+
+class NewsgroupSelectorDisplayModeTest : public NewsgroupSelectorDisplayStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, GroupDisplayChoice>>
+{
+};
+
+class NewsgroupSelectorDisplayLoadingTest : public NewsgroupSelectorDisplayStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class NewsgroupSelectorDisplaySessionTest : public NewsgroupSelectorDisplayStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, char, bool>>
+{
+};
+
+class NewsgroupSelectorDisplayScopeTest : public NewsgroupSelectorDisplayStateTest,
+                                          public testing::WithParamInterface<bool>
+{
+};
+
 class NewsgroupSelectorRefreshStateTest : public NewsgroupSelectorDelegatedExitStateTest
 {
 protected:
@@ -6407,6 +6524,143 @@ TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
     EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory"));
     EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
 }
+
+TEST_P(NewsgroupSelectorDisplayModeTest, displayCommandAdvancesTheConfiguredCycleWithoutChangingReadingState)
+{
+    const auto [rereading, choice] = GetParam();
+    prepare_display(rereading, choice.modes, choice.before);
+    load_descriptions();
+
+    const DisplayState result = run_delegated('L', "Q");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(choice.modes, g_sel_grp_display_mode);
+    EXPECT_EQ(choice.after, g_sel_grp_display_mode_index);
+    EXPECT_EQ(choice.modes[choice.after], current_group_display_mode());
+    EXPECT_EQ("(" + std::string{choice.style} + " display style)", g_msg);
+    expect_display_preserved(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ReadScopeAndConfiguredCycle, NewsgroupSelectorDisplayModeTest,
+    testing::Combine(testing::Bool(),
+                     testing::Values(GroupDisplayChoice{"slm", 0, 1, "long"}, GroupDisplayChoice{"slm", 1, 2, "medium"},
+                                     GroupDisplayChoice{"slm", 2, 0, "short"}, GroupDisplayChoice{"ms", 0, 1, "short"},
+                                     GroupDisplayChoice{"ms", 1, 0, "medium"}, GroupDisplayChoice{"s", 0, 0, "short"},
+                                     GroupDisplayChoice{"m", 0, 0, "medium"}, GroupDisplayChoice{"l", 0, 0, "long"})));
+
+TEST_P(NewsgroupSelectorDisplayLoadingTest, enteringADescriptionModeRequestsARestartBeforeLoadingDescriptions)
+{
+    const auto [rereading, mode] = GetParam();
+    prepare_display(rereading, std::string{"s"} + mode);
+    ASSERT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+
+    const DisplayState result = run_delegated('L', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(1, g_sel_grp_display_mode_index);
+    EXPECT_EQ(mode, current_group_display_mode());
+    EXPECT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    EXPECT_EQ(mode == 'm' ? "(medium display style)" : "(long display style)", g_msg);
+    expect_display_preserved(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndDescriptionMode, NewsgroupSelectorDisplayLoadingTest,
+                         testing::Combine(testing::Bool(), testing::Values('m', 'l')));
+
+TEST_P(NewsgroupSelectorDisplayScopeTest, returningToShortDisplayNeedsNoDescriptionCache)
+{
+    const bool rereading = GetParam();
+    prepare_display(rereading, "ms");
+    ASSERT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+
+    const DisplayState result = run_delegated('L', "Q");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ('s', current_group_display_mode());
+    EXPECT_EQ("(short display style)", g_msg);
+    EXPECT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    expect_display_preserved(rereading);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDisplaySessionTest, descriptionDisplayResumesTheSelectorWithSelectionsAndReadRangesIntact)
+{
+    const auto [rereading, mode, cached] = GetParam();
+    prepare_display_session(rereading, std::string{"s"} + mode);
+    if (cached)
+    {
+        load_descriptions();
+    }
+
+    const char result = run_selector_session(rereading ? "U.LqQ" : "LqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(mode, current_group_display_mode());
+    ASSERT_NE(nullptr, m_data_source.m_desc_sf.m_hp);
+    EXPECT_EQ("Cplusplus discussion\n", m_data_source.find_group_desc("comp.lang.cpp"));
+    const std::size_t description = m_output.find("Cplusplus discussion");
+    ASSERT_NE(std::string::npos, description);
+    const std::size_t row_start = m_output.rfind('\n', description);
+    const std::string row = m_output.substr(row_start == std::string::npos ? 0 : row_start + 1,
+                                            row_start == std::string::npos ? description : description - row_start - 1);
+    EXPECT_EQ(mode == 'l', row.find("comp.lang.cpp") != std::string::npos);
+    EXPECT_NE(std::string::npos, m_output.find("Previous discussion"));
+    EXPECT_NE(std::string::npos, m_output.find(mode == 'm' ? "(medium display style)" : "(long display style)"));
+    expect_session_preserved(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeDescriptionModeAndCache, NewsgroupSelectorDisplaySessionTest,
+                         testing::Combine(testing::Bool(), testing::Values('m', 'l'), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDisplayScopeTest, unavailableDescriptionsFallBackToNamesAndKeepTheSelectorUsable)
+{
+    const bool rereading = GetParam();
+    prepare_display_session(rereading, "sm");
+    m_data_source.m_group_desc = (m_output_dir / "absent-newsgroups").generic_string();
+
+    const char result = run_selector_session(rereading ? "U.LqQ" : "LqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ('m', current_group_display_mode());
+    EXPECT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    EXPECT_EQ(0, m_data_source.m_desc_sf.m_refetch_secs);
+    EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp"));
+    EXPECT_NE(std::string::npos, m_output.find("comp.previous"));
+    expect_session_preserved(rereading);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDisplayScopeTest, repeatedDisplayCommandsCycleBackToNamesWithoutChangingSelections)
+{
+    const bool rereading = GetParam();
+    prepare_display_session(rereading);
+
+    const char result = run_selector_session(rereading ? "U.LLLqQ" : "LLLqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ("slm", g_sel_grp_display_mode);
+    EXPECT_EQ(0, g_sel_grp_display_mode_index);
+    EXPECT_EQ('s', current_group_display_mode());
+    const std::size_t long_style = m_output.find("(long display style)");
+    const std::size_t medium_style = m_output.find("(medium display style)");
+    const std::size_t short_style = m_output.find("(short display style)");
+    ASSERT_NE(std::string::npos, long_style);
+    ASSERT_NE(std::string::npos, medium_style);
+    ASSERT_NE(std::string::npos, short_style);
+    EXPECT_LT(long_style, medium_style);
+    EXPECT_LT(medium_style, short_style);
+    const std::string short_page = m_output.substr(medium_style, short_style - medium_style);
+    EXPECT_EQ(std::string::npos, short_page.find("discussion"));
+    EXPECT_NE(std::string::npos, short_page.find("comp.lang.cpp"));
+    expect_session_preserved(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, NewsgroupSelectorDisplayScopeTest, testing::Bool());
 
 TEST_P(NewsgroupSelectorRefreshInvalidationTest, refreshInvalidatesCachedBoundsAndCountsOnlySubscribedCandidates)
 {
