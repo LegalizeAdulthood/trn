@@ -2578,11 +2578,20 @@ struct PagerResumeCase
     long                         next_row;
     bool                         starts_in_header{};
     bool                         erase_screen{};
+    std::vector<std::size_t>     rotated_pages;
+    bool                         expected_rotate{};
 };
 
 void PrintTo(const PagerResumeCase &value, std::ostream *output)
 {
     *output << value.name;
+}
+
+PagerResumeCase with_resume_rotation(PagerResumeCase scenario, std::vector<std::size_t> pages, bool rotated)
+{
+    scenario.rotated_pages = std::move(pages);
+    scenario.expected_rotate = rotated;
+    return scenario;
 }
 
 using PagerResumeParam = std::tuple<PagerResumeCase, PagerResumeText>;
@@ -2593,7 +2602,9 @@ protected:
     void SetUp() override;
 
     std::vector<std::string> m_rows;
+    std::vector<std::string> m_rotated_rows;
     std::vector<long>        m_offsets;
+    std::string              m_source;
 
 private:
     ValueSaver<std::string> m_first_line{g_first_line, g_first_line};
@@ -2611,19 +2622,23 @@ void PagerResumeArticleTest::SetUp()
     g_erase_screen = scenario.erase_screen;
     g_first_line = "Pager title";
     std::string_view suffix;
+    std::string_view rotated_suffix;
     switch (text)
     {
     case PagerResumeText::UNBROKEN:
         suffix = "abcdefghijklmnopqrstuvw";
+        rotated_suffix = "nopqrstuvwxyzabcdefghij";
         break;
 
     case PagerResumeText::WORDS:
         suffix = "alpha beta end";
+        rotated_suffix = "nycun orgn raq";
         g_word_wrap_offset = 8;
         break;
 
     case PagerResumeText::UTF8:
         suffix = "abcdefghijklmnopqrs\345\244\251e\314\201f";
+        rotated_suffix = "nopqrstuvwxyzabcdef\345\244\251r\314\201s";
         break;
     }
     std::string body;
@@ -2634,6 +2649,9 @@ void PagerResumeArticleTest::SetUp()
         const std::string line = label.str();
         m_offsets.push_back(static_cast<long>(body.size()));
         m_rows.push_back(line);
+        std::ostringstream rotated;
+        rotated << "Obql " << std::setw(3) << std::setfill('0') << row << ' ' << rotated_suffix;
+        m_rotated_rows.push_back(rotated.str());
         body += line;
         if (text == PagerResumeText::WORDS && row != 17)
         {
@@ -2646,6 +2664,114 @@ void PagerResumeArticleTest::SetUp()
     {
         g_top_line = ArticleLine{-1};
     }
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
+}
+
+struct PagerPresentationPage
+{
+    long first;
+    long count;
+    bool raw{};
+    bool rotated{};
+    bool headers{};
+};
+
+struct PagerPresentationCase
+{
+    const char                        *name;
+    std::string_view                   input;
+    std::string_view                   raised_commands;
+    std::vector<PagerPresentationPage> pages;
+    long                               next_row{11};
+    bool                               raw{};
+    bool                               rotated{};
+};
+
+void PrintTo(const PagerPresentationCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class PagerPresentationArticleTest : public PagerFilteringArticleTest, public WithParamInterface<PagerPresentationCase>
+{
+protected:
+    void SetUp() override;
+    void read_session();
+
+    std::vector<std::string> m_rows;
+    std::vector<std::string> m_raw_rows;
+    std::vector<std::string> m_rotated_rows;
+    std::vector<std::string> m_raw_rotated_rows;
+    std::vector<long>        m_offsets;
+    std::string              m_decoded_body;
+    std::string              m_source;
+    std::string              m_headers;
+    ArticleFlags             m_flags{};
+    ArticleUnread            m_unread{};
+
+private:
+    ValueSaver<bool>            m_reread{g_reread, g_reread};
+    ValueSaver<HeaderTypeFlags> m_path_flags{g_header_type[PATH_LINE].flags, g_header_type[PATH_LINE].flags};
+};
+
+void PagerPresentationArticleTest::SetUp()
+{
+    PagerFilteringArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    g_tc_LINES = 8;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_header_type[PATH_LINE].flags |= HT_HIDE;
+    set_filters("^>");
+    std::string body;
+    for (long row = 0; row < 20; ++row)
+    {
+        std::ostringstream label;
+        label << std::setw(3) << std::setfill('0') << row;
+        const std::string prefix = row == 2 ? "> " : "";
+        m_rows.push_back(prefix + "Body " + label.str() + ": AbMnZz=41!");
+        m_raw_rows.push_back(prefix + "Body " + label.str() + "=3A AbMnZz=3D41=21");
+        m_rotated_rows.push_back(prefix + "Obql " + label.str() + ": NoZaMm=41!");
+        m_raw_rotated_rows.push_back(prefix + "Obql " + label.str() + "=3N NoZaMm=3Q41=21");
+        m_offsets.push_back(static_cast<long>(m_decoded_body.size()));
+        m_decoded_body += m_rows.back() + '\n';
+        body += m_raw_rows.back() + '\n';
+    }
+    load_body(body, "Path: gateway!reader\nMIME-Version: 1.0\nContent-Type: text/plain\n"
+                    "Content-Transfer-Encoding: quoted-printable\n");
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
+    m_headers = g_head_buf;
+    m_flags = g_artp->m_flags & (AF_UNREAD | AF_SEL);
+    m_unread = g_newsgroup_ptr->m_to_read;
+}
+
+void PagerPresentationArticleTest::read_session()
+{
+    read_pages(GetParam().input);
+    std::string output = m_rendered;
+    for (const char command : GetParam().raised_commands)
+    {
+        ASSERT_EQ(DA_RAISE, m_result);
+        ASSERT_FALSE(m_article_command.empty());
+        ASSERT_EQ(command, m_article_command.front());
+        testing::internal::CaptureStdout();
+        const ArticleSwitchResult result = art_switch(m_article_command);
+        output += testing::internal::GetCapturedStdout();
+        ASSERT_EQ(AS_NORM, result);
+        if (!g_do_fseek)
+        {
+            // Resume the article as the reading loop does after AS_NORM.
+            g_art_line_num = ArticleLine{};
+            g_top_line = ArticleLine{-1};
+        }
+        ASSERT_NE(nullptr, art_open(g_art, ArticlePosition{}));
+        render_article();
+        output += m_rendered;
+    }
+    m_rendered = std::move(output);
 }
 
 struct PagerSearchPage
@@ -4368,12 +4494,15 @@ TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
     for (std::size_t page = 0; page < scenario.pages.size(); ++page)
     {
         const PagerResumePage         &expected_page = scenario.pages[page];
-        const std::vector<std::string> expected{m_rows.begin() + expected_page.first,
-                                                m_rows.begin() + expected_page.first + expected_page.count};
+        const bool rotated = std::find(scenario.rotated_pages.begin(), scenario.rotated_pages.end(), page) !=
+                             scenario.rotated_pages.end();
+        const std::vector<std::string> &rows = rotated ? m_rotated_rows : m_rows;
+        const std::vector<std::string>  expected{rows.begin() + expected_page.first,
+                                                 rows.begin() + expected_page.first + expected_page.count};
         std::vector<std::string>       actual = displayed_rows(page);
         if (expected_page.headers)
         {
-            while (!actual.empty() && actual.front().find("Body ") != 0)
+            while (!actual.empty() && actual.front().find(rotated ? "Obql " : "Body ") != 0)
             {
                 actual.erase(actual.begin());
             }
@@ -4405,6 +4534,19 @@ TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_TRUE(m_article_command.empty());
+    EXPECT_EQ(scenario.expected_rotate, g_rotate);
+    const std::string_view cached = art_buf_view(m_body_start);
+    for (std::size_t row = 0; row < m_offsets.size(); ++row)
+    {
+        const std::size_t offset = static_cast<std::size_t>(m_offsets[row]);
+        if (offset + m_rows[row].size() <= cached.size())
+        {
+            EXPECT_EQ(m_rows[row], cached.substr(offset, m_rows[row].size())) << "Cached row " << row;
+        }
+    }
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -4435,7 +4577,38 @@ INSTANTIATE_TEST_SUITE_P(
                                    {{0, 2, true}, {1, 5}, {0, 2, true}, {0, 2, true}, {1, 5}},
                                    6,
                                    true,
-                                   true}),
+                                   true},
+                   with_resume_rotation(PagerResumeCase{"RotateBackRefreshAndResume",
+                                                        "  Xb \f",
+                                                        {{0, 5}, {5, 4}, {9, 4}, {8, 5}, {4, 5}, {9, 4}, {8, 5}},
+                                                        13},
+                                        {3, 4, 5, 6}, true),
+                   with_resume_rotation(
+                       PagerResumeCase{
+                           "ToggleOffAfterBackingUp", " XbX ", {{0, 5}, {5, 4}, {4, 5}, {0, 5}, {0, 5}, {5, 4}}, 9},
+                       {2, 3}, false),
+                   with_resume_rotation(PagerResumeCase{"RotateRefreshToggleOffAndResume",
+                                                        " X\fXb ",
+                                                        {{0, 5}, {5, 4}, {4, 5}, {4, 5}, {4, 5}, {0, 5}, {5, 4}},
+                                                        9},
+                                        {2, 3}, false),
+                   with_resume_rotation(PagerResumeCase{"ClearingRotatedBackAndResume",
+                                                        "  Xb ",
+                                                        {{0, 5}, {4, 5}, {8, 5}, {8, 5}, {4, 5}, {8, 5}},
+                                                        13,
+                                                        false,
+                                                        true},
+                                        {3, 4, 5}, true),
+                   with_resume_rotation(PagerResumeCase{"RotatedHeaderRefreshAndResume",
+                                                        "Xb\f ",
+                                                        {{0, 5}, {0, 5}, {0, 2, true}, {0, 2, true}, {2, 4}},
+                                                        6},
+                                        {1, 2, 3, 4}, true),
+                   with_resume_rotation(PagerResumeCase{"ToggleOffAcrossHeaderBoundary",
+                                                        "XbX ",
+                                                        {{0, 5}, {0, 5}, {0, 2, true}, {0, 2, true}, {2, 4}},
+                                                        6},
+                                        {1, 2}, false)),
             Values(PagerResumeText::UNBROKEN, PagerResumeText::WORDS, PagerResumeText::UTF8)),
     [](const TestParamInfo<PagerResumeParam> &info)
     {
@@ -4444,6 +4617,153 @@ INSTANTIATE_TEST_SUITE_P(
                                                                                 : "Utf8";
         return std::string{std::get<0>(info.param).name} + text;
     });
+
+TEST_P(PagerPresentationArticleTest, restartsAndResumesWithTheRequestedPresentation)
+{
+    const PagerPresentationCase &scenario = GetParam();
+
+    read_session();
+
+    ASSERT_FALSE(HasFatalFailure());
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+    {
+        const PagerPresentationPage &expected_page = scenario.pages[page];
+        std::vector<std::string>     expected;
+        if (expected_page.headers)
+        {
+            expected = {"Pager title", "Subject: pager advancement"};
+            if (expected_page.raw)
+            {
+                expected.insert(expected.end(),
+                                {"Path: gateway!reader", "MIME-Version: 1.0", "Content-Type: text/plain",
+                                 "Content-Transfer-Encoding: quoted-printable"});
+            }
+        }
+        const std::vector<std::string> &rows = expected_page.raw
+                                                   ? (expected_page.rotated ? m_raw_rotated_rows : m_raw_rows)
+                                                   : (expected_page.rotated ? m_rotated_rows : m_rows);
+        for (long row = expected_page.first; row < expected_page.first + expected_page.count; ++row)
+        {
+            if (row != 2 || expected_page.raw)
+            {
+                expected.push_back(rows[static_cast<std::size_t>(row)]);
+            }
+        }
+        std::vector<std::string> actual = displayed_rows(page);
+        if (expected_page.headers)
+        {
+            const auto title = std::find(actual.begin(), actual.end(), "Pager title");
+            ASSERT_NE(actual.end(), title) << "Page " << page;
+            actual.erase(actual.begin(), title);
+        }
+        EXPECT_EQ(expected, actual) << "Page " << page;
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(scenario.pages.size(), prompts);
+    EXPECT_EQ(!scenario.raw, g_do_hiding);
+    EXPECT_EQ(scenario.rotated, g_rotate);
+    const long header_rows = scenario.raw ? 6 : 2;
+    const long skipped = !scenario.raw && scenario.next_row > 2 ? 1 : 0;
+    EXPECT_EQ(ArticleLine{header_rows + scenario.next_row - skipped}, g_art_line_num);
+    const ArticlePosition expected_position =
+        scenario.raw
+            ? ArticlePosition{static_cast<long>(m_source.find(m_raw_rows[static_cast<std::size_t>(scenario.next_row)]))}
+            : m_body_start + ArticlePosition{m_offsets[static_cast<std::size_t>(scenario.next_row)]};
+    EXPECT_EQ(expected_position, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    if (!scenario.raw)
+    {
+        const std::string_view cached = art_buf_view(m_body_start);
+        ASSERT_FALSE(cached.empty());
+        EXPECT_EQ(m_decoded_body.substr(0, cached.size()), cached);
+    }
+    EXPECT_EQ(m_headers, g_head_buf);
+    EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
+    EXPECT_EQ(m_flags, g_artp->m_flags & (AF_UNREAD | AF_SEL));
+    EXPECT_EQ(m_unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_TRUE(m_article_command.empty());
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ReadingPresentationChanges, PagerPresentationArticleTest,
+    Values(PagerPresentationCase{"RawBackAndDecodedResume",
+                                 "v b\022 ",
+                                 "v\022",
+                                 {{0, 8},
+                                  {0, 0, true, false, true},
+                                  {0, 6, true},
+                                  {0, 0, true, false, true},
+                                  {0, 5, false, false, true},
+                                  {5, 6}}},
+           PagerPresentationCase{"RepeatedRawDecodedTransitions",
+                                 "v \022 v ",
+                                 "v\022v",
+                                 {{0, 8},
+                                  {0, 0, true, false, true},
+                                  {0, 6, true},
+                                  {0, 5, false, false, true},
+                                  {5, 6},
+                                  {0, 0, true, false, true},
+                                  {0, 6, true}},
+                                 6,
+                                 true},
+           PagerPresentationCase{"RotateRawRestoreAndResume",
+                                 "Xv \022X b ",
+                                 "v\022",
+                                 {{0, 8},
+                                  {0, 8, false, true},
+                                  {0, 0, true, true, true},
+                                  {0, 6, true, true},
+                                  {0, 5, false, false, true},
+                                  {0, 5, false, true, true},
+                                  {5, 6, false, true},
+                                  {0, 5, false, true, true},
+                                  {5, 6, false, true}},
+                                 11,
+                                 false,
+                                 true},
+           PagerPresentationCase{
+               "RepeatedDecodedRestart",
+               " \022 \022 ",
+               "\022\022",
+               {{0, 8}, {8, 6}, {0, 5, false, false, true}, {5, 6}, {0, 5, false, false, true}, {5, 6}}},
+           PagerPresentationCase{
+               "Rot13RestartBackAndResume",
+               " \030b ",
+               "\030",
+               {{0, 8}, {8, 6}, {0, 5, false, true, true}, {0, 5, false, true, true}, {5, 6, false, true}},
+               11,
+               false,
+               true},
+           PagerPresentationCase{"RepeatedRawRestartThenDecode",
+                                 "vv b\022 ",
+                                 "vv\022",
+                                 {{0, 8},
+                                  {0, 0, true, false, true},
+                                  {0, 0, true, false, true},
+                                  {0, 6, true},
+                                  {0, 0, true, false, true},
+                                  {0, 5, false, false, true},
+                                  {5, 6}}}),
+    [](const TestParamInfo<PagerPresentationCase> &info) { return std::string{info.param.name}; });
 
 TEST_P(PagerWrappingArticleTest, readsWrappedTextAcrossPagesWithoutLosingItsPosition)
 {
