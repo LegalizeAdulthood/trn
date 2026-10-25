@@ -10,6 +10,7 @@
 #include <trn/artio.h>
 #include <trn/artstate.h>
 #include <trn/backpage.h>
+#include <trn/bits.h>
 #include <trn/cache.h>
 #include <trn/datasrc.h>
 #include <trn/decode.h>
@@ -52,6 +53,10 @@
 
 #include <config/fdio.h>
 #include <config/user_id.h>
+
+#ifdef _WIN32
+#include <share.h>
+#endif
 
 #ifdef I_UNISTD
 #include <unistd.h>
@@ -1158,6 +1163,8 @@ private:
     int                                m_old_last_line{g_sel_last_line};
     bool                               m_old_at_end{g_sel_at_end};
     std::array<SelectionItem, MAX_SEL> m_old_items;
+    decltype(g_missing_count)          m_old_missing_count{g_missing_count};
+    int                                m_old_dm_count{g_dm_count};
 };
 
 void InputNewsgroupReadingTest::SetUp()
@@ -1211,6 +1218,8 @@ void InputNewsgroupReadingTest::TearDown()
     g_sel_last_line = m_old_last_line;
     g_sel_at_end = m_old_at_end;
     std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    g_missing_count = m_old_missing_count;
+    g_dm_count = m_old_dm_count;
 }
 
 InputNewsgroupResult InputNewsgroupReadingTest::run_command(std::string_view command)
@@ -1372,6 +1381,56 @@ DoNewsgroupResult NewsgroupPagerReadingTest::run_reading(std::string_view comman
     EXPECT_EQ(article_find(g_art), g_artp);
     return result;
 }
+
+class LocalArticleFailureReadingTest : public InputNewsgroupReadingTest
+{
+protected:
+    void              TearDown() override;
+    DoNewsgroupResult run_reading(std::string_view commands, std::optional<std::string> start_command = std::nullopt);
+
+    std::FILE *m_locked_file{};
+
+private:
+    TerminalInputReader m_old_input_reader{g_terminal_input_reader};
+};
+
+void LocalArticleFailureReadingTest::TearDown()
+{
+    if (m_locked_file)
+    {
+        std::fclose(m_locked_file);
+    }
+    g_terminal_input_reader = m_old_input_reader;
+    InputNewsgroupReadingTest::TearDown();
+}
+
+DoNewsgroupResult LocalArticleFailureReadingTest::run_reading(std::string_view           commands,
+                                                              std::optional<std::string> start_command)
+{
+    push_command(commands);
+    errno = 0;
+    testing::internal::CaptureStdout();
+    const DoNewsgroupResult result = do_newsgroup(std::move(start_command));
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    return result;
+}
+
+class LocalArticleAccessFailureTest : public LocalArticleFailureReadingTest, public testing::WithParamInterface<bool>
+{
+};
+
+using HeaderlessLocalArticle = std::pair<std::string_view, std::string_view>;
+
+class HeaderlessLocalArticleTest : public LocalArticleFailureReadingTest,
+                                   public testing::WithParamInterface<HeaderlessLocalArticle>
+{
+};
 
 class InputNewsgroupNormalEntryTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<char>
 {
@@ -6839,6 +6898,180 @@ TEST_P(NewsgroupPagerReadingTest, numericPagerCommandRetainsItsArgumentAndLeaves
 }
 
 INSTANTIATE_TEST_SUITE_P(ScrollingAndScreenClearing, NewsgroupPagerReadingTest, testing::Bool());
+
+TEST_P(NewsgroupPagerReadingTest, anArticleExpiringDuringReadingIsSkippedWithoutAnExtraPrompt)
+{
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        EXPECT_TRUE(fs::remove(m_output_dir / "comp/lang/cpp/3"));
+        return reader(buffer, size);
+    };
+
+    const DoNewsgroupResult result = run_reading("n");
+
+    EXPECT_EQ(NG_NORM, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
+    EXPECT_EQ(ArticleUnread{0}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_missing_count);
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{2}, g_recent_art);
+    EXPECT_EQ(article_find(ArticleNum{2}), g_recent_artp);
+    EXPECT_FALSE(article_find(ArticleNum{3})->m_flags & AF_EXISTS);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, localGrowthRetainsAnAvailableNewArticle)
+{
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        EXPECT_TRUE(fs::copy_file(m_output_dir / "comp/lang/cpp/3", m_output_dir / "comp/lang/cpp/4"));
+        grow_newsgroup(ArticleNum{4});
+        return reader(buffer, size);
+    };
+
+    const DoNewsgroupResult result = run_reading("Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{3})));
+    EXPECT_EQ(ArticleNum{4}, g_last_art);
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_find(ArticleNum{4})->m_flags & (AF_EXISTS | AF_UNREAD));
+    EXPECT_EQ(ArticleUnread{3}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-1", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_F(LocalArticleFailureReadingTest, aHoleInTheLocalSpoolSkipsToTheNextReadableArticle)
+{
+    ASSERT_TRUE(fs::remove(m_output_dir / "comp/lang/cpp/2"));
+
+    const DoNewsgroupResult result = run_reading("Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(article_find(ArticleNum{3}), g_curr_artp);
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_F(LocalArticleFailureReadingTest, anUnavailableExplicitArticleReportsTheFailureAndRetainsItsNumber)
+{
+    ASSERT_TRUE(fs::remove(m_output_dir / "comp/lang/cpp/2"));
+    g_terminal_input_reader = [](char *buffer, int)
+    {
+        *buffer = 'Q';
+        return 1;
+    };
+
+    const DoNewsgroupResult result = run_reading("", "2");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::HasSubstr("article is not available"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ(ArticleNum{2}, g_curr_art);
+    EXPECT_EQ(article_find(ArticleNum{2}), g_curr_artp);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_F(LocalArticleFailureReadingTest, aSpoolWithNoRemainingFilesReachesTheGroupEndWithoutNegativeCounts)
+{
+    ASSERT_TRUE(fs::remove(m_output_dir / "comp/lang/cpp/2"));
+    ASSERT_TRUE(fs::remove(m_output_dir / "comp/lang/cpp/3"));
+
+    const DoNewsgroupResult result = run_reading("Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::HasSubstr("End of comp.lang.cpp"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(article_after(g_last_art), g_curr_art);
+    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(HeaderlessLocalArticleTest, anArticleWithoutASubjectCanBeReadWithoutLosingTheFollowingArticle)
+{
+    const auto &[contents, body] = GetParam();
+    std::ofstream{m_output_dir / "comp/lang/cpp/2", std::ios::binary} << contents;
+
+    const DoNewsgroupResult result = run_reading("Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::HasSubstr(body));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
+    EXPECT_EQ("<NONE>", article_find(ArticleNum{2})->get_cached_line_view(SUBJ_LINE, false));
+    EXPECT_TRUE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EmptyFileEmptyHeaderAndMissingSubject, HeaderlessLocalArticleTest,
+    testing::Values(HeaderlessLocalArticle{"", ""}, HeaderlessLocalArticle{"\nHeaderless body\n", "Headerless body"},
+                    HeaderlessLocalArticle{"From: Reader <reader@example.test>\n\nNo subject body\n",
+                                           "No subject body"}));
+
+TEST_P(LocalArticleAccessFailureTest, aMissingGroupDirectoryReportsTheFailureAndPreservesReadRanges)
+{
+    g_verbose = GetParam();
+    fs::rename(m_output_dir / "comp/lang/cpp", m_output_dir / "comp/lang/saved-cpp");
+
+    const DoNewsgroupResult result = run_reading("");
+
+    EXPECT_EQ(NG_ERROR, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "does not have a spool directory" : "No spool for"));
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_F(LocalArticleFailureReadingTest, aRegularFileAtTheGroupDirectoryPathReturnsAnAccessError)
+{
+    const fs::path group = m_output_dir / "comp/lang/cpp";
+    fs::rename(group, m_output_dir / "comp/lang/saved-cpp");
+    std::ofstream{group} << "not a directory\n";
+    fs::permissions(group, fs::perms::all);
+
+    const DoNewsgroupResult result = run_reading("");
+
+    EXPECT_EQ(NG_ERROR, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory comp/lang/cpp"));
+    EXPECT_EQ(" 1", g_newsgroup_ptr->rc_numbers());
+}
+
+#ifdef _WIN32
+TEST_P(LocalArticleAccessFailureTest, anUnreadableArticleReportsItsNumberAndContinuesToTheNextArticle)
+{
+    g_verbose = GetParam();
+    const fs::path article = m_output_dir / "comp/lang/cpp/2";
+    m_locked_file = _fsopen(article.string().c_str(), "rb", _SH_DENYRW);
+    ASSERT_NE(nullptr, m_locked_file);
+
+    const DoNewsgroupResult result = run_reading("Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Article 2 exists but is unreadable" : "2 unreadable"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+#endif
+
+INSTANTIATE_TEST_SUITE_P(TerseAndVerbose, LocalArticleAccessFailureTest, testing::Bool());
 
 TEST_P(InputNewsgroupNormalEntryTest, normalEntryReadsTheFirstUnreadArticleAndBypassesTheAutomaticSelector)
 {

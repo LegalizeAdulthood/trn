@@ -339,7 +339,12 @@ void grow_newsgroup(ArticleNum new_last)
         do
         {
             ++g_last_art;
-            article_ptr(g_last_art)->m_flags |= AF_EXISTS|AF_UNREAD;
+            Article *const article = article_ptr(g_last_art);
+            article->m_flags |= AF_EXISTS | AF_UNREAD;
+            if (!(g_data_source->m_flags & DF_REMOTE) && eaccess(std::to_string(g_last_art.value_of()), 0))
+            {
+                article->one_missing();
+            }
         } while (g_last_art < new_last);
         thread_grow();
         // Score all new articles now just in case they weren't done above.

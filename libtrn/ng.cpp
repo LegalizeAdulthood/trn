@@ -468,7 +468,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             count_subjects(CS_RETAIN);
             article_walk(count_uncached_article, 0);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
-            if (g_artp != g_curr_artp)
+            if (g_art != g_curr_art || g_artp != g_curr_artp)
             {
                 g_recent_art = g_curr_art;      // remember last article # (for '-')
                 g_curr_art = g_art;             // set current article #
@@ -549,7 +549,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         }
         else                            // we have a real live article
         {
-            if (g_artp != g_curr_artp)
+            if (g_art != g_curr_art || g_artp != g_curr_artp)
             {
                 g_recent_art = g_curr_art;      // remember last article # (for '-')
                 g_curr_art = g_art;             // set current article #
@@ -619,7 +619,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                     break;
                 }
             }
-            if (g_art >= g_abs_first)    // don't mark non-existent articles
+            if (g_artp && g_art >= g_abs_first) // don't mark non-existent articles
             {
                 g_artp->mark_as_read();  // mark current article as read
             }
