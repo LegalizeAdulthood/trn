@@ -1459,6 +1459,85 @@ class NewsgroupSelectorDelegatedOptionsTest : public NewsgroupSelectorDelegation
 {
 };
 
+struct DelegatedGroupNavigation
+{
+    std::string_view input;
+    int              start;
+    int              target;
+    int              row;
+};
+
+void PrintTo(const DelegatedGroupNavigation &navigation, std::ostream *output)
+{
+    *output << testing::PrintToString(navigation.input) << ", " << navigation.start << " -> " << navigation.target;
+}
+
+class NewsgroupSelectorDelegatedNavigationTest : public NewsgroupSelectorDelegationStateTest,
+                                                 public testing::WithParamInterface<DelegatedGroupNavigation>
+{
+};
+
+class NewsgroupSelectorDelegatedPageTest : public NewsgroupSelectorDelegationStateTest
+{
+protected:
+    void SetUp() override;
+    void locate_group(int index);
+};
+
+void NewsgroupSelectorDelegatedPageTest::SetUp()
+{
+    NewsgroupSelectorDelegationStateTest::SetUp();
+    g_tc_LINES = 6;
+    prepare_selector();
+}
+
+void NewsgroupSelectorDelegatedPageTest::locate_group(int index)
+{
+    Selection target{};
+    target.np = &g_newsgroup_data[index];
+    (void) calc_page(target);
+    g_newsgroup_ptr = target.np;
+    g_term_line = g_sel_last_line;
+}
+
+class NewsgroupSelectorDelegatedPagedNavigationTest : public NewsgroupSelectorDelegatedPageTest,
+                                                      public testing::WithParamInterface<DelegatedGroupNavigation>
+{
+};
+
+class NewsgroupSelectorDelegatedReadGroupTest : public NewsgroupSelectorDelegationStateTest
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorDelegatedReadGroupTest::SetUp()
+{
+    NewsgroupSelectorDelegationStateTest::SetUp();
+    prepare_selector();
+    NewsgroupData &group = g_newsgroup_data[0];
+    group.m_rc_line.resize(group.m_num_offset);
+    group.m_rc_line += " 1-3";
+    group.m_to_read = TR_NONE;
+    g_newsgroup_to_read = NewsgroupNum{2};
+    init_pages(PRESERVE_PAGE);
+}
+
+class NewsgroupSelectorDelegatedReadLookupTest : public NewsgroupSelectorDelegatedReadGroupTest,
+                                                 public testing::WithParamInterface<std::pair<std::string_view, int>>
+{
+};
+
+class NewsgroupSelectorDelegatedRestrictedLookupTest : public NewsgroupSelectorDelegationStateTest,
+                                                       public testing::WithParamInterface<std::string_view>
+{
+};
+
+class NewsgroupSelectorDelegatedEndTest : public NewsgroupSelectorDelegatedPageTest,
+                                          public testing::WithParamInterface<bool>
+{
+};
+
 class OnDemandThreadArticleTest : public LocalSpoolArticleTest
 {
 protected:
@@ -5850,6 +5929,187 @@ TEST_F(NewsgroupSelectorDelegationStateTest, returningFromANestedArticleSelector
     EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
     expect_next_command('Q');
 }
+
+TEST_P(NewsgroupSelectorDelegatedNavigationTest, aVisibleTargetKeepsThePageAndMovesTheCursor)
+{
+    const DelegatedGroupNavigation &navigation = GetParam();
+    prepare_selector();
+    g_newsgroup_ptr = &g_newsgroup_data[navigation.start];
+    g_sel_item_index = 2;
+    const std::string input = std::string{navigation.input} + "Q";
+
+    const DisplayState result = run_delegated('\\', input);
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[navigation.target], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(3, g_sel_page_item_cnt);
+    EXPECT_EQ(navigation.row, g_sel_item_index);
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Command, NewsgroupSelectorDelegatedNavigationTest,
+    testing::Values(DelegatedGroupNavigation{"n", 1, 2, 1}, DelegatedGroupNavigation{"N", 1, 2, 1},
+                    DelegatedGroupNavigation{"p", 2, 1, 0}, DelegatedGroupNavigation{"P", 2, 1, 0},
+                    DelegatedGroupNavigation{"^", 0, 1, 0}, DelegatedGroupNavigation{"1", 0, 1, 0},
+                    DelegatedGroupNavigation{"-", 2, 0, 2}, DelegatedGroupNavigation{"gcomp.next\n", 1, 2, 1},
+                    DelegatedGroupNavigation{"g2\n", 1, 2, 1}, DelegatedGroupNavigation{"/next\n", 1, 2, 1},
+                    DelegatedGroupNavigation{"?previous\n", 1, 0, 2}, DelegatedGroupNavigation{"p", 1, 1, 0}));
+
+TEST_P(NewsgroupSelectorDelegatedPagedNavigationTest, anOffPageTargetRelocatesThePageAndResetsTheCursor)
+{
+    const DelegatedGroupNavigation &navigation = GetParam();
+    locate_group(navigation.start);
+    const std::string input = std::string{navigation.input} + "Q";
+
+    const DisplayState result = run_delegated('\\', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[navigation.target], g_newsgroup_ptr);
+    EXPECT_EQ(g_newsgroup_ptr, g_sel_page_np);
+    EXPECT_EQ(navigation.row, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Command, NewsgroupSelectorDelegatedPagedNavigationTest,
+                         testing::Values(DelegatedGroupNavigation{"n", 1, 2, 1}, DelegatedGroupNavigation{"N", 2, 0, 2},
+                                         DelegatedGroupNavigation{"p", 0, 2, 1}, DelegatedGroupNavigation{"P", 2, 1, 0},
+                                         DelegatedGroupNavigation{"^", 0, 1, 0}, DelegatedGroupNavigation{"1", 0, 1, 0},
+                                         DelegatedGroupNavigation{"-", 1, 0, 2},
+                                         DelegatedGroupNavigation{"gcomp.previous\n", 1, 0, 2},
+                                         DelegatedGroupNavigation{"g1\n", 0, 1, 0},
+                                         DelegatedGroupNavigation{"/previous\n", 1, 0, 2},
+                                         DelegatedGroupNavigation{"?lang.cpp\n", 0, 1, 0}));
+
+TEST_F(NewsgroupSelectorDelegatedPageTest, lookingUpTheVisibleGroupOnALaterPageRetainsThatPage)
+{
+    locate_group(2);
+    ASSERT_EQ(1, g_sel_prior_obj_cnt);
+
+    const DisplayState result = run_delegated('g', "comp.next\nQ");
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ(g_newsgroup_ptr, g_sel_page_np);
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDelegatedEndTest, goingPastTheLastGroupReturnsToTheFirstPageWithNoCurrentGroup)
+{
+    if (GetParam())
+    {
+        ASSERT_TRUE(next_page());
+        g_newsgroup_ptr = g_sel_page_np;
+    }
+
+    const DisplayState result = run_delegated('\\', "$Q");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(0, g_sel_item_index);
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Page, NewsgroupSelectorDelegatedEndTest, testing::Bool());
+
+TEST_P(NewsgroupSelectorDelegatedReadLookupTest, explicitlyRequestedReadGroupsAreShownWithoutChangingReadState)
+{
+    const auto [command, start] = GetParam();
+    g_newsgroup_ptr = start < 0 ? nullptr : &g_newsgroup_data[start];
+    ASSERT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & NF_INCLUDED);
+    const std::string input = std::string{command} + "Q";
+
+    const DisplayState result = run_delegated('\\', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ(NF_INCLUDED, g_newsgroup_ptr->m_flags & NF_INCLUDED);
+    EXPECT_EQ(NF_NONE, g_newsgroup_ptr->m_flags & NF_SEL);
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Command, NewsgroupSelectorDelegatedReadLookupTest,
+    testing::Values(std::pair<std::string_view, int>{"N", 2}, std::pair<std::string_view, int>{"P", -1},
+                    std::pair<std::string_view, int>{"-", 1}, std::pair<std::string_view, int>{"gcomp.previous\n", 1},
+                    std::pair<std::string_view, int>{"g0\n", 1}, std::pair<std::string_view, int>{"/previous/r\n", 1},
+                    std::pair<std::string_view, int>{"?previous?r\n", 1}));
+
+TEST_F(NewsgroupSelectorDelegatedReadGroupTest, lookingUpAnAlreadySelectedReadGroupDoesNotCountItTwice)
+{
+    g_newsgroup_data[0].m_flags |= NF_SEL;
+    init_pages(PRESERVE_PAGE);
+    ASSERT_EQ(3, g_sel_total_obj_cnt);
+
+    const DisplayState result = run_delegated('g', "comp.previous\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(NF_SEL, g_newsgroup_ptr->m_flags & NF_SEL);
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDelegatedRestrictedLookupTest, lookupRetainsTheActiveRestrictionAndSelections)
+{
+    prepare_selector();
+    set_newsgroup_to_do("comp.[ln]*");
+    init_pages(PRESERVE_PAGE);
+    const std::string input = std::string{GetParam()} + "Q";
+
+    const DisplayState result = run_delegated('\\', input);
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page_np);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & NF_INCLUDED);
+    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ("comp.[ln]*", newsgroup_restriction(0));
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Command, NewsgroupSelectorDelegatedRestrictedLookupTest,
+                         testing::Values("gcomp.next\n", "g2\n", "/next\n", "?next\n"));
 
 INSTANTIATE_TEST_SUITE_P(ForcedReading, InputNewsgroupNormalEntryTest, testing::Values('y', 'Y', '\t'));
 

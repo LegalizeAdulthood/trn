@@ -3730,8 +3730,11 @@ reask_sort:
         init_pages(PRESERVE_PAGE);
         if (ret == ING_SPECIAL && g_newsgroup_ptr && g_newsgroup_ptr->m_to_read < g_newsgroup_min_to_read)
         {
-            g_newsgroup_ptr->m_flags |= NF_INCLUDED;
-            g_sel_total_obj_cnt++;
+            if (!(g_newsgroup_ptr->m_flags & NF_INCLUDED))
+            {
+                g_newsgroup_ptr->m_flags |= NF_INCLUDED;
+                g_sel_total_obj_cnt++;
+            }
             ret = ING_DISPLAY;
         }
         u.np = g_newsgroup_ptr;
