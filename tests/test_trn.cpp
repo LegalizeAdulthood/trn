@@ -1538,6 +1538,158 @@ class NewsgroupSelectorDelegatedEndTest : public NewsgroupSelectorDelegatedPageT
 {
 };
 
+class NewsgroupSelectorDelegatedPopulationTest : public NewsgroupSelectorDelegationStateTest
+{
+protected:
+    void prepare_population(bool rereading, int target, bool selected = false);
+    void remember_population();
+    void expect_other_groups_preserved(int target) const;
+    void expect_files_unchanged() const;
+    void expect_checkpoint(int target, std::string_view numbers) const;
+    void expect_rebuilt_page();
+
+private:
+    static std::string read_file(const fs::path &path);
+
+    std::array<NewsgroupData, 3> m_before;
+    std::string                  m_original_newsrc;
+};
+
+void NewsgroupSelectorDelegatedPopulationTest::prepare_population(bool rereading, int target, bool selected)
+{
+    g_tc_LINES = 6;
+    prepare_selector(rereading);
+    g_newsgroup_data[0].m_flags = static_cast<NewsgroupFlags>(g_sel_mask) | NF_DEL;
+    g_newsgroup_data[1].m_flags = NF_NONE;
+    g_newsgroup_data[target].m_flags = selected ? static_cast<NewsgroupFlags>(g_sel_mask) : NF_NONE;
+    g_sel_page_np = &g_newsgroup_data[target];
+    init_pages(PRESERVE_PAGE);
+    Selection origin{};
+    origin.np = &g_newsgroup_data[target];
+    (void) calc_page(origin);
+    g_newsgroup_ptr = origin.np;
+    set_newsgroup_name(origin.np->rc_name());
+    g_term_line = g_sel_last_line;
+    m_newsrc.name = m_output_dir / "newsrc";
+    m_newsrc.new_name = m_output_dir / "newsrc.new";
+    m_newsrc.old_name = m_output_dir / "old-newsrc";
+    remember_population();
+}
+
+void NewsgroupSelectorDelegatedPopulationTest::remember_population()
+{
+    std::copy(g_newsgroup_data.begin(), g_newsgroup_data.end(), m_before.begin());
+    m_original_newsrc.clear();
+    for (const NewsgroupData &group : m_before)
+    {
+        m_original_newsrc +=
+            std::string{group.rc_name()} + group.m_subscribe_char + std::string{group.rc_numbers()} + '\n';
+    }
+    std::ofstream{m_newsrc.name} << m_original_newsrc;
+    std::ofstream{m_newsrc.old_name} << m_original_newsrc;
+    m_newsrc.flags &= ~RF_RC_CHANGED;
+}
+
+std::string NewsgroupSelectorDelegatedPopulationTest::read_file(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void NewsgroupSelectorDelegatedPopulationTest::expect_other_groups_preserved(int target) const
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        if (index == target)
+        {
+            continue;
+        }
+        const NewsgroupData &group = g_newsgroup_data[index];
+        EXPECT_EQ(m_before[index].rc_numbers(), group.rc_numbers()) << index;
+        EXPECT_EQ(m_before[index].m_to_read, group.m_to_read) << index;
+        EXPECT_EQ(m_before[index].m_subscribe_char, group.m_subscribe_char) << index;
+        EXPECT_EQ(m_before[index].m_flags & ~NF_INCLUDED, group.m_flags & ~NF_INCLUDED) << index;
+    }
+    EXPECT_EQ(NF_DEL, g_newsgroup_data[0].m_flags & NF_DEL);
+    EXPECT_EQ(static_cast<NewsgroupFlags>(g_sel_mask), g_newsgroup_data[0].m_flags & g_sel_mask);
+}
+
+void NewsgroupSelectorDelegatedPopulationTest::expect_files_unchanged() const
+{
+    EXPECT_EQ(m_original_newsrc, read_file(m_newsrc.name));
+    EXPECT_EQ(m_original_newsrc, read_file(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+}
+
+void NewsgroupSelectorDelegatedPopulationTest::expect_checkpoint(int target, std::string_view numbers) const
+{
+    std::string expected;
+    for (int index = 0; index < 3; ++index)
+    {
+        const NewsgroupData &group = m_before[index];
+        expected += std::string{group.rc_name()} + group.m_subscribe_char;
+        expected += index == target ? numbers : group.rc_numbers();
+        expected += '\n';
+    }
+    EXPECT_EQ(expected, read_file(m_newsrc.name));
+    EXPECT_EQ(m_original_newsrc, read_file(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+}
+
+void NewsgroupSelectorDelegatedPopulationTest::expect_rebuilt_page()
+{
+    EXPECT_EQ(0, g_sel_item_index);
+    testing::internal::CaptureStdout();
+    display_page();
+    testing::internal::GetCapturedStdout();
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(1, g_sel_page_obj_cnt);
+    ASSERT_NE(nullptr, g_sel_items[0].u.np);
+    EXPECT_EQ(NF_INCLUDED, g_sel_items[0].u.np->m_flags & NF_INCLUDED);
+    EXPECT_NE('!', g_sel_items[0].u.np->m_subscribe_char);
+}
+
+using DelegatedUnsubscribeState = std::tuple<bool, int, bool>;
+
+class NewsgroupSelectorDelegatedUnsubscribeTest : public NewsgroupSelectorDelegatedPopulationTest,
+                                                  public testing::WithParamInterface<DelegatedUnsubscribeState>
+{
+};
+
+class NewsgroupSelectorDelegatedSubscriptionTest : public NewsgroupSelectorDelegatedPopulationTest,
+                                                   public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorDelegatedSubscriptionTest::SetUp()
+{
+    NewsgroupSelectorDelegationStateTest::SetUp();
+    prepare_population(GetParam(), 1);
+    g_newsgroup_data[2].m_subscribe_char = '!';
+    g_newsgroup_data[2].m_to_read = TR_UNSUB;
+    g_newsgroup_data[2].m_flags = NF_DEL | NF_DEL_SEL;
+    g_newsgroup_to_read = NewsgroupNum{GetParam() ? 0 : 2};
+    init_pages(PRESERVE_PAGE);
+    remember_population();
+}
+
+class NewsgroupSelectorDelegatedCatchupTest : public NewsgroupSelectorDelegatedPopulationTest,
+                                              public testing::WithParamInterface<std::pair<bool, int>>
+{
+};
+
+class NewsgroupSelectorDelegatedSelectedCatchupTest : public NewsgroupSelectorDelegatedPopulationTest,
+                                                      public testing::WithParamInterface<int>
+{
+};
+
+class NewsgroupSelectorDelegatedCatchupCancelTest : public NewsgroupSelectorDelegatedPopulationTest,
+                                                    public testing::WithParamInterface<std::pair<bool, char>>
+{
+};
+
 class OnDemandThreadArticleTest : public LocalSpoolArticleTest
 {
 protected:
@@ -6110,6 +6262,210 @@ TEST_P(NewsgroupSelectorDelegatedRestrictedLookupTest, lookupRetainsTheActiveRes
 
 INSTANTIATE_TEST_SUITE_P(Command, NewsgroupSelectorDelegatedRestrictedLookupTest,
                          testing::Values("gcomp.next\n", "g2\n", "/next\n", "?next\n"));
+
+TEST_P(NewsgroupSelectorDelegatedUnsubscribeTest, unsubscribeRemovesTheGroupAndRetainsOtherSelectionsAndPendingMarks)
+{
+    const auto [rereading, target, selected] = GetParam();
+    prepare_population(rereading, target, selected);
+    const std::string numbers{g_newsgroup_ptr->rc_numbers()};
+
+    const DisplayState result = run_delegated('\\', "u\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ('!', g_newsgroup_data[target].m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[target].m_to_read);
+    EXPECT_EQ(numbers, g_newsgroup_data[target].rc_numbers());
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[target].m_flags & NF_INCLUDED);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(target);
+    expect_files_unchanged();
+    expect_selector_context(rereading);
+    expect_rebuilt_page();
+    EXPECT_NE(&g_newsgroup_data[target], g_sel_items[0].u.np);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAnchorAndSelection, NewsgroupSelectorDelegatedUnsubscribeTest,
+                         testing::Combine(testing::Bool(), testing::Values(1, 2), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedSubscriptionTest, acceptingResubscriptionRebuildsEligibilityWithoutSelectingTheGroup)
+{
+    const bool rereading = GetParam();
+
+    const DisplayState result = run_delegated('g', "comp.next\ny\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
+    EXPECT_EQ(':', g_newsgroup_ptr->m_subscribe_char);
+    EXPECT_EQ(rereading ? ArticleUnread{0} : ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(rereading ? " 1-3" : " 1-2", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(NF_INCLUDED, g_newsgroup_ptr->m_flags & NF_INCLUDED);
+    EXPECT_EQ(NF_NONE, g_newsgroup_ptr->m_flags & g_sel_mask);
+    EXPECT_EQ(rereading ? NF_DEL : NF_NONE, g_newsgroup_ptr->m_flags & NF_DEL);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(2);
+    expect_files_unchanged();
+    expect_selector_context(rereading);
+    expect_rebuilt_page();
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDelegatedSubscriptionTest, decliningResubscriptionRetainsThePopulationAndCurrentGroup)
+{
+    const bool rereading = GetParam();
+
+    const DisplayState result = run_delegated('g', "comp.next\nn\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ('!', g_newsgroup_data[2].m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[2].m_to_read);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[2].m_flags & NF_INCLUDED);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(2);
+    expect_files_unchanged();
+    expect_selector_context(rereading);
+    expect_rebuilt_page();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, NewsgroupSelectorDelegatedSubscriptionTest, testing::Bool());
+
+TEST_P(NewsgroupSelectorDelegatedCatchupTest, fullCatchupRebuildsThePopulationAndCheckpointsOnlyTheTargetReadRanges)
+{
+    const auto [rereading, target] = GetParam();
+    prepare_population(rereading, target);
+
+    const DisplayState result = run_delegated('\\', "cy\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[target].m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_data[target].rc_numbers());
+    EXPECT_EQ(':', g_newsgroup_data[target].m_subscribe_char);
+    EXPECT_EQ(rereading ? NF_INCLUDED : NF_NONE, g_newsgroup_data[target].m_flags & NF_INCLUDED);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
+    EXPECT_EQ(rereading ? 3 : 2, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(target);
+    expect_checkpoint(target, " 1-3");
+    expect_selector_context(rereading);
+    expect_rebuilt_page();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndAnchor, NewsgroupSelectorDelegatedCatchupTest,
+                         testing::Values(std::pair<bool, int>{false, 1}, std::pair<bool, int>{false, 2},
+                                         std::pair<bool, int>{true, 1}, std::pair<bool, int>{true, 2}));
+
+TEST_P(NewsgroupSelectorDelegatedSelectedCatchupTest, catchingUpASelectedGroupKeepsItsSelectionAndVisibleRow)
+{
+    const int target = GetParam();
+    prepare_population(false, target, true);
+
+    const DisplayState result = run_delegated('\\', "cy\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[target].m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_data[target].rc_numbers());
+    EXPECT_EQ(NF_SEL | NF_INCLUDED, g_newsgroup_data[target].m_flags & (NF_SEL | NF_INCLUDED));
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(target);
+    expect_checkpoint(target, " 1-3");
+    expect_selector_context();
+    expect_rebuilt_page();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Anchor, NewsgroupSelectorDelegatedSelectedCatchupTest, testing::Values(1, 2));
+
+TEST_P(NewsgroupSelectorDelegatedUnsubscribeTest, catchupAndUnsubscribeRemovesTheGroupRegardlessOfSelection)
+{
+    const auto [rereading, target, selected] = GetParam();
+    prepare_population(rereading, target, selected);
+
+    const DisplayState result = run_delegated('\\', "cu\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ('!', g_newsgroup_data[target].m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[target].m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_data[target].rc_numbers());
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[target].m_flags & NF_INCLUDED);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(target);
+    expect_checkpoint(target, " 1-3");
+    expect_selector_context(rereading);
+    expect_rebuilt_page();
+    EXPECT_NE(&g_newsgroup_data[target], g_sel_items[0].u.np);
+    expect_next_command('Q');
+}
+
+TEST_F(NewsgroupSelectorDelegatedPopulationTest, partialCatchupRetainsTheUnreadTailAndItsCurrentRow)
+{
+    prepare_population(false, 1);
+
+    const DisplayState result = run_delegated('\\', "c1\n\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(':', g_newsgroup_ptr->m_subscribe_char);
+    EXPECT_EQ(NF_INCLUDED, g_newsgroup_ptr->m_flags & NF_INCLUDED);
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(1);
+    expect_checkpoint(1, " 1-2");
+    expect_selector_context();
+    expect_rebuilt_page();
+    EXPECT_EQ(g_newsgroup_ptr, g_sel_items[0].u.np);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDelegatedCatchupCancelTest, decliningCatchupKeepsReadRangesSelectionsAndPendingMarks)
+{
+    const auto [rereading, answer] = GetParam();
+    prepare_population(rereading, 1, true);
+    const std::string input = std::string{"c"} + answer + "\nQ";
+
+    const DisplayState result = run_delegated('\\', input);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    EXPECT_EQ(rereading ? ArticleUnread{0} : ArticleUnread{2}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(rereading ? " 1-3" : " 1", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(static_cast<NewsgroupFlags>(g_sel_mask), g_newsgroup_ptr->m_flags & g_sel_mask);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_other_groups_preserved(1);
+    expect_files_unchanged();
+    expect_selector_context(rereading);
+    expect_rebuilt_page();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndAnswer, NewsgroupSelectorDelegatedCatchupCancelTest,
+                         testing::Values(std::pair<bool, char>{false, 'n'}, std::pair<bool, char>{false, 'q'},
+                                         std::pair<bool, char>{true, 'n'}, std::pair<bool, char>{true, 'q'}));
 
 INSTANTIATE_TEST_SUITE_P(ForcedReading, InputNewsgroupNormalEntryTest, testing::Values('y', 'Y', '\t'));
 

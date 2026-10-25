@@ -799,8 +799,12 @@ display_multirc:
     case 'c':                 // catch up
         if (g_newsgroup_ptr)
         {
-            ask_catchup();
-            if (g_newsgroup_ptr->m_to_read == TR_NONE)
+            const char result = ask_catchup();
+            if (result == 'u')
+            {
+                g_newsgroup_ptr->m_to_read = TR_UNSUB;
+            }
+            if ((result == 'y' || result == 'u') && g_newsgroup_ptr->m_to_read <= TR_NONE)
             {
                 g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr);
             }
@@ -828,11 +832,14 @@ display_multirc:
             newline();
             fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_ptr->rc_name());
             term_down(1);
+            if (g_newsgroup_ptr->m_to_read >= g_newsgroup_min_to_read)
+            {
+                --g_newsgroup_to_read;
+            }
             g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR; // unsubscribe it
             g_newsgroup_ptr->m_to_read = TR_UNSUB;                 // and make line invisible
             g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr); // do an automatic 'n'
-            --g_newsgroup_to_read;
         }
         break;
 
