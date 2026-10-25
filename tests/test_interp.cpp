@@ -2020,6 +2020,30 @@ std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool hi
     return lines;
 }
 
+class PagerTextArticleTest : public PagerArticleTest
+{
+protected:
+    void                     SetUp() override;
+    std::vector<std::string> displayed_rows(std::size_t page) const;
+
+private:
+    ValueSaver<int>              m_wrap_offset{g_word_wrap_offset, g_word_wrap_offset};
+    ValueSaver<bool>             m_auto_margin{g_tc_AM, g_tc_AM};
+    ValueSaver<bool>             m_newline_glitch{g_tc_XN, g_tc_XN};
+    ValueSaver<std::string_view> m_clear_line{g_tc_CE, g_tc_CE};
+};
+
+void PagerTextArticleTest::SetUp()
+{
+    PagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    g_word_wrap_offset = -1;
+    g_tc_AM = false;
+    g_tc_XN = false;
+    g_tc_CE = "<eol>";
+    utf_init("utf-8", "utf-8");
+}
+
 struct PagerWrappingCase
 {
     const char              *name;
@@ -2036,37 +2060,26 @@ void PrintTo(const PagerWrappingCase &value, std::ostream *output)
 
 using PagerWrappingParam = std::tuple<PagerWrappingCase, bool>;
 
-class PagerWrappingArticleTest : public PagerArticleTest, public WithParamInterface<PagerWrappingParam>
+class PagerWrappingArticleTest : public PagerTextArticleTest, public WithParamInterface<PagerWrappingParam>
 {
 protected:
-    void                     SetUp() override;
-    std::vector<std::string> displayed_rows(std::size_t page) const;
-
-private:
-    ValueSaver<int>              m_wrap_offset{g_word_wrap_offset, g_word_wrap_offset};
-    ValueSaver<bool>             m_auto_margin{g_tc_AM, g_tc_AM};
-    ValueSaver<bool>             m_newline_glitch{g_tc_XN, g_tc_XN};
-    ValueSaver<std::string_view> m_clear_line{g_tc_CE, g_tc_CE};
+    void SetUp() override;
 };
 
 void PagerWrappingArticleTest::SetUp()
 {
-    PagerArticleTest::SetUp();
+    PagerTextArticleTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     const PagerWrappingCase &scenario = std::get<0>(GetParam());
     g_tc_LINES = 4;
     g_init_lines = ArticleLine{g_tc_LINES};
     g_tc_COLS = scenario.columns;
     g_word_wrap_offset = scenario.wrap_offset;
-    g_tc_AM = false;
-    g_tc_XN = false;
-    g_tc_CE = "<eol>";
     g_erase_screen = std::get<1>(GetParam());
-    utf_init("utf-8", "utf-8");
     load_body(scenario.body, "Content-Type: text/plain; charset=UTF-8\n");
 }
 
-std::vector<std::string> PagerWrappingArticleTest::displayed_rows(std::size_t page) const
+std::vector<std::string> PagerTextArticleTest::displayed_rows(std::size_t page) const
 {
     std::string text{page_text(page)};
     for (const std::string_view marker : {"<clear>", "<home>", "<up>", "<eol>", "<mark>", "</mark>"})
@@ -2090,6 +2103,98 @@ std::vector<std::string> PagerWrappingArticleTest::displayed_rows(std::size_t pa
         }
     }
     return rows;
+}
+
+enum class PagerResumeText
+{
+    UNBROKEN,
+    WORDS,
+    UTF8
+};
+
+struct PagerResumePage
+{
+    long first;
+    long count;
+    bool headers{};
+};
+
+struct PagerResumeCase
+{
+    const char                  *name;
+    std::string_view             commands;
+    std::vector<PagerResumePage> pages;
+    long                         next_row;
+    bool                         starts_in_header{};
+    bool                         erase_screen{};
+};
+
+void PrintTo(const PagerResumeCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+using PagerResumeParam = std::tuple<PagerResumeCase, PagerResumeText>;
+
+class PagerResumeArticleTest : public PagerTextArticleTest, public WithParamInterface<PagerResumeParam>
+{
+protected:
+    void SetUp() override;
+
+    std::vector<std::string> m_rows;
+    std::vector<long>        m_offsets;
+
+private:
+    ValueSaver<std::string> m_first_line{g_first_line, g_first_line};
+};
+
+void PagerResumeArticleTest::SetUp()
+{
+    PagerTextArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerResumeCase &scenario = std::get<0>(GetParam());
+    const PagerResumeText  text = std::get<1>(GetParam());
+    g_tc_LINES = 6;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_tc_COLS = 32;
+    g_erase_screen = scenario.erase_screen;
+    g_first_line = "Pager title";
+    std::string_view suffix;
+    switch (text)
+    {
+    case PagerResumeText::UNBROKEN:
+        suffix = "abcdefghijklmnopqrstuvw";
+        break;
+
+    case PagerResumeText::WORDS:
+        suffix = "alpha beta end";
+        g_word_wrap_offset = 8;
+        break;
+
+    case PagerResumeText::UTF8:
+        suffix = "abcdefghijklmnopqrs\345\244\251e\314\201f";
+        break;
+    }
+    std::string body;
+    for (long row = 0; row < 18; ++row)
+    {
+        std::ostringstream label;
+        label << "Body " << std::setw(3) << std::setfill('0') << row << ' ' << suffix;
+        const std::string line = label.str();
+        m_offsets.push_back(static_cast<long>(body.size()));
+        m_rows.push_back(line);
+        body += line;
+        if (text == PagerResumeText::WORDS && row != 17)
+        {
+            body += ' ';
+        }
+    }
+    body += "\nEnd\n";
+    load_body(body, "Content-Type: text/plain; charset=UTF-8\n");
+    if (scenario.starts_in_header)
+    {
+        g_top_line = ArticleLine{-1};
+    }
 }
 
 struct PagerExitCase
@@ -3096,6 +3201,95 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
               g_prompt);
 }
+
+TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
+{
+    const PagerResumeCase &scenario = std::get<0>(GetParam());
+
+    read_pages(scenario.commands);
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    bool visited_headers = false;
+    for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+    {
+        const PagerResumePage         &expected_page = scenario.pages[page];
+        const std::vector<std::string> expected{m_rows.begin() + expected_page.first,
+                                                m_rows.begin() + expected_page.first + expected_page.count};
+        std::vector<std::string>       actual = displayed_rows(page);
+        if (expected_page.headers)
+        {
+            while (!actual.empty() && actual.front().find("Body ") != 0)
+            {
+                actual.erase(actual.begin());
+            }
+        }
+        EXPECT_EQ(expected, actual) << "Page " << page;
+        EXPECT_EQ(expected_page.headers, page_text(page).find("Pager title") != std::string_view::npos);
+        EXPECT_EQ(expected_page.headers, page_text(page).find("Subject:") != std::string_view::npos);
+        visited_headers |= expected_page.headers;
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(scenario.pages.size(), prompts);
+    const long header_lines = visited_headers ? 2 : 0;
+    for (long row = 0; row <= scenario.next_row; ++row)
+    {
+        EXPECT_EQ(m_body_start + ArticlePosition{m_offsets[static_cast<std::size_t>(row)]},
+                  virtual_read(ArticleLine{header_lines + row}))
+            << "Row " << row;
+    }
+    EXPECT_EQ(ArticleLine{header_lines + scenario.next_row}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{m_offsets[static_cast<std::size_t>(scenario.next_row)]}, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_TRUE(m_article_command.empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SavedPositions, PagerResumeArticleTest,
+    Combine(Values(PagerResumeCase{"RefreshFirstBodyPage", "\f ", {{0, 5}, {0, 5}, {5, 4}}, 9},
+                   PagerResumeCase{"RefreshContinuation", " \f ", {{0, 5}, {5, 4}, {4, 5}, {9, 4}}, 13},
+                   PagerResumeCase{"RepeatedRefresh", " \fl ", {{0, 5}, {5, 4}, {4, 5}, {4, 5}, {9, 4}}, 13},
+                   PagerResumeCase{"BackThenForward", "  b ", {{0, 5}, {5, 4}, {9, 4}, {4, 5}, {9, 4}}, 13},
+                   PagerResumeCase{
+                       "BackRefreshThenForward", "  b\f ", {{0, 5}, {5, 4}, {9, 4}, {4, 5}, {4, 5}, {9, 4}}, 13},
+                   PagerResumeCase{"ClearingBackRefreshThenForward",
+                                   "  b\f ",
+                                   {{0, 5}, {4, 5}, {8, 5}, {4, 5}, {4, 5}, {8, 5}},
+                                   13,
+                                   false,
+                                   true},
+                   PagerResumeCase{
+                       "BackToHeadersThenForward", "b\f  ", {{0, 5}, {0, 2, true}, {0, 2, true}, {2, 4}, {6, 4}}, 10},
+                   PagerResumeCase{
+                       "RefreshHeadersThenForward", "\f  ", {{0, 2, true}, {0, 2, true}, {2, 4}, {6, 4}}, 10, true},
+                   PagerResumeCase{"CrossHeaderBoundaryAndReturn",
+                                   " b\f ",
+                                   {{0, 2, true}, {2, 4}, {0, 2, true}, {0, 2, true}, {2, 4}},
+                                   6,
+                                   true},
+                   PagerResumeCase{"ClearingCrossHeaderBoundaryAndReturn",
+                                   " b\f ",
+                                   {{0, 2, true}, {1, 5}, {0, 2, true}, {0, 2, true}, {1, 5}},
+                                   6,
+                                   true,
+                                   true}),
+            Values(PagerResumeText::UNBROKEN, PagerResumeText::WORDS, PagerResumeText::UTF8)),
+    [](const TestParamInfo<PagerResumeParam> &info)
+    {
+        const char *text = std::get<1>(info.param) == PagerResumeText::UNBROKEN ? "Unbroken"
+                           : std::get<1>(info.param) == PagerResumeText::WORDS  ? "Words"
+                                                                                : "Utf8";
+        return std::string{std::get<0>(info.param).name} + text;
+    });
 
 TEST_P(PagerWrappingArticleTest, readsWrappedTextAcrossPagesWithoutLosingItsPosition)
 {
