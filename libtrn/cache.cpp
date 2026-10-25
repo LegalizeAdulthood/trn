@@ -701,6 +701,14 @@ void cache_until_key()
         return;
     }
 
+    // Local header prefetch replaces the open article and clears its
+    // decoded buffer. Defer it while the pager is using that state.
+    if (!(g_data_source->m_flags & DF_REMOTE) && g_mode == MM_PAGER)
+    {
+        check_data_sources();
+        return;
+    }
+
     if ((g_data_source->m_flags & DF_REMOTE) && nntp_finish_body(FB_BACKGROUND))
     {
         return;

@@ -869,6 +869,7 @@ reask_pager:
             checkpoint_newsrcs();       // update all newsrcs
             update_thread_kill_file();
         }
+        set_mode(g_general_mode, MM_PAGER);
         cache_until_key();
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
@@ -876,7 +877,6 @@ reask_pager:
             goto_xy(s_more_prompt_col,g_term_line);
             goto recheck_pager;
         }
-        set_mode(g_general_mode,MM_PAGER);
         pager_command = get_cmd();
         if (errno)
         {

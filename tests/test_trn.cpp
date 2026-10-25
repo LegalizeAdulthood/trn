@@ -1280,6 +1280,99 @@ void SuccessiveLocalArticlesTest::TearDown()
     InputNewsgroupReadingTest::TearDown();
 }
 
+struct PagerReadingState
+{
+    MinorMode     mode;
+    ArticleNum    article;
+    bool          read;
+    ArticleUnread unread;
+};
+
+class NewsgroupPagerReadingTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    DoNewsgroupResult run_reading(std::string_view commands);
+
+    std::vector<PagerReadingState> m_states;
+
+private:
+    TerminalInputReader m_old_input_reader{g_terminal_input_reader};
+    bool                m_old_allow_typeahead{g_allow_typeahead};
+    std::string         m_commands;
+    std::size_t         m_input_pos{};
+};
+
+void NewsgroupPagerReadingTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    g_tc_LINES = 12;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_erase_screen = GetParam();
+    g_allow_typeahead = true;
+    std::ofstream article{m_output_dir / "comp/lang/cpp/2", std::ios::binary};
+    article << "From: Reply <reply@example.test>\n"
+               "Subject: Re: Topic\n"
+               "Date: 21 Oct 2026 11:00:00 GMT\n"
+               "Message-ID: <reply@example.test>\n"
+               "References: <root@example.test>\n\n";
+    for (int line = 1; line <= 12; ++line)
+    {
+        article << "Paged body " << line << '\n';
+    }
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        m_states.push_back({g_mode, g_art, was_read(g_art), g_newsgroup_ptr->m_to_read});
+        if (g_mode == MM_PAGER)
+        {
+            EXPECT_EQ(g_art, g_parsed_art);
+            EXPECT_EQ(g_art, g_open_art);
+        }
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected terminal input request";
+            *buffer = 'Q';
+            return 1;
+        }
+        *buffer = m_commands[m_input_pos++];
+        if (m_input_pos == m_commands.size())
+        {
+            push_command("~");
+        }
+        return 1;
+    };
+}
+
+void NewsgroupPagerReadingTest::TearDown()
+{
+    g_terminal_input_reader = m_old_input_reader;
+    g_allow_typeahead = m_old_allow_typeahead;
+    InputNewsgroupReadingTest::TearDown();
+}
+
+DoNewsgroupResult NewsgroupPagerReadingTest::run_reading(std::string_view commands)
+{
+    m_commands = commands;
+    errno = 0;
+    testing::internal::CaptureStdout();
+    const DoNewsgroupResult result = do_newsgroup(std::nullopt);
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_TRUE(macro_pending());
+    EXPECT_EQ('~', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(article_find(g_art), g_artp);
+    return result;
+}
+
 class InputNewsgroupNormalEntryTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<char>
 {
 };
@@ -6629,6 +6722,123 @@ TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticle
 }
 
 INSTANTIATE_TEST_SUITE_P(NextAndSpace, SuccessiveLocalArticlesTest, testing::Values('n', ' '));
+
+TEST_P(NewsgroupPagerReadingTest, completingTheSecondPageMarksTheArticleReadBeforeTheArticlePrompt)
+{
+    const DoNewsgroupResult result = run_reading(" Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{2}, true, ArticleUnread{1})));
+    EXPECT_THAT(m_output, testing::HasSubstr("--MORE--("));
+    EXPECT_THAT(m_output, testing::HasSubstr("Paged body 12\n"));
+    std::size_t next_position{};
+    for (int line = 1; line <= 12; ++line)
+    {
+        const std::string text = "Paged body " + std::to_string(line) + '\n';
+        const std::size_t position = m_output.find(text, next_position);
+        ASSERT_NE(std::string::npos, position) << line;
+        next_position = position + text.size();
+    }
+    EXPECT_THAT(m_output, testing::HasSubstr("End of article 2"));
+    EXPECT_TRUE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, displayingTheLastPageCompletesReadingAndMarksTheArticleRead)
+{
+    const DoNewsgroupResult result = run_reading("\005Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{2}, true, ArticleUnread{1})));
+    EXPECT_THAT(m_output, testing::HasSubstr("Paged body 12\n"));
+    EXPECT_THAT(m_output, testing::HasSubstr("End of article 2"));
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, quittingThePagerLeavesThePartialArticleUnreadAtTheArticlePrompt)
+{
+    const DoNewsgroupResult result = run_reading("qQ");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{2}, false, ArticleUnread{2})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged body 12\n")));
+    EXPECT_THAT(m_output, testing::HasSubstr("End of article 2"));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_EQ(" 1-1", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, advancingAfterQuittingThePagerPreservesThePartialArticlesUnreadMark)
+{
+    const DoNewsgroupResult result = run_reading("qnQ");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{3}, true, ArticleUnread{1})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged body 12\n")));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body\n"));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    EXPECT_EQ(" 1-1,3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, uppercaseQuitLeavesTheGroupDirectlyWithoutMarkingThePartialArticleRead)
+{
+    const DoNewsgroupResult result = run_reading("Q");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("End of article 2")));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_EQ(" 1-1", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, nextFromThePagerMarksThePartialArticleReadAndDisplaysTheNextArticle)
+{
+    const DoNewsgroupResult result = run_reading("nQ");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{3}, true, ArticleUnread{0})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged body 12\n")));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body\n"));
+    EXPECT_TRUE(was_read(ArticleNum{2}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, junkFromThePagerMarksTheArticleReadAndReturnsToItsArticlePrompt)
+{
+    const DoNewsgroupResult result = run_reading("jQ");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{2}, true, ArticleUnread{1})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged body 12\n")));
+    EXPECT_THAT(m_output, testing::HasSubstr("End of article 2"));
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupPagerReadingTest, numericPagerCommandRetainsItsArgumentAndLeavesThePartialArticleUnread)
+{
+    const DoNewsgroupResult result = run_reading("3\nQ");
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{2}, false, ArticleUnread{2}),
+                                               testing::FieldsAre(MM_ARTICLE, ArticleNum{3}, true, ArticleUnread{1})));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged body 12\n")));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body\n"));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    EXPECT_EQ(" 1-1,3", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ScrollingAndScreenClearing, NewsgroupPagerReadingTest, testing::Bool());
 
 TEST_P(InputNewsgroupNormalEntryTest, normalEntryReadsTheFirstUnreadArticleAndBypassesTheAutomaticSelector)
 {
