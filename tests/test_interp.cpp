@@ -3,6 +3,7 @@
 #include <trn/intrp.h>
 
 #include <config/common.h>
+#include <nntp/nntpinit.h>
 #include <trn/addng.h>
 #include <trn/art.h>
 #include <trn/artio.h>
@@ -24,6 +25,7 @@
 #include <trn/ngdata.h>
 #include <trn/ngsrch.h>
 #include <trn/ngstuff.h>
+#include <trn/nntp.h>
 #include <trn/only.h>
 #include <trn/opt.h>
 #include <trn/patchlevel.h>
@@ -44,6 +46,7 @@
 #include <util/util2.h>
 
 #include "MockNNTPConnection.h"
+#include "support/MockNntpServer.h"
 #include "support/YencFixture.h"
 #include <mock_env.h>
 #include <test_config.h>
@@ -1961,6 +1964,209 @@ std::string_view PagerArticleTest::page_text(std::size_t page) const
         text.remove_prefix(end + 1);
     }
     return text.substr(0, text.find("--MORE--("));
+}
+
+struct RemotePagerCase
+{
+    const char *name;
+    bool        hiding;
+    bool        quoted_printable;
+    int         visible_lines;
+    bool        hidden_tail;
+};
+
+void PrintTo(const RemotePagerCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class RemotePagerArticleTest : public PagerArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void start_article(const RemotePagerCase &scenario);
+    void expect_complete_article();
+
+    std::string              m_completion_input;
+    std::vector<std::string> m_visible_lines;
+    std::string              m_filtered_body;
+    ArticlePosition          m_raw_size{};
+    bool                     m_received_end{};
+
+private:
+    MockNntpServer            m_server;
+    DataSource                m_remote_source{};
+    DataSource               *m_local_source{};
+    ValueSaver<NNTPLink>      m_link{g_nntp_link, g_nntp_link};
+    ValueSaver<std::string>   m_response{g_ser_line, g_ser_line};
+    ValueSaver<std::string>   m_command{g_last_command, g_last_command};
+    ValueSaver<bool>          m_hiding{g_do_hiding, g_do_hiding};
+    ValueSaver<std::string>   m_hidden{g_hide_line, g_hide_line};
+    ValueSaver<CompiledRegex> m_hide_regex{g_hide_compex, g_hide_compex};
+    std::string               m_raw_article;
+    bool                      m_started{};
+};
+
+void RemotePagerArticleTest::SetUp()
+{
+    PagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    m_local_source = g_data_source;
+}
+
+void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
+{
+    const std::string_view headers = scenario.quoted_printable
+                                         ? "MIME-Version: 1.0\nContent-Type: text/plain; "
+                                           "charset=utf-8\nContent-Transfer-Encoding: quoted-printable\n"
+                                         : "";
+    load_body("", headers);
+    ASSERT_FALSE(HasFatalFailure());
+    art_close();
+    g_do_hiding = scenario.hiding;
+    g_hide_line = scenario.hidden_tail ? "^Hidden" : "";
+    if (scenario.hidden_tail)
+    {
+        ASSERT_TRUE(g_hide_compex.compile(g_hide_line, true, true).empty());
+    }
+    std::vector<std::string> wire_lines;
+    m_raw_article = g_head_buf;
+    m_body_start = ArticlePosition{static_cast<long>(g_head_buf.size())};
+    for (int row = 0; row < scenario.visible_lines + (scenario.hidden_tail ? 5 : 0); ++row)
+    {
+        std::ostringstream text;
+        text << (row < scenario.visible_lines ? "Body " : "Hidden ") << std::setw(3) << std::setfill('0') << row;
+        std::string decoded = text.str();
+        if (row == 4)
+        {
+            decoded.insert(0, ".");
+        }
+        std::string raw = decoded;
+        if (scenario.quoted_printable && row < scenario.visible_lines)
+        {
+            raw.replace(raw.find('B'), 1, "=42");
+        }
+        const std::string displayed = scenario.hiding ? decoded : raw;
+        m_filtered_body += displayed + '\n';
+        if (row < scenario.visible_lines)
+        {
+            m_visible_lines.push_back(displayed + '\n');
+        }
+        m_raw_article += raw + '\n';
+        wire_lines.push_back(raw.front() == '.' ? "." + raw : raw);
+    }
+    m_raw_size = ArticlePosition{static_cast<long>(m_raw_article.size())};
+    m_server.expect_capabilities({"VERSION 2", "READER"});
+    m_server.expect_body(g_art.value_of(), std::move(wire_lines));
+    m_server.expect_quit();
+    m_server.start();
+    m_started = true;
+    init_nntp();
+    g_nntp_link = {};
+    g_nntp_link.port_number = m_server.port();
+    ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
+    const ConnectionPtr real_connection = g_nntp_link.connection;
+    const auto          connection = std::make_shared<StrictMock<MockNNTPConnection>>();
+    EXPECT_CALL(*connection, write_line(_, _))
+        .WillRepeatedly([real_connection](const std::string &line, error_code_t &error)
+                        { real_connection->write_line(line, error); });
+    EXPECT_CALL(*connection, read_line(_))
+        .WillRepeatedly(
+            [this, real_connection](error_code_t &error)
+            {
+                std::string line = real_connection->read_line(error);
+                if (line == ".\r\n")
+                {
+                    m_received_end = true;
+                    // Supply user input only after the background download completes.
+                    for (auto key = m_completion_input.rbegin(); key != m_completion_input.rend(); ++key)
+                    {
+                        push_char(*key);
+                    }
+                }
+                return line;
+            });
+    g_nntp_link.connection = connection;
+    m_remote_source.m_flags = DF_REMOTE;
+    g_data_source = &m_remote_source;
+    nntp_gets_clear_buffer();
+    (void) nntp_art_name(ArticleNum{}, false);
+    ASSERT_NE(nullptr, art_open(g_art, m_body_start));
+    mime_set_article();
+    clear_art_buf();
+    set_art_buf_seek(m_body_start);
+    g_art_pos = m_body_start;
+    virtual_write(ArticleLine{}, m_body_start);
+    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+}
+
+void RemotePagerArticleTest::expect_complete_article()
+{
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_TRUE(m_received_end);
+    EXPECT_EQ(m_raw_size, nntp_art_size());
+    EXPECT_EQ(m_raw_size, g_raw_art_size);
+    EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(m_filtered_body.size())}, g_art_size);
+    EXPECT_EQ(g_art_size, g_art_pos);
+    if (g_do_hiding)
+    {
+        EXPECT_EQ(m_filtered_body, art_buf_view(m_body_start));
+    }
+    std::size_t position{};
+    for (const std::string &line : m_visible_lines)
+    {
+        const std::size_t found = m_rendered.find(line, position);
+        ASSERT_NE(std::string::npos, found) << line;
+        EXPECT_EQ(std::string::npos, m_rendered.find(line, found + line.size())) << line;
+        position = found + line.size();
+    }
+    EXPECT_THAT(m_rendered, Not(HasSubstr("Hidden ")));
+    EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(100%)")));
+    EXPECT_TRUE(g_artp->m_flags & AF_UNREAD);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_art, g_open_art);
+    EXPECT_EQ(g_art, g_parsed_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_TRUE(m_article_command.empty());
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('n', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+    std::ifstream source{nntp_art_name(g_art, false), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    EXPECT_EQ(m_raw_article, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
+}
+
+void RemotePagerArticleTest::TearDown()
+{
+    m_completion_input.clear();
+    if (m_started)
+    {
+        art_close();
+        (void) nntp_art_name(ArticleNum{}, false);
+        nntp_gets_clear_buffer();
+        nntp_close(true);
+        m_server.verify();
+    }
+    g_data_source = m_local_source;
+    PagerArticleTest::TearDown();
+}
+
+class DownloadingPagerArticleTest : public RemotePagerArticleTest, public WithParamInterface<RemotePagerCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void DownloadingPagerArticleTest::SetUp()
+{
+    RemotePagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    start_article(GetParam());
 }
 
 class PagerMovementArticleTest : public PagerArticleTest, public WithParamInterface<PagerMovementCase>
@@ -5918,6 +6124,100 @@ INSTANTIATE_TEST_SUITE_P(
                                                  AF_UNREAD | AF_SEL, 0, DA_NORM, true, "nq"},
                                    "", {{0, 4}, {4, 3}, {7, 3}, {10, 2}}, 12)),
     [](const TestParamInfo<PagerExitCase> &info) { return info.param.name; });
+
+TEST_P(DownloadingPagerArticleTest, continuesReadingAfterTheBackgroundDownloadMakesTheSizeKnown)
+{
+    const int continuation_pages = (GetParam().visible_lines - 9 + 7) / 8;
+    m_completion_input = std::string(static_cast<std::size_t>(continuation_pages), ' ') + 'n';
+
+    render_article();
+
+    ASSERT_NO_FATAL_FAILURE(expect_complete_article());
+    std::vector<std::string> progress;
+    for (std::size_t start = m_rendered.find("--MORE--("); start != std::string::npos;
+         start = m_rendered.find("--MORE--(", start + 9))
+    {
+        const std::size_t end = m_rendered.find("%)", start);
+        ASSERT_NE(std::string::npos, end);
+        progress.push_back(m_rendered.substr(start + 9, end - start - 9));
+    }
+    ASSERT_EQ(static_cast<std::size_t>(continuation_pages + 1), progress.size());
+    EXPECT_EQ("?", progress.front());
+    int previous{};
+    for (std::size_t prompt = 1; prompt < progress.size(); ++prompt)
+    {
+        const int percent = std::stoi(progress[prompt]);
+        EXPECT_GT(percent, previous);
+        EXPECT_LT(percent, 100);
+        previous = percent;
+    }
+}
+
+TEST_P(DownloadingPagerArticleTest, continuesPagingWhileTheDownloadIsIncomplete)
+{
+    const int continuation_pages = (GetParam().visible_lines - 9 + 7) / 8;
+    push_char('n');
+    for (int page = 0; page < continuation_pages; ++page)
+    {
+        push_char(' ');
+    }
+
+    render_article();
+
+    ASSERT_NO_FATAL_FAILURE(expect_complete_article());
+    EXPECT_THAT(m_rendered, HasSubstr("--MORE--(?%)"));
+}
+
+INSTANTIATE_TEST_SUITE_P(ContentAndTail, DownloadingPagerArticleTest,
+                         Values(RemotePagerCase{"PlainText", false, false, 27, false},
+                                RemotePagerCase{"FilteredPlainText", true, false, 27, false},
+                                RemotePagerCase{"DecodedQuotedPrintable", true, true, 27, false},
+                                RemotePagerCase{"RawQuotedPrintable", false, true, 27, false},
+                                RemotePagerCase{"HiddenTailAtPageBoundary", true, true, 9, true},
+                                RemotePagerCase{"HiddenTailAfterContinuation", true, true, 14, true}),
+                         [](const TestParamInfo<RemotePagerCase> &info) { return info.param.name; });
+
+TEST_F(RemotePagerArticleTest, quittingLeavesTheDownloadIncomplete)
+{
+    ASSERT_NO_FATAL_FAILURE(start_article({"PlainText", false, false, 27, false}));
+    push_char('q');
+
+    render_article();
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    EXPECT_FALSE(m_received_end);
+    EXPECT_EQ(ArticlePosition{-1}, nntp_art_size());
+    EXPECT_EQ(ArticlePosition{-1}, g_art_size);
+    EXPECT_EQ(m_body_start + ArticlePosition{9 * 9 + 1}, g_art_pos);
+    EXPECT_THAT(m_rendered, HasSubstr("--MORE--(?%)"));
+    EXPECT_THAT(m_rendered, HasSubstr("Body 008\n"));
+    EXPECT_THAT(m_rendered, Not(HasSubstr("Body 009\n")));
+    EXPECT_TRUE(g_artp->m_flags & AF_UNREAD);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(RemotePagerArticleTest, reopensTheCompletedDownloadWithAKnownSize)
+{
+    ASSERT_NO_FATAL_FAILURE(start_article({"PlainText", false, false, 27, false}));
+    nntp_finish_body(FB_SILENT);
+    art_close();
+    ASSERT_NE(nullptr, art_open(g_art, m_body_start));
+    set_art_buf_seek(m_body_start);
+    push_char('n');
+    push_char(' ');
+    push_char(' ');
+    push_char(' ');
+
+    render_article();
+
+    ASSERT_NO_FATAL_FAILURE(expect_complete_article());
+    EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(?%)")));
+    const long percent = (m_body_start.value_of() + 9 * 9 + 1) * 100 / m_raw_size.value_of();
+    EXPECT_THAT(m_rendered, HasSubstr("--MORE--(" + std::to_string(percent) + "%)"));
+}
 
 TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
 {

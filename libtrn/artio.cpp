@@ -264,6 +264,10 @@ ArticlePosition art_buf_article_pos()
 
 ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
 {
+    if (!g_do_hiding)
+    {
+        return raw_art_size;
+    }
     return raw_art_size - s_art_buf_seek + s_art_buf_len + g_header_type[PAST_HEADER].min_pos;
 }
 
