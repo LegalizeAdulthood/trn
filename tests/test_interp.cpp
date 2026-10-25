@@ -16,6 +16,7 @@
 #include <trn/color.h>
 #include <trn/datasrc.h>
 #include <trn/file-contents.h>
+#include <trn/final.h>
 #include <trn/head.h>
 #include <trn/init.h>
 #include <trn/kfile.h>
@@ -56,6 +57,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cerrno>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
@@ -68,6 +70,12 @@
 #include <system_error>
 #include <tuple>
 #include <vector>
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 using namespace testing;
 
@@ -1994,6 +2002,8 @@ protected:
     ArticlePosition          m_raw_size{};
     bool                     m_received_end{};
 
+    std::function<void(std::string_view)> m_received_line;
+
 private:
     MockNntpServer            m_server;
     DataSource                m_remote_source{};
@@ -2076,6 +2086,10 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
             [this, real_connection](error_code_t &error)
             {
                 std::string line = real_connection->read_line(error);
+                if (m_received_line)
+                {
+                    m_received_line(line);
+                }
                 if (line == ".\r\n")
                 {
                     m_received_end = true;
@@ -2143,6 +2157,7 @@ void RemotePagerArticleTest::expect_complete_article()
 
 void RemotePagerArticleTest::TearDown()
 {
+    m_received_line = {};
     m_completion_input.clear();
     if (m_started)
     {
@@ -2167,6 +2182,213 @@ void DownloadingPagerArticleTest::SetUp()
     RemotePagerArticleTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     start_article(GetParam());
+}
+
+struct PagerInputInterruptCase
+{
+    const char                        *name;
+    int                                height;
+    bool                               control_c;
+    int                                failures;
+    bool                               continue_first;
+    std::vector<std::pair<long, long>> pages;
+    long                               next_line;
+};
+
+void PrintTo(const PagerInputInterruptCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class InterruptedPagerInputTest : public PagerArticleTest, public WithParamInterface<PagerInputInterruptCase>
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    int               read_input(char *address, int size);
+    std::vector<long> body_rows(std::size_t page) const;
+
+    int           m_reads{};
+    ArticleFlags  m_flags{};
+    ArticleUnread m_unread{};
+
+private:
+    ValueSaver<TerminalInputReader> m_reader{g_terminal_input_reader, g_terminal_input_reader};
+    ValueSaver<bool>                m_in_group{g_in_ng, g_in_ng};
+    ValueSaver<char>                m_interrupts{g_int_count, g_int_count};
+    ValueSaver<int>                 m_error{errno, errno};
+    int                             m_failures{};
+    bool                            m_continue_first{};
+    int                             m_after{};
+    int                             m_stdin{-1};
+};
+
+void InterruptedPagerInputTest::SetUp()
+{
+    PagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const fs::path input_path = fs::path{m_output.path()} / "terminal-input";
+    std::FILE     *input = std::fopen(input_path.string().c_str(), "w+b");
+    ASSERT_NE(nullptr, input);
+    EXPECT_NE(EOF, std::fputc('q', input));
+    std::rewind(input);
+    m_stdin = dup(fileno(stdin));
+    EXPECT_GE(m_stdin, 0);
+    EXPECT_GE(dup2(fileno(input), fileno(stdin)), 0);
+    std::fclose(input);
+    std::clearerr(stdin);
+    std::ostringstream body;
+    for (int row = 0; row < 300; ++row)
+    {
+        body << "Body " << std::setw(3) << std::setfill('0') << row << '\n';
+    }
+    load_body(body.str());
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerInputInterruptCase &scenario = GetParam();
+    g_tc_LINES = scenario.height;
+    g_init_lines = ArticleLine{scenario.height};
+    g_in_ng = false;
+    m_flags = g_artp->m_flags;
+    m_unread = g_newsgroup_ptr->m_to_read;
+    m_failures = scenario.failures;
+    m_continue_first = scenario.continue_first;
+    g_terminal_input_reader = [this](char *address, int size) { return read_input(address, size); };
+}
+
+void InterruptedPagerInputTest::TearDown()
+{
+    if (m_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_stdin, fileno(stdin)), 0);
+        EXPECT_EQ(0, close(m_stdin));
+        std::clearerr(stdin);
+    }
+    PagerArticleTest::TearDown();
+}
+
+int InterruptedPagerInputTest::read_input(char *address, int size)
+{
+    EXPECT_EQ(1, size);
+    EXPECT_EQ(MM_PAGER, g_mode);
+    ++m_reads;
+    if (m_continue_first)
+    {
+        m_continue_first = false;
+        *address = ' ';
+        return 1;
+    }
+    if (m_failures-- > 0)
+    {
+        errno = EINTR;
+        g_int_count = GetParam().control_c ? 1 : 0;
+        return -1;
+    }
+    *address = m_after++ == 0 ? ' ' : 'q';
+    EXPECT_LE(m_after, 2);
+    return 1;
+}
+
+std::vector<long> InterruptedPagerInputTest::body_rows(std::size_t page) const
+{
+    const std::string_view text = page_text(page);
+    std::vector<long>      rows;
+    for (std::size_t start = text.find("Body "); start != std::string_view::npos; start = text.find("Body ", start + 5))
+    {
+        rows.push_back(std::stol(std::string{text.substr(start + 5, 3)}));
+    }
+    return rows;
+}
+
+struct PagerRenderingInterruptCase
+{
+    const char *name;
+    bool        decoded;
+    int         row;
+    int         columns;
+    int         top{};
+};
+
+void PrintTo(const PagerRenderingInterruptCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class InterruptedPagerRenderingTest : public RemotePagerArticleTest,
+                                      public WithParamInterface<PagerRenderingInterruptCase>
+{
+protected:
+    void SetUp() override;
+    void interrupt_and_refresh();
+
+    std::string         m_interrupted_output;
+    DoArticleResult     m_interrupted_result{DA_CLEAN};
+    ArticlePosition     m_interrupted_position{};
+    ArticleLine         m_interrupted_line{};
+    ArticleLine         m_interrupted_top{};
+    int                 m_pending_interrupts{};
+    int                 m_return_column{};
+    MinorMode           m_return_mode{MM_INITIALIZING};
+    ArticleFlags        m_flags{};
+    ArticleUnread       m_unread{};
+    ArticleSwitchResult m_refresh_result{AS_ASK};
+    bool                m_interrupted{};
+
+private:
+    ValueSaver<TerminalInputReader> m_reader{g_terminal_input_reader, g_terminal_input_reader};
+    ValueSaver<char>                m_interrupts{g_int_count, g_int_count};
+    ValueSaver<bool>                m_reread{g_reread, g_reread};
+    ValueSaver<bool>                m_in_group{g_in_ng, g_in_ng};
+    int                             m_reads{};
+};
+
+void InterruptedPagerRenderingTest::SetUp()
+{
+    RemotePagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerRenderingInterruptCase &scenario = GetParam();
+    start_article({"Interrupted", scenario.decoded, scenario.decoded, 27, false});
+    ASSERT_FALSE(HasFatalFailure());
+    g_in_ng = false;
+    g_tc_COLS = scenario.columns;
+    m_flags = g_artp->m_flags;
+    m_unread = g_newsgroup_ptr->m_to_read;
+    std::ostringstream trigger;
+    trigger << (scenario.decoded ? "=42ody " : "Body ") << std::setw(3) << std::setfill('0') << scenario.row << "\r\n";
+    m_received_line = [this, line_to_interrupt = trigger.str()](std::string_view line)
+    {
+        if (!m_interrupted && line == line_to_interrupt)
+        {
+            m_interrupted = true;
+            g_int_count = 1;
+        }
+    };
+    g_terminal_input_reader = [this](char *address, int size)
+    {
+        EXPECT_EQ(1, size);
+        EXPECT_LT(++m_reads, 100);
+        *address = m_reads < 100 ? ' ' : 'q';
+        return 1;
+    };
+}
+
+void InterruptedPagerRenderingTest::interrupt_and_refresh()
+{
+    render_article();
+    m_interrupted_output = m_rendered;
+    m_interrupted_result = m_result;
+    m_interrupted_position = g_art_pos;
+    m_interrupted_line = g_art_line_num;
+    m_interrupted_top = g_top_line;
+    m_pending_interrupts = g_int_count;
+    m_return_column = g_term_col;
+    m_return_mode = g_mode;
+    m_received_line = {};
+    testing::internal::CaptureStdout();
+    m_refresh_result = art_switch("\f");
+    (void) testing::internal::GetCapturedStdout();
+    ASSERT_EQ(AS_NORM, m_refresh_result);
+    ASSERT_NE(nullptr, art_open(g_art, ArticlePosition{}));
+    render_article();
 }
 
 class PagerMovementArticleTest : public PagerArticleTest, public WithParamInterface<PagerMovementCase>
@@ -6124,6 +6346,118 @@ INSTANTIATE_TEST_SUITE_P(
                                                  AF_UNREAD | AF_SEL, 0, DA_NORM, true, "nq"},
                                    "", {{0, 4}, {4, 3}, {7, 3}, {10, 2}}, 12)),
     [](const TestParamInfo<PagerExitCase> &info) { return info.param.name; });
+
+TEST_P(InterruptedPagerInputTest, retainsTheReadingContextAcrossInterruptedInput)
+{
+    const PagerInputInterruptCase &scenario = GetParam();
+
+    render_article();
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    EXPECT_EQ(ArticleLine{scenario.next_line}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{scenario.next_line * 9}, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+    {
+        const std::pair<long, long> &range = scenario.pages[page];
+        std::vector<long>            expected(static_cast<std::size_t>(range.second));
+        std::iota(expected.begin(), expected.end(), range.first);
+        EXPECT_EQ(expected, body_rows(page)) << "Page " << page;
+    }
+    const bool refreshes = scenario.height < 100 && !scenario.control_c;
+    EXPECT_EQ(scenario.failures + (scenario.continue_first ? 1 : 0) + (refreshes ? 2 : 0), m_reads);
+    EXPECT_EQ(scenario.control_c ? 1 : 0, g_int_count);
+    EXPECT_EQ(m_flags, g_artp->m_flags);
+    EXPECT_EQ(m_unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(g_art, g_open_art);
+    EXPECT_EQ(g_art, g_parsed_art);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(0, g_term_col);
+    EXPECT_TRUE(g_fire_is_out & STANDOUT);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_TRUE(m_article_command.empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SignalAndTerminal, InterruptedPagerInputTest,
+    Values(PagerInputInterruptCase{"ControlC", 10, true, 1, false, {{0, 9}}, 9},
+           PagerInputInterruptCase{"ControlCAfterContinuation", 10, true, 1, true, {{0, 9}, {9, 8}}, 17},
+           PagerInputInterruptCase{"PaperResume", 100, false, 1, false, {{0, 99}}, 99},
+           PagerInputInterruptCase{"PaperControlC", 100, true, 1, false, {{0, 99}}, 99},
+           PagerInputInterruptCase{"ScreenResume", 10, false, 1, false, {{0, 9}, {0, 9}, {9, 8}}, 17},
+           PagerInputInterruptCase{
+               "ScreenResumeAfterContinuation", 10, false, 1, true, {{0, 9}, {9, 8}, {8, 9}, {17, 8}}, 25},
+           PagerInputInterruptCase{"RepeatedResume", 10, false, 2, false, {{0, 9}, {0, 9}, {0, 9}, {9, 8}}, 17},
+           PagerInputInterruptCase{"LastScreenHeight", 99, false, 1, false, {{0, 98}, {0, 98}, {98, 97}}, 195}),
+    [](const TestParamInfo<PagerInputInterruptCase> &info) { return info.param.name; });
+
+TEST_P(InterruptedPagerRenderingTest, refreshesAndContinuesAfterRenderingIsInterrupted)
+{
+    const PagerRenderingInterruptCase &scenario = GetParam();
+
+    interrupt_and_refresh();
+
+    ASSERT_FALSE(HasFatalFailure());
+    SCOPED_TRACE(m_interrupted_output);
+    SCOPED_TRACE(m_rendered);
+    ASSERT_TRUE(m_interrupted);
+    EXPECT_EQ(DA_NORM, m_interrupted_result);
+    const bool wrapped = scenario.columns == 5;
+    EXPECT_EQ(ArticleLine{wrapped ? scenario.row * 2 + 1 : scenario.row + 1}, m_interrupted_line);
+    const long body_offset = wrapped ? scenario.row * 9 + 5 : (scenario.row + 1) * 9 + (scenario.row >= 4 ? 1 : 0);
+    EXPECT_EQ(m_body_start + ArticlePosition{body_offset}, m_interrupted_position);
+    EXPECT_EQ(ArticleLine{scenario.top}, m_interrupted_top);
+    EXPECT_EQ(0, m_pending_interrupts);
+    EXPECT_EQ(0, m_return_column);
+    EXPECT_EQ(MM_ARTICLE, m_return_mode);
+    EXPECT_EQ(AS_NORM, m_refresh_result);
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_TRUE(m_received_end);
+    EXPECT_EQ(m_raw_size, nntp_art_size());
+    EXPECT_EQ(m_raw_size, g_raw_art_size);
+    EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(m_filtered_body.size())}, g_art_size);
+    EXPECT_EQ(g_art_size, g_art_pos);
+    for (int row = scenario.top; row < 27; ++row)
+    {
+        const std::string &line = m_visible_lines[static_cast<std::size_t>(row)];
+        const std::string  suffix = line.substr(line.size() - 4);
+        const std::size_t  found = m_rendered.find(suffix);
+        ASSERT_NE(std::string::npos, found) << suffix;
+        EXPECT_EQ(std::string::npos, m_rendered.find(suffix, found + suffix.size())) << suffix;
+    }
+    if (scenario.decoded)
+    {
+        EXPECT_EQ(m_filtered_body, art_buf_view(m_body_start));
+    }
+    EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(100%)")));
+    EXPECT_EQ(m_flags, g_artp->m_flags);
+    EXPECT_EQ(m_unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_art, g_open_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_TRUE(m_article_command.empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadPositionAndPresentation, InterruptedPagerRenderingTest,
+                         Values(PagerRenderingInterruptCase{"RawFirstLine", false, 0, 80},
+                                PagerRenderingInterruptCase{"DecodedFirstLine", true, 0, 80},
+                                PagerRenderingInterruptCase{"RawBody", false, 3, 80},
+                                PagerRenderingInterruptCase{"DecodedBody", true, 3, 80},
+                                PagerRenderingInterruptCase{"RawLaterPage", false, 10, 80, 2},
+                                PagerRenderingInterruptCase{"DecodedLaterPage", true, 10, 80, 2},
+                                PagerRenderingInterruptCase{"RawWrappedLine", false, 3, 5},
+                                PagerRenderingInterruptCase{"DecodedWrappedLine", true, 3, 5}),
+                         [](const TestParamInfo<PagerRenderingInterruptCase> &info) { return info.param.name; });
 
 TEST_P(DownloadingPagerArticleTest, continuesReadingAfterTheBackgroundDownloadMakesTheSizeKnown)
 {

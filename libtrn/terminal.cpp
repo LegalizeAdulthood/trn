@@ -129,6 +129,7 @@ bool          g_use_mouse{};                      //
 std::string   g_mouse_modes{"acjlptwvK"};         //
 MinorMode     g_mode{MM_INITIALIZING};            // current state of trn
 GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
+TerminalInputReader g_terminal_input_reader{read_terminal_input};
 
 #ifdef HAS_TERMLIB
 bool  g_tc_GT{};              // hardware tabs
@@ -1306,16 +1307,10 @@ static Signal_t alarm_catcher(int signo)
 }
 #endif
 
-// read a character from the terminal, with multi-character pushback
+// Read from the console or redirected standard input.
 
-static int read_tty(char *addr, int size)
+int read_terminal_input(char *addr, int size)
 {
-    if (macro_pending())
-    {
-        *addr = s_circle_buf[s_next_out++];
-        s_next_out %= PUSH_SIZE;
-        return 1;
-    }
 #ifdef USE_CONIO_TERMINAL_INPUT
     if (isatty(0))
     {
@@ -1331,6 +1326,20 @@ static int read_tty(char *addr, int size)
     {
         size = read(0, addr, size);
     }
+    return size;
+}
+
+// Read a character from the terminal, with multi-character pushback.
+
+static int read_tty(char *addr, int size)
+{
+    if (macro_pending())
+    {
+        *addr = s_circle_buf[s_next_out++];
+        s_next_out %= PUSH_SIZE;
+        return 1;
+    }
+    size = g_terminal_input_reader(addr, size);
 #ifdef RAWONLY
     *addr &= 0177;
 #endif

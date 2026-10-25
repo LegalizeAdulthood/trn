@@ -10,6 +10,7 @@
 #include <trn/enum-flags.h>
 #include <trn/init.h>
 
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -183,6 +184,10 @@ std::string finish_dbl_char(std::string_view command);
 void        eat_typeahead();
 std::string save_typeahead();
 void  settle_down();
+using TerminalInputReader = std::function<int(char *, int)>;
+extern TerminalInputReader g_terminal_input_reader;
+
+int  read_terminal_input(char *address, int size);
 char read_tty_char();
 void push_char(char_int c);
 void under_print(std::string_view text);
