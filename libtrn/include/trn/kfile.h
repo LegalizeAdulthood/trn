@@ -72,6 +72,7 @@ extern ArticleNum         g_kill_first;            // used as g_first_art when k
 
 void kill_file_init();
 void kill_unwanted(ArticleNum starting, std::string_view message, int entering);
+void rewrite_kill_file(ArticleNum thru);
 void update_thread_kill_file();
 void edit_kill_file();
 void open_kill_file(int local);

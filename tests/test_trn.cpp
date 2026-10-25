@@ -19,6 +19,7 @@
 #include <trn/head.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
+#include <trn/kfile.h>
 #include <trn/last.h>
 #include <trn/mime.h>
 #include <trn/ng-internal.h>
@@ -1636,6 +1637,237 @@ void NewsgroupEndReadingStateTest::expect_end_heading() const
     EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "End of newsgroup comp.lang.cpp." : "End of comp.lang.cpp"));
     EXPECT_THAT(m_output, testing::HasSubstr("What next? [npq]"));
 }
+
+class NewsgroupExitReadingTest : public NewsgroupEndReadingStateTest,
+                                 public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+protected:
+    void               SetUp() override;
+    void               TearDown() override;
+    void               expect_final_state(std::string_view numbers, ArticleUnread unread) const;
+    void               set_kill_commands(std::string commands);
+    static std::string read_file(const fs::path &path);
+
+private:
+    trn::testing::MockEnvironment m_env;
+    std::FILE                    *m_old_local_kfp{g_local_kfp};
+    SelectionSortMode             m_old_group_sort{g_sel_newsgroup_sort};
+    int                           m_old_check_count{g_check_count};
+    std::string                   m_original_newsrc;
+    std::string                   m_original_backup{"comp.previous: 1\ncomp.lang.cpp: 1\ncomp.next: 1\n"};
+    std::string                   m_kill_contents{"# Private reading-session commands\n"};
+    fs::path                      m_kill_file;
+};
+
+void NewsgroupExitReadingTest::SetUp()
+{
+    EXPECT_CALL(m_env.getter, Call(testing::_)).Times(testing::AnyNumber()).WillRepeatedly(testing::Return(nullptr));
+    NewsgroupEndReadingStateTest::SetUp();
+    const auto [unsafe_saves, verbose, threaded] = GetParam();
+    g_unsafe_rc_saves = unsafe_saves;
+    g_verbose = verbose;
+    g_use_threads = g_threaded_group = g_thread_always = threaded;
+    g_sel_newsgroup_sort = SS_NATURAL;
+    g_check_count = 0;
+    g_local_kfp = nullptr;
+    m_kill_file = m_output_dir / "KILL";
+    std::ofstream{m_kill_file} << m_kill_contents;
+    m_env.expect_env_repeatedly("KILLLOCAL", m_kill_file.generic_string().c_str());
+    m_env.expect_env_repeatedly("KILLGLOBAL", (m_output_dir / "global-KILL").generic_string().c_str());
+    m_newsrc.name = m_output_dir / "newsrc";
+    m_newsrc.old_name = m_output_dir / "old-newsrc";
+    m_newsrc.new_name = m_output_dir / "newsrc.new";
+    m_newsrc.info_name = m_output_dir / "newsrc.info";
+    m_original_newsrc = "comp.previous: 1-2\ncomp.lang.cpp: 1\ncomp.next: 1-2\n";
+    std::ofstream{m_newsrc.name} << m_original_newsrc;
+    std::ofstream{m_newsrc.old_name} << m_original_backup;
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [reading_input](char *buffer, int size)
+    {
+        EXPECT_NE(nullptr, g_local_kfp);
+        EXPECT_NE(nullptr, g_art_fp);
+        return reading_input(buffer, size);
+    };
+}
+
+void NewsgroupExitReadingTest::TearDown()
+{
+    if (g_local_kfp)
+    {
+        std::fclose(g_local_kfp);
+    }
+    g_local_kfp = m_old_local_kfp;
+    g_sel_newsgroup_sort = m_old_group_sort;
+    g_check_count = m_old_check_count;
+    NewsgroupEndReadingStateTest::TearDown();
+}
+
+std::string NewsgroupExitReadingTest::read_file(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void NewsgroupExitReadingTest::set_kill_commands(std::string commands)
+{
+    m_kill_contents = std::move(commands);
+    std::ofstream{m_kill_file} << m_kill_contents;
+}
+
+void NewsgroupExitReadingTest::expect_final_state(std::string_view numbers, ArticleUnread unread) const
+{
+    EXPECT_EQ(numbers, g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ(" 1-2", g_newsgroup_data[2].rc_numbers());
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_EQ(TR_NONE, g_selected_count);
+    EXPECT_EQ(0, g_selected_subj_cnt);
+    EXPECT_FALSE(g_selected_only);
+    EXPECT_EQ(nullptr, g_sel_page_sp);
+    EXPECT_EQ(nullptr, g_sel_page_app);
+    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_EQ(ArticleNum{}, g_open_art);
+    for (const long number : {1L, 2L, 3L})
+    {
+        EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{number})->m_flags & (AF_YANK_BACK | AF_SEL)) << number;
+    }
+    const std::string saved = "comp.previous: 1-2\ncomp.lang.cpp:" + std::string{numbers} + "\ncomp.next: 1-2\n";
+    const bool        unsafe_saves = std::get<0>(GetParam());
+    EXPECT_EQ(unsafe_saves ? m_original_newsrc : saved, read_file(m_newsrc.name));
+    EXPECT_EQ(m_original_backup, read_file(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    EXPECT_EQ(unsafe_saves ? RF_RC_CHANGED : RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(!unsafe_saves, fs::exists(m_newsrc.info_name));
+    EXPECT_EQ("THRU " + m_newsrc.name.generic_string() + " 3\n" + m_kill_contents, read_file(m_kill_file));
+}
+
+TEST_P(NewsgroupExitReadingTest, leavingAfterOneArticleSavesOnlyTheCompletedRead)
+{
+    const DoNewsgroupResult result = run_reading({"Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(1U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    expect_final_state(" 1-2", ArticleUnread{1});
+}
+
+TEST_P(NewsgroupExitReadingTest, exhaustionSavesAllCompletedArticlesWithoutAnotherPrompt)
+{
+    const DoNewsgroupResult result = run_reading({"n", "n"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ(ArticleNum{3}, m_states[1].article);
+    expect_final_state(" 1-3", TR_NONE);
+}
+
+TEST_P(NewsgroupExitReadingTest, leavingRestoresTheCurrentDelayedArticleBeforeSaving)
+{
+    const DoNewsgroupResult result = run_reading({"M", "q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NEXT, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_TRUE(m_states[1].read[1]);
+    EXPECT_THAT(m_output, testing::HasSubstr("Returning 1 Marked article..."));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    expect_final_state(" 1-1", ArticleUnread{2});
+}
+
+TEST_P(NewsgroupExitReadingTest, leavingRestoresAnEarlierDelayedArticleAndKeepsLaterCompletedReads)
+{
+    const DoNewsgroupResult result = run_reading({"M", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    EXPECT_EQ(ArticleNum{3}, m_states[2].article);
+    EXPECT_TRUE(m_states[2].read[1]);
+    EXPECT_TRUE(m_states[2].read[2]);
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    expect_final_state(" 1-1,3", ArticleUnread{1});
+}
+
+TEST_P(NewsgroupExitReadingTest, exhaustionRestoresEveryDelayedArticleBeforeSaving)
+{
+    const DoNewsgroupResult result = run_reading({"M", "n", "M", "n"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(4U, m_states.size());
+    EXPECT_TRUE(m_states[3].read[1]);
+    EXPECT_TRUE(m_states[3].read[2]);
+    EXPECT_THAT(m_output, testing::HasSubstr("Returning 2 Marked articles..."));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    expect_final_state(" 1-1", ArticleUnread{2});
+}
+
+TEST_P(NewsgroupExitReadingTest, leavingSelectedOnlyReadingClearsSelectionsBeforeRestoringDelayedArticles)
+{
+    select_reply();
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+
+    const DoNewsgroupResult result = run_reading({"M", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_TRUE(m_states[1].selected_only);
+    EXPECT_EQ(ArticleUnread{1}, m_states[1].selected);
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    expect_final_state(" 1-1", ArticleUnread{2});
+}
+
+TEST_P(NewsgroupExitReadingTest, leavingPreservesAnExplicitUnreadMarkWithoutADelayedReturn)
+{
+    const DoNewsgroupResult result = run_reading({"m", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_FALSE(m_states[1].read[1]);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Returning ")));
+    expect_final_state(" 1-1", ArticleUnread{2});
+}
+
+TEST_P(NewsgroupExitReadingTest, exitKillCommandsRunBeforeDelayedRestorationAndSerialization)
+{
+    set_kill_commands("X*j\n");
+
+    const DoNewsgroupResult result = run_reading({"M", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_FALSE(m_states[1].read[2]);
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    expect_final_state(" 1-1,3", ArticleUnread{1});
+}
+
+TEST_P(NewsgroupExitReadingTest, leavingRetainsStarCommandsForTheNextReadingSession)
+{
+    select_reply();
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    set_kill_commands("# Keep selected articles\n*X\n");
+
+    const DoNewsgroupResult result = run_reading({"M", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_FALSE(m_states[1].read[2]);
+    expect_final_state(" 1-1", ArticleUnread{2});
+}
+
+INSTANTIATE_TEST_SUITE_P(SavePolicyVerbosityAndThreading, NewsgroupExitReadingTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
 
 enum class ReadingServerFailure
 {

@@ -43,6 +43,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -55,7 +56,6 @@ ArticleNum         g_kill_first{};            // used as g_firstart when killing
 static void mention(std::string_view str);
 static bool kill_file_junk(Article &article, int killmask);
 static int  do_kill_file(std::FILE *kfp, int entering);
-static void rewrite_kill_file(ArticleNum thru);
 static int  write_local_thread_commands(int keylen, HashDatum *data, int extra);
 static int  write_global_thread_commands(int keylen, HashDatum *data, int appending);
 static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
@@ -536,7 +536,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
     return 0;
 }
 
-static void rewrite_kill_file(ArticleNum thru)
+void rewrite_kill_file(ArticleNum thru)
 {
     bool has_content = (g_kf_state & (KFS_THREAD_LINES|KFS_GLOBAL_THREAD_FILE))
                                  == KFS_THREAD_LINES;
@@ -544,10 +544,18 @@ static void rewrite_kill_file(ArticleNum thru)
     bool needs_newline = false;
     const fs::path killname{file_exp(get_env_var("KILLLOCAL", s_kill_local))};
     std::error_code error;
+    std::vector<std::string> kill_lines;
 
     if (g_local_kfp)
     {
         std::fseek(g_local_kfp, 0L, 0);       // rewind current file
+        for (std::string line = get_a_line(g_local_kfp); !line.empty(); line = get_a_line(g_local_kfp))
+        {
+            kill_lines.push_back(line);
+        }
+        // Close the reader before removing its file on Windows.
+        std::fclose(g_local_kfp);
+        g_local_kfp = nullptr;
     }
     else
     {
@@ -559,8 +567,7 @@ static void rewrite_kill_file(ArticleNum thru)
     if (s_new_kill_file_fp != nullptr)
     {
         fmt::print(s_new_kill_file_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
-        for (std::string kill_line = g_local_kfp ? get_a_line(g_local_kfp) : std::string{}; !kill_line.empty();
-             kill_line = get_a_line(g_local_kfp))
+        for (const std::string &kill_line : kill_lines)
         {
             const std::string_view line{kill_line};
             if (line.substr(0, 4) == "THRU")
@@ -604,14 +611,8 @@ static void rewrite_kill_file(ArticleNum thru)
         }
         if (has_star_commands)
         {
-            std::fseek(g_local_kfp,0L,0);                     // rewind file
-            while (true)
+            for (const std::string &kill_line : kill_lines)
             {
-                const std::string kill_line = get_a_line(g_local_kfp);
-                if (kill_line.empty())
-                {
-                    break;
-                }
                 const std::string_view line_text = skip_leading_space(kill_line);
                 if (!line_text.empty() && line_text.front() == '*')
                 {
