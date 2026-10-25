@@ -1502,8 +1502,10 @@ class NewsgroupSelectorDelegatedExitStateTest : public NewsgroupSelectorDelegate
 {
 protected:
     void               prepare_exit(bool rereading, bool later_page, bool at_end = false);
+    void               prepare_selector_session(bool rereading);
     void               expect_pending_changes() const;
     void               expect_exit_files_unchanged() const;
+    void               expect_selector_session_preserved(bool rereading, int direction = 1) const;
     static std::string newsrc_text(const Newsrc &newsrc);
     static std::string read_newsrc(const fs::path &path);
 
@@ -1570,6 +1572,122 @@ void NewsgroupSelectorDelegatedExitStateTest::expect_exit_files_unchanged() cons
     EXPECT_FALSE(fs::exists(m_newsrc.new_name));
 }
 
+void NewsgroupSelectorDelegatedExitStateTest::prepare_selector_session(bool rereading)
+{
+    prepare_exit(rereading, true);
+    g_tc_LINES = 24;
+    g_newsgroup_data[1].m_flags = (g_newsgroup_data[1].m_flags & ~NF_DEL_SEL) | NF_SEL;
+    m_original_newsrc = newsrc_text(m_newsrc);
+    std::ofstream{m_newsrc.name} << m_original_newsrc;
+    std::ofstream{m_newsrc.old_name} << m_original_newsrc;
+    m_newsrc.flags &= ~RF_RC_CHANGED;
+}
+
+void NewsgroupSelectorDelegatedExitStateTest::expect_selector_session_preserved(bool rereading, int direction) const
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        const NewsgroupData &group = g_newsgroup_data[index];
+        EXPECT_EQ(rereading ? " 1-3" : index == 1 ? " 1" : " 1-2", group.rc_numbers()) << index;
+        EXPECT_EQ(ArticleUnread{rereading ? 0 : index == 1 ? 2 : 1}, group.m_to_read) << index;
+        EXPECT_EQ(':', group.m_subscribe_char) << index;
+        EXPECT_EQ(index == 1 ? NF_SEL : NF_NONE, group.m_flags & (NF_SEL | NF_DEL_SEL | NF_DEL)) << index;
+        EXPECT_EQ(ArticleNum{1}, group.m_abs_first) << index;
+        EXPECT_EQ(ArticleNum{3}, group.m_ng_max) << index;
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
+    EXPECT_FALSE(g_sel_exclusive);
+    expect_exit_files_unchanged();
+    expect_selector_context(rereading, direction);
+}
+
+class NewsgroupSelectorHelpStateTest : public NewsgroupSelectorDelegatedExitStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_help(bool rereading, bool complete_page = false);
+    void expect_help_preserved(bool rereading, bool restart = false) const;
+
+private:
+    std::string m_old_library{g_rn_lib};
+    int         m_initial_univ_level{g_univ_level};
+};
+
+void NewsgroupSelectorHelpStateTest::SetUp()
+{
+    NewsgroupSelectorDelegatedExitStateTest::SetUp();
+    g_rn_lib = m_output_dir.generic_string();
+    fs::create_directory(m_output_dir / "HelpFiles");
+    std::ofstream{m_output_dir / "HelpFiles/top"} << "\"Local help topic\" &selector-help\n";
+}
+
+void NewsgroupSelectorHelpStateTest::TearDown()
+{
+    EXPECT_EQ(m_initial_univ_level, g_univ_level);
+    g_rn_lib = m_old_library;
+    NewsgroupSelectorDelegatedExitStateTest::TearDown();
+}
+
+void NewsgroupSelectorHelpStateTest::prepare_help(bool rereading, bool complete_page)
+{
+    prepare_exit(rereading, true);
+    if (complete_page)
+    {
+        g_tc_LINES = 200;
+    }
+}
+
+void NewsgroupSelectorHelpStateTest::expect_help_preserved(bool rereading, bool restart) const
+{
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    EXPECT_EQ(SM_NEWSGROUP, g_sel_mode);
+    EXPECT_EQ(SS_STRING, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+    EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[0], g_recent_newsgroup);
+    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
+    EXPECT_EQ("s", g_sel_grp_display_mode);
+    EXPECT_EQ(0, g_sel_grp_display_mode_index);
+    if (!restart)
+    {
+        expect_page(true, 1);
+        EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    }
+}
+
+class NewsgroupSelectorOnlineHelpTest : public NewsgroupSelectorHelpStateTest,
+                                        public testing::WithParamInterface<std::tuple<bool, char, char>>
+{
+};
+
+class NewsgroupSelectorFinishedHelpTest : public NewsgroupSelectorHelpStateTest,
+                                          public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class NewsgroupSelectorHelpScopeTest : public NewsgroupSelectorHelpStateTest, public testing::WithParamInterface<bool>
+{
+};
+
+class NewsgroupSelectorHelpCommandTest : public NewsgroupSelectorHelpStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, bool, char>>
+{
+};
+
+class NewsgroupSelectorHelpSessionTest : public NewsgroupSelectorHelpStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
 class NewsgroupSelectorDisplayStateTest : public NewsgroupSelectorDelegatedExitStateTest
 {
 protected:
@@ -1579,7 +1697,6 @@ protected:
     void prepare_display_session(bool rereading, std::string_view modes = "slm");
     void load_descriptions();
     void expect_display_preserved(bool rereading) const;
-    void expect_session_preserved(bool rereading) const;
 };
 
 void NewsgroupSelectorDisplayStateTest::SetUp()
@@ -1613,13 +1730,9 @@ void NewsgroupSelectorDisplayStateTest::load_descriptions()
 
 void NewsgroupSelectorDisplayStateTest::prepare_display_session(bool rereading, std::string_view modes)
 {
-    prepare_display(rereading, modes);
-    g_tc_LINES = 24;
-    g_newsgroup_data[1].m_flags = (g_newsgroup_data[1].m_flags & ~NF_DEL_SEL) | NF_SEL;
-    m_original_newsrc = newsrc_text(m_newsrc);
-    std::ofstream{m_newsrc.name} << m_original_newsrc;
-    std::ofstream{m_newsrc.old_name} << m_original_newsrc;
-    m_newsrc.flags &= ~RF_RC_CHANGED;
+    prepare_selector_session(rereading);
+    g_sel_grp_display_mode = modes;
+    g_sel_grp_display_mode_index = 0;
 }
 
 void NewsgroupSelectorDisplayStateTest::expect_display_preserved(bool rereading) const
@@ -1632,26 +1745,6 @@ void NewsgroupSelectorDisplayStateTest::expect_display_preserved(bool rereading)
     EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
     EXPECT_EQ(&g_newsgroup_data[0], g_recent_newsgroup);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
-}
-
-void NewsgroupSelectorDisplayStateTest::expect_session_preserved(bool rereading) const
-{
-    for (int index = 0; index < 3; ++index)
-    {
-        const NewsgroupData &group = g_newsgroup_data[index];
-        EXPECT_EQ(rereading ? " 1-3" : index == 1 ? " 1" : " 1-2", group.rc_numbers()) << index;
-        EXPECT_EQ(ArticleUnread{rereading ? 0 : index == 1 ? 2 : 1}, group.m_to_read) << index;
-        EXPECT_EQ(':', group.m_subscribe_char) << index;
-        EXPECT_EQ(index == 1 ? NF_SEL : NF_NONE, group.m_flags & (NF_SEL | NF_DEL_SEL | NF_DEL)) << index;
-        EXPECT_EQ(ArticleNum{1}, group.m_abs_first) << index;
-        EXPECT_EQ(ArticleNum{3}, group.m_ng_max) << index;
-    }
-    EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
-    EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
-    EXPECT_FALSE(g_sel_exclusive);
-    expect_exit_files_unchanged();
-    expect_selector_context(rereading);
 }
 
 struct GroupDisplayChoice
@@ -6525,6 +6618,149 @@ TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
     EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
 }
 
+TEST_P(NewsgroupSelectorOnlineHelpTest, onlineHelpOpensTheNewsgroupSelectorDestinationAndRequestsARestart)
+{
+    const auto [rereading, command, leave] = GetParam();
+    prepare_help(rereading);
+
+    const DisplayState result = run_delegated(command, std::string{leave} + "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Extended Help"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Newsgroup Selector"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Local help topic"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Article Display/Selection Mode")));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Newsgroup Browse Mode")));
+    expect_help_preserved(rereading, true);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeCommandAndExit, NewsgroupSelectorOnlineHelpTest,
+                         testing::Combine(testing::Bool(), testing::Values('h', '?'), testing::Values('q', 'Q')));
+
+TEST_P(NewsgroupSelectorFinishedHelpTest, completedKeyHelpRedisplaysAfterTheContinuationAnswer)
+{
+    const auto [rereading, answer] = GetParam();
+    prepare_help(rereading, true);
+
+    const DisplayState result = run_delegated('H', std::string{answer} + "Q");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Refresh the article counts in the selector"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Quit the selector and return to the rn-style group selector."));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Extended Help")));
+    expect_help_preserved(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndAnswer, NewsgroupSelectorFinishedHelpTest,
+                         testing::Combine(testing::Bool(), testing::Values(' ', '\n', 'q')));
+
+TEST_P(NewsgroupSelectorHelpScopeTest, quittingPagedKeyHelpReturnsWithoutConsumingTheNextSelectorCommand)
+{
+    const bool rereading = GetParam();
+    prepare_help(rereading);
+
+    const DisplayState result = run_delegated('H', "qQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Refresh the article counts in the selector")));
+    expect_help_preserved(rereading);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorHelpScopeTest, continuingPagedKeyHelpDisplaysTheRemainingCommandsBeforeRedisplay)
+{
+    const bool rereading = GetParam();
+    prepare_help(rereading);
+    g_tc_LINES = 24;
+
+    const DisplayState result = run_delegated('H', "  Q");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Quit the selector and return to the rn-style group selector."));
+    expect_help_preserved(rereading);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorHelpCommandTest, keyHelpReturnsASelectorCommandWithoutDiscardingQueuedInput)
+{
+    const auto [rereading, paged, command] = GetParam();
+    prepare_help(rereading, !paged);
+
+    const DisplayState result = run_delegated('H', std::string{command} + "Q");
+
+    EXPECT_EQ(command == 'R' ? DS_DO_COMMAND : DS_DISPLAY, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
+    expect_help_preserved(rereading);
+    if (command != 'R')
+    {
+        ASSERT_TRUE(macro_pending());
+        EXPECT_EQ(command, read_tty_char() & 0177);
+    }
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopePaginationAndCommand, NewsgroupSelectorHelpCommandTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Values('R', 'a')));
+
+TEST_P(NewsgroupSelectorHelpSessionTest, closingOnlineHelpRebuildsTheOriginalReadingScope)
+{
+    const auto [rereading, command] = GetParam();
+    prepare_selector_session(rereading);
+    const std::string input = std::string{rereading ? "U." : ""} + command + "qqQ";
+
+    const char result = run_selector_session(input);
+
+    EXPECT_EQ('q', result);
+    const std::size_t help = m_output.find("Extended Help");
+    ASSERT_NE(std::string::npos, help);
+    EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp", help));
+    EXPECT_THAT(m_output, testing::HasSubstr("Newsgroup Selector"));
+    expect_selector_session_preserved(rereading);
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorHelpSessionTest, theOnlineHelpContextItemDisplaysNewsgroupSelectorKeyHelp)
+{
+    const auto [rereading, command] = GetParam();
+    prepare_selector_session(rereading);
+    const std::string input = std::string{rereading ? "U." : ""} + command + "\rqqqQ";
+
+    const char result = run_selector_session(input);
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Extended Help"));
+    EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
+    expect_selector_session_preserved(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndCommand, NewsgroupSelectorHelpSessionTest,
+                         testing::Combine(testing::Bool(), testing::Values('h', '?')));
+
+TEST_P(NewsgroupSelectorHelpScopeTest, theSelectorDispatchesTheCommandReturnedFromKeyHelp)
+{
+    const bool rereading = GetParam();
+    prepare_selector_session(rereading);
+    g_tc_LINES = 200;
+
+    const char result = run_selector_session(rereading ? "U.HRqQ" : "HRqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
+    expect_selector_session_preserved(rereading, -1);
+    ASSERT_EQ(3, g_newsgroup_order.size());
+    EXPECT_EQ(&g_newsgroup_data[0], newsgroup_first());
+    EXPECT_EQ(&g_newsgroup_data[1], newsgroup_last());
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, NewsgroupSelectorHelpScopeTest, testing::Bool());
+
 TEST_P(NewsgroupSelectorDisplayModeTest, displayCommandAdvancesTheConfiguredCycleWithoutChangingReadingState)
 {
     const auto [rereading, choice] = GetParam();
@@ -6609,7 +6845,7 @@ TEST_P(NewsgroupSelectorDisplaySessionTest, descriptionDisplayResumesTheSelector
     EXPECT_EQ(mode == 'l', row.find("comp.lang.cpp") != std::string::npos);
     EXPECT_NE(std::string::npos, m_output.find("Previous discussion"));
     EXPECT_NE(std::string::npos, m_output.find(mode == 'm' ? "(medium display style)" : "(long display style)"));
-    expect_session_preserved(rereading);
+    expect_selector_session_preserved(rereading);
     expect_next_command('Q');
 }
 
@@ -6630,7 +6866,7 @@ TEST_P(NewsgroupSelectorDisplayScopeTest, unavailableDescriptionsFallBackToNames
     EXPECT_EQ(0, m_data_source.m_desc_sf.m_refetch_secs);
     EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp"));
     EXPECT_NE(std::string::npos, m_output.find("comp.previous"));
-    expect_session_preserved(rereading);
+    expect_selector_session_preserved(rereading);
     expect_next_command('Q');
 }
 
@@ -6656,7 +6892,7 @@ TEST_P(NewsgroupSelectorDisplayScopeTest, repeatedDisplayCommandsCycleBackToName
     const std::string short_page = m_output.substr(medium_style, short_style - medium_style);
     EXPECT_EQ(std::string::npos, short_page.find("discussion"));
     EXPECT_NE(std::string::npos, short_page.find("comp.lang.cpp"));
-    expect_session_preserved(rereading);
+    expect_selector_session_preserved(rereading);
     expect_next_command('Q');
 }
 
