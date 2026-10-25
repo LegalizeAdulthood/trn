@@ -2197,6 +2197,71 @@ std::string numbered_pager_body(long first = 0, long end = 12)
     return body.str();
 }
 
+struct PagerEndCase
+{
+    const char                           *name;
+    std::string                           body;
+    std::vector<std::vector<std::string>> pages;
+    std::string_view                      hidden;
+    std::string_view                      headers;
+    int                                   columns{80};
+    int                                   wrap_offset{-1};
+    bool                                  hiding{true};
+};
+
+void PrintTo(const PagerEndCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+std::vector<std::string> numbered_pager_rows(long first, long end)
+{
+    std::istringstream       body{numbered_pager_body(first, end)};
+    std::vector<std::string> rows;
+    for (std::string row; std::getline(body, row);)
+    {
+        rows.push_back(std::move(row));
+    }
+    return rows;
+}
+
+using PagerEndParam = std::tuple<PagerEndCase, bool>;
+
+class PagerEndArticleTest : public PagerFilteringArticleTest, public WithParamInterface<PagerEndParam>
+{
+protected:
+    void SetUp() override;
+    void read_to_end();
+
+    std::vector<std::vector<std::string>> m_pages;
+};
+
+void PagerEndArticleTest::SetUp()
+{
+    PagerFilteringArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerEndCase &scenario = std::get<0>(GetParam());
+    g_erase_screen = std::get<1>(GetParam());
+    g_tc_COLS = scenario.columns;
+    g_word_wrap_offset = scenario.wrap_offset;
+    g_do_hiding = scenario.hiding;
+    set_filters(scenario.hidden);
+    load_filtered_body(scenario.body, scenario.headers);
+    m_pages = scenario.pages;
+    if (g_erase_screen)
+    {
+        for (std::size_t page = 1; page < m_pages.size(); ++page)
+        {
+            m_pages[page].insert(m_pages[page].begin(), m_pages[page - 1].back());
+        }
+    }
+}
+
+void PagerEndArticleTest::read_to_end()
+{
+    read_pages(std::string(m_pages.size() - 1, ' '));
+}
+
 struct PagerHiddenHeaderCase
 {
     const char      *name;
@@ -3481,6 +3546,162 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
               g_prompt);
 }
+
+TEST_P(PagerEndArticleTest, completesAfterTheLastDisplayedPageWithoutConsumingTheNextCommand)
+{
+    read_to_end();
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_NORM, m_result);
+    for (std::size_t page = 0; page < m_pages.size(); ++page)
+    {
+        EXPECT_EQ(m_pages[page], displayed_rows(page)) << "Page " << page;
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(m_pages.size() - 1, prompts);
+    EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(100%)")));
+    EXPECT_EQ(g_art_size, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_TRUE(m_article_command.empty());
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('q', read_tty_char());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ArticleEndings, PagerEndArticleTest,
+    Combine(Values(PagerEndCase{"Empty", "", {{}}}, PagerEndCase{"OneLine", "Body 000\n", {{"Body 000"}}},
+                   PagerEndCase{"Short", numbered_pager_body(0, 3), {numbered_pager_rows(0, 3)}},
+                   PagerEndCase{"ExactFirstPage", numbered_pager_body(0, 4), {numbered_pager_rows(0, 4)}},
+                   PagerEndCase{
+                       "OneLineBeyondFirstPage", numbered_pager_body(0, 5), {numbered_pager_rows(0, 4), {"Body 004"}}},
+                   PagerEndCase{"ExactSecondPage",
+                                numbered_pager_body(0, 7),
+                                {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7)}},
+                   PagerEndCase{"PartialThirdPage",
+                                numbered_pager_body(0, 9),
+                                {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7), numbered_pager_rows(7, 9)}},
+                   PagerEndCase{"ExactThirdPage",
+                                numbered_pager_body(0, 10),
+                                {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7), numbered_pager_rows(7, 10)}},
+                   PagerEndCase{"UnterminatedShort", "Body 000", {{"Body 000"}}},
+                   PagerEndCase{"UnterminatedExactFirstPage",
+                                numbered_pager_body(0, 3) + "Body 003",
+                                {numbered_pager_rows(0, 4)}},
+                   PagerEndCase{"UnterminatedExactSecondPage",
+                                numbered_pager_body(0, 6) + "Body 006",
+                                {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7)}},
+                   PagerEndCase{"UnterminatedPartialSecondPage",
+                                numbered_pager_body(0, 4) + "Body 004",
+                                {numbered_pager_rows(0, 4), {"Body 004"}}},
+                   PagerEndCase{"AllHidden", "> hidden first\n> hidden last\n", {{}}, "^>..."},
+                   PagerEndCase{"HiddenTailOnShortPage", "Body 000\n> hidden last\n", {{"Body 000"}}, "^>..."},
+                   PagerEndCase{"HiddenTailAfterExactFirstPage",
+                                numbered_pager_body(0, 4) + "> hidden first\n> hidden last\n",
+                                {numbered_pager_rows(0, 4)},
+                                "^>..."},
+                   PagerEndCase{"HiddenTailAfterExactSecondPage",
+                                numbered_pager_body(0, 7) + "> hidden last\n",
+                                {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7)},
+                                "^>..."},
+                   PagerEndCase{"VisibleLineAfterHiddenTail",
+                                numbered_pager_body(0, 4) + "> hidden first\n> hidden last\nBody 004\n",
+                                {numbered_pager_rows(0, 4), {"Body 004"}},
+                                "^>..."},
+                   PagerEndCase{"WrappedHiddenTail",
+                                numbered_pager_body(0, 4) + "> hidden " + std::string(100, 'x'),
+                                {numbered_pager_rows(0, 4)},
+                                "^>...",
+                                "",
+                                32,
+                                8},
+                   PagerEndCase{"ExactWidthUnterminated", std::string(32, 'x'), {{std::string(32, 'x')}}, "", "", 32},
+                   PagerEndCase{"UnbrokenExactPageUnterminated",
+                                std::string(128, 'x'),
+                                {std::vector<std::string>(4, std::string(32, 'x'))},
+                                "",
+                                "",
+                                32},
+                   PagerEndCase{"UnbrokenBeyondPageUnterminated",
+                                std::string(129, 'x'),
+                                {std::vector<std::string>(4, std::string(32, 'x')), {"x"}},
+                                "",
+                                "",
+                                32},
+                   PagerEndCase{"WordWrappedUnterminated",
+                                "Body 000 alpha beta end Body 001 alpha beta end Body 002 alpha beta end "
+                                "Body 003 alpha beta end",
+                                {{"Body 000 alpha beta end", "Body 001 alpha beta end", "Body 002 alpha beta end",
+                                  "Body 003 alpha beta end"}},
+                                "",
+                                "",
+                                32,
+                                8},
+                   PagerEndCase{"VisibleContinuationMatchesHidePattern",
+                                "Body 000 alpha beta end Body 001 alpha beta end Body 002 alpha beta end "
+                                "Body 003 alpha beta end > continuation end",
+                                {{"Body 000 alpha beta end", "Body 001 alpha beta end", "Body 002 alpha beta end",
+                                  "Body 003 alpha beta end"},
+                                 {"> continuation end"}},
+                                "^>...",
+                                "",
+                                32,
+                                8},
+                   PagerEndCase{"RawUnterminated", "Body 000", {{"Body 000"}}, "", "", 80, -1, false},
+                   PagerEndCase{
+                       "RawExactPage", numbered_pager_body(0, 4), {numbered_pager_rows(0, 4)}, "", "", 80, -1, false},
+                   PagerEndCase{"RawUnterminatedSecondPage",
+                                numbered_pager_body(0, 6) + "Body 006",
+                                {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7)},
+                                "",
+                                "",
+                                80,
+                                -1,
+                                false}),
+            Bool()),
+    [](const TestParamInfo<PagerEndParam> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Clearing" : "Scrolling"); });
+
+INSTANTIATE_TEST_SUITE_P(
+    FilteredEndings, PagerEndArticleTest,
+    Combine(
+        Values(
+            PagerEndCase{"OnlySoftBreaks",
+                         "=\n=\n",
+                         {{}},
+                         "",
+                         "MIME-Version: 1.0\nContent-Type: text/plain\nContent-Transfer-Encoding: quoted-printable\n"},
+            PagerEndCase{"SoftBreakTailOnShortPage",
+                         "=42ody 000\n=\n=\n",
+                         {{"Body 000"}},
+                         "",
+                         "MIME-Version: 1.0\nContent-Type: text/plain\nContent-Transfer-Encoding: quoted-printable\n"},
+            PagerEndCase{"SoftBreakTailAfterExactPage",
+                         numbered_pager_body(0, 4) + "=\n=\n",
+                         {numbered_pager_rows(0, 4)},
+                         "",
+                         "MIME-Version: 1.0\nContent-Type: text/plain\nContent-Transfer-Encoding: quoted-printable\n"},
+            PagerEndCase{"SoftBreakTailAfterSecondPage",
+                         numbered_pager_body(0, 7) + "=\n=\n",
+                         {numbered_pager_rows(0, 4), numbered_pager_rows(4, 7)},
+                         "",
+                         "MIME-Version: 1.0\nContent-Type: text/plain\nContent-Transfer-Encoding: quoted-printable\n"}),
+        Bool()),
+    [](const TestParamInfo<PagerEndParam> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Clearing" : "Scrolling"); });
 
 TEST_P(PagerHiddenHeaderArticleTest, hiddenHeadersDoNotConsumeBodyRows)
 {

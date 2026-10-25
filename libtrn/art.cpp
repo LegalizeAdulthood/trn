@@ -784,13 +784,29 @@ DoArticleResult do_article(std::string &article_command)
             g_art_size = art_buf_size_from_raw(g_raw_art_size);
         }
 recheck_pager:
-        if (g_do_hiding && art_buf_at_end())
+        if (const bool can_hide_tail =
+                !g_in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
+            g_do_hiding && (art_buf_at_end() || (can_hide_tail && !g_hide_line.empty())))
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.
             ArticlePosition seek_pos = art_buf_article_pos();
             std::string     remaining_line;
-            (void) read_art_buf(remaining_line, false);
+            bool            hidden_continuation = false;
+            while (read_art_buf(remaining_line, false))
+            {
+                if (!can_hide_tail || g_hide_line.empty() ||
+                    (!hidden_continuation && !g_hide_compex.execute(remaining_line)))
+                {
+                    break;
+                }
+                hidden_continuation = remaining_line.back() == WRAPPED_NL;
+            }
+            if (can_hide_tail && remaining_line.empty())
+            {
+                seek_pos = g_art_pos = art_buf_article_pos();
+                virtual_write(g_art_line_num, g_art_pos);
+            }
             seek_art_buf(seek_pos);
         }
         if (g_art_pos == g_art_size)  // did we just now reach EOF?
