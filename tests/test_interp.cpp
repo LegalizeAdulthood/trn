@@ -3018,12 +3018,12 @@ void PrintTo(const PagerTreeCase &value, std::ostream *output)
     *output << value.name;
 }
 
-class PagerTreeArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerTreeCase>
+class PagerGroupArticleTest : public ArticleHeaderPresentationTest
 {
 protected:
-    void              SetUp() override;
+    void              load_group(bool threaded, bool quoted_printable);
     void              TearDown() override;
-    void              read_with_tree();
+    void              read_pages(std::string_view commands);
     std::vector<long> displayed_body_lines() const;
 
     ArticlePosition              m_body_start{};
@@ -3043,7 +3043,7 @@ private:
     ValueSaver<std::string_view> m_end_standout{g_tc_SE, g_tc_SE};
 };
 
-void PagerTreeArticleTest::SetUp()
+void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable)
 {
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
@@ -3058,13 +3058,13 @@ void PagerTreeArticleTest::SetUp()
     g_newsgroup_ptr->m_ng_max = g_last_art;
     g_newsgroup_ptr->m_rc_line.resize(g_newsgroup_ptr->m_num_offset);
     g_newsgroup_ptr->m_rc_line += "1-" + std::to_string(article_before(g_abs_first).value_of());
-    g_threaded_group = GetParam().threaded;
+    g_threaded_group = threaded;
     g_thread_always = true;
     g_max_tree_lines = 0;
     {
         std::ofstream article{std::to_string(g_art.value_of())};
         article << "Subject: Pager thread\nMessage-ID: <pager-root@example.test>\n";
-        if (GetParam().quoted_printable)
+        if (quoted_printable)
         {
             article << "MIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n"
                        "Content-Transfer-Encoding: quoted-printable\n";
@@ -3074,8 +3074,7 @@ void PagerTreeArticleTest::SetUp()
         m_raw_positions.push_back(m_body_start);
         for (long line = 0; line < 40; ++line)
         {
-            article << (GetParam().quoted_printable ? "=42ody " : "Body ") << std::setw(3) << std::setfill('0') << line
-                    << '\n';
+            article << (quoted_printable ? "=42ody " : "Body ") << std::setw(3) << std::setfill('0') << line << '\n';
             m_raw_positions.emplace_back(static_cast<long>(article.tellp()));
         }
         ASSERT_TRUE(article.good());
@@ -3112,7 +3111,7 @@ void PagerTreeArticleTest::SetUp()
     }
 }
 
-void PagerTreeArticleTest::TearDown()
+void PagerGroupArticleTest::TearDown()
 {
     while (macro_pending())
     {
@@ -3125,10 +3124,9 @@ void PagerTreeArticleTest::TearDown()
     ArticleHeaderPresentationTest::TearDown();
 }
 
-void PagerTreeArticleTest::read_with_tree()
+void PagerGroupArticleTest::read_pages(std::string_view commands)
 {
     push_char('q');
-    const std::string_view commands{GetParam().commands};
     for (auto character = commands.rbegin(); character != commands.rend(); ++character)
     {
         push_char(*character);
@@ -3136,7 +3134,7 @@ void PagerTreeArticleTest::read_with_tree()
     render_article();
 }
 
-std::vector<long> PagerTreeArticleTest::displayed_body_lines() const
+std::vector<long> PagerGroupArticleTest::displayed_body_lines() const
 {
     std::vector<long> lines;
     for (std::size_t position = m_rendered.find("Body "); position != std::string::npos;
@@ -3145,6 +3143,178 @@ std::vector<long> PagerTreeArticleTest::displayed_body_lines() const
         lines.push_back(std::stol(m_rendered.substr(position + 5, 3)));
     }
     return lines;
+}
+
+class PagerTreeArticleTest : public PagerGroupArticleTest, public WithParamInterface<PagerTreeCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void PagerTreeArticleTest::SetUp()
+{
+    load_group(GetParam().threaded, GetParam().quoted_printable);
+}
+
+enum PagerTitleFlags
+{
+    TITLE_READ = 0x01,
+    TITLE_SELECT_CURRENT = 0x02,
+    TITLE_SELECT_REPLY = 0x04,
+    TITLE_SELECTED_ONLY = 0x08,
+    TITLE_DELAYED_RETURN = 0x10,
+    TITLE_THREADED = 0x20,
+    TITLE_MODERATED = 0x40
+};
+
+struct PagerTitleCase
+{
+    const char      *name;
+    int              flags;
+    std::string_view before;
+    std::string_view after;
+    std::string_view first_line;
+    bool             quoted_printable{};
+};
+
+void PrintTo(const PagerTitleCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class PagerTitleArticleTest : public PagerGroupArticleTest, public WithParamInterface<PagerTitleCase>
+{
+protected:
+    void                     SetUp() override;
+    void                     read_reply_and_return();
+    std::vector<std::string> titles(std::string_view text) const;
+    std::string              expected_title(std::string_view pattern) const;
+    void                     open_for_reading(ArticleNum number);
+
+    ArticleNum        m_root{};
+    std::string       m_initial_output;
+    std::vector<long> m_initial_body;
+    std::string       m_reply_output;
+    std::string       m_source;
+    ArticleFlags      m_root_flags{};
+
+private:
+    ValueSaver<std::string>   m_name{g_newsgroup_name, g_newsgroup_name};
+    ValueSaver<std::string>   m_moderated{g_moderated, g_moderated};
+    ValueSaver<std::string>   m_first_line{g_first_line, g_first_line};
+    ValueSaver<bool>          m_hiding{g_do_hiding, g_do_hiding};
+    ValueSaver<bool>          m_selected_only{g_selected_only, g_selected_only};
+    ValueSaver<bool>          m_sel_rereading{g_sel_rereading, g_sel_rereading};
+    ValueSaver<AddGroupFlags> m_mask{g_sel_mask, g_sel_mask};
+    ValueSaver<ArticleUnread> m_selected{g_selected_count, g_selected_count};
+    ValueSaver<int>           m_selected_subjects{g_selected_subj_cnt, g_selected_subj_cnt};
+    ValueSaver<int>           m_delayed{g_dm_count, g_dm_count};
+};
+
+void PagerTitleArticleTest::SetUp()
+{
+    const PagerTitleCase &scenario = GetParam();
+    load_group((scenario.flags & TITLE_THREADED) != 0, scenario.quoted_printable);
+    ASSERT_FALSE(HasFatalFailure());
+    m_root = g_art;
+    g_newsgroup_name = "title.group";
+    g_moderated = scenario.flags & TITLE_MODERATED ? " (moderated)" : "";
+    g_first_line = scenario.first_line;
+    g_do_hiding = true;
+    g_sel_mask = static_cast<AddGroupFlags>(AF_SEL);
+    g_sel_rereading = false;
+    g_selected_count = ArticleUnread{};
+    g_selected_subj_cnt = 0;
+    g_selected_only = false;
+    g_dm_count = 0;
+    if (g_threaded_group)
+    {
+        ASSERT_TRUE(parse_header(g_last_art));
+        ASSERT_TRUE(parse_header(m_root));
+        ASSERT_EQ(article_ptr(g_last_art), g_artp->m_child1);
+        ASSERT_EQ(g_artp, article_ptr(g_last_art)->m_parent);
+        g_max_tree_lines = 3;
+    }
+    if (scenario.flags & (TITLE_READ | TITLE_DELAYED_RETURN))
+    {
+        g_artp->mark_as_read();
+    }
+    if (scenario.flags & TITLE_DELAYED_RETURN)
+    {
+        g_artp->delay_unmark();
+    }
+    if (scenario.flags & TITLE_SELECT_CURRENT)
+    {
+        g_artp->select_article(AUTO_KILL_NONE);
+    }
+    if (scenario.flags & TITLE_SELECT_REPLY)
+    {
+        article_ptr(g_last_art)->select_article(AUTO_KILL_NONE);
+    }
+    g_selected_only = (scenario.flags & TITLE_SELECTED_ONLY) != 0;
+    m_root_flags = g_artp->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK);
+    open_for_reading(m_root);
+    std::ifstream source{std::to_string(m_root.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
+}
+
+void PagerTitleArticleTest::open_for_reading(ArticleNum number)
+{
+    g_art = g_curr_art = number;
+    g_artp = g_curr_artp = article_ptr(number);
+    g_art_line_num = ArticleLine{};
+    g_top_line = ArticleLine{-1};
+    g_do_fseek = false;
+    ASSERT_NE(nullptr, art_open(number, ArticlePosition{}));
+}
+
+void PagerTitleArticleTest::read_reply_and_return()
+{
+    read_pages("");
+    ASSERT_EQ(DA_TO_END, m_result);
+    m_initial_output = m_rendered;
+    m_initial_body = displayed_body_lines();
+    open_for_reading(g_last_art);
+    ASSERT_FALSE(HasFatalFailure());
+    render_article();
+    ASSERT_EQ(DA_NORM, m_result);
+    m_reply_output = m_rendered;
+    // The reading loop marks an article read after its normal EOF return.
+    g_artp->mark_as_read();
+    open_for_reading(m_root);
+    ASSERT_FALSE(HasFatalFailure());
+    read_pages("\f ");
+}
+
+std::string PagerTitleArticleTest::expected_title(std::string_view pattern) const
+{
+    std::string title{pattern};
+    title.replace(title.find("{}"), 2, std::to_string(m_root.value_of()));
+    return title;
+}
+
+std::vector<std::string> PagerTitleArticleTest::titles(std::string_view text) const
+{
+    const std::string_view   prefix = GetParam().first_line.empty() ? "title.group" : "Configured|";
+    std::istringstream       input{std::string{text}};
+    std::vector<std::string> result;
+    for (std::string line; std::getline(input, line);)
+    {
+        const std::size_t start = line.find(prefix);
+        if (start != std::string::npos)
+        {
+            line.erase(0, start);
+            line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+            const std::size_t tree = line.find("  ");
+            if (tree != std::string::npos)
+            {
+                line.resize(tree);
+            }
+            result.push_back(std::move(line));
+        }
+    }
+    return result;
 }
 
 } // namespace
@@ -5749,9 +5919,106 @@ INSTANTIATE_TEST_SUITE_P(
                                    "", {{0, 4}, {4, 3}, {7, 3}, {10, 2}}, 12)),
     [](const TestParamInfo<PagerExitCase> &info) { return info.param.name; });
 
+TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
+{
+    const PagerTitleCase &scenario = GetParam();
+
+    read_reply_and_return();
+
+    ASSERT_FALSE(HasFatalFailure());
+    SCOPED_TRACE(m_initial_output);
+    SCOPED_TRACE(m_reply_output);
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    const std::string initial = expected_title(scenario.before);
+    const std::string returned = expected_title(scenario.after);
+    EXPECT_EQ((std::vector<std::string>{initial}), titles(m_initial_output));
+    EXPECT_EQ((std::vector<std::string>{returned, returned}), titles(m_rendered));
+    EXPECT_THAT(m_reply_output, HasSubstr("Other article\n"));
+    const std::vector<long> first{0, 1, 2, 3, 4, 5};
+    EXPECT_EQ(first, m_initial_body);
+    std::vector<long> expected = first;
+    expected.insert(expected.end(), first.begin(), first.end());
+    for (long row = 6; row < 14; ++row)
+    {
+        expected.push_back(row);
+    }
+    EXPECT_EQ(expected, displayed_body_lines());
+    EXPECT_EQ(ArticleLine{16}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{14 * 9}, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
+    EXPECT_EQ(m_root_flags, g_artp->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK));
+    EXPECT_FALSE(article_ptr(g_last_art)->m_flags & (AF_UNREAD | AF_SEL));
+    EXPECT_EQ(ArticleUnread{(m_root_flags & AF_UNREAD) ? 1 : 0}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(ArticleUnread{(m_root_flags & AF_SEL) ? 1 : 0}, g_selected_count);
+    EXPECT_EQ((scenario.flags & TITLE_SELECTED_ONLY) != 0, g_selected_only);
+    EXPECT_EQ((scenario.flags & TITLE_DELAYED_RETURN) ? 1 : 0, g_dm_count);
+    EXPECT_EQ(m_root, g_art);
+    EXPECT_EQ(m_root, g_curr_art);
+    EXPECT_EQ(m_root, g_open_art);
+    EXPECT_EQ(m_root, g_parsed_art);
+    EXPECT_EQ(article_ptr(m_root), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    if (scenario.flags & TITLE_THREADED)
+    {
+        const std::string_view node =
+            m_root_flags & AF_UNREAD ? (g_selected_only && !(m_root_flags & AF_SEL) ? "<1>" : "[1]") : "(1)";
+        EXPECT_THAT(m_initial_output, HasSubstr("<mark>" + std::string{node} + "</mark>"));
+        EXPECT_THAT(m_rendered, HasSubstr("<mark>" + std::string{node} + "</mark>"));
+        EXPECT_THAT(m_rendered, HasSubstr("-(1)"));
+        EXPECT_EQ(article_ptr(g_last_art), g_artp->m_child1);
+        EXPECT_EQ(g_artp, article_ptr(g_last_art)->m_parent);
+    }
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_TRUE(m_article_command.empty());
+    std::ifstream source{std::to_string(m_root.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ReadingContextAndFirstLine, PagerTitleArticleTest,
+    Values(PagerTitleCase{"UnreadCurrent", 0, "title.group #{} (1 more)", "title.group #{}"},
+           PagerTitleCase{"RereadCurrent", TITLE_READ, "title.group #{} (1 more)", "title.group #{}"},
+           PagerTitleCase{"SelectedCurrent", TITLE_SELECT_CURRENT | TITLE_SELECTED_ONLY, "title.group #{} (0 + 1 more)",
+                          "title.group #{} (0 + 0 more)"},
+           PagerTitleCase{"UnselectedCurrent", TITLE_SELECT_REPLY | TITLE_SELECTED_ONLY, "title.group #{} (1 + 0 more)",
+                          "title.group #{} (0 + 0 more)"},
+           PagerTitleCase{"BothSelected", TITLE_SELECT_CURRENT | TITLE_SELECT_REPLY | TITLE_SELECTED_ONLY,
+                          "title.group #{} (1 + 0 more)", "title.group #{} (0 + 0 more)"},
+           PagerTitleCase{"ReadCurrentWithSelectedReply", TITLE_READ | TITLE_SELECT_REPLY | TITLE_SELECTED_ONLY,
+                          "title.group #{} (1 + 0 more)", "title.group #{} (0 + 0 more)"},
+           PagerTitleCase{"SelectionsWithoutFiltering", TITLE_SELECT_CURRENT, "title.group #{} (1 more)",
+                          "title.group #{}"},
+           PagerTitleCase{"DelayedReturn", TITLE_DELAYED_RETURN, "title.group #{} (1 more + 1 Marked to return)",
+                          "title.group #{} (0 more + 1 Marked to return)"},
+           PagerTitleCase{"ThreadedDelayedReturn", TITLE_THREADED | TITLE_DELAYED_RETURN, "title.group #{} (1 more)",
+                          "title.group #{}"},
+           PagerTitleCase{"ThreadedCurrent", TITLE_THREADED, "title.group #{} (1 more)", "title.group #{}"},
+           PagerTitleCase{"ThreadedSelectedCurrent", TITLE_THREADED | TITLE_SELECT_CURRENT | TITLE_SELECTED_ONLY,
+                          "title.group #{} (0 + 1 more)", "title.group #{} (0 + 0 more)"},
+           PagerTitleCase{"ThreadedUnselectedCurrent", TITLE_THREADED | TITLE_SELECT_REPLY | TITLE_SELECTED_ONLY,
+                          "title.group #{} (1 + 0 more)", "title.group #{} (0 + 0 more)"},
+           PagerTitleCase{"ModeratedGroup", TITLE_MODERATED, "title.group (moderated) #{} (1 more)",
+                          "title.group (moderated) #{}"},
+           PagerTitleCase{"ConfiguredFirstLine", 0, "Configured|{}|title.group|2|Pager thread",
+                          "Configured|{}|title.group|1|Pager thread", "Configured|%a|%C|%u|%s"},
+           PagerTitleCase{"ConfiguredSelectedCounts", TITLE_SELECT_CURRENT | TITLE_SELECTED_ONLY,
+                          "Configured|{}|0|1|Pager thread", "Configured|{}|0|0|Pager thread", "Configured|%a|%U|%v|%s"},
+           PagerTitleCase{"ThreadedConfiguredFirstLine", TITLE_THREADED, "Configured|{}|title.group|2|Pager thread",
+                          "Configured|{}|title.group|1|Pager thread", "Configured|%a|%C|%u|%s"},
+           PagerTitleCase{"ThreadedQuotedPrintableReturn", TITLE_THREADED, "title.group #{} (1 more)",
+                          "title.group #{}", "", true}),
+    [](const TestParamInfo<PagerTitleCase> &info) { return info.param.name; });
+
 TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
 {
-    read_with_tree();
+    read_pages(GetParam().commands);
 
     SCOPED_TRACE(m_rendered);
     const PagerTreeCase &scenario = GetParam();
