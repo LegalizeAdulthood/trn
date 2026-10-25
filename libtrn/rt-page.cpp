@@ -2676,6 +2676,10 @@ static int count_subject_lines(const Subject *subj, int *selptr)
     {
         *selptr = sel;
     }
+    if (g_tc_COLS / 5 < 8)
+    {
+        return subj->m_misc != 0;
+    }
     if (current_article_display_mode() == 'l')
     {
         return subj->m_misc;

@@ -848,6 +848,33 @@ class ThreadPageBoundaryTest : public ThreadPageDisplayState, public testing::Wi
 {
 };
 
+class ArticlePageLayoutTest : public ArticlePageDisplayState,
+                              public testing::WithParamInterface<std::tuple<int, bool, char>>
+{
+};
+
+class ArticlePageResizeTest : public ArticlePageDisplayState, public testing::WithParamInterface<bool>
+{
+};
+
+class ArticlePageLabelCapacityTest : public SubjectPageDisplayState, public testing::WithParamInterface<bool>
+{
+};
+
+class GroupedPageLayoutTest : public ThreadPageDisplayState,
+                              public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+};
+
+class NarrowGroupedPageTest : public ThreadPageDisplayState,
+                              public testing::WithParamInterface<std::tuple<SelectionMode, char>>
+{
+};
+
+class CompactThreadPageLayoutTest : public ThreadPageDisplayState, public testing::WithParamInterface<bool>
+{
+};
+
 } // namespace
 
 TEST_P(ArticlePageEligibilityTest, selectionDoesNotOverrideExistenceOrReadScope)
@@ -2056,6 +2083,228 @@ TEST_P(ThreadPageBoundaryTest, exclusiveDisplayKeepsUnselectedSubjectsOfAPartial
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, ThreadPageBoundaryTest, testing::Bool());
+
+TEST_P(ArticlePageLayoutTest, fitsLongSubjectRowsToTheAvailableColumnsAndLabelWidth)
+{
+    const auto [columns, numeric, mode] = GetParam();
+    prepare_display(false, mode);
+    g_tc_COLS = columns;
+    g_use_sel_num = numeric;
+    m_subject.m_str = "Re: " + std::string(100, 'A');
+    std::string row = numeric ? "01+" : "a+";
+    const int   details = mode != 's' && columns >= 40 ? columns / 5 : 0;
+    if (details && mode == 'd')
+    {
+        row += std::string{std::ctime(&m_subject.m_articles->m_date)}.substr(0, details);
+    }
+    else if (details)
+    {
+        row += "Alice" + std::string(details - 5, ' ');
+    }
+    const int subject_width = std::max(columns - 5 - numeric, 32) - details;
+    row += "  " + std::string(subject_width, 'A');
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(row + "\n"));
+    EXPECT_LT(row.size(), static_cast<std::size_t>(columns));
+    const int items = columns < 50 ? 3 : 4;
+    ASSERT_EQ(items, g_sel_page_item_cnt);
+    for (int i = 0; i < items; ++i)
+    {
+        EXPECT_EQ(article_ptr(ArticleNum{i + 1}), g_sel_items[i].u.ap);
+        EXPECT_EQ(i + 2, g_sel_items[i].line);
+    }
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(items, g_sel_page_obj_cnt);
+    EXPECT_EQ(items + 3, g_sel_last_line);
+    EXPECT_FALSE(g_sel_at_end);
+    expect_article_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ColumnsLabelsAndPresentation, ArticlePageLayoutTest,
+                         testing::Combine(testing::Values(39, 40, 80), testing::Bool(),
+                                          testing::Values('s', 'd', 'l')));
+
+TEST_P(ArticlePageResizeTest, shrinkingTheTerminalRebuildsThePageAndRetainsVisibleArticleMappings)
+{
+    prepare_display(false, 'l');
+    g_use_sel_num = GetParam();
+    (void) render_page();
+    g_tc_COLS = 39;
+    g_tc_LINES = 8;
+    init_pages(PRESERVE_PAGE);
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "01+  Article eligibility\n" : "a+  Article eligibility\n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alice")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_sel_items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_sel_items[1].u.ap);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(3, g_sel_items[1].line);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), *g_sel_next_app);
+    EXPECT_FALSE(g_sel_at_end);
+    expect_article_state();
+}
+
+TEST_P(ArticlePageResizeTest, enlargingTheTerminalShowsTheRemainingArticlesOnTheSamePage)
+{
+    prepare_display(false, 'l');
+    g_use_sel_num = GetParam();
+    g_tc_COLS = 39;
+    g_tc_LINES = 8;
+    g_sel_last_ap = article_ptr(ArticleNum{2});
+    (void) render_page();
+    g_tc_COLS = 80;
+    g_tc_LINES = 11;
+    init_pages(PRESERVE_PAGE);
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "05 Next page" : "e Next page"));
+    ASSERT_EQ(5, g_sel_page_item_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{7}), g_sel_items[4].u.ap);
+    EXPECT_EQ(6, g_sel_items[4].line);
+    EXPECT_EQ(5, g_sel_page_obj_cnt);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(article_ptr_list_end(), g_sel_next_app);
+    EXPECT_TRUE(g_sel_at_end);
+    expect_article_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(LabelStyle, ArticlePageResizeTest, testing::Bool());
+
+TEST_P(ArticlePageLabelCapacityTest, numericLabelsAllowMoreRowsThanTheConfiguredLetterAlphabet)
+{
+    prepare_subjects(false, 's', {{8, 1}});
+    g_sel_mode = SM_ARTICLE;
+    g_sel_page_app = nullptr;
+    g_tc_LINES = 20;
+    g_use_sel_num = GetParam();
+    init_pages(PRESERVE_PAGE);
+
+    const std::string output = render_page();
+
+    const int items = GetParam() ? 8 : 6;
+    ASSERT_EQ(items, g_sel_page_item_cnt);
+    EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "08   Alpha\n" : "f   Alpha\n"));
+    EXPECT_EQ(items, g_sel_page_obj_cnt);
+    EXPECT_EQ(8, g_sel_total_obj_cnt);
+    EXPECT_EQ(items + 3, g_sel_last_line);
+    EXPECT_EQ(GetParam(), g_sel_at_end);
+    EXPECT_EQ(article_ptr(ArticleNum{items}), g_sel_items[items - 1].u.ap);
+}
+
+INSTANTIATE_TEST_SUITE_P(LabelStyle, ArticlePageLabelCapacityTest, testing::Bool());
+
+TEST_P(GroupedPageLayoutTest, alignsAndTruncatesSubjectHeadingsWithLetterOrNumericThreadLabels)
+{
+    const auto [selection_mode, numeric, mode] = GetParam();
+    g_tc_LINES = 12;
+    prepare_threads(false, mode, {{2, 1}, {1, 1}});
+    g_sel_mode = selection_mode;
+    g_use_sel_num = numeric;
+    m_subject.m_str = "Re: " + std::string(100, 'A');
+    m_bravo.m_str = "Re: " + std::string(100, 'B');
+    rebuild_page();
+    const int   details = mode == 's' ? 0 : 16;
+    std::string row = numeric ? "01*" : "a*";
+    if (mode == 'd')
+    {
+        row += std::string{std::ctime(&m_subject.m_articles->m_date)}.substr(0, 16);
+    }
+    else if (details)
+    {
+        row += "Alpha 1         ";
+    }
+    const int subject_width = 72 - numeric - details;
+    row += "  2  " + std::string(subject_width, 'A');
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(row + "\n"));
+    EXPECT_EQ(79U, row.size());
+    EXPECT_THAT(output, testing::HasSubstr(">" + std::string(subject_width - 1, 'B') + "\n"));
+    if (mode == 'l' || mode == 'm')
+    {
+        EXPECT_THAT(output, testing::HasSubstr(numeric ? "   Alpha 2         \n" : "  Alpha 2         \n"));
+    }
+    ASSERT_EQ(selection_mode == SM_THREAD ? 1 : 2, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    if (selection_mode == SM_SUBJECT)
+    {
+        EXPECT_THAT(output, testing::HasSubstr(numeric ? "02+" : "b+"));
+        EXPECT_EQ(&m_bravo, g_sel_items[1].u.sp);
+        EXPECT_EQ(mode == 'l' || mode == 'm' ? 4 : 3, g_sel_items[1].line);
+    }
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(SelectorLabelsAndPresentation, GroupedPageLayoutTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('s', 'd', 'l', 'm')));
+
+TEST_P(NarrowGroupedPageTest, allocatesOneLinePerSubjectWhenTheScreenCannotShowAuthors)
+{
+    const auto [selection_mode, mode] = GetParam();
+    prepare_threads(false, mode, {{4, 1}, {2, 1}, {1, 1}});
+    g_sel_mode = selection_mode;
+    g_tc_COLS = 39;
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    const std::string rows = selection_mode == SM_THREAD ? "a*  4  Alpha\n    2  >Bravo\nb+  1  Charlie\n"
+                                                         : "a*  4  Alpha\nb*  2  >Bravo\nc+  1  Charlie\n";
+    EXPECT_THAT(output, testing::HasSubstr(rows));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("etc.")));
+    ASSERT_EQ(selection_mode == SM_THREAD ? 2 : 3, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(&m_charlie, g_sel_items[g_sel_page_item_cnt - 1].u.sp);
+    EXPECT_EQ(4, g_sel_items[g_sel_page_item_cnt - 1].line);
+    EXPECT_EQ(7, g_sel_page_obj_cnt);
+    EXPECT_EQ(7, g_sel_total_obj_cnt);
+    EXPECT_EQ(6, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(SelectorAndAuthorPresentation, NarrowGroupedPageTest,
+                         testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Values('l', 'm')));
+
+TEST_P(CompactThreadPageLayoutTest, alignsPackedAuthorsAndUnlabelledReplySubjectsWithNumericLabels)
+{
+    g_tc_LINES = 15;
+    prepare_threads(false, 'm', {{7, 1}, {1, 1}});
+    g_use_sel_num = GetParam();
+    rebuild_page();
+    const std::string indent(GetParam() ? 3 : 2, ' ');
+    const std::string packed = indent + "Alpha 3" + std::string(15, ' ') + indent + "Alpha 4" + std::string(15, ' ') +
+                               indent + "Alpha 5" + std::string(15, ' ') + "\n";
+    std::string       reply = reply_heading(m_bravo);
+    if (GetParam())
+    {
+        reply.insert(0, " ");
+    }
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(packed));
+    EXPECT_THAT(output, testing::HasSubstr(reply));
+    EXPECT_THAT(output, testing::HasSubstr(indent + "Alpha 7         \n"));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(8, g_sel_page_obj_cnt);
+    EXPECT_EQ(9, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(LabelStyle, CompactThreadPageLayoutTest, testing::Bool());
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
 {

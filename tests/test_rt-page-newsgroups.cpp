@@ -423,6 +423,25 @@ class ExclusiveNewsgroupPageDisplayTest : public NewsgroupPageDisplayState, publ
 {
 };
 
+class NewsgroupPageLayoutTest : public NewsgroupPageDisplayState,
+                                public testing::WithParamInterface<std::tuple<bool, bool, char>>
+{
+protected:
+    std::string row_prefix(int index, std::string_view label, char marker) const;
+};
+
+std::string NewsgroupPageLayoutTest::row_prefix(int index, std::string_view label, char marker) const
+{
+    std::ostringstream row;
+    row << label << marker << std::setw(5) << static_cast<long>(m_entries[index]->m_to_read) << ' ';
+    return row.str();
+}
+
+class NewsgroupPageResizeTest : public NewsgroupPageDisplayState,
+                                public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
 class NewsgroupPageBoundaryState : public NewsgroupPageDisplayState
 {
 protected:
@@ -4826,6 +4845,118 @@ TEST_P(RemovedNewsgroupPageDisplayTest, displaysAnEmptyPageAfterAllVisibleGroups
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, RemovedNewsgroupPageDisplayTest, testing::Bool());
+
+TEST_P(NewsgroupPageLayoutTest, truncatesLongDescriptionsWithinAlignedNameAndLabelColumns)
+{
+    const auto [rereading, numeric, mode] = GetParam();
+    prepare_display(rereading, mode);
+    cache_descriptions(std::string(100, 'A') + "\n");
+    g_tc_COLS = 40;
+    g_use_sel_num = numeric;
+    const int         name_width = mode == 'l' ? 12 : 0;
+    const std::string name = mode == 'l' ? "comp.alpha  " : "";
+    const std::string row =
+        row_prefix(0, numeric ? "01" : "a", '+') + name + std::string(31 - name_width - numeric, 'A');
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(row + "\n"));
+    EXPECT_EQ(39U, row.size());
+    ASSERT_EQ(3, g_sel_page_item_cnt);
+    EXPECT_EQ(m_entries[0], g_sel_items[0].u.np);
+    EXPECT_EQ(m_entries[2], g_sel_items[1].u.np);
+    EXPECT_EQ(m_entries[4], g_sel_items[2].u.np);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(3, g_sel_items[1].line);
+    EXPECT_EQ(4, g_sel_items[2].line);
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_entries[6], g_sel_next_np);
+    EXPECT_FALSE(g_sel_at_end);
+    expect_group_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeLabelsAndPresentation, NewsgroupPageLayoutTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Values('m', 'l')));
+
+TEST_P(NewsgroupPageResizeTest, retainsTheNameWhenNoColumnsRemainForItsDescription)
+{
+    const auto [rereading, numeric] = GetParam();
+    prepare_display(rereading, 'l');
+    cache_descriptions(std::string(100, 'A') + "\n");
+    g_use_sel_num = numeric;
+    g_tc_COLS = 20 + numeric;
+    const std::string row = std::string(numeric ? "01+" : "a+") + (rereading ? "    0 " : "    3 ") + "comp.alpha  ";
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(row + "\n"));
+    EXPECT_EQ(static_cast<std::size_t>(g_tc_COLS), row.size());
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("AAAA")));
+    ASSERT_EQ(3, g_sel_page_item_cnt);
+    EXPECT_EQ(m_entries[0], g_sel_items[0].u.np);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    expect_group_state();
+}
+
+TEST_P(NewsgroupPageResizeTest, shrinkingTheTerminalRetainsVisibleGroupMappingsAndDefersLaterRows)
+{
+    const auto [rereading, numeric] = GetParam();
+    prepare_display(rereading, 's');
+    g_use_sel_num = numeric;
+    g_newsgroup_ptr = m_entries[2];
+    (void) render_page();
+    g_tc_COLS = 39;
+    g_tc_LINES = 8;
+    initialize_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr("comp.alpha\n"));
+    EXPECT_THAT(output, testing::HasSubstr("comp.beta\n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.gamma")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(m_entries[0], g_sel_items[0].u.np);
+    EXPECT_EQ(m_entries[2], g_sel_items[1].u.np);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(3, g_sel_items[1].line);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_entries[4], g_sel_next_np);
+    EXPECT_FALSE(g_sel_at_end);
+    expect_group_state();
+}
+
+TEST_P(NewsgroupPageResizeTest, enlargingTheTerminalRestoresRowsWithoutChangingTheCurrentGroup)
+{
+    const auto [rereading, numeric] = GetParam();
+    prepare_display(rereading, 's');
+    g_use_sel_num = numeric;
+    g_tc_COLS = 39;
+    g_tc_LINES = 8;
+    (void) render_page();
+    g_tc_COLS = 80;
+    g_tc_LINES = 11;
+    initialize_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr("comp.next\n"));
+    ASSERT_EQ(5, g_sel_page_item_cnt);
+    EXPECT_EQ(m_entries[7], g_sel_items[4].u.np);
+    EXPECT_EQ(6, g_sel_items[4].line);
+    EXPECT_EQ(m_entries[4], g_newsgroup_ptr);
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(5, g_sel_page_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_TRUE(g_sel_at_end);
+    expect_group_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndLabels, NewsgroupPageResizeTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {
