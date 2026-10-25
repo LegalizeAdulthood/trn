@@ -89,6 +89,112 @@ class DeferredNewsgroupDisplayTest : public DeferredNewsgroupDisplayState,
 {
 };
 
+class DeferredNewsgroupRecoveryState : public DeferredNewsgroupDisplayState
+{
+protected:
+    void        prepare_recovery(bool rereading, char mode, bool numeric, int capacity);
+    void        expect_refreshed_state(bool rereading) const;
+    void        expect_row(int row, NewsgroupData *group, int selected) const;
+    std::string expected_row(int row, const NewsgroupData &group, int selected) const;
+
+    std::vector<NewsgroupData *>   m_retained;
+    std::array<NewsgroupData *, 2> m_removed{};
+};
+
+void DeferredNewsgroupRecoveryState::prepare_recovery(bool rereading, char mode, bool numeric, int capacity)
+{
+    const std::array<std::string_view, 3> names{"comp.first", "comp.middle", "comp.last"};
+    const std::string                     numbers = rereading ? "1-10" : "1-7";
+    set_read_scope(rereading);
+    g_use_sel_num = numeric;
+    g_tc_LINES = capacity + 5;
+    for (int i = 0; i <= capacity; ++i)
+    {
+        m_retained.push_back(&add_pending(names[i], numbers));
+    }
+    m_retained.back()->m_flags = static_cast<NewsgroupFlags>(g_sel_mask);
+    m_removed[0] = &add_pending("comp.opposite.first", rereading ? "1-7" : "1-10");
+    m_removed[1] = &add_pending("comp.opposite.last", rereading ? "1-7" : "1-10");
+    prepare_page(rereading, mode);
+    (void) render_page();
+    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(ArticleNum{}, m_removed[0]->m_abs_first);
+    ASSERT_EQ(ArticleNum{}, m_removed[1]->m_abs_first);
+    ASSERT_TRUE(last_page());
+    ASSERT_EQ(m_removed[capacity == 1 ? 1 : 0], g_sel_page_np);
+    g_newsgroup_ptr = m_retained.back();
+}
+
+void DeferredNewsgroupRecoveryState::expect_refreshed_state(bool rereading) const
+{
+    const int retained = static_cast<int>(m_retained.size());
+    EXPECT_EQ(retained, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{retained}, g_obj_count);
+    EXPECT_EQ(NewsgroupNum{rereading ? 2 : retained}, g_newsgroup_to_read);
+    EXPECT_EQ(rereading ? retained : 2, g_missing_count);
+    EXPECT_EQ(1, g_selected_count);
+    for (std::size_t i = 0; i < m_retained.size(); ++i)
+    {
+        const NewsgroupData &group = *m_retained[i];
+        const bool           selected = i + 1 == m_retained.size();
+        const NewsgroupFlags mark = selected ? static_cast<NewsgroupFlags>(g_sel_mask) : rereading ? NF_DEL : NF_NONE;
+        EXPECT_EQ(NF_INCLUDED | mark, group.m_flags);
+        EXPECT_EQ(rereading ? 0 : 3, group.m_to_read);
+        EXPECT_EQ(rereading ? " 1-10" : " 1-7", group.rc_numbers());
+    }
+    for (const NewsgroupData *group : m_removed)
+    {
+        EXPECT_FALSE(group->m_flags & NF_INCLUDED);
+        EXPECT_EQ(rereading ? 3 : 0, group->m_to_read);
+        EXPECT_EQ(rereading ? " 1-7" : " 1-10", group->rc_numbers());
+        EXPECT_EQ(ArticleNum{1}, group->m_abs_first);
+        EXPECT_EQ(ArticleNum{10}, group->m_ng_max);
+    }
+    EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
+    EXPECT_FALSE(g_paranoid);
+}
+
+void DeferredNewsgroupRecoveryState::expect_row(int row, NewsgroupData *group, int selected) const
+{
+    EXPECT_EQ(group, g_sel_items[row].u.np);
+    EXPECT_EQ(row + 2, g_sel_items[row].line);
+    EXPECT_EQ(selected, g_sel_items[row].sel);
+}
+
+std::string DeferredNewsgroupRecoveryState::expected_row(int row, const NewsgroupData &group, int selected) const
+{
+    const std::string label = g_use_sel_num ? "0" + std::to_string(row + 1) : std::string(1, "ab"[row]);
+    return label + " +-*"[selected] + (g_sel_rereading ? "    0 " : "    3 ") + std::string{group.rc_name()} + "\n";
+}
+
+class DeferredNewsgroupRecoveryTest : public DeferredNewsgroupRecoveryState,
+                                      public testing::WithParamInterface<std::tuple<bool, char, bool, int>>
+{
+protected:
+    void SetUp() override;
+};
+
+void DeferredNewsgroupRecoveryTest::SetUp()
+{
+    DeferredNewsgroupRecoveryState::SetUp();
+    const auto [rereading, mode, numeric, capacity] = GetParam();
+    prepare_recovery(rereading, mode, numeric, capacity);
+}
+
+class DeferredNewsgroupRecoveryNavigationTest : public DeferredNewsgroupRecoveryState,
+                                                public testing::WithParamInterface<std::tuple<bool, int>>
+{
+protected:
+    void SetUp() override;
+};
+
+void DeferredNewsgroupRecoveryNavigationTest::SetUp()
+{
+    DeferredNewsgroupRecoveryState::SetUp();
+    const auto [rereading, capacity] = GetParam();
+    prepare_recovery(rereading, 's', false, capacity);
+}
+
 class DeferredNewsgroupCleanupTest : public DeferredNewsgroupDisplayState,
                                      public testing::WithParamInterface<std::tuple<bool, bool>>
 {
@@ -316,6 +422,106 @@ TEST_P(DeferredNewsgroupDisplayTest, finishesLoadingOnTheFinalPageWithoutRepeati
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndPresentation, DeferredNewsgroupDisplayTest,
                          testing::Combine(testing::Bool(), testing::Values('s', 'm', 'l')));
+
+TEST_P(DeferredNewsgroupRecoveryTest, replacesAnEmptyDeferredPageWithEarlierIncludedGroups)
+{
+    const auto [rereading, mode, numeric, capacity] = GetParam();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
+    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    for (int row = 0; row < capacity; ++row)
+    {
+        NewsgroupData *group = m_retained[row + 1];
+        const int      selected = row + 1 == capacity ? 1 : rereading ? 2 : 0;
+        expect_row(row, group, selected);
+        EXPECT_THAT(output, testing::HasSubstr(expected_row(row, *group, selected)));
+    }
+    expect_refreshed_state(rereading);
+    EXPECT_EQ(m_retained[1], g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(capacity, g_sel_page_obj_cnt);
+    EXPECT_EQ(capacity - 1, g_sel_item_index);
+    EXPECT_EQ(capacity + 3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+    const std::size_t heading = output.rfind("Newsgroups");
+    ASSERT_NE(std::string::npos, heading);
+    EXPECT_THAT(output.substr(heading), testing::HasSubstr(std::to_string(m_retained.size()) + " groups"));
+    EXPECT_THAT(output.substr(heading), testing::Not(testing::HasSubstr("~")));
+}
+
+INSTANTIATE_TEST_SUITE_P(ScopePresentationLabelAndCapacity, DeferredNewsgroupRecoveryTest,
+                         testing::Combine(testing::Bool(), testing::Values('s', 'm', 'l'), testing::Bool(),
+                                          testing::Values(1, 2)));
+
+TEST_P(DeferredNewsgroupRecoveryNavigationTest, redrawingTheRecoveredPageDoesNotRepeatReadAccounting)
+{
+    const auto [rereading, capacity] = GetParam();
+    (void) render_page();
+
+    const std::string output = render_page();
+
+    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    for (int row = 0; row < capacity; ++row)
+    {
+        NewsgroupData *group = m_retained[row + 1];
+        const int      selected = row + 1 == capacity ? 1 : rereading ? 2 : 0;
+        expect_row(row, group, selected);
+        EXPECT_THAT(output, testing::HasSubstr(expected_row(row, *group, selected)));
+    }
+    expect_refreshed_state(rereading);
+    EXPECT_EQ(1, g_sel_prior_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+TEST_P(DeferredNewsgroupRecoveryNavigationTest, movesBackToTheEarlierPageAfterDeferredRecovery)
+{
+    const auto [rereading, capacity] = GetParam();
+    (void) render_page();
+    ASSERT_TRUE(prev_page());
+
+    const std::string output = render_page();
+
+    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    for (int row = 0; row < capacity; ++row)
+    {
+        expect_row(row, m_retained[row], rereading ? 2 : 0);
+        EXPECT_THAT(output, testing::HasSubstr(expected_row(row, *m_retained[row], rereading ? 2 : 0)));
+    }
+    expect_refreshed_state(rereading);
+    EXPECT_EQ(m_retained.front(), g_sel_page_np);
+    EXPECT_EQ(m_retained.back(), g_sel_next_np);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_FALSE(g_sel_at_end);
+}
+
+TEST_P(DeferredNewsgroupRecoveryNavigationTest, advancesFromTheEarlierPageToTheFinalRetainedGroup)
+{
+    const auto [rereading, capacity] = GetParam();
+    (void) render_page();
+    ASSERT_TRUE(prev_page());
+    (void) render_page();
+
+    ASSERT_TRUE(next_page());
+    const std::string output = render_page();
+
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    expect_row(0, m_retained.back(), 1);
+    EXPECT_THAT(output, testing::HasSubstr(expected_row(0, *m_retained.back(), 1)));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
+    expect_refreshed_state(rereading);
+    EXPECT_EQ(capacity, g_sel_prior_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndCapacity, DeferredNewsgroupRecoveryNavigationTest,
+                         testing::Combine(testing::Bool(), testing::Values(1, 2)));
 
 TEST_P(DeferredNewsgroupCleanupTest, rebuildsRowsAndPointersAfterCleanupMovesOrDeletesABogusGroup)
 {
