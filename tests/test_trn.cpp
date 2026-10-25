@@ -1451,6 +1451,208 @@ void LocalArticleTraversalTest::expect_articles(const std::vector<int> &expected
     EXPECT_EQ(bodies, displayed);
 }
 
+struct NewsgroupEndReadingState
+{
+    MinorMode               mode;
+    ArticleNum              article;
+    ArticleUnread           unread;
+    ArticleUnread           selected;
+    std::string             default_command;
+    std::vector<ArticleNum> selector_articles;
+};
+
+class NewsgroupEndReadingStateTest : public InputNewsgroupReadingTest
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    void              set_read_range(std::string_view numbers);
+    void              configure_display(bool verbose, bool erase_screen);
+    void              empty_spool();
+    void              select_reply();
+    DoNewsgroupResult run_reading(std::vector<std::string>   commands,
+                                  std::optional<std::string> start_command = std::nullopt);
+    void              expect_end_heading() const;
+
+    std::vector<NewsgroupEndReadingState> m_states;
+
+private:
+    TerminalInputReader      m_old_input_reader{g_terminal_input_reader};
+    bool                     m_old_allow_typeahead{g_allow_typeahead};
+    bool                     m_old_can_home{g_can_home};
+    bool                     m_old_use_sel_num{g_use_sel_num};
+    std::string              m_old_news_sel_cmds{g_news_sel_cmds};
+    int                      m_old_mouse_count{g_mouse_bar_cnt};
+    int                      m_old_mouse_width{g_mouse_bar_width};
+    std::vector<std::string> m_commands;
+    std::size_t              m_input_pos{};
+};
+
+void NewsgroupEndReadingStateTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    g_allow_typeahead = true;
+    g_can_home = false;
+    g_use_sel_num = false;
+    g_news_sel_cmds = "Z>";
+    g_mouse_bar_cnt = g_mouse_bar_width = 0;
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        NewsgroupEndReadingState state{g_mode, g_art, g_newsgroup_ptr->m_to_read, g_selected_count, g_default_cmd, {}};
+        if (g_mode == MM_THREAD_SELECTOR)
+        {
+            EXPECT_EQ(GM_SELECTOR, g_general_mode);
+            EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+            for (int item = 0; item < g_sel_page_item_cnt; ++item)
+            {
+                state.selector_articles.push_back(g_sel_items[item].u.ap->article_num());
+            }
+        }
+        else
+        {
+            EXPECT_EQ(GM_READ, g_general_mode);
+            EXPECT_EQ(g_art, g_curr_art);
+            EXPECT_EQ(g_artp, g_curr_artp);
+            EXPECT_EQ(article_find(g_art), g_artp);
+        }
+        m_states.push_back(std::move(state));
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected terminal input request";
+            *buffer = 'Q';
+            return 1;
+        }
+        const std::string &command = m_commands[m_input_pos++];
+        push_command(std::string_view{command}.substr(1));
+        *buffer = command.front();
+        return 1;
+    };
+}
+
+void NewsgroupEndReadingStateTest::TearDown()
+{
+    g_terminal_input_reader = m_old_input_reader;
+    g_allow_typeahead = m_old_allow_typeahead;
+    g_can_home = m_old_can_home;
+    g_use_sel_num = m_old_use_sel_num;
+    g_news_sel_cmds = m_old_news_sel_cmds;
+    g_mouse_bar_cnt = m_old_mouse_count;
+    g_mouse_bar_width = m_old_mouse_width;
+    InputNewsgroupReadingTest::TearDown();
+}
+
+void NewsgroupEndReadingStateTest::set_read_range(std::string_view numbers)
+{
+    g_newsgroup_ptr->m_rc_line.resize(g_newsgroup_ptr->m_num_offset);
+    g_newsgroup_ptr->m_rc_line += ' ';
+    g_newsgroup_ptr->m_rc_line += numbers;
+}
+
+void NewsgroupEndReadingStateTest::configure_display(bool verbose, bool erase_screen)
+{
+    g_verbose = verbose;
+    g_erase_screen = erase_screen;
+}
+
+void NewsgroupEndReadingStateTest::empty_spool()
+{
+    for (const char *name : {"1", "2", "3"})
+    {
+        fs::remove(m_output_dir / "comp/lang/cpp" / name);
+    }
+    g_newsgroup_ptr->m_ng_max = ArticleNum{};
+    m_data_source.m_act_sf.close();
+    const fs::path active_file = m_output_dir / "active";
+    std::ofstream{active_file, std::ios::binary} << "comp.previous 3 1 y\ncomp.lang.cpp 0 1 y\ncomp.next 3 1 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_file, "", ""));
+}
+
+void NewsgroupEndReadingStateTest::select_reply()
+{
+    g_thread_always = true;
+    fs::current_path(m_output_dir);
+    ASSERT_EQ(1, access_newsgroup());
+    article_ptr(ArticleNum{2})->select_article(AUTO_KILL_NONE);
+    g_in_ng = false;
+    g_mode = MM_NEWSGROUP_LIST;
+}
+
+DoNewsgroupResult NewsgroupEndReadingStateTest::run_reading(std::vector<std::string>   commands,
+                                                            std::optional<std::string> start_command)
+{
+    m_commands = std::move(commands);
+    errno = 0;
+    testing::internal::CaptureStdout();
+    const DoNewsgroupResult result = do_newsgroup(std::move(start_command));
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    return result;
+}
+
+void NewsgroupEndReadingStateTest::expect_end_heading() const
+{
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "End of newsgroup comp.lang.cpp." : "End of comp.lang.cpp"));
+    EXPECT_THAT(m_output, testing::HasSubstr("What next? [npq]"));
+}
+
+class NewsgroupEndReadingTest : public NewsgroupEndReadingStateTest,
+                                public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupEndReadingTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    const auto [verbose, erase_screen] = GetParam();
+    configure_display(verbose, erase_screen);
+}
+
+class EmptyNewsgroupEndTest : public NewsgroupEndReadingStateTest,
+                              public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmptyNewsgroupEndTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    const auto [verbose, erase_screen, no_files] = GetParam();
+    configure_display(verbose, erase_screen);
+    set_read_range("1-3");
+    if (no_files)
+    {
+        empty_spool();
+        set_read_range("1-0");
+    }
+}
+
+using ForcedEndReadRange = std::pair<std::string_view, ArticleUnread>;
+
+class ForcedNewsgroupEndCountTest : public NewsgroupEndReadingStateTest,
+                                    public testing::WithParamInterface<std::tuple<bool, bool, ForcedEndReadRange>>
+{
+protected:
+    void SetUp() override;
+};
+
+void ForcedNewsgroupEndCountTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    const auto &[verbose, erase_screen, range] = GetParam();
+    configure_display(verbose, erase_screen);
+    set_read_range(range.first);
+}
+
 struct PagerReadingState
 {
     MinorMode     mode;
@@ -7124,6 +7326,226 @@ INSTANTIATE_TEST_SUITE_P(ReadingOrder, LocalArticleTraversalTest,
                              }
                              return "Unknown";
                          });
+
+TEST_P(EmptyNewsgroupEndTest, entryOffersAnEndPromptWithoutDisplayingAnArticle)
+{
+    const DoNewsgroupResult result = run_reading({"Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(1, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ(article_after(g_last_art), m_states[0].article);
+    EXPECT_EQ(TR_NONE, m_states[0].unread);
+    EXPECT_EQ(TR_NONE, m_states[0].selected);
+    EXPECT_EQ("npq", m_states[0].default_command);
+    expect_end_heading();
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("still unread")));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("body")));
+    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+}
+
+TEST_P(EmptyNewsgroupEndTest, theDefaultCommandAtTheInitialEndPromptLeavesTheGroup)
+{
+    const DoNewsgroupResult result = run_reading({" "});
+
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(1, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ("npq", m_states[0].default_command);
+    expect_end_heading();
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("body")));
+}
+
+TEST_P(ForcedNewsgroupEndCountTest, jumpingToTheEndDisplaysTheCurrentUnreadCount)
+{
+    const ArticleUnread unread = std::get<2>(GetParam()).second;
+
+    const DoNewsgroupResult result = run_reading({"Q"}, "$");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(1, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{4}, m_states[0].article);
+    EXPECT_EQ(unread, m_states[0].unread);
+    EXPECT_EQ("npq", m_states[0].default_command);
+    expect_end_heading();
+    if (unread)
+    {
+        const std::string count =
+            "(" + std::to_string(unread) + (unread == 1 ? " article still unread)" : " articles still unread)");
+        EXPECT_THAT(m_output, testing::HasSubstr(count));
+    }
+    else
+    {
+        EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("still unread")));
+    }
+    EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("body")));
+}
+
+TEST_P(NewsgroupEndReadingTest, finishingTheLastUnreadArticleLeavesWithoutAnotherInputRequest)
+{
+    set_read_range("1-2");
+
+    const DoNewsgroupResult result = run_reading({"n"});
+
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(1, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{3}, m_states[0].article);
+    EXPECT_EQ(TR_NONE, m_states[0].unread);
+    EXPECT_EQ("npq", m_states[0].default_command);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(ArticleNum{4}, g_curr_art);
+    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(ArticleNum{3}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("What next? [npq]")));
+}
+
+TEST_P(NewsgroupEndReadingTest, anExplicitEndJumpStillPromptsAfterTheLastUnreadArticle)
+{
+    set_read_range("1-2");
+
+    const DoNewsgroupResult result = run_reading({"$", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{3}, m_states[0].article);
+    EXPECT_EQ(MM_ARTICLE_END, m_states[1].mode);
+    EXPECT_EQ(ArticleNum{4}, m_states[1].article);
+    EXPECT_EQ(TR_NONE, m_states[1].unread);
+    EXPECT_EQ("npq", m_states[1].default_command);
+    expect_end_heading();
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(ArticleNum{3}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+}
+
+TEST_P(NewsgroupEndReadingTest, nextAtAForcedEndPromptReadsTheFirstUnreadArticle)
+{
+    const DoNewsgroupResult result = run_reading({"n", "Q"}, "$");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ(ArticleUnread{2}, m_states[0].unread);
+    EXPECT_EQ(MM_ARTICLE, m_states[1].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[1].article);
+    EXPECT_EQ(ArticleUnread{1}, m_states[1].unread);
+    expect_end_heading();
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupEndReadingTest, nextArticleAtAnAllReadEndPromptRereadsTheFirstArticle)
+{
+    set_read_range("1-3");
+
+    const DoNewsgroupResult result = run_reading({"N", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ(MM_ARTICLE, m_states[1].mode);
+    EXPECT_EQ(ArticleNum{1}, m_states[1].article);
+    EXPECT_EQ(TR_NONE, m_states[1].unread);
+    expect_end_heading();
+    EXPECT_THAT(m_output, testing::HasSubstr("Root first line\nRoot next line"));
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupEndReadingTest, aForcedEndPromptSplitsSelectedAndUnselectedUnreadCounts)
+{
+    select_reply();
+
+    const DoNewsgroupResult result = run_reading({"Q"}, "$");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(1, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ(ArticleUnread{2}, m_states[0].unread);
+    EXPECT_EQ(ArticleUnread{1}, m_states[0].selected);
+    EXPECT_EQ("npq", m_states[0].default_command);
+    expect_end_heading();
+    EXPECT_THAT(m_output, testing::HasSubstr("(1 + 1 articles still unread)"));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+}
+
+TEST_P(NewsgroupEndReadingTest, exhaustingSelectionsOffersTheRemainingUnreadArticlesInTheSelector)
+{
+    select_reply();
+
+    const DoNewsgroupResult result = run_reading({"n", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(ArticleUnread{1}, m_states[0].unread);
+    EXPECT_EQ(TR_NONE, m_states[0].selected);
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[1].mode);
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{3}}), m_states[1].selector_articles);
+    EXPECT_EQ(ArticleUnread{1}, m_states[1].unread);
+    EXPECT_TRUE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("End of comp.lang.cpp")));
+}
+
+TEST_P(NewsgroupEndReadingTest, acceptingTheExhaustedSelectionPageContinuesReadingTheRemainingArticle)
+{
+    select_reply();
+
+    const DoNewsgroupResult result = run_reading({"n", "Z", "n"});
+
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(3, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[1].mode);
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{3}}), m_states[1].selector_articles);
+    EXPECT_EQ(MM_ARTICLE, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{3}, m_states[2].article);
+    EXPECT_EQ(TR_NONE, m_states[2].unread);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupEndReadingTest, cancellingTheExhaustedSelectionPageReturnsToTheLastArticlePrompt)
+{
+    select_reply();
+
+    const DoNewsgroupResult result = run_reading({"n", "+", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3, m_states.size());
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[1].mode);
+    EXPECT_EQ(MM_ARTICLE, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[2].article);
+    EXPECT_EQ(ArticleUnread{1}, m_states[2].unread);
+    EXPECT_EQ("npq", m_states[2].default_command);
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
+}
+
+INSTANTIATE_TEST_SUITE_P(PresentationAndSpool, EmptyNewsgroupEndTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(PresentationAndReadRange, ForcedNewsgroupEndCountTest,
+                         testing::Combine(testing::Bool(), testing::Bool(),
+                                          testing::Values(ForcedEndReadRange{"", 3}, ForcedEndReadRange{"1", 2},
+                                                          ForcedEndReadRange{"1-2", 1}, ForcedEndReadRange{"1-3", 0})));
+
+INSTANTIATE_TEST_SUITE_P(Presentation, NewsgroupEndReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
 
 TEST_P(NewsgroupPagerReadingTest, completingTheSecondPageMarksTheArticleReadBeforeTheArticlePrompt)
 {
