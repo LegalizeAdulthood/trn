@@ -775,6 +775,79 @@ class SubjectPageBoundaryTest : public SubjectPageDisplayState, public testing::
 {
 };
 
+class ThreadPageDisplayState : public SubjectPageDisplayState
+{
+protected:
+    void        prepare_threads(bool rereading, char mode, std::initializer_list<SubjectDisplayRow> rows,
+                                bool first_thread_has_replies = true);
+    void        link_thread(std::initializer_list<Subject *> subjects);
+    std::string reply_heading(const Subject &subject) const;
+};
+
+void ThreadPageDisplayState::prepare_threads(bool rereading, char mode, std::initializer_list<SubjectDisplayRow> rows,
+                                             bool first_thread_has_replies)
+{
+    prepare_subjects(rereading, mode, rows);
+    g_sel_mode = SM_THREAD;
+    g_threaded_group = true;
+    if (rows.size() >= 2 && first_thread_has_replies)
+    {
+        link_thread({&m_subject, &m_bravo});
+    }
+    else if (rows.size() == 3)
+    {
+        link_thread({&m_bravo, &m_charlie});
+    }
+    g_sel_page_sp = nullptr;
+    rebuild_page();
+}
+
+void ThreadPageDisplayState::link_thread(std::initializer_list<Subject *> subjects)
+{
+    Subject *first = *subjects.begin();
+    Subject *previous = first;
+    for (Subject *subject : subjects)
+    {
+        subject->m_thread = first->m_articles;
+        previous->m_thread_link = subject;
+        previous = subject;
+    }
+    previous->m_thread_link = first;
+}
+
+std::string ThreadPageDisplayState::reply_heading(const Subject &subject) const
+{
+    std::string result = heading(subject, ' ', ' ');
+    result.insert(result.rfind(subject.m_str.substr(4)), ">");
+    return result;
+}
+
+class ThreadPageDisplayTest : public ThreadPageDisplayState, public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class ThreadPageSelectionTest : public ThreadPageDisplayState, public testing::WithParamInterface<std::tuple<bool, int>>
+{
+};
+
+struct TruncatedThread
+{
+    char mode;
+    int  original_articles;
+    int  reply_articles;
+    int  lines;
+    bool reply_visible;
+};
+
+class TruncatedThreadPageTest : public ThreadPageDisplayState,
+                                public testing::WithParamInterface<std::tuple<bool, TruncatedThread>>
+{
+};
+
+class ThreadPageBoundaryTest : public ThreadPageDisplayState, public testing::WithParamInterface<bool>
+{
+};
+
 } // namespace
 
 TEST_P(ArticlePageEligibilityTest, selectionDoesNotOverrideExistenceOrReadScope)
@@ -1675,6 +1748,314 @@ TEST_P(SubjectPageBoundaryTest, displaysNoRowsAfterTheLastSubjectLeavesTheReadSc
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, SubjectPageBoundaryTest, testing::Bool());
+
+TEST_P(ThreadPageDisplayTest, groupsSubjectsUnderOneLabelAndAggregatesTheirSelection)
+{
+    const auto [rereading, mode] = GetParam();
+    g_tc_LINES = 15;
+    prepare_threads(rereading, mode, {{2, 2}, {2, 0}, {1, 1}});
+    g_sel_last_sp = &m_charlie;
+    g_sel_item_index = -1;
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr(reply_heading(m_bravo)));
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_charlie, 'b', '+')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Other scope")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(&m_charlie, g_sel_items[1].u.sp);
+    EXPECT_EQ(3, g_sel_items[0].sel);
+    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(mode == 'l' || mode == 'm' ? 6 : 4, g_sel_items[1].line);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(5, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_EQ(mode == 'l' || mode == 'm' ? 8 : 6, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+TEST_P(ThreadPageDisplayTest, labelsEligibleRepliesWhenTheOriginalSubjectHasNoEligibleArticles)
+{
+    const auto [rereading, mode] = GetParam();
+    prepare_threads(rereading, mode, {{0, 0}, {2, 2}, {1, 1}});
+    std::string reply = heading(m_bravo, 'a', '+');
+    reply.insert(reply.rfind("Bravo"), ">");
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(reply));
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_charlie, 'b', '+')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(&m_charlie, g_sel_items[1].u.sp);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(mode == 'l' || mode == 'm' ? 4 : 3, g_sel_items[1].line);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_selected_count);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPresentation, ThreadPageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Values('s', 'd', 'l', 'm')));
+
+TEST_P(ThreadPageSelectionTest, displaysAThreadWideMarkerForMatchingSubjectSelections)
+{
+    const auto [rereading, selected] = GetParam();
+    prepare_threads(rereading, 's', {{2, selected}, {2, selected}});
+    const char marker = selected == 2 ? '+' : selected ? '*' : rereading ? '-' : ' ';
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', marker)));
+    EXPECT_THAT(output, testing::HasSubstr(reply_heading(m_bravo)));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(selected == 2 ? 1 : selected ? 3 : rereading ? 2 : 0, g_sel_items[0].sel);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(2 * selected, g_selected_count);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndSelectedCount, ThreadPageSelectionTest,
+                         testing::Combine(testing::Bool(), testing::Values(0, 1, 2)));
+
+TEST_P(TruncatedThreadPageTest, clipsVisibleRowsWhileCountingEveryArticleInTheThread)
+{
+    const auto [rereading, thread] = GetParam();
+    prepare_threads(rereading, thread.mode, {{thread.original_articles, 1}, {thread.reply_articles, 1}, {1, 1}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_EQ(thread.reply_visible, output.find("Bravo 1") != std::string::npos);
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo 2")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Charlie")));
+    EXPECT_THAT(output, testing::HasSubstr("... etc. [" + std::to_string(thread.lines) + " lines total]"));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(thread.original_articles + thread.reply_articles, g_sel_page_obj_cnt);
+    EXPECT_EQ(thread.original_articles + thread.reply_articles + 1, g_sel_total_obj_cnt);
+    EXPECT_EQ(&m_charlie, g_sel_next_sp);
+    EXPECT_FALSE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndTruncationPoint, TruncatedThreadPageTest,
+                         testing::Combine(testing::Bool(), testing::Values(TruncatedThread{'l', 3, 3, 6, true},
+                                                                           TruncatedThread{'l', 4, 2, 6, false},
+                                                                           TruncatedThread{'m', 7, 2, 7, false})));
+
+TEST_P(ThreadPageBoundaryTest, skipsAnEmptyReplySubjectWithoutConsumingARowOrLabel)
+{
+    prepare_threads(GetParam(), 'l', {{1, 1}, {0, 0}, {1, 1}});
+    link_thread({&m_subject, &m_bravo, &m_charlie});
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '+')));
+    EXPECT_THAT(output, testing::HasSubstr(reply_heading(m_charlie)));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+TEST_P(ThreadPageBoundaryTest, defersAllSubjectsOfAThreadWhenTheRemainingLinesAreInsufficient)
+{
+    prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}, {1, 1}}, false);
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Charlie")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(&m_bravo, g_sel_next_sp);
+    EXPECT_FALSE(g_sel_at_end);
+}
+
+TEST_P(ThreadPageBoundaryTest, displaysTheFinalThreadWithoutRepeatingSubjectsFromThePreviousPage)
+{
+    prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}, {1, 1}}, false);
+    (void) render_page();
+    ASSERT_TRUE(next_page());
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_bravo, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr(reply_heading(m_charlie)));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_bravo, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_prior_obj_cnt);
+    EXPECT_EQ(6, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, advancesPastEverySubjectOfATruncatedThread)
+{
+    prepare_threads(GetParam(), 'l', {{3, 1}, {3, 1}, {1, 1}});
+    (void) render_page();
+    ASSERT_TRUE(next_page());
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_charlie, 'a', '+')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_charlie, g_sel_items[0].u.sp);
+    EXPECT_EQ(1, g_sel_page_obj_cnt);
+    EXPECT_EQ(6, g_sel_prior_obj_cnt);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, endsWhenTheFinalThreadExactlyFillsTheScreen)
+{
+    prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(reply_heading(m_bravo)));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("etc.")));
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(7, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, displaysNoRowsForAnEmptyThreadCatalog)
+{
+    prepare_threads(GetParam(), 'l', {});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "0 read articles" : "0 articles"));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, displaysNoRowsWhenAllThreadArticlesAreOutsideTheReadScope)
+{
+    prepare_threads(GetParam(), 'l', {{0, 0}, {0, 0}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Other scope")));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, recoversAnEarlierPageAfterTheFinalThreadLeavesTheReadScope)
+{
+    prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}, {1, 1}}, false);
+    (void) render_page();
+    ASSERT_TRUE(next_page());
+    (void) render_page();
+    remove_subject(m_bravo);
+    remove_subject(m_charlie);
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Charlie")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, displaysNoRowsAfterTheLastThreadLeavesTheReadScope)
+{
+    prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}});
+    (void) render_page();
+    remove_subject(m_subject);
+    remove_subject(m_bravo);
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(ThreadPageBoundaryTest, exclusiveDisplayOmitsEverySubjectOfAnUnselectedThread)
+{
+    prepare_threads(GetParam(), 'l', {{2, 0}, {2, 0}, {1, 1}});
+    g_sel_exclusive = true;
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_charlie, 'a', '+')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_charlie, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(1, g_sel_page_obj_cnt);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+TEST_P(ThreadPageBoundaryTest, exclusiveDisplayKeepsUnselectedSubjectsOfAPartiallySelectedThread)
+{
+    prepare_threads(GetParam(), 'l', {{2, 0}, {2, 1}, {1, 0}});
+    g_sel_exclusive = true;
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr(reply_heading(m_bravo)));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Charlie")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, ThreadPageBoundaryTest, testing::Bool());
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
 {
