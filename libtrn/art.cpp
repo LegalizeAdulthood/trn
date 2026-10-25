@@ -319,12 +319,19 @@ DoArticleResult do_article(std::string &article_command)
                 set_line(body_line);
                 if (g_do_hiding && !g_in_header)
                 {
-                    s_continuation = maybe_set_color(line_text, line_pos, restart_color);
+                    const ArticlePosition body_start = g_header_type[PAST_HEADER].min_pos;
+                    s_continuation =
+                        maybe_set_color(art_buf_view(body_start),
+                                        static_cast<std::size_t>((g_art_pos - body_start).value_of()), restart_color);
                 }
                 else
                 {
                     s_continuation = false;
                 }
+            }
+            if (!g_in_header && !s_continuation)
+            {
+                hide_this_line = false;
             }
             s_a_line_begin = g_art_pos;      // remember where we began
             restart_color = false;
@@ -452,10 +459,6 @@ DoArticleResult do_article(std::string &article_command)
             else if (hide_this_line && g_do_hiding)     // do not print line?
             {
                 --line_num;                        // compensate for line_num++
-                if (!g_in_header)
-                {
-                    hide_this_line = false;
-                }
             }
             else if (g_in_header)
             {

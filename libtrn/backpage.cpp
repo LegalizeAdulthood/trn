@@ -110,7 +110,7 @@ void virtual_write(ArticleLine index, ArticlePosition value)
     {
         fmt::print("vwtary({})\n", index.value_of());
     }
-    if (!index)
+    if (!index && value >= 0)
     {
         s_max_index = 0;
     }

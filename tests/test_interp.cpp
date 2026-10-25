@@ -2105,6 +2105,181 @@ std::vector<std::string> PagerTextArticleTest::displayed_rows(std::size_t page) 
     return rows;
 }
 
+class PagerFilteringArticleTest : public PagerTextArticleTest
+{
+protected:
+    void            SetUp() override;
+    void            set_filters(std::string_view hidden, std::string_view stop = {});
+    void            load_filtered_body(std::string body, std::string_view headers = {});
+    ArticlePosition position_of(std::string_view text) const;
+    void            expect_position(long displayed_lines, std::string_view next_line);
+
+    std::string m_body;
+
+private:
+    std::string                 m_raw_article;
+    ValueSaver<bool>            m_hiding{g_do_hiding, g_do_hiding};
+    ValueSaver<std::string>     m_hidden{g_hide_line, g_hide_line};
+    ValueSaver<std::string>     m_first_line{g_first_line, g_first_line};
+    ValueSaver<CompiledRegex>   m_hide_regex{g_hide_compex, g_hide_compex};
+    ValueSaver<CompiledRegex>   m_stop_regex{g_page_compex, g_page_compex};
+    ValueSaver<HeaderTypeFlags> m_subject_flags{g_header_type[SUBJ_LINE].flags, g_header_type[SUBJ_LINE].flags};
+};
+
+void PagerFilteringArticleTest::SetUp()
+{
+    PagerTextArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    g_do_hiding = true;
+    g_hide_line.clear();
+    g_first_line = "Pager title";
+    g_header_type[SUBJ_LINE].flags &= ~HT_MAGIC;
+    g_tc_LINES = 5;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_tc_COLS = 80;
+}
+
+void PagerFilteringArticleTest::set_filters(std::string_view hidden, std::string_view stop)
+{
+    g_hide_line = hidden;
+    g_page_stop = stop;
+    if (!hidden.empty())
+    {
+        ASSERT_TRUE(g_hide_compex.compile(hidden, true, true).empty());
+    }
+    if (!stop.empty())
+    {
+        ASSERT_TRUE(g_page_compex.compile(stop, true, true).empty());
+    }
+}
+
+void PagerFilteringArticleTest::load_filtered_body(std::string body, std::string_view headers)
+{
+    m_body = std::move(body);
+    load_body(m_body, headers);
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    std::ostringstream raw;
+    raw << source.rdbuf();
+    m_raw_article = raw.str();
+}
+
+ArticlePosition PagerFilteringArticleTest::position_of(std::string_view text) const
+{
+    const std::string &source = g_do_hiding ? m_body : m_raw_article;
+    std::size_t        offset = source.find(std::string{text} + (g_do_hiding ? "\n" : "\r\n"));
+    if (offset == std::string::npos)
+    {
+        offset = source.find(text);
+    }
+    EXPECT_NE(std::string::npos, offset);
+    return (g_do_hiding ? m_body_start : ArticlePosition{}) + ArticlePosition{static_cast<long>(offset)};
+}
+
+void PagerFilteringArticleTest::expect_position(long displayed_lines, std::string_view next_line)
+{
+    EXPECT_EQ(position_of(next_line), g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_EQ(ArticleLine{displayed_lines}, g_art_line_num);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+}
+
+std::string numbered_pager_body(long first = 0, long end = 12)
+{
+    std::ostringstream body;
+    for (long line = first; line < end; ++line)
+    {
+        body << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
+    }
+    return body.str();
+}
+
+struct PagerHiddenHeaderCase
+{
+    const char      *name;
+    std::string_view header;
+    HeaderLineType   type;
+    long             lines;
+};
+
+void PrintTo(const PagerHiddenHeaderCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+using PagerHiddenHeaderParam = std::tuple<PagerHiddenHeaderCase, bool>;
+
+class PagerHiddenHeaderArticleTest : public PagerFilteringArticleTest, public WithParamInterface<PagerHiddenHeaderParam>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_headers;
+
+private:
+    ValueSaver<HeaderTypeFlags> m_from_flags{g_header_type[FROM_LINE].flags, g_header_type[FROM_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_path_flags{g_header_type[PATH_LINE].flags, g_header_type[PATH_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_unknown_flags{g_header_type[SOME_LINE].flags, g_header_type[SOME_LINE].flags};
+};
+
+void PagerHiddenHeaderArticleTest::SetUp()
+{
+    PagerFilteringArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerHiddenHeaderCase &scenario = std::get<0>(GetParam());
+    g_header_type[scenario.type].flags |= HT_HIDE;
+    g_header_type[scenario.type].flags &= ~HT_MAGIC;
+    g_do_hiding = std::get<1>(GetParam());
+    g_tc_LINES = 8;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    load_filtered_body(numbered_pager_body(), scenario.header);
+    m_headers = g_head_buf;
+    g_top_line = ArticleLine{-1};
+}
+
+struct PagerFilteredBodyCase
+{
+    const char                           *name;
+    std::string                           body;
+    std::string_view                      hidden;
+    std::string_view                      stop;
+    std::string_view                      commands;
+    std::vector<std::vector<std::string>> pages;
+    std::string_view                      next_line;
+    std::vector<long>                     stop_rows;
+    bool                                  word_wrap{};
+    bool                                  hiding{true};
+};
+
+void PrintTo(const PagerFilteredBodyCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class PagerFilteredBodyArticleTest : public PagerFilteringArticleTest, public WithParamInterface<PagerFilteredBodyCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void PagerFilteredBodyArticleTest::SetUp()
+{
+    PagerFilteringArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerFilteredBodyCase &scenario = GetParam();
+    g_do_hiding = scenario.hiding;
+    if (scenario.word_wrap)
+    {
+        g_tc_COLS = 32;
+        g_word_wrap_offset = 8;
+    }
+    set_filters(scenario.hidden, scenario.stop);
+    load_filtered_body(scenario.body);
+}
+
 enum class PagerResumeText
 {
     UNBROKEN,
@@ -3201,6 +3376,216 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
               g_prompt);
 }
+
+TEST_P(PagerHiddenHeaderArticleTest, hiddenHeadersDoNotConsumeBodyRows)
+{
+    const PagerHiddenHeaderCase &scenario = std::get<0>(GetParam());
+    const bool                   hiding = std::get<1>(GetParam());
+    const long                   shown_headers = hiding ? 0 : scenario.lines;
+
+    read_pages(" ");
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    const long first_body_count = 4 - shown_headers;
+    for (std::size_t page = 0; page < 2; ++page)
+    {
+        std::vector<std::string> expected;
+        const long               first = page == 0 ? 0 : first_body_count;
+        const long               count = page == 0 ? first_body_count : 6;
+        for (long line = first; line < first + count; ++line)
+        {
+            const std::string text = numbered_pager_body(line, line + 1);
+            expected.push_back(text.substr(0, text.size() - 1));
+        }
+        std::vector<std::string> actual = displayed_rows(page);
+        if (page == 0)
+        {
+            while (!actual.empty() && actual.front().find("Body ") != 0)
+            {
+                actual.erase(actual.begin());
+            }
+        }
+        EXPECT_EQ(expected, actual) << "Page " << page;
+    }
+    const std::string_view header_line = scenario.header.substr(0, scenario.header.find('\n'));
+    EXPECT_EQ(!hiding, m_rendered.find(header_line) != std::string::npos);
+    if (scenario.lines > 1)
+    {
+        const std::size_t      continuation = scenario.header.find('\n') + 1;
+        const std::string_view continuation_line =
+            scenario.header.substr(continuation, scenario.header.find('\n', continuation) - continuation);
+        EXPECT_EQ(!hiding, m_rendered.find(continuation_line) != std::string::npos);
+    }
+    EXPECT_EQ(m_headers, g_head_buf);
+    EXPECT_EQ(HT_HIDE, g_header_type[scenario.type].flags & HT_HIDE);
+    const long        next_line = first_body_count + 6;
+    const std::string next_text = numbered_pager_body(next_line, next_line + 1);
+    expect_position(2 + shown_headers + next_line, std::string_view{next_text}.substr(0, next_text.size() - 1));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    HeaderKindsAndDisplayModes, PagerHiddenHeaderArticleTest,
+    Combine(Values(PagerHiddenHeaderCase{"FoldedFrom", "From: Reader <reader@example.test>\n via a gateway\n",
+                                         FROM_LINE, 2},
+                   PagerHiddenHeaderCase{"Path", "Path: first!second!last\n", PATH_LINE, 1},
+                   PagerHiddenHeaderCase{"FoldedUnrecognized", "X-Trace: private\n more trace detail\n", SOME_LINE, 2}),
+            Bool()),
+    [](const TestParamInfo<PagerHiddenHeaderParam> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Hidden" : "Raw"); });
+
+TEST_P(PagerFilteredBodyArticleTest, filteringAndStopsPreserveDisplayedRowsAndPosition)
+{
+    const PagerFilteredBodyCase &scenario = GetParam();
+
+    read_pages(scenario.commands);
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    long displayed = 0;
+    for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+    {
+        EXPECT_EQ(scenario.pages[page], displayed_rows(page)) << "Page " << page;
+        for (const std::string &line : scenario.pages[page])
+        {
+            const ArticlePosition saved = virtual_read(ArticleLine{displayed});
+            const bool            stop =
+                std::find(scenario.stop_rows.begin(), scenario.stop_rows.end(), displayed) != scenario.stop_rows.end();
+            EXPECT_EQ(stop, saved < 0) << "Row " << displayed;
+            EXPECT_EQ(position_of(line), saved < 0 ? -saved : saved) << "Row " << displayed;
+            ++displayed;
+        }
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(scenario.pages.size(), prompts);
+    expect_position(displayed, scenario.next_line);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    HiddenLinesAndPageStops, PagerFilteredBodyArticleTest,
+    Values(
+        PagerFilteredBodyCase{"QuotedPrefix",
+                              "> quoted first\n> quoted second\n>\n" + numbered_pager_body(),
+                              "^>...",
+                              "",
+                              " ",
+                              {{">", "Body 000", "Body 001", "Body 002"}, {"Body 003", "Body 004", "Body 005"}},
+                              "Body 006"},
+        PagerFilteredBodyCase{"ConsecutiveHiddenLines",
+                              "Body 000\n> hidden alpha\n> hidden beta\n" + numbered_pager_body(1),
+                              "^>...",
+                              "",
+                              " ",
+                              {{"Body 000", "Body 001", "Body 002", "Body 003"}, {"Body 004", "Body 005", "Body 006"}},
+                              "Body 007"},
+        PagerFilteredBodyCase{"HiddenBlockAtPageBoundary",
+                              numbered_pager_body(0, 4) + "> hidden alpha\n> hidden beta\n" + numbered_pager_body(4),
+                              "^>...",
+                              "",
+                              " ",
+                              {{"Body 000", "Body 001", "Body 002", "Body 003"}, {"Body 004", "Body 005", "Body 006"}},
+                              "Body 007"},
+        PagerFilteredBodyCase{"AlternativeHiddenPatterns",
+                              "> quoted first\nSKIP removed\n>\n" + numbered_pager_body(),
+                              "^>...\\|^SKIP",
+                              "",
+                              " ",
+                              {{">", "Body 000", "Body 001", "Body 002"}, {"Body 003", "Body 004", "Body 005"}},
+                              "Body 006"},
+        PagerFilteredBodyCase{"WrappedHiddenLine",
+                              "> quoted line alpha beta gamma delta epsilon zeta eta theta\n" + numbered_pager_body(),
+                              "^>...",
+                              "",
+                              " ",
+                              {{"Body 000", "Body 001", "Body 002", "Body 003"}, {"Body 004", "Body 005", "Body 006"}},
+                              "Body 007",
+                              {},
+                              true},
+        PagerFilteredBodyCase{"VisibleWrappedContinuation",
+                              "Body first alpha beta hidden continuation text ends\n" + numbered_pager_body(),
+                              "^hidden",
+                              "",
+                              " ",
+                              {{"Body first alpha beta", "hidden continuation text", "ends", "Body 000"},
+                               {"Body 001", "Body 002", "Body 003"}},
+                              "Body 004",
+                              {},
+                              true},
+        PagerFilteredBodyCase{
+            "RawDisplayIgnoresHiding",
+            "> quoted content\n" + numbered_pager_body(),
+            "^>...",
+            "",
+            " ",
+            {{"> quoted content", "Body 000", "Body 001", "Body 002"}, {"Body 003", "Body 004", "Body 005"}},
+            "Body 006",
+            {},
+            false,
+            false},
+        PagerFilteredBodyCase{"SignatureStop",
+                              "Body 000\n-- \nsig one\nsig two\n" + numbered_pager_body(1),
+                              "",
+                              "^-- $",
+                              " ",
+                              {{"Body 000", "-- "}, {"sig one", "sig two", "Body 001", "Body 002"}},
+                              "Body 003",
+                              {1}},
+        PagerFilteredBodyCase{
+            "AdjacentDigestStops",
+            "-------- first\n-------- second\n" + numbered_pager_body(),
+            "",
+            "^--------",
+            "  ",
+            {{"-------- first"}, {"-------- second"}, {"Body 000", "Body 001", "Body 002", "Body 003"}},
+            "Body 004",
+            {0, 1}},
+        PagerFilteredBodyCase{
+            "StopAtPageBoundary",
+            numbered_pager_body(0, 3) + "-- \n" + numbered_pager_body(3),
+            "",
+            "^-- $",
+            " ",
+            {{"Body 000", "Body 001", "Body 002", "-- "}, {"Body 003", "Body 004", "Body 005", "Body 006"}},
+            "Body 007",
+            {3}},
+        PagerFilteredBodyCase{"StopOnFirstLine",
+                              "-- \n" + numbered_pager_body(),
+                              "",
+                              "^-- $",
+                              " ",
+                              {{"-- "}, {"Body 000", "Body 001", "Body 002", "Body 003"}},
+                              "Body 004",
+                              {0}},
+        PagerFilteredBodyCase{"NonmatchingStopPattern",
+                              "Body 000\n--x\n" + numbered_pager_body(1),
+                              "",
+                              "^-- $",
+                              " ",
+                              {{"Body 000", "--x", "Body 001", "Body 002"}, {"Body 003", "Body 004", "Body 005"}},
+                              "Body 006"},
+        PagerFilteredBodyCase{
+            "WrappedStopContinuesWithoutMatchingAgain",
+            "-------- alpha beta gamma delta epsilon zeta eta theta iota kappa\n" + numbered_pager_body(),
+            "",
+            "^--------\\|^gamma",
+            " ",
+            {{"-------- alpha beta"}, {"gamma delta epsilon zeta", "eta theta iota kappa", "Body 000", "Body 001"}},
+            "Body 002",
+            {0},
+            true},
+        PagerFilteredBodyCase{"HiddenStopDoesNotEndThePage",
+                              "Body 000\n> hidden stop\n" + numbered_pager_body(1),
+                              "^>...",
+                              "^>",
+                              " ",
+                              {{"Body 000", "Body 001", "Body 002", "Body 003"}, {"Body 004", "Body 005", "Body 006"}},
+                              "Body 007"}),
+    [](const TestParamInfo<PagerFilteredBodyCase> &info) { return info.param.name; });
 
 TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
 {
