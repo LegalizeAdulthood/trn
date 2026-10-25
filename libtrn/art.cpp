@@ -266,7 +266,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
                 line_num += tree_puts(title_line, line_num + g_top_line, 0);
             }
-            start_header(g_art);
+            restart_header(g_art);
             g_force_last = false;        // we will have our day in court
             s_restart = ArticlePosition{};
             g_art_line_num = ArticleLine{};              // start counting lines
@@ -378,10 +378,13 @@ DoArticleResult do_article(std::string &article_command)
                 {
                 case NEWSGROUPS_LINE:
                 {
-                    std::string_view newsgroups = line_tail();
-                    newsgroups = newsgroups.substr(0, newsgroups.find('\n'));
-                    newsgroups.remove_prefix(std::min(newsgroups.size(), sizeof("Newsgroups: ") - 1));
-                    hide_this_line = newsgroups.find(',') == std::string_view::npos && newsgroups == g_newsgroup_name;
+                    if (!s_continuation)
+                    {
+                        const std::string      value = decode_header(fetch_lines(g_art, NEWSGROUPS_LINE));
+                        const std::string_view newsgroups = skip_hor_space(value);
+                        hide_this_line =
+                            newsgroups.find(',') == std::string_view::npos && newsgroups == g_newsgroup_name;
+                    }
                     break;
                 }
 
@@ -399,15 +402,18 @@ DoArticleResult do_article(std::string &article_command)
 
                 case FROM_LINE:
                 {
-                    from_line.reserve(LINE_BUF_LEN);
-                    const std::string_view from_text = line_tail();
-                    from_line = from_text.substr(0, from_text.find('\n'));
-                    const std::string name{extract_name(std::string_view{from_line}.substr(6))};
+                    const std::string name{extract_name(decode_header(fetch_lines(g_art, FROM_LINE)))};
                     if (!name.empty())
                     {
-                        from_line.resize(6);
-                        from_line += name;
-                        set_line(from_line);
+                        if (s_continuation)
+                        {
+                            hide_this_line = true;
+                        }
+                        else
+                        {
+                            from_line = "From: " + name;
+                            set_line(from_line);
+                        }
                     }
                     break;
                 }
@@ -415,6 +421,11 @@ DoArticleResult do_article(std::string &article_command)
                 case DATE_LINE:
                     if (g_curr_artp->m_date != -1)
                     {
+                        if (s_continuation)
+                        {
+                            hide_this_line = true;
+                            break;
+                        }
                         date_line.clear();
                         date_line.reserve(LINE_BUF_LEN);
                         date_line.append(line_tail().substr(0, 6));
@@ -786,7 +797,7 @@ DoArticleResult do_article(std::string &article_command)
 recheck_pager:
         if (const bool can_hide_tail =
                 !g_in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
-            g_do_hiding && (art_buf_at_end() || (can_hide_tail && !g_hide_line.empty())))
+            g_do_hiding && !g_in_header && (art_buf_at_end() || (can_hide_tail && !g_hide_line.empty())))
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.

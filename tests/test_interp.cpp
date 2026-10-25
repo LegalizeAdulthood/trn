@@ -51,10 +51,13 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
 #include <iomanip>
+#include <iterator>
 #include <memory>
 #include <numeric>
 #include <sstream>
@@ -1811,6 +1814,7 @@ protected:
     void             SetUp() override;
     void             TearDown() override;
     void             load_body(std::string_view body, std::string_view extra_headers = {});
+    void             load_article(std::string_view headers, std::string_view body);
     void             read_pages(std::string_view commands);
     std::string_view page_text(std::size_t page) const;
 
@@ -1890,10 +1894,15 @@ void PagerArticleTest::SetUp()
 
 void PagerArticleTest::load_body(std::string_view body, std::string_view extra_headers)
 {
+    load_article(std::string{"Subject: pager advancement\n"} + std::string{extra_headers}, body);
+}
+
+void PagerArticleTest::load_article(std::string_view headers, std::string_view body)
+{
     art_close();
     {
         std::ofstream article{std::to_string(g_art.value_of())};
-        article << "Subject: pager advancement\n" << extra_headers << '\n';
+        article << headers << '\n';
         m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
         article << body;
         ASSERT_TRUE(article.good());
@@ -2303,6 +2312,129 @@ void PagerHiddenHeaderArticleTest::SetUp()
     load_filtered_body(numbered_pager_body(), scenario.header);
     m_headers = g_head_buf;
     g_top_line = ArticleLine{-1};
+}
+
+struct PagerFormattedHeaderCase
+{
+    const char              *name;
+    HeaderLineType           type;
+    std::string_view         header;
+    std::vector<std::string> formatted;
+    std::vector<std::string> raw;
+    bool                     magic{true};
+    bool                     known_date{true};
+    int                      columns{80};
+    std::size_t              first_rows{1};
+};
+
+void PrintTo(const PagerFormattedHeaderCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+using PagerFormattedHeaderParam = std::tuple<PagerFormattedHeaderCase, bool, bool>;
+
+class PagerFormattedHeaderArticleTest : public PagerFilteringArticleTest,
+                                        public WithParamInterface<PagerFormattedHeaderParam>
+{
+protected:
+    void SetUp() override;
+    void read_headers();
+
+    std::vector<std::vector<std::string>>                              m_pages;
+    std::string                                                        m_headers;
+    std::string                                                        m_subject;
+    std::string                                                        m_from;
+    std::string                                                        m_source;
+    std::array<std::pair<ArticlePosition, ArticlePosition>, HEAD_LAST> m_header_spans;
+    long                                                               m_next_body_row{};
+    long                                                               m_header_rows{};
+
+private:
+    ValueSaver<HeaderTypeFlags>  m_from_flags{g_header_type[FROM_LINE].flags, g_header_type[FROM_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_date_flags{g_header_type[DATE_LINE].flags, g_header_type[DATE_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_group_flags{g_header_type[NEWSGROUPS_LINE].flags,
+                                               g_header_type[NEWSGROUPS_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_unknown_flags{g_header_type[SOME_LINE].flags, g_header_type[SOME_LINE].flags};
+    ValueSaver<std::string>      m_group_name{g_newsgroup_name, g_newsgroup_name};
+    ValueSaver<bool>             m_threaded{g_threaded_group, g_threaded_group};
+    ValueSaver<std::string_view> m_underline_start{g_tc_US, g_tc_US};
+    ValueSaver<std::string_view> m_underline_end{g_tc_UE, g_tc_UE};
+    ValueSaver<std::string_view> m_underchar{g_tc_UC, g_tc_UC};
+};
+
+void PagerFormattedHeaderArticleTest::SetUp()
+{
+    PagerFilteringArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerFormattedHeaderCase &scenario = std::get<0>(GetParam());
+    g_do_hiding = std::get<1>(GetParam());
+    g_tc_LINES = 6;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_tc_COLS = scenario.columns;
+    g_newsgroup_name = "list.current";
+    g_threaded_group = false;
+    g_tc_US = "<mark>";
+    g_tc_UE = "</mark>";
+    g_tc_UC = "";
+    g_header_type[SOME_LINE].flags &= ~(HT_HIDE | HT_MAGIC);
+    g_header_type[scenario.type].flags &= ~(HT_HIDE | HT_MAGIC);
+    if (scenario.magic)
+    {
+        g_header_type[scenario.type].flags |= HT_MAGIC;
+    }
+    m_env.expect_env("LOCALTIMEFMT", "local date");
+    std::string              headers;
+    std::vector<std::string> prefix{"Pager title"};
+    if (scenario.type != SUBJ_LINE)
+    {
+        headers = "Subject: Header pagination\n";
+        prefix.emplace_back("Subject: Header pagination");
+    }
+    const long padding = scenario.type == SUBJ_LINE ? 3 : 2;
+    for (long row = 0; row < padding; ++row)
+    {
+        const std::string line = "X-Pad: " + std::to_string(row);
+        headers += line + '\n';
+        prefix.push_back(line);
+    }
+    headers += scenario.header;
+    load_article(headers, numbered_pager_body());
+    // The overview cache describes the same private article as its header.
+    g_artp->m_flags &= ~AF_HAS_RE;
+    g_artp->set_subj_line(fetch_lines(g_art, SUBJ_LINE));
+    g_artp->set_cached_line(FROM_LINE, fetch_lines(g_art, FROM_LINE));
+    g_artp->m_date = scenario.known_date ? 1070514367 : -1;
+    g_top_line = ArticleLine{-1};
+    m_headers = g_head_buf;
+    m_subject = g_artp->get_cached_line_view(SUBJ_LINE, false);
+    m_from = g_artp->get_cached_line_view(FROM_LINE, false);
+    for (std::size_t i = 0; i < m_header_spans.size(); ++i)
+    {
+        m_header_spans[i] = {g_header_type[i].min_pos, g_header_type[i].max_pos};
+    }
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
+    const std::vector<std::string> &shown = g_do_hiding ? scenario.formatted : scenario.raw;
+    const std::size_t               first = std::min(scenario.first_rows, shown.size());
+    prefix.insert(prefix.end(), shown.begin(), shown.begin() + first);
+    std::vector<std::string> remaining{shown.begin() + first, shown.end()};
+    m_next_body_row = shown.empty() ? 4 : 3 - static_cast<long>(remaining.size());
+    const std::vector<std::string> body = numbered_pager_rows(0, m_next_body_row);
+    remaining.insert(remaining.end(), body.begin(), body.end());
+    m_header_rows = 4 + static_cast<long>(shown.size());
+    m_pages = {std::move(prefix)};
+    if (std::get<2>(GetParam()))
+    {
+        m_pages.push_back(m_pages.front());
+    }
+    m_pages.push_back(std::move(remaining));
+}
+
+void PagerFormattedHeaderArticleTest::read_headers()
+{
+    read_pages(std::get<2>(GetParam()) ? "\f " : " ");
 }
 
 struct PagerFilteredBodyCase
@@ -3728,6 +3860,150 @@ INSTANTIATE_TEST_SUITE_P(
         Bool()),
     [](const TestParamInfo<PagerEndParam> &info)
     { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Clearing" : "Scrolling"); });
+
+TEST_P(PagerFormattedHeaderArticleTest, pagesThroughFormattedHeadersWithoutChangingCachedTextOrBodyOffsets)
+{
+    const std::time_t original_date = g_artp->m_date;
+
+    read_headers();
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    for (std::size_t page = 0; page < m_pages.size(); ++page)
+    {
+        EXPECT_EQ(m_pages[page], displayed_rows(page)) << "Page " << page;
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(m_pages.size(), prompts);
+    EXPECT_EQ(m_headers, g_head_buf);
+    EXPECT_EQ(m_subject, g_artp->get_cached_line_view(SUBJ_LINE, false));
+    EXPECT_EQ(m_from, g_artp->get_cached_line_view(FROM_LINE, false));
+    EXPECT_EQ(original_date, g_artp->m_date);
+    for (std::size_t i = 0; i < m_header_spans.size(); ++i)
+    {
+        EXPECT_EQ(m_header_spans[i].first, g_header_type[i].min_pos) << "Header " << i;
+        EXPECT_EQ(m_header_spans[i].second, g_header_type[i].max_pos) << "Header " << i;
+    }
+    EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
+    EXPECT_EQ(ArticleLine{m_header_rows + m_next_body_row}, g_art_line_num);
+    for (long row = 0; row <= m_next_body_row; ++row)
+    {
+        const std::string     text = numbered_pager_rows(row, row + 1).front();
+        const ArticlePosition expected = g_do_hiding ? m_body_start + ArticlePosition{row * 9}
+                                                     : ArticlePosition{static_cast<long>(m_source.find(text))};
+        EXPECT_EQ(expected, virtual_read(ArticleLine{m_header_rows + row})) << "Body row " << row;
+    }
+    EXPECT_EQ(virtual_read(g_art_line_num), g_art_pos);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_TRUE(m_article_command.empty());
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    HeaderFormattingAndPaging, PagerFormattedHeaderArticleTest,
+    Combine(Values(PagerFormattedHeaderCase{"FoldedSubject",
+                                            SUBJ_LINE,
+                                            "Subject: first\n continuation\n",
+                                            {"Subject: first continuation"},
+                                            {"Subject: first", "+        continuation"}},
+                   PagerFormattedHeaderCase{"SubjectWithoutMagic",
+                                            SUBJ_LINE,
+                                            "Subject: first\n continuation\n",
+                                            {"Subject: first", "+        continuation"},
+                                            {"Subject: first", "+        continuation"},
+                                            false},
+                   PagerFormattedHeaderCase{"EncodedFoldedSubject",
+                                            SUBJ_LINE,
+                                            "Subject: =?us-ascii?q?first?=\n =?us-ascii?q?_continuation?=\n",
+                                            {"Subject: first continuation"},
+                                            {"Subject: =?us-ascii?q?first?=", "+        =?us-ascii?q?_continuation?="}},
+                   PagerFormattedHeaderCase{"WrappedSubject",
+                                            SUBJ_LINE,
+                                            "Subject: one two three four five six seven eight\n",
+                                            {"Subject: one two three four", "+        five six seven eight"},
+                                            {"Subject: one two three four", "+        five six seven eight"},
+                                            true,
+                                            true,
+                                            32,
+                                            2},
+                   PagerFormattedHeaderCase{"FoldedAuthorComment",
+                                            FROM_LINE,
+                                            "From: reader@example.test\n (Reader Name)\n",
+                                            {"From: Reader Name"},
+                                            {"From: reader@example.test", "+     (Reader Name)"}},
+                   PagerFormattedHeaderCase{"ShortAuthorComment",
+                                            FROM_LINE,
+                                            "From: reader@example.test\n (R)\n",
+                                            {"From: R"},
+                                            {"From: reader@example.test", "+     (R)"}},
+                   PagerFormattedHeaderCase{"FoldedAuthorAddress",
+                                            FROM_LINE,
+                                            "From: Reader Name\n <reader@example.test>\n",
+                                            {"From: Reader Name"},
+                                            {"From: Reader Name", "+     <reader@example.test>"}},
+                   PagerFormattedHeaderCase{"PlainAuthorAddress",
+                                            FROM_LINE,
+                                            "From: reader@example.test\n",
+                                            {"From: reader@example.test"},
+                                            {"From: reader@example.test"}},
+                   PagerFormattedHeaderCase{"AuthorWithoutMagic",
+                                            FROM_LINE,
+                                            "From: reader@example.test\n (Reader Name)\n",
+                                            {"From: reader@example.test", "+     (Reader Name)"},
+                                            {"From: reader@example.test", "+     (Reader Name)"},
+                                            false},
+                   PagerFormattedHeaderCase{"FoldedDate",
+                                            DATE_LINE,
+                                            "Date: Thu, 04 Dec 2003\n 05:06:07 +0000\n",
+                                            {"Date: local date"},
+                                            {"Date: Thu, 04 Dec 2003", "+     05:06:07 +0000"}},
+                   PagerFormattedHeaderCase{"DateWithoutMagic",
+                                            DATE_LINE,
+                                            "Date: Thu, 04 Dec 2003\n 05:06:07 +0000\n",
+                                            {"Date: Thu, 04 Dec 2003", "+     05:06:07 +0000"},
+                                            {"Date: Thu, 04 Dec 2003", "+     05:06:07 +0000"},
+                                            false},
+                   PagerFormattedHeaderCase{"UnknownDate",
+                                            DATE_LINE,
+                                            "Date: unknown date\n",
+                                            {"Date: unknown date"},
+                                            {"Date: unknown date"},
+                                            true,
+                                            false},
+                   PagerFormattedHeaderCase{"FoldedCurrentNewsgroup",
+                                            NEWSGROUPS_LINE,
+                                            "Newsgroups:\n list.current\n",
+                                            {},
+                                            {"Newsgroups:", "list.current"}},
+                   PagerFormattedHeaderCase{"FoldedCrosspost",
+                                            NEWSGROUPS_LINE,
+                                            "Newsgroups: list.current,\n list.other\n",
+                                            {"Newsgroups: list.current,", "+           list.other"},
+                                            {"Newsgroups: list.current,", "+           list.other"}},
+                   PagerFormattedHeaderCase{"NewsgroupWithoutMagic",
+                                            NEWSGROUPS_LINE,
+                                            "Newsgroups:\n list.current\n",
+                                            {"Newsgroups:", "list.current"},
+                                            {"Newsgroups:", "list.current"},
+                                            false}),
+            Bool(), Bool()),
+    [](const TestParamInfo<PagerFormattedHeaderParam> &info)
+    {
+        return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Formatted" : "Raw") +
+               (std::get<2>(info.param) ? "Refresh" : "Continue");
+    });
 
 TEST_P(PagerHiddenHeaderArticleTest, hiddenHeadersDoNotConsumeBodyRows)
 {

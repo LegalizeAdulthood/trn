@@ -273,6 +273,11 @@ void start_header(ArticleNum artnum)
         i.min_pos = ArticlePosition{-1};
         i.max_pos = ArticlePosition{};
     }
+    restart_header(artnum);
+}
+
+void restart_header(ArticleNum artnum)
+{
     g_in_header = SOME_LINE;
     s_first_one = false;
     g_parsed_art = artnum;
