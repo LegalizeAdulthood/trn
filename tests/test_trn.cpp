@@ -1426,6 +1426,74 @@ void NewsgroupSelectorDelegationStateTest::expect_next_command(char command)
     EXPECT_FALSE(macro_pending());
 }
 
+class NewsgroupSelectorDelegatedRecoveryTest : public NewsgroupSelectorDelegationStateTest
+{
+protected:
+    void TearDown() override;
+    void prepare_recovery(bool rereading, bool later_page);
+    void expect_page(bool later_page, int cursor) const;
+
+private:
+    std::string m_old_message{g_msg};
+    int         m_old_scrolled{g_term_scrolled};
+};
+
+void NewsgroupSelectorDelegatedRecoveryTest::TearDown()
+{
+    g_msg = m_old_message;
+    g_term_scrolled = m_old_scrolled;
+    NewsgroupSelectorDelegationStateTest::TearDown();
+}
+
+void NewsgroupSelectorDelegatedRecoveryTest::prepare_recovery(bool rereading, bool later_page)
+{
+    g_tc_LINES = 7;
+    prepare_selector(rereading);
+    g_sel_page_np = &g_newsgroup_data[later_page ? 2 : 1];
+    init_pages(PRESERVE_PAGE);
+    Selection no_search{};
+    no_search.op = OI_NONE;
+    (void) calc_page(no_search);
+    g_sel_item_index = 1;
+    g_newsgroup_ptr = &g_newsgroup_data[later_page ? 0 : 2];
+    set_newsgroup_name(g_newsgroup_ptr->rc_line());
+    g_term_line = g_sel_last_line;
+    g_term_scrolled = 0;
+}
+
+void NewsgroupSelectorDelegatedRecoveryTest::expect_page(bool later_page, int cursor) const
+{
+    EXPECT_EQ(&g_newsgroup_data[later_page ? 2 : 1], g_sel_page_np);
+    EXPECT_EQ(later_page ? 1 : 0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(cursor, g_sel_item_index);
+}
+
+class NewsgroupSelectorDelegatedEraseTest : public NewsgroupSelectorDelegatedRecoveryTest,
+                                            public testing::WithParamInterface<std::tuple<bool, bool, bool, char>>
+{
+};
+
+class NewsgroupSelectorDelegatedPromptTest : public NewsgroupSelectorDelegatedRecoveryTest,
+                                             public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+};
+
+class NewsgroupSelectorDelegatedOutputTest : public NewsgroupSelectorDelegatedRecoveryTest,
+                                             public testing::WithParamInterface<char>
+{
+};
+
+class NewsgroupSelectorDelegatedMessageTest : public NewsgroupSelectorDelegatedRecoveryTest,
+                                              public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+};
+
+class NewsgroupSelectorDelegatedRedisplayTest : public NewsgroupSelectorDelegatedRecoveryTest,
+                                                public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
 class NewsgroupSelectorDelegatedEntryTest : public NewsgroupSelectorDelegationStateTest,
                                             public testing::WithParamInterface<std::tuple<char, bool>>
 {
@@ -5922,6 +5990,163 @@ TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
     EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
     EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory"));
     EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorDelegatedEraseTest, erasingADelegatedCommandRecoversTheOriginalPageAndCursor)
+{
+    const auto [rereading, later_page, dirty, erase] = GetParam();
+    prepare_recovery(rereading, later_page);
+    if (dirty)
+    {
+        ASSERT_EQ(DS_DO_COMMAND, run_delegated('t', "\\"));
+        ASSERT_FALSE(macro_pending());
+    }
+    const std::string input = std::string{erase} + (dirty ? "\nQ" : "Q");
+
+    const DisplayState result = run_delegated('\\', input);
+
+    EXPECT_EQ(dirty ? DS_DISPLAY : DS_ASK, result);
+    expect_page(later_page, 1);
+    expect_groups_preserved();
+    expect_selector_context(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopePageScreenAndEraseKey, NewsgroupSelectorDelegatedEraseTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool(),
+                                          testing::Values('\b', Ctl('u'))));
+
+TEST_P(NewsgroupSelectorDelegatedPromptTest, returningToAVisibleGroupOnlyPausesWhenTheScreenHasScrolled)
+{
+    const auto [rereading, later_page, scrolled] = GetParam();
+    prepare_recovery(rereading, later_page);
+    g_term_scrolled = scrolled;
+
+    const DisplayState result = run_delegated('p', scrolled ? "\nQ" : "Q");
+
+    EXPECT_EQ(scrolled ? DS_DISPLAY : DS_ASK, result);
+    expect_page(later_page, 0);
+    EXPECT_EQ(&g_newsgroup_data[later_page ? 2 : 1], g_newsgroup_ptr);
+    expect_groups_preserved();
+    expect_selector_context(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopePageAndScrolling, NewsgroupSelectorDelegatedPromptTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedOutputTest, outputAcceptsAcknowledgmentOrPreservesTheFollowupCommand)
+{
+    const char followup = GetParam();
+    prepare_recovery(false, true);
+    const std::string input = std::string{followup} + "Q";
+
+    const DisplayState result = run_delegated('t', input);
+
+    EXPECT_EQ(followup == 'q' || followup == 'R' ? DS_DO_COMMAND : DS_DISPLAY, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Not running in thread mode."));
+    expect_page(true, 1);
+    expect_groups_preserved();
+    expect_selector_context();
+    if (followup == 'a')
+    {
+        ASSERT_TRUE(macro_pending());
+        EXPECT_EQ('a', read_tty_char() & 0177);
+    }
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Followup, NewsgroupSelectorDelegatedOutputTest,
+                         testing::Values('\n', '\r', ' ', 'q', 'R', 'a'));
+
+TEST_P(NewsgroupSelectorDelegatedMessageTest, removingARestrictionReturnsItsStatusEvenWhenTheTargetChangesPages)
+{
+    const auto [later_page, scrolled, verbose] = GetParam();
+    prepare_recovery(false, later_page);
+    set_newsgroup_to_do("comp.*");
+    g_verbose = verbose;
+    g_term_scrolled = scrolled;
+
+    const DisplayState result = run_delegated('o', "\nQ");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ(verbose ? "Restriction comp.* removed." : "Exiting \"only\".", g_msg);
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    expect_page(false, 0);
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(PageScrollingAndVerbosity, NewsgroupSelectorDelegatedMessageTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedRedisplayTest, anExplicitRedisplayClearsAnOldMessageAndReturnsToTheFirstGroup)
+{
+    const auto [rereading, scrolled] = GetParam();
+    prepare_recovery(rereading, true);
+    g_msg = "Old status";
+    g_term_scrolled = scrolled;
+
+    const DisplayState result = run_delegated('o', scrolled ? "\n\nQ" : "\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_TRUE(g_msg.empty());
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    expect_page(false, 0);
+    expect_groups_preserved();
+    expect_selector_context(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndScrolling, NewsgroupSelectorDelegatedRedisplayTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_F(NewsgroupSelectorDelegatedRecoveryTest, theSelectorShowsTheRestrictionRemovalMessageAfterChangingPages)
+{
+    prepare_recovery(false, false);
+    set_newsgroup_to_do("comp.*");
+
+    const char result = run_selector_session(">\\\\o\nqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Exiting \"only\"."));
+    expect_page(false, 0);
+    expect_groups_preserved();
+    expect_selector_context();
+    expect_next_command('Q');
+}
+
+TEST_F(NewsgroupSelectorDelegatedRecoveryTest, aCommandEnteredAfterOutputIsDispatchedWithinTheSelector)
+{
+    prepare_selector();
+
+    const char result = run_selector_session("\\\\tRqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Not running in thread mode."));
+    EXPECT_THAT(m_output, testing::HasSubstr("reverse group name order"));
+    expect_groups_preserved();
+    expect_selector_context(false, -1);
+    expect_next_command('Q');
+}
+
+TEST_F(NewsgroupSelectorDelegatedRecoveryTest, aSelectionEnteredAfterOutputIsAppliedExactlyOnce)
+{
+    prepare_selector();
+
+    const char result = run_selector_session("\\\\taqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Not running in thread mode."));
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(" 1", g_newsgroup_data[1].rc_numbers());
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    expect_selector_context();
+    expect_next_command('Q');
 }
 
 TEST_P(NewsgroupSelectorDelegatedEntryTest, fallbackCommandsUseTheCurrentGroupOrEndPrompt)

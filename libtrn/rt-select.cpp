@@ -3738,14 +3738,15 @@ reask_sort:
             ret = ING_DISPLAY;
         }
         u.np = g_newsgroup_ptr;
-        if ((calc_page(u) || ret == ING_DISPLAY) && s_clean_screen)
-        {
-            return DS_DISPLAY;
-        }
+        const bool page_changed = calc_page(u);
         if (ret == ING_MESSAGE)
         {
             s_clean_screen = false;
             return DS_STATUS;
+        }
+        if ((page_changed || ret == ING_DISPLAY) && s_clean_screen)
+        {
+            return DS_DISPLAY;
         }
         if (was_at_top)
         {
