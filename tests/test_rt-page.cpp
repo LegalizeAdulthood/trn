@@ -4,14 +4,19 @@
 #include <trn/rt-page.h>
 
 #include <trn/cache.h>
+#include <trn/ngdata.h>
 #include <trn/rthread.h>
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 
+#include <mock_env.h>
+
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
+#include <ctime>
 #include <initializer_list>
 #include <string>
 #include <tuple>
@@ -198,6 +203,181 @@ class ArticlePageReadScopeTest : public ArticlePageStateTest, public testing::Wi
 
 class ArticlePageReadingSelectionTest : public ArticlePageStateTest,
                                         public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class ArticlePageDisplayState : public ArticlePageStateTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        prepare_display(bool rereading, char mode, bool exclusive = false);
+    std::string render_page();
+    std::string expected_rows(char mode, std::initializer_list<long> numbers) const;
+    void        expect_article_state() const;
+
+private:
+    trn::testing::MockEnvironment      m_env;
+    std::array<ArticleFlags, 7>        m_flags{};
+    std::array<SelectionItem, MAX_SEL> m_old_items{};
+    bool                               m_old_in_group{g_in_ng};
+    bool                               m_old_threaded{g_threaded_group};
+    bool                               m_old_redirected{g_redirected};
+    bool                               m_old_erase_screen{g_erase_screen};
+    bool                               m_old_erase_each_line{g_erase_each_line};
+    std::string                        m_old_name{g_newsgroup_name};
+    std::string                        m_old_moderated{g_moderated};
+    std::string                        m_old_display_mode{g_sel_art_display_mode};
+    std::size_t                        m_old_display_index{g_sel_art_display_mode_index};
+    int                                m_old_item_index{g_sel_item_index};
+    int                                m_old_last_line{g_sel_last_line};
+    bool                               m_old_at_end{g_sel_at_end};
+    Article                           *m_old_last_article{g_sel_last_ap};
+    Subject                           *m_old_last_subject{g_sel_last_sp};
+    int                                m_old_term_line{g_term_line};
+    int                                m_old_term_column{g_term_col};
+    int                                m_old_scrolled{g_term_scrolled};
+    int                                m_old_fire{g_fire_is_out};
+    std::string_view                   m_old_home{g_tc_HO};
+    std::string_view                   m_old_clear{g_tc_CD};
+    std::string_view                   m_old_return{g_tc_CR};
+    std::string_view                   m_old_standout{g_tc_SO};
+    std::string_view                   m_old_end_standout{g_tc_SE};
+};
+
+void ArticlePageDisplayState::SetUp()
+{
+    ArticlePageStateTest::SetUp();
+    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    m_env.expect_env_repeatedly("SELECTCHARS", "abcdef");
+    g_in_ng = true;
+    g_threaded_group = false;
+    g_redirected = false;
+    g_newsgroup_name = "comp.display";
+    g_moderated.clear();
+    g_erase_screen = false;
+    g_erase_each_line = false;
+    g_tc_HO = "<home>";
+    g_tc_CD = "<clear>";
+    g_tc_CR = "";
+    g_tc_SO = "";
+    g_tc_SE = "";
+    g_tc_LINES = 9;
+    g_sel_last_sp = nullptr;
+}
+
+void ArticlePageDisplayState::TearDown()
+{
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    g_in_ng = m_old_in_group;
+    g_threaded_group = m_old_threaded;
+    g_redirected = m_old_redirected;
+    g_newsgroup_name = m_old_name;
+    g_moderated = m_old_moderated;
+    g_erase_screen = m_old_erase_screen;
+    g_erase_each_line = m_old_erase_each_line;
+    g_sel_art_display_mode = m_old_display_mode;
+    g_sel_art_display_mode_index = m_old_display_index;
+    g_sel_item_index = m_old_item_index;
+    g_sel_last_line = m_old_last_line;
+    g_sel_at_end = m_old_at_end;
+    g_sel_last_ap = m_old_last_article;
+    g_sel_last_sp = m_old_last_subject;
+    g_term_line = m_old_term_line;
+    g_term_col = m_old_term_column;
+    g_term_scrolled = m_old_scrolled;
+    g_fire_is_out = m_old_fire;
+    g_tc_HO = m_old_home;
+    g_tc_CD = m_old_clear;
+    g_tc_CR = m_old_return;
+    g_tc_SO = m_old_standout;
+    g_tc_SE = m_old_end_standout;
+    ArticlePageStateTest::TearDown();
+}
+
+void ArticlePageDisplayState::prepare_display(bool rereading, char mode, bool exclusive)
+{
+    const ArticleFlags scope = rereading ? AF_EXISTS : AF_EXISTS | AF_UNREAD;
+    const ArticleFlags opposite_scope = rereading ? AF_EXISTS | AF_UNREAD : AF_EXISTS;
+    const ArticleFlags selected = rereading ? AF_DEL_SEL : AF_SEL;
+    const ArticleFlags opposite_selection = rereading ? AF_SEL : AF_DEL_SEL;
+    prepare_articles(rereading, {scope | selected, scope | opposite_selection, scope, scope | selected,
+                                 opposite_scope | selected, selected, scope});
+    g_sel_exclusive = exclusive;
+    g_sel_art_display_mode.assign(1, mode);
+    g_sel_art_display_mode_index = 0;
+    const std::array<std::string, 7> authors{"Alice",           "Bob",      "Carol", "Dan", "Opposite scope",
+                                             "Missing article", "Next page"};
+    for (long number = 1; number <= 7; ++number)
+    {
+        Article *article = article_ptr(ArticleNum{number});
+        article->m_from = authors[static_cast<std::size_t>(number - 1)] + " <author@example.test>";
+        article->m_date = static_cast<std::time_t>(number * 86400);
+    }
+    init_pages(PRESERVE_PAGE);
+    for (long number = 1; number <= 7; ++number)
+    {
+        article_ptr(ArticleNum{number})->m_flags &= ~AF_DEL;
+    }
+    article_ptr(ArticleNum{3})->m_flags |= AF_DEL;
+    article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
+    for (long number = 1; number <= 7; ++number)
+    {
+        m_flags[static_cast<std::size_t>(number - 1)] = article_ptr(ArticleNum{number})->m_flags;
+    }
+    g_sel_last_ap = article_ptr(ArticleNum{exclusive ? 4 : 3});
+    g_sel_item_index = -1;
+}
+
+std::string ArticlePageDisplayState::render_page()
+{
+    testing::internal::CaptureStdout();
+    display_page();
+    return testing::internal::GetCapturedStdout();
+}
+
+std::string ArticlePageDisplayState::expected_rows(char mode, std::initializer_list<long> numbers) const
+{
+    const std::array<std::string, 4> authors{"Alice", "Bob", "Carol", "Dan"};
+    const std::array<char, 4>        marks{'+', ' ', '-', '*'};
+    std::string                      rows;
+    char                             label = 'a';
+    for (const long number : numbers)
+    {
+        const std::size_t index = static_cast<std::size_t>(number - 1);
+        rows += label++;
+        rows += marks[index];
+        if (mode == 'd')
+        {
+            rows += std::string{std::ctime(&article_ptr(ArticleNum{number})->m_date)}.substr(0, 16);
+        }
+        else if (mode != 's')
+        {
+            rows += authors[index] + std::string(16 - authors[index].size(), ' ');
+        }
+        rows += "  ";
+        rows += mode != 's' && number != 1 ? ">Article eligibility\n" : "Article eligibility\n";
+    }
+    return rows;
+}
+
+void ArticlePageDisplayState::expect_article_state() const
+{
+    for (long number = 1; number <= 7; ++number)
+    {
+        SCOPED_TRACE(number);
+        EXPECT_EQ(m_flags[static_cast<std::size_t>(number - 1)], article_ptr(ArticleNum{number})->m_flags);
+    }
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+}
+
+class ArticlePageDisplayTest : public ArticlePageDisplayState,
+                               public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class ExclusiveArticlePageDisplayTest : public ArticlePageDisplayState, public testing::WithParamInterface<bool>
 {
 };
 
@@ -850,6 +1030,77 @@ INSTANTIATE_TEST_SUITE_P(ModeAndReadScope, SubjectPageAnchorTest,
 
 INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndFillPolicy, SubjectPageFillTest,
                          testing::Combine(testing::Values(SM_SUBJECT, SM_THREAD), testing::Bool(), testing::Bool()));
+
+TEST_P(ArticlePageDisplayTest, displaysArticleRowsWithoutChangingTheirReadingState)
+{
+    const auto [rereading, mode] = GetParam();
+    prepare_display(rereading, mode);
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(expected_rows(mode, {1, 2, 3, 4})));
+    EXPECT_THAT(output, testing::HasSubstr(rereading ? "5 read articles" : "5 articles"));
+    EXPECT_THAT(output, testing::HasSubstr("comp.display"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Next page")));
+    ASSERT_EQ(4, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    for (int index = 0; index < 4; ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(article_ptr(ArticleNum{index + 1}), g_sel_items[index].u.ap);
+        EXPECT_EQ(index + 2, g_sel_items[index].line);
+        EXPECT_EQ(index == 0 ? 1 : index == 1 ? 0 : index, g_sel_items[index].sel);
+    }
+    EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+    ASSERT_EQ(article_ptr_list_begin() + 4, g_sel_next_app);
+    EXPECT_EQ(article_ptr(ArticleNum{7}), *g_sel_next_app);
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(7, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_last_ap);
+    EXPECT_EQ(nullptr, g_sel_last_sp);
+    EXPECT_FALSE(g_sel_at_end);
+    expect_article_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPresentation, ArticlePageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Values('l', 'm', 's', 'd')));
+
+TEST_P(ExclusiveArticlePageDisplayTest, skipsUnselectedArticlesWithoutAssigningThemRowLabels)
+{
+    const bool rereading = GetParam();
+    prepare_display(rereading, 'l', true);
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(expected_rows('l', {1, 4})));
+    EXPECT_THAT(output, testing::HasSubstr(rereading ? "2 read articles out of 5" : "2 articles out of 5"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bob")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Carol")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Next page")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_sel_items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[1].u.ap);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(3, g_sel_items[1].line);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(3, g_sel_items[1].sel);
+    EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+    EXPECT_EQ(article_ptr_list_end(), g_sel_next_app);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(5, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_last_ap);
+    EXPECT_TRUE(g_sel_at_end);
+    expect_article_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, ExclusiveArticlePageDisplayTest, testing::Bool());
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
 {
