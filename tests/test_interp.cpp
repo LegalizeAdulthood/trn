@@ -3449,7 +3449,7 @@ void PrintTo(const PagerTreeCase &value, std::ostream *output)
 class PagerGroupArticleTest : public ArticleHeaderPresentationTest
 {
 protected:
-    void              load_group(bool threaded, bool quoted_printable);
+    void              load_group(bool threaded, bool quoted_printable, long body_lines = 40);
     void              TearDown() override;
     void              read_pages(std::string_view commands);
     std::vector<long> displayed_body_lines() const;
@@ -3471,7 +3471,7 @@ private:
     ValueSaver<std::string_view> m_end_standout{g_tc_SE, g_tc_SE};
 };
 
-void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable)
+void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, long body_lines)
 {
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
@@ -3500,7 +3500,7 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable)
         article << '\n';
         m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
         m_raw_positions.push_back(m_body_start);
-        for (long line = 0; line < 40; ++line)
+        for (long line = 0; line < body_lines; ++line)
         {
             article << (quoted_printable ? "=42ody " : "Body ") << std::setw(3) << std::setfill('0') << line << '\n';
             m_raw_positions.emplace_back(static_cast<long>(article.tellp()));
@@ -3571,6 +3571,151 @@ std::vector<long> PagerGroupArticleTest::displayed_body_lines() const
         lines.push_back(std::stol(m_rendered.substr(position + 5, 3)));
     }
     return lines;
+}
+
+struct PagerCheckpointPause
+{
+    long row;
+    bool saved;
+};
+
+struct PagerCheckpointCase
+{
+    const char                       *name;
+    int                               height;
+    int                               threshold;
+    int                               count;
+    std::string                       commands;
+    std::vector<PagerCheckpointPause> pauses;
+    long                              next_row;
+    long                              body_lines{120};
+    bool                              partial_page{};
+    bool                              delayed_return{};
+    bool                              erase_screen{true};
+};
+
+class PagerCheckpointArticleTest : public PagerGroupArticleTest, public WithParamInterface<PagerCheckpointCase>
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string saved_newsrc() const;
+    std::string expected_newsrc() const;
+
+    struct Pause
+    {
+        long        row;
+        int         count;
+        std::string newsrc;
+        bool        dirty;
+    };
+
+    std::vector<Pause> m_pauses;
+    Newsrc             m_newsrc{};
+    ArticleFlags       m_root_flags{};
+
+private:
+    int read_input(char *address, int size);
+
+    Multirc                         m_multirc{};
+    Newsrc                         *m_original_newsrc{};
+    ValueSaver<Multirc *>           m_current_rc{g_multirc, g_multirc};
+    ValueSaver<bool>                m_doing_group{g_doing_ng, g_doing_ng};
+    ValueSaver<int>                 m_checkpoints{g_check_count, g_check_count};
+    ValueSaver<int>                 m_threshold{g_do_check_when, g_do_check_when};
+    ValueSaver<int>                 m_delayed{g_dm_count, g_dm_count};
+    ValueSaver<bool>                m_erase{g_erase_screen, g_erase_screen};
+    ValueSaver<MarkingMode>         m_marking{g_marking, g_marking};
+    ValueSaver<KillFileStateFlags>  m_kill_state{g_kf_state, g_kf_state};
+    ValueSaver<SelectionSortMode>   m_group_sort{g_sel_newsgroup_sort, g_sel_newsgroup_sort};
+    ValueSaver<TerminalInputReader> m_reader{g_terminal_input_reader, g_terminal_input_reader};
+};
+
+void PagerCheckpointArticleTest::SetUp()
+{
+    const PagerCheckpointCase &scenario = GetParam();
+    load_group(false, false, scenario.body_lines);
+    ASSERT_FALSE(HasFatalFailure());
+    ASSERT_TRUE(parse_header(g_last_art));
+    ASSERT_TRUE(parse_header(g_art));
+    article_ptr(g_last_art)->mark_as_read();
+    g_dm_count = 0;
+    if (scenario.delayed_return)
+    {
+        g_artp->mark_as_read();
+        g_artp->delay_unmark();
+    }
+    m_root_flags = g_artp->m_flags;
+    m_newsrc.data_source = g_data_source;
+    m_newsrc.name = fs::path{m_output.path()} / "checkpoint-newsrc";
+    m_newsrc.new_name = fs::path{m_output.path()} / "checkpoint-newsrc.new";
+    m_newsrc.old_name = fs::path{m_output.path()} / "checkpoint-newsrc.old";
+    m_newsrc.info_name = fs::path{m_output.path()} / "checkpoint-newsrc.info";
+    m_newsrc.flags = RF_ACTIVE | RF_RC_CHANGED;
+    std::ofstream{m_newsrc.name} << "original newsrc\n";
+    std::ofstream{m_newsrc.old_name} << "original backup\n";
+    m_original_newsrc = g_newsgroup_ptr->m_rc;
+    g_newsgroup_ptr->m_rc = &m_newsrc;
+    g_newsgroup_ptr->m_flags &= ~NF_UNTHREADED;
+    m_multirc.m_first = &m_newsrc;
+    g_multirc = &m_multirc;
+    g_doing_ng = true;
+    g_kf_state = KFS_NONE;
+    g_sel_newsgroup_sort = SS_NATURAL;
+    g_do_check_when = scenario.threshold;
+    g_check_count = scenario.count;
+    g_tc_LINES = scenario.height;
+    g_init_lines = ArticleLine{scenario.partial_page ? 5 : scenario.height};
+    g_erase_screen = scenario.erase_screen;
+    g_marking = static_cast<MarkingMode>(0);
+    if (scenario.partial_page)
+    {
+        g_top_line = ArticleLine{-1};
+    }
+    g_terminal_input_reader = [this](char *address, int size) { return read_input(address, size); };
+}
+
+void PagerCheckpointArticleTest::TearDown()
+{
+    if (m_original_newsrc)
+    {
+        g_newsgroup_ptr->m_rc = m_original_newsrc;
+    }
+    PagerGroupArticleTest::TearDown();
+}
+
+std::string PagerCheckpointArticleTest::saved_newsrc() const
+{
+    std::ifstream file{m_newsrc.name};
+    return {std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
+}
+
+std::string PagerCheckpointArticleTest::expected_newsrc() const
+{
+    std::string line{g_newsgroup_ptr->rc_name()};
+    line += g_newsgroup_ptr->m_subscribe_char;
+    line += " 1-";
+    if (GetParam().delayed_return)
+    {
+        line += std::to_string(g_last_art.value_of());
+    }
+    else
+    {
+        line += std::to_string(g_art.value_of() - 1) + ',' + std::to_string(g_last_art.value_of());
+    }
+    return line + '\n';
+}
+
+int PagerCheckpointArticleTest::read_input(char *address, int size)
+{
+    EXPECT_EQ(1, size);
+    const std::size_t index = m_pauses.size();
+    m_pauses.push_back(
+        {g_art_line_num.value_of(), g_check_count, saved_newsrc(), (m_newsrc.flags & RF_RC_CHANGED) != 0});
+    const std::string &commands = GetParam().commands;
+    EXPECT_LT(index, commands.size());
+    address[0] = index < commands.size() ? commands[index] : 'q';
+    return 1;
 }
 
 class PagerTreeArticleTest : public PagerGroupArticleTest, public WithParamInterface<PagerTreeCase>
@@ -6552,6 +6697,101 @@ TEST_F(RemotePagerArticleTest, reopensTheCompletedDownloadWithAKnownSize)
     const long percent = (m_body_start.value_of() + 9 * 9 + 1) * 100 / m_raw_size.value_of();
     EXPECT_THAT(m_rendered, HasSubstr("--MORE--(" + std::to_string(percent) + "%)"));
 }
+
+TEST_P(PagerCheckpointArticleTest, checkpointsAtTheDocumentedReadingPauseAndContinuesPaging)
+{
+    const PagerCheckpointCase &scenario = GetParam();
+
+    render_article();
+
+    ASSERT_EQ(scenario.pauses.size(), m_pauses.size());
+    bool saved = false;
+    for (std::size_t index = 0; index < m_pauses.size(); ++index)
+    {
+        SCOPED_TRACE(index);
+        const PagerCheckpointPause &expected = scenario.pauses[index];
+        const Pause                &actual = m_pauses[index];
+        EXPECT_EQ(expected.row, actual.row);
+        EXPECT_EQ(expected.saved ? 0 : scenario.count, actual.count);
+        EXPECT_EQ(expected.saved ? expected_newsrc() : "original newsrc\n", actual.newsrc);
+        EXPECT_EQ(!expected.saved, actual.dirty);
+        saved = expected.saved;
+    }
+    EXPECT_EQ(saved ? expected_newsrc() : "original newsrc\n", saved_newsrc());
+    EXPECT_EQ(saved, fs::exists(m_newsrc.info_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    std::ifstream backup{m_newsrc.old_name};
+    EXPECT_EQ("original backup\n",
+              (std::string{std::istreambuf_iterator<char>{backup}, std::istreambuf_iterator<char>{}}));
+    std::vector<long> expected_body;
+    long              next_body = 0;
+    for (std::size_t index = 0; index < scenario.pauses.size(); ++index)
+    {
+        const long end = scenario.pauses[index].row - (scenario.partial_page ? 2 : 0);
+        for (long row = next_body; row < end; ++row)
+        {
+            expected_body.push_back(row);
+        }
+        next_body = end;
+        if (scenario.erase_screen && scenario.commands[index] == ' ')
+        {
+            --next_body;
+        }
+    }
+    if (scenario.pauses.empty())
+    {
+        expected_body.resize(static_cast<std::size_t>(scenario.next_row));
+        std::iota(expected_body.begin(), expected_body.end(), 0);
+    }
+    EXPECT_EQ(expected_body, displayed_body_lines());
+    EXPECT_EQ(scenario.commands.empty() ? DA_NORM : DA_TO_END, m_result);
+    EXPECT_EQ(m_body_start + ArticlePosition{scenario.next_row * 9}, g_art_pos);
+    EXPECT_EQ(m_root_flags, g_artp->m_flags);
+    EXPECT_FALSE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
+    EXPECT_EQ(ArticleUnread{scenario.delayed_return ? 0 : 1}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(scenario.delayed_return ? 1 : 0, g_dm_count);
+    EXPECT_EQ(saved ? 0 : scenario.count, g_check_count);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_art, g_open_art);
+    EXPECT_EQ(g_art, g_parsed_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_TRUE(m_article_command.empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CheckpointTimingAndReadState, PagerCheckpointArticleTest,
+    Values(
+        PagerCheckpointCase{"BelowConfiguredCount", 42, 7, 6, " q", {{41, false}, {81, false}}, 81},
+        PagerCheckpointCase{"WaitsForLongArticlePause",
+                            10,
+                            20,
+                            20,
+                            "     q",
+                            {{9, false}, {17, false}, {25, false}, {33, false}, {41, true}, {49, true}},
+                            49},
+        PagerCheckpointCase{"ExactlyFortyRows", 41, 7, 7, " q", {{40, false}, {79, true}}, 79},
+        PagerCheckpointCase{"TenExtraArticlesForceCheckpoint", 10, 7, 17, " q", {{9, true}, {17, true}}, 17},
+        PagerCheckpointCase{"NineExtraArticlesStillWait", 10, 7, 16, " q", {{9, false}, {17, false}}, 17},
+        PagerCheckpointCase{
+            "PartialPageWaitsForFullPage", 10, 20, 30, "\n q", {{3, false}, {4, false}, {12, true}}, 10, 120, true},
+        PagerCheckpointCase{"EndOfArticleDoesNotCheckpoint", 10, 20, 30, "", {}, 3, 3},
+        PagerCheckpointCase{
+            "DelayedReturnRemainsReadInCheckpoint", 42, 20, 20, " q", {{41, true}, {81, true}}, 81, 120, false, true},
+        PagerCheckpointCase{"ScrollingReservesLastRow",
+                            10,
+                            20,
+                            20,
+                            "     q",
+                            {{9, false}, {17, false}, {25, false}, {33, false}, {41, false}, {49, false}},
+                            49,
+                            120,
+                            false,
+                            false,
+                            false}),
+    [](const TestParamInfo<PagerCheckpointCase> &info) { return info.param.name; });
 
 TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
 {
