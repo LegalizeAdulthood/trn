@@ -1289,6 +1289,168 @@ void SuccessiveLocalArticlesTest::TearDown()
     InputNewsgroupReadingTest::TearDown();
 }
 
+enum class LocalReadingOrder
+{
+    Numeric,
+    Date,
+    Subject,
+    Thread
+};
+
+class LocalArticleTraversalTest : public InputNewsgroupReadingTest,
+                                  public testing::WithParamInterface<LocalReadingOrder>
+{
+protected:
+    void              SetUp() override;
+    void              TearDown() override;
+    void              write_article(int number, std::string_view subject, int hour, int parent = 0);
+    std::vector<int>  reading_order() const;
+    DoNewsgroupResult run_reading(std::vector<std::string>   commands,
+                                  std::optional<std::string> start_command = std::nullopt);
+    void              expect_articles(const std::vector<int> &expected) const;
+
+    std::vector<int>           m_articles;
+    std::vector<ArticleUnread> m_unread;
+
+private:
+    TerminalInputReader      m_old_input_reader{g_terminal_input_reader};
+    bool                     m_old_allow_typeahead{g_allow_typeahead};
+    int                      m_old_scan_on{g_scan_on};
+    bool                     m_old_breadth_first{g_breadth_first};
+    SelectionMode            m_old_thread_mode{g_sel_thread_mode};
+    SelectionSortMode        m_old_thread_sort{g_sel_thread_sort};
+    std::vector<std::string> m_commands;
+    std::size_t              m_input_pos{};
+};
+
+void LocalArticleTraversalTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    write_article(1, "Zebra", 10);
+    write_article(2, "Alpha", 11);
+    write_article(3, "Re: Zebra", 14, 1);
+    write_article(4, "Branch", 12, 1);
+    write_article(5, "Re: Zebra", 13, 1);
+    write_article(7, "Re: Alpha", 15, 2);
+    g_newsgroup_ptr->m_rc_line.resize(g_newsgroup_ptr->m_num_offset);
+    g_newsgroup_ptr->m_rc_line += " 5";
+    g_newsgroup_ptr->m_ng_max = ArticleNum{7};
+    m_data_source.m_act_sf.close();
+    const fs::path active_file = m_output_dir / "active";
+    std::ofstream{active_file, std::ios::binary} << "comp.previous 3 1 y\ncomp.lang.cpp 7 1 y\ncomp.next 3 1 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_file, "", ""));
+    g_thread_always = true;
+    g_use_threads = g_threaded_group = GetParam() == LocalReadingOrder::Thread;
+    g_breadth_first = false;
+    g_scan_on = GetParam() == LocalReadingOrder::Subject ? 1 : 0;
+    const SelectionMode mode = GetParam() == LocalReadingOrder::Thread    ? SM_THREAD
+                               : GetParam() == LocalReadingOrder::Subject ? SM_SUBJECT
+                                                                          : SM_ARTICLE;
+    set_selector(mode, GetParam() == LocalReadingOrder::Numeric ? SS_NATURAL : SS_DATE);
+    fs::current_path(m_output_dir);
+    ASSERT_EQ(1, access_newsgroup());
+    if (GetParam() == LocalReadingOrder::Date)
+    {
+        sort_articles();
+    }
+    g_in_ng = false;
+    g_mode = MM_NEWSGROUP_LIST;
+    g_allow_typeahead = true;
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        EXPECT_EQ(MM_ARTICLE, g_mode);
+        EXPECT_EQ(g_art, g_curr_art);
+        EXPECT_EQ(g_artp, g_curr_artp);
+        EXPECT_EQ(article_find(g_art), g_artp);
+        m_articles.push_back(static_cast<int>(g_art.value_of()));
+        m_unread.push_back(g_newsgroup_ptr->m_to_read);
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected terminal input request";
+            *buffer = 'Q';
+            return 1;
+        }
+        const std::string &command = m_commands[m_input_pos++];
+        push_command(std::string_view{command}.substr(1));
+        *buffer = command.front();
+        return 1;
+    };
+}
+
+void LocalArticleTraversalTest::TearDown()
+{
+    g_terminal_input_reader = m_old_input_reader;
+    g_allow_typeahead = m_old_allow_typeahead;
+    g_scan_on = m_old_scan_on;
+    g_breadth_first = m_old_breadth_first;
+    InputNewsgroupReadingTest::TearDown();
+    g_sel_thread_mode = m_old_thread_mode;
+    g_sel_thread_sort = m_old_thread_sort;
+}
+
+void LocalArticleTraversalTest::write_article(int number, std::string_view subject, int hour, int parent)
+{
+    std::ofstream article{m_output_dir / "comp/lang/cpp" / std::to_string(number), std::ios::binary};
+    article << "From: Reader <reader@example.test>\nSubject: " << subject << "\nDate: 21 Oct 2026 " << hour
+            << ":00:00 GMT\nMessage-ID: <" << number << "@example.test>\n";
+    if (parent)
+    {
+        article << "References: <" << parent << "@example.test>\n";
+    }
+    article << "\nTraversal body " << number << '\n';
+}
+
+std::vector<int> LocalArticleTraversalTest::reading_order() const
+{
+    switch (GetParam())
+    {
+    case LocalReadingOrder::Numeric:
+        return {1, 2, 3, 4, 7};
+    case LocalReadingOrder::Date:
+        return {1, 2, 4, 3, 7};
+    case LocalReadingOrder::Subject:
+        return {1, 3, 2, 7, 4};
+    case LocalReadingOrder::Thread:
+        return {1, 4, 3, 2, 7};
+    }
+    return {};
+}
+
+DoNewsgroupResult LocalArticleTraversalTest::run_reading(std::vector<std::string>   commands,
+                                                         std::optional<std::string> start_command)
+{
+    m_commands = std::move(commands);
+    errno = 0;
+    testing::internal::CaptureStdout();
+    const DoNewsgroupResult result = do_newsgroup(std::move(start_command));
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_EQ(nullptr, g_art_fp);
+    return result;
+}
+
+void LocalArticleTraversalTest::expect_articles(const std::vector<int> &expected) const
+{
+    EXPECT_EQ(expected, m_articles);
+    std::string bodies;
+    for (int number : expected)
+    {
+        bodies += "Traversal body " + std::to_string(number) + '\n';
+    }
+    std::string      displayed;
+    const std::regex body{"Traversal body [0-9]+\\n"};
+    for (auto match = std::sregex_iterator(m_output.begin(), m_output.end(), body); match != std::sregex_iterator{};
+         ++match)
+    {
+        displayed += match->str();
+    }
+    EXPECT_EQ(bodies, displayed);
+}
+
 struct PagerReadingState
 {
     MinorMode     mode;
@@ -6781,6 +6943,187 @@ TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticle
 }
 
 INSTANTIATE_TEST_SUITE_P(NextAndSpace, SuccessiveLocalArticlesTest, testing::Values('n', ' '));
+
+TEST_P(LocalArticleTraversalTest, forwardReadingSkipsReadAndMissingArticlesInTheChosenOrder)
+{
+    const std::vector<int> expected = reading_order();
+
+    const DoNewsgroupResult result = run_reading({" ", " ", " ", " ", " "});
+
+    EXPECT_EQ(NG_NORM, result);
+    expect_articles(expected);
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 2, 1, 0}), m_unread);
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-7", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{6})->m_flags & AF_EXISTS);
+}
+
+TEST_P(LocalArticleTraversalTest, previousUnreadReturnsToAnArticleLeftUnread)
+{
+    const int second = reading_order()[1];
+
+    const DoNewsgroupResult result = run_reading({"m", " ", "p", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_EQ((std::vector<int>{1, 1, second, 1}), m_articles);
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 5, 4, 3}), m_unread);
+    EXPECT_TRUE(was_read(ArticleNum{1}));
+    EXPECT_TRUE(was_read(ArticleNum{second}));
+    EXPECT_EQ(ArticleUnread{3}, g_newsgroup_ptr->m_to_read);
+}
+
+TEST_P(LocalArticleTraversalTest, selectedOnlyReadingLeavesOtherUnreadArticlesUntouched)
+{
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    article_ptr(ArticleNum{7})->select_article(AUTO_KILL_NONE);
+
+    const DoNewsgroupResult result = run_reading({" ", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({3, 7});
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 3}), m_unread);
+    EXPECT_FALSE(was_read(ArticleNum{1}));
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{4}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    EXPECT_TRUE(was_read(ArticleNum{7}));
+    EXPECT_EQ(ArticleUnread{3}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-0,3,5-7", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(LocalArticleTraversalTest, previousUnreadSkipsReadAndMissingArticles)
+{
+    const int previous = GetParam() == LocalReadingOrder::Numeric ? 4 : GetParam() == LocalReadingOrder::Date ? 3 : 2;
+
+    const DoNewsgroupResult result = run_reading({"p", "Q"}, "7");
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({7, previous});
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 3}), m_unread);
+    EXPECT_TRUE(was_read(ArticleNum{5}));
+    EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{6})->m_flags & AF_EXISTS);
+}
+
+TEST_P(LocalArticleTraversalTest, previousUnreadAtTheFirstArticleKeepsTheCurrentArticle)
+{
+    const DoNewsgroupResult result = run_reading({"p", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_EQ((std::vector<int>{1, 1}), m_articles);
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 4}), m_unread);
+    EXPECT_THAT(m_output, testing::HasSubstr("No previous unread articles"));
+    EXPECT_EQ(ArticleNum{1}, g_curr_art);
+    EXPECT_EQ(article_find(g_curr_art), g_curr_artp);
+}
+
+TEST_P(LocalArticleTraversalTest, firstUnreadReturnsFromAnExplicitReadArticle)
+{
+    const DoNewsgroupResult result = run_reading({"^", "Q"}, "5");
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({5, 1});
+    EXPECT_EQ((std::vector<ArticleUnread>{5, 4}), m_unread);
+    EXPECT_EQ(ArticleNum{5}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+}
+
+TEST_P(LocalArticleTraversalTest, anExplicitReadTargetBypassesSelectedOnlyFiltering)
+{
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+
+    const DoNewsgroupResult result = run_reading({"Q"}, "5");
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({5});
+    EXPECT_EQ((std::vector<ArticleUnread>{5}), m_unread);
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    EXPECT_EQ(ArticleUnread{5}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-0,5-6", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(LocalArticleTraversalTest, anExplicitUnselectedUnreadTargetIsRead)
+{
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+
+    const DoNewsgroupResult result = run_reading({"Q"}, "2");
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({2});
+    EXPECT_EQ((std::vector<ArticleUnread>{4}), m_unread);
+    EXPECT_TRUE(was_read(ArticleNum{2}));
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    EXPECT_EQ(ArticleUnread{4}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-0,2,5-6", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(LocalArticleTraversalTest, previousArticleIncludesReadArticlesInTheChosenOrder)
+{
+    const int second = reading_order()[1];
+    const int previous = GetParam() == LocalReadingOrder::Subject ? 5 : 1;
+
+    const DoNewsgroupResult result = run_reading({" ", "P", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({1, second, previous});
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3}), m_unread);
+    EXPECT_EQ(ArticleNum{second}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+}
+
+TEST_P(LocalArticleTraversalTest, nextArticleCanRereadAnAlreadyReadArticle)
+{
+    const int second = reading_order()[1];
+    const int next = GetParam() == LocalReadingOrder::Subject ? 5 : second;
+
+    const DoNewsgroupResult result = run_reading({" ", "1\n", "N", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({1, second, 1, next});
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3, 3}), m_unread);
+    EXPECT_EQ(ArticleUnread{3}, g_newsgroup_ptr->m_to_read);
+}
+
+TEST_P(LocalArticleTraversalTest, minusRereadsTheMostRecentlyDisplayedArticle)
+{
+    const int second = reading_order()[1];
+
+    const DoNewsgroupResult result = run_reading({" ", "-", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({1, second, 1});
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3}), m_unread);
+    EXPECT_EQ(ArticleNum{second}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+}
+
+TEST_P(LocalArticleTraversalTest, restartingTheCurrentArticleDoesNotMarkItReadTwice)
+{
+    const DoNewsgroupResult result = run_reading({"\022", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    expect_articles({1, 1});
+    EXPECT_EQ((std::vector<ArticleUnread>{4, 4}), m_unread);
+    EXPECT_EQ(ArticleUnread{4}, g_newsgroup_ptr->m_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingOrder, LocalArticleTraversalTest,
+                         testing::Values(LocalReadingOrder::Numeric, LocalReadingOrder::Date,
+                                         LocalReadingOrder::Subject, LocalReadingOrder::Thread),
+                         [](const testing::TestParamInfo<LocalReadingOrder> &info)
+                         {
+                             switch (info.param)
+                             {
+                             case LocalReadingOrder::Numeric:
+                                 return "Numeric";
+                             case LocalReadingOrder::Date:
+                                 return "Date";
+                             case LocalReadingOrder::Subject:
+                                 return "Subject";
+                             case LocalReadingOrder::Thread:
+                                 return "Thread";
+                             }
+                             return "Unknown";
+                         });
 
 TEST_P(NewsgroupPagerReadingTest, completingTheSecondPageMarksTheArticleReadBeforeTheArticlePrompt)
 {
