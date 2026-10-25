@@ -1227,6 +1227,59 @@ InputNewsgroupResult InputNewsgroupReadingTest::run_command(std::string_view com
     return result;
 }
 
+struct LocalArticleReadingState
+{
+    ArticleNum          article;
+    Article            *article_ptr;
+    ArticleNum          current;
+    Article            *current_ptr;
+    ArticleNum          recent;
+    Article            *recent_ptr;
+    ArticleUnread       unread;
+    std::array<bool, 3> read;
+};
+
+class SuccessiveLocalArticlesTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+    std::vector<LocalArticleReadingState> m_states;
+
+private:
+    TerminalInputReader m_old_input_reader{g_terminal_input_reader};
+    bool                m_old_allow_typeahead{g_allow_typeahead};
+};
+
+void SuccessiveLocalArticlesTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    g_newsgroup_ptr->m_rc_line.resize(g_newsgroup_ptr->m_num_offset);
+    g_newsgroup_ptr->m_rc_line += ' ';
+    g_allow_typeahead = true;
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        m_states.push_back({g_art,
+                            g_artp,
+                            g_curr_art,
+                            g_curr_artp,
+                            g_recent_art,
+                            g_recent_artp,
+                            g_newsgroup_ptr->m_to_read,
+                            {was_read(ArticleNum{1}), was_read(ArticleNum{2}), was_read(ArticleNum{3})}});
+        *buffer = m_states.size() <= 3 ? GetParam() : 'q';
+        return 1;
+    };
+}
+
+void SuccessiveLocalArticlesTest::TearDown()
+{
+    g_terminal_input_reader = m_old_input_reader;
+    g_allow_typeahead = m_old_allow_typeahead;
+    InputNewsgroupReadingTest::TearDown();
+}
+
 class InputNewsgroupNormalEntryTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<char>
 {
 };
@@ -6523,6 +6576,59 @@ INSTANTIATE_TEST_SUITE_P(DirectionAndPosition, InputNewsgroupSearchDirectionTest
                          testing::Combine(testing::Values('/', '?'), testing::Bool()));
 
 INSTANTIATE_TEST_SUITE_P(ForwardAndBackward, InputNewsgroupSearchWrapTest, testing::Values('/', '?'));
+
+TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticleStateConsistent)
+{
+    errno = 0;
+
+    testing::internal::CaptureStdout();
+    const DoNewsgroupResult result = do_newsgroup(std::nullopt);
+    const std::string       output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(3, m_states.size());
+    for (int index = 0; index < 3; ++index)
+    {
+        SCOPED_TRACE(index);
+        const LocalArticleReadingState &state = m_states[index];
+        const ArticleNum                number{index + 1};
+        const ArticleNum                recent{index == 0 ? 4 : index};
+        EXPECT_EQ(number, state.article);
+        EXPECT_EQ(article_find(number), state.article_ptr);
+        EXPECT_EQ(number, state.current);
+        EXPECT_EQ(state.article_ptr, state.current_ptr);
+        EXPECT_EQ(recent, state.recent);
+        EXPECT_EQ(index == 0 ? nullptr : article_find(recent), state.recent_ptr);
+        EXPECT_EQ(ArticleUnread{2 - index}, state.unread);
+        EXPECT_EQ((std::array<bool, 3>{true, index >= 1, index >= 2}), state.read);
+    }
+    const std::size_t root = output.find("Root first line\nRoot next line");
+    const std::size_t reply = output.find("Reply body");
+    const std::size_t branch = output.find("Branch body");
+    ASSERT_NE(std::string::npos, root);
+    ASSERT_NE(std::string::npos, reply);
+    ASSERT_NE(std::string::npos, branch);
+    EXPECT_LT(root, reply);
+    EXPECT_LT(reply, branch);
+    EXPECT_EQ(std::string::npos, output.find("Root first line", root + 1));
+    EXPECT_EQ(std::string::npos, output.find("Reply body", reply + 1));
+    EXPECT_EQ(std::string::npos, output.find("Branch body", branch + 1));
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(nullptr, g_artp);
+    EXPECT_EQ(ArticleNum{4}, g_curr_art);
+    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(ArticleNum{3}, g_recent_art);
+    EXPECT_EQ(article_find(ArticleNum{3}), g_recent_artp);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(NextAndSpace, SuccessiveLocalArticlesTest, testing::Values('n', ' '));
 
 TEST_P(InputNewsgroupNormalEntryTest, normalEntryReadsTheFirstUnreadArticleAndBypassesTheAutomaticSelector)
 {
