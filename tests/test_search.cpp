@@ -33,6 +33,62 @@ void CompiledRegexTest::SetUp()
     m_regex.init_compex();
 }
 
+struct RegexFindCase
+{
+    const char      *name;
+    std::string_view pattern;
+    std::string_view text;
+    std::size_t      offset;
+    std::size_t      length{std::string_view::npos};
+};
+
+void PrintTo(const RegexFindCase &value, std::ostream *out)
+{
+    *out << value.name;
+}
+
+class RegexFindTest : public CompiledRegexTest, public testing::WithParamInterface<RegexFindCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void RegexFindTest::SetUp()
+{
+    CompiledRegexTest::SetUp();
+    ASSERT_TRUE(m_regex.compile(GetParam().pattern, true, false).empty());
+}
+
+TEST_P(RegexFindTest, returnsTheByteOffsetOfTheFirstMatchWithinTheView)
+{
+    const RegexFindCase &input = GetParam();
+
+    const std::size_t offset = m_regex.find(input.text.substr(0, input.length));
+
+    EXPECT_EQ(input.offset, offset);
+}
+
+INSTANTIATE_TEST_SUITE_P(MatchPositions, RegexFindTest,
+                         testing::Values(RegexFindCase{"LiteralAtStart", "needle", "needle suffix", 0},
+                                         RegexFindCase{"LiteralAfterPrefix", "needle", "prefix needle", 7},
+                                         RegexFindCase{"FirstRepeatedMatch", "needle", "a needle and needle", 2},
+                                         RegexFindCase{"ClassAtStart", "[n]eedle", "needle suffix", 0},
+                                         RegexFindCase{"ClassAfterPrefix", "[n]eedle", "prefix needle", 7},
+                                         RegexFindCase{"SecondAlternative", "missing\\|needle", "prefix needle", 7},
+                                         RegexFindCase{"ZeroWidthStart", "^", "needle", 0},
+                                         RegexFindCase{"MissingLiteral", "needle", "haystack", std::string_view::npos},
+                                         RegexFindCase{"MissingClass", "[n]eedle", "haystack", std::string_view::npos},
+                                         RegexFindCase{"BoundedInput", "needle", "a needle", std::string_view::npos, 3},
+                                         RegexFindCase{"Utf8ByteOffset", "needle", "\345\244\251e\314\201 needle", 7}),
+                         [](const testing::TestParamInfo<RegexFindCase> &info) { return info.param.name; });
+
+TEST_F(CompiledRegexTest, findingWithoutAnExpressionReturnsNoMatch)
+{
+    const std::size_t offset = m_regex.find("needle");
+
+    EXPECT_EQ(std::string_view::npos, offset);
+}
+
 struct RegexMatchCase
 {
     const char      *name;

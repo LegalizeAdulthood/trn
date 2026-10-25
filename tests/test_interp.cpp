@@ -2372,6 +2372,111 @@ void PagerResumeArticleTest::SetUp()
     }
 }
 
+struct PagerSearchPage
+{
+    long first;
+    long count;
+    long highlighted{-1};
+};
+
+struct PagerSearchCase
+{
+    const char                  *name;
+    std::string_view             commands;
+    std::vector<PagerSearchPage> pages;
+    long                         next_row;
+};
+
+void PrintTo(const PagerSearchCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+struct PagerSearchText
+{
+    const char      *name;
+    std::string_view suffix;
+    std::string_view separator;
+    int              wrap_offset{-1};
+};
+
+void PrintTo(const PagerSearchText &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+using PagerSearchParam = std::tuple<PagerSearchCase, PagerSearchText, MarkingMode>;
+
+std::string pager_search_name(const TestParamInfo<PagerSearchParam> &info)
+{
+    return std::string{std::get<0>(info.param).name} + std::get<1>(info.param).name +
+           (std::get<2>(info.param) == STANDOUT ? "Standout" : "Underline");
+}
+
+class PagerSearchArticleTest : public PagerTextArticleTest, public WithParamInterface<PagerSearchParam>
+{
+protected:
+    void                     SetUp() override;
+    std::vector<std::string> highlighted_rows(std::size_t page) const;
+
+    std::vector<std::string> m_rows;
+    std::vector<long>        m_offsets;
+
+private:
+    ValueSaver<std::string_view> m_underline_start{g_tc_US, "<mark>"};
+    ValueSaver<std::string_view> m_underline_end{g_tc_UE, "</mark>"};
+    ValueSaver<std::string_view> m_underchar{g_tc_UC, ""};
+};
+
+void PagerSearchArticleTest::SetUp()
+{
+    PagerTextArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerSearchText &text = std::get<1>(GetParam());
+    g_tc_LINES = 6;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_tc_COLS = 32;
+    g_g_line = 1;
+    g_marking = std::get<2>(GetParam());
+    g_tc_US = "<mark>";
+    g_tc_UE = "</mark>";
+    g_tc_UC = "";
+    g_word_wrap_offset = text.wrap_offset;
+    std::string body;
+    for (long row = 0; row < 30; ++row)
+    {
+        std::ostringstream label;
+        label << "Body " << std::setw(3) << std::setfill('0') << row << ' ' << text.suffix;
+        m_offsets.push_back(static_cast<long>(body.size()));
+        m_rows.push_back(label.str());
+        body += m_rows.back();
+        body += text.separator;
+    }
+    body += "\nEnd\n";
+    load_body(body, "Content-Type: text/plain; charset=UTF-8\n");
+}
+
+std::vector<std::string> PagerSearchArticleTest::highlighted_rows(std::size_t page) const
+{
+    const std::string_view   text = page_text(page);
+    std::vector<std::string> rows;
+    for (std::size_t start = text.find("<mark>"); start != std::string_view::npos; start = text.find("<mark>", start))
+    {
+        start += 6;
+        const std::size_t end = text.find("</mark>", start);
+        if (end == std::string_view::npos)
+        {
+            break;
+        }
+        std::string row{text.substr(start, end - start)};
+        row.erase(std::remove(row.begin(), row.end(), '\r'), row.end());
+        row.erase(std::remove(row.begin(), row.end(), '\n'), row.end());
+        rows.push_back(std::move(row));
+        start = end + 7;
+    }
+    return rows;
+}
+
 struct PagerExitCase
 {
     const char     *name;
@@ -3586,6 +3691,68 @@ INSTANTIATE_TEST_SUITE_P(
                               {{"Body 000", "Body 001", "Body 002", "Body 003"}, {"Body 004", "Body 005", "Body 006"}},
                               "Body 007"}),
     [](const TestParamInfo<PagerFilteredBodyCase> &info) { return info.param.name; });
+
+TEST_P(PagerSearchArticleTest, displaysTheMatchingRowAndClearsItsHighlightBeforeContinuing)
+{
+    const PagerSearchCase &scenario = std::get<0>(GetParam());
+
+    read_pages(scenario.commands);
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_TO_END, m_result);
+    for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+    {
+        SCOPED_TRACE(page);
+        const PagerSearchPage         &expected = scenario.pages[page];
+        const std::vector<std::string> rows{m_rows.begin() + expected.first,
+                                            m_rows.begin() + expected.first + expected.count};
+        std::vector<std::string>       actual = displayed_rows(page);
+        while (!actual.empty() && actual.front().find("Body ") != 0)
+        {
+            actual.erase(actual.begin());
+        }
+        EXPECT_EQ(rows, actual);
+        const std::vector<std::string> marked =
+            expected.highlighted < 0 ? std::vector<std::string>{}
+                                     : std::vector<std::string>{m_rows[static_cast<std::size_t>(expected.highlighted)]};
+        EXPECT_EQ(marked, highlighted_rows(page));
+    }
+    EXPECT_EQ(ArticleLine{scenario.next_row}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{m_offsets[static_cast<std::size_t>(scenario.next_row)]}, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_EQ(ArticleLine{-1}, g_highlight);
+    EXPECT_EQ(ArticlePosition{}, g_inner_search);
+    EXPECT_FALSE(g_hide_everything);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_TRUE(m_article_command.empty());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SearchRedisplay, PagerSearchArticleTest,
+    Combine(Values(PagerSearchCase{"CurrentPage", "gBody 002\n", {{0, 5}, {1, 5, 2}}, 6},
+                   PagerSearchCase{"BeyondPage", "gBody 008\n", {{0, 5}, {7, 5, 8}}, 12},
+                   PagerSearchCase{"RepeatSearch", "gBody 0[01]8\nG", {{0, 5}, {7, 5, 8}, {17, 5, 18}}, 22},
+                   PagerSearchCase{"ContinueOneLine", "gBody 008\n\n", {{0, 5}, {7, 5, 8}, {12, 1}}, 13},
+                   PagerSearchCase{"ContinueNextPage", "gBody 008\n ", {{0, 5}, {7, 5, 8}, {11, 5, 11}}, 16},
+                   PagerSearchCase{"RefreshMatch", "gBody 008\n\f", {{0, 5}, {7, 5, 8}, {7, 5}}, 12},
+                   PagerSearchCase{"BackThenForward", "gBody 008\nb ", {{0, 5}, {7, 5, 8}, {3, 5}, {7, 5, 7}}, 12},
+                   PagerSearchCase{
+                       "SearchAgainAfterBackingUp", "gBody 008\nbG", {{0, 5}, {7, 5, 8}, {3, 5}, {7, 5, 8}}, 12}),
+            Values(PagerSearchText{"Newlines", "abcdefghijklmnopqrstuvw", "\n"},
+                   PagerSearchText{"Unbroken", "abcdefghijklmnopqrstuvw", ""},
+                   PagerSearchText{"Words", "alpha beta end", " ", 8},
+                   PagerSearchText{"Utf8", "abcdefghijklmnopqrs\345\244\251e\314\201f", ""}),
+            Values(STANDOUT, UNDERLINE)),
+    pager_search_name);
+
+INSTANTIATE_TEST_SUITE_P(
+    MatchesAcrossDisplayRows, PagerSearchArticleTest,
+    Combine(Values(PagerSearchCase{"StartsAtLastColumn", "g[wf]Body 008\n", {{0, 5}, {6, 5, 7}}, 11},
+                   PagerSearchCase{"SpansTwoRows", "gBody 007.*Body 008\n", {{0, 5}, {6, 5, 7}}, 11}),
+            Values(PagerSearchText{"Unbroken", "abcdefghijklmnopqrstuvw", ""},
+                   PagerSearchText{"Utf8", "abcdefghijklmnopqrs\345\244\251e\314\201f", ""}),
+            Values(STANDOUT, UNDERLINE)),
+    pager_search_name);
 
 TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
 {

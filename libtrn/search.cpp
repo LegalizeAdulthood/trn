@@ -420,11 +420,16 @@ char *CompiledRegex::grow_eb(char *epp)
 
 bool CompiledRegex::execute(std::string_view text)
 {
+    return find(text) != std::string_view::npos;
+}
+
+std::size_t CompiledRegex::find(std::string_view text)
+{
     Uchar *trt = s_trans;
 
     if (m_exp_buf.empty())
     {
-        return false;
+        return std::string_view::npos;
     }
 
     m_bracket_str = text;
@@ -444,7 +449,7 @@ bool CompiledRegex::execute(std::string_view text)
         {
             if (trt[*(Uchar *) p1] == c && advance(p1, expression))
             {
-                return true;
+                return static_cast<std::size_t>(p1 - m_bracket_str.data());
             }
             p1++;
         } while (*p1 && !s_err);
@@ -452,7 +457,7 @@ bool CompiledRegex::execute(std::string_view text)
         {
             s_err = 0;
         }
-        return false;
+        return std::string_view::npos;
     }
     do // regular algorithm
     {
@@ -461,7 +466,7 @@ bool CompiledRegex::execute(std::string_view text)
         {
             if (advance(p1, expression + m_alternatives[alt_index++]))
             {
-                return true;
+                return static_cast<std::size_t>(p1 - m_bracket_str.data());
             }
         }
         p1++;
@@ -470,7 +475,7 @@ bool CompiledRegex::execute(std::string_view text)
     {
         s_err = 0;
     }
-    return false;
+    return std::string_view::npos;
 }
 
 // advance the match of the regular expression starting at ep along the

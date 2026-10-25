@@ -26,6 +26,7 @@ public:
     bool             has_brackets() const;
     std::string_view compile(std::string_view strp, bool re, bool fold);
     bool             execute(std::string_view text);
+    std::size_t      find(std::string_view text);
 
 private:
     char            *grow_eb(char *epp);

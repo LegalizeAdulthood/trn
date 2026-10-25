@@ -1044,7 +1044,6 @@ caseG:
     case 'G':
     {
         ArticlePosition start_where;
-        bool success;
 
         if (g_g_line < 0 || g_g_line > g_tc_LINES-2)
         {
@@ -1085,10 +1084,13 @@ caseG:
                 fmt::print("Test {}\n", search_line);
             }
 #endif
-            success = s_gcompex.execute(search_line);
-            if (success)
+            const std::size_t match = s_gcompex.find(search_line);
+            if (match != std::string_view::npos)
             {
-                g_inner_search = art_buf_article_pos();
+                const ArticlePosition line_start =
+                    art_buf_article_pos() - ArticlePosition{static_cast<long>(pager_line_storage.size())};
+                // The first byte after the match start identifies its display row.
+                g_inner_search = line_start + ArticlePosition{static_cast<long>(match) + 1};
                 break;
             }
         }
@@ -1474,7 +1476,7 @@ static bool inner_more()
 #endif
         return true;
     }
-    if (g_art_pos == g_inner_search)      // just got onto page?
+    if (g_art_pos == g_inner_search || g_hide_everything) // just got onto page?
     {
         s_i_search_line = g_art_line_num;        // remember first line after
         if (g_inner_light)
