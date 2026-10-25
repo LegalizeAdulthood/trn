@@ -14,6 +14,8 @@ add_executable(trn-test
     support/MockNntpServer.cpp
     support/MockNntpServer.h
     support/NntpTestCertificate.h
+    support/NewsgroupPageState.cpp
+    support/NewsgroupPageState.h
     test_addng.cpp
     test_art.cpp
     test_autosub.cpp
@@ -61,6 +63,7 @@ add_executable(trn-test
     test_respond.cpp
     test_rthread.cpp
     test_rt-page.cpp
+    test_rt-page-deferred-newsgroups.cpp
     test_rt-page-newsgroups.cpp
     test_rt-ov.cpp
     test_rt-process.cpp

@@ -2195,8 +2195,7 @@ start_of_loop:
                 {
                     np->m_flags &= ~NF_INCLUDED;
                     g_sel_total_obj_cnt--;
-                    --g_newsgroup_to_read;
-                    g_missing_count++;
+                    --g_obj_count;
                     continue;
                 }
             }
