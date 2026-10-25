@@ -24,6 +24,8 @@
 #include <trn/trn.h>
 #include <trn/univ.h>
 
+#include <mock_env.h>
+
 #include <gtest/gtest.h>
 
 #ifdef I_UNISTD
@@ -34,8 +36,10 @@
 #include <array>
 #include <cerrno>
 #include <cstdio>
+#include <iomanip>
 #include <optional>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -211,6 +215,227 @@ class NewsgroupPageEligibilityTest : public NewsgroupPageStateTest,
 };
 
 class NewsgroupPageReadScopeTest : public NewsgroupPageStateTest, public testing::WithParamInterface<bool>
+{
+};
+
+const std::array<std::string_view, 8> DISPLAY_GROUP_NAMES{"comp.alpha", "alt.hidden.with.a.long.name",
+                                                          "comp.beta",  "comp.opposite",
+                                                          "comp.gamma", "comp.invalid",
+                                                          "comp.delta", "comp.next"};
+
+class NewsgroupPageDisplayState : public NewsgroupPageStateTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        prepare_display(bool rereading, char mode, bool exclusive = false);
+    void        cache_descriptions(std::optional<std::string_view> alpha);
+    std::string render_page();
+    std::string expected_rows(char mode, std::initializer_list<int> indices) const;
+    void        expect_group_state() const;
+
+    std::array<NewsgroupData *, 8> m_entries{};
+
+private:
+    DataSource                         m_source{};
+    Newsrc                             m_newsrc{};
+    Multirc                            m_multirc{};
+    trn::testing::MockEnvironment      m_env;
+    std::array<NewsgroupData, 8>       m_before{};
+    std::array<SelectionItem, MAX_SEL> m_old_items{};
+    Multirc                           *m_old_multirc{g_multirc};
+    NewsgroupData                     *m_old_group{g_newsgroup_ptr};
+    bool                               m_old_in_group{g_in_ng};
+    bool                               m_old_group_listing{g_sel_group_listing};
+    bool                               m_old_erase_screen{g_erase_screen};
+    bool                               m_old_erase_each_line{g_erase_each_line};
+    std::string                        m_old_display_mode{g_sel_grp_display_mode};
+    std::size_t                        m_old_display_index{g_sel_grp_display_mode_index};
+    int                                m_old_last_line{g_sel_last_line};
+    bool                               m_old_at_end{g_sel_at_end};
+    Article                           *m_old_last_article{g_sel_last_ap};
+    Subject                           *m_old_last_subject{g_sel_last_sp};
+    int                                m_old_term_column{g_term_col};
+    int                                m_old_scrolled{g_term_scrolled};
+    int                                m_old_fire{g_fire_is_out};
+    std::string_view                   m_old_home{g_tc_HO};
+    std::string_view                   m_old_clear{g_tc_CD};
+    std::string_view                   m_old_return{g_tc_CR};
+    std::string_view                   m_old_standout{g_tc_SO};
+    std::string_view                   m_old_end_standout{g_tc_SE};
+};
+
+void NewsgroupPageDisplayState::SetUp()
+{
+    NewsgroupPageStateTest::SetUp();
+    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    m_env.expect_env_repeatedly("SELECTCHARS", "abcdef");
+    m_source.m_name = "default";
+    m_source.m_group_desc = "cached-newsgroups";
+    m_newsrc.data_source = &m_source;
+    m_newsrc.flags = RF_ACTIVE;
+    m_multirc.m_first = &m_newsrc;
+    g_multirc = &m_multirc;
+    g_in_ng = false;
+    g_sel_group_listing = false;
+    g_erase_screen = false;
+    g_erase_each_line = false;
+    g_tc_HO = "<home>";
+    g_tc_CD = "<clear>";
+    g_tc_CR = "";
+    g_tc_SO = "";
+    g_tc_SE = "";
+    g_tc_LINES = 9;
+    g_sel_last_ap = nullptr;
+    g_sel_last_sp = nullptr;
+}
+
+void NewsgroupPageDisplayState::TearDown()
+{
+    m_source.m_desc_sf.close();
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    g_multirc = m_old_multirc;
+    g_newsgroup_ptr = m_old_group;
+    g_in_ng = m_old_in_group;
+    g_sel_group_listing = m_old_group_listing;
+    g_erase_screen = m_old_erase_screen;
+    g_erase_each_line = m_old_erase_each_line;
+    g_sel_grp_display_mode = m_old_display_mode;
+    g_sel_grp_display_mode_index = m_old_display_index;
+    g_sel_last_line = m_old_last_line;
+    g_sel_at_end = m_old_at_end;
+    g_sel_last_ap = m_old_last_article;
+    g_sel_last_sp = m_old_last_subject;
+    g_term_col = m_old_term_column;
+    g_term_scrolled = m_old_scrolled;
+    g_fire_is_out = m_old_fire;
+    g_tc_HO = m_old_home;
+    g_tc_CD = m_old_clear;
+    g_tc_CR = m_old_return;
+    g_tc_SO = m_old_standout;
+    g_tc_SE = m_old_end_standout;
+    NewsgroupPageStateTest::TearDown();
+}
+
+void NewsgroupPageDisplayState::prepare_display(bool rereading, char mode, bool exclusive)
+{
+    set_read_scope(rereading);
+    const NewsgroupFlags                selected = static_cast<NewsgroupFlags>(g_sel_mask);
+    const NewsgroupFlags                other_selection = rereading ? NF_SEL : NF_DEL_SEL;
+    const std::array<ArticleUnread, 8>  unread{3, 4, 12, 0, 7, TR_UNSUB, 1, 9};
+    const std::array<NewsgroupFlags, 8> flags{selected, selected, other_selection, other_selection,
+                                              NF_NONE,  selected, selected,        NF_NONE};
+    for (std::size_t index = 0; index < m_entries.size(); ++index)
+    {
+        const ArticleUnread count =
+            index == 3 ? (rereading ? 7 : 0) : (rereading && unread[index] >= TR_NONE ? 0 : unread[index]);
+        NewsgroupData &group = add_group(DISPLAY_GROUP_NAMES[index], count, flags[index]);
+        group.m_rc = &m_newsrc;
+        group.m_rc_line += "1-3";
+        m_entries[index] = &group;
+    }
+    set_newsgroup_to_do("comp.*");
+    g_sel_exclusive = exclusive;
+    g_sel_grp_display_mode.assign(1, mode);
+    g_sel_grp_display_mode_index = 0;
+    initialize_page();
+    m_entries[4]->m_flags |= NF_DEL;
+    m_entries[6]->m_flags |= NF_DEL;
+    g_newsgroup_ptr = m_entries[exclusive ? 6 : 4];
+    g_sel_item_index = -1;
+    cache_descriptions("Alpha discussion\n");
+    for (std::size_t index = 0; index < m_entries.size(); ++index)
+    {
+        m_before[index] = *m_entries[index];
+    }
+}
+
+void NewsgroupPageDisplayState::cache_descriptions(std::optional<std::string_view> alpha)
+{
+    m_source.m_desc_sf.close();
+    ASSERT_EQ(1, m_source.m_desc_sf.open({}, "", ""));
+    if (alpha)
+    {
+        (void) m_source.m_desc_sf.append("comp.alpha " + std::string{*alpha}, 10);
+    }
+    (void) m_source.m_desc_sf.append("comp.beta Beta discussion\n", 9);
+    (void) m_source.m_desc_sf.append("comp.gamma Gamma discussion\n", 10);
+    (void) m_source.m_desc_sf.append("comp.delta Delta discussion\n", 10);
+    (void) m_source.m_desc_sf.append("comp.next Next page discussion\n", 9);
+}
+
+std::string NewsgroupPageDisplayState::render_page()
+{
+    testing::internal::CaptureStdout();
+    display_page();
+    return testing::internal::GetCapturedStdout();
+}
+
+std::string NewsgroupPageDisplayState::expected_rows(char mode, std::initializer_list<int> indices) const
+{
+    const std::array<std::string_view, 8> descriptions{
+        "Alpha discussion", "", "Beta discussion",  "",
+        "Gamma discussion", "", "Delta discussion", "Next page discussion"};
+    std::ostringstream rows;
+    char               label = 'a';
+    for (const int index : indices)
+    {
+        const char mark = index == 0 ? '+' : index == 6 ? '*' : index == 4 || g_sel_rereading ? '-' : ' ';
+        rows << label++ << mark << std::setw(5) << static_cast<long>(m_before[index].m_to_read) << ' ';
+        if (mode == 's')
+        {
+            rows << DISPLAY_GROUP_NAMES[index];
+        }
+        else if (mode == 'm')
+        {
+            rows << descriptions[index];
+        }
+        else
+        {
+            rows << std::left << std::setw(12) << DISPLAY_GROUP_NAMES[index] << std::right << descriptions[index];
+        }
+        rows << '\n';
+    }
+    return rows.str();
+}
+
+void NewsgroupPageDisplayState::expect_group_state() const
+{
+    for (std::size_t index = 0; index < m_entries.size(); ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(m_before[index].m_flags, m_entries[index]->m_flags);
+        EXPECT_EQ(m_before[index].m_to_read, m_entries[index]->m_to_read);
+        EXPECT_EQ(m_before[index].m_rc_line, m_entries[index]->m_rc_line);
+        EXPECT_EQ(m_before[index].m_abs_first, m_entries[index]->m_abs_first);
+        EXPECT_EQ(&m_newsrc, m_entries[index]->m_rc);
+    }
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
+}
+
+class NewsgroupPageDisplayTest : public NewsgroupPageDisplayState,
+                                 public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class ExclusiveNewsgroupPageDisplayTest : public NewsgroupPageDisplayState, public testing::WithParamInterface<bool>
+{
+};
+
+struct GroupDescriptionFallback
+{
+    const char                     *name;
+    std::optional<std::string_view> description;
+};
+
+void PrintTo(const GroupDescriptionFallback &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class NewsgroupDescriptionFallbackTest : public NewsgroupPageDisplayState,
+                                         public testing::WithParamInterface<std::tuple<char, GroupDescriptionFallback>>
 {
 };
 
@@ -4322,6 +4547,116 @@ TEST_F(NewsgroupSelectorRecoveryStateTest, cancellingAfterAScrolledCommandPreser
     EXPECT_EQ('Q', read_tty_char() & 0177);
     EXPECT_FALSE(macro_pending());
 }
+
+TEST_P(NewsgroupPageDisplayTest, displaysEligibleGroupsWithTheirCurrentCountsAndMarks)
+{
+    const auto [rereading, mode] = GetParam();
+    prepare_display(rereading, mode);
+    ASSERT_FALSE(HasFatalFailure());
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(expected_rows(mode, {0, 2, 4, 6})));
+    EXPECT_THAT(output, testing::HasSubstr("5 groups"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("alt.hidden")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.invalid")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Next page discussion")));
+    ASSERT_EQ(4, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    const std::array<int, 4> indices{0, 2, 4, 6};
+    const std::array<int, 4> marks{1, rereading ? 2 : 0, 2, 3};
+    for (std::size_t index = 0; index < indices.size(); ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(m_entries[indices[index]], g_sel_items[index].u.np);
+        EXPECT_EQ(static_cast<int>(index) + 2, g_sel_items[index].line);
+        EXPECT_EQ(marks[index], g_sel_items[index].sel);
+    }
+    EXPECT_EQ(m_entries[0], g_sel_page_np);
+    EXPECT_EQ(m_entries[7], g_sel_next_np);
+    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(7, g_sel_last_line);
+    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(m_entries[4], g_newsgroup_ptr);
+    expect_group_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndStyle, NewsgroupPageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Values('s', 'm', 'l')));
+
+TEST_P(ExclusiveNewsgroupPageDisplayTest, skipsHiddenGroupsWithoutConsumingTheirRowLabels)
+{
+    prepare_display(GetParam(), 'l', true);
+    ASSERT_FALSE(HasFatalFailure());
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(expected_rows('l', {0, 6})));
+    EXPECT_THAT(output, testing::HasSubstr("2 groups out of 5"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Beta discussion")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Gamma discussion")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("alt.hidden")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.invalid")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(m_entries[0], g_sel_items[0].u.np);
+    EXPECT_EQ(m_entries[6], g_sel_items[1].u.np);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(3, g_sel_items[1].line);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(3, g_sel_items[1].sel);
+    EXPECT_EQ(m_entries[0], g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(5, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(GetParam(), g_sel_rereading);
+    EXPECT_EQ(m_entries[6], g_newsgroup_ptr);
+    expect_group_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, ExclusiveNewsgroupPageDisplayTest, testing::Bool());
+
+TEST_P(NewsgroupDescriptionFallbackTest, usesTheGroupNameWhenItsDescriptionIsUnavailable)
+{
+    const auto &[mode, fallback] = GetParam();
+    prepare_display(false, mode);
+    cache_descriptions(fallback.description);
+    ASSERT_FALSE(HasFatalFailure());
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr("a+    3 comp.alpha\n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha discussion")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("?Unknown")));
+    EXPECT_THAT(output, testing::HasSubstr("Beta discussion"));
+    ASSERT_EQ(4, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(m_entries[0], g_sel_items[0].u.np);
+    EXPECT_EQ(m_entries[2], g_sel_items[1].u.np);
+    EXPECT_EQ(m_entries[4], g_sel_items[2].u.np);
+    EXPECT_EQ(m_entries[6], g_sel_items[3].u.np);
+    EXPECT_EQ(m_entries[7], g_sel_next_np);
+    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(m_entries[4], g_newsgroup_ptr);
+    expect_group_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(StyleAndDescription, NewsgroupDescriptionFallbackTest,
+                         testing::Combine(testing::Values('m', 'l'),
+                                          testing::Values(GroupDescriptionFallback{"Missing", std::nullopt},
+                                                          GroupDescriptionFallback{"Empty", "\n"},
+                                                          GroupDescriptionFallback{"Unknown", "?Unknown\n"})));
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {
