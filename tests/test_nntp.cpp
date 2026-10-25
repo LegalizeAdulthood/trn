@@ -1718,6 +1718,34 @@ TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
     EXPECT_EQ("server line", line);
 }
 
+class NNTPTransportFailureTest : public NNTPGetStringTest, public WithParamInterface<error_code_t>
+{
+};
+
+TEST_P(NNTPTransportFailureTest, checkReportsAReadFailureAsServerLoss)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(GetParam()), Return("")));
+
+    const int result = nntp_check();
+
+    EXPECT_EQ(-2, result);
+    EXPECT_EQ("503 Server closed connection.", g_ser_line);
+}
+
+INSTANTIATE_TEST_SUITE_P(TransportError, NNTPTransportFailureTest,
+                         Values(error_code_t{boost::asio::error::connection_reset},
+                                error_code_t{boost::asio::error::eof}));
+
+TEST_F(NNTPGetStringTest, checkKeepsAServerErrorDistinctFromTransportLoss)
+{
+    EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("503 Server cannot perform this command."));
+
+    const int result = nntp_check();
+
+    EXPECT_EQ(-1, result);
+    EXPECT_EQ("503 Server cannot perform this command.", g_ser_line);
+}
+
 TEST_F(NNTPGetStringTest, checkStoresStatusLineWithoutCrlf)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 ready\r\n"));

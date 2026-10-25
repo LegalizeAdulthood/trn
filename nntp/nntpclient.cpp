@@ -500,7 +500,7 @@ read_it:
     {
         ret = 1; // (this includes NNTP_CLASS_OK)
     }
-    else if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_FATAL)
+    else if (ret >= 0 && !g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_FATAL)
     {
         ret = -1;
     }

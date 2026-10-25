@@ -18,6 +18,7 @@
 #include <trn/head.h>
 #include <trn/init.h>
 #include <trn/intrp.h>
+#include <trn/last.h>
 #include <trn/mime.h>
 #include <trn/ng-internal.h>
 #include <trn/ng.h>
@@ -62,6 +63,8 @@
 #include "mock_env.h"
 #include "MockNNTPConnection.h"
 #include "support/MockNntpServer.h"
+
+#include <boost/asio/error.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -1493,6 +1496,286 @@ class NewsgroupSelectorDelegatedRedisplayTest : public NewsgroupSelectorDelegate
                                                 public testing::WithParamInterface<std::tuple<bool, bool>>
 {
 };
+
+class NewsgroupSelectorDelegatedExitStateTest : public NewsgroupSelectorDelegatedRecoveryTest
+{
+protected:
+    void               prepare_exit(bool rereading, bool later_page, bool at_end = false);
+    void               expect_pending_changes() const;
+    void               expect_exit_files_unchanged() const;
+    static std::string newsrc_text(const Newsrc &newsrc);
+    static std::string read_newsrc(const fs::path &path);
+
+    std::string m_original_newsrc;
+
+private:
+    std::array<NewsgroupData, 3> m_pending;
+};
+
+void NewsgroupSelectorDelegatedExitStateTest::prepare_exit(bool rereading, bool later_page, bool at_end)
+{
+    prepare_recovery(rereading, later_page);
+    if (at_end)
+    {
+        g_newsgroup_ptr = nullptr;
+    }
+    m_newsrc.name = m_output_dir / "newsrc";
+    m_newsrc.old_name = m_output_dir / "old-newsrc";
+    m_newsrc.new_name = m_output_dir / "newsrc.new";
+    m_newsrc.info_name = m_output_dir / "newsrc.info";
+    m_newsrc.flags |= RF_RC_CHANGED;
+    std::copy(g_newsgroup_data.begin(), g_newsgroup_data.end(), m_pending.begin());
+    m_original_newsrc = "comp.previous: 1\ncomp.lang.cpp: 1\ncomp.next: 1\n";
+    std::ofstream{m_newsrc.name} << m_original_newsrc;
+    std::ofstream{m_newsrc.old_name} << m_original_newsrc;
+}
+
+std::string NewsgroupSelectorDelegatedExitStateTest::newsrc_text(const Newsrc &newsrc)
+{
+    std::string result;
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        if (group.m_rc == &newsrc)
+        {
+            result += std::string{group.rc_name()} + group.m_subscribe_char + std::string{group.rc_numbers()} + '\n';
+        }
+    }
+    return result;
+}
+
+std::string NewsgroupSelectorDelegatedExitStateTest::read_newsrc(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void NewsgroupSelectorDelegatedExitStateTest::expect_pending_changes() const
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        EXPECT_EQ(m_pending[index].rc_numbers(), g_newsgroup_data[index].rc_numbers()) << index;
+        EXPECT_EQ(m_pending[index].m_to_read, g_newsgroup_data[index].m_to_read) << index;
+        EXPECT_EQ(m_pending[index].m_subscribe_char, g_newsgroup_data[index].m_subscribe_char) << index;
+        EXPECT_EQ(m_pending[index].m_flags, g_newsgroup_data[index].m_flags) << index;
+    }
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+void NewsgroupSelectorDelegatedExitStateTest::expect_exit_files_unchanged() const
+{
+    EXPECT_EQ(m_original_newsrc, read_newsrc(m_newsrc.name));
+    EXPECT_EQ(m_original_newsrc, read_newsrc(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+}
+
+class NewsgroupSelectorDelegatedQuitTest : public NewsgroupSelectorDelegatedExitStateTest,
+                                           public testing::WithParamInterface<std::tuple<char, bool, bool>>
+{
+};
+
+class NewsgroupSelectorDelegatedAbandonExitTest : public NewsgroupSelectorDelegatedExitStateTest,
+                                                  public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class NewsgroupSelectorDelegatedDeclineExitTest : public NewsgroupSelectorDelegatedExitStateTest,
+                                                  public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class NewsgroupSelectorDelegatedErrorTest : public NewsgroupSelectorDelegatedExitStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+};
+
+class NewsgroupSelectorDelegatedQuitSessionTest : public NewsgroupSelectorDelegatedExitStateTest,
+                                                  public testing::WithParamInterface<char>
+{
+};
+
+class NewsgroupSelectorDelegatedErrorSessionTest : public NewsgroupSelectorDelegatedExitStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    int  m_saved_stdin{-1};
+    bool m_old_allow_typeahead{g_allow_typeahead};
+};
+
+void NewsgroupSelectorDelegatedErrorSessionTest::SetUp()
+{
+    NewsgroupSelectorDelegatedExitStateTest::SetUp();
+    prepare_exit(false, false);
+    const fs::path input_file = m_output_dir / "selector-input";
+    std::ofstream{input_file} << "RqQ";
+    std::FILE *input = std::fopen(input_file.string().c_str(), "r");
+    ASSERT_NE(nullptr, input);
+    m_saved_stdin = dup(fileno(stdin));
+    ASSERT_GE(m_saved_stdin, 0);
+    EXPECT_GE(dup2(fileno(input), fileno(stdin)), 0);
+    std::fclose(input);
+    std::clearerr(stdin);
+    g_allow_typeahead = true;
+}
+
+void NewsgroupSelectorDelegatedErrorSessionTest::TearDown()
+{
+    if (m_saved_stdin >= 0)
+    {
+        EXPECT_GE(dup2(m_saved_stdin, fileno(stdin)), 0);
+        close(m_saved_stdin);
+        std::clearerr(stdin);
+    }
+    g_allow_typeahead = m_old_allow_typeahead;
+    NewsgroupSelectorDelegatedExitStateTest::TearDown();
+}
+
+class NewsgroupSelectorDelegatedServerLossTest : public NewsgroupSelectorDelegatedExitStateTest,
+                                                 public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+protected:
+    void TearDown() override;
+    void prepare_server_loss(bool rereading, bool later_page, bool remaining_source);
+    void expect_saved_changes() const;
+    void expect_selector_modes(bool rereading) const;
+
+    std::string m_diagnostic;
+
+private:
+    DataSource     m_remaining_source{};
+    Newsrc         m_remaining_newsrc{};
+    std::string    m_saved_failed_text;
+    std::string    m_saved_remaining_text;
+    std::string    m_original_remaining_text;
+    std::string    m_old_server_line{g_ser_line};
+    std::string    m_old_last_command{g_last_command};
+    std::string    m_old_last_group{g_last_newsgroup_name};
+    long           m_old_last_new_time{g_last_new_time};
+    bool           m_old_allow_timeout{g_nntp_allow_timeout};
+    bool           m_old_check{g_check_flag};
+    bool           m_old_suppress{g_suppress_cn};
+    bool           m_old_paranoid{g_paranoid};
+    NewsgroupData *m_old_start{g_start_here};
+    NewsgroupData *m_old_go_group{g_ng_go_newsgroup_ptr};
+};
+
+void NewsgroupSelectorDelegatedServerLossTest::prepare_server_loss(bool rereading, bool later_page,
+                                                                   bool remaining_source)
+{
+    prepare_exit(rereading, later_page);
+    const int target = later_page ? 0 : 1;
+    Selection origin{};
+    origin.np = &g_newsgroup_data[target];
+    (void) calc_page(origin);
+    g_newsgroup_ptr = origin.np;
+    set_newsgroup_name(origin.np->rc_name());
+    g_term_line = g_sel_last_line;
+    g_check_flag = false;
+    g_suppress_cn = true;
+    g_paranoid = false;
+    g_nntp_allow_timeout = false;
+    if (remaining_source)
+    {
+        m_remaining_source.m_flags = DF_OPEN | DF_ACTIVE;
+        m_remaining_source.m_news_id = (m_output_dir / "active").generic_string();
+        m_remaining_source.m_spool_dir = m_output_dir.generic_string();
+        ASSERT_EQ(1, m_remaining_source.m_act_sf.open(m_remaining_source.m_news_id, "", ""));
+        m_remaining_newsrc.data_source = &m_remaining_source;
+        m_remaining_newsrc.name = m_output_dir / "remaining-newsrc";
+        m_remaining_newsrc.old_name = m_output_dir / "remaining-old-newsrc";
+        m_remaining_newsrc.new_name = m_output_dir / "remaining-newsrc.new";
+        m_remaining_newsrc.info_name = m_output_dir / "remaining-newsrc.info";
+        m_remaining_newsrc.flags = RF_ACTIVE | RF_RC_CHANGED;
+        m_newsrc.next = &m_remaining_newsrc;
+        m_original_newsrc.clear();
+        for (int index = 0; index < 3; ++index)
+        {
+            const std::string original_line = std::string{g_newsgroup_data[index].rc_name()} + ": 1\n";
+            if (index != target)
+            {
+                g_newsgroup_data[index].m_rc = &m_remaining_newsrc;
+                m_original_remaining_text += original_line;
+            }
+            else
+            {
+                m_original_newsrc += original_line;
+            }
+        }
+        std::ofstream{m_remaining_newsrc.name} << m_original_remaining_text;
+        std::ofstream{m_remaining_newsrc.old_name} << m_original_remaining_text;
+        std::ofstream{m_newsrc.name} << m_original_newsrc;
+        std::ofstream{m_newsrc.old_name} << m_original_newsrc;
+    }
+    m_saved_failed_text = newsrc_text(m_newsrc);
+    m_saved_remaining_text = newsrc_text(m_remaining_newsrc);
+    const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.connection = connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    m_data_source.m_nntp_link = g_nntp_link;
+    m_data_source.m_flags = DF_REMOTE | DF_OPEN | DF_ACTIVE;
+    testing::InSequence sequence;
+    EXPECT_CALL(*connection, write_line(testing::StrEq("GROUP " + std::string{origin.np->rc_name()}), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_))
+        .WillOnce(
+            [](error_code_t &error)
+            {
+                error = boost::asio::error::connection_reset;
+                return std::string{};
+            });
+    EXPECT_CALL(*connection, write_line(testing::StrEq("QUIT"), testing::_))
+        .WillOnce([](const std::string &, error_code_t &error) { error = boost::asio::error::connection_reset; });
+}
+
+void NewsgroupSelectorDelegatedServerLossTest::TearDown()
+{
+    if (g_multirc == &m_multirc)
+    {
+        unuse_multirc(&m_multirc);
+    }
+    m_remaining_source.close();
+    g_ser_line = m_old_server_line;
+    g_last_command = m_old_last_command;
+    g_last_newsgroup_name = m_old_last_group;
+    g_last_new_time = m_old_last_new_time;
+    g_nntp_allow_timeout = m_old_allow_timeout;
+    g_check_flag = m_old_check;
+    g_suppress_cn = m_old_suppress;
+    g_paranoid = m_old_paranoid;
+    g_start_here = m_old_start;
+    g_ng_go_newsgroup_ptr = m_old_go_group;
+    NewsgroupSelectorDelegatedExitStateTest::TearDown();
+}
+
+void NewsgroupSelectorDelegatedServerLossTest::expect_saved_changes() const
+{
+    EXPECT_EQ(m_saved_failed_text, read_newsrc(m_newsrc.name));
+    EXPECT_EQ(m_original_newsrc, read_newsrc(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    if (!m_saved_remaining_text.empty())
+    {
+        EXPECT_EQ(m_saved_remaining_text, read_newsrc(m_remaining_newsrc.name));
+        EXPECT_EQ(m_saved_remaining_text, read_newsrc(m_remaining_newsrc.old_name));
+        EXPECT_FALSE(fs::exists(m_remaining_newsrc.new_name));
+    }
+    EXPECT_EQ(DF_UNAVAILABLE, m_data_source.m_flags & DF_UNAVAILABLE);
+    EXPECT_EQ(DF_NONE, m_data_source.m_flags & (DF_OPEN | DF_ACTIVE));
+    EXPECT_FALSE(m_data_source.m_nntp_link.connection);
+    EXPECT_FALSE(g_restore_old_newsrc);
+}
+
+void NewsgroupSelectorDelegatedServerLossTest::expect_selector_modes(bool rereading) const
+{
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
+    EXPECT_EQ(SM_NEWSGROUP, g_sel_mode);
+    EXPECT_EQ(SS_STRING, g_sel_sort);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_restore_old_newsrc);
+}
 
 class NewsgroupSelectorDelegatedEntryTest : public NewsgroupSelectorDelegationStateTest,
                                             public testing::WithParamInterface<std::tuple<char, bool>>
@@ -5990,6 +6273,192 @@ TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
     EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
     EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory"));
     EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorDelegatedQuitTest, quittingRetainsPendingChangesAndTheSelectorPosition)
+{
+    const auto [command, rereading, at_end] = GetParam();
+    prepare_exit(rereading, true, at_end);
+    NewsgroupData *const group = g_newsgroup_ptr;
+
+    const DisplayState result = run_delegated('\\', std::string{command} + "Q");
+
+    EXPECT_EQ(DS_QUIT, result);
+    EXPECT_EQ(group, g_newsgroup_ptr);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_page(true, 1);
+    expect_selector_context(rereading);
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandReadScopeAndEndPrompt, NewsgroupSelectorDelegatedQuitTest,
+                         testing::Combine(testing::Values('q', 'Q'), testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedAbandonExitTest, confirmedAbandonmentRequestsRestorationWithoutWritingTheNewsrc)
+{
+    const auto [rereading, answer] = GetParam();
+    prepare_exit(rereading, true);
+
+    const DisplayState result = run_delegated('x', std::string{answer} + "Q");
+
+    EXPECT_EQ(DS_QUIT, result);
+    EXPECT_TRUE(g_restore_old_newsrc);
+    EXPECT_THAT(m_output, testing::HasSubstr("The abandoned changes are in"));
+    expect_page(true, 1);
+    expect_selector_context(rereading);
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndConfirmation, NewsgroupSelectorDelegatedAbandonExitTest,
+                         testing::Combine(testing::Bool(), testing::Values('y', ' ', '\r', '\n')));
+
+TEST_P(NewsgroupSelectorDelegatedDeclineExitTest, decliningAbandonmentKeepsTheSelectorAndPendingChanges)
+{
+    const auto [rereading, answer] = GetParam();
+    prepare_exit(rereading, true);
+
+    const DisplayState result = run_delegated('x', std::string{answer} + "\nQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("The abandoned changes are in")));
+    expect_page(true, 1);
+    expect_selector_context(rereading);
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndRefusal, NewsgroupSelectorDelegatedDeclineExitTest,
+                         testing::Combine(testing::Bool(), testing::Values('n', 'q')));
+
+TEST_P(NewsgroupSelectorDelegatedErrorTest, anUnknownCommandRetainsThePageInputAndPendingChanges)
+{
+    const auto [rereading, later_page, at_end] = GetParam();
+    prepare_exit(rereading, later_page, at_end);
+    NewsgroupData *const group = g_newsgroup_ptr;
+
+    const DisplayState result = run_delegated('@', "Q");
+
+    EXPECT_EQ(DS_ERROR, result);
+    EXPECT_EQ(group, g_newsgroup_ptr);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_page(later_page, 1);
+    expect_selector_context(rereading);
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopePageAndEndPrompt, NewsgroupSelectorDelegatedErrorTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedQuitSessionTest, aDelegatedQuitReturnsTheGroupListQuitCommand)
+{
+    prepare_exit(false, false);
+    const std::string input = "\\\\" + std::string{GetParam()} + "Q";
+
+    const char result = run_selector_session(input);
+
+    EXPECT_EQ('q', result);
+    EXPECT_FALSE(g_restore_old_newsrc);
+    expect_selector_context();
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(Command, NewsgroupSelectorDelegatedQuitSessionTest, testing::Values('q', 'Q'));
+
+TEST_F(NewsgroupSelectorDelegatedErrorSessionTest, anUnknownDelegatedCommandAllowsTheNextSelectorCommand)
+{
+    const char result = run_selector_session("\\\\@");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("help"));
+    EXPECT_THAT(m_output, testing::HasSubstr("reverse group name order"));
+    expect_selector_context(false, -1);
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+}
+
+TEST_F(NewsgroupSelectorDelegatedExitStateTest, aDelegatedAbandonExitReturnsQuitWithRestorationPending)
+{
+    prepare_exit(false, false);
+
+    const char result = run_selector_session("\\\\xyQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_TRUE(g_restore_old_newsrc);
+    expect_selector_context();
+    expect_pending_changes();
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorDelegatedServerLossTest, serverLossRestartsOnlyWhenAnotherSourceRemains)
+{
+    const auto [rereading, later_page, remaining_source] = GetParam();
+    prepare_server_loss(rereading, later_page, remaining_source);
+
+    testing::internal::CaptureStderr();
+    const DisplayState result = run_delegated('y', "  Q");
+    m_diagnostic = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ(remaining_source ? DS_RESTART : DS_QUIT, result);
+    EXPECT_EQ(remaining_source ? &m_multirc : nullptr, g_multirc);
+    EXPECT_EQ(remaining_source ? 2 : 0, g_newsgroup_data.size());
+    EXPECT_EQ(nullptr, g_sel_page_np);
+    if (remaining_source)
+    {
+        EXPECT_EQ(0, g_sel_prior_obj_cnt);
+        for (const NewsgroupData &group : g_newsgroup_data)
+        {
+            EXPECT_NE(&m_data_source, group.m_rc->data_source);
+            EXPECT_EQ(rereading ? " 1-3" : (group.rc_name() == "comp.lang.cpp" ? " 1" : " 1-2"), group.rc_numbers());
+        }
+    }
+    EXPECT_THAT(m_diagnostic, testing::HasSubstr("503 Server closed connection."));
+    expect_saved_changes();
+    expect_selector_modes(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopePageAndRemainingSource, NewsgroupSelectorDelegatedServerLossTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorDelegatedServerLossTest, theSelectorRecoversOrQuitsAfterARealGroupAccessFailure)
+{
+    const auto [rereading, later_page, remaining_source] = GetParam();
+    prepare_server_loss(rereading, later_page, remaining_source);
+    const std::string input =
+        std::string{rereading ? "U" : ""} + (later_page ? ">" : "") + "\\\\y  " + (remaining_source ? "qQ" : "Q");
+    g_sel_page_np = nullptr;
+
+    testing::internal::CaptureStderr();
+    const char result = run_selector_session(input);
+    m_diagnostic = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(remaining_source ? &m_multirc : nullptr, g_multirc);
+    if (remaining_source)
+    {
+        EXPECT_EQ(0, g_sel_prior_obj_cnt);
+        EXPECT_EQ(0, g_sel_item_index);
+        EXPECT_EQ(2, g_sel_total_obj_cnt);
+        EXPECT_EQ(newsgroup_first(), g_sel_page_np);
+        EXPECT_EQ(0, g_selected_count);
+    }
+    EXPECT_THAT(m_diagnostic, testing::HasSubstr("503 Server closed connection."));
+    expect_saved_changes();
+    expect_selector_modes(rereading);
+    expect_next_command('Q');
 }
 
 TEST_P(NewsgroupSelectorDelegatedEraseTest, erasingADelegatedCommandRecoversTheOriginalPageAndCursor)
