@@ -1370,7 +1370,7 @@ bool last_page()
 ///
 bool next_page()
 {
-    if (!g_sel_total_obj_cnt)
+    if (!g_sel_total_obj_cnt || g_sel_prior_obj_cnt + g_sel_page_obj_cnt >= g_sel_total_obj_cnt)
     {
         return false;
     }
