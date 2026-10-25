@@ -2545,7 +2545,7 @@ std::vector<std::string> PagerSearchArticleTest::highlighted_rows(std::size_t pa
 struct PagerExitCase
 {
     const char     *name;
-    const char     *input;
+    std::string     input;
     std::string     command;
     ArticleFlags    initial_flags{AF_UNREAD};
     ArticleFlags    expected_flags{AF_UNREAD};
@@ -2553,6 +2553,10 @@ struct PagerExitCase
     DoArticleResult result{DA_RAISE};
     bool            reread{};
     const char     *pending{"q"};
+
+    std::vector<PagerResumePage> pages;
+    long                         next_row{4};
+    std::string_view             message;
 };
 
 void PrintTo(const PagerExitCase &value, std::ostream *output)
@@ -2570,7 +2574,17 @@ PagerExitCase raised_pager_command(const char *name, const char *input, bool mar
             mark_read ? 1 : 0};
 }
 
-class PagerExitArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerExitCase>
+PagerExitCase after_pager_interaction(PagerExitCase scenario, std::string_view commands,
+                                      std::vector<PagerResumePage> pages, long next_row, std::string_view message = {})
+{
+    scenario.input = std::string{commands} + scenario.input;
+    scenario.pages = std::move(pages);
+    scenario.next_row = next_row;
+    scenario.message = message;
+    return scenario;
+}
+
+class PagerExitArticleTest : public PagerTextArticleTest, public WithParamInterface<PagerExitCase>
 {
 protected:
     void        SetUp() override;
@@ -2582,6 +2596,7 @@ protected:
 private:
     ValueSaver<ArticleNum>    m_current_article{g_curr_art, g_curr_art};
     ValueSaver<char>          m_erase_char{g_erase_char, g_erase_char};
+    ValueSaver<char>          m_kill_char{g_kill_char, g_kill_char};
     ValueSaver<bool>          m_reread{g_reread, g_reread};
     ValueSaver<int>           m_checkpoints{g_check_count, g_check_count};
     ValueSaver<ArticleUnread> m_selected{g_selected_count, g_selected_count};
@@ -2592,9 +2607,21 @@ private:
 
 void PagerExitArticleTest::SetUp()
 {
-    ArticleHeaderPresentationTest::SetUp();
+    PagerTextArticleTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     const PagerExitCase &scenario = GetParam();
+    if (scenario.pages.empty())
+    {
+        g_top_line = ArticleLine{-1};
+        g_init_lines = ArticleLine{2};
+        g_tc_LINES = 4;
+    }
+    else
+    {
+        load_body(numbered_pager_body(0, 12));
+        g_tc_LINES = 5;
+        g_init_lines = ArticleLine{g_tc_LINES};
+    }
     if (scenario.initial_flags & AF_UNREAD)
     {
         g_artp->one_more();
@@ -2609,10 +2636,9 @@ void PagerExitArticleTest::SetUp()
     m_unread_before = g_newsgroup_ptr->m_to_read;
     g_curr_art = g_art;
     g_erase_char = '\b';
+    g_kill_char = '\025';
     g_check_count = 0;
     g_reread = true;
-    g_init_lines = ArticleLine{2};
-    g_tc_LINES = 4;
     m_article_command = "stale command";
     set_mode(GM_READ, MM_ARTICLE);
     (void) pending_input();
@@ -2627,7 +2653,7 @@ void PagerExitArticleTest::SetUp()
 void PagerExitArticleTest::TearDown()
 {
     (void) pending_input();
-    ArticleHeaderPresentationTest::TearDown();
+    PagerTextArticleTest::TearDown();
 }
 
 std::string PagerExitArticleTest::pending_input()
@@ -4781,6 +4807,38 @@ TEST_P(PagerExitArticleTest, returnsTheCommandAndItsReadStateToTheArticleLoop)
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_THAT(m_rendered, HasSubstr("--MORE--("));
+    if (!scenario.message.empty())
+    {
+        EXPECT_THAT(m_rendered, HasSubstr(scenario.message));
+    }
+    if (!scenario.pages.empty())
+    {
+        for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+        {
+            const PagerResumePage   &expected = scenario.pages[page];
+            std::vector<std::string> rows = displayed_rows(page);
+            rows.erase(
+                std::remove_if(rows.begin(), rows.end(), [](const std::string &row) { return row.find("Body ") != 0; }),
+                rows.end());
+            EXPECT_EQ(numbered_pager_rows(expected.first, expected.first + expected.count), rows) << "Page " << page;
+        }
+        std::size_t prompts = 0;
+        for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+             position = m_rendered.find("--MORE--(", position + 1))
+        {
+            ++prompts;
+        }
+        EXPECT_EQ(scenario.pages.size() - (scenario.result == DA_NORM ? 1 : 0), prompts);
+        EXPECT_EQ(ArticleLine{scenario.next_row}, g_art_line_num);
+        EXPECT_EQ(ArticleLine{std::max(0L, scenario.next_row - 4)}, g_top_line);
+        for (long row = 0; row <= scenario.next_row; ++row)
+        {
+            EXPECT_EQ(m_body_start + ArticlePosition{row * 9}, virtual_read(ArticleLine{row})) << "Row " << row;
+        }
+        EXPECT_EQ(virtual_read(g_art_line_num), g_art_pos);
+        EXPECT_FALSE(g_do_fseek);
+        EXPECT_FALSE(g_in_header);
+    }
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -4813,6 +4871,45 @@ INSTANTIATE_TEST_SUITE_P(
            PagerExitCase{"ThreadSelectorRetainsTheCompletedCommand", "_t", "_t"},
            PagerExitCase{"QuitOnlyThePager", "q", "", AF_UNREAD, AF_UNREAD, 0, DA_TO_END, true},
            PagerExitCase{"ErasingSelectorPrefixStaysInPager", "_\b", "", AF_UNREAD, AF_UNREAD, 0, DA_TO_END, true, ""}),
+    [](const TestParamInfo<PagerExitCase> &info) { return info.param.name; });
+
+INSTANTIATE_TEST_SUITE_P(
+    PagerInteractions, PagerExitArticleTest,
+    Values(after_pager_interaction(raised_pager_command("CanceledSearchThenNext", "n", true), "g\b", {{0, 4}, {0, 0}},
+                                   4),
+           after_pager_interaction(raised_pager_command("MalformedSearchThenReply", "r"), "g[\n", {{0, 4}, {0, 0}}, 4,
+                                   "Missing ]"),
+           after_pager_interaction(raised_pager_command("MissedSearchThenNext", "n", true), "gnosuchline\n",
+                                   {{0, 4}, {0, 0}}, 4, "(Not found)"),
+           after_pager_interaction(raised_pager_command("CanceledSelectorThenNext", "n", true), "_\b", {{0, 4}, {0, 0}},
+                                   4),
+           after_pager_interaction(PagerExitCase{"KilledSelectorThenSelect", "_a", "_a"}, "_\025", {{0, 4}, {0, 0}}, 4),
+           after_pager_interaction(raised_pager_command("ContinueThenNext", "n", true), " ", {{0, 4}, {4, 3}}, 7),
+           after_pager_interaction(PagerExitCase{"ContinueThenQuit", "q", "", AF_UNREAD, AF_UNREAD, 0, DA_TO_END, true},
+                                   " ", {{0, 4}, {4, 3}}, 7),
+           after_pager_interaction(PagerExitCase{"LineThenSelectedReply", "r",
+                                                 std::string{'r', static_cast<char>(FINISH_CMD)}, AF_UNREAD | AF_SEL,
+                                                 AF_UNREAD | AF_SEL},
+                                   "\n", {{0, 4}, {4, 1}}, 5),
+           after_pager_interaction(PagerExitCase{"RefreshThenRange", "3,5:s\n",
+                                                 std::string{'3', static_cast<char>(FINISH_CMD)}, AF_UNREAD, AF_UNREAD,
+                                                 0, DA_RAISE, false, ",5:s\nq"},
+                                   "\f", {{0, 4}, {0, 4}}, 4),
+           after_pager_interaction(PagerExitCase{"BackThenSearch", "/needle\n",
+                                                 std::string{'/', static_cast<char>(FINISH_CMD)}, AF_UNREAD, AF_UNREAD,
+                                                 0, DA_RAISE, false, "needle\nq"},
+                                   " b", {{0, 4}, {4, 3}, {0, 4}}, 4),
+           after_pager_interaction(PagerExitCase{"ContinueThenSelector", "_an", "_a", AF_UNREAD, AF_UNREAD, 0, DA_RAISE,
+                                                 false, "nq"},
+                                   " ", {{0, 4}, {4, 3}}, 7),
+           after_pager_interaction(PagerExitCase{"MalformedSearchThenContinue", "q", "", AF_UNREAD, AF_UNREAD, 0,
+                                                 DA_TO_END, true},
+                                   "g[\n ", {{0, 4}, {0, 0}, {4, 3}}, 7, "Missing ]"),
+           after_pager_interaction(raised_pager_command("HelpThenMarkUnread", "m"), "Hq", {{0, 4}, {0, 0}}, 4,
+                                   "Paging commands:"),
+           after_pager_interaction(PagerExitCase{"EofRetainsSelectionAndNextCommand", "   n", "", AF_UNREAD | AF_SEL,
+                                                 AF_UNREAD | AF_SEL, 0, DA_NORM, true, "nq"},
+                                   "", {{0, 4}, {4, 3}, {7, 3}, {10, 2}}, 12)),
     [](const TestParamInfo<PagerExitCase> &info) { return info.param.name; });
 
 TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
