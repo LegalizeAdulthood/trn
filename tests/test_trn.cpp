@@ -8,6 +8,7 @@
 #include <trn/addng.h>
 #include <trn/art.h>
 #include <trn/artio.h>
+#include <trn/artsrch.h>
 #include <trn/artstate.h>
 #include <trn/backpage.h>
 #include <trn/bits.h>
@@ -1637,6 +1638,294 @@ void NewsgroupEndReadingStateTest::expect_end_heading() const
     EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "End of newsgroup comp.lang.cpp." : "End of comp.lang.cpp"));
     EXPECT_THAT(m_output, testing::HasSubstr("What next? [npq]"));
 }
+
+class NewsgroupPromptRecoveryStateTest : public NewsgroupEndReadingStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_retained_prompt(std::size_t before, std::size_t after) const;
+    void expect_completed_reading(int reply_displays = 1) const;
+    void expect_text_count(std::string_view text, int expected) const;
+
+private:
+    std::string    m_old_last_pattern{g_last_pat};
+    ArtScope       m_old_scope{g_art_how_much};
+    HeaderLineType m_old_search_header{g_art_srch_hdr};
+    bool           m_old_search_read{g_art_do_read};
+};
+
+void NewsgroupPromptRecoveryStateTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    g_thread_always = true;
+    g_last_pat.clear();
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_srch_hdr = SOME_LINE;
+    g_art_do_read = false;
+    search_init();
+    art_search_init();
+}
+
+void NewsgroupPromptRecoveryStateTest::TearDown()
+{
+    g_last_pat = m_old_last_pattern;
+    g_art_how_much = m_old_scope;
+    g_art_srch_hdr = m_old_search_header;
+    g_art_do_read = m_old_search_read;
+    NewsgroupEndReadingStateTest::TearDown();
+}
+
+void NewsgroupPromptRecoveryStateTest::expect_retained_prompt(std::size_t before, std::size_t after) const
+{
+    ASSERT_LT(before, m_states.size());
+    ASSERT_LT(after, m_states.size());
+    const NewsgroupEndReadingState &original = m_states[before];
+    const NewsgroupEndReadingState &recovered = m_states[after];
+    EXPECT_EQ(original.mode, recovered.mode);
+    EXPECT_EQ(original.article, recovered.article);
+    EXPECT_EQ(original.current, recovered.current);
+    EXPECT_EQ(original.recent, recovered.recent);
+    EXPECT_EQ(original.unread, recovered.unread);
+    EXPECT_EQ(original.selected, recovered.selected);
+    EXPECT_EQ(original.selected_only, recovered.selected_only);
+    EXPECT_EQ(original.read, recovered.read);
+    EXPECT_EQ(original.default_command, recovered.default_command);
+}
+
+void NewsgroupPromptRecoveryStateTest::expect_text_count(std::string_view text, int expected) const
+{
+    int count{};
+    for (std::size_t pos = m_output.find(text); pos != std::string::npos; pos = m_output.find(text, pos + text.size()))
+    {
+        ++count;
+    }
+    EXPECT_EQ(expected, count) << text;
+}
+
+void NewsgroupPromptRecoveryStateTest::expect_completed_reading(int reply_displays) const
+{
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(ArticleNum{3}, m_states.back().article);
+    expect_text_count("Reply body", reply_displays);
+    expect_text_count("Branch body", 1);
+}
+
+class NewsgroupPromptRecoveryTest : public NewsgroupPromptRecoveryStateTest,
+                                    public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupPromptRecoveryTest::SetUp()
+{
+    NewsgroupPromptRecoveryStateTest::SetUp();
+    const auto [verbose, erase_screen] = GetParam();
+    configure_display(verbose, erase_screen);
+    g_erase_each_line = erase_screen;
+}
+
+TEST_P(NewsgroupPromptRecoveryTest, anUnknownCommandRepromptsWithoutRedisplayingOrChangingReadState)
+{
+    const DoNewsgroupResult result = run_reading({"~", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    expect_retained_prompt(0, 1);
+    EXPECT_THAT(m_output, testing::HasSubstr("Type h for help."));
+    expect_text_count("End of article 2", 2);
+    expect_completed_reading();
+}
+
+TEST_P(NewsgroupPromptRecoveryTest, aCorrectedSearchContinuesAfterAnInvalidPattern)
+{
+    const DoNewsgroupResult result = run_reading({"/[\n", "/Branch\n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    expect_retained_prompt(0, 1);
+    EXPECT_THAT(m_output, testing::HasSubstr("Missing ]"));
+    EXPECT_EQ("Branch", g_last_pat);
+    expect_text_count("End of article 2", 1);
+    expect_completed_reading();
+}
+
+TEST_P(NewsgroupPromptRecoveryTest, anUnsuccessfulSearchRepromptsAndAllowsOrdinaryReading)
+{
+    const DoNewsgroupResult result = run_reading({"/absent-subject\n", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    expect_retained_prompt(0, 1);
+    EXPECT_THAT(m_output, testing::HasSubstr("Not found."));
+    expect_text_count("End of article 2", 2);
+    expect_completed_reading();
+}
+
+TEST_P(NewsgroupPromptRecoveryTest, refreshingRedisplaysTheArticleAndPreservesTheReadingAnchor)
+{
+    const DoNewsgroupResult result = run_reading({"\f", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    expect_retained_prompt(0, 1);
+    expect_text_count("End of article 2", 2);
+    expect_completed_reading(2);
+}
+
+TEST_P(NewsgroupPromptRecoveryTest, anUnknownCommandAtGroupEndRetainsTheUnreadArticleForContinuedReading)
+{
+    const DoNewsgroupResult result = run_reading({"$", "~", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(4U, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[1].mode);
+    EXPECT_EQ(ArticleNum{4}, m_states[1].article);
+    EXPECT_EQ(ArticleUnread{1}, m_states[1].unread);
+    expect_retained_prompt(1, 2);
+    EXPECT_THAT(m_output, testing::HasSubstr("Type h for help."));
+    expect_text_count("End of comp.lang.cpp", std::get<0>(GetParam()) ? 0 : 1);
+    expect_completed_reading();
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndErasure, NewsgroupPromptRecoveryTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+class NewsgroupCancelledCommandReadingTest
+    : public NewsgroupPromptRecoveryStateTest,
+      public testing::WithParamInterface<std::tuple<bool, bool, std::string_view>>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupCancelledCommandReadingTest::SetUp()
+{
+    NewsgroupPromptRecoveryStateTest::SetUp();
+    configure_display(std::get<0>(GetParam()), std::get<1>(GetParam()));
+    g_erase_each_line = g_erase_screen;
+}
+
+TEST_P(NewsgroupCancelledCommandReadingTest, cancellingReturnsToSingleCharacterInputWithoutReprintingThePrompt)
+{
+    const std::string command{std::get<2>(GetParam())};
+
+    const DoNewsgroupResult result = run_reading({command, "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    expect_retained_prompt(0, 1);
+    EXPECT_TRUE(g_last_pat.empty());
+    expect_text_count("End of article 2", 1);
+    expect_completed_reading();
+}
+
+INSTANTIATE_TEST_SUITE_P(DisplayAndCommand, NewsgroupCancelledCommandReadingTest,
+                         testing::Combine(testing::Bool(), testing::Bool(),
+                                          testing::Values(std::string_view{"3\b"}, std::string_view{"/Bra\x15"},
+                                                          std::string_view{":\b"})));
+
+using PromptInterruption = std::pair<int, bool>;
+
+class NewsgroupInterruptedInputReadingTest : public NewsgroupPromptRecoveryStateTest,
+                                             public testing::WithParamInterface<PromptInterruption>
+{
+};
+
+TEST_P(NewsgroupInterruptedInputReadingTest, interruptedInputRetainsContextAndContinuesWithTheNextCommand)
+{
+    const auto [rows, pending_signal] = GetParam();
+    g_tc_LINES = rows;
+    bool                      interrupted{};
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [reading_input, pending_signal, &interrupted](char *buffer, int size)
+    {
+        if (!interrupted)
+        {
+            interrupted = true;
+            EXPECT_EQ(ArticleNum{2}, g_curr_art);
+            EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+            EXPECT_TRUE(was_read(ArticleNum{2}));
+            EXPECT_FALSE(was_read(ArticleNum{3}));
+            errno = EINTR;
+            g_int_count = pending_signal ? 1 : 0;
+            return -1;
+        }
+        return reading_input(buffer, size);
+    };
+
+    const DoNewsgroupResult result = run_reading({"n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_TRUE(interrupted);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(ArticleNum{2}, m_states[0].current);
+    EXPECT_EQ(ArticleNum{4}, m_states[0].recent);
+    EXPECT_EQ(ArticleUnread{1}, m_states[0].unread);
+    expect_completed_reading(rows < 100 && !pending_signal ? 2 : 1);
+}
+
+INSTANTIATE_TEST_SUITE_P(ResumeSignalAndTallTerminal, NewsgroupInterruptedInputReadingTest,
+                         testing::Values(PromptInterruption{24, false}, PromptInterruption{24, true},
+                                         PromptInterruption{100, false}));
+
+class NewsgroupSearchInputRecoveryTest : public NewsgroupPromptRecoveryStateTest,
+                                         public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+TEST_P(NewsgroupSearchInputRecoveryTest, rewritingAnIncompleteSearchRetainsItsTextAndFindsTheRequestedArticle)
+{
+    const auto [erase_screen, interrupt] = GetParam();
+    g_erase_screen = g_erase_each_line = erase_screen;
+    int                       continuation_requests{};
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reading_input, interrupt, &continuation_requests](char *buffer, int size)
+    {
+        if (g_general_mode != GM_INPUT)
+        {
+            return reading_input(buffer, size);
+        }
+        EXPECT_EQ(ArticleNum{2}, g_curr_art);
+        EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+        if (++continuation_requests == 1)
+        {
+            if (interrupt)
+            {
+                errno = EINTR;
+                return -1;
+            }
+            *buffer = '\f';
+            return 1;
+        }
+        EXPECT_EQ(2, continuation_requests);
+        push_command("ch\n");
+        *buffer = 'n';
+        return 1;
+    };
+
+    const DoNewsgroupResult result = run_reading({"/Bra", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_EQ(2, continuation_requests);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ("Branch", g_last_pat);
+    expect_completed_reading();
+}
+
+INSTANTIATE_TEST_SUITE_P(ErasureAndInterruption, NewsgroupSearchInputRecoveryTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
 
 class NewsgroupExitReadingTest : public NewsgroupEndReadingStateTest,
                                  public testing::WithParamInterface<std::tuple<bool, bool, bool>>
