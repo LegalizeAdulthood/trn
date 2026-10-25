@@ -117,6 +117,7 @@ DoArticleResult do_article(std::string &article_command)
     std::string_view line_text;
     std::size_t      line_pos{};
     std::string      body_line;
+    ArticlePosition  body_line_begin{};
     std::string      from_line;
     std::string      date_line;
     std::string      pager_command;
@@ -139,7 +140,7 @@ DoArticleResult do_article(std::string &article_command)
         const std::size_t pos = line_pos + offset;
         return pos < line_text.size() ? line_text[pos] : '\0';
     };
-    auto current_article_pos = [&]() { return s_a_line_begin + ArticlePosition{static_cast<long>(line_pos)}; };
+    auto current_article_pos = [&]() { return body_line_begin + ArticlePosition{static_cast<long>(line_pos)}; };
 
     if (g_data_source->m_flags & DF_REMOTE)
     {
@@ -289,7 +290,7 @@ DoArticleResult do_article(std::string &article_command)
             }
             if (s_restart)              // did not finish last line?
             {
-                set_line(body_line, static_cast<std::size_t>((s_restart - s_a_line_begin).value_of()));
+                set_line(body_line, static_cast<std::size_t>((s_restart - body_line_begin).value_of()));
                 s_restart = ArticlePosition{}; // and reset the flag
                 s_continuation = true;
                 if (restart_color && g_do_hiding && !g_in_header)
@@ -305,6 +306,7 @@ DoArticleResult do_article(std::string &article_command)
             }
             else
             {
+                body_line_begin = g_art_pos;
                 if (!read_art_buf(body_line, g_auto_view_inline))
                 {
                     s_special = false;
@@ -499,7 +501,11 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     line_num = ArticleLine{32700};
                 }
-                for (out_pos = 0; out_pos < g_tc_COLS; )   // while line has room
+                for (out_pos = 0; out_pos < g_tc_COLS
+#ifdef USE_UTF_HACK
+                                  || (at_norm_char(line_tail()) && utf8_visual_width_at(line_tail()) == 0)
+#endif
+                         ;) // while line has room, including combining marks at the margin
                 {
                     if (at_norm_char(line_tail()))       // normal char?
                     {
@@ -563,9 +569,7 @@ DoArticleResult do_article(std::string &article_command)
 #ifdef USE_UTF_HACK
                             if (out_pos + utf8_visual_width_at(line_tail()) > g_tc_COLS) // will line overflow?
                             {
-                                newline();
-                                out_pos = 0;
-                                ++line_num;
+                                break;
                             }
                             std::string_view  text = line_tail();
                             const std::size_t old_size = text.size();

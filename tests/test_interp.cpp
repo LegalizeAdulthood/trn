@@ -60,6 +60,7 @@
 #include <sstream>
 #include <string>
 #include <system_error>
+#include <tuple>
 #include <vector>
 
 using namespace testing;
@@ -1804,14 +1805,14 @@ PagerMovementCase with_character_conversion(PagerMovementCase scenario, char mod
     return with_body_prefix(std::move(scenario), 0, last_line, "\"a ");
 }
 
-class PagerMovementArticleTest : public ArticleHeaderPresentationTest, public WithParamInterface<PagerMovementCase>
+class PagerArticleTest : public ArticleHeaderPresentationTest
 {
 protected:
-    void              SetUp() override;
-    void              TearDown() override;
-    void              read_pages();
-    std::string_view  page_text(std::size_t page) const;
-    std::vector<long> page_lines(std::size_t page, bool highlighted_only = false) const;
+    void             SetUp() override;
+    void             TearDown() override;
+    void             load_body(std::string_view body, std::string_view extra_headers = {});
+    void             read_pages(std::string_view commands);
+    std::string_view page_text(std::size_t page) const;
 
     ArticlePosition m_body_start{};
 
@@ -1846,7 +1847,7 @@ private:
     ValueSaver<std::string_view> m_insert_line{g_tc_IL, g_tc_IL};
 };
 
-void PagerMovementArticleTest::SetUp()
+void PagerArticleTest::SetUp()
 {
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
@@ -1856,35 +1857,6 @@ void PagerMovementArticleTest::SetUp()
     m_previous_directory = fs::current_path();
     fs::current_path(m_output.path());
     g_newsgroup_dir = ".";
-    art_close();
-    {
-        std::ofstream article{std::to_string(g_art.value_of())};
-        article << "Subject: pager advancement\n\n";
-        m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
-        for (long line = 0; line < GetParam().body_lines; ++line)
-        {
-            if (line == GetParam().page_break_line)
-            {
-                article << '\f';
-            }
-            for (const PagerBodyPrefix &prefix : GetParam().line_prefixes)
-            {
-                if (prefix.first == line)
-                {
-                    article << prefix.second;
-                }
-            }
-            article << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
-        }
-        ASSERT_TRUE(article.good());
-    }
-    g_parsed_art = ArticleNum{};
-    ASSERT_TRUE(parse_header(g_art));
-    mime_set_article();
-    clear_art_buf();
-    set_art_buf_seek(m_body_start);
-    ASSERT_EQ(0, seek_art(m_body_start));
-    g_art_pos = m_body_start;
     g_art_line_num = ArticleLine{};
     g_top_line = ArticleLine{};
     g_in_header = PAST_HEADER;
@@ -1895,22 +1867,20 @@ void PagerMovementArticleTest::SetUp()
     g_hide_everything = 0;
     g_page_stop.clear();
     g_check_count = 0;
-    g_g_line = GetParam().search_context;
     g_erase_char = '\b';
     g_curr_art = g_art;
-    g_tc_LINES = GetParam().screen_lines;
+    g_tc_LINES = 10;
     g_init_lines = ArticleLine{g_tc_LINES};
-    g_erase_screen = GetParam().erase_screen;
-    g_erase_each_line = GetParam().erase_each_line;
-    g_marking = GetParam().marking;
-    g_marking_areas = GetParam().marking_areas;
+    g_erase_screen = false;
+    g_erase_each_line = false;
+    g_marking = NO_MARKING;
+    g_marking_areas = NONE;
     g_tc_CD = "<clear>";
-    g_tc_HO = GetParam().can_home ? "<home>" : "";
+    g_tc_HO = "<home>";
     g_tc_UP = "<up>";
     g_tc_SO = "<mark>";
     g_tc_SE = "</mark>";
-    g_tc_IL = GetParam().can_insert_line ? "<insert>" : "";
-    virtual_write(ArticleLine{}, m_body_start);
+    g_tc_IL = "";
     set_mode(GM_READ, MM_ARTICLE);
     while (macro_pending())
     {
@@ -1918,7 +1888,27 @@ void PagerMovementArticleTest::SetUp()
     }
 }
 
-void PagerMovementArticleTest::TearDown()
+void PagerArticleTest::load_body(std::string_view body, std::string_view extra_headers)
+{
+    art_close();
+    {
+        std::ofstream article{std::to_string(g_art.value_of())};
+        article << "Subject: pager advancement\n" << extra_headers << '\n';
+        m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
+        article << body;
+        ASSERT_TRUE(article.good());
+    }
+    g_parsed_art = ArticleNum{};
+    ASSERT_TRUE(parse_header(g_art));
+    mime_set_article();
+    clear_art_buf();
+    set_art_buf_seek(m_body_start);
+    ASSERT_EQ(0, seek_art(m_body_start));
+    g_art_pos = m_body_start;
+    virtual_write(ArticleLine{}, m_body_start);
+}
+
+void PagerArticleTest::TearDown()
 {
     while (macro_pending())
     {
@@ -1932,10 +1922,9 @@ void PagerMovementArticleTest::TearDown()
     ArticleHeaderPresentationTest::TearDown();
 }
 
-void PagerMovementArticleTest::read_pages()
+void PagerArticleTest::read_pages(std::string_view commands)
 {
     push_char('q');
-    const std::string_view commands{GetParam().commands};
     for (auto character = commands.rbegin(); character != commands.rend(); ++character)
     {
         push_char(*character);
@@ -1943,7 +1932,7 @@ void PagerMovementArticleTest::read_pages()
     render_article();
 }
 
-std::string_view PagerMovementArticleTest::page_text(std::size_t page) const
+std::string_view PagerArticleTest::page_text(std::size_t page) const
 {
     std::string_view text{m_rendered};
     for (std::size_t index = 0; index < page; ++index)
@@ -1965,6 +1954,52 @@ std::string_view PagerMovementArticleTest::page_text(std::size_t page) const
     return text.substr(0, text.find("--MORE--("));
 }
 
+class PagerMovementArticleTest : public PagerArticleTest, public WithParamInterface<PagerMovementCase>
+{
+protected:
+    void              SetUp() override;
+    void              read_pages();
+    std::vector<long> page_lines(std::size_t page, bool highlighted_only = false) const;
+};
+
+void PagerMovementArticleTest::SetUp()
+{
+    PagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerMovementCase &scenario = GetParam();
+    std::ostringstream       body;
+    for (long line = 0; line < scenario.body_lines; ++line)
+    {
+        if (line == scenario.page_break_line)
+        {
+            body << '\f';
+        }
+        for (const PagerBodyPrefix &prefix : scenario.line_prefixes)
+        {
+            if (prefix.first == line)
+            {
+                body << prefix.second;
+            }
+        }
+        body << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
+    }
+    load_body(body.str());
+    g_g_line = scenario.search_context;
+    g_tc_LINES = scenario.screen_lines;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_erase_screen = scenario.erase_screen;
+    g_erase_each_line = scenario.erase_each_line;
+    g_marking = scenario.marking;
+    g_marking_areas = scenario.marking_areas;
+    g_tc_HO = scenario.can_home ? "<home>" : "";
+    g_tc_IL = scenario.can_insert_line ? "<insert>" : "";
+}
+
+void PagerMovementArticleTest::read_pages()
+{
+    PagerArticleTest::read_pages(GetParam().commands);
+}
+
 std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool highlighted_only) const
 {
     const std::string_view          text = page_text(page);
@@ -1983,6 +2018,78 @@ std::vector<long> PagerMovementArticleTest::page_lines(std::size_t page, bool hi
         }
     }
     return lines;
+}
+
+struct PagerWrappingCase
+{
+    const char              *name;
+    std::string_view         body;
+    std::vector<std::string> rows;
+    int                      columns;
+    int                      wrap_offset{-1};
+};
+
+void PrintTo(const PagerWrappingCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+using PagerWrappingParam = std::tuple<PagerWrappingCase, bool>;
+
+class PagerWrappingArticleTest : public PagerArticleTest, public WithParamInterface<PagerWrappingParam>
+{
+protected:
+    void                     SetUp() override;
+    std::vector<std::string> displayed_rows(std::size_t page) const;
+
+private:
+    ValueSaver<int>              m_wrap_offset{g_word_wrap_offset, g_word_wrap_offset};
+    ValueSaver<bool>             m_auto_margin{g_tc_AM, g_tc_AM};
+    ValueSaver<bool>             m_newline_glitch{g_tc_XN, g_tc_XN};
+    ValueSaver<std::string_view> m_clear_line{g_tc_CE, g_tc_CE};
+};
+
+void PagerWrappingArticleTest::SetUp()
+{
+    PagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerWrappingCase &scenario = std::get<0>(GetParam());
+    g_tc_LINES = 4;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_tc_COLS = scenario.columns;
+    g_word_wrap_offset = scenario.wrap_offset;
+    g_tc_AM = false;
+    g_tc_XN = false;
+    g_tc_CE = "<eol>";
+    g_erase_screen = std::get<1>(GetParam());
+    utf_init("utf-8", "utf-8");
+    load_body(scenario.body, "Content-Type: text/plain; charset=UTF-8\n");
+}
+
+std::vector<std::string> PagerWrappingArticleTest::displayed_rows(std::size_t page) const
+{
+    std::string text{page_text(page)};
+    for (const std::string_view marker : {"<clear>", "<home>", "<up>", "<eol>", "<mark>", "</mark>"})
+    {
+        for (std::size_t position = text.find(marker); position != std::string::npos; position = text.find(marker))
+        {
+            text.erase(position, marker.size());
+        }
+    }
+    text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
+    text.erase(std::remove(text.begin(), text.end(), '\b'), text.end());
+    const std::size_t start = text.find_first_not_of(' ');
+    text.erase(0, start == std::string::npos ? text.size() : start);
+    std::istringstream       input{text};
+    std::vector<std::string> rows;
+    for (std::string row; std::getline(input, row);)
+    {
+        if (row.find_first_not_of(' ') != std::string::npos)
+        {
+            rows.push_back(std::move(row));
+        }
+    }
+    return rows;
 }
 
 struct PagerExitCase
@@ -2989,6 +3096,93 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
               g_prompt);
 }
+
+TEST_P(PagerWrappingArticleTest, readsWrappedTextAcrossPagesWithoutLosingItsPosition)
+{
+    const PagerWrappingCase &scenario = std::get<0>(GetParam());
+    const bool               overlap = std::get<1>(GetParam());
+
+    read_pages(std::string(scenario.rows.size(), ' '));
+
+    SCOPED_TRACE(m_rendered);
+    EXPECT_EQ(DA_NORM, m_result);
+    std::size_t page = 0;
+    for (std::size_t first = 0; first < scenario.rows.size();)
+    {
+        const std::size_t count = std::min<std::size_t>(page == 0 || overlap ? 3 : 2, scenario.rows.size() - first);
+        const std::vector<std::string> expected{scenario.rows.begin() + first, scenario.rows.begin() + first + count};
+        EXPECT_EQ(expected, displayed_rows(page)) << "Page " << page;
+        ++page;
+        first += count;
+        if (overlap && first < scenario.rows.size())
+        {
+            --first;
+        }
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(page - 1, prompts);
+    std::size_t source_position = 0;
+    for (std::size_t row = 0; row < scenario.rows.size(); ++row)
+    {
+        const std::size_t offset = scenario.body.find(scenario.rows[row], source_position);
+        ASSERT_NE(std::string_view::npos, offset);
+        source_position = offset + scenario.rows[row].size();
+        EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(offset)},
+                  virtual_read(ArticleLine{static_cast<long>(row)}))
+            << "Row " << row;
+    }
+    EXPECT_EQ(ArticleLine{static_cast<long>(scenario.rows.size())}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(scenario.body.size())}, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_EQ(g_art_pos, art_buf_article_pos());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TextAndTerminalModes, PagerWrappingArticleTest,
+    Combine(Values(PagerWrappingCase{"Words",
+                                     "one two three four five six seven eight nine ten eleven twelve thirteen "
+                                     "fourteen fifteen sixteen seventeen eighteen nineteen twenty\nTail\n",
+                                     {"one two three four five", "six seven eight nine ten", "eleven twelve thirteen",
+                                      "fourteen fifteen sixteen", "seventeen eighteen", "nineteen twenty", "Tail"},
+                                     32,
+                                     8},
+                   PagerWrappingCase{"UnbrokenLine",
+                                     "0123456789abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
+                                     "6789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh"
+                                     "ijklmnopqrstuvwxyzABCDEFGHIJKLMN\nTail\n",
+                                     {"0123456789abcdefghijklmnopqrstuv", "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345",
+                                      "6789abcdefghijklmnopqrstuvwxyzAB", "CDEFGHIJKLMNOPQRSTUVWXYZabcdefgh",
+                                      "ijklmnopqrstuvwxyzABCDEFGHIJKLMN", "Tail"},
+                                     32,
+                                     8},
+                   PagerWrappingCase{"ExactWidthEndings",
+                                     "abcdefghijklmnop\nABCDEFGHIJKLMNOP\n0123456789abcdef\nGHIJKLMNOPQRSTUV\n"
+                                     "wxyz0123456789AB\nCDEFGHIJKLMNOPQR\nTail\n",
+                                     {"abcdefghijklmnop", "ABCDEFGHIJKLMNOP", "0123456789abcdef", "GHIJKLMNOPQRSTUV",
+                                      "wxyz0123456789AB", "CDEFGHIJKLMNOPQR", "Tail"},
+                                     16},
+                   PagerWrappingCase{"Utf8SingleColumn",
+                                     "ab\303\251cd\316\251efgh\303\261ij\316\262klmn\303\266"
+                                     "op\316\263qrst\303\274uv\316\264wxyz\nTail\n",
+                                     {"ab\303\251cd\316\251ef", "gh\303\261ij\316\262kl", "mn\303\266op\316\263qr",
+                                      "st\303\274uv\316\264wx", "yz", "Tail"},
+                                     8},
+                   PagerWrappingCase{"Utf8WideAtMargin",
+                                     "abcdefg\345\244\251hijklmnopqrst\345\234\260uvwxyz\nTail\n",
+                                     {"abcdefg", "\345\244\251hijklm", "nopqrst", "\345\234\260uvwxyz", "Tail"},
+                                     8},
+                   PagerWrappingCase{"Utf8CombiningAtMargin",
+                                     "abcdefge\314\201HIJKLMNOPQRSTUVe\314\21012345678\nTail\n",
+                                     {"abcdefge\314\201", "HIJKLMNO", "PQRSTUVe\314\210", "12345678", "Tail"},
+                                     8}),
+            Bool()),
+    [](const TestParamInfo<PagerWrappingParam> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Clearing" : "Scrolling"); });
 
 TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
 {
