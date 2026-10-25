@@ -74,6 +74,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -1568,6 +1569,138 @@ void NewsgroupSelectorDelegatedExitStateTest::expect_exit_files_unchanged() cons
     EXPECT_EQ(m_original_newsrc, read_newsrc(m_newsrc.old_name));
     EXPECT_FALSE(fs::exists(m_newsrc.new_name));
 }
+
+class NewsgroupSelectorRefreshStateTest : public NewsgroupSelectorDelegatedExitStateTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        prepare_refresh(bool rereading);
+    DataSource &add_refresh_source();
+    void        replace_active_counts(DataSource &source, int high);
+    void        recount_groups();
+    void        expect_active_counts(const DataSource &source, int high) const;
+
+private:
+    std::vector<DataSource> m_saved_sources;
+    ArticleUnread           m_old_missing{g_missing_count};
+    std::string             m_old_server_line{g_ser_line};
+    std::string             m_old_last_command{g_last_command};
+};
+
+void NewsgroupSelectorRefreshStateTest::SetUp()
+{
+    NewsgroupSelectorDelegatedExitStateTest::SetUp();
+    m_saved_sources.swap(g_data_sources);
+    g_data_sources.reserve(4);
+    (void) add_refresh_source();
+    m_newsrc.data_source = &g_data_sources.front();
+    g_data_source = &g_data_sources.front();
+}
+
+void NewsgroupSelectorRefreshStateTest::TearDown()
+{
+    g_nntp_link.connection.reset();
+    for (DataSource &source : g_data_sources)
+    {
+        source.m_nntp_link.connection.reset();
+        source.close();
+        source.m_act_sf.close();
+    }
+    g_data_sources.clear();
+    m_saved_sources.swap(g_data_sources);
+    m_newsrc.data_source = &m_data_source;
+    g_data_source = &m_data_source;
+    g_missing_count = m_old_missing;
+    g_ser_line = m_old_server_line;
+    g_last_command = m_old_last_command;
+    NewsgroupSelectorDelegatedExitStateTest::TearDown();
+}
+
+DataSource &NewsgroupSelectorRefreshStateTest::add_refresh_source()
+{
+    EXPECT_LT(g_data_sources.size(), g_data_sources.capacity());
+    DataSource &source = g_data_sources.emplace_back();
+    source.m_flags = DF_OPEN | DF_ACTIVE;
+    source.m_news_id = (m_output_dir / "active").generic_string();
+    source.m_act_sf.m_refetch_secs = 3600;
+    EXPECT_EQ(1, source.m_act_sf.open(source.m_news_id, "", ""));
+    source.m_act_sf.m_last_fetch = std::time(nullptr);
+    return source;
+}
+
+void NewsgroupSelectorRefreshStateTest::prepare_refresh(bool rereading)
+{
+    prepare_exit(rereading, false);
+    m_original_newsrc = newsrc_text(m_newsrc);
+    std::ofstream{m_newsrc.name} << m_original_newsrc;
+    std::ofstream{m_newsrc.old_name} << m_original_newsrc;
+    m_newsrc.flags &= ~RF_RC_CHANGED;
+    g_missing_count = 17;
+}
+
+void NewsgroupSelectorRefreshStateTest::replace_active_counts(DataSource &source, int high)
+{
+    const std::size_t index = static_cast<std::size_t>(&source - g_data_sources.data());
+    const fs::path    active_file = m_output_dir / ("refreshed-active-" + std::to_string(index));
+    std::ofstream     output{active_file};
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        output << group.rc_name() << ' ' << high << " 1 y\n";
+    }
+    source.m_news_id = active_file.generic_string();
+}
+
+void NewsgroupSelectorRefreshStateTest::recount_groups()
+{
+    g_newsgroup_to_read = NewsgroupNum{
+        static_cast<long>(std::count_if(g_newsgroup_data.begin(), g_newsgroup_data.end(), [](const NewsgroupData &group)
+                                        { return group.m_to_read >= g_newsgroup_min_to_read; }))};
+}
+
+void NewsgroupSelectorRefreshStateTest::expect_active_counts(const DataSource &source, int high) const
+{
+    ASSERT_EQ(3, source.m_act_sf.m_lines.size());
+    for (int index = 0; index < 3; ++index)
+    {
+        EXPECT_EQ(std::string{g_newsgroup_data[index].rc_name()} + " " + std::to_string(high) + " 1 y\n",
+                  source.m_act_sf.m_lines[index]);
+    }
+}
+
+class NewsgroupSelectorRefreshInvalidationTest : public NewsgroupSelectorRefreshStateTest,
+                                                 public testing::WithParamInterface<std::tuple<bool, ArticleUnread>>
+{
+};
+
+class NewsgroupSelectorRefreshCleanupTest : public NewsgroupSelectorRefreshStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class NewsgroupSelectorRefreshRebuildTest : public NewsgroupSelectorRefreshStateTest,
+                                            public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+struct RefreshSourceState
+{
+    const char     *name;
+    DataSourceFlags flags;
+    bool            refetch;
+    bool            cached_file;
+    bool            refreshed;
+};
+
+void PrintTo(const RefreshSourceState &state, std::ostream *output)
+{
+    *output << state.name;
+}
+
+class NewsgroupSelectorRefreshSourceTest : public NewsgroupSelectorRefreshStateTest,
+                                           public testing::WithParamInterface<RefreshSourceState>
+{
+};
 
 class NewsgroupSelectorDelegatedQuitTest : public NewsgroupSelectorDelegatedExitStateTest,
                                            public testing::WithParamInterface<std::tuple<char, bool, bool>>
@@ -6273,6 +6406,234 @@ TEST_F(InputNewsgroupReadingTest, anUnavailableSpoolAdvancesToTheNextGroup)
     EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
     EXPECT_THAT(m_output, testing::HasSubstr("Can't chdir to directory"));
     EXPECT_EQ(original_numbers, g_newsgroup_data[1].rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorRefreshInvalidationTest, refreshInvalidatesCachedBoundsAndCountsOnlySubscribedCandidates)
+{
+    const auto [rereading, unread] = GetParam();
+    prepare_refresh(rereading);
+    NewsgroupData &group = g_newsgroup_data[0];
+    group.m_to_read = unread;
+    group.m_subscribe_char = unread == TR_UNSUB ? '!' : ':';
+    group.m_flags &= ~NF_DEL;
+    recount_groups();
+    const std::string numbers{group.rc_numbers()};
+
+    const DisplayState result = run_delegated('=', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(0, g_missing_count);
+    EXPECT_EQ(NewsgroupNum{unread >= TR_NONE ? 3 : 2}, g_newsgroup_to_read);
+    EXPECT_EQ(unread, group.m_to_read);
+    EXPECT_EQ(unread == TR_UNSUB ? '!' : ':', group.m_subscribe_char);
+    EXPECT_EQ(numbers, group.rc_numbers());
+    for (const NewsgroupData &candidate : g_newsgroup_data)
+    {
+        EXPECT_EQ(ArticleNum{}, candidate.m_abs_first);
+    }
+    expect_selector_context(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndCachedCount, NewsgroupSelectorRefreshInvalidationTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(ArticleUnread{TR_JUNK}, ArticleUnread{TR_BOGUS},
+                                                          ArticleUnread{TR_UNSUB}, ArticleUnread{0}, ArticleUnread{1},
+                                                          ArticleUnread{2})));
+
+TEST_P(NewsgroupSelectorRefreshCleanupTest, refreshAppliesPendingMarksBeforeInvalidatingCounts)
+{
+    const auto [rereading, exclusive] = GetParam();
+    prepare_refresh(rereading);
+    NewsgroupData &group = g_newsgroup_data[0];
+    group.m_flags |= NF_DEL;
+    if (rereading)
+    {
+        group.m_flags |= NF_DEL_SEL | NF_UNTHREADED;
+    }
+    g_sel_exclusive = exclusive;
+
+    const DisplayState result = run_delegated('=', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(" 1-3", group.rc_numbers());
+    EXPECT_EQ(TR_NONE, group.m_to_read);
+    EXPECT_EQ(rereading ? NF_UNTHREADED : NF_NONE, group.m_flags & NF_UNTHREADED);
+    EXPECT_EQ(rereading ? NF_SEL : NF_NONE, group.m_flags & NF_SEL);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(exclusive, g_sel_exclusive);
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
+    for (const NewsgroupData &candidate : g_newsgroup_data)
+    {
+        EXPECT_EQ(NF_NONE, candidate.m_flags & (NF_DEL | NF_DEL_SEL));
+        EXPECT_EQ(ArticleNum{}, candidate.m_abs_first);
+    }
+    if (rereading)
+    {
+        expect_exit_files_unchanged();
+    }
+    else
+    {
+        EXPECT_EQ(newsrc_text(m_newsrc), read_newsrc(m_newsrc.name));
+        EXPECT_EQ(m_original_newsrc, read_newsrc(m_newsrc.old_name));
+    }
+    expect_selector_context(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndDisplay, NewsgroupSelectorRefreshCleanupTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorRefreshRebuildTest, restartingAfterRefreshRecountsGroupsFromTheActiveList)
+{
+    const auto [rereading, new_articles] = GetParam();
+    prepare_refresh(rereading);
+    const int high = new_articles ? 5 : 3;
+    replace_active_counts(g_data_sources.front(), high);
+
+    const char result = run_selector_session(rereading ? "U=qQ" : "=qQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(NewsgroupNum{rereading && !new_articles ? 0 : 3}, g_newsgroup_to_read);
+    EXPECT_EQ(rereading && new_articles ? 0 : 3, g_sel_total_obj_cnt);
+    for (int index = 0; index < 3; ++index)
+    {
+        const NewsgroupData &group = g_newsgroup_data[index];
+        EXPECT_EQ(ArticleUnread{high - (rereading ? 3 : index == 1 ? 1 : 2)}, group.m_to_read) << index;
+        EXPECT_EQ(ArticleNum{1}, group.m_abs_first) << index;
+        EXPECT_EQ(ArticleNum{high}, group.m_ng_max) << index;
+        EXPECT_EQ(':', group.m_subscribe_char) << index;
+        EXPECT_EQ(rereading ? " 1-3" : index == 1 ? " 1" : " 1-2", group.rc_numbers()) << index;
+    }
+    expect_exit_files_unchanged();
+    expect_selector_context(rereading);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndNewArticles, NewsgroupSelectorRefreshRebuildTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_F(NewsgroupSelectorRefreshStateTest, repeatedRefreshesKeepReadAndUnsubscribedGroupsOutOfTheUnreadCount)
+{
+    prepare_refresh(false);
+    NewsgroupData &read_group = g_newsgroup_data[0];
+    read_group.m_rc_line.resize(read_group.m_num_offset);
+    read_group.m_rc_line += " 1-3";
+    read_group.m_to_read = TR_NONE;
+    g_newsgroup_data[2].m_subscribe_char = '!';
+    g_newsgroup_data[2].m_to_read = TR_UNSUB;
+    m_newsrc.flags |= RF_RC_CHANGED;
+    recount_groups();
+
+    const char result = run_selector_session("==qQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(TR_NONE, read_group.m_to_read);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[2].m_to_read);
+    EXPECT_EQ('!', g_newsgroup_data[2].m_subscribe_char);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[2].rc_numbers());
+    EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
+    expect_exit_files_unchanged();
+    expect_next_command('Q');
+}
+
+TEST_P(NewsgroupSelectorRefreshSourceTest, refreshForcesOnlyEligibleActiveSources)
+{
+    const RefreshSourceState &state = GetParam();
+    prepare_refresh(false);
+    DataSource &source = g_data_sources.front();
+    replace_active_counts(source, 5);
+    source.m_flags = state.flags;
+    source.m_act_sf.m_refetch_secs = state.refetch ? 3600 : 0;
+    if (!state.cached_file)
+    {
+        std::fclose(source.m_act_sf.m_fp);
+        source.m_act_sf.m_fp = nullptr;
+    }
+
+    const DisplayState result = run_delegated('=', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    expect_active_counts(source, state.refreshed ? 5 : 3);
+    EXPECT_EQ(state.flags, source.m_flags);
+    EXPECT_EQ(&source, g_data_source);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(SourceState, NewsgroupSelectorRefreshSourceTest,
+                         testing::Values(RefreshSourceState{"open active", DF_OPEN | DF_ACTIVE, true, true, true},
+                                         RefreshSourceState{"inactive", DF_OPEN, true, true, false},
+                                         RefreshSourceState{"closed", DF_ACTIVE, true, true, false},
+                                         RefreshSourceState{"unused", DF_NONE, true, true, false},
+                                         RefreshSourceState{"disabled", DF_OPEN | DF_ACTIVE, false, true, false},
+                                         RefreshSourceState{"no cached file", DF_OPEN | DF_ACTIVE, true, false,
+                                                            false}));
+
+TEST_F(NewsgroupSelectorRefreshStateTest, refreshRefetchesARecentRemoteActiveList)
+{
+    prepare_refresh(false);
+    DataSource &source = g_data_sources.front();
+    source.m_extra_name = source.m_news_id;
+    source.m_news_id = "news.example.test";
+    source.m_flags |= DF_REMOTE;
+    const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp_link.connection = connection;
+    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    source.m_nntp_link = g_nntp_link;
+    testing::InSequence sequence;
+    EXPECT_CALL(*connection, write_line(testing::StrEq("LIST"), testing::_));
+    EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return("215 active list follows"));
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        EXPECT_CALL(*connection, read_line(testing::_))
+            .WillOnce(testing::Return(std::string{group.rc_name()} + " 5 1 y"));
+    }
+    EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return("."));
+
+    const DisplayState result = run_delegated('=', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    expect_active_counts(source, 5);
+    EXPECT_EQ(3600, source.m_act_sf.m_refetch_secs);
+    expect_next_command('Q');
+}
+
+TEST_F(NewsgroupSelectorRefreshStateTest, refreshUpdatesEveryOpenActiveSource)
+{
+    prepare_refresh(false);
+    DataSource &other = add_refresh_source();
+    replace_active_counts(g_data_sources.front(), 5);
+    replace_active_counts(other, 7);
+
+    const DisplayState result = run_delegated('=', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    expect_active_counts(g_data_sources.front(), 5);
+    expect_active_counts(other, 7);
+    expect_next_command('Q');
+}
+
+TEST_F(NewsgroupSelectorRefreshStateTest, aRefreshOfAnEmptyCatalogStillRefreshesTheActiveList)
+{
+    prepare_refresh(false);
+    DataSource &source = g_data_sources.front();
+    replace_active_counts(source, 5);
+    g_newsgroup_data.clear();
+    g_newsgroup_order.clear();
+    g_first_newsgroup = g_last_newsgroup = g_newsgroup_ptr = g_current_newsgroup = g_recent_newsgroup = nullptr;
+    g_sel_page_np = g_sel_next_np = nullptr;
+    g_newsgroup_count = g_newsgroup_to_read = NewsgroupNum{};
+
+    const DisplayState result = run_delegated('=', "Q");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(0, g_missing_count);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    ASSERT_EQ(3, source.m_act_sf.m_lines.size());
+    EXPECT_EQ("comp.lang.cpp 5 1 y\n", source.m_act_sf.m_lines[1]);
+    expect_next_command('Q');
 }
 
 TEST_P(NewsgroupSelectorDelegatedQuitTest, quittingRetainsPendingChangesAndTheSelectorPosition)

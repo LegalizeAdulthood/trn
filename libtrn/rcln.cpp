@@ -583,7 +583,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
     }
     else if (unread <= 0)
     {
-        if (m_to_read > g_newsgroup_min_to_read)
+        if (virgin_ng || m_to_read >= g_newsgroup_min_to_read)
         {
             --g_newsgroup_to_read;
             if (virgin_ng)

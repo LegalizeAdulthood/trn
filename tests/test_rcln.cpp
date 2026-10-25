@@ -17,6 +17,7 @@
 #include <fstream>
 #include <string>
 #include <system_error>
+#include <tuple>
 
 namespace
 {
@@ -125,6 +126,11 @@ protected:
     DataSource    m_data_source{};
     Newsrc        m_newsrc{};
     NewsgroupData m_group{};
+};
+
+class SetToReadPopulationTest : public SetToReadTest,
+                                public testing::WithParamInterface<std::tuple<bool, ArticleUnread>>
+{
 };
 
 class AddArtNumTest : public testing::Test
@@ -269,6 +275,26 @@ TEST_F(ExpiredArticleTest, extendsReadRangeWithoutUnreadSuffix)
     EXPECT_EQ('\0', m_group.m_rc_line[static_cast<std::size_t>(m_group.m_num_offset - 1)]);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
 }
+
+TEST_P(SetToReadPopulationTest, fullyReadGroupsAreRemovedFromTheCountedPopulation)
+{
+    const auto [uncached, cached_unread] = GetParam();
+    set_numbers("1-100");
+    m_group.m_abs_first = uncached ? ArticleNum{} : ArticleNum{1};
+    m_group.m_to_read = cached_unread;
+    g_newsgroup_to_read = NewsgroupNum{uncached || cached_unread >= TR_ONE ? 1 : 0};
+
+    m_group.set_to_read(ST_LAX);
+
+    EXPECT_EQ(TR_NONE, m_group.m_to_read);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(uncached ? 1 : 0, g_missing_count);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+}
+
+INSTANTIATE_TEST_SUITE_P(CacheStateAndPriorCount, SetToReadPopulationTest,
+                         testing::Combine(testing::Bool(),
+                                          testing::Values(ArticleUnread{0}, ArticleUnread{1}, ArticleUnread{2})));
 
 TEST_F(SetToReadTest, countsUnreadArticlesFromLongReadList)
 {
