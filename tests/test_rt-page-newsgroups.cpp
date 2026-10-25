@@ -423,6 +423,81 @@ class ExclusiveNewsgroupPageDisplayTest : public NewsgroupPageDisplayState, publ
 {
 };
 
+class NewsgroupPageBoundaryState : public NewsgroupPageDisplayState
+{
+protected:
+    void        prepare_empty(bool rereading, bool populated);
+    void        leave_read_scope();
+    std::string page_to_end();
+    void        expect_empty(const std::string &output, bool rereading) const;
+};
+
+void NewsgroupPageBoundaryState::prepare_empty(bool rereading, bool populated)
+{
+    if (populated)
+    {
+        prepare_display(rereading, 's');
+        leave_read_scope();
+    }
+    else
+    {
+        set_read_scope(rereading);
+    }
+    init_pages(PRESERVE_PAGE);
+}
+
+void NewsgroupPageBoundaryState::leave_read_scope()
+{
+    for (NewsgroupData *group : m_entries)
+    {
+        group->m_flags &= ~(NF_SEL | NF_DEL_SEL);
+        if (group->m_to_read >= TR_NONE)
+        {
+            group->m_to_read = g_sel_rereading ? 7 : 0;
+        }
+    }
+}
+
+std::string NewsgroupPageBoundaryState::page_to_end()
+{
+    std::string output = render_page();
+    while (next_page())
+    {
+        output = render_page();
+    }
+    return output;
+}
+
+void NewsgroupPageBoundaryState::expect_empty(const std::string &output, bool rereading) const
+{
+    EXPECT_THAT(output, testing::HasSubstr("0 groups"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.")));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(ArticleNum{}, g_obj_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_FALSE(next_page());
+}
+
+class EmptyNewsgroupPageDisplayTest : public NewsgroupPageBoundaryState,
+                                      public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class FinalNewsgroupPageDisplayTest : public NewsgroupPageBoundaryState,
+                                      public testing::WithParamInterface<std::tuple<bool, int>>
+{
+};
+
+class RemovedNewsgroupPageDisplayTest : public NewsgroupPageBoundaryState, public testing::WithParamInterface<bool>
+{
+};
+
 struct GroupDescriptionFallback
 {
     const char                     *name;
@@ -4657,6 +4732,100 @@ INSTANTIATE_TEST_SUITE_P(StyleAndDescription, NewsgroupDescriptionFallbackTest,
                                           testing::Values(GroupDescriptionFallback{"Missing", std::nullopt},
                                                           GroupDescriptionFallback{"Empty", "\n"},
                                                           GroupDescriptionFallback{"Unknown", "?Unknown\n"})));
+
+TEST_P(EmptyNewsgroupPageDisplayTest, displaysNoRowsWhenThePopulationIsEmpty)
+{
+    const auto [rereading, populated] = GetParam();
+    prepare_empty(rereading, populated);
+
+    const std::string output = render_page();
+
+    expect_empty(output, rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPriorPopulation, EmptyNewsgroupPageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(FinalNewsgroupPageDisplayTest, endsAtTheLastGroupWithoutInventingAnotherPage)
+{
+    const auto [rereading, capacity] = GetParam();
+    g_tc_LINES = capacity + 5;
+    prepare_display(rereading, 's');
+    ASSERT_FALSE(HasFatalFailure());
+
+    const std::string output = page_to_end();
+
+    const int                count = 5 % capacity ? 5 % capacity : capacity;
+    const std::array<int, 5> indices{0, 2, 4, 6, 7};
+    EXPECT_THAT(output, testing::HasSubstr("comp.next\n"));
+    ASSERT_EQ(count, g_sel_page_item_cnt);
+    EXPECT_EQ(count, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(5 - count, g_sel_prior_obj_cnt);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    for (int index = 0; index < count; ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(m_entries[indices[5 - count + index]], g_sel_items[index].u.np);
+        EXPECT_EQ(index + 2, g_sel_items[index].line);
+    }
+    EXPECT_EQ(m_entries[indices[5 - count]], g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(count + 3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+    expect_group_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPageCapacity, FinalNewsgroupPageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Values(2, 3, 5)));
+
+TEST_P(RemovedNewsgroupPageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleGroupLeavesTheReadScope)
+{
+    const bool rereading = GetParam();
+    prepare_display(rereading, 's');
+    ASSERT_FALSE(HasFatalFailure());
+    (void) page_to_end();
+    m_entries[7]->m_to_read = rereading ? 7 : 0;
+
+    init_pages(PRESERVE_PAGE);
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.next")));
+    EXPECT_THAT(output, testing::HasSubstr("comp.alpha"));
+    EXPECT_THAT(output, testing::HasSubstr("comp.delta"));
+    ASSERT_EQ(4, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    const std::array<int, 4> indices{0, 2, 4, 6};
+    for (int index = 0; index < 4; ++index)
+    {
+        EXPECT_EQ(m_entries[indices[index]], g_sel_items[index].u.np);
+    }
+    EXPECT_EQ(m_entries[0], g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_next_np);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(RemovedNewsgroupPageDisplayTest, displaysAnEmptyPageAfterAllVisibleGroupsLeaveTheReadScope)
+{
+    const bool rereading = GetParam();
+    prepare_display(rereading, 's');
+    ASSERT_FALSE(HasFatalFailure());
+    (void) page_to_end();
+    leave_read_scope();
+
+    init_pages(PRESERVE_PAGE);
+    const std::string output = render_page();
+
+    expect_empty(output, rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, RemovedNewsgroupPageDisplayTest, testing::Bool());
 
 TEST_P(NewsgroupPageEligibilityTest, cachedCountsAndCurrentSelectionDetermineEligibility)
 {

@@ -1370,6 +1370,10 @@ bool last_page()
 ///
 bool next_page()
 {
+    if (!g_sel_total_obj_cnt)
+    {
+        return false;
+    }
     switch (g_sel_mode)
     {
     case SM_MULTIRC:

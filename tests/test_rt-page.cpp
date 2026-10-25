@@ -381,6 +381,80 @@ class ExclusiveArticlePageDisplayTest : public ArticlePageDisplayState, public t
 {
 };
 
+class ArticlePageBoundaryState : public ArticlePageDisplayState
+{
+protected:
+    void        prepare_empty(bool rereading, bool populated);
+    void        leave_read_scope();
+    std::string page_to_end();
+    void        expect_empty(const std::string &output, bool rereading) const;
+};
+
+void ArticlePageBoundaryState::prepare_empty(bool rereading, bool populated)
+{
+    if (populated)
+    {
+        prepare_display(rereading, 'l');
+        leave_read_scope();
+    }
+    else
+    {
+        prepare_articles(rereading, {});
+    }
+    init_pages(PRESERVE_PAGE);
+}
+
+void ArticlePageBoundaryState::leave_read_scope()
+{
+    for (Article *article : g_art_ptr_list)
+    {
+        article->m_flags ^= AF_UNREAD;
+        article->m_flags &= ~(AF_SEL | AF_DEL_SEL);
+    }
+    count_subjects(CS_UNSEL_STORE);
+}
+
+std::string ArticlePageBoundaryState::page_to_end()
+{
+    std::string output = render_page();
+    while (next_page())
+    {
+        output = render_page();
+    }
+    return output;
+}
+
+void ArticlePageBoundaryState::expect_empty(const std::string &output, bool rereading) const
+{
+    EXPECT_THAT(output, testing::HasSubstr(rereading ? "0 read articles" : "0 articles"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Article eligibility")));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Next page")));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(ArticleNum{}, g_obj_count);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_FALSE(next_page());
+}
+
+class EmptyArticlePageDisplayTest : public ArticlePageBoundaryState,
+                                    public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+class FinalArticlePageDisplayTest : public ArticlePageBoundaryState,
+                                    public testing::WithParamInterface<std::tuple<bool, int>>
+{
+};
+
+class RemovedArticlePageDisplayTest : public ArticlePageBoundaryState, public testing::WithParamInterface<bool>
+{
+};
+
 class SubjectPageStateTest : public ArticlePageStateTest
 {
 protected:
@@ -1101,6 +1175,97 @@ TEST_P(ExclusiveArticlePageDisplayTest, skipsUnselectedArticlesWithoutAssigningT
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, ExclusiveArticlePageDisplayTest, testing::Bool());
+
+TEST_P(EmptyArticlePageDisplayTest, displaysNoRowsWhenThePopulationIsEmpty)
+{
+    const auto [rereading, populated] = GetParam();
+    prepare_empty(rereading, populated);
+
+    const std::string output = render_page();
+
+    expect_empty(output, rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPriorPopulation, EmptyArticlePageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(FinalArticlePageDisplayTest, endsAtTheLastArticleWithoutInventingAnotherPage)
+{
+    const auto [rereading, capacity] = GetParam();
+    g_tc_LINES = capacity + 5;
+    prepare_display(rereading, 'l');
+
+    const std::string output = page_to_end();
+
+    const int                 count = 5 % capacity ? 5 % capacity : capacity;
+    const std::array<long, 5> numbers{1, 2, 3, 4, 7};
+    EXPECT_THAT(output, testing::HasSubstr("Next page"));
+    ASSERT_EQ(count, g_sel_page_item_cnt);
+    EXPECT_EQ(count, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(5 - count, g_sel_prior_obj_cnt);
+    EXPECT_EQ(ArticleNum{5}, g_obj_count);
+    for (int index = 0; index < count; ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(article_ptr(ArticleNum{numbers[5 - count + index]}), g_sel_items[index].u.ap);
+        EXPECT_EQ(index + 2, g_sel_items[index].line);
+    }
+    EXPECT_EQ(article_ptr_list_end() - count, g_sel_page_app);
+    EXPECT_EQ(article_ptr_list_end(), g_sel_next_app);
+    EXPECT_EQ(count + 3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+    expect_article_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPageCapacity, FinalArticlePageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Values(2, 3, 5)));
+
+TEST_P(RemovedArticlePageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleArticleLeavesTheReadScope)
+{
+    const bool rereading = GetParam();
+    prepare_display(rereading, 'l');
+    (void) page_to_end();
+    article_ptr(ArticleNum{7})->m_flags ^= AF_UNREAD;
+    count_subjects(CS_UNSEL_STORE);
+
+    init_pages(PRESERVE_PAGE);
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Next page")));
+    EXPECT_THAT(output, testing::HasSubstr("Alice"));
+    EXPECT_THAT(output, testing::HasSubstr("Dan"));
+    ASSERT_EQ(4, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(ArticleNum{4}, g_obj_count);
+    for (int index = 0; index < 4; ++index)
+    {
+        EXPECT_EQ(article_ptr(ArticleNum{index + 1}), g_sel_items[index].u.ap);
+    }
+    EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+    EXPECT_EQ(article_ptr_list_end(), g_sel_next_app);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(RemovedArticlePageDisplayTest, displaysAnEmptyPageAfterAllVisibleArticlesLeaveTheReadScope)
+{
+    const bool rereading = GetParam();
+    prepare_display(rereading, 'l');
+    (void) page_to_end();
+    leave_read_scope();
+
+    init_pages(PRESERVE_PAGE);
+    const std::string output = render_page();
+
+    expect_empty(output, rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, RemovedArticlePageDisplayTest, testing::Bool());
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
 {
