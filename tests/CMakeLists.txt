@@ -65,6 +65,7 @@ add_executable(trn-test
     test_rt-page.cpp
     test_rt-page-deferred-newsgroups.cpp
     test_rt-page-newsgroups.cpp
+    test_rt-page-universal.cpp
     test_rt-ov.cpp
     test_rt-process.cpp
     test_rt-select.cpp
