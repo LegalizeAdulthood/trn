@@ -9,6 +9,7 @@
 #include <trn/Subject.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
+#include <trn/utf.h>
 
 #include <mock_env.h>
 
@@ -615,6 +616,162 @@ class SubjectPageAnchorTest : public SubjectPageStateTest,
 
 class SubjectPageFillTest : public SubjectPageStateTest,
                             public testing::WithParamInterface<std::tuple<SelectionMode, bool, bool>>
+{
+};
+
+struct SubjectDisplayRow
+{
+    int articles;
+    int selected;
+};
+
+class SubjectPageDisplayState : public ArticlePageDisplayState
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        prepare_subjects(bool rereading, char mode, std::initializer_list<SubjectDisplayRow> rows);
+    void        remove_subject(Subject &subject);
+    void        rebuild_page();
+    std::string heading(const Subject &subject, char label, char marker) const;
+
+    Subject m_bravo{};
+    Subject m_charlie{};
+
+private:
+    int         m_old_subject_count{g_subject_count};
+    Subject    *m_old_next_subject{g_sel_next_sp};
+    std::string m_old_input_charset{input_charset_name()};
+    std::string m_old_output_charset{output_charset_name()};
+};
+
+void SubjectPageDisplayState::SetUp()
+{
+    ArticlePageDisplayState::SetUp();
+    g_sel_mode = SM_SUBJECT;
+    g_sel_next_sp = nullptr;
+}
+
+void SubjectPageDisplayState::TearDown()
+{
+    g_subject_count = m_old_subject_count;
+    g_sel_next_sp = m_old_next_subject;
+    utf_init(m_old_input_charset, m_old_output_charset);
+    ArticlePageDisplayState::TearDown();
+}
+
+void SubjectPageDisplayState::prepare_subjects(bool rereading, char mode, std::initializer_list<SubjectDisplayRow> rows)
+{
+    g_sel_rereading = rereading;
+    g_sel_mask = rereading ? AGF_DEL_SEL : AGF_SEL;
+    g_sel_art_display_mode.assign(1, mode);
+    g_sel_art_display_mode_index = 0;
+    g_subject_count = static_cast<int>(rows.size());
+    const std::array<Subject *, 3>   subjects{&m_subject, &m_bravo, &m_charlie};
+    const std::array<std::string, 3> names{"Alpha", "Bravo", "Charlie"};
+    std::size_t                      index = 0;
+    long                             number = 0;
+    Subject                         *previous = nullptr;
+    for (const SubjectDisplayRow row : rows)
+    {
+        Subject &subject = *subjects[index];
+        subject.m_str = "Re: " + names[index];
+        subject.m_thread_link = &subject;
+        subject.m_prev = previous;
+        if (previous)
+        {
+            previous->m_next = &subject;
+        }
+        Article *last_article = nullptr;
+        for (int i = 0; i <= row.articles; ++i)
+        {
+            Article   *article = article_ptr(ArticleNum{++number});
+            const bool in_scope = i < row.articles;
+            article->m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
+            if (in_scope != rereading)
+            {
+                article->m_flags |= AF_UNREAD;
+            }
+            if (i < row.selected)
+            {
+                article->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+            }
+            article->m_from = in_scope ? names[index] + " " + std::to_string(i + 1) : "Other scope";
+            article->m_date = static_cast<std::time_t>(number * 86400);
+            article->m_subj = &subject;
+            if (last_article)
+            {
+                last_article->m_subj_next = article;
+            }
+            else
+            {
+                subject.m_articles = article;
+                subject.m_thread = article;
+            }
+            last_article = article;
+        }
+        previous = &subject;
+        ++index;
+    }
+    g_first_subject = rows.size() ? &m_subject : nullptr;
+    g_last_subject = previous;
+    g_last_art = ArticleNum{number};
+    g_last_cached = g_last_art;
+    rebuild_page();
+}
+
+void SubjectPageDisplayState::remove_subject(Subject &subject)
+{
+    for (Article *article = subject.m_articles; article; article = article->m_subj_next)
+    {
+        if (g_sel_rereading)
+        {
+            article->m_flags |= AF_UNREAD;
+        }
+        else
+        {
+            article->m_flags &= ~AF_UNREAD;
+        }
+        article->m_flags &= ~(AF_SEL | AF_DEL_SEL);
+    }
+}
+
+void SubjectPageDisplayState::rebuild_page()
+{
+    count_subjects(CS_UNSEL_STORE);
+    init_pages(PRESERVE_PAGE);
+    Selection no_search{};
+    no_search.op = OI_NONE;
+    (void) calc_page(no_search);
+}
+
+std::string SubjectPageDisplayState::heading(const Subject &subject, char label, char marker) const
+{
+    std::string result{label, marker};
+    if (current_article_display_mode() == 'd')
+    {
+        result += std::string{std::ctime(&subject.m_articles->m_date)}.substr(0, 16);
+    }
+    else if (current_article_display_mode() != 's')
+    {
+        const std::string author{subject.m_articles->from_view()};
+        result += author + std::string(16 - author.size(), ' ');
+    }
+    const std::string count = std::to_string(subject.m_misc);
+    return result + std::string(3 - count.size(), ' ') + count + "  " + subject.m_str.substr(4) + "\n";
+}
+
+class SubjectPageDisplayTest : public SubjectPageDisplayState,
+                               public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+class CompactSubjectPageDisplayTest : public SubjectPageDisplayState,
+                                      public testing::WithParamInterface<std::tuple<bool, int, int>>
+{
+};
+
+class SubjectPageBoundaryTest : public SubjectPageDisplayState, public testing::WithParamInterface<bool>
 {
 };
 
@@ -1266,6 +1423,258 @@ TEST_P(RemovedArticlePageDisplayTest, displaysAnEmptyPageAfterAllVisibleArticles
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, RemovedArticlePageDisplayTest, testing::Bool());
+
+TEST_P(SubjectPageDisplayTest, mapsMultiArticleSubjectsAndTheirSelectionMarkersToRows)
+{
+    const auto [rereading, mode] = GetParam();
+    g_tc_LINES = 17;
+    prepare_subjects(rereading, mode, {{3, 3}, {3, 1}, {2, 0}});
+    g_sel_last_sp = &m_bravo;
+    g_sel_item_index = -1;
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '+')));
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_bravo, 'b', '*')));
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_charlie, 'c', rereading ? '-' : ' ')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Other scope")));
+    ASSERT_EQ(3, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(&m_bravo, g_sel_items[1].u.sp);
+    EXPECT_EQ(&m_charlie, g_sel_items[2].u.sp);
+    const int lines = mode == 'l' || mode == 'm' ? 3 : 1;
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(2 + lines, g_sel_items[1].line);
+    EXPECT_EQ(2 + 2 * lines, g_sel_items[2].line);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(3, g_sel_items[1].sel);
+    EXPECT_EQ(rereading ? 2 : 0, g_sel_items[2].sel);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(8, g_sel_page_obj_cnt);
+    EXPECT_EQ(8, g_sel_total_obj_cnt);
+    EXPECT_EQ(4, g_selected_count);
+    EXPECT_EQ(2, g_selected_subj_cnt);
+    EXPECT_EQ(mode == 'l' || mode == 'm' ? 11 : 6, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+}
+
+TEST_P(SubjectPageDisplayTest, usesTheFirstEligibleArticleWhenTheOriginalLeavesTheReadScope)
+{
+    const auto [rereading, mode] = GetParam();
+    prepare_subjects(rereading, mode, {{3, 1}});
+    m_subject.m_articles->m_flags ^= AF_UNREAD;
+    m_subject.m_articles->m_flags &= ~(AF_SEL | AF_DEL_SEL);
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    const char  marker = rereading ? '-' : ' ';
+    std::string row{'a', marker};
+    if (mode == 'd')
+    {
+        row += std::string{std::ctime(&m_subject.m_articles->m_subj_next->m_date)}.substr(0, 16);
+    }
+    else if (mode != 's')
+    {
+        row += "Alpha 2         ";
+    }
+    EXPECT_THAT(output, testing::HasSubstr(row + "  2  >Alpha\n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha 1")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(mode == 'l' || mode == 'm' ? 5 : 4, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndPresentation, SubjectPageDisplayTest,
+                         testing::Combine(testing::Bool(), testing::Values('s', 'd', 'l', 'm')));
+
+TEST_P(CompactSubjectPageDisplayTest, packsMiddleAuthorsWhileKeepingTheFinalAuthorOnItsOwnLine)
+{
+    const auto [rereading, articles, lines] = GetParam();
+    g_tc_LINES = 17;
+    prepare_subjects(rereading, 'm', {{articles, 1}, {1, 1}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    for (int i = 2; i <= articles; ++i)
+    {
+        const std::string author = "Alpha " + std::to_string(i);
+        const std::size_t position = output.find(author);
+        ASSERT_NE(std::string::npos, position) << output;
+        EXPECT_EQ(std::string::npos, output.find(author, position + author.size()));
+    }
+    const std::string final_author = "Alpha " + std::to_string(articles);
+    EXPECT_THAT(output, testing::HasSubstr("\n  " + final_author + std::string(16 - final_author.size(), ' ') + "\n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Other scope")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_bravo, g_sel_items[1].u.sp);
+    EXPECT_EQ(2 + lines, g_sel_items[1].line);
+    EXPECT_EQ(articles + 1, g_sel_page_obj_cnt);
+    EXPECT_EQ(lines + 4, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScopeAndAuthorPacking, CompactSubjectPageDisplayTest,
+                         testing::Values(std::tuple{false, 4, 4}, std::tuple{true, 4, 4}, std::tuple{false, 5, 4},
+                                         std::tuple{true, 5, 4}, std::tuple{false, 7, 5}, std::tuple{true, 7, 5},
+                                         std::tuple{false, 8, 5}, std::tuple{true, 8, 5}));
+
+TEST_P(SubjectPageBoundaryTest, defersAWholeSubjectWhenItsAuthorsDoNotFitTheRemainingLines)
+{
+    prepare_subjects(GetParam(), 'l', {{3, 1}, {2, 2}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr("  Alpha 2         \n  Alpha 3         \n"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(5, g_sel_total_obj_cnt);
+    EXPECT_EQ(&m_bravo, g_sel_next_sp);
+    EXPECT_FALSE(g_sel_at_end);
+}
+
+TEST_P(SubjectPageBoundaryTest, displaysTheFinalSubjectAfterAdvancingPastAnEarlierPage)
+{
+    prepare_subjects(GetParam(), 'l', {{3, 1}, {2, 2}});
+    (void) render_page();
+    ASSERT_TRUE(next_page());
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_bravo, 'a', '+')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_bravo, g_sel_items[0].u.sp);
+    EXPECT_EQ(2, g_sel_items[0].line);
+    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_prior_obj_cnt);
+    EXPECT_EQ(5, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(SubjectPageBoundaryTest, truncatesAnOversizedSubjectWithoutLosingItsArticleCount)
+{
+    prepare_subjects(GetParam(), 'l', {{6, 1}, {1, 1}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr("Alpha 4"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha 5")));
+    EXPECT_THAT(output, testing::HasSubstr("... etc. [6 lines total]"));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(6, g_sel_page_obj_cnt);
+    EXPECT_EQ(7, g_sel_total_obj_cnt);
+    EXPECT_EQ(&m_bravo, g_sel_next_sp);
+    EXPECT_FALSE(g_sel_at_end);
+}
+
+TEST_P(SubjectPageBoundaryTest, endsWithoutAnotherPageWhenTheFinalSubjectExactlyFillsTheScreen)
+{
+    prepare_subjects(GetParam(), 'l', {{4, 1}});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr("Alpha 4"));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("etc.")));
+    EXPECT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(7, g_sel_last_line);
+    EXPECT_EQ(nullptr, g_sel_next_sp);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(SubjectPageBoundaryTest, exclusiveDisplayKeepsAllArticlesOfAPartiallySelectedSubject)
+{
+    prepare_subjects(GetParam(), 'l', {{3, 1}, {1, 0}, {1, 1}});
+    g_sel_exclusive = true;
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_charlie, 'b', '+')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    ASSERT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(&m_charlie, g_sel_items[1].u.sp);
+    EXPECT_EQ(5, g_sel_items[1].line);
+    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_TRUE(g_sel_at_end);
+}
+
+TEST_P(SubjectPageBoundaryTest, displaysNoRowsForAnEmptySubjectCatalog)
+{
+    prepare_subjects(GetParam(), 'l', {});
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "0 read articles" : "0 articles"));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(SubjectPageBoundaryTest, recoversAnEarlierPageAfterTheFinalSubjectLeavesTheReadScope)
+{
+    prepare_subjects(GetParam(), 'l', {{3, 1}, {2, 2}});
+    (void) render_page();
+    ASSERT_TRUE(next_page());
+    (void) render_page();
+    remove_subject(m_bravo);
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::HasSubstr(heading(m_subject, 'a', '*')));
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Bravo")));
+    ASSERT_EQ(1, g_sel_page_item_cnt);
+    EXPECT_EQ(&m_subject, g_sel_items[0].u.sp);
+    EXPECT_EQ(3, g_sel_page_obj_cnt);
+    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+TEST_P(SubjectPageBoundaryTest, displaysNoRowsAfterTheLastSubjectLeavesTheReadScope)
+{
+    prepare_subjects(GetParam(), 'l', {{3, 1}});
+    (void) render_page();
+    remove_subject(m_subject);
+    rebuild_page();
+
+    const std::string output = render_page();
+
+    EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alpha")));
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page_obj_cnt);
+    EXPECT_EQ(0, g_sel_total_obj_cnt);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(3, g_sel_last_line);
+    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_FALSE(next_page());
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, SubjectPageBoundaryTest, testing::Bool());
 
 TEST(SelectorPageTest, outputSelectorUsesConfiguredCharacterOrder)
 {
