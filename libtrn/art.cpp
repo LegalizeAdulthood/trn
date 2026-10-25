@@ -523,25 +523,22 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     if (at_norm_char(line_tail()))       // normal char?
                     {
-                        if (current_char() == '_')
+                        if (current_char() == '_' && char_at(1) == '\b')
                         {
-                            if (char_at(1) == '\b')
+                            if (output_ok && !under_lining && g_highlight != g_art_line_num)
                             {
-                                if (output_ok && !under_lining && g_highlight != g_art_line_num)
+                                under_lining = true;
+                                if (g_tc_UG)
                                 {
-                                    under_lining = true;
-                                    if (g_tc_UG)
+                                    if (line_pos != 0 && line_text[line_pos - 1] == ' ')
                                     {
-                                        if (line_pos != 0 && line_text[line_pos - 1] == ' ')
-                                        {
-                                            out_pos--;
-                                            backspace();
-                                        }
+                                        out_pos--;
+                                        backspace();
                                     }
-                                    underline();
                                 }
-                                line_pos += 2;
+                                underline();
                             }
+                            line_pos += 2;
                         }
                         else
                         {
@@ -705,6 +702,11 @@ DoArticleResult do_article(std::string &article_command)
                     }
                 } // end of column loop
 
+                if (under_lining)
+                {
+                    under_lining = false;
+                    un_underline();
+                }
                 if (out_pos < 1000)      // did line overflow?
                 {
                     s_restart = current_article_pos(); // restart here next time
@@ -930,12 +932,13 @@ reask_pager:
 static bool maybe_set_color(std::string_view line, std::size_t pos, bool back_search)
 {
     pos = std::min(pos, line.size());
+    const bool after_line_marker = pos == 1 || (pos > 1 && at_nl(line[pos - 2]));
     const char ch = (pos == 0 ? 0 : line[pos - 1]);
-    if (ch == '\001')
+    if (after_line_marker && ch == '\001')
     {
         color_object(COLOR_MIME_DESC, false);
     }
-    else if (ch == '\002')
+    else if (after_line_marker && ch == '\002')
     {
         color_object(COLOR_MIME_SEP, false);
     }

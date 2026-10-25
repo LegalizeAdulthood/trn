@@ -2053,6 +2053,85 @@ void PagerTextArticleTest::SetUp()
     utf_init("utf-8", "utf-8");
 }
 
+enum class PagerTerminalMode
+{
+    NORMAL,
+    HARDWARE_TABS,
+    CRLF,
+    UNFILTERED,
+    UNDERCHAR,
+    UNDERLINE_GLITCH
+};
+
+struct PagerTerminalCase
+{
+    const char                           *name;
+    std::string_view                      text;
+    std::vector<std::vector<std::string>> pages;
+    std::vector<long>                     offsets;
+    PagerTerminalMode                     mode{PagerTerminalMode::NORMAL};
+    std::string_view                      commands{" "};
+    int                                   screen_lines{4};
+    std::vector<std::size_t>              stop_rows;
+    std::string_view                      tail{"Tail\nEnd\nLast\nMore\nDone\n"};
+};
+
+void PrintTo(const PagerTerminalCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class PagerTerminalArticleTest : public PagerTextArticleTest, public WithParamInterface<PagerTerminalCase>
+{
+protected:
+    void SetUp() override;
+
+    std::string m_source;
+
+private:
+    ValueSaver<bool>             m_hiding{g_do_hiding, g_do_hiding};
+    ValueSaver<bool>             m_filter{g_dont_filter_control, g_dont_filter_control};
+    ValueSaver<bool>             m_tabs{g_tc_GT, g_tc_GT};
+    ValueSaver<bool>             m_glitch{g_tc_UG, g_tc_UG};
+    ValueSaver<int>              m_fire{g_fire_is_out, g_fire_is_out};
+    ValueSaver<std::string_view> m_underline_start{g_tc_US, g_tc_US};
+    ValueSaver<std::string_view> m_underline_end{g_tc_UE, g_tc_UE};
+    ValueSaver<std::string_view> m_underchar{g_tc_UC, g_tc_UC};
+};
+
+void PagerTerminalArticleTest::SetUp()
+{
+    PagerTextArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    const PagerTerminalCase &scenario = GetParam();
+    g_tc_COLS = 8;
+    g_tc_LINES = scenario.screen_lines;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    g_do_hiding = true;
+    g_dont_filter_control = scenario.mode == PagerTerminalMode::UNFILTERED;
+    g_tc_GT = scenario.mode == PagerTerminalMode::HARDWARE_TABS;
+    g_tc_UG = scenario.mode == PagerTerminalMode::UNDERLINE_GLITCH;
+    g_tc_US = scenario.mode == PagerTerminalMode::UNDERCHAR ? "" : "<ul>";
+    g_tc_UE = scenario.mode == PagerTerminalMode::UNDERCHAR ? "" : "</ul>";
+    g_tc_UC = scenario.mode == PagerTerminalMode::UNDERCHAR ? "<uc>" : "";
+    std::string body = "One\nTwo\n" + std::string{scenario.text} + std::string{scenario.tail};
+    std::string headers;
+    if (scenario.mode == PagerTerminalMode::CRLF)
+    {
+        // Decode CRLF in the message body on text-mode and binary-mode hosts.
+        headers = "MIME-Version: 1.0\nContent-Type: text/plain\nContent-Transfer-Encoding: quoted-printable\n";
+        for (std::size_t position = body.find('\r'); position != std::string::npos;
+             position = body.find('\r', position + 3))
+        {
+            body.replace(position, 1, "=0D");
+        }
+    }
+    load_body(body, headers);
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
+}
+
 struct PagerWrappingCase
 {
     const char              *name;
@@ -4452,6 +4531,168 @@ INSTANTIATE_TEST_SUITE_P(
             Bool()),
     [](const TestParamInfo<PagerWrappingParam> &info)
     { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Clearing" : "Scrolling"); });
+
+TEST_P(PagerTerminalArticleTest, preservesColumnsStopsAndAttributesAcrossThePageBoundary)
+{
+    const PagerTerminalCase &scenario = GetParam();
+
+    read_pages(scenario.commands);
+
+    SCOPED_TRACE(m_rendered);
+    const bool at_end = scenario.tail.empty();
+    EXPECT_EQ(at_end ? DA_NORM : DA_TO_END, m_result);
+    for (std::size_t page = 0; page < scenario.pages.size(); ++page)
+    {
+        std::vector<std::string> expected = scenario.pages[page];
+        if (page == 0)
+        {
+            expected.insert(expected.begin(), {"One", "Two"});
+        }
+        EXPECT_EQ(expected, displayed_rows(page)) << "Page " << page;
+        const std::string_view text = page_text(page);
+        EXPECT_EQ(at_end ? std::string_view::npos : text.size() - std::string_view{"<mark>"}.size(),
+                  text.find("<mark>"))
+            << "Unexpected standout in body on page " << page;
+        if (const std::size_t start = text.rfind("<ul>"); start != std::string_view::npos)
+        {
+            const std::size_t end = text.rfind("</ul>");
+            EXPECT_NE(std::string_view::npos, end) << "Page " << page;
+            EXPECT_GT(end, start) << "Page " << page;
+        }
+    }
+    std::size_t prompts = 0;
+    for (std::size_t position = m_rendered.find("--MORE--("); position != std::string::npos;
+         position = m_rendered.find("--MORE--(", position + 1))
+    {
+        ++prompts;
+    }
+    EXPECT_EQ(scenario.pages.size() - (at_end ? 1 : 0), prompts);
+    EXPECT_EQ(m_body_start, virtual_read(ArticleLine{}));
+    EXPECT_EQ(m_body_start + ArticlePosition{4}, virtual_read(ArticleLine{1}));
+    for (std::size_t row = 0; row < scenario.offsets.size(); ++row)
+    {
+        const ArticlePosition expected = m_body_start + ArticlePosition{8 + scenario.offsets[row]};
+        const bool            stop =
+            std::find(scenario.stop_rows.begin(), scenario.stop_rows.end(), row) != scenario.stop_rows.end();
+        EXPECT_EQ(stop ? -expected : expected, virtual_read(ArticleLine{static_cast<long>(row + 2)})) << "Row " << row;
+    }
+    EXPECT_EQ(ArticleLine{static_cast<long>(scenario.offsets.size() + 1)}, g_art_line_num);
+    EXPECT_EQ(m_body_start + ArticlePosition{8 + scenario.offsets.back()}, g_art_pos);
+    EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
+    EXPECT_GE(art_buf_article_pos(), g_art_pos);
+    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_in_header);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_TRUE(m_article_command.empty());
+    EXPECT_EQ(at_end, macro_pending());
+    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    ASSERT_TRUE(source.is_open());
+    EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TextAndTerminalBoundaries, PagerTerminalArticleTest,
+    Values(
+        PagerTerminalCase{"ExpandedTabAtMargin", "abcdefg\tXYZ\n", {{"abcdefg "}, {"XYZ", "Tail"}}, {0, 8, 12, 17}},
+        PagerTerminalCase{"HardwareTabAtMargin",
+                          "abcdefg\tXYZ\n",
+                          {{"abcdefg\t"}, {"XYZ", "Tail"}},
+                          {0, 8, 12, 17},
+                          PagerTerminalMode::HARDWARE_TABS},
+        PagerTerminalCase{"TabToTheNextStop", "ab\tXYZ\n", {{"ab      "}, {"XYZ", "Tail"}}, {0, 3, 7, 12}},
+        PagerTerminalCase{"CrLfBeforeMargin",
+                          "1234567\r\nNEXT\r\n",
+                          {{"1234567"}, {"NEXT", "Tail"}},
+                          {0, 8, 13, 18},
+                          PagerTerminalMode::CRLF},
+        PagerTerminalCase{"CrLfAtMargin",
+                          "12345678\r\nNEXT\r\n",
+                          {{"12345678"}, {"NEXT", "Tail"}},
+                          {0, 9, 14, 19},
+                          PagerTerminalMode::CRLF},
+        PagerTerminalCase{"LoneCarriageReturn", "ab\rcd\n", {{"ab^Mcd"}, {"Tail", "End"}}, {0, 6, 11, 15}},
+        PagerTerminalCase{"ControlNeedsTwoColumns", "1234567\001Z\n", {{"1234567"}, {"^AZ", "Tail"}}, {0, 7, 10, 15}},
+        PagerTerminalCase{"ControlFitsAtMargin", "123456\007Z\n", {{"123456^G"}, {"Z", "Tail"}}, {0, 7, 9, 14}},
+        PagerTerminalCase{"DeleteIsFiltered", "ab\177cd\n", {{"ab^?cd"}, {"Tail", "End"}}, {0, 6, 11, 15}},
+        PagerTerminalCase{"EscapeIsFiltered", "ab\033cd\n", {{"ab^[cd"}, {"Tail", "End"}}, {0, 6, 11, 15}},
+        PagerTerminalCase{"ControlsRemainRawWithJ",
+                          "1234567\001Z\n",
+                          {{"1234567\001"}, {"Z", "Tail"}},
+                          {0, 8, 10, 15},
+                          PagerTerminalMode::UNFILTERED},
+        PagerTerminalCase{"BellRemainsRawWithJ",
+                          "1234567\007Z\n",
+                          {{"1234567\007"}, {"Z", "Tail"}},
+                          {0, 8, 10, 15},
+                          PagerTerminalMode::UNFILTERED},
+        PagerTerminalCase{"LiteralControlBIsNotAMimeSeparator",
+                          "1234567\002Z\n",
+                          {{"1234567\002"}, {"Z", "Tail"}},
+                          {0, 8, 10, 15},
+                          PagerTerminalMode::UNFILTERED},
+        PagerTerminalCase{
+            "FormFeedStopsThePage", "\fbreak\n", {{"^Lbreak"}}, {0, 7}, PagerTerminalMode::NORMAL, "", 6, {0}},
+        PagerTerminalCase{"ContinueAfterFormFeed",
+                          "\fbreak\n",
+                          {{"^Lbreak"}, {"Tail", "End", "Last", "More", "Done"}},
+                          {0, 7, 12, 16, 21, 26, 31},
+                          PagerTerminalMode::NORMAL,
+                          " ",
+                          6,
+                          {0},
+                          "Tail\nEnd\nLast\nMore\nDone\nStay\n"},
+        PagerTerminalCase{"InlineFormFeedDoesNotStop",
+                          "ab\fcd\n",
+                          {{"ab^Lcd", "Tail", "End"}},
+                          {0, 6, 11, 15},
+                          PagerTerminalMode::NORMAL,
+                          "",
+                          6},
+        PagerTerminalCase{"FormFeedNeedsTwoColumns", "1234567\fZ\n", {{"1234567"}, {"^LZ", "Tail"}}, {0, 7, 10, 15}},
+        PagerTerminalCase{"FormFeedFitsAtMargin", "123456\fZ\n", {{"123456^L"}, {"Z", "Tail"}}, {0, 7, 9, 14}},
+        PagerTerminalCase{"UnderlineRunEndsBeforePlainText",
+                          " _\bA_\bB cd\n",
+                          {{" <ul>AB</ul> cd"}, {"Tail", "End"}},
+                          {0, 11, 16, 20}},
+        PagerTerminalCase{
+            "LiteralUnderscoreEndsUnderline", "_\bA_B\n", {{"<ul>A</ul>_B"}, {"Tail", "End"}}, {0, 6, 11, 15}},
+        PagerTerminalCase{"UnderlineEndsAtNewline", " _\bA_\bB\n", {{" <ul>AB</ul>"}, {"Tail", "End"}}, {0, 8, 13, 17}},
+        PagerTerminalCase{"UnderlineAcrossPageBoundary",
+                          "_\ba_\bb_\bc_\bd_\be_\bf_\bg_\bh_\bi_\bj\n",
+                          {{"<ul>abcdefgh</ul>"}, {"<ul>ij</ul>", "Tail"}},
+                          {0, 24, 31, 36}},
+        PagerTerminalCase{"QuitDuringUnderlinedText",
+                          "_\ba_\bb_\bc_\bd_\be_\bf_\bg_\bh_\bi_\bj\n",
+                          {{"<ul>abcdefgh</ul>"}},
+                          {0, 24},
+                          PagerTerminalMode::NORMAL,
+                          ""},
+        PagerTerminalCase{"UnderlineAtExactWidthEof",
+                          "_\ba_\bb_\bc_\bd_\be_\bf_\bg_\bh\n",
+                          {{"<ul>abcdefgh</ul>"}},
+                          {0, 25},
+                          PagerTerminalMode::NORMAL,
+                          "",
+                          4,
+                          {},
+                          ""},
+        PagerTerminalCase{"PerCharacterUnderline",
+                          " _\bA_\bB cd\n",
+                          {{" A<uc>B<uc> cd"}, {"Tail", "End"}},
+                          {0, 11, 16, 20},
+                          PagerTerminalMode::UNDERCHAR},
+        PagerTerminalCase{"PerCharacterUnderlineAcrossPageBoundary",
+                          "_\ba_\bb_\bc_\bd_\be_\bf_\bg_\bh_\bi_\bj\n",
+                          {{"a<uc>b<uc>c<uc>d<uc>e<uc>f<uc>g<uc>h<uc>"}, {"i<uc>j<uc>", "Tail"}},
+                          {0, 24, 31, 36},
+                          PagerTerminalMode::UNDERCHAR},
+        PagerTerminalCase{"UnderlineCookieConsumesSpaces",
+                          " _\bA_\bB cd\n",
+                          {{" <ul>AB</ul>cd"}, {"Tail", "End"}},
+                          {0, 11, 16, 20},
+                          PagerTerminalMode::UNDERLINE_GLITCH}),
+    [](const TestParamInfo<PagerTerminalCase> &info) { return std::string{info.param.name}; });
 
 TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
 {
