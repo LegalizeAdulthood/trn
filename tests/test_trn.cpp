@@ -1459,6 +1459,11 @@ struct NewsgroupEndReadingState
     ArticleUnread           selected;
     std::string             default_command;
     std::vector<ArticleNum> selector_articles;
+    SelectionMode           selector_mode{};
+    ArticleNum              current;
+    ArticleNum              recent;
+    bool                    selected_only{};
+    std::array<bool, 3>     read{};
 };
 
 class NewsgroupEndReadingStateTest : public InputNewsgroupReadingTest
@@ -1470,6 +1475,8 @@ protected:
     void              configure_display(bool verbose, bool erase_screen);
     void              empty_spool();
     void              select_reply();
+    void              prepare_commands(std::vector<std::string> commands);
+    void              expect_return_to_caller() const;
     DoNewsgroupResult run_reading(std::vector<std::string>   commands,
                                   std::optional<std::string> start_command = std::nullopt);
     void              expect_end_heading() const;
@@ -1499,13 +1506,31 @@ void NewsgroupEndReadingStateTest::SetUp()
     g_terminal_input_reader = [this](char *buffer, int)
     {
         NewsgroupEndReadingState state{g_mode, g_art, g_newsgroup_ptr->m_to_read, g_selected_count, g_default_cmd, {}};
+        state.selector_mode = g_sel_mode;
+        state.current = g_curr_art;
+        state.recent = g_recent_art;
+        state.selected_only = g_selected_only;
+        state.read = {was_read(ArticleNum{1}), was_read(ArticleNum{2}), was_read(ArticleNum{3})};
         if (g_mode == MM_THREAD_SELECTOR)
         {
             EXPECT_EQ(GM_SELECTOR, g_general_mode);
-            EXPECT_EQ(SM_ARTICLE, g_sel_mode);
             for (int item = 0; item < g_sel_page_item_cnt; ++item)
             {
-                state.selector_articles.push_back(g_sel_items[item].u.ap->article_num());
+                if (g_sel_mode == SM_ARTICLE)
+                {
+                    state.selector_articles.push_back(g_sel_items[item].u.ap->article_num());
+                }
+                else
+                {
+                    for (Article *article = g_sel_items[item].u.sp->first_art(); article;
+                         article = article->next_article())
+                    {
+                        if ((article->m_flags & (AF_EXISTS | AF_UNREAD)) == (AF_EXISTS | AF_UNREAD))
+                        {
+                            state.selector_articles.push_back(article->article_num());
+                        }
+                    }
+                }
             }
         }
         else
@@ -1580,11 +1605,23 @@ void NewsgroupEndReadingStateTest::select_reply()
 DoNewsgroupResult NewsgroupEndReadingStateTest::run_reading(std::vector<std::string>   commands,
                                                             std::optional<std::string> start_command)
 {
-    m_commands = std::move(commands);
-    errno = 0;
+    prepare_commands(std::move(commands));
     testing::internal::CaptureStdout();
     const DoNewsgroupResult result = do_newsgroup(std::move(start_command));
     m_output = testing::internal::GetCapturedStdout();
+    expect_return_to_caller();
+    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
+    return result;
+}
+
+void NewsgroupEndReadingStateTest::prepare_commands(std::vector<std::string> commands)
+{
+    m_commands = std::move(commands);
+    errno = 0;
+}
+
+void NewsgroupEndReadingStateTest::expect_return_to_caller() const
+{
     EXPECT_EQ(m_commands.size(), m_input_pos);
     EXPECT_FALSE(macro_pending());
     EXPECT_EQ(GM_READ, g_general_mode);
@@ -1592,8 +1629,6 @@ DoNewsgroupResult NewsgroupEndReadingStateTest::run_reading(std::vector<std::str
     EXPECT_FALSE(g_in_ng);
     EXPECT_FALSE(g_doing_ng);
     EXPECT_EQ(nullptr, g_art_fp);
-    EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
-    return result;
 }
 
 void NewsgroupEndReadingStateTest::expect_end_heading() const
@@ -1651,6 +1686,111 @@ void ForcedNewsgroupEndCountTest::SetUp()
     const auto &[verbose, erase_screen, range] = GetParam();
     configure_display(verbose, erase_screen);
     set_read_range(range.first);
+}
+
+class NewsgroupSelectorReadingStateTest : public NewsgroupEndReadingStateTest
+{
+protected:
+    void                 TearDown() override;
+    void                 configure_selector(SelectionMode mode, bool erase_screen);
+    void                 expect_selector(std::size_t index, std::vector<ArticleNum> articles) const;
+    void                 expect_body_count(std::string_view body, int expected) const;
+    InputNewsgroupResult run_from_group_prompt(std::vector<std::string> commands);
+
+private:
+    SelectionMode     m_old_thread_mode{g_sel_thread_mode};
+    SelectionSortMode m_old_thread_sort{g_sel_thread_sort};
+    bool              m_old_breadth_first{g_breadth_first};
+    bool              m_old_bos_on_stop{g_bos_on_stop};
+    int               m_old_scan_on{g_scan_on};
+    SelectionMode     m_mode{};
+};
+
+void NewsgroupSelectorReadingStateTest::TearDown()
+{
+    NewsgroupEndReadingStateTest::TearDown();
+    g_sel_thread_mode = m_old_thread_mode;
+    g_sel_thread_sort = m_old_thread_sort;
+    g_breadth_first = m_old_breadth_first;
+    g_bos_on_stop = m_old_bos_on_stop;
+    g_scan_on = m_old_scan_on;
+}
+
+void NewsgroupSelectorReadingStateTest::configure_selector(SelectionMode mode, bool erase_screen)
+{
+    m_mode = mode;
+    g_sel_default_mode = mode;
+    g_use_threads = g_threaded_group = mode == SM_THREAD;
+    g_thread_always = true;
+    g_breadth_first = false;
+    g_scan_on = 0;
+    g_erase_screen = erase_screen;
+    g_tc_LINES = 40;
+    g_init_lines = ArticleLine{g_tc_LINES};
+    set_selector(mode, mode == SM_ARTICLE ? SS_NATURAL : SS_DATE);
+    std::ofstream{m_output_dir / "comp/lang/cpp/3", std::ios::binary}
+        << "From: Branch <branch@example.test>\nSubject: Branch\n"
+           "Date: 21 Oct 2026 12:00:00 GMT\nMessage-ID: <branch@example.test>\n\nBranch body\n";
+}
+
+void NewsgroupSelectorReadingStateTest::expect_selector(std::size_t index, std::vector<ArticleNum> articles) const
+{
+    ASSERT_LT(index, m_states.size());
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[index].mode);
+    EXPECT_EQ(m_mode, m_states[index].selector_mode);
+    EXPECT_EQ(articles, m_states[index].selector_articles);
+}
+
+void NewsgroupSelectorReadingStateTest::expect_body_count(std::string_view body, int expected) const
+{
+    int count = 0;
+    for (std::size_t pos = m_output.find(body); pos != std::string::npos; pos = m_output.find(body, pos + body.size()))
+    {
+        ++count;
+    }
+    EXPECT_EQ(expected, count) << body;
+}
+
+InputNewsgroupResult NewsgroupSelectorReadingStateTest::run_from_group_prompt(std::vector<std::string> commands)
+{
+    prepare_commands(std::move(commands));
+    push_command("y");
+    testing::internal::CaptureStdout();
+    const InputNewsgroupResult result = input_newsgroup();
+    m_output = testing::internal::GetCapturedStdout();
+    expect_return_to_caller();
+    return result;
+}
+
+class NewsgroupSelectorReadingTest : public NewsgroupSelectorReadingStateTest,
+                                     public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorReadingTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    const auto [mode, erase_screen] = GetParam();
+    configure_selector(mode, erase_screen);
+}
+
+using SelectorReadingExit = std::tuple<char, InputNewsgroupResult, DoNewsgroupResult, std::size_t>;
+
+class NewsgroupSelectorReadingExitTest
+    : public NewsgroupSelectorReadingStateTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, SelectorReadingExit>>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorReadingExitTest::SetUp()
+{
+    NewsgroupEndReadingStateTest::SetUp();
+    const auto &[mode, erase_screen, exit] = GetParam();
+    configure_selector(mode, erase_screen);
 }
 
 struct PagerReadingState
@@ -7546,6 +7686,140 @@ INSTANTIATE_TEST_SUITE_P(PresentationAndReadRange, ForcedNewsgroupEndCountTest,
                                                           ForcedEndReadRange{"1-2", 1}, ForcedEndReadRange{"1-3", 0})));
 
 INSTANTIATE_TEST_SUITE_P(Presentation, NewsgroupEndReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(NewsgroupSelectorReadingTest, cancellingExplicitSelectionRestoresTheCurrentArticlePrompt)
+{
+    const DoNewsgroupResult result = run_reading({"+", "+", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    expect_selector(1, {ArticleNum{3}});
+    EXPECT_EQ(ArticleNum{2}, m_states[1].current);
+    EXPECT_EQ(MM_ARTICLE, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[2].article);
+    EXPECT_EQ(m_states[0].recent, m_states[2].recent);
+    EXPECT_EQ(m_states[0].read, m_states[2].read);
+    EXPECT_EQ(ArticleUnread{1}, m_states[2].unread);
+    EXPECT_FALSE(m_states[2].selected_only);
+    expect_body_count("Reply body", 1);
+    expect_body_count("Branch body", 0);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorReadingTest, cancellationRetainsAnExistingSelectionAndSelectedOnlyReading)
+{
+    select_reply();
+    article_ptr(ArticleNum{2})->deselect_article(AUTO_KILL_NONE);
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+
+    const DoNewsgroupResult result = run_reading({"+", "+", "Q"}, "2");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3, m_states.size());
+    expect_selector(1, {ArticleNum{3}});
+    EXPECT_EQ(ArticleUnread{1}, m_states[1].selected);
+    EXPECT_EQ(MM_ARTICLE, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[2].article);
+    EXPECT_TRUE(m_states[2].selected_only);
+    EXPECT_EQ(ArticleUnread{1}, m_states[2].selected);
+    EXPECT_EQ(m_states[0].read, m_states[2].read);
+    expect_body_count("Reply body", 1);
+    expect_body_count("Branch body", 0);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorReadingTest, acceptingWithoutSelectionsContinuesWithTheRemainingUnreadArticle)
+{
+    const DoNewsgroupResult result = run_reading({"+", "Z", "n"});
+
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(3, m_states.size());
+    expect_selector(1, {ArticleNum{3}});
+    EXPECT_EQ(TR_NONE, m_states[1].selected);
+    EXPECT_EQ(MM_ARTICLE, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{3}, m_states[2].article);
+    EXPECT_EQ(TR_NONE, m_states[2].unread);
+    EXPECT_FALSE(m_states[2].selected_only);
+    expect_body_count("Reply body", 1);
+    expect_body_count("Branch body", 1);
+    EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorReadingTest, acceptingTheChosenItemSkipsTheOtherUnreadArticle)
+{
+    set_read_range("");
+
+    const DoNewsgroupResult result = run_reading({"+", "bZ", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3, m_states.size());
+    EXPECT_EQ(ArticleNum{1}, m_states[0].article);
+    expect_selector(1, {ArticleNum{2}, ArticleNum{3}});
+    EXPECT_EQ(ArticleUnread{2}, m_states[1].unread);
+    EXPECT_EQ(MM_ARTICLE, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{3}, m_states[2].article);
+    EXPECT_TRUE(m_states[2].selected_only);
+    EXPECT_EQ(ArticleUnread{1}, m_states[2].unread);
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    expect_body_count("Root first line", 1);
+    expect_body_count("Reply body", 0);
+    expect_body_count("Branch body", 1);
+    EXPECT_EQ(" 1-1,3", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorReadingTest, cancellingAtTheGroupEndRestoresTheEndPromptAndUnreadCount)
+{
+    const std::string_view default_command = std::get<0>(GetParam()) == SM_SUBJECT ? "^Nnpq" : "npq";
+
+    const DoNewsgroupResult result = run_reading({"+", "+", "Q"}, "$");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    expect_selector(1, {ArticleNum{2}, ArticleNum{3}});
+    EXPECT_EQ(MM_ARTICLE_END, m_states[2].mode);
+    EXPECT_EQ(ArticleNum{4}, m_states[2].article);
+    EXPECT_EQ(m_states[0].read, m_states[2].read);
+    EXPECT_EQ(ArticleUnread{2}, m_states[2].unread);
+    EXPECT_EQ(default_command, m_states[2].default_command);
+    expect_body_count("Reply body", 0);
+    expect_body_count("Branch body", 0);
+    EXPECT_EQ(" 1-1", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(NewsgroupSelectorReadingExitTest, leavingTheSelectorAfterReadingReachesTheRequestedGroupDestination)
+{
+    const auto &[mode, erase_screen, exit] = GetParam();
+    const auto [command, expected, group_result, index] = exit;
+
+    const InputNewsgroupResult result = run_from_group_prompt({"+", std::string{command}});
+
+    EXPECT_EQ(expected, result);
+    EXPECT_EQ(group_result, g_newsgroup_exit_code);
+    ASSERT_EQ(2, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    expect_selector(1, {ArticleNum{3}});
+    EXPECT_EQ(ArticleNum{2}, m_states[1].current);
+    EXPECT_EQ(&g_newsgroup_data[index], g_newsgroup_ptr);
+    EXPECT_EQ(&g_newsgroup_data[1], g_current_newsgroup);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[1].rc_numbers());
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[1].m_to_read);
+    expect_body_count("Reply body", 1);
+    expect_body_count("Branch body", 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScreen, NewsgroupSelectorReadingTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+INSTANTIATE_TEST_SUITE_P(ModeScreenAndDestination, NewsgroupSelectorReadingExitTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(SelectorReadingExit{'q', ING_NORM, NG_NEXT, 2},
+                                                          SelectorReadingExit{'Q', ING_ASK, NG_ASK, 1},
+                                                          SelectorReadingExit{'N', ING_NORM, NG_SEL_NEXT, 2},
+                                                          SelectorReadingExit{'P', ING_NORM, NG_SEL_PRIOR, 0})));
 
 TEST_P(NewsgroupPagerReadingTest, completingTheSecondPageMarksTheArticleReadBeforeTheArticlePrompt)
 {
