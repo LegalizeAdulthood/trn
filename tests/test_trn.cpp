@@ -689,6 +689,273 @@ protected:
     char                              m_empty_tc[1]{};
 };
 
+struct MultircGroupPrompt
+{
+    std::string   group;
+    ArticleUnread unread;
+    MinorMode     mode;
+    std::string   default_command;
+};
+
+class MultircTraversalStateTest : public InputNewsgroupTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void run_groups(std::string commands);
+    void expect_prompts(std::vector<std::string> groups) const;
+
+    std::vector<MultircGroupPrompt> m_prompts;
+    std::string                     m_output;
+
+private:
+    TerminalInputReader m_old_input_reader{g_terminal_input_reader};
+    bool                m_old_typeahead{g_allow_typeahead};
+    bool                m_old_univ_selector{g_use_univ_selector};
+    bool                m_old_group_selector{g_use_newsgroup_selector};
+    bool                m_old_paranoid{g_paranoid};
+    int                 m_old_find_last{g_find_last};
+    NewsgroupData      *m_old_start{g_start_here};
+    NewsgroupData      *m_old_recent{g_recent_newsgroup};
+    std::string         m_old_message{g_msg};
+    std::string         m_commands;
+    std::size_t         m_input_pos{};
+};
+
+void MultircTraversalStateTest::SetUp()
+{
+    InputNewsgroupTest::SetUp();
+    search_init();
+    push_only();
+    g_newsgroup_data.reserve(8);
+    g_newsgroup_order.reserve(8);
+    g_newsgroup_min_to_read = ArticleUnread{2};
+    g_allow_typeahead = true;
+    g_use_univ_selector = g_use_newsgroup_selector = false;
+    g_paranoid = false;
+    g_find_last = 0;
+    g_start_here = g_recent_newsgroup = nullptr;
+    m_data_source.m_flags = DF_NONE;
+    m_newsrc.info_name = m_output_dir / "newsrc.info";
+    m_newsrc.name = m_output_dir / "newsrc";
+    m_newsrc.new_name = m_output_dir / "newsrc.new";
+    std::ofstream{m_newsrc.name};
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        EXPECT_EQ(GM_READ, g_general_mode);
+        EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+        m_prompts.push_back({g_newsgroup_ptr ? std::string{g_newsgroup_ptr->rc_name()} : "",
+                             g_newsgroup_ptr ? g_newsgroup_ptr->m_to_read : TR_NONE, g_mode, g_default_cmd});
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected group prompt";
+            *buffer = 'q';
+        }
+        else
+        {
+            *buffer = m_commands[m_input_pos++];
+        }
+        return 1;
+    };
+}
+
+void MultircTraversalStateTest::TearDown()
+{
+    pop_only();
+    g_terminal_input_reader = m_old_input_reader;
+    g_allow_typeahead = m_old_typeahead;
+    g_use_univ_selector = m_old_univ_selector;
+    g_use_newsgroup_selector = m_old_group_selector;
+    g_paranoid = m_old_paranoid;
+    g_find_last = m_old_find_last;
+    g_start_here = m_old_start;
+    g_recent_newsgroup = m_old_recent;
+    g_msg = m_old_message;
+    InputNewsgroupTest::TearDown();
+}
+
+void MultircTraversalStateTest::run_groups(std::string commands)
+{
+    m_data_source.m_act_sf.close();
+    const fs::path active_path = m_output_dir / "active";
+    std::ofstream  active{active_path, std::ios::binary};
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        if (group.m_num_offset)
+        {
+            active << group.rc_name() << " 6 1 y\n";
+        }
+    }
+    active.close();
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_path, "", ""));
+    m_commands = std::move(commands);
+    errno = 0;
+
+    testing::internal::CaptureStdout();
+    do_multirc();
+    m_output = testing::internal::GetCapturedStdout();
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NONE, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_restore_old_newsrc);
+}
+
+void MultircTraversalStateTest::expect_prompts(std::vector<std::string> groups) const
+{
+    SCOPED_TRACE(m_output);
+    ASSERT_EQ(groups.size(), m_prompts.size());
+    for (std::size_t index = 0; index < groups.size(); ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(groups[index], m_prompts[index].group);
+        EXPECT_EQ(groups[index].empty() ? MM_FINISH_NEWSGROUP_LIST : MM_NEWSGROUP_LIST, m_prompts[index].mode);
+        EXPECT_EQ(groups[index].empty() ? "npq" : "ynq", m_prompts[index].default_command);
+    }
+}
+
+struct IneligibleMultircGroup
+{
+    const char   *name;
+    const char   *read_ranges;
+    ArticleUnread cached_count;
+    char          subscription;
+    ArticleUnread expected_count;
+};
+
+class MultircIneligibleGroupTest : public MultircTraversalStateTest,
+                                   public testing::WithParamInterface<std::tuple<IneligibleMultircGroup, bool>>
+{
+protected:
+    void SetUp() override;
+    void expect_skipped_groups() const;
+};
+
+void MultircIneligibleGroupTest::SetUp()
+{
+    MultircTraversalStateTest::SetUp();
+    const auto [skipped, verbose] = GetParam();
+    g_verbose = verbose;
+    add_newsgroup("comp.leading", skipped.read_ranges, ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.first", "1-4", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.middle", skipped.read_ranges, ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.last", "1-3", ArticleNum{1}, ArticleNum{6});
+    for (int index : {0, 2})
+    {
+        NewsgroupData &group = g_newsgroup_data[index];
+        group.m_to_read = skipped.cached_count;
+        group.m_subscribe_char = skipped.subscription;
+        if (skipped.cached_count == TR_JUNK)
+        {
+            group.m_rc_line = "options -x";
+            group.m_num_offset = 0;
+        }
+    }
+}
+
+void MultircIneligibleGroupTest::expect_skipped_groups() const
+{
+    const IneligibleMultircGroup &skipped = std::get<0>(GetParam());
+    for (int index : {0, 2})
+    {
+        EXPECT_EQ(skipped.expected_count, g_newsgroup_data[index].m_to_read);
+        EXPECT_EQ(skipped.subscription, g_newsgroup_data[index].m_subscribe_char);
+    }
+    EXPECT_EQ(ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(ArticleUnread{3}, g_newsgroup_data[3].m_to_read);
+    EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
+}
+
+TEST_P(MultircIneligibleGroupTest, forwardTraversalSkipsIneligibleGroupsAndStopsAtTheEndPrompt)
+{
+    run_groups("nnq");
+
+    expect_prompts({"comp.first", "comp.last", ""});
+    EXPECT_EQ(ArticleUnread{2}, m_prompts[0].unread);
+    EXPECT_EQ(ArticleUnread{3}, m_prompts[1].unread);
+    expect_skipped_groups();
+}
+
+TEST_P(MultircIneligibleGroupTest, backwardTraversalSkipsIneligibleGroupsAndRetainsTheFirstEligibleGroup)
+{
+    run_groups("nppq");
+
+    expect_prompts({"comp.first", "comp.last", "comp.first", "comp.first"});
+    expect_skipped_groups();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EligibilityAndVerbosity, MultircIneligibleGroupTest,
+    testing::Combine(testing::Values(IneligibleMultircGroup{"FullyRead", "1-6", TR_NONE, ':', TR_NONE},
+                                     IneligibleMultircGroup{"BelowThreshold", "1-5", TR_NONE, ':', ArticleUnread{1}},
+                                     IneligibleMultircGroup{"Unsubscribed", "1", TR_UNSUB, '!', TR_UNSUB},
+                                     IneligibleMultircGroup{"Bogus", "1", TR_BOGUS, ':', TR_BOGUS},
+                                     IneligibleMultircGroup{"Ignored", "1", TR_IGNORE, ':', TR_IGNORE},
+                                     IneligibleMultircGroup{"Junk", "", TR_JUNK, ':', TR_JUNK}),
+                     testing::Bool()),
+    [](const testing::TestParamInfo<std::tuple<IneligibleMultircGroup, bool>> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Verbose" : "Terse"); });
+
+class MultircGroupTraversalTest : public MultircTraversalStateTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircGroupTraversalTest::SetUp()
+{
+    MultircTraversalStateTest::SetUp();
+    g_verbose = GetParam();
+}
+
+TEST_P(MultircGroupTraversalTest, restrictionsSkipNonmatchingGroupsInBothDirections)
+{
+    add_newsgroup("comp.excluded.first", "1", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.match.first", "1-4", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.excluded.middle", "1", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.match.last", "1-3", ArticleNum{1}, ArticleNum{6});
+    set_newsgroup_to_do("comp.match.*");
+
+    run_groups("npq");
+
+    expect_prompts({"comp.match.first", "comp.match.last", "comp.match.first"});
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[0].m_to_read);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[2].m_to_read);
+    EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(1, g_max_newsgroup_to_do);
+}
+
+TEST_P(MultircGroupTraversalTest, previousAtTheFirstGroupRetainsItsPrompt)
+{
+    add_newsgroup("comp.first", "1-4", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.last", "1-3", ArticleNum{1}, ArticleNum{6});
+
+    run_groups("pq");
+
+    expect_prompts({"comp.first", "comp.first"});
+    EXPECT_EQ(ArticleUnread{2}, m_prompts[0].unread);
+    EXPECT_EQ(m_prompts[0].unread, m_prompts[1].unread);
+}
+
+TEST_P(MultircGroupTraversalTest, recalculationDiscoversArrivalsThatMeetTheUnreadThreshold)
+{
+    add_newsgroup("comp.growing", "1-2");
+    g_newsgroup_data[0].m_to_read = ArticleUnread{1};
+
+    run_groups("nq");
+
+    expect_prompts({"comp.growing", ""});
+    EXPECT_EQ(ArticleUnread{4}, m_prompts[0].unread);
+    EXPECT_EQ(ArticleNum{6}, g_newsgroup_data[0].m_ng_max);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, MultircGroupTraversalTest, testing::Bool());
+
 class InputNewsgroupNavigationTest : public InputNewsgroupTest
 {
 protected:
