@@ -1828,6 +1828,167 @@ TEST_P(MultircReadingTest, explicitPreviousAndNextVisitAReadGroupAfterReading)
 
 INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
 
+class MultircSaveReadingTest : public MultircReadingTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_saved_files(std::string_view first, std::string_view second) const;
+
+    DataSource m_second_source{};
+    Newsrc     m_second_newsrc{};
+
+private:
+    static std::string read_file(const fs::path &path);
+
+    SelectionSortMode m_old_group_sort{g_sel_newsgroup_sort};
+    std::string       m_saved_score_file;
+    const std::string m_first_backup{"comp.previous: 1\ncomp.next! 1\n"};
+    const std::string m_second_backup{"comp.lang.cpp: 1\n"};
+};
+
+void MultircSaveReadingTest::SetUp()
+{
+    set_environment([](const char *) -> char * { return nullptr; });
+    MultircReadingTest::SetUp();
+    m_saved_score_file = (m_output_dir / "saved-scores").generic_string();
+    set_environment([this](const char *name) -> char *
+                    { return std::string_view{name} == "SAVESCOREFILE" ? m_saved_score_file.data() : nullptr; });
+    g_sel_newsgroup_sort = SS_NATURAL;
+    m_second_source.m_flags = DF_NONE;
+    m_second_source.m_spool_dir = m_data_source.m_spool_dir;
+    m_second_source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+    ASSERT_EQ(1, m_second_source.m_act_sf.open(m_output_dir / "active", "", ""));
+    m_second_newsrc.data_source = &m_second_source;
+    m_second_newsrc.flags = RF_ACTIVE;
+    m_second_newsrc.name = m_output_dir / "second-newsrc";
+    m_second_newsrc.old_name = m_output_dir / "second-newsrc.old";
+    m_second_newsrc.new_name = m_output_dir / "second-newsrc.new";
+    m_second_newsrc.info_name = m_output_dir / "second-newsrc.info";
+    m_newsrc.next = &m_second_newsrc;
+    m_newsrc.old_name = m_output_dir / "newsrc.old";
+    g_newsgroup_data[1].m_rc = &m_second_newsrc;
+    g_newsgroup_data[2].m_subscribe_char = UNSUBSCRIBED_CHAR;
+    g_newsgroup_data[2].m_to_read = TR_UNSUB;
+    std::ofstream{m_newsrc.name} << "comp.previous: 1-2\ncomp.next! 1-2\n";
+    std::ofstream{m_newsrc.old_name} << m_first_backup;
+    std::ofstream{m_second_newsrc.name} << "comp.lang.cpp: 1\n";
+    std::ofstream{m_second_newsrc.old_name} << m_second_backup;
+}
+
+void MultircSaveReadingTest::TearDown()
+{
+    m_second_source.close();
+    m_data_source.m_act_sf.close();
+    g_sel_newsgroup_sort = m_old_group_sort;
+    MultircReadingTest::TearDown();
+    set_environment(nullptr);
+}
+
+std::string MultircSaveReadingTest::read_file(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void MultircSaveReadingTest::expect_saved_files(std::string_view first, std::string_view second) const
+{
+    EXPECT_EQ(first, read_file(m_newsrc.name));
+    EXPECT_EQ(second, read_file(m_second_newsrc.name));
+    EXPECT_EQ(m_first_backup, read_file(m_newsrc.old_name));
+    EXPECT_EQ(m_second_backup, read_file(m_second_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    EXPECT_FALSE(fs::exists(m_second_newsrc.new_name));
+    EXPECT_TRUE(fs::exists(m_newsrc.info_name));
+    EXPECT_TRUE(fs::exists(m_second_newsrc.info_name));
+}
+
+TEST_P(MultircSaveReadingTest, normalQuitSavesPartialReadsToTheirRespectiveNewsrcFiles)
+{
+    run_session("yQnyQq");
+
+    expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2"});
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1-2\n");
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
+    EXPECT_EQ(RF_NONE, m_second_newsrc.flags & RF_RC_CHANGED);
+}
+
+TEST_P(MultircSaveReadingTest, normalQuitAtTheEndSavesAllCompletedReadsAcrossNewsrcFiles)
+{
+    run_session("ynynnq");
+
+    expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2", "comp.lang.cpp article 3"});
+    ASSERT_FALSE(m_prompts.empty());
+    EXPECT_EQ(MM_FINISH_NEWSGROUP_LIST, m_prompts.back().mode);
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1-3\n");
+}
+
+TEST_P(MultircSaveReadingTest, normalQuitSavesAnUnsubscriptionWithItsCompletedReads)
+{
+    run_session("yQnyQuq");
+
+    expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2"});
+    EXPECT_EQ(UNSUBSCRIBED_CHAR, g_newsgroup_data[1].m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[1].m_to_read);
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp! 1-2\n");
+}
+
+TEST_P(MultircSaveReadingTest, normalQuitLeavesAnUnvisitedNewsrcFileUnchanged)
+{
+    run_session("yQq");
+
+    expect_body_order({"comp.previous article 3"});
+    EXPECT_EQ(std::string::npos, m_output.find("Group body comp.lang.cpp"));
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1\n");
+}
+
+TEST_P(MultircSaveReadingTest, normalQuitSavesRestoredDelayedArticlesWithoutLosingOtherCompletedReads)
+{
+    run_session("yQnyMnQq");
+
+    expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2", "comp.lang.cpp article 3"});
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_TRUE(was_read(ArticleNum{3}));
+    EXPECT_EQ(0, g_dm_count);
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1-1,3\n");
+}
+
+TEST_P(MultircSaveReadingTest, processExitPreservesSavedReadsAndRemovesBothNewsrcLocks)
+{
+    m_newsrc.lock_name = m_output_dir / "newsrc.lock";
+    m_second_newsrc.lock_name = m_output_dir / "second-newsrc.lock";
+    std::ofstream{m_newsrc.lock_name} << "private first lock\n";
+    std::ofstream{m_second_newsrc.lock_name} << "private second lock\n";
+    m_data_source.m_act_sf.close();
+    m_second_source.m_act_sf.close();
+    back_page_final();
+    fs::current_path(m_output_dir.parent_path());
+
+    EXPECT_EXIT(
+        {
+            if (m_data_source.m_act_sf.open(m_output_dir / "active", "", "") != 1 ||
+                m_second_source.m_act_sf.open(m_output_dir / "active", "", "") != 1)
+            {
+                std::exit(2);
+            }
+            back_page_init();
+            run_session("yQnyQq");
+            g_check_flag = false;
+            g_bizarre = false;
+            g_tmp_dir = m_output_dir.generic_string();
+            g_head_name.clear();
+            finalize(testing::Test::HasFailure() ? 1 : 0);
+        },
+        testing::ExitedWithCode(0), ".*");
+
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1-2\n");
+    EXPECT_FALSE(fs::exists(m_newsrc.lock_name));
+    EXPECT_FALSE(fs::exists(m_second_newsrc.lock_name));
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircSaveReadingTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
 struct LocalArticleReadingState
 {
     ArticleNum          article;
