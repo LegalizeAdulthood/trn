@@ -2165,22 +2165,22 @@ enum class ReadingServerFailure
     SERVER_ERROR
 };
 
-class RemoteNewsgroupFailureReadingTest : public NewsgroupEndReadingStateTest,
-                                          public testing::WithParamInterface<std::tuple<ReadingServerFailure, bool>>
+class RemoteNewsgroupReadingStateTest : public NewsgroupEndReadingStateTest
 {
 protected:
     void SetUp() override;
     void TearDown() override;
-    void expect_command(std::string command, std::vector<std::string> response);
+    void expect_command(std::string command, std::vector<std::string> response,
+                        std::function<void()> first_payload = {});
     void expect_header(int number, bool missing_parent = false);
-    void expect_body(int number);
+    void expect_body(int number, std::function<void()> first_line = {});
     void expect_entry(bool threaded = false);
-    void expect_failure(std::string command);
     void expect_saved_range(std::string_view range, ArticleUnread unread) const;
 
-private:
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
     testing::Sequence                                        m_protocol;
+
+private:
     bool                                                     m_old_allow_timeout{g_nntp_allow_timeout};
     bool                                                     m_old_force_grow{g_force_grow};
     ArticleNum                                               m_old_go_article{g_ng_go_art_num};
@@ -2188,10 +2188,9 @@ private:
     std::string                                              m_old_last_command{g_last_command};
 };
 
-void RemoteNewsgroupFailureReadingTest::SetUp()
+void RemoteNewsgroupReadingStateTest::SetUp()
 {
     NewsgroupEndReadingStateTest::SetUp();
-    g_verbose = std::get<1>(GetParam());
     g_nntp_allow_timeout = false;
     g_force_grow = false;
     m_data_source.m_flags = DF_REMOTE | DF_NO_XREFS;
@@ -2201,7 +2200,7 @@ void RemoteNewsgroupFailureReadingTest::SetUp()
     m_data_source.m_nntp_link = g_nntp_link;
 }
 
-void RemoteNewsgroupFailureReadingTest::TearDown()
+void RemoteNewsgroupReadingStateTest::TearDown()
 {
     g_nntp_allow_timeout = m_old_allow_timeout;
     g_force_grow = m_old_force_grow;
@@ -2211,16 +2210,28 @@ void RemoteNewsgroupFailureReadingTest::TearDown()
     NewsgroupEndReadingStateTest::TearDown();
 }
 
-void RemoteNewsgroupFailureReadingTest::expect_command(std::string command, std::vector<std::string> response)
+void RemoteNewsgroupReadingStateTest::expect_command(std::string command, std::vector<std::string> response,
+                                                     std::function<void()> first_payload)
 {
     EXPECT_CALL(*m_connection, write_line(testing::StrEq(command), testing::_)).InSequence(m_protocol);
-    for (const std::string &line : response)
+    for (std::size_t index = 0; index < response.size(); ++index)
     {
-        EXPECT_CALL(*m_connection, read_line(testing::_)).InSequence(m_protocol).WillOnce(testing::Return(line));
+        EXPECT_CALL(*m_connection, read_line(testing::_))
+            .InSequence(m_protocol)
+            .WillOnce(
+                [line = response[index],
+                 callback = index == 1 ? first_payload : std::function<void()>{}](error_code_t &)
+                {
+                    if (callback)
+                    {
+                        callback();
+                    }
+                    return line;
+                });
     }
 }
 
-void RemoteNewsgroupFailureReadingTest::expect_header(int number, bool missing_parent)
+void RemoteNewsgroupReadingStateTest::expect_header(int number, bool missing_parent)
 {
     std::ifstream            article{m_output_dir / std::to_string(number)};
     std::vector<std::string> lines{"221 Header follows"};
@@ -2236,13 +2247,23 @@ void RemoteNewsgroupFailureReadingTest::expect_header(int number, bool missing_p
     expect_command("HEAD " + std::to_string(number), std::move(lines));
 }
 
-void RemoteNewsgroupFailureReadingTest::expect_body(int number)
+void RemoteNewsgroupReadingStateTest::expect_body(int number, std::function<void()> first_line)
 {
-    expect_command("BODY " + std::to_string(number),
-                   {"222 Body follows", number == 2 ? "Reply body" : "Branch body", "."});
+    std::ifstream article{m_output_dir / std::to_string(number)};
+    std::string   line;
+    while (std::getline(article, line) && !line.empty())
+    {
+    }
+    std::vector<std::string> lines{"222 Body follows"};
+    while (std::getline(article, line))
+    {
+        lines.push_back(line);
+    }
+    lines.emplace_back(".");
+    expect_command("BODY " + std::to_string(number), std::move(lines), std::move(first_line));
 }
 
-void RemoteNewsgroupFailureReadingTest::expect_entry(bool threaded)
+void RemoteNewsgroupReadingStateTest::expect_entry(bool threaded)
 {
     g_use_threads = g_thread_always = g_threaded_group = threaded;
     expect_command("GROUP comp.lang.cpp", {"211 3 1 3 comp.lang.cpp"});
@@ -2260,6 +2281,20 @@ void RemoteNewsgroupFailureReadingTest::expect_entry(bool threaded)
     }
     expect_body(2);
     expect_header(3);
+}
+
+class RemoteNewsgroupFailureReadingTest : public RemoteNewsgroupReadingStateTest,
+                                          public testing::WithParamInterface<std::tuple<ReadingServerFailure, bool>>
+{
+protected:
+    void SetUp() override;
+    void expect_failure(std::string command);
+};
+
+void RemoteNewsgroupFailureReadingTest::SetUp()
+{
+    RemoteNewsgroupReadingStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
 }
 
 void RemoteNewsgroupFailureReadingTest::expect_failure(std::string command)
@@ -2281,7 +2316,7 @@ void RemoteNewsgroupFailureReadingTest::expect_failure(std::string command)
             });
 }
 
-void RemoteNewsgroupFailureReadingTest::expect_saved_range(std::string_view range, ArticleUnread unread) const
+void RemoteNewsgroupReadingStateTest::expect_saved_range(std::string_view range, ArticleUnread unread) const
 {
     EXPECT_EQ(range, g_newsgroup_ptr->rc_numbers());
     EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
@@ -2369,6 +2404,224 @@ INSTANTIATE_TEST_SUITE_P(TransportAndDisplay, RemoteNewsgroupFailureReadingTest,
                                                           ReadingServerFailure::CONNECTION_RESET,
                                                           ReadingServerFailure::SERVER_ERROR),
                                           testing::Bool()));
+
+class RemoteNewsgroupRefreshReadingTest : public RemoteNewsgroupReadingStateTest,
+                                          public testing::WithParamInterface<std::tuple<bool, int>>
+{
+protected:
+    void SetUp() override;
+    void expect_refresh();
+    void expect_subjects(int first);
+    void expect_arrivals(bool read) const;
+
+    int m_arrivals{};
+};
+
+void RemoteNewsgroupRefreshReadingTest::SetUp()
+{
+    RemoteNewsgroupReadingStateTest::SetUp();
+    g_verbose = std::get<0>(GetParam());
+    m_arrivals = std::get<1>(GetParam());
+    for (int number = 4; number < 4 + m_arrivals; ++number)
+    {
+        std::ofstream{m_output_dir / std::to_string(number)}
+            << "From: Arrival <arrival@example.test>\nSubject: Arrival " << number
+            << "\nDate: Thu, 1 Jan 2026 12:00:00 +0000\nMessage-ID: <arrival" << number
+            << "@example.test>\nNewsgroups: comp.lang.cpp\n\nArrival body " << number << '\n';
+    }
+}
+
+void RemoteNewsgroupRefreshReadingTest::expect_refresh()
+{
+    expect_command("GROUP comp.lang.cpp", {"211 " + std::to_string(3 + m_arrivals) + " 1 " +
+                                           std::to_string(3 + m_arrivals) + " comp.lang.cpp"});
+}
+
+void RemoteNewsgroupRefreshReadingTest::expect_subjects(int first)
+{
+    if (first > 3 + m_arrivals)
+    {
+        return;
+    }
+    std::vector<std::string> response{"225 Headers follow"};
+    for (int number = first; number < 4 + m_arrivals; ++number)
+    {
+        response.push_back(std::to_string(number) + (number == 3 ? " Branch" : " Arrival " + std::to_string(number)));
+    }
+    response.emplace_back(".");
+    expect_command("HDR subject " + std::to_string(first) + "-" + std::to_string(3 + m_arrivals), std::move(response));
+}
+
+void RemoteNewsgroupRefreshReadingTest::expect_arrivals(bool read) const
+{
+    EXPECT_EQ(ArticleNum{1}, g_abs_first);
+    EXPECT_EQ(ArticleNum{3 + m_arrivals}, g_last_art);
+    EXPECT_EQ(g_last_art, g_newsgroup_ptr->m_ng_max);
+    EXPECT_FALSE(g_force_grow);
+    for (int number = 4; number < 4 + m_arrivals; ++number)
+    {
+        const Article *article = article_find(ArticleNum{number});
+        ASSERT_NE(nullptr, article);
+        EXPECT_NE(AF_NONE, article->m_flags & AF_EXISTS);
+        EXPECT_EQ(read, was_read(ArticleNum{number}));
+        EXPECT_EQ(read, m_output.find("Arrival body " + std::to_string(number)) != std::string::npos);
+    }
+}
+
+TEST_P(RemoteNewsgroupRefreshReadingTest, exhaustionRefreshesTheGroupAndContinuesThroughArrivals)
+{
+    expect_entry();
+    expect_body(3);
+    expect_refresh();
+    for (int number = 4; number < 4 + m_arrivals; ++number)
+    {
+        if (number == 4)
+        {
+            expect_header(number);
+        }
+        expect_body(number);
+        if (number + 1 < 4 + m_arrivals)
+        {
+            expect_header(number + 1);
+        }
+    }
+    if (m_arrivals)
+    {
+        expect_refresh();
+    }
+
+    const DoNewsgroupResult result = run_reading(std::vector<std::string>(2 + m_arrivals, "n"));
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_NORM, result);
+    ASSERT_EQ(2 + m_arrivals, m_states.size());
+    for (std::size_t index = 0; index < m_states.size(); ++index)
+    {
+        EXPECT_EQ(ArticleNum{2 + static_cast<long>(index)}, m_states[index].article);
+        EXPECT_EQ(MM_ARTICLE, m_states[index].mode);
+    }
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    expect_arrivals(true);
+    expect_saved_range(" 1-" + std::to_string(3 + m_arrivals), TR_NONE);
+    EXPECT_EQ(ArticleNum{3 + m_arrivals}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+}
+
+TEST_P(RemoteNewsgroupRefreshReadingTest, aForcedEndJumpRefreshesBoundsAndPreservesSkippedArticles)
+{
+    expect_entry();
+    expect_refresh();
+    expect_subjects(4);
+    for (int number = 4; number < 4 + m_arrivals; ++number)
+    {
+        expect_header(number);
+    }
+
+    const DoNewsgroupResult result = run_reading({"$", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[1].mode);
+    EXPECT_EQ(ArticleNum{4 + m_arrivals}, m_states[1].article);
+    EXPECT_EQ(ArticleUnread{1 + m_arrivals}, m_states[1].unread);
+    EXPECT_FALSE(was_read(ArticleNum{3}));
+    expect_end_heading();
+    expect_arrivals(false);
+    expect_saved_range(" 1-2", ArticleUnread{1 + m_arrivals});
+}
+
+TEST_P(RemoteNewsgroupRefreshReadingTest, aRequestedRefreshReusesTheCachedBodyAndKeepsTheCurrentArticle)
+{
+    expect_entry();
+    expect_refresh();
+    expect_header(3);
+    expect_subjects(4);
+    for (int number = 4; number < 4 + m_arrivals; ++number)
+    {
+        expect_header(number);
+    }
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reading_input](char *buffer, int size)
+    {
+        if (m_states.empty())
+        {
+            g_force_grow = true;
+        }
+        return reading_input(buffer, size);
+    };
+
+    const DoNewsgroupResult result = run_reading({"\022", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[1].article);
+    EXPECT_EQ(m_states[0].current, m_states[1].current);
+    EXPECT_EQ(m_states[0].recent, m_states[1].recent);
+    EXPECT_EQ(m_states[0].read, m_states[1].read);
+    const std::size_t first = m_output.find("Reply body");
+    ASSERT_NE(std::string::npos, first);
+    EXPECT_NE(std::string::npos, m_output.find("Reply body", first + 1));
+    expect_arrivals(false);
+    expect_saved_range(" 1-2", ArticleUnread{1 + m_arrivals});
+}
+
+TEST_P(RemoteNewsgroupRefreshReadingTest, leavingThePagerFinishesTheBodyBeforeRefreshingTheGroup)
+{
+    std::ofstream article{m_output_dir / "2", std::ios::app};
+    for (int line = 0; line < 100; ++line)
+    {
+        article << "Pending body line " << line << '\n';
+    }
+    article.close();
+    g_tc_LINES = 12;
+    expect_command("GROUP comp.lang.cpp", {"211 3 1 3 comp.lang.cpp"});
+    expect_command("LISTGROUP", {"211 Article numbers follow", "1", "2", "3", "."});
+    expect_header(2);
+    bool interrupted_body = false;
+    expect_body(2,
+                [this, &interrupted_body]
+                {
+                    EXPECT_LT(nntp_art_size(), ArticlePosition{});
+                    interrupted_body = true;
+                    push_command("$");
+                });
+    expect_refresh();
+    expect_subjects(3);
+    expect_header(3);
+    for (int number = 4; number < 4 + m_arrivals; ++number)
+    {
+        expect_header(number);
+    }
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reading_input](char *buffer, int size)
+    {
+        const std::string name = nntp_art_name(ArticleNum{2}, false);
+        std::ifstream     cached{name, std::ios::binary};
+        const std::string body{std::istreambuf_iterator<char>{cached}, {}};
+        EXPECT_THAT(body, testing::HasSubstr("Pending body line 99\n"));
+        EXPECT_GE(nntp_art_size(), ArticlePosition{});
+        return reading_input(buffer, size);
+    };
+
+    const DoNewsgroupResult result = run_reading({"Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    EXPECT_TRUE(interrupted_body);
+    ASSERT_EQ(1U, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    EXPECT_EQ(ArticleNum{4 + m_arrivals}, m_states[0].article);
+    EXPECT_FALSE(was_read(ArticleNum{2}));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Pending body line 99")));
+    expect_arrivals(false);
+    expect_saved_range(" 1-1", ArticleUnread{2 + m_arrivals});
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndArrivals, RemoteNewsgroupRefreshReadingTest,
+                         testing::Combine(testing::Bool(), testing::Values(0, 1, 2)));
 
 class NewsgroupEndReadingTest : public NewsgroupEndReadingStateTest,
                                 public testing::WithParamInterface<std::tuple<bool, bool>>
