@@ -1540,7 +1540,14 @@ void NewsgroupEndReadingStateTest::SetUp()
             EXPECT_EQ(GM_READ, g_general_mode);
             EXPECT_EQ(g_art, g_curr_art);
             EXPECT_EQ(g_artp, g_curr_artp);
-            EXPECT_EQ(article_find(g_art), g_artp);
+            if (g_art == 0 && g_artp && (g_artp->m_flags & AF_TMP_MEM))
+            {
+                EXPECT_EQ(ArticleNum{}, g_artp->article_num());
+            }
+            else
+            {
+                EXPECT_EQ(article_find(g_art), g_artp);
+            }
         }
         m_states.push_back(std::move(state));
         if (m_input_pos == m_commands.size())
@@ -2404,6 +2411,145 @@ INSTANTIATE_TEST_SUITE_P(TransportAndDisplay, RemoteNewsgroupFailureReadingTest,
                                                           ReadingServerFailure::CONNECTION_RESET,
                                                           ReadingServerFailure::SERVER_ERROR),
                                           testing::Bool()));
+
+class RemoteNewsgroupParentReadingTest : public RemoteNewsgroupReadingStateTest,
+                                         public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+    void expect_uncached_parent_entry(bool missing_parent = false);
+    void expect_article(int number);
+};
+
+void RemoteNewsgroupParentReadingTest::SetUp()
+{
+    RemoteNewsgroupReadingStateTest::SetUp();
+    g_verbose = GetParam();
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [reading_input](char *buffer, int size)
+    {
+        if (g_recent_artp)
+        {
+            EXPECT_EQ(g_recent_art, g_recent_artp->article_num());
+        }
+        else
+        {
+            EXPECT_EQ(article_after(g_last_art), g_recent_art);
+        }
+        return reading_input(buffer, size);
+    };
+}
+
+void RemoteNewsgroupParentReadingTest::expect_article(int number)
+{
+    std::ifstream            article{m_output_dir / std::to_string(number)};
+    std::vector<std::string> response{"220 Article follows"};
+    for (std::string line; std::getline(article, line);)
+    {
+        response.push_back(std::move(line));
+    }
+    response.emplace_back(".");
+    expect_command("ARTICLE " + std::to_string(number), std::move(response));
+}
+
+void RemoteNewsgroupParentReadingTest::expect_uncached_parent_entry(bool missing_parent)
+{
+    g_use_threads = g_threaded_group = true;
+    g_thread_always = false;
+    expect_command("GROUP comp.lang.cpp", {"211 3 1 3 comp.lang.cpp"});
+    expect_command("LISTGROUP", {"211 Article numbers follow", "1", "2", "3", "."});
+    expect_header(2, missing_parent);
+    expect_body(2, [this] { push_command("["); });
+    expect_header(3);
+}
+
+TEST_P(RemoteNewsgroupParentReadingTest, anAvailableUncachedParentCanBeReadBeforeReturningToItsReply)
+{
+    expect_uncached_parent_entry();
+    expect_command("STAT <root@example.test>", {"223 1 <root@example.test>"});
+    expect_article(1);
+    expect_header(3);
+    expect_header(3);
+    expect_body(3);
+
+    const DoNewsgroupResult result = run_reading({"]", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    EXPECT_EQ(ArticleNum{1}, m_states[0].article);
+    EXPECT_EQ(ArticleNum{1}, m_states[0].current);
+    EXPECT_EQ(ArticleNum{2}, m_states[0].recent);
+    EXPECT_EQ(ArticleNum{2}, m_states[1].article);
+    EXPECT_EQ(ArticleNum{1}, m_states[1].recent);
+    EXPECT_EQ(ArticleNum{3}, m_states[2].article);
+    EXPECT_THAT(m_output, testing::HasSubstr("Root first line"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("article is not available")));
+    expect_saved_range(" 1-3", TR_NONE);
+}
+
+TEST_P(RemoteNewsgroupParentReadingTest, anUnavailableParentShowsADiagnosticAndAllowsReturnToItsReply)
+{
+    expect_entry(true);
+    expect_command("STAT <missing@example.test>", {"430 No such article"});
+    expect_header(3);
+    expect_body(3);
+
+    const DoNewsgroupResult result = run_reading({"[", "]", "n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(4U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(ArticleNum{}, m_states[1].article);
+    EXPECT_EQ(ArticleNum{2}, m_states[1].recent);
+    EXPECT_EQ(m_states[0].read, m_states[1].read);
+    EXPECT_EQ(ArticleUnread{1}, m_states[1].unread);
+    EXPECT_EQ(ArticleNum{2}, m_states[2].article);
+    EXPECT_EQ(ArticleNum{}, m_states[2].recent);
+    EXPECT_EQ(ArticleNum{3}, m_states[3].article);
+    EXPECT_THAT(m_output, testing::HasSubstr("article is not available."));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    EXPECT_EQ(ArticleNum{2}, g_recent_art);
+    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    expect_saved_range(" 1-3", TR_NONE);
+}
+
+TEST_P(RemoteNewsgroupParentReadingTest, anUncachedParentCanBeLeftWhileTheHeaderCacheIsIncomplete)
+{
+    expect_uncached_parent_entry(true);
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("STAT <missing@example.test>"), testing::_))
+        .InSequence(m_protocol);
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .InSequence(m_protocol)
+        .WillOnce(
+            [this](error_code_t &)
+            {
+                EXPECT_LT(g_last_cached, g_last_art);
+                push_command("]");
+                return std::string{"430 No such article"};
+            });
+    expect_header(3);
+    expect_header(1);
+    expect_header(3);
+    expect_body(3);
+
+    const DoNewsgroupResult result = run_reading({"n", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(2U, m_states.size());
+    EXPECT_EQ(ArticleNum{2}, m_states[0].article);
+    EXPECT_EQ(ArticleNum{}, m_states[0].recent);
+    EXPECT_EQ(ArticleUnread{1}, m_states[0].unread);
+    EXPECT_EQ(ArticleNum{3}, m_states[1].article);
+    EXPECT_THAT(m_output, testing::HasSubstr("article may show up in a moment."));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+    expect_saved_range(" 1-3", TR_NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, RemoteNewsgroupParentReadingTest, testing::Bool());
 
 class RemoteNewsgroupRefreshReadingTest : public RemoteNewsgroupReadingStateTest,
                                           public testing::WithParamInterface<std::tuple<bool, int>>
