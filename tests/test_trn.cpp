@@ -689,6 +689,48 @@ protected:
     char                              m_empty_tc[1]{};
 };
 
+class MultircLoopContext
+{
+public:
+    MultircLoopContext(Newsrc &newsrc, const fs::path &directory);
+    ~MultircLoopContext();
+
+private:
+    bool           m_old_univ_selector{g_use_univ_selector};
+    bool           m_old_group_selector{g_use_newsgroup_selector};
+    bool           m_old_paranoid{g_paranoid};
+    int            m_old_find_last{g_find_last};
+    NewsgroupData *m_old_start{g_start_here};
+    NewsgroupData *m_old_recent{g_recent_newsgroup};
+    std::string    m_old_message{g_msg};
+};
+
+MultircLoopContext::MultircLoopContext(Newsrc &newsrc, const fs::path &directory)
+{
+    search_init();
+    push_only();
+    g_use_univ_selector = g_use_newsgroup_selector = false;
+    g_paranoid = false;
+    g_find_last = 0;
+    g_start_here = g_recent_newsgroup = nullptr;
+    newsrc.info_name = directory / "newsrc.info";
+    newsrc.name = directory / "newsrc";
+    newsrc.new_name = directory / "newsrc.new";
+    std::ofstream{newsrc.name};
+}
+
+MultircLoopContext::~MultircLoopContext()
+{
+    pop_only();
+    g_use_univ_selector = m_old_univ_selector;
+    g_use_newsgroup_selector = m_old_group_selector;
+    g_paranoid = m_old_paranoid;
+    g_find_last = m_old_find_last;
+    g_start_here = m_old_start;
+    g_recent_newsgroup = m_old_recent;
+    g_msg = m_old_message;
+}
+
 struct MultircGroupPrompt
 {
     std::string   group;
@@ -711,13 +753,7 @@ protected:
 private:
     TerminalInputReader m_old_input_reader{g_terminal_input_reader};
     bool                m_old_typeahead{g_allow_typeahead};
-    bool                m_old_univ_selector{g_use_univ_selector};
-    bool                m_old_group_selector{g_use_newsgroup_selector};
-    bool                m_old_paranoid{g_paranoid};
-    int                 m_old_find_last{g_find_last};
-    NewsgroupData      *m_old_start{g_start_here};
-    NewsgroupData      *m_old_recent{g_recent_newsgroup};
-    std::string         m_old_message{g_msg};
+    std::optional<MultircLoopContext> m_loop_context;
     std::string         m_commands;
     std::size_t         m_input_pos{};
 };
@@ -725,21 +761,12 @@ private:
 void MultircTraversalStateTest::SetUp()
 {
     InputNewsgroupTest::SetUp();
-    search_init();
-    push_only();
+    m_loop_context.emplace(m_newsrc, m_output_dir);
     g_newsgroup_data.reserve(8);
     g_newsgroup_order.reserve(8);
     g_newsgroup_min_to_read = ArticleUnread{2};
     g_allow_typeahead = true;
-    g_use_univ_selector = g_use_newsgroup_selector = false;
-    g_paranoid = false;
-    g_find_last = 0;
-    g_start_here = g_recent_newsgroup = nullptr;
     m_data_source.m_flags = DF_NONE;
-    m_newsrc.info_name = m_output_dir / "newsrc.info";
-    m_newsrc.name = m_output_dir / "newsrc";
-    m_newsrc.new_name = m_output_dir / "newsrc.new";
-    std::ofstream{m_newsrc.name};
     g_terminal_input_reader = [this](char *buffer, int)
     {
         EXPECT_EQ(GM_READ, g_general_mode);
@@ -761,16 +788,9 @@ void MultircTraversalStateTest::SetUp()
 
 void MultircTraversalStateTest::TearDown()
 {
-    pop_only();
+    m_loop_context.reset();
     g_terminal_input_reader = m_old_input_reader;
     g_allow_typeahead = m_old_typeahead;
-    g_use_univ_selector = m_old_univ_selector;
-    g_use_newsgroup_selector = m_old_group_selector;
-    g_paranoid = m_old_paranoid;
-    g_find_last = m_old_find_last;
-    g_start_here = m_old_start;
-    g_recent_newsgroup = m_old_recent;
-    g_msg = m_old_message;
     InputNewsgroupTest::TearDown();
 }
 
@@ -1504,6 +1524,309 @@ InputNewsgroupResult InputNewsgroupReadingTest::run_command(std::string_view com
     EXPECT_FALSE(macro_pending());
     return result;
 }
+
+struct MultircReadingPrompt
+{
+    int                        group;
+    int                        recent_group;
+    MinorMode                  mode;
+    ArticleNum                 article;
+    ArticleUnread              unread;
+    std::string                default_command;
+    std::array<std::string, 3> read_ranges;
+};
+
+class MultircReadingTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void run_session(std::string commands);
+    void expect_prompts(std::vector<std::pair<int, MinorMode>> prompts) const;
+    void expect_body_order(std::vector<std::string> bodies) const;
+
+    std::vector<MultircReadingPrompt> m_prompts;
+
+private:
+    std::optional<MultircLoopContext> m_loop_context;
+    TerminalInputReader               m_old_input_reader{g_terminal_input_reader};
+    bool                              m_old_typeahead{g_allow_typeahead};
+    std::string                       m_commands;
+    std::size_t                       m_input_pos{};
+};
+
+void MultircReadingTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    m_loop_context.emplace(m_newsrc, m_output_dir);
+    const auto [verbose, threaded] = GetParam();
+    g_verbose = verbose;
+    g_use_threads = threaded;
+    g_thread_always = true;
+    g_newsgroup_min_to_read = TR_ONE;
+    g_allow_typeahead = true;
+    for (const char *directory : {"comp/previous", "comp/next"})
+    {
+        fs::create_directories(m_output_dir / directory);
+        for (const char *number : {"1", "2", "3"})
+        {
+            fs::copy_file(m_output_dir / number, m_output_dir / directory / number);
+        }
+    }
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        std::string directory{group.rc_name()};
+        std::replace(directory.begin(), directory.end(), '.', '/');
+        for (int number = 1; number <= 3; ++number)
+        {
+            std::ofstream{m_output_dir / directory / std::to_string(number), std::ios::app}
+                << "Group body " << group.rc_name() << " article " << number << '\n';
+        }
+    }
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        EXPECT_EQ(GM_READ, g_general_mode);
+        EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+        const bool reading = g_mode == MM_ARTICLE || g_mode == MM_ARTICLE_END;
+        if (reading)
+        {
+            EXPECT_TRUE(g_in_ng);
+            EXPECT_TRUE(g_doing_ng);
+            EXPECT_EQ(g_art, g_curr_art);
+            EXPECT_EQ(g_artp, g_curr_artp);
+            EXPECT_EQ(article_find(g_art), g_artp);
+        }
+        else
+        {
+            EXPECT_FALSE(g_in_ng);
+            EXPECT_FALSE(g_doing_ng);
+            EXPECT_EQ(nullptr, g_art_fp);
+        }
+        m_prompts.push_back(
+            {g_newsgroup_ptr ? static_cast<int>(g_newsgroup_ptr->m_num.value_of()) : -1,
+             g_recent_newsgroup ? static_cast<int>(g_recent_newsgroup->m_num.value_of()) : -1,
+             g_mode,
+             reading ? g_art : ArticleNum{},
+             g_newsgroup_ptr ? g_newsgroup_ptr->m_to_read : TR_NONE,
+             g_default_cmd,
+             {std::string{g_newsgroup_data[0].rc_numbers()}, std::string{g_newsgroup_data[1].rc_numbers()},
+              std::string{g_newsgroup_data[2].rc_numbers()}}});
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected reading-session prompt";
+            *buffer = reading ? 'Q' : 'q';
+        }
+        else
+        {
+            *buffer = m_commands[m_input_pos++];
+        }
+        return 1;
+    };
+}
+
+void MultircReadingTest::TearDown()
+{
+    m_loop_context.reset();
+    g_terminal_input_reader = m_old_input_reader;
+    g_allow_typeahead = m_old_typeahead;
+    InputNewsgroupReadingTest::TearDown();
+}
+
+void MultircReadingTest::run_session(std::string commands)
+{
+    m_commands = std::move(commands);
+    errno = 0;
+
+    testing::internal::CaptureStdout();
+    do_multirc();
+    m_output = testing::internal::GetCapturedStdout();
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_FALSE(g_restore_old_newsrc);
+}
+
+void MultircReadingTest::expect_prompts(std::vector<std::pair<int, MinorMode>> prompts) const
+{
+    SCOPED_TRACE(m_output);
+    ASSERT_EQ(prompts.size(), m_prompts.size());
+    for (std::size_t index = 0; index < prompts.size(); ++index)
+    {
+        SCOPED_TRACE(index);
+        EXPECT_EQ(prompts[index].first, m_prompts[index].group);
+        EXPECT_EQ(prompts[index].second, m_prompts[index].mode);
+        if (prompts[index].second == MM_NEWSGROUP_LIST)
+        {
+            EXPECT_EQ("ynq", m_prompts[index].default_command);
+        }
+    }
+}
+
+void MultircReadingTest::expect_body_order(std::vector<std::string> bodies) const
+{
+    SCOPED_TRACE(m_output);
+    std::size_t position = 0;
+    for (const std::string &body : bodies)
+    {
+        position = m_output.find("Group body " + body, position);
+        ASSERT_NE(std::string::npos, position) << body;
+        ++position;
+    }
+}
+
+TEST_P(MultircReadingTest, returningToTheGroupPromptRetainsThePartiallyReadGroup)
+{
+    run_session("nyQq");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST}, {1, MM_NEWSGROUP_LIST}, {1, MM_ARTICLE}, {1, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(ArticleNum{2}, m_prompts[2].article);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[3].unread);
+    EXPECT_EQ(0, m_prompts[3].recent_group);
+    EXPECT_EQ(" 1-2", m_prompts[3].read_ranges[1]);
+    expect_body_order({"comp.lang.cpp article 2"});
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Group body comp.lang.cpp article 3")));
+}
+
+TEST_P(MultircReadingTest, leavingAnArticleForTheNextGroupRetainsItsReadMark)
+{
+    run_session("nyqq");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST}, {1, MM_NEWSGROUP_LIST}, {1, MM_ARTICLE}, {2, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(1, m_prompts[3].recent_group);
+    EXPECT_EQ(" 1-2", m_prompts[3].read_ranges[1]);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[1].m_to_read);
+    expect_body_order({"comp.lang.cpp article 2"});
+}
+
+TEST_P(MultircReadingTest, exhaustingAGroupAdvancesToTheNextUnreadGroup)
+{
+    run_session("nynnq");
+
+    expect_prompts(
+        {{0, MM_NEWSGROUP_LIST}, {1, MM_NEWSGROUP_LIST}, {1, MM_ARTICLE}, {1, MM_ARTICLE}, {2, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(ArticleNum{2}, m_prompts[2].article);
+    EXPECT_EQ(ArticleNum{3}, m_prompts[3].article);
+    EXPECT_EQ(1, m_prompts[4].recent_group);
+    EXPECT_EQ(" 1-3", m_prompts[4].read_ranges[1]);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[1].m_to_read);
+    expect_body_order({"comp.lang.cpp article 2", "comp.lang.cpp article 3"});
+}
+
+TEST_P(MultircReadingTest, readingAllGroupsReachesTheEndWithTheirReadRangesRetained)
+{
+    run_session("ynynnynq");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST},
+                    {0, MM_ARTICLE},
+                    {1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {1, MM_ARTICLE},
+                    {2, MM_NEWSGROUP_LIST},
+                    {2, MM_ARTICLE},
+                    {-1, MM_FINISH_NEWSGROUP_LIST}});
+    EXPECT_EQ(2, m_prompts[7].recent_group);
+    EXPECT_EQ("npq", m_prompts[7].default_command);
+    for (int index = 0; index < 3; ++index)
+    {
+        EXPECT_EQ(" 1-3", m_prompts[7].read_ranges[index]);
+        EXPECT_EQ(TR_NONE, g_newsgroup_data[index].m_to_read);
+    }
+    expect_body_order(
+        {"comp.previous article 3", "comp.lang.cpp article 2", "comp.lang.cpp article 3", "comp.next article 3"});
+}
+
+TEST_P(MultircReadingTest, previousUnreadSkipsTheGroupJustExhausted)
+{
+    run_session("nynnpq");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST},
+                    {1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {1, MM_ARTICLE},
+                    {2, MM_NEWSGROUP_LIST},
+                    {0, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(2, m_prompts[5].recent_group);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[5].unread);
+    EXPECT_EQ(" 1-3", m_prompts[5].read_ranges[1]);
+    expect_body_order({"comp.lang.cpp article 2", "comp.lang.cpp article 3"});
+}
+
+TEST_P(MultircReadingTest, recentGroupCanReturnToTheGroupJustExhausted)
+{
+    run_session("nynn-q");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST},
+                    {1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {1, MM_ARTICLE},
+                    {2, MM_NEWSGROUP_LIST},
+                    {1, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(2, m_prompts[5].recent_group);
+    EXPECT_EQ(TR_NONE, m_prompts[5].unread);
+    EXPECT_EQ(" 1-3", m_prompts[5].read_ranges[1]);
+    expect_body_order({"comp.lang.cpp article 2", "comp.lang.cpp article 3"});
+}
+
+TEST_P(MultircReadingTest, previousAtTheEndReturnsToTheLastUnreadGroupAfterReading)
+{
+    run_session("nyqnpq");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST},
+                    {1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {2, MM_NEWSGROUP_LIST},
+                    {-1, MM_FINISH_NEWSGROUP_LIST},
+                    {2, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(2, m_prompts[4].recent_group);
+    EXPECT_EQ(-1, m_prompts[5].recent_group);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[5].unread);
+    EXPECT_EQ(" 1-2", m_prompts[5].read_ranges[1]);
+    expect_body_order({"comp.lang.cpp article 2"});
+}
+
+TEST_P(MultircReadingTest, nextAtTheEndRestartsWithTheFirstUnreadGroupAfterReading)
+{
+    run_session("nyqnnq");
+
+    expect_prompts({{0, MM_NEWSGROUP_LIST},
+                    {1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {2, MM_NEWSGROUP_LIST},
+                    {-1, MM_FINISH_NEWSGROUP_LIST},
+                    {0, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(-1, m_prompts[5].recent_group);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[5].unread);
+    EXPECT_EQ(" 1-2", m_prompts[5].read_ranges[1]);
+    expect_body_order({"comp.lang.cpp article 2"});
+}
+
+TEST_P(MultircReadingTest, explicitPreviousAndNextVisitAReadGroupAfterReading)
+{
+    g_newsgroup_data[0].m_rc_line.resize(g_newsgroup_data[0].m_num_offset);
+    g_newsgroup_data[0].m_rc_line += " 1-3";
+
+    run_session("yQPNq");
+
+    expect_prompts({{1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {1, MM_NEWSGROUP_LIST},
+                    {0, MM_NEWSGROUP_LIST},
+                    {1, MM_NEWSGROUP_LIST}});
+    EXPECT_EQ(TR_NONE, m_prompts[3].unread);
+    EXPECT_EQ(1, m_prompts[3].recent_group);
+    EXPECT_EQ(0, m_prompts[4].recent_group);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[4].unread);
+    EXPECT_EQ(" 1-2", m_prompts[4].read_ranges[1]);
+    expect_body_order({"comp.lang.cpp article 2"});
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
 
 struct LocalArticleReadingState
 {
