@@ -216,6 +216,7 @@ restart:
         {
             g_find_last = -1;
             g_start_here = nullptr;
+            g_newsgroup_ptr = newsgroup_first();
             if (!g_last_newsgroup_name.empty())
             {
                 g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name);

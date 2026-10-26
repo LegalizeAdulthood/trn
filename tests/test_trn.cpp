@@ -745,7 +745,7 @@ protected:
     void SetUp() override;
     void TearDown() override;
     void run_groups(std::string commands);
-    void expect_prompts(std::vector<std::string> groups) const;
+    void expect_prompts(std::vector<std::string> groups, std::string_view end_default = "npq") const;
 
     std::vector<MultircGroupPrompt> m_prompts;
     std::string                     m_output;
@@ -824,7 +824,7 @@ void MultircTraversalStateTest::run_groups(std::string commands)
     EXPECT_FALSE(g_restore_old_newsrc);
 }
 
-void MultircTraversalStateTest::expect_prompts(std::vector<std::string> groups) const
+void MultircTraversalStateTest::expect_prompts(std::vector<std::string> groups, std::string_view end_default) const
 {
     SCOPED_TRACE(m_output);
     ASSERT_EQ(groups.size(), m_prompts.size());
@@ -833,7 +833,7 @@ void MultircTraversalStateTest::expect_prompts(std::vector<std::string> groups) 
         SCOPED_TRACE(index);
         EXPECT_EQ(groups[index], m_prompts[index].group);
         EXPECT_EQ(groups[index].empty() ? MM_FINISH_NEWSGROUP_LIST : MM_NEWSGROUP_LIST, m_prompts[index].mode);
-        EXPECT_EQ(groups[index].empty() ? "npq" : "ynq", m_prompts[index].default_command);
+        EXPECT_EQ(groups[index].empty() ? end_default : "ynq", m_prompts[index].default_command);
     }
 }
 
@@ -975,6 +975,246 @@ TEST_P(MultircGroupTraversalTest, recalculationDiscoversArrivalsThatMeetTheUnrea
 }
 
 INSTANTIATE_TEST_SUITE_P(Verbosity, MultircGroupTraversalTest, testing::Bool());
+
+class MultircStartupStateTest : public MultircTraversalStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_groups();
+    void set_group_state(int index, std::string_view read_ranges, char subscription = ':');
+
+private:
+    std::string m_old_last_group{g_last_newsgroup_name};
+};
+
+void MultircStartupStateTest::SetUp()
+{
+    MultircTraversalStateTest::SetUp();
+    g_last_newsgroup_name.clear();
+}
+
+void MultircStartupStateTest::TearDown()
+{
+    g_last_newsgroup_name = std::move(m_old_last_group);
+    MultircTraversalStateTest::TearDown();
+}
+
+void MultircStartupStateTest::prepare_groups()
+{
+    add_newsgroup("comp.first", "1-4", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.middle", "1-3", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.last", "1-2", ArticleNum{1}, ArticleNum{6});
+}
+
+void MultircStartupStateTest::set_group_state(int index, std::string_view read_ranges, char subscription)
+{
+    NewsgroupData &group = g_newsgroup_data[index];
+    group.m_rc_line.resize(group.m_num_offset);
+    group.m_rc_line += ' ';
+    group.m_rc_line += read_ranges;
+    group.m_subscribe_char = subscription;
+    group.m_to_read = subscription == UNSUBSCRIBED_CHAR ? TR_UNSUB : TR_NONE;
+}
+
+struct MultircStartPosition
+{
+    const char   *name;
+    int           group;
+    const char   *read_ranges;
+    char          subscription;
+    int           expected_group;
+    ArticleUnread expected_unread;
+};
+
+class MultircExplicitStartTest : public MultircStartupStateTest,
+                                 public testing::WithParamInterface<std::tuple<MultircStartPosition, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircExplicitStartTest::SetUp()
+{
+    MultircStartupStateTest::SetUp();
+    prepare_groups();
+    const MultircStartPosition &position = std::get<0>(GetParam());
+    g_verbose = std::get<1>(GetParam());
+    set_group_state(position.group, position.read_ranges, position.subscription);
+    g_start_here = &g_newsgroup_data[position.group];
+}
+
+TEST_P(MultircExplicitStartTest, startupOffersTheFirstEligibleGroupAtOrAfterTheStartingPosition)
+{
+    run_groups("q");
+
+    const MultircStartPosition &position = std::get<0>(GetParam());
+    expect_prompts({std::string{g_newsgroup_data[position.expected_group].rc_name()}});
+    EXPECT_EQ(position.expected_unread, m_prompts[0].unread);
+    EXPECT_EQ(nullptr, g_start_here);
+    EXPECT_EQ(0, g_find_last);
+    EXPECT_EQ(position.subscription, g_newsgroup_data[position.group].m_subscribe_char);
+    EXPECT_EQ(" " + std::string{position.read_ranges}, g_newsgroup_data[position.group].rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PositionAndVerbosity, MultircExplicitStartTest,
+    testing::Combine(testing::Values(MultircStartPosition{"First", 0, "1-4", ':', 0, ArticleUnread{2}},
+                                     MultircStartPosition{"Middle", 1, "1-3", ':', 1, ArticleUnread{3}},
+                                     MultircStartPosition{"Last", 2, "1-2", ':', 2, ArticleUnread{4}},
+                                     MultircStartPosition{"ReadMiddle", 1, "1-6", ':', 2, ArticleUnread{4}},
+                                     MultircStartPosition{"UnsubscribedMiddle", 1, "1-3", '!', 2, ArticleUnread{4}},
+                                     MultircStartPosition{"BelowThresholdMiddle", 1, "1-5", ':', 2, ArticleUnread{4}}),
+                     testing::Bool()),
+    [](const testing::TestParamInfo<std::tuple<MultircStartPosition, bool>> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Verbose" : "Terse"); });
+
+struct MultircResumePosition
+{
+    const char   *name;
+    const char   *last_group;
+    const char   *middle_read_ranges;
+    char          middle_subscription;
+    int           expected_group;
+    ArticleUnread expected_unread;
+};
+
+class MultircResumeTest : public MultircStartupStateTest,
+                          public testing::WithParamInterface<std::tuple<MultircResumePosition, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircResumeTest::SetUp()
+{
+    MultircStartupStateTest::SetUp();
+    prepare_groups();
+    const MultircResumePosition &position = std::get<0>(GetParam());
+    g_verbose = std::get<1>(GetParam());
+    set_group_state(1, position.middle_read_ranges, position.middle_subscription);
+    g_last_newsgroup_name = position.last_group;
+    g_find_last = 1;
+    g_start_here = &g_newsgroup_data[0];
+}
+
+TEST_P(MultircResumeTest, startupResumesAnUnreadGroupOrFallsBackToTheFirstEligibleGroup)
+{
+    run_groups("q");
+
+    const MultircResumePosition &position = std::get<0>(GetParam());
+    expect_prompts({std::string{g_newsgroup_data[position.expected_group].rc_name()}});
+    EXPECT_EQ(position.expected_unread, m_prompts[0].unread);
+    EXPECT_EQ(-1, g_find_last);
+    EXPECT_EQ(nullptr, g_start_here);
+    EXPECT_EQ(position.middle_subscription, g_newsgroup_data[1].m_subscribe_char);
+    EXPECT_EQ(" " + std::string{position.middle_read_ranges}, g_newsgroup_data[1].rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SavedGroupAndVerbosity, MultircResumeTest,
+    testing::Combine(
+        testing::Values(MultircResumePosition{"UnreadMiddle", "comp.middle", "1-3", ':', 1, ArticleUnread{3}},
+                        MultircResumePosition{"UnreadLast", "comp.last", "1-3", ':', 2, ArticleUnread{4}},
+                        MultircResumePosition{"ReadMiddle", "comp.middle", "1-6", ':', 0, ArticleUnread{2}},
+                        MultircResumePosition{"UnsubscribedMiddle", "comp.middle", "1-3", '!', 0, ArticleUnread{2}},
+                        MultircResumePosition{"Missing", "comp.removed", "1-3", ':', 0, ArticleUnread{2}},
+                        MultircResumePosition{"NoSavedGroup", "", "1-3", ':', 0, ArticleUnread{2}}),
+        testing::Bool()),
+    [](const testing::TestParamInfo<std::tuple<MultircResumePosition, bool>> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Verbose" : "Terse"); });
+
+class MultircStartupTest : public MultircStartupStateTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircStartupTest::SetUp()
+{
+    MultircStartupStateTest::SetUp();
+    g_verbose = GetParam();
+    prepare_groups();
+}
+
+TEST_P(MultircStartupTest, restartingAfterAnExplicitStartReturnsToEarlierUnreadNews)
+{
+    g_start_here = &g_newsgroup_data[1];
+
+    run_groups("nnnq");
+
+    expect_prompts({"comp.middle", "comp.last", "", "comp.first"});
+    EXPECT_EQ(ArticleUnread{2}, m_prompts.back().unread);
+    EXPECT_EQ(nullptr, g_start_here);
+}
+
+TEST_P(MultircStartupTest, restartingAfterResumingReturnsToEarlierUnreadNews)
+{
+    g_find_last = 1;
+    g_last_newsgroup_name = "comp.middle";
+    g_start_here = &g_newsgroup_data[0];
+
+    run_groups("nnnq");
+
+    expect_prompts({"comp.middle", "comp.last", "", "comp.first"});
+    EXPECT_EQ(ArticleUnread{2}, m_prompts.back().unread);
+    EXPECT_EQ(-1, g_find_last);
+    EXPECT_EQ(nullptr, g_start_here);
+}
+
+TEST_P(MultircStartupTest, aFullyReadCatalogOffersTheEndPromptWithoutChangingReadRanges)
+{
+    for (int index = 0; index < 3; ++index)
+    {
+        set_group_state(index, "1-6");
+    }
+    g_start_here = &g_newsgroup_data.back();
+
+    run_groups("q");
+
+    expect_prompts({""}, "qnp");
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        EXPECT_EQ(TR_NONE, group.m_to_read);
+        EXPECT_EQ(" 1-6", group.rc_numbers());
+        EXPECT_EQ(':', group.m_subscribe_char);
+    }
+    EXPECT_EQ(nullptr, g_start_here);
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, MultircStartupTest, testing::Bool());
+
+class MultircEmptyStartupTest : public MultircStartupStateTest,
+                                public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircEmptyStartupTest::SetUp()
+{
+    MultircStartupStateTest::SetUp();
+    const auto [resume, verbose] = GetParam();
+    g_find_last = resume ? 1 : 0;
+    g_verbose = verbose;
+}
+
+TEST_P(MultircEmptyStartupTest, nextOnAnEmptyCatalogRepeatsTheEndPromptAndAllowsQuit)
+{
+    run_groups("nq");
+
+    expect_prompts({"", ""}, "qnp");
+    EXPECT_TRUE(g_newsgroup_data.empty());
+    EXPECT_TRUE(g_newsgroup_order.empty());
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_count);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_EQ(nullptr, g_current_newsgroup);
+    EXPECT_EQ(nullptr, g_start_here);
+    EXPECT_EQ(std::get<0>(GetParam()) ? -1 : 0, g_find_last);
+}
+
+INSTANTIATE_TEST_SUITE_P(ResumeAndVerbosity, MultircEmptyStartupTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
 
 class InputNewsgroupNavigationTest : public InputNewsgroupTest
 {
