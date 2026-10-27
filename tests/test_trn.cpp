@@ -5607,6 +5607,42 @@ TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSe
     expect_next_command('Q');
 }
 
+TEST_F(NewsgroupSelectorDelegationStateTest, versionInformationReturnsToTheSameSelectedNewsgroup)
+{
+    m_newsrc.flags |= RF_ACTIVE;
+    m_newsrc.name = "selector.newsrc";
+    m_data_source.m_name = "selector-source";
+    m_data_source.m_news_id = "active";
+    g_tc_COLS = 240;
+    g_verbose = true;
+    prepare_selector();
+    NewsgroupData *const cursor = g_newsgroup_ptr;
+    const ArticleNum     article = g_art;
+    Article *const       article_pointer = g_artp;
+
+    const char result = run_selector_session("\\v qQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Trn version: " + g_patch_level + '.'));
+    EXPECT_THAT(m_output, testing::HasSubstr("News source group #1:"));
+    EXPECT_THAT(m_output, testing::HasSubstr("ID selector-source:"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Newsrc " + m_newsrc.name.generic_string() + '.'));
+    EXPECT_THAT(m_output, testing::HasSubstr("News from " + m_data_source.m_spool_dir + '.'));
+    EXPECT_THAT(m_output, testing::HasSubstr("Local active file active."));
+    EXPECT_THAT(m_output, testing::HasSubstr("trn-workers@lists.sourceforge.net"));
+    const std::size_t pause = m_output.find("[Type space or a command]");
+    ASSERT_NE(std::string::npos, pause);
+    EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp", pause));
+    EXPECT_EQ(cursor, g_newsgroup_ptr);
+    EXPECT_EQ(article, g_art);
+    EXPECT_EQ(article_pointer, g_artp);
+    EXPECT_EQ(&m_multirc, g_multirc);
+    EXPECT_EQ(&m_data_source, g_data_source);
+    expect_selector_context();
+    expect_groups_preserved();
+    expect_next_command('Q');
+}
+
 struct MultircSelectorPrompt
 {
     MinorMode                mode;

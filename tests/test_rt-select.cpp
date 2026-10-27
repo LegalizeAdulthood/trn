@@ -14,6 +14,7 @@
 #include <trn/ngstuff.h>
 #include <trn/opt.h>
 #include <trn/OptionCatalog.h>
+#include <trn/rcstuff.h>
 #include <trn/respond.h>
 #include <trn/rt-page.h>
 #include <trn/rt-util.h>
@@ -45,6 +46,7 @@
 #include <array>
 #include <cctype>
 #include <cerrno>
+#include <chrono>
 #include <csignal>
 #include <filesystem>
 #include <fstream>
@@ -996,6 +998,282 @@ TEST_F(SelectorEscapedArticleTest, escapeOverridesASelectionLetterAndRunsTheComm
     EXPECT_NE(std::string::npos, m_output.find("Selector mode", second));
     SelectorSessionInputState::expect_next_command('q');
 }
+
+class SelectorInformationTest : public SelectorEscapedArticleTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_reading_context();
+    void expect_version();
+
+private:
+    std::string m_old_version{g_patch_level};
+    Multirc    *m_old_source{g_multirc};
+    std::string m_old_mail{g_mail_call};
+#ifdef MAIL_CALL
+    int m_old_mail_count{g_mail_count};
+#endif
+};
+
+void SelectorInformationTest::SetUp()
+{
+    g_mail_call.clear();
+#ifdef MAIL_CALL
+    g_mail_count = 1;
+#endif
+    SelectorEscapedArticleTest::SetUp();
+    g_patch_level = "selector-test-version";
+    g_multirc = nullptr;
+}
+
+void SelectorInformationTest::TearDown()
+{
+    g_patch_level = m_old_version;
+    g_multirc = m_old_source;
+    g_mail_call = m_old_mail;
+#ifdef MAIL_CALL
+    g_mail_count = m_old_mail_count;
+#endif
+    SelectorEscapedArticleTest::TearDown();
+}
+
+void SelectorInformationTest::expect_reading_context()
+{
+    expect_article_page();
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    EXPECT_EQ(SS_NATURAL, g_sel_sort);
+    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+    EXPECT_EQ(nullptr, g_multirc);
+}
+
+void SelectorInformationTest::expect_version()
+{
+    const std::size_t version = m_output.find("Trn version: selector-test-version.");
+    ASSERT_NE(std::string::npos, version);
+    EXPECT_EQ(std::string::npos, m_output.find("Trn version:", version + 1));
+#ifdef HAS_LOCAL_SPOOL
+    EXPECT_NE(std::string::npos, m_output.find("Configured for both NNTP and local news access."));
+#else
+    EXPECT_NE(std::string::npos, m_output.find("Configured for NNTP (plus individual local access)."));
+#endif
+    EXPECT_NE(std::string::npos, m_output.find("trn-users@lists.sourceforge.net"));
+    EXPECT_NE(std::string::npos, m_output.find("trn-workers@lists.sourceforge.net"));
+    EXPECT_NE(std::string::npos, m_output.find("[Type space or a command]"));
+}
+
+class SelectorVersionDismissalTest : public SelectorInformationTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorVersionDismissalTest, dismissingVersionInformationRequestsTheUnchangedArticlePage)
+{
+    const DisplayState result = dispatch('v', std::string(1, GetParam()));
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_version();
+    expect_reading_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(SpaceReturnAndNewline, SelectorVersionDismissalTest, testing::Values(' ', '\r', '\n'));
+
+TEST_F(SelectorInformationTest, aCommandAtTheVersionPauseUsesTheArticleCallback)
+{
+    const DisplayState result = dispatch('v', "Y");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    expect_version();
+    expect_reading_context();
+    expect_next_command('q');
+}
+
+class SelectorVersionQuitTest : public SelectorInformationTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorVersionQuitTest, quittingAtTheVersionPauseUsesTheSelectorExitPolicy)
+{
+    const DisplayState result = dispatch('v', std::string(1, GetParam()));
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_version();
+    expect_reading_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(LowerAndUpperCase, SelectorVersionQuitTest, testing::Values('q', 'Q'));
+
+TEST_F(SelectorInformationTest, aSelectionLetterAtTheVersionPauseIsReturnedToTheSelectorInputLoop)
+{
+    const DisplayState result = dispatch('v', "a");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_version();
+    expect_reading_context();
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('a', read_tty_char() & 0177);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorInformationTest, closingVersionInformationRedisplaysRowsAndAcceptsTheNextCommand)
+{
+    g_in_ng = true;
+
+    const char result = run_input("v q");
+
+    EXPECT_EQ('Q', result);
+    expect_version();
+    const std::size_t pause = m_output.find("[Type space or a command]");
+    EXPECT_NE(std::string::npos, m_output.find("Second topic", pause));
+    expect_reading_context();
+    SelectorSessionInputState::expect_next_command('q');
+}
+
+#ifdef MAIL_CALL
+enum class SelectorMailboxState
+{
+    Missing,
+    Empty,
+    Read,
+    Unread
+};
+
+class SelectorMailTest : public SelectorInformationTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_mail(SelectorMailboxState state);
+
+    trn::testing::MockEnvironment m_env;
+
+private:
+    std::filesystem::path m_root;
+    std::filesystem::path m_mailbox;
+};
+
+void SelectorMailTest::SetUp()
+{
+    EXPECT_CALL(m_env.getter, Call(testing::_)).WillRepeatedly(testing::Invoke(std::getenv));
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_root = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    ASSERT_FALSE(error) << error.message();
+    std::filesystem::create_directories(m_root);
+    m_mailbox = m_root / "mailbox with spaces";
+    m_env.expect_env_repeatedly("MAILFILE", m_mailbox.generic_string().c_str());
+    m_env.expect_no_envar("MAILCALL");
+    SelectorInformationTest::SetUp();
+}
+
+void SelectorMailTest::TearDown()
+{
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    EXPECT_FALSE(error) << error.message();
+    SelectorInformationTest::TearDown();
+}
+
+void SelectorMailTest::prepare_mail(SelectorMailboxState state)
+{
+    if (state != SelectorMailboxState::Missing)
+    {
+        std::ofstream(m_mailbox, std::ios::binary) << (state == SelectorMailboxState::Empty ? "" : "New mail\n");
+        const std::chrono::hours age{state == SelectorMailboxState::Read ? -1 : 1};
+        std::filesystem::last_write_time(m_mailbox, std::filesystem::file_time_type::clock::now() + age);
+    }
+    g_mail_count = 3;
+    g_mail_call = "Stale mail notice ";
+}
+
+struct SelectorMailCase
+{
+    const char          *name;
+    SelectorMailboxState state;
+    const char          *configured;
+    const char          *expected;
+};
+
+void PrintTo(const SelectorMailCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class SelectorMailRefreshTest : public SelectorMailTest, public testing::WithParamInterface<SelectorMailCase>
+{
+};
+
+TEST_P(SelectorMailRefreshTest, anExplicitMailRequestRefreshesCachedStatusWithoutChangingTheArticlePage)
+{
+    const SelectorMailCase &value = GetParam();
+    prepare_mail(value.state);
+    if (value.configured)
+    {
+        m_env.expect_env_repeatedly("MAILCALL", value.configured);
+    }
+
+    const DisplayState result = dispatch(Ctl('^'));
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(value.expected, g_mail_call);
+    EXPECT_EQ(1, g_mail_count);
+    expect_reading_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    MailboxAndNotice, SelectorMailRefreshTest,
+    testing::Values(SelectorMailCase{"Missing", SelectorMailboxState::Missing, nullptr, ""},
+                    SelectorMailCase{"Empty", SelectorMailboxState::Empty, nullptr, ""},
+                    SelectorMailCase{"AlreadyRead", SelectorMailboxState::Read, nullptr, ""},
+                    SelectorMailCase{"NewMail", SelectorMailboxState::Unread, nullptr, "(Mail) "},
+                    SelectorMailCase{"Configured", SelectorMailboxState::Unread, "[Mail %V] ", "[Mail %V] "},
+                    SelectorMailCase{"EmptyUsesDefault", SelectorMailboxState::Unread, "", "(Mail) "}));
+
+TEST_F(SelectorMailTest, aForcedMailRefreshDisplaysTheInterpolatedNoticeBeforeAcceptingAnotherCommand)
+{
+    prepare_mail(SelectorMailboxState::Unread);
+    m_env.expect_env_repeatedly("MAILCALL", "[Mail %V] ");
+    g_in_ng = true;
+
+    const char result = run_input(std::string(1, Ctl('^')) + 'q');
+
+    EXPECT_EQ('Q', result);
+    const std::size_t stale = m_output.find("Stale mail notice ");
+    ASSERT_NE(std::string::npos, stale);
+    EXPECT_NE(std::string::npos, m_output.find("[Mail selector-test-version] -- Select articles", stale + 1));
+    EXPECT_EQ(std::string::npos, m_output.find("Stale mail notice ", stale + 1));
+    expect_reading_context();
+    SelectorSessionInputState::expect_next_command('q');
+}
+
+TEST_F(SelectorMailTest, aForcedMailRefreshRemovesAStaleNoticeBeforeAcceptingAnotherCommand)
+{
+    prepare_mail(SelectorMailboxState::Missing);
+    g_in_ng = true;
+
+    const char result = run_input(std::string(1, Ctl('^')) + 'q');
+
+    EXPECT_EQ('Q', result);
+    const std::size_t stale = m_output.find("Stale mail notice ");
+    ASSERT_NE(std::string::npos, stale);
+    EXPECT_NE(std::string::npos, m_output.find("-- Select articles", stale + 1));
+    EXPECT_EQ(std::string::npos, m_output.find("Stale mail notice ", stale + 1));
+    EXPECT_TRUE(g_mail_call.empty());
+    expect_reading_context();
+    SelectorSessionInputState::expect_next_command('q');
+}
+#endif
 
 class SelectorShellTest : public SelectorCallbackTest
 {
