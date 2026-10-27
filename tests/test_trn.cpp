@@ -2276,12 +2276,12 @@ struct MultircReadingPrompt
     std::vector<std::string>   restrictions;
 };
 
-class MultircReadingTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<std::tuple<bool, bool>>
+class MultircReadingStateTest : public InputNewsgroupReadingTest
 {
 protected:
     void SetUp() override;
     void TearDown() override;
-    void run_session(std::string commands);
+    void run_session(std::string commands, bool restore_old = false);
     void expect_prompts(std::vector<std::pair<int, MinorMode>> prompts) const;
     void expect_body_order(std::vector<std::string> bodies) const;
 
@@ -2295,13 +2295,10 @@ private:
     std::size_t                       m_input_pos{};
 };
 
-void MultircReadingTest::SetUp()
+void MultircReadingStateTest::SetUp()
 {
     InputNewsgroupReadingTest::SetUp();
     m_loop_context.emplace(m_newsrc, m_output_dir);
-    const auto [verbose, threaded] = GetParam();
-    g_verbose = verbose;
-    g_use_threads = threaded;
     g_thread_always = true;
     g_newsgroup_min_to_read = TR_ONE;
     g_allow_typeahead = true;
@@ -2325,7 +2322,7 @@ void MultircReadingTest::SetUp()
     }
     g_terminal_input_reader = [this](char *buffer, int)
     {
-        EXPECT_EQ(GM_READ, g_general_mode);
+        EXPECT_EQ(g_mode == MM_ADD_NEWSGROUP_PROMPT ? GM_PROMPT : GM_READ, g_general_mode);
         EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
         const bool reading = g_mode == MM_ARTICLE || g_mode == MM_ARTICLE_END;
         if (reading)
@@ -2365,7 +2362,7 @@ void MultircReadingTest::SetUp()
     };
 }
 
-void MultircReadingTest::TearDown()
+void MultircReadingStateTest::TearDown()
 {
     m_loop_context.reset();
     g_terminal_input_reader = m_old_input_reader;
@@ -2373,7 +2370,7 @@ void MultircReadingTest::TearDown()
     InputNewsgroupReadingTest::TearDown();
 }
 
-void MultircReadingTest::run_session(std::string commands)
+void MultircReadingStateTest::run_session(std::string commands, bool restore_old)
 {
     m_commands = std::move(commands);
     errno = 0;
@@ -2390,10 +2387,10 @@ void MultircReadingTest::run_session(std::string commands)
     EXPECT_FALSE(g_in_ng);
     EXPECT_FALSE(g_doing_ng);
     EXPECT_EQ(nullptr, g_art_fp);
-    EXPECT_FALSE(g_restore_old_newsrc);
+    EXPECT_EQ(restore_old, g_restore_old_newsrc);
 }
 
-void MultircReadingTest::expect_prompts(std::vector<std::pair<int, MinorMode>> prompts) const
+void MultircReadingStateTest::expect_prompts(std::vector<std::pair<int, MinorMode>> prompts) const
 {
     SCOPED_TRACE(m_output);
     ASSERT_EQ(prompts.size(), m_prompts.size());
@@ -2409,7 +2406,7 @@ void MultircReadingTest::expect_prompts(std::vector<std::pair<int, MinorMode>> p
     }
 }
 
-void MultircReadingTest::expect_body_order(std::vector<std::string> bodies) const
+void MultircReadingStateTest::expect_body_order(std::vector<std::string> bodies) const
 {
     SCOPED_TRACE(m_output);
     std::size_t position = 0;
@@ -2419,6 +2416,20 @@ void MultircReadingTest::expect_body_order(std::vector<std::string> bodies) cons
         ASSERT_NE(std::string::npos, position) << body;
         ++position;
     }
+}
+
+class MultircReadingTest : public MultircReadingStateTest, public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircReadingTest::SetUp()
+{
+    MultircReadingStateTest::SetUp();
+    const auto [verbose, threaded] = GetParam();
+    g_verbose = verbose;
+    g_use_threads = threaded;
 }
 
 TEST_P(MultircReadingTest, returningToTheGroupPromptRetainsThePartiallyReadGroup)
@@ -2609,29 +2620,29 @@ TEST_P(MultircRestrictionReadingTest, readingAllRestrictedNewsReleasesTheRestric
 INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircRestrictionReadingTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
 
-class MultircSaveReadingTest : public MultircReadingTest
+class MultircSaveReadingStateTest : public MultircReadingStateTest
 {
 protected:
     void SetUp() override;
     void TearDown() override;
     void expect_saved_files(std::string_view first, std::string_view second) const;
+    void               expect_restored_files(std::string_view first, std::string_view second) const;
+    static std::string read_file(const fs::path &path);
 
     DataSource m_second_source{};
     Newsrc     m_second_newsrc{};
 
 private:
-    static std::string read_file(const fs::path &path);
-
     SelectionSortMode m_old_group_sort{g_sel_newsgroup_sort};
     std::string       m_saved_score_file;
     const std::string m_first_backup{"comp.previous: 1\ncomp.next! 1\n"};
     const std::string m_second_backup{"comp.lang.cpp: 1\n"};
 };
 
-void MultircSaveReadingTest::SetUp()
+void MultircSaveReadingStateTest::SetUp()
 {
     set_environment([](const char *) -> char * { return nullptr; });
-    MultircReadingTest::SetUp();
+    MultircReadingStateTest::SetUp();
     m_saved_score_file = (m_output_dir / "saved-scores").generic_string();
     set_environment([this](const char *name) -> char *
                     { return std::string_view{name} == "SAVESCOREFILE" ? m_saved_score_file.data() : nullptr; });
@@ -2657,22 +2668,22 @@ void MultircSaveReadingTest::SetUp()
     std::ofstream{m_second_newsrc.old_name} << m_second_backup;
 }
 
-void MultircSaveReadingTest::TearDown()
+void MultircSaveReadingStateTest::TearDown()
 {
     m_second_source.close();
     m_data_source.m_act_sf.close();
     g_sel_newsgroup_sort = m_old_group_sort;
-    MultircReadingTest::TearDown();
+    MultircReadingStateTest::TearDown();
     set_environment(nullptr);
 }
 
-std::string MultircSaveReadingTest::read_file(const fs::path &path)
+std::string MultircSaveReadingStateTest::read_file(const fs::path &path)
 {
     std::ifstream input{path};
     return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
 }
 
-void MultircSaveReadingTest::expect_saved_files(std::string_view first, std::string_view second) const
+void MultircSaveReadingStateTest::expect_saved_files(std::string_view first, std::string_view second) const
 {
     EXPECT_EQ(first, read_file(m_newsrc.name));
     EXPECT_EQ(second, read_file(m_second_newsrc.name));
@@ -2682,6 +2693,33 @@ void MultircSaveReadingTest::expect_saved_files(std::string_view first, std::str
     EXPECT_FALSE(fs::exists(m_second_newsrc.new_name));
     EXPECT_TRUE(fs::exists(m_newsrc.info_name));
     EXPECT_TRUE(fs::exists(m_second_newsrc.info_name));
+}
+
+void MultircSaveReadingStateTest::expect_restored_files(std::string_view first, std::string_view second) const
+{
+    EXPECT_EQ(m_first_backup, read_file(m_newsrc.name));
+    EXPECT_EQ(m_second_backup, read_file(m_second_newsrc.name));
+    EXPECT_EQ(first, read_file(m_newsrc.new_name));
+    EXPECT_EQ(second, read_file(m_second_newsrc.new_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_second_newsrc.old_name));
+    EXPECT_TRUE(fs::exists(m_newsrc.info_name));
+    EXPECT_TRUE(fs::exists(m_second_newsrc.info_name));
+}
+
+class MultircSaveReadingTest : public MultircSaveReadingStateTest,
+                               public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircSaveReadingTest::SetUp()
+{
+    MultircSaveReadingStateTest::SetUp();
+    const auto [verbose, threaded] = GetParam();
+    g_verbose = verbose;
+    g_use_threads = threaded;
 }
 
 TEST_P(MultircSaveReadingTest, normalQuitSavesPartialReadsToTheirRespectiveNewsrcFiles)
@@ -2769,6 +2807,198 @@ TEST_P(MultircSaveReadingTest, processExitPreservesSavedReadsAndRemovesBothNewsr
 
 INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircSaveReadingTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
+
+class MultircExitRecoveryStateTest : public MultircSaveReadingStateTest
+{
+protected:
+    void SetUp() override;
+    void expect_unrelated_files() const;
+    void release_child_files();
+    void initialize_child();
+    void finalize_child();
+
+    Newsrc m_inactive_newsrc{};
+};
+
+void MultircExitRecoveryStateTest::SetUp()
+{
+    MultircSaveReadingStateTest::SetUp();
+    m_second_newsrc.next = &m_inactive_newsrc;
+    m_inactive_newsrc.data_source = &m_second_source;
+    m_inactive_newsrc.name = m_output_dir / "inactive-newsrc";
+    m_inactive_newsrc.old_name = m_output_dir / "inactive-newsrc.old";
+    m_inactive_newsrc.new_name = m_output_dir / "inactive-newsrc.new";
+    std::ofstream{m_inactive_newsrc.name} << "inactive current\n";
+    std::ofstream{m_inactive_newsrc.old_name} << "inactive backup\n";
+    std::ofstream{m_inactive_newsrc.new_name} << "inactive working\n";
+    std::ofstream{m_output_dir / "unrelated"} << "unrelated file\n";
+}
+
+void MultircExitRecoveryStateTest::expect_unrelated_files() const
+{
+    EXPECT_EQ("inactive current\n", read_file(m_inactive_newsrc.name));
+    EXPECT_EQ("inactive backup\n", read_file(m_inactive_newsrc.old_name));
+    EXPECT_EQ("inactive working\n", read_file(m_inactive_newsrc.new_name));
+    EXPECT_EQ("unrelated file\n", read_file(m_output_dir / "unrelated"));
+}
+
+void MultircExitRecoveryStateTest::release_child_files()
+{
+    m_newsrc.lock_name = m_output_dir / "newsrc.lock";
+    m_second_newsrc.lock_name = m_output_dir / "second-newsrc.lock";
+    std::ofstream{m_newsrc.lock_name} << "private first lock\n";
+    std::ofstream{m_second_newsrc.lock_name} << "private second lock\n";
+    m_data_source.m_act_sf.close();
+    m_second_source.m_act_sf.close();
+    back_page_final();
+    fs::current_path(m_output_dir.parent_path());
+}
+
+void MultircExitRecoveryStateTest::initialize_child()
+{
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(m_output_dir / "active", "", ""));
+    ASSERT_EQ(1, m_second_source.m_act_sf.open(m_output_dir / "active", "", ""));
+    back_page_init();
+}
+
+void MultircExitRecoveryStateTest::finalize_child()
+{
+    g_check_flag = false;
+    g_bizarre = false;
+    g_tmp_dir = m_output_dir.generic_string();
+    g_head_name.clear();
+    finalize(testing::Test::HasFailure() ? 1 : 0);
+}
+
+class MultircAbandonExitTest : public MultircExitRecoveryStateTest,
+                               public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircAbandonExitTest::SetUp()
+{
+    MultircExitRecoveryStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+    g_use_threads = std::get<2>(GetParam());
+}
+
+TEST_P(MultircAbandonExitTest, confirmedAbandonmentRestoresBothBackupsAndRetainsTheDiscardedReads)
+{
+    const bool at_end = std::get<0>(GetParam());
+    release_child_files();
+
+    EXPECT_EXIT(
+        {
+            initialize_child();
+            if (testing::Test::HasFailure())
+            {
+                std::exit(2);
+            }
+            run_session(std::string{"yQnyQ"} + (at_end ? "$" : "") + "xy", true);
+            expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2"});
+            EXPECT_THAT(m_output, testing::HasSubstr("The abandoned changes are in"));
+            ASSERT_FALSE(m_prompts.empty());
+            EXPECT_EQ(at_end ? -1 : 1, m_prompts.back().group);
+            EXPECT_EQ(MM_ADD_NEWSGROUP_PROMPT, m_prompts.back().mode);
+            finalize_child();
+        },
+        testing::ExitedWithCode(0), ".*");
+
+    expect_restored_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1-2\n");
+    expect_unrelated_files();
+    EXPECT_FALSE(fs::exists(m_newsrc.lock_name));
+    EXPECT_FALSE(fs::exists(m_second_newsrc.lock_name));
+}
+
+TEST_P(MultircAbandonExitTest, decliningAbandonmentThenQuittingSavesTheCompletedReads)
+{
+    const bool at_end = std::get<0>(GetParam());
+
+    run_session(std::string{"yQnyQ"} + (at_end ? "$" : "") + "xnq");
+
+    expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2"});
+    EXPECT_THAT(m_output, testing::HasSubstr("Confirm: exit and abandon newsrc changes?"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("The abandoned changes are in")));
+    ASSERT_GE(m_prompts.size(), 2);
+    EXPECT_EQ(at_end ? -1 : 1, m_prompts.back().group);
+    EXPECT_EQ(at_end ? MM_FINISH_NEWSGROUP_LIST : MM_NEWSGROUP_LIST, m_prompts.back().mode);
+    expect_saved_files("comp.previous: 1-3\ncomp.next! 1-2\n", "comp.lang.cpp: 1-2\n");
+    expect_unrelated_files();
+}
+
+INSTANTIATE_TEST_SUITE_P(EndPromptVerbosityAndThreading, MultircAbandonExitTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
+
+class MultircFailedSaveTest : public MultircExitRecoveryStateTest,
+                              public testing::WithParamInterface<std::tuple<bool, bool, bool, bool>>
+{
+protected:
+    void SetUp() override;
+    void expect_recovered_files() const;
+
+    Newsrc *m_failed_newsrc{};
+};
+
+void MultircFailedSaveTest::SetUp()
+{
+    MultircExitRecoveryStateTest::SetUp();
+    const auto [second, at_end, verbose, threaded] = GetParam();
+    g_verbose = verbose;
+    g_use_threads = threaded;
+    m_failed_newsrc = second ? &m_second_newsrc : &m_newsrc;
+    fs::create_directory(m_failed_newsrc->new_name);
+}
+
+void MultircFailedSaveTest::expect_recovered_files() const
+{
+    const bool second = std::get<0>(GetParam());
+    expect_restored_files(second ? "comp.previous: 1-3\ncomp.next! 1-2\n" : "comp.previous: 1-2\ncomp.next! 1-2\n",
+                          second ? "comp.lang.cpp: 1\n" : "comp.lang.cpp: 1-2\n");
+    expect_unrelated_files();
+}
+
+TEST_P(MultircFailedSaveTest, aFailedWriteRestoresBothSourcesBeforeReturningToTheCaller)
+{
+    const bool at_end = std::get<1>(GetParam());
+
+    run_session(std::string{"yQnyQ"} + (at_end ? "$q" : "q"), true);
+
+    expect_body_order({"comp.previous article 3", "comp.lang.cpp article 2"});
+    EXPECT_THAT(m_output, testing::HasSubstr("Can't recreate " + m_failed_newsrc->name.generic_string()));
+    EXPECT_THAT(m_output, testing::HasSubstr("restoring older version"));
+    ASSERT_FALSE(m_prompts.empty());
+    EXPECT_EQ(at_end ? -1 : 1, m_prompts.back().group);
+    EXPECT_EQ(at_end ? MM_FINISH_NEWSGROUP_LIST : MM_NEWSGROUP_LIST, m_prompts.back().mode);
+    expect_recovered_files();
+}
+
+TEST_P(MultircFailedSaveTest, finalizationPreservesTheRecoveredSourcesAndRemovesTheirLocks)
+{
+    const bool at_end = std::get<1>(GetParam());
+    release_child_files();
+
+    EXPECT_EXIT(
+        {
+            initialize_child();
+            if (testing::Test::HasFailure())
+            {
+                std::exit(2);
+            }
+            run_session(std::string{"yQnyQ"} + (at_end ? "$q" : "q"), true);
+            expect_recovered_files();
+            finalize_child();
+        },
+        testing::ExitedWithCode(0), ".*");
+
+    expect_recovered_files();
+    EXPECT_FALSE(fs::exists(m_newsrc.lock_name));
+    EXPECT_FALSE(fs::exists(m_second_newsrc.lock_name));
+}
+
+INSTANTIATE_TEST_SUITE_P(FailedSourceEndPromptVerbosityAndThreading, MultircFailedSaveTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool(), testing::Bool()));
 
 struct LocalArticleReadingState
 {
@@ -4894,7 +5124,7 @@ class MultircSelectorStateTest : public NewsgroupSelectorDelegationStateTest
 protected:
     void               SetUp() override;
     void               TearDown() override;
-    void               run_outer(std::string commands);
+    void               run_outer(std::string commands, bool restore_old = false);
     void               prepare_sources();
     void               expect_modes(std::vector<MinorMode> modes) const;
     static std::string read_file(const fs::path &path);
@@ -5001,7 +5231,7 @@ void MultircSelectorStateTest::TearDown()
     NewsgroupSelectorDelegationStateTest::TearDown();
 }
 
-void MultircSelectorStateTest::run_outer(std::string commands)
+void MultircSelectorStateTest::run_outer(std::string commands, bool restore_old)
 {
     m_commands = std::move(commands);
     errno = 0;
@@ -5018,7 +5248,7 @@ void MultircSelectorStateTest::run_outer(std::string commands)
     EXPECT_FALSE(g_in_ng);
     EXPECT_FALSE(g_doing_ng);
     EXPECT_EQ(nullptr, g_art_fp);
-    EXPECT_FALSE(g_restore_old_newsrc);
+    EXPECT_EQ(restore_old, g_restore_old_newsrc);
 }
 
 void MultircSelectorStateTest::prepare_sources()
@@ -5240,6 +5470,48 @@ TEST_P(MultircSelectorReadTest, readingAnotherSourceDoesNotChangeTheFirstSources
 INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircSelectorReadTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
 
+class MultircSelectorRecoveryExitTest : public MultircSelectorStateTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircSelectorRecoveryExitTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    g_verbose = GetParam();
+    g_newsgroup_data[1].m_rc_line.resize(g_newsgroup_data[1].m_num_offset);
+    g_newsgroup_data[1].m_rc_line += " 1-2";
+    g_newsgroup_data[1].m_to_read = ArticleUnread{1};
+    m_newsrc.flags |= RF_RC_CHANGED;
+}
+
+TEST_P(MultircSelectorRecoveryExitTest, confirmedAbandonmentFromStartupRestoresTheBackupAndRetainsPendingChanges)
+{
+    run_outer("\\xy", true);
+
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_ADD_NEWSGROUP_PROMPT});
+    EXPECT_THAT(m_output, testing::HasSubstr("The abandoned changes are in"));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ("comp.previous: 1-2\ncomp.lang.cpp: 1-2\ncomp.next: 1-2\n", read_file(m_newsrc.new_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.old_name));
+}
+
+TEST_P(MultircSelectorRecoveryExitTest, aFailedWriteOnStartupQuitRestoresTheBackup)
+{
+    fs::create_directory(m_newsrc.new_name);
+
+    run_outer("q", true);
+
+    expect_modes({MM_NEWSGROUP_SELECTOR});
+    EXPECT_THAT(m_output, testing::HasSubstr("restoring older version"));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.new_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.old_name));
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, MultircSelectorRecoveryExitTest, testing::Bool());
+
 class MultircUniversalStartupTest : public MultircSelectorStateTest,
                                     public testing::WithParamInterface<std::tuple<bool, bool>>
 {
@@ -5248,6 +5520,7 @@ protected:
     void TearDown() override;
     void release_child_files();
     void initialize_child();
+    void prepare_pending_changes();
 
 private:
     std::string m_old_trn_dir{g_trn_dir};
@@ -5317,6 +5590,26 @@ TEST_P(MultircUniversalStartupTest, leavingUniversalStartupContinuesToTheConfigu
     EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
 }
 
+void MultircUniversalStartupTest::prepare_pending_changes()
+{
+    g_newsgroup_data[1].m_rc_line.resize(g_newsgroup_data[1].m_num_offset);
+    g_newsgroup_data[1].m_rc_line += " 1-2";
+    g_newsgroup_data[1].m_to_read = ArticleUnread{1};
+    m_newsrc.flags |= RF_RC_CHANGED;
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        const int result = reader(buffer, size);
+        std::ofstream(m_output_dir / "universal-input", std::ios::app)
+            << static_cast<int>(g_mode) << ' ' << g_univ_level << ' ' << g_univ_items.size() << '\n';
+        if (testing::Test::HasFailure())
+        {
+            std::exit(3);
+        }
+        return result;
+    };
+}
+
 TEST_P(MultircUniversalStartupTest, quittingUniversalStartupSavesPendingChangesAndFinalizesWithoutAnotherSelector)
 {
     m_newsrc.lock_name = m_output_dir / "universal-newsrc.lock";
@@ -5330,22 +5623,7 @@ TEST_P(MultircUniversalStartupTest, quittingUniversalStartupSavesPendingChangesA
             {
                 std::exit(2);
             }
-            g_newsgroup_data[1].m_rc_line.resize(g_newsgroup_data[1].m_num_offset);
-            g_newsgroup_data[1].m_rc_line += " 1-2";
-            g_newsgroup_data[1].m_to_read = ArticleUnread{1};
-            m_newsrc.flags |= RF_RC_CHANGED;
-            const TerminalInputReader reader = g_terminal_input_reader;
-            g_terminal_input_reader = [&](char *buffer, int size)
-            {
-                const int result = reader(buffer, size);
-                std::ofstream(m_output_dir / "universal-input", std::ios::app)
-                    << static_cast<int>(g_mode) << ' ' << g_univ_level << ' ' << g_univ_items.size() << '\n';
-                if (testing::Test::HasFailure())
-                {
-                    std::exit(3);
-                }
-                return result;
-            };
+            prepare_pending_changes();
             run_outer("q");
             std::exit(4);
         },
@@ -5354,6 +5632,36 @@ TEST_P(MultircUniversalStartupTest, quittingUniversalStartupSavesPendingChangesA
     EXPECT_EQ("comp.previous: 1-2\ncomp.lang.cpp: 1-2\ncomp.next: 1-2\n", read_file(m_newsrc.name));
     EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
     EXPECT_EQ(std::to_string(static_cast<int>(MM_UNIVERSAL)) + " 1 1\n", read_file(m_output_dir / "universal-input"));
+    EXPECT_FALSE(fs::exists(m_newsrc.lock_name));
+    EXPECT_TRUE(fs::exists(m_newsrc.info_name));
+}
+
+TEST_P(MultircUniversalStartupTest, aFailedWriteOnUniversalQuitPreservesTheRestoredBackupThroughFinalization)
+{
+    m_newsrc.lock_name = m_output_dir / "universal-newsrc.lock";
+    std::ofstream{m_newsrc.lock_name} << "private session lock\n";
+    std::ofstream{m_output_dir / "unrelated"} << "unrelated file\n";
+    fs::create_directory(m_newsrc.new_name);
+    release_child_files();
+
+    EXPECT_EXIT(
+        {
+            initialize_child();
+            if (testing::Test::HasFailure())
+            {
+                std::exit(2);
+            }
+            prepare_pending_changes();
+            run_outer("q");
+            std::exit(4);
+        },
+        testing::ExitedWithCode(0), ".*");
+
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.new_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.old_name));
+    EXPECT_EQ(std::to_string(static_cast<int>(MM_UNIVERSAL)) + " 1 1\n", read_file(m_output_dir / "universal-input"));
+    EXPECT_EQ("unrelated file\n", read_file(m_output_dir / "unrelated"));
     EXPECT_FALSE(fs::exists(m_newsrc.lock_name));
     EXPECT_TRUE(fs::exists(m_newsrc.info_name));
 }

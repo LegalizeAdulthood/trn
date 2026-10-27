@@ -379,6 +379,21 @@ TEST_F(NewsrcRotationTest, getOldNewsrcsRestoresBackupFile)
     EXPECT_EQ((std::vector<std::string>{"old contents"}), read_lines(newsrc.name));
     EXPECT_EQ((std::vector<std::string>{"current contents"}), read_lines(newsrc.new_name));
     EXPECT_FALSE(fs::exists(newsrc.old_name));
+    EXPECT_EQ(RF_ACTIVE, newsrc.flags);
+}
+
+TEST_F(NewsrcRotationTest, missingBackupRetainsPendingChanges)
+{
+    Newsrc  newsrc = make_newsrc();
+    Multirc multirc{};
+    multirc.m_first = &newsrc;
+    std::ofstream{newsrc.name} << "current contents\n";
+
+    get_old_newsrcs(&multirc);
+
+    EXPECT_EQ(RF_ACTIVE | RF_RC_CHANGED, newsrc.flags);
+    EXPECT_EQ((std::vector<std::string>{"current contents"}), read_lines(newsrc.new_name));
+    EXPECT_FALSE(fs::exists(newsrc.name));
 }
 
 TEST_F(NewsrcRotationTest, useMultircRefreshesBackupFile)

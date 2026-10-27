@@ -1994,6 +1994,10 @@ void get_old_newsrcs(Multirc *mptr)
                 fs::rename(rp->name, rp->new_name, error);
                 error.clear();
                 fs::rename(rp->old_name, rp->name, error);
+                if (!error)
+                {
+                    rp->flags &= ~RF_RC_CHANGED;
+                }
             }
         }
     }
