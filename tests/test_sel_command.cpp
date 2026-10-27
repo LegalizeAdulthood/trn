@@ -38,13 +38,13 @@ protected:
     DisplayState dispatch(char command);
     void         expect_page(int page, int cursor, bool empty = false, bool redraw = true);
     void         expect_preserved() const;
+    std::vector<int> flags() const;
+    int              row_number(int index) const;
 
 private:
     void             prepare_articles(int count);
     void             prepare_groups(int count);
     void             prepare_menu(int count);
-    std::vector<int> flags() const;
-    int              row_number(int index) const;
 
     std::array<Subject, 6>   m_subjects{};
     std::vector<int>         m_flags;
@@ -444,5 +444,371 @@ INSTANTIATE_TEST_SUITE_P(
     CommandModeAndReadScope, EmptySelectorPagingCommandTest,
     testing::Combine(testing::Values('>', '<', '^', Ctl('r'), '$', Ctl('l')),
                      testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool()));
+
+class SelectorExitStateTest : public SelectorPagingStateTest
+{
+protected:
+    void             prepare_exit(SelectionMode mode, bool rereading, bool empty = false);
+    void             set_selection(std::vector<int> selected, bool killed = false);
+    void             expect_exit(std::vector<int> selected, bool implicit = false) const;
+    std::vector<int> current_objects() const;
+
+private:
+    void             group_current_row();
+    void             set_object_flags(int number, int value);
+    std::vector<int> marked_objects(int mask) const;
+    std::vector<int> rows() const;
+
+    std::vector<int>   m_before_flags;
+    std::vector<int>   m_before_killed;
+    std::vector<int>   m_before_rows;
+    Article          **m_page_app{};
+    Subject           *m_page_sp{};
+    NewsgroupData     *m_page_np{};
+    UniversalItemIndex m_page_menu{};
+    int                m_prior{};
+    int                m_total{};
+    int                m_objects{};
+    int                m_items{};
+    bool               m_end{};
+    bool               m_empty{};
+    SelectionMode      m_mode{};
+    bool               m_rereading{};
+};
+
+void SelectorExitStateTest::prepare_exit(SelectionMode mode, bool rereading, bool empty)
+{
+    prepare(mode, rereading, empty ? 0 : 6);
+    m_empty = empty;
+    m_mode = mode;
+    m_rereading = rereading;
+    g_tc_LINES = 9;
+    if (!empty)
+    {
+        group_current_row();
+    }
+}
+
+void SelectorExitStateTest::group_current_row()
+{
+    if (g_sel_mode != SM_SUBJECT && g_sel_mode != SM_THREAD)
+    {
+        return;
+    }
+    Article *first = article_ptr(ArticleNum{2});
+    Article *reply = article_ptr(ArticleNum{3});
+    Subject *first_subject = first->m_subj;
+    Subject *reply_subject = reply->m_subj;
+    if (g_sel_mode == SM_SUBJECT)
+    {
+        first->m_subj_next = reply;
+        reply->m_subj = first_subject;
+        reply_subject->m_articles = nullptr;
+        first_subject->m_next = reply_subject->m_next;
+        reply_subject->m_next->m_prev = first_subject;
+        --g_subject_count;
+    }
+    else
+    {
+        first_subject->m_thread_link = reply_subject;
+        reply_subject->m_thread_link = first_subject;
+        reply_subject->m_thread = first;
+        first->m_child1 = reply;
+        reply->m_parent = first;
+    }
+}
+
+std::vector<int> SelectorExitStateTest::current_objects() const
+{
+    return g_sel_mode == SM_SUBJECT || g_sel_mode == SM_THREAD ? std::vector<int>{2, 3} : std::vector<int>{2};
+}
+
+void SelectorExitStateTest::set_object_flags(int number, int value)
+{
+    if (g_sel_mode == SM_NEWSGROUP)
+    {
+        g_newsgroup_order[number - 1]->m_flags = static_cast<NewsgroupFlags>(value);
+    }
+    else if (g_sel_mode == SM_UNIVERSAL)
+    {
+        g_univ_items[number - 1].m_flags = static_cast<UniversalItemFlags>(value);
+    }
+    else
+    {
+        article_ptr(ArticleNum{number})->m_flags = static_cast<ArticleFlags>(value);
+    }
+}
+
+std::vector<int> SelectorExitStateTest::marked_objects(int mask) const
+{
+    const std::vector<int> values = flags();
+    const std::size_t      stride = g_in_ng ? 2 : 1;
+    std::vector<int>       result;
+    for (std::size_t index = 0; index < values.size(); index += stride)
+    {
+        if (values[index] & mask)
+        {
+            result.push_back(static_cast<int>(index / stride) + 1);
+        }
+    }
+    return result;
+}
+
+std::vector<int> SelectorExitStateTest::rows() const
+{
+    std::vector<int> result;
+    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    {
+        result.push_back(row_number(index));
+    }
+    return result;
+}
+
+void SelectorExitStateTest::set_selection(std::vector<int> selected, bool killed)
+{
+    std::vector<int> values = flags();
+    const int        stride = g_in_ng ? 2 : 1;
+    const int        selection_bits = AGF_SEL | AGF_DEL_SEL | AGF_DEL;
+    for (int index = 0; index < (m_empty ? 0 : 6); ++index)
+    {
+        int value = values[index * stride] & ~selection_bits;
+        if (std::find(selected.begin(), selected.end(), index + 1) != selected.end())
+        {
+            value |= g_sel_mask;
+        }
+        if (index == 4)
+        {
+            value |= g_sel_rereading ? AGF_SEL : AGF_DEL_SEL;
+        }
+        set_object_flags(index + 1, value);
+    }
+    if (g_in_ng)
+    {
+        for (Subject *subject = g_first_subject; subject; subject = subject->m_next)
+        {
+            subject->m_flags &= ~(SF_SEL | SF_DEL_SEL | SF_DEL);
+        }
+        count_subjects(CS_UNSEL_STORE);
+    }
+    else
+    {
+        g_selected_count = ArticleUnread{static_cast<long>(selected.size())};
+    }
+    init_pages(PRESERVE_PAGE);
+    if (!m_empty)
+    {
+        values = flags();
+        for (const int number : current_objects())
+        {
+            const int value = values[(number - 1) * stride];
+            set_object_flags(number, killed ? value | AGF_DEL : value & ~static_cast<int>(AGF_DEL));
+            if (g_in_ng)
+            {
+                Subject *subject = article_ptr(ArticleNum{number})->m_subj;
+                subject->m_flags = killed ? subject->m_flags | SF_DEL : subject->m_flags & ~SF_DEL;
+            }
+        }
+    }
+    ASSERT_NO_FATAL_FAILURE(position_page(0));
+    g_sel_item_index = m_empty ? 0 : 1;
+    m_before_flags = flags();
+    m_before_killed = marked_objects(AGF_DEL);
+    m_before_rows = rows();
+    m_page_app = g_sel_page_app;
+    m_page_sp = g_sel_page_sp;
+    m_page_np = g_sel_page_np;
+    m_page_menu = g_sel_page_univ_index;
+    m_prior = g_sel_prior_obj_cnt;
+    m_total = g_sel_total_obj_cnt;
+    m_objects = g_sel_page_obj_cnt;
+    m_items = g_sel_page_item_cnt;
+    m_end = g_sel_at_end;
+    EXPECT_EQ(selected, marked_objects(g_sel_mask));
+    EXPECT_EQ(ArticleUnread{static_cast<long>(selected.size())}, g_selected_count);
+}
+
+void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit) const
+{
+    EXPECT_EQ(selected, marked_objects(g_sel_mask));
+    EXPECT_EQ(ArticleUnread{static_cast<long>(selected.size())}, g_selected_count);
+    EXPECT_EQ(m_empty ? std::vector<int>{} : std::vector<int>{5},
+              marked_objects(g_sel_rereading ? AGF_SEL : AGF_DEL_SEL));
+    std::vector<int> killed = m_before_killed;
+    if (implicit)
+    {
+        for (int number : current_objects())
+        {
+            killed.erase(std::remove(killed.begin(), killed.end(), number), killed.end());
+        }
+    }
+    else
+    {
+        EXPECT_EQ(m_before_flags, flags());
+    }
+    const std::vector<int> targets = m_empty ? std::vector<int>{} : current_objects();
+    const std::vector<int> after = flags();
+    const int              stride = g_in_ng ? 2 : 1;
+    for (int index = 0; index < (m_empty ? 0 : 6); ++index)
+    {
+        if (std::find(targets.begin(), targets.end(), index + 1) == targets.end())
+        {
+            for (int field = 0; field < stride; ++field)
+            {
+                EXPECT_EQ(m_before_flags[index * stride + field], after[index * stride + field]);
+            }
+        }
+    }
+    std::vector<Subject *> selected_subjects;
+    if (g_in_ng)
+    {
+        for (int number : selected)
+        {
+            Subject *subject = article_ptr(ArticleNum{number})->m_subj;
+            if (std::find(selected_subjects.begin(), selected_subjects.end(), subject) == selected_subjects.end())
+            {
+                selected_subjects.push_back(subject);
+            }
+        }
+    }
+    EXPECT_EQ(selected_subjects.size(), g_selected_subj_cnt);
+    EXPECT_EQ(killed, marked_objects(AGF_DEL));
+    EXPECT_EQ(m_mode, g_sel_mode);
+    EXPECT_EQ(m_rereading, g_sel_rereading);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(m_mode == SM_UNIVERSAL   ? MM_UNIVERSAL
+              : m_mode == SM_NEWSGROUP ? MM_NEWSGROUP_SELECTOR
+                                       : MM_THREAD_SELECTOR,
+              g_mode);
+    EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(m_empty ? 0 : 1, g_sel_item_index);
+    EXPECT_EQ(m_page_app, g_sel_page_app);
+    EXPECT_EQ(m_page_sp, g_sel_page_sp);
+    EXPECT_EQ(m_page_np, g_sel_page_np);
+    EXPECT_EQ(m_page_menu, g_sel_page_univ_index);
+    EXPECT_EQ(m_prior, g_sel_prior_obj_cnt);
+    EXPECT_EQ(m_total, g_sel_total_obj_cnt);
+    EXPECT_EQ(m_objects, g_sel_page_obj_cnt);
+    EXPECT_EQ(m_items, g_sel_page_item_cnt);
+    EXPECT_EQ(m_end, g_sel_at_end);
+    EXPECT_EQ(m_before_rows, rows());
+    if (g_sel_mode == SM_NEWSGROUP)
+    {
+        EXPECT_EQ(m_empty ? nullptr : g_sel_items[1].u.np, g_newsgroup_ptr);
+    }
+    EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
+    for (const NewsgroupData *group : g_newsgroup_order)
+    {
+        EXPECT_EQ(g_sel_mode == SM_UNIVERSAL ? (g_sel_rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
+        EXPECT_EQ(':', group->m_subscribe_char);
+    }
+    for (const auto &[number, article] : g_article_list)
+    {
+        EXPECT_NE(AF_NONE, article.m_flags & AF_EXISTS);
+        EXPECT_EQ(!g_sel_rereading, (article.m_flags & AF_UNREAD) != 0);
+    }
+}
+
+enum class ExitSelection
+{
+    NONE,
+    CURRENT,
+    OFF_PAGE,
+    KILLED
+};
+
+class SelectorEnterPolicyTest : public SelectorExitStateTest,
+                                public testing::WithParamInterface<std::tuple<char, SelectionMode, bool, ExitSelection>>
+{
+};
+
+TEST_P(SelectorEnterPolicyTest, enterSelectsTheCurrentRowOnlyWhenTheAcceptancePolicyAllowsIt)
+{
+    const auto [command, mode, rereading, selection] = GetParam();
+    prepare_exit(mode, rereading);
+    const std::vector<int> initial = selection == ExitSelection::CURRENT    ? current_objects()
+                                     : selection == ExitSelection::OFF_PAGE ? std::vector<int>{6}
+                                                                            : std::vector<int>{};
+    ASSERT_NO_FATAL_FAILURE(set_selection(initial, selection == ExitSelection::KILLED));
+    const bool implicit = selection == ExitSelection::NONE || (selection == ExitSelection::KILLED && rereading);
+
+    const DisplayState result = dispatch(command);
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_exit(implicit ? current_objects() : initial, implicit);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CommandModeReadScopeAndSelections, SelectorEnterPolicyTest,
+    testing::Combine(testing::Values('\r', '\n'),
+                     testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool(),
+                     testing::Values(ExitSelection::NONE, ExitSelection::CURRENT, ExitSelection::OFF_PAGE,
+                                     ExitSelection::KILLED)));
+
+class SelectorExitPreservationTest : public SelectorExitStateTest,
+                                     public testing::WithParamInterface<std::tuple<char, SelectionMode, bool, bool>>
+{
+};
+
+TEST_P(SelectorExitPreservationTest, acceptQuitAndCancelRetainThePendingSelectionWithoutAddingTheCurrentRow)
+{
+    const auto [command, mode, rereading, selected] = GetParam();
+    prepare_exit(mode, rereading);
+    const std::vector<int> initial = selected ? std::vector<int>{6} : std::vector<int>{};
+    ASSERT_NO_FATAL_FAILURE(set_selection(initial, true));
+
+    const DisplayState result = dispatch(command);
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_exit(initial);
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandModeReadScopeAndSelections, SelectorExitPreservationTest,
+                         testing::Combine(testing::Values('Z', 'q', '\033'),
+                                          testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP,
+                                                          SM_UNIVERSAL),
+                                          testing::Bool(), testing::Bool()));
+
+class EmptySelectorExitPolicyTest : public SelectorExitStateTest,
+                                    public testing::WithParamInterface<std::tuple<char, SelectionMode, bool>>
+{
+};
+
+TEST_P(EmptySelectorExitPolicyTest, anEmptySelectorExitsWithoutSelectingAnAbsentCurrentRow)
+{
+    const auto [command, mode, rereading] = GetParam();
+    prepare_exit(mode, rereading, true);
+    ASSERT_NO_FATAL_FAILURE(set_selection({}));
+
+    const DisplayState result = dispatch(command);
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_exit({});
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CommandModeAndReadScope, EmptySelectorExitPolicyTest,
+    testing::Combine(testing::Values('\r', '\n', 'Z', 'q', '\033'),
+                     testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool()));
+
+class SelectorPartialAcceptTest : public SelectorExitStateTest,
+                                  public testing::WithParamInterface<std::tuple<char, SelectionMode, bool>>
+{
+};
+
+TEST_P(SelectorPartialAcceptTest, enterAcceptsAPartialCurrentGroupWithoutSelectingItsOtherArticles)
+{
+    const auto [command, mode, rereading] = GetParam();
+    prepare_exit(mode, rereading);
+    ASSERT_NO_FATAL_FAILURE(set_selection({2}));
+
+    const DisplayState result = dispatch(command);
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_exit({2});
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandModeAndReadScope, SelectorPartialAcceptTest,
+                         testing::Combine(testing::Values('\r', '\n'), testing::Values(SM_SUBJECT, SM_THREAD),
+                                          testing::Bool()));
 
 } // namespace
