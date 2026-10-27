@@ -534,6 +534,311 @@ void SelectorSessionInputState::expect_next_command(char command)
     EXPECT_FALSE(macro_pending());
 }
 
+class SelectorCallbackTest : public SelectorSessionInputState
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    DisplayState dispatch(char command, std::string_view input = {});
+    char         run_commands(std::string_view input);
+    void         expect_next_command(char command);
+
+private:
+    void set_input(std::string_view input);
+
+    TerminalInputReader m_old_reader{g_terminal_input_reader};
+    std::string         m_input;
+    std::size_t         m_input_index{};
+    int                 m_old_dm_count{g_dm_count};
+    bool                m_old_verbose{g_verbose};
+};
+
+void SelectorCallbackTest::SetUp()
+{
+    SelectorSessionInputState::SetUp();
+    testing::internal::CaptureStdout();
+    (void) run_selector("q");
+    (void) testing::internal::GetCapturedStdout();
+    drain_input();
+    prepare_input(SM_ARTICLE, false);
+    // This fixture has cached rows but no spool for idle prefetch.
+    g_in_ng = false;
+    g_dm_count = 0;
+    g_verbose = true;
+    g_term_line = g_sel_last_line + 1;
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        if (m_input_index == m_input.size())
+        {
+            ADD_FAILURE() << "Unexpected terminal read";
+            *buffer = 'q';
+        }
+        else
+        {
+            *buffer = m_input[m_input_index++];
+        }
+        return 1;
+    };
+}
+
+void SelectorCallbackTest::TearDown()
+{
+    g_terminal_input_reader = m_old_reader;
+    g_dm_count = m_old_dm_count;
+    g_verbose = m_old_verbose;
+    SelectorSessionInputState::TearDown();
+}
+
+DisplayState SelectorCallbackTest::dispatch(char command, std::string_view input)
+{
+    set_input(input);
+    testing::internal::CaptureStdout();
+    const DisplayState result = sel_command(command);
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void SelectorCallbackTest::set_input(std::string_view input)
+{
+    m_input = std::string(input) + 'q';
+    m_input_index = 0;
+}
+
+char SelectorCallbackTest::run_commands(std::string_view input)
+{
+    set_input(input);
+    testing::internal::CaptureStdout();
+    const char result = sel_input();
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void SelectorCallbackTest::expect_next_command(char command)
+{
+    ASSERT_EQ(m_input.size() - 1, m_input_index);
+    EXPECT_EQ(command, read_tty_char());
+    EXPECT_EQ(m_input.size(), m_input_index);
+    EXPECT_FALSE(macro_pending());
+}
+
+TEST_F(SelectorCallbackTest, cancelledModePromptOnlyRequestsAnotherPrompt)
+{
+    Article **const page = g_sel_page_app;
+
+    const DisplayState result = dispatch('S', "q");
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_EQ(page, g_sel_page_app);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_NE(std::string::npos, m_output.find("Selector mode:"));
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, unavailableYankReturnsItsStatusWithoutConsumingInput)
+{
+    const DisplayState result = dispatch('Y');
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, cancelledMultilineMemorizeRequestsARowUpdateWithoutChangingSelection)
+{
+    const DisplayState result = dispatch('A', "hq");
+
+    EXPECT_EQ(DS_UPDATE, result);
+    EXPECT_EQ(ArticleNum{3}, g_art);
+    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_FALSE(article_ptr(ArticleNum{3})->m_flags & AF_SEL);
+    EXPECT_NE(std::string::npos, m_output.find("Memorize subject command:"));
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, reverseOrderRequestsRedisplayAndReversesOnlyOnce)
+{
+    const DisplayState result = dispatch('R');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(-1, g_sel_direction);
+    ASSERT_EQ(2, g_art_ptr_list.size());
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_art_ptr_list.front());
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_art_ptr_list.back());
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, changingReadScopeRequestsASelectorRestart)
+{
+    const DisplayState result = dispatch('U');
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_TRUE(g_sel_rereading);
+    EXPECT_EQ(nullptr, g_sel_page_app);
+    EXPECT_EQ(nullptr, g_sel_page_sp);
+    expect_next_command('q');
+}
+
+class SelectorCallbackQuitTest : public SelectorCallbackTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorCallbackQuitTest, modeExitReturnsWithoutConsumingTheNextCommand)
+{
+    const DisplayState result = dispatch(GetParam());
+
+    EXPECT_EQ(DS_QUIT, result);
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(NextPreviousAndScan, SelectorCallbackQuitTest, testing::Values('N', 'P', ';'));
+
+TEST_F(SelectorCallbackTest, unknownCommandOnACleanScreenReturnsAHelpStatus)
+{
+    push_char('x' | 0200);
+
+    const DisplayState result = dispatch('%');
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("Type ? for help.", g_msg);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(0, g_term_scrolled);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, helpFollowupReversesOrderOnceWithoutConsumingTheNextCommand)
+{
+    const DisplayState result = dispatch('H', "R");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(-1, g_sel_direction);
+    ASSERT_EQ(2, g_art_ptr_list.size());
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_art_ptr_list.front());
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_art_ptr_list.back());
+    EXPECT_NE(std::string::npos, m_output.find("Selector Commands:"));
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, selectorLoopDisplaysTheModeStatusAndReadsTheFollowingExit)
+{
+    const char result = run_commands("Yq");
+
+    EXPECT_EQ('Q', result);
+    EXPECT_NE(std::string::npos, m_output.find("No marked articles to yank back."));
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, selectorLoopDisplaysUnknownCommandHelpAndReadsTheFollowingExit)
+{
+    const char result = run_commands("%q");
+
+    EXPECT_EQ('Q', result);
+    EXPECT_NE(std::string::npos, m_output.find("Type ? for help."));
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackTest, cancelledModePromptAfterHelpRedrawsTheSelectorBeforeReadingTheExit)
+{
+    g_in_ng = true;
+
+    const char result = run_input("Shqq");
+
+    EXPECT_EQ('Q', result);
+    EXPECT_NE(std::string::npos, m_output.find("Type q to leave things as they are."));
+    EXPECT_NE(std::string::npos, m_output.find("Second topic")) << m_output;
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_EQ(0, g_selected_count);
+    SelectorSessionInputState::expect_next_command('q');
+}
+
+class SelectorCallbackSearchTest : public SelectorCallbackTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    std::string    m_old_pattern{g_last_pat};
+    CompiledRegex  m_old_regex{*g_bra_compex};
+    ArtScope       m_old_scope{g_art_how_much};
+    HeaderLineType m_old_header{g_art_srch_hdr};
+    bool           m_old_do_read{g_art_do_read};
+    bool           m_old_novice_delays{g_novice_delays};
+    bool           m_old_error{g_error_occurred};
+    bool           m_old_mouse_down{g_mouse_is_down};
+    int            m_old_perform_count{g_perform_count};
+    bool           m_old_performed_loop{g_performed_article_loop};
+};
+
+void SelectorCallbackSearchTest::SetUp()
+{
+    SelectorCallbackTest::SetUp();
+    g_last_pat.clear();
+    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_srch_hdr = SOME_LINE;
+    g_art_do_read = false;
+    g_novice_delays = false;
+    g_error_occurred = false;
+    g_perform_count = 0;
+    search_init();
+    art_search_init();
+}
+
+void SelectorCallbackSearchTest::TearDown()
+{
+    g_last_pat = m_old_pattern;
+    *g_bra_compex = m_old_regex;
+    g_art_how_much = m_old_scope;
+    g_art_srch_hdr = m_old_header;
+    g_art_do_read = m_old_do_read;
+    g_novice_delays = m_old_novice_delays;
+    g_error_occurred = m_old_error;
+    g_mouse_is_down = m_old_mouse_down;
+    g_perform_count = m_old_perform_count;
+    g_performed_article_loop = m_old_performed_loop;
+    SelectorCallbackTest::TearDown();
+}
+
+TEST_F(SelectorCallbackSearchTest, searchFollowupReversesOrderOnceWithoutConsumingTheNextCommand)
+{
+    const DisplayState result = dispatch('/', "\nR");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(-1, g_sel_direction);
+    EXPECT_NE(std::string::npos, m_output.find("Null search string"));
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackSearchTest, invalidFollowupAfterSearchOutputRedrawsWithAHelpDiagnostic)
+{
+    const DisplayState result = dispatch('/', "\n\\\\\n");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ("Type ? for help.", g_msg);
+    EXPECT_NE(std::string::npos, m_output.find("Null search string"));
+    EXPECT_NE(std::string::npos, m_output.find("Type ? for help."));
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
+TEST_F(SelectorCallbackSearchTest, commandAfterAScrolledErrorIsDispatchedOnceAndRetainsFollowingInput)
+{
+    const DisplayState result = dispatch('/', "\n\\\\R");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(-1, g_sel_direction);
+    EXPECT_NE(std::string::npos, m_output.find("Type ? for help."));
+    EXPECT_EQ(0, g_selected_count);
+    expect_next_command('q');
+}
+
 using SelectorExitCommand = std::pair<char, char>;
 
 class SelectorExitInputTest : public SelectorSessionInputState,
