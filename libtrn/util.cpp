@@ -740,22 +740,13 @@ char menu_get_char()
     return ch;
 }
 
-// NOTE: kfile.c uses its own editor function
-// used in a few places, now centralized
-int edit_file(std::string_view fname)
+std::string editor_command(std::string_view expanded_filename)
 {
-    int r = -1;
-
-    if (fname.empty())
-    {
-        return r;
-    }
-
 #ifdef USE_SPAWN_SHELL
-    const std::string filename = fmt::format("\"{}\"", file_exp(fname));
+    const std::string filename = fmt::format("\"{}\"", expanded_filename);
 #else
     std::string filename{"'"};
-    for (const char character : file_exp(fname))
+    for (const char character : expanded_filename)
     {
         if (character == '\'')
         {
@@ -768,11 +759,19 @@ int edit_file(std::string_view fname)
     }
     filename += '\'';
 #endif
-    const std::string command =
-        fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), filename);
+    return fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))), filename);
+}
+
+int edit_file(std::string_view fname)
+{
+    if (fname.empty())
+    {
+        return -1;
+    }
+    const std::string command = editor_command(file_exp(fname));
     term_down(3);
     reset_tty();                  // make sure tty is friendly
-    r = do_shell(SH, command);          // invoke the shell
+    const int r = do_shell(SH, command); // invoke the shell
     no_echo();                   // and make terminal
     cr_mode();                   // unfriendly again
     return r;

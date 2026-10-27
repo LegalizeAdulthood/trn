@@ -5499,6 +5499,114 @@ void NewsgroupSelectorDelegationStateTest::expect_next_command(char command)
     EXPECT_FALSE(macro_pending());
 }
 
+class NewsgroupSelectorKillEditorTest : public NewsgroupSelectorDelegationStateTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string editor_text(const char *name) const;
+
+    fs::path m_kill_file;
+
+private:
+    using SignalHandler = void (*)(int);
+    trn::testing::MockEnvironment              m_env;
+    std::vector<std::pair<int, SignalHandler>> m_signals;
+    std::FILE                                 *m_old_local{g_local_kfp};
+    bool                                       m_old_waiting{g_waiting};
+    bool                                       m_old_no_wait{g_no_wait_fork};
+    bool                                       m_old_bizarre{g_bizarre};
+};
+
+void NewsgroupSelectorKillEditorTest::SetUp()
+{
+    EXPECT_CALL(m_env.getter, Call(testing::_)).WillRepeatedly(testing::Invoke(std::getenv));
+    NewsgroupSelectorDelegationStateTest::SetUp();
+    for (const int number : {
+             SIGINT,
+#ifdef SIGQUIT
+             SIGQUIT,
+#endif
+#ifdef SIGTSTP
+             SIGTSTP,
+             SIGTTOU,
+             SIGTTIN,
+#endif
+         })
+    {
+        m_signals.emplace_back(number, std::signal(number, SIG_IGN));
+    }
+    g_waiting = g_no_wait_fork = false;
+    g_local_kfp = nullptr;
+    const std::string editor =
+#ifdef USE_SPAWN_SHELL
+        "call "
+#endif
+        "\"" TRN_TEST_PROCESS_TOOL "\" kill-editor";
+    m_kill_file = m_output_dir / "global rules/KILL";
+    fs::create_directories(m_kill_file.parent_path());
+    std::ofstream(m_kill_file, std::ios::binary) << "# Global rules\n";
+    m_env.expect_env_repeatedly("VISUAL", editor.c_str());
+    m_env.expect_env_repeatedly("EDITOR", "unused-editor");
+    m_env.expect_env_repeatedly("KILLGLOBAL", m_kill_file.generic_string().c_str());
+    m_env.expect_env_repeatedly("KILLLOCAL", (m_output_dir / "unused-local").generic_string().c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", m_output_dir.generic_string().c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "");
+    m_env.expect_no_envars({"NNTPSERVER", "NNTP_FORCE_AUTH", "NEWSACTIVE", "NEWSDESCRIPTIONS", "QUOTECHARS"});
+    prepare_selector();
+}
+
+void NewsgroupSelectorKillEditorTest::TearDown()
+{
+    m_env.expect_env_repeatedly("KILLGLOBAL", (m_output_dir / "absent-global").generic_string().c_str());
+    open_kill_file(KF_GLOBAL);
+    for (const std::pair<int, SignalHandler> &signal : m_signals)
+    {
+        std::signal(signal.first, signal.second);
+    }
+    g_local_kfp = m_old_local;
+    g_waiting = m_old_waiting;
+    g_no_wait_fork = m_old_no_wait;
+    g_bizarre = m_old_bizarre;
+    NewsgroupSelectorDelegationStateTest::TearDown();
+}
+
+std::string NewsgroupSelectorKillEditorTest::editor_text(const char *name) const
+{
+    std::ifstream input{m_output_dir / name};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSelectedNewsgroup)
+{
+    NewsgroupData *const cursor = g_newsgroup_ptr;
+    const ArticleNum     article = g_art;
+    Article *const       article_pointer = g_artp;
+
+    const char result = run_selector_session(std::string(1, Ctl('k')) + "qQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ("# Global rules\n", editor_text("kill-editor-input"));
+    EXPECT_EQ(m_kill_file.generic_string(), editor_text("kill-editor-file"));
+    EXPECT_EQ(m_output_dir.generic_string(), editor_text("kill-editor-directory"));
+    EXPECT_EQ("kill-editor\n" + m_kill_file.generic_string() + '\n', editor_text("tools.log"));
+    EXPECT_EQ("# Global rules\n/controlled/:j\n", editor_text("global rules/KILL"));
+    EXPECT_FALSE(fs::exists(m_output_dir / "unused-local"));
+    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(cursor, g_newsgroup_ptr);
+    EXPECT_EQ(article, g_art);
+    EXPECT_EQ(article_pointer, g_artp);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_EQ(&m_multirc, g_multirc);
+    EXPECT_EQ(&m_data_source, g_data_source);
+    const std::size_t editing = m_output.find("Editing global KILL file:");
+    ASSERT_NE(std::string::npos, editing);
+    EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp", editing));
+    expect_selector_context();
+    expect_groups_preserved();
+    expect_next_command('Q');
+}
+
 struct MultircSelectorPrompt
 {
     MinorMode                mode;

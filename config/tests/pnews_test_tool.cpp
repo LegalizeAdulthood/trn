@@ -128,6 +128,21 @@ int main(int argc, char **argv)
         }
         return 4;
     }
+    if (role == "kill-editor")
+    {
+        if (argc != 3)
+        {
+            return 16;
+        }
+        const std::filesystem::path path = argv[2];
+        write_file(directory / "kill-editor-input", read_file(path));
+        write_file(directory / "kill-editor-file", path.generic_string());
+        write_file(directory / "kill-editor-directory", std::filesystem::current_path().generic_string());
+        std::ofstream output{path, std::ios::binary | std::ios::app};
+        output << "/controlled/:j\n";
+        output.close();
+        return output.fail() ? 16 : 0;
+    }
     if (role == "score-editor")
     {
         if (argc != 3)

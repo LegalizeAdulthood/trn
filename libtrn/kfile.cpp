@@ -791,9 +791,7 @@ void edit_kill_file()
     fs::create_directories(kill_file.parent_path(), error);
     if (!error)
     {
-        const std::string command =
-            fmt::format("{} {}", file_exp(get_env_var("VISUAL", get_env_var("EDITOR", DEFAULT_EDITOR))),
-                        kill_file.string());
+        const std::string command = editor_command(kill_file.string());
         fmt::print("\nEditing {} KILL file:\n{}\n", g_in_ng ? "local" : "global", command);
         term_down(3);
         reset_tty();                      // make sure tty is friendly

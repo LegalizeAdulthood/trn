@@ -58,6 +58,7 @@ bool        parse_ini_section(const IniSection &section, const IniSchema &schema
 bool        check_ini_cond(std::string_view cond);
 char        menu_get_char();
 int         edit_file(std::string_view fname);
+std::string editor_command(std::string_view expanded_filename);
 
 inline void safe_free(void *ptr)
 {
