@@ -864,6 +864,211 @@ void MultircTraversalStateTest::expect_prompts(std::vector<std::string> groups, 
     }
 }
 
+class MultircRecoveryStateTest : public MultircTraversalStateTest
+{
+protected:
+    void SetUp() override;
+    void prepare_context(bool at_end, bool verbose);
+    void expect_groups_preserved() const;
+    void expect_visible_prompts(int count) const;
+
+    std::array<std::string, 3> m_original_ranges;
+};
+
+void MultircRecoveryStateTest::SetUp()
+{
+    MultircTraversalStateTest::SetUp();
+    add_newsgroup("comp.first", "1-4", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.middle", "1-3", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.last", "1-2", ArticleNum{1}, ArticleNum{6});
+    for (std::size_t index = 0; index < m_original_ranges.size(); ++index)
+    {
+        m_original_ranges[index] = g_newsgroup_data[index].m_rc_line;
+    }
+}
+
+void MultircRecoveryStateTest::prepare_context(bool at_end, bool verbose)
+{
+    g_verbose = verbose;
+    g_start_here = &g_newsgroup_data[at_end ? 2 : 1];
+    set_newsgroup_to_do("comp.*");
+}
+
+void MultircRecoveryStateTest::expect_groups_preserved() const
+{
+    for (std::size_t index = 0; index < m_original_ranges.size(); ++index)
+    {
+        EXPECT_EQ(m_original_ranges[index], g_newsgroup_data[index].m_rc_line);
+        EXPECT_EQ(':', g_newsgroup_data[index].m_subscribe_char);
+    }
+    EXPECT_EQ(nullptr, g_start_here);
+    EXPECT_EQ(nullptr, g_art_fp);
+}
+
+void MultircRecoveryStateTest::expect_visible_prompts(int count) const
+{
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(count, std::count(m_output.begin(), m_output.end(), '?'));
+}
+
+struct MultircRecoveryInput
+{
+    const char *name;
+    const char *command;
+    bool        redraw;
+    const char *message;
+};
+
+class MultircCommandRecoveryTest : public MultircRecoveryStateTest,
+                                   public testing::WithParamInterface<std::tuple<MultircRecoveryInput, bool, bool>>
+{
+};
+
+TEST_P(MultircCommandRecoveryTest, recoveryRetainsThePromptContextAndFollowingCommands)
+{
+    const auto [input, at_end, verbose] = GetParam();
+    prepare_context(at_end, verbose);
+
+    run_groups((at_end ? "n" : "") + std::string{input.command} + (at_end ? "pq" : "nq"));
+
+    expect_prompts(at_end ? std::vector<std::string>{"comp.last", "", "", "comp.last"}
+                          : std::vector<std::string>{"comp.middle", "comp.middle", "comp.last"});
+    expect_visible_prompts(2 + at_end + input.redraw);
+    EXPECT_NE(std::string::npos, m_output.find(input.message));
+    EXPECT_EQ(std::string_view{input.command} == "@", m_output.find("Type h for help.") != std::string::npos);
+    EXPECT_EQ((std::vector<std::string>{"comp.*"}), multirc_restrictions());
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CommandContextAndVerbosity, MultircCommandRecoveryTest,
+    testing::Combine(
+        testing::Values(MultircRecoveryInput{"InvalidKey", "@", true, "Type h for help."},
+                        MultircRecoveryInput{"Erase", "\b", false, ""}, MultircRecoveryInput{"Kill", "\025", false, ""},
+                        MultircRecoveryInput{"Refresh", "\f", true, ""},
+                        MultircRecoveryInput{"CancelledLookup", "g\b", false, ""},
+                        MultircRecoveryInput{"MissingGroup", "g\n", true, "Newsgroup name or number required."},
+                        MultircRecoveryInput{"CancelledSearch", "/comp.partial\025", false, ""},
+                        MultircRecoveryInput{"CancelledRestriction", "O comp.*\025", false, ""}),
+        testing::Bool(), testing::Bool()),
+    [](const testing::TestParamInfo<std::tuple<MultircRecoveryInput, bool, bool>> &info)
+    {
+        return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "End" : "Group") +
+               (std::get<2>(info.param) ? "Verbose" : "Terse");
+    });
+
+class MultircPromptRecoveryTest : public MultircRecoveryStateTest,
+                                  public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircPromptRecoveryTest::SetUp()
+{
+    MultircRecoveryStateTest::SetUp();
+    prepare_context(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
+
+TEST_P(MultircPromptRecoveryTest, interruptedInputRedrawsTheSamePromptBeforeReadingTheNextCommand)
+{
+    const bool                at_end = std::get<0>(GetParam());
+    const TerminalInputReader reader = g_terminal_input_reader;
+    int                       interruptions = 0;
+    g_terminal_input_reader = [&, reader](char *buffer, int count)
+    {
+        if (!interruptions && g_general_mode == GM_READ && (!at_end || !g_newsgroup_ptr))
+        {
+            EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+            EXPECT_EQ(at_end ? MM_FINISH_NEWSGROUP_LIST : MM_NEWSGROUP_LIST, g_mode);
+            EXPECT_EQ(at_end ? "" : "comp.middle", g_newsgroup_ptr ? g_newsgroup_ptr->rc_name() : "");
+            ++interruptions;
+            errno = EINTR;
+            return -1;
+        }
+        return reader(buffer, count);
+    };
+
+    run_groups(at_end ? "npq" : "nq");
+
+    expect_prompts(at_end ? std::vector<std::string>{"comp.last", "", "comp.last"}
+                          : std::vector<std::string>{"comp.middle", "comp.last"});
+    expect_visible_prompts(3 + at_end);
+    EXPECT_EQ(1, interruptions);
+    EXPECT_EQ(0, errno);
+    EXPECT_EQ((std::vector<std::string>{"comp.*"}), multirc_restrictions());
+    expect_groups_preserved();
+}
+
+TEST_P(MultircPromptRecoveryTest, restrictionRemovalDisplaysItsMessageAndConsumesTheQueuedQuit)
+{
+    const bool                at_end = std::get<0>(GetParam());
+    const TerminalInputReader reader = g_terminal_input_reader;
+    bool                      queued = false;
+    g_terminal_input_reader = [&, reader](char *buffer, int count)
+    {
+        const int result = reader(buffer, count);
+        if (!queued && g_general_mode == GM_INPUT && *buffer == '\n')
+        {
+            push_char('q' | 0200);
+            queued = true;
+        }
+        return result;
+    };
+
+    run_groups(at_end ? "no\n" : "o\n");
+
+    expect_prompts(at_end ? std::vector<std::string>{"comp.last", ""} : std::vector<std::string>{"comp.middle"});
+    expect_visible_prompts(2 + at_end);
+    EXPECT_TRUE(queued);
+    EXPECT_NE(std::string::npos, m_output.find(g_verbose ? "Restriction comp.* removed." : "Exiting \"only\"."));
+    EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+    EXPECT_EQ("comp.first", std::string{g_newsgroup_ptr->rc_name()});
+    EXPECT_TRUE(multirc_restrictions().empty());
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_min_to_read);
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(ContextAndVerbosity, MultircPromptRecoveryTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+class MultircQueuedRecoveryTest : public MultircRecoveryStateTest,
+                                  public testing::WithParamInterface<std::tuple<std::string, bool, bool>>
+{
+};
+
+TEST_P(MultircQueuedRecoveryTest, cancellationRetainsQueuedNavigationBeforeTheFollowingTypedQuit)
+{
+    const auto [command, at_end, verbose] = GetParam();
+    prepare_context(at_end, verbose);
+    const TerminalInputReader reader = g_terminal_input_reader;
+    bool                      queued = false;
+    g_terminal_input_reader = [&, reader](char *buffer, int count)
+    {
+        const int result = reader(buffer, count);
+        if (!queued && *buffer == command.back())
+        {
+            push_char((at_end ? 'p' : 'n') | 0200);
+            queued = true;
+        }
+        return result;
+    };
+
+    run_groups((at_end ? "n" : "") + command + "q");
+
+    expect_prompts(at_end ? std::vector<std::string>{"comp.last", "", "comp.last"}
+                          : std::vector<std::string>{"comp.middle", "comp.last"});
+    expect_visible_prompts(2 + at_end);
+    EXPECT_TRUE(queued);
+    EXPECT_EQ((std::vector<std::string>{"comp.*"}), multirc_restrictions());
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(CancellationContextAndVerbosity, MultircQueuedRecoveryTest,
+                         testing::Combine(testing::Values(std::string{"\b"}, std::string{"g\b"},
+                                                          std::string{"O comp.*\025"}),
+                                          testing::Bool(), testing::Bool()));
+
 struct IneligibleMultircGroup
 {
     const char   *name;
@@ -4949,6 +5154,35 @@ TEST_P(MultircSelectorSourceTest, leavingTheSelectorThenSwitchingSourcesHonorsTh
     EXPECT_EQ(1, m_prompts[1].source);
     EXPECT_EQ(command == Ctl('n') ? 2 : 3, m_prompts[2].source);
     EXPECT_EQ(command == Ctl('n') ? "comp.lang.cpp" : "comp.previous", m_prompts[2].group);
+    EXPECT_FALSE(g_use_newsgroup_selector);
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_second_text, read_file(m_other_newsrcs[0].name));
+    EXPECT_EQ(m_third_text, read_file(m_other_newsrcs[1].name));
+}
+
+TEST_P(MultircSelectorSourceTest, switchingSourcesRetainsTheQueuedQuitAtTheRestartedGroupPrompt)
+{
+    const char                command = std::get<0>(GetParam());
+    const TerminalInputReader reader = g_terminal_input_reader;
+    bool                      queued = false;
+    g_terminal_input_reader = [&, reader](char *buffer, int count)
+    {
+        const int result = reader(buffer, count);
+        if (!queued && g_mode == MM_NEWSGROUP_LIST && *buffer == command)
+        {
+            push_char('q' | 0200);
+            queued = true;
+        }
+        return result;
+    };
+
+    run_outer(std::string{'Q', command});
+
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_LIST});
+    EXPECT_TRUE(queued);
+    EXPECT_EQ(command == Ctl('n') ? 2 : 3, g_multirc->m_num);
+    EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+    EXPECT_EQ(command == Ctl('n') ? "comp.lang.cpp" : "comp.previous", std::string{g_newsgroup_ptr->rc_name()});
     EXPECT_FALSE(g_use_newsgroup_selector);
     EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
     EXPECT_EQ(m_second_text, read_file(m_other_newsrcs[0].name));
