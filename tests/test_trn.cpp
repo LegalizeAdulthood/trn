@@ -692,10 +692,11 @@ protected:
 class MultircLoopContext
 {
 public:
-    MultircLoopContext(Newsrc &newsrc, const fs::path &directory);
+    MultircLoopContext(Newsrc &newsrc, const fs::path &directory, bool save_restrictions = true);
     ~MultircLoopContext();
 
 private:
+    bool           m_save_restrictions;
     bool           m_old_univ_selector{g_use_univ_selector};
     bool           m_old_group_selector{g_use_newsgroup_selector};
     bool           m_old_paranoid{g_paranoid};
@@ -705,10 +706,14 @@ private:
     std::string    m_old_message{g_msg};
 };
 
-MultircLoopContext::MultircLoopContext(Newsrc &newsrc, const fs::path &directory)
+MultircLoopContext::MultircLoopContext(Newsrc &newsrc, const fs::path &directory, bool save_restrictions) :
+    m_save_restrictions{save_restrictions}
 {
     search_init();
-    push_only();
+    if (m_save_restrictions)
+    {
+        push_only();
+    }
     g_use_univ_selector = g_use_newsgroup_selector = false;
     g_paranoid = false;
     g_find_last = 0;
@@ -721,7 +726,10 @@ MultircLoopContext::MultircLoopContext(Newsrc &newsrc, const fs::path &directory
 
 MultircLoopContext::~MultircLoopContext()
 {
-    pop_only();
+    if (m_save_restrictions)
+    {
+        pop_only();
+    }
     g_use_univ_selector = m_old_univ_selector;
     g_use_newsgroup_selector = m_old_group_selector;
     g_paranoid = m_old_paranoid;
@@ -4664,6 +4672,460 @@ void NewsgroupSelectorDelegationStateTest::expect_next_command(char command)
     EXPECT_EQ(command, read_tty_char() & 0177);
     EXPECT_FALSE(macro_pending());
 }
+
+struct MultircSelectorPrompt
+{
+    MinorMode                mode;
+    int                      source;
+    std::string              group;
+    std::vector<std::string> rows;
+    std::vector<std::string> ranges;
+    std::vector<std::string> restrictions;
+    ArticleNum               article;
+};
+
+class MultircSelectorStateTest : public NewsgroupSelectorDelegationStateTest
+{
+protected:
+    void               SetUp() override;
+    void               TearDown() override;
+    void               run_outer(std::string commands);
+    void               prepare_sources();
+    void               expect_modes(std::vector<MinorMode> modes) const;
+    static std::string read_file(const fs::path &path);
+
+    std::vector<MultircSelectorPrompt> m_prompts;
+    std::array<Newsrc, 2>              m_other_newsrcs{};
+    std::array<DataSource, 2>          m_other_sources{};
+    const std::string                  m_first_text{"comp.previous: 1-2\ncomp.lang.cpp: 1\ncomp.next: 1-2\n"};
+    const std::string                  m_second_text{"comp.previous: 1-3\ncomp.lang.cpp: 1-2\ncomp.next: 1-3\n"};
+    const std::string                  m_third_text{"comp.previous: 1-2\ncomp.lang.cpp: 1-3\ncomp.next: 1-3\n"};
+
+private:
+    std::optional<MultircLoopContext> m_loop_context;
+    TerminalInputReader               m_old_input{g_terminal_input_reader};
+    bool                              m_old_typeahead{g_allow_typeahead};
+    bool                              m_old_check{g_check_flag};
+    bool                              m_old_suppress{g_suppress_cn};
+    std::string                       m_old_last_group{g_last_newsgroup_name};
+    long                              m_old_last_time{g_last_time};
+    long                              m_old_last_new_time{g_last_new_time};
+    long                              m_old_last_active{g_last_active_size};
+    long                              m_old_last_extra{g_last_extra_num};
+    std::vector<Multirc>              m_old_multircs;
+    bool                              m_sources_prepared{};
+    std::string                       m_commands;
+    std::size_t                       m_input_pos{};
+};
+
+void MultircSelectorStateTest::SetUp()
+{
+    NewsgroupSelectorDelegationStateTest::SetUp();
+    m_loop_context.emplace(m_newsrc, m_output_dir, false);
+    m_newsrc.old_name = m_output_dir / "newsrc.old";
+    std::ofstream{m_newsrc.name} << m_first_text;
+    std::ofstream{m_newsrc.old_name} << m_first_text;
+    m_data_source.m_name = "first";
+    m_data_source.m_flags = DF_OPEN | DF_ACTIVE;
+    g_use_newsgroup_selector = true;
+    g_newsgroup_min_to_read = TR_ONE;
+    g_thread_always = true;
+    g_allow_typeahead = true;
+    g_check_flag = false;
+    g_suppress_cn = false;
+    g_newsgroup_to_read = NewsgroupNum{};
+    for (NewsgroupData &group : g_newsgroup_data)
+    {
+        group.set_to_read(ST_LAX);
+    }
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        MultircSelectorPrompt prompt{};
+        prompt.mode = g_mode;
+        prompt.source = g_multirc ? g_multirc->m_num : -1;
+        prompt.group = g_newsgroup_ptr ? std::string{g_newsgroup_ptr->rc_name()} : "";
+        prompt.restrictions = multirc_restrictions();
+        prompt.article = g_in_ng ? g_art : ArticleNum{};
+        for (const NewsgroupData &group : g_newsgroup_data)
+        {
+            prompt.ranges.emplace_back(group.rc_numbers());
+        }
+        if (g_general_mode == GM_SELECTOR && g_sel_mode == SM_NEWSGROUP)
+        {
+            for (int index = 0; index < g_sel_page_item_cnt; ++index)
+            {
+                prompt.rows.emplace_back(g_sel_items[index].u.np->rc_name());
+            }
+        }
+        m_prompts.push_back(std::move(prompt));
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected outer selector-session input";
+            *buffer = 'q';
+        }
+        else
+        {
+            *buffer = m_commands[m_input_pos++];
+        }
+        return 1;
+    };
+}
+
+void MultircSelectorStateTest::TearDown()
+{
+    if (m_sources_prepared)
+    {
+        unuse_multirc(g_multirc);
+        g_multircs = std::move(m_old_multircs);
+        for (DataSource &source : m_other_sources)
+        {
+            source.close();
+        }
+    }
+    m_data_source.m_act_sf.close();
+    g_terminal_input_reader = m_old_input;
+    g_allow_typeahead = m_old_typeahead;
+    g_check_flag = m_old_check;
+    g_suppress_cn = m_old_suppress;
+    g_last_newsgroup_name = m_old_last_group;
+    g_last_time = m_old_last_time;
+    g_last_new_time = m_old_last_new_time;
+    g_last_active_size = m_old_last_active;
+    g_last_extra_num = m_old_last_extra;
+    m_loop_context.reset();
+    NewsgroupSelectorDelegationStateTest::TearDown();
+}
+
+void MultircSelectorStateTest::run_outer(std::string commands)
+{
+    m_commands = std::move(commands);
+    errno = 0;
+
+    testing::internal::CaptureStdout();
+    do_multirc();
+    m_output = testing::internal::GetCapturedStdout();
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_FALSE(g_restore_old_newsrc);
+}
+
+void MultircSelectorStateTest::prepare_sources()
+{
+    m_old_multircs = std::move(g_multircs);
+    g_multircs = {{&m_newsrc, 1, MF_NONE}, {&m_other_newsrcs[0], 2, MF_NONE}, {&m_other_newsrcs[1], 3, MF_NONE}};
+    g_multirc = &g_multircs[0];
+    m_sources_prepared = true;
+    for (std::size_t index = 0; index < m_other_newsrcs.size(); ++index)
+    {
+        DataSource &source = m_other_sources[index];
+        source.m_name = index == 0 ? "second" : "third";
+        source.m_flags = DF_OPEN;
+        source.m_spool_dir = m_data_source.m_spool_dir;
+        source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
+        ASSERT_EQ(1, source.m_act_sf.open(m_output_dir / "active", "", ""));
+        Newsrc &newsrc = m_other_newsrcs[index];
+        newsrc.data_source = &source;
+        newsrc.name = m_output_dir / (source.m_name + "-newsrc");
+        newsrc.old_name = newsrc.name;
+        newsrc.old_name += ".old";
+        newsrc.new_name = newsrc.name;
+        newsrc.new_name += ".new";
+        newsrc.info_name = newsrc.name;
+        newsrc.info_name += ".info";
+        std::ofstream{newsrc.name} << (index == 0 ? m_second_text : m_third_text);
+    }
+}
+
+void MultircSelectorStateTest::expect_modes(std::vector<MinorMode> modes) const
+{
+    SCOPED_TRACE(m_output);
+    ASSERT_EQ(modes.size(), m_prompts.size());
+    for (std::size_t index = 0; index < modes.size(); ++index)
+    {
+        EXPECT_EQ(modes[index], m_prompts[index].mode) << index;
+    }
+}
+
+std::string MultircSelectorStateTest::read_file(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+class MultircSelectorExitTest : public MultircSelectorStateTest,
+                                public testing::WithParamInterface<std::tuple<char, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircSelectorExitTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+}
+
+TEST_P(MultircSelectorExitTest, selectorQuitAndLeaveCommandsReturnThroughTheOuterLoop)
+{
+    const char  command = std::get<0>(GetParam());
+    std::string input{command};
+    if (command != 'q')
+    {
+        input += 'q';
+    }
+
+    run_outer(input);
+
+    if (command == 'q')
+    {
+        expect_modes({MM_NEWSGROUP_SELECTOR});
+    }
+    else
+    {
+        expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_LIST});
+        EXPECT_EQ("comp.lang.cpp", m_prompts[1].group);
+        EXPECT_FALSE(g_use_newsgroup_selector);
+    }
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.next", "comp.previous"}), m_prompts[0].rows);
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
+    EXPECT_TRUE(fs::exists(m_newsrc.info_name));
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndVerbosity, MultircSelectorExitTest,
+                         testing::Combine(testing::Values('q', 'Q', '`', '\033'), testing::Bool()));
+
+class MultircSelectorSourceTest : public MultircSelectorStateTest,
+                                  public testing::WithParamInterface<std::tuple<char, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircSelectorSourceTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+    prepare_sources();
+}
+
+TEST_P(MultircSelectorSourceTest, switchingSourcesAndReturningRestoresEachSourcesGroupState)
+{
+    const char command = std::get<0>(GetParam());
+    const char reverse = command == Ctl('n') ? Ctl('p') : Ctl('n');
+    set_newsgroup_to_do("comp.lang.cpp");
+
+    run_outer(std::string{command, reverse, 'q'});
+
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR});
+    EXPECT_EQ(1, m_prompts[0].source);
+    EXPECT_EQ(command == Ctl('n') ? 2 : 3, m_prompts[1].source);
+    EXPECT_EQ(1, m_prompts[2].source);
+    EXPECT_EQ(std::vector<std::string>{"comp.lang.cpp"}, m_prompts[0].rows);
+    EXPECT_EQ(std::vector<std::string>{command == Ctl('n') ? "comp.lang.cpp" : "comp.previous"}, m_prompts[1].rows);
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.next", "comp.previous"}), m_prompts[2].rows);
+    EXPECT_FALSE(m_prompts[0].restrictions.empty());
+    EXPECT_TRUE(m_prompts[1].restrictions.empty());
+    EXPECT_TRUE(m_prompts[2].restrictions.empty());
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_second_text, read_file(m_other_newsrcs[0].name));
+    EXPECT_EQ(m_third_text, read_file(m_other_newsrcs[1].name));
+}
+
+TEST_P(MultircSelectorSourceTest, leavingTheSelectorThenSwitchingSourcesHonorsTheRequestedDirection)
+{
+    const char command = std::get<0>(GetParam());
+
+    run_outer(std::string{'Q', command, 'q'});
+
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_LIST, MM_NEWSGROUP_LIST});
+    EXPECT_EQ(1, m_prompts[1].source);
+    EXPECT_EQ(command == Ctl('n') ? 2 : 3, m_prompts[2].source);
+    EXPECT_EQ(command == Ctl('n') ? "comp.lang.cpp" : "comp.previous", m_prompts[2].group);
+    EXPECT_FALSE(g_use_newsgroup_selector);
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_second_text, read_file(m_other_newsrcs[0].name));
+    EXPECT_EQ(m_third_text, read_file(m_other_newsrcs[1].name));
+}
+
+INSTANTIATE_TEST_SUITE_P(DirectionAndVerbosity, MultircSelectorSourceTest,
+                         testing::Combine(testing::Values(Ctl('n'), Ctl('p')), testing::Bool()));
+
+class MultircSelectorReadTest : public MultircSelectorStateTest,
+                                public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircSelectorReadTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    const auto [verbose, threaded] = GetParam();
+    g_verbose = verbose;
+    g_use_threads = threaded;
+}
+
+TEST_P(MultircSelectorReadTest, readingFromTheStartupSelectorReturnsToItsPageAndSavesCompletedReads)
+{
+    run_outer("\nQq");
+
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_ARTICLE, MM_NEWSGROUP_SELECTOR});
+    EXPECT_EQ("comp.lang.cpp", m_prompts[1].group);
+    EXPECT_EQ(ArticleNum{2}, m_prompts[1].article);
+    EXPECT_EQ(" 1-2", m_prompts[2].ranges[1]);
+    EXPECT_EQ("comp.previous: 1-2\ncomp.lang.cpp: 1-2\ncomp.next: 1-2\n", read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+}
+
+TEST_P(MultircSelectorReadTest, readingAnotherSourceDoesNotChangeTheFirstSourcesReadRanges)
+{
+    prepare_sources();
+
+    run_outer(std::string{Ctl('n')} + "\nQ" + std::string{Ctl('p')} + "q");
+
+    expect_modes(
+        {MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_ARTICLE, MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR});
+    EXPECT_EQ(2, m_prompts[2].source);
+    EXPECT_EQ(ArticleNum{3}, m_prompts[2].article);
+    EXPECT_TRUE(m_prompts[3].rows.empty());
+    EXPECT_EQ(1, m_prompts[4].source);
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ("comp.previous: 1-3\ncomp.lang.cpp: 1-3\ncomp.next: 1-3\n", read_file(m_other_newsrcs[0].name));
+    EXPECT_EQ(m_third_text, read_file(m_other_newsrcs[1].name));
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircSelectorReadTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+class MultircUniversalStartupTest : public MultircSelectorStateTest,
+                                    public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void release_child_files();
+    void initialize_child();
+
+private:
+    std::string m_old_trn_dir{g_trn_dir};
+    std::string m_score_file;
+};
+
+void MultircUniversalStartupTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    const auto [group_selector, verbose] = GetParam();
+    g_verbose = verbose;
+    g_use_newsgroup_selector = group_selector;
+    g_use_univ_selector = true;
+    g_trn_dir = (m_output_dir / "private").generic_string();
+    fs::create_directories(fs::path{g_trn_dir} / "univ");
+    std::ofstream{fs::path{g_trn_dir} / "univ/top"} << "\"Local groups\" comp.*\n";
+    m_score_file = (m_output_dir / "saved-scores").generic_string();
+}
+
+void MultircUniversalStartupTest::TearDown()
+{
+    g_trn_dir = m_old_trn_dir;
+    MultircSelectorStateTest::TearDown();
+}
+
+void MultircUniversalStartupTest::release_child_files()
+{
+    m_data_source.m_act_sf.close();
+    back_page_final();
+    fs::current_path(m_output_dir.parent_path());
+}
+
+void MultircUniversalStartupTest::initialize_child()
+{
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(m_output_dir / "active", "", ""));
+    back_page_init();
+    univ_init();
+    g_bizarre = false;
+    g_head_name.clear();
+    set_environment([this](const char *name) -> char *
+                    { return std::string_view{name} == "SAVESCOREFILE" ? m_score_file.data() : nullptr; });
+}
+
+TEST_P(MultircUniversalStartupTest, leavingUniversalStartupContinuesToTheConfiguredNextSelector)
+{
+    release_child_files();
+
+    EXPECT_EXIT(
+        {
+            initialize_child();
+            if (testing::Test::HasFailure())
+            {
+                std::exit(2);
+            }
+            run_outer("Qq");
+            expect_modes({MM_UNIVERSAL, std::get<0>(GetParam()) ? MM_NEWSGROUP_SELECTOR : MM_NEWSGROUP_LIST});
+            EXPECT_EQ(0, g_univ_level);
+            EXPECT_TRUE(g_univ_items.empty());
+            EXPECT_THAT(m_output, testing::HasSubstr("Local groups"));
+            EXPECT_THAT(m_output, testing::HasSubstr("Top Level"));
+            EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+            finalize(testing::Test::HasFailure() ? 1 : 0);
+        },
+        testing::ExitedWithCode(0), ".*");
+
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
+}
+
+TEST_P(MultircUniversalStartupTest, quittingUniversalStartupSavesPendingChangesAndFinalizesWithoutAnotherSelector)
+{
+    m_newsrc.lock_name = m_output_dir / "universal-newsrc.lock";
+    std::ofstream{m_newsrc.lock_name} << "private session lock\n";
+    release_child_files();
+
+    EXPECT_EXIT(
+        {
+            initialize_child();
+            if (testing::Test::HasFailure())
+            {
+                std::exit(2);
+            }
+            g_newsgroup_data[1].m_rc_line.resize(g_newsgroup_data[1].m_num_offset);
+            g_newsgroup_data[1].m_rc_line += " 1-2";
+            g_newsgroup_data[1].m_to_read = ArticleUnread{1};
+            m_newsrc.flags |= RF_RC_CHANGED;
+            const TerminalInputReader reader = g_terminal_input_reader;
+            g_terminal_input_reader = [&](char *buffer, int size)
+            {
+                const int result = reader(buffer, size);
+                std::ofstream(m_output_dir / "universal-input", std::ios::app)
+                    << static_cast<int>(g_mode) << ' ' << g_univ_level << ' ' << g_univ_items.size() << '\n';
+                if (testing::Test::HasFailure())
+                {
+                    std::exit(3);
+                }
+                return result;
+            };
+            run_outer("q");
+            std::exit(4);
+        },
+        testing::ExitedWithCode(0), ".*");
+
+    EXPECT_EQ("comp.previous: 1-2\ncomp.lang.cpp: 1-2\ncomp.next: 1-2\n", read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
+    EXPECT_EQ(std::to_string(static_cast<int>(MM_UNIVERSAL)) + " 1 1\n", read_file(m_output_dir / "universal-input"));
+    EXPECT_FALSE(fs::exists(m_newsrc.lock_name));
+    EXPECT_TRUE(fs::exists(m_newsrc.info_name));
+}
+
+INSTANTIATE_TEST_SUITE_P(NextSelectorAndVerbosity, MultircUniversalStartupTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
 
 class NewsgroupSelectorDelegatedRecoveryTest : public NewsgroupSelectorDelegationStateTest
 {

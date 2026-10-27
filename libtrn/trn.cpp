@@ -773,7 +773,7 @@ do_command:
     case Ctl('p'):            // prev newsrc list
         end_only();
         newline();
-        g_multirc->use_next_multirc();
+        g_multirc->use_prev_multirc();
 display_multirc:
         {
             Newsrc* rp;
