@@ -107,7 +107,7 @@ protected:
         fs::remove_all(m_output_dir, error);
     }
 
-    void open_article_text(std::string_view text)
+    void open_article_text(std::string_view text, const char *mode = "r")
     {
         const fs::path article_file = m_output_dir / "article";
         {
@@ -116,7 +116,7 @@ protected:
         }
 
         const std::string article_file_name = article_file.generic_string();
-        g_art_fp = std::fopen(article_file_name.c_str(), "r");
+        g_art_fp = std::fopen(article_file_name.c_str(), mode);
         ASSERT_NE(nullptr, g_art_fp);
         g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
         g_art_size = g_raw_art_size;
@@ -393,6 +393,182 @@ std::vector<std::string> UnicodeReplacementArticleTest::read_presentation()
     }
     return lines;
 }
+
+std::string repeat_article_text(std::string_view text, int count)
+{
+    std::string result;
+    for (int i = 0; i < count; ++i)
+    {
+        result += text;
+    }
+    return result;
+}
+
+struct LongArticleCase
+{
+    const char      *name;
+    const char      *type;
+    MimeEncoding     encoding;
+    std::string_view prefix;
+    std::string_view wire_fragment;
+    std::string_view text_fragment;
+    int              repetitions;
+    std::string_view terminator;
+    std::string_view following_wire;
+    bool             following_cached;
+};
+
+const LongArticleCase LONG_ARTICLE_CASES[]{
+    {"PlainParagraph", "text/plain; charset=UTF-8", MENCODE_NONE, "Hello\n", "A long paragraph of article text. ",
+     "A long paragraph of article text. ", 1600, "\n", "Afterword\n", false},
+    {"SoftLineBreaks", "text/plain; charset=UTF-8", MENCODE_QPRINT, "Hello\n",
+     "Article=20text=20continues=20here.=20=\n", "Article text continues here. ", 1600, "\n", "Afterword\n", false},
+    {"Base64Paragraph", "text/plain; charset=UTF-8", MENCODE_BASE64, "SGVsbG8K\n",
+     "VXNlbmV0IGFydGljbGUuVXNlbmV0IGFydGljbGUuVXNlbmV0IGFydGljbGUu\n", "Usenet article.Usenet article.Usenet article.",
+     1024, "CkFmdGVyd29yZAo=\n", "", true},
+    {"ExpandingCharset", "text/plain; charset=ISO-8859-1", MENCODE_NONE, "Hello\n", "caf\xE9 ", "caf\xC3\xA9 ", 6000,
+     "\n", "Afterword\n", false}};
+
+void PrintTo(const LongArticleCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class LongArticleBufferTest : public ArticleIoTest, public testing::WithParamInterface<LongArticleCase>
+{
+protected:
+    void SetUp() override;
+    void cache_body();
+
+    std::string                       m_expected;
+    ArticlePosition                   m_long_position;
+    ArticlePosition                   m_following_position;
+    ArticlePosition                   m_raw_after_long;
+    static constexpr std::string_view FOLLOWING{"Afterword\n"};
+};
+
+void LongArticleBufferTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    const LongArticleCase &value = GetParam();
+    g_charsets = "p";
+    reset_char_subst_mode();
+    utf_init("UTF-8", "UTF-8");
+    g_word_wrap_offset = -1;
+    m_mime_section.mime_parse_type(value.type);
+    m_mime_section.m_encoding = value.encoding;
+    g_mime_section = &m_mime_section;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    const std::string wire =
+        repeat_article_text(value.wire_fragment, value.repetitions) + std::string(value.terminator);
+    m_expected = repeat_article_text(value.text_fragment, value.repetitions) + '\n';
+    const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
+    g_header_type[PAST_HEADER].min_pos = body_start;
+    ASSERT_NO_FATAL_FAILURE(open_article_text(
+        std::string(ARTICLE_VIEW_HEADER) + std::string(value.prefix) + wire + std::string(value.following_wire), "rb"));
+    ASSERT_EQ(0, seek_art(body_start));
+    set_art_buf_seek(body_start);
+    std::string prefix;
+    ASSERT_TRUE(read_art_buf(prefix, false));
+    ASSERT_EQ("Hello\n", prefix);
+    m_long_position = art_buf_article_pos();
+    m_following_position = m_long_position + ArticlePosition{static_cast<long>(m_expected.size())};
+    m_raw_after_long = body_start + ArticlePosition{static_cast<long>(value.prefix.size() + wire.size())};
+}
+
+void LongArticleBufferTest::cache_body()
+{
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ(m_expected, line);
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ(FOLLOWING, line);
+}
+
+TEST_P(LongArticleBufferTest, theRawReaderRetainsTheCompleteTextAcrossBufferGrowth)
+{
+    const char *const text = read_art_buf_raw(false);
+
+    ASSERT_NE(nullptr, text);
+    EXPECT_EQ(m_expected + (GetParam().following_cached ? std::string(FOLLOWING) : ""), text);
+    EXPECT_EQ(m_following_position, art_buf_article_pos());
+    EXPECT_EQ(m_raw_after_long, art_buf_seek());
+}
+
+TEST_P(LongArticleBufferTest, theLineReaderReturnsOneCompleteLogicalLineAcrossBufferGrowth)
+{
+    std::string line;
+
+    const bool read = read_art_buf(line, false);
+
+    EXPECT_TRUE(read);
+    EXPECT_EQ(m_expected, line);
+    EXPECT_EQ(m_following_position, art_buf_article_pos());
+    EXPECT_EQ(m_raw_after_long, art_buf_seek());
+    EXPECT_EQ(m_following_position + ArticlePosition{static_cast<long>(FOLLOWING.size())}, g_art_size);
+}
+
+TEST_P(LongArticleBufferTest, readingAfterTheLongLineReturnsTheFollowingLine)
+{
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ(m_expected, line);
+
+    const bool read = read_art_buf(line, false);
+
+    EXPECT_TRUE(read);
+    EXPECT_EQ(FOLLOWING, line);
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_TRUE(art_buf_at_end());
+}
+
+TEST_P(LongArticleBufferTest, aForwardSeekAcrossTheUncachedLongLineFindsTheFollowingLine)
+{
+    std::string line;
+
+    const int  result = seek_art_buf(m_following_position);
+    const bool read = read_art_buf(line, false);
+
+    EXPECT_EQ(0, result);
+    EXPECT_TRUE(read);
+    EXPECT_EQ(FOLLOWING, line);
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+}
+
+TEST_P(LongArticleBufferTest, aSavedLongLinePositionRemainsValidAfterTheBufferGrows)
+{
+    ASSERT_NO_FATAL_FAILURE(cache_body());
+    const ArticlePosition source_position = tell_art();
+    std::string           line;
+
+    const int  result = seek_art_buf(m_long_position);
+    const bool read = read_art_buf(line, false);
+
+    EXPECT_EQ(0, result);
+    EXPECT_TRUE(read);
+    EXPECT_EQ(m_expected, line);
+    EXPECT_EQ(m_following_position, art_buf_article_pos());
+    EXPECT_EQ(source_position, tell_art());
+}
+
+TEST_P(LongArticleBufferTest, aPositionSavedBeforeBufferGrowthStillReadsTheCachedPrefix)
+{
+    ASSERT_NO_FATAL_FAILURE(cache_body());
+    const ArticlePosition source_position = tell_art();
+    std::string           line;
+
+    const int  result = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+    const bool read = read_art_buf(line, false);
+
+    EXPECT_EQ(0, result);
+    EXPECT_TRUE(read);
+    EXPECT_EQ("Hello\n", line);
+    EXPECT_EQ(m_long_position, art_buf_article_pos());
+    EXPECT_EQ(source_position, tell_art());
+}
+
+INSTANTIATE_TEST_SUITE_P(PlainAndDecodedText, LongArticleBufferTest, testing::ValuesIn(LONG_ARTICLE_CASES));
 
 } // namespace
 

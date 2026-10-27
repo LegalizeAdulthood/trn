@@ -64,7 +64,6 @@ PreserveArticleBuffer::~PreserveArticleBuffer()
     s_art_buf_len = m_length;
 }
 
-static char *read_art_buf_raw(bool view_inline);
 static char *art_buf_data();
 static std::size_t art_buf_offset(const char *ptr);
 
@@ -351,7 +350,7 @@ static std::string substitute_art_text(std::string_view text)
     return result;
 }
 
-static char *read_art_buf_raw(bool view_inline)
+char *read_art_buf_raw(bool view_inline)
 {
     char       *bp;
     char       *s;
