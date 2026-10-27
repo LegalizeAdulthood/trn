@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cerrno>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -444,6 +445,162 @@ INSTANTIATE_TEST_SUITE_P(
     CommandModeAndReadScope, EmptySelectorPagingCommandTest,
     testing::Combine(testing::Values('>', '<', '^', Ctl('r'), '$', Ctl('l')),
                      testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool()));
+
+class SelectorEscapedPageState : public SelectorPagingStateTest
+{
+protected:
+    void         SetUp() override;
+    void         TearDown() override;
+    DisplayState escape(char command);
+    void         expect_next_command();
+
+    std::string m_output;
+
+private:
+    void             discard_input();
+    int              m_old_errno{errno};
+    std::string_view m_old_erase{g_tc_CE};
+};
+
+void SelectorEscapedPageState::SetUp()
+{
+    SelectorPagingStateTest::SetUp();
+    discard_input();
+    errno = 0;
+    g_tc_CE = "";
+}
+
+void SelectorEscapedPageState::TearDown()
+{
+    discard_input();
+    errno = m_old_errno;
+    g_tc_CE = m_old_erase;
+    SelectorPagingStateTest::TearDown();
+}
+
+void SelectorEscapedPageState::discard_input()
+{
+    while (macro_pending())
+    {
+        (void) read_tty_char();
+    }
+}
+
+DisplayState SelectorEscapedPageState::escape(char command)
+{
+    push_char('Q' | 0200);
+    push_char(static_cast<unsigned char>(command) | 0200);
+    testing::internal::CaptureStdout();
+    const DisplayState result = sel_command('\\');
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void SelectorEscapedPageState::expect_next_command()
+{
+    ASSERT_TRUE(macro_pending());
+    const std::string next = get_cmd();
+    ASSERT_FALSE(next.empty());
+    EXPECT_EQ('Q', next.front());
+    EXPECT_FALSE(macro_pending());
+}
+
+class SelectorBlankEscapeTest : public SelectorEscapedPageState,
+                                public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+};
+
+TEST_P(SelectorBlankEscapeTest, blankEscapeRetainsThePageCursorSelectionsAndQueuedCommand)
+{
+    const auto [mode, rereading, blank] = GetParam();
+    prepare(mode, rereading);
+    ASSERT_NO_FATAL_FAILURE(position_page(1));
+    g_sel_item_index = 1;
+
+    const DisplayState result = escape(blank);
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_NE(std::string::npos, m_output.find("Cmd: "));
+    expect_page(1, 1, false, false);
+    expect_next_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndBlank, SelectorBlankEscapeTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP,
+                                                          SM_UNIVERSAL),
+                                          testing::Bool(), testing::Values(' ', '\r', '\n')));
+
+class SelectorRefreshEscapeTest : public SelectorEscapedPageState,
+                                  public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+TEST_P(SelectorRefreshEscapeTest, escapedControlCommandRequestsRefreshWithoutChangingThePage)
+{
+    const auto [mode, rereading] = GetParam();
+    prepare(mode, rereading);
+    ASSERT_NO_FATAL_FAILURE(position_page(1));
+    g_sel_item_index = 1;
+
+    const DisplayState result = escape(Ctl('l'));
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(mode, g_sel_mode);
+    EXPECT_EQ(rereading, g_sel_rereading);
+    expect_page(1, 1, false, false);
+    expect_next_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeAndReadScope, SelectorRefreshEscapeTest,
+    testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD, SM_NEWSGROUP, SM_UNIVERSAL), testing::Bool()));
+
+class SelectorGroupEscapeTest : public SelectorEscapedPageState, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(SelectorGroupEscapeTest, commandPromptUsesTheCursorGroupInsteadOfThePreviousGroup)
+{
+    prepare(SM_NEWSGROUP, GetParam());
+    ASSERT_NO_FATAL_FAILURE(position_page(1));
+    g_sel_item_index = 1;
+    NewsgroupData *const target = g_sel_items[1].u.np;
+    std::string          directory{target->rc_line()};
+    std::replace(directory.begin(), directory.end(), '.', '/');
+    g_newsgroup_ptr = g_newsgroup_order.front();
+    g_newsgroup_name = "stale.group";
+
+    const DisplayState result = escape(' ');
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(target, g_newsgroup_ptr);
+    EXPECT_EQ(target->rc_line(), g_newsgroup_name);
+    EXPECT_EQ(directory, g_newsgroup_dir);
+    EXPECT_NE(std::string::npos, m_output.find("[" + std::string(target->rc_line()) + "] Cmd: "));
+    EXPECT_EQ(std::string::npos, m_output.find("stale.group"));
+    expect_page(1, 1, false, false);
+    expect_next_command();
+}
+
+TEST_P(SelectorGroupEscapeTest, anEmptyGroupPageUsesTheEndPromptAndClearsThePreviousGroup)
+{
+    prepare(SM_NEWSGROUP, GetParam(), 0);
+    ASSERT_NO_FATAL_FAILURE(position_page(0));
+    NewsgroupData previous{};
+    g_newsgroup_ptr = &previous;
+
+    const DisplayState result = escape(' ');
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    EXPECT_NE(std::string::npos, m_output.find("[*End*] Cmd: "));
+    expect_page(0, 0, true, false);
+    expect_next_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadScope, SelectorGroupEscapeTest, testing::Bool());
 
 class SelectorExitStateTest : public SelectorPagingStateTest
 {

@@ -853,6 +853,149 @@ TEST_F(SelectorCallbackSearchTest, commandAfterAScrolledErrorIsDispatchedOnceAnd
     expect_next_command('q');
 }
 
+class SelectorScrolledEscapeTest : public SelectorCallbackSearchTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorScrolledEscapeTest, blankEscapeAfterScrolledOutputRequestsRedisplayAndRetainsTheNextKey)
+{
+    const DisplayState result = dispatch('/', std::string("\n\\") + GetParam() + '\n');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find("Null search string"));
+    EXPECT_NE(std::string::npos, m_output.find("Cmd: "));
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_TRUE(article_ptr(ArticleNum{3})->m_flags & AF_UNREAD);
+    EXPECT_TRUE(article_ptr(ArticleNum{4})->m_flags & AF_UNREAD);
+    expect_next_command('q');
+}
+
+TEST_P(SelectorScrolledEscapeTest, blankEscapeAfterScrolledOutputDispatchesTheFollowupCommand)
+{
+    const DisplayState result = dispatch('/', std::string("\n\\") + GetParam() + 'Y');
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    EXPECT_NE(std::string::npos, m_output.find("Null search string"));
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_TRUE(article_ptr(ArticleNum{3})->m_flags & AF_UNREAD);
+    EXPECT_TRUE(article_ptr(ArticleNum{4})->m_flags & AF_UNREAD);
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(SpaceReturnAndNewline, SelectorScrolledEscapeTest, testing::Values(' ', '\r', '\n'));
+
+class SelectorEscapedArticleTest : public SelectorCallbackTest
+{
+protected:
+    void SetUp() override;
+    void expect_article_page();
+    char run_escaped_input(std::string_view commands);
+
+private:
+    std::array<ArticleFlags, 2> m_flags{};
+    Article                   **m_page{};
+};
+
+void SelectorEscapedArticleTest::SetUp()
+{
+    SelectorCallbackTest::SetUp();
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
+    g_sel_items[0].sel = 1;
+    g_sel_items[1].sel = 2;
+    g_sel_item_index = 1;
+    m_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
+    m_page = g_sel_page_app;
+}
+
+void SelectorEscapedArticleTest::expect_article_page()
+{
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(m_flags[0], article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(m_flags[1], article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(m_page, g_sel_page_app);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_sel_items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[1].u.ap);
+}
+
+char SelectorEscapedArticleTest::run_escaped_input(std::string_view commands)
+{
+    const std::string input = std::string(commands) + 'q';
+    for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
+    {
+        push_char(static_cast<unsigned char>(*ch) | 0200);
+    }
+    g_in_ng = true;
+    testing::internal::CaptureStdout();
+    const char result = sel_input();
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+TEST_F(SelectorEscapedArticleTest, escapedModeCommandUsesTheArticleCallbackAndPreservesThePage)
+{
+    const DisplayState result = dispatch('\\', "Y");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    EXPECT_NE(std::string::npos, m_output.find("Cmd: "));
+    expect_article_page();
+    expect_next_command('q');
+}
+
+TEST_F(SelectorEscapedArticleTest, doubleBackslashReportsTheArticleHandlersErrorWithoutReadingAnotherKey)
+{
+    const DisplayState result = dispatch('\\', "\\");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("Type ? for help.", g_msg);
+    expect_article_page();
+    expect_next_command('q');
+}
+
+class SelectorEscapedExitTest : public SelectorEscapedArticleTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorEscapedExitTest, escapedEraseKeyUsesTheNormalSelectorExitPolicy)
+{
+    const DisplayState result = dispatch('\\', std::string(1, GetParam()));
+
+    EXPECT_EQ(DS_QUIT, result);
+    expect_article_page();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(BackspaceAndDelete, SelectorEscapedExitTest, testing::Values('\b', '\177'));
+
+TEST_F(SelectorEscapedArticleTest, escapeOverridesASelectionLetterAndRunsTheCommandOnce)
+{
+    article_ptr(ArticleNum{4})->m_flags &= ~AF_DEL;
+    g_sel_items[1].sel = 0;
+    g_sel_chars = "Rab";
+
+    const char result = run_escaped_input("\\Rq");
+
+    EXPECT_EQ('Q', result);
+    EXPECT_EQ(-1, g_sel_direction);
+    ASSERT_EQ(2, g_art_ptr_list.size());
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_art_ptr_list.front());
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_art_ptr_list.back());
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_TRUE(article_ptr(ArticleNum{3})->m_flags & AF_SEL);
+    EXPECT_FALSE(article_ptr(ArticleNum{4})->m_flags & AF_SEL);
+    const std::size_t second = m_output.find("Second topic");
+    ASSERT_NE(std::string::npos, second);
+    EXPECT_NE(std::string::npos, m_output.find("Selector mode", second));
+    SelectorSessionInputState::expect_next_command('q');
+}
+
 class SelectorShellTest : public SelectorCallbackTest
 {
 protected:
