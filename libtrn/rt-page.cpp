@@ -1646,8 +1646,9 @@ bool prev_page()
     {
         Article** page_app = g_sel_page_app;
 
-        for (Article **app = g_sel_page_app; --app >= article_ptr_list_begin();)
+        for (Article **app = g_sel_page_app; app > article_ptr_list_begin();)
         {
+            --app;
             if ((*app)->m_flags & AF_INCLUDED)
             {
                 page_app = app;
