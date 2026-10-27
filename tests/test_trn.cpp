@@ -1069,6 +1069,151 @@ INSTANTIATE_TEST_SUITE_P(CancellationContextAndVerbosity, MultircQueuedRecoveryT
                                                           std::string{"O comp.*\025"}),
                                           testing::Bool(), testing::Bool()));
 
+struct MultircRefetchPolicy
+{
+    const char *name;
+    bool        expired;
+    int         interval;
+};
+
+class MultircRefetchTest : public MultircTraversalStateTest,
+                           public testing::WithParamInterface<std::tuple<MultircRefetchPolicy, bool>>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_sources(bool refreshed, std::string_view first_range = " 1-6") const;
+
+private:
+    std::vector<DataSource> m_saved_sources;
+    bool                    m_replaced{};
+};
+
+void MultircRefetchTest::SetUp()
+{
+    MultircTraversalStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+    add_newsgroup("comp.first", "1-6", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.middle", "1-6", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.last", "1-6", ArticleNum{1}, ArticleNum{6});
+    m_saved_sources.swap(g_data_sources);
+    g_data_sources.reserve(4);
+    for (int index = 0; index < 4; ++index)
+    {
+        DataSource &source = g_data_sources.emplace_back();
+        source.m_flags = index == 1 ? DF_OPEN : DF_OPEN | DF_ACTIVE;
+        const fs::path original = m_output_dir / ("original-active-" + std::to_string(index));
+        std::ofstream{original} << "comp.first 6 1 y\ncomp.middle 6 1 y\ncomp.last 6 1 y\n";
+        source.m_news_id = original.generic_string();
+        ASSERT_EQ(1, source.m_act_sf.open(original, "", ""));
+        source.m_act_sf.m_last_fetch = 1;
+        source.m_act_sf.m_refetch_secs = index == 3 ? 0 : 1;
+        if (index == 2)
+        {
+            source.m_act_sf.close();
+        }
+    }
+    m_newsrc.data_source = &g_data_sources.front();
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int count)
+    {
+        if (!m_replaced && g_mode == MM_FINISH_NEWSGROUP_LIST)
+        {
+            m_replaced = true;
+            for (std::size_t index = 0; index < g_data_sources.size(); ++index)
+            {
+                const fs::path replacement = m_output_dir / ("replacement-active-" + std::to_string(index));
+                std::ofstream{replacement} << "comp.first 8 1 y\ncomp.middle 8 1 y\ncomp.last 8 1 y\n";
+                g_data_sources[index].m_news_id = replacement.generic_string();
+            }
+            const MultircRefetchPolicy &policy = std::get<0>(GetParam());
+            g_data_sources[0].m_act_sf.m_last_fetch = policy.expired ? 1 : std::time(nullptr) + 3600;
+            g_data_sources[0].m_act_sf.m_refetch_secs = policy.interval;
+        }
+        return reader(buffer, count);
+    };
+}
+
+void MultircRefetchTest::TearDown()
+{
+    for (DataSource &source : g_data_sources)
+    {
+        source.close();
+    }
+    g_data_sources.clear();
+    m_saved_sources.swap(g_data_sources);
+    m_newsrc.data_source = &m_data_source;
+    MultircTraversalStateTest::TearDown();
+}
+
+void MultircRefetchTest::expect_sources(bool refreshed, std::string_view first_range) const
+{
+    EXPECT_TRUE(m_replaced);
+    for (int index : {0, 1, 3})
+    {
+        SCOPED_TRACE(index);
+        ASSERT_EQ(3, g_data_sources[index].m_act_sf.m_lines.size());
+        EXPECT_EQ(index == 0 && refreshed ? "comp.first 8 1 y\n" : "comp.first 6 1 y\n",
+                  g_data_sources[index].m_act_sf.m_lines[0]);
+    }
+    EXPECT_EQ(nullptr, g_data_sources[2].m_act_sf.m_fp);
+    EXPECT_EQ(1, g_data_sources[1].m_act_sf.m_last_fetch);
+    EXPECT_EQ(1, g_data_sources[3].m_act_sf.m_last_fetch);
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        EXPECT_EQ(':', group.m_subscribe_char);
+        EXPECT_EQ(group.rc_name() == "comp.first" ? first_range : " 1-6", group.rc_numbers());
+    }
+}
+
+TEST_P(MultircRefetchTest, anotherTraversalOffersArrivalsOnlyWhenRefetchIsDue)
+{
+    const MultircRefetchPolicy &policy = std::get<0>(GetParam());
+    const bool                  refreshed = policy.expired && policy.interval != 0;
+
+    run_groups("nq");
+
+    expect_prompts(refreshed ? std::vector<std::string>{"", "comp.first"} : std::vector<std::string>{"", ""}, "qnp");
+    expect_sources(refreshed);
+    EXPECT_EQ(refreshed ? ArticleUnread{2} : TR_NONE, m_prompts.back().unread);
+    EXPECT_EQ(refreshed ? ArticleNum{8} : ArticleNum{6}, g_newsgroup_data[0].m_ng_max);
+    EXPECT_TRUE(multirc_restrictions().empty());
+}
+
+TEST_P(MultircRefetchTest, anotherTraversalRetainsRestrictionsWhileRecalculatingUnreadCounts)
+{
+    const MultircRefetchPolicy &policy = std::get<0>(GetParam());
+    const bool                  refreshed = policy.expired && policy.interval != 0;
+    g_newsgroup_data[0].m_rc_line.resize(g_newsgroup_data[0].m_num_offset);
+    g_newsgroup_data[0].m_rc_line += " 1-4";
+    set_newsgroup_to_do("comp.first");
+
+    run_groups("nnq");
+
+    expect_prompts({"comp.first", "", "comp.first"});
+    EXPECT_EQ(ArticleUnread{2}, m_prompts[0].unread);
+    EXPECT_EQ(refreshed ? ArticleUnread{4} : ArticleUnread{2}, m_prompts.back().unread);
+    EXPECT_EQ(" 1-4", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ((std::vector<std::string>{"comp.first"}), multirc_restrictions());
+    for (const MultircGroupPrompt &prompt : m_prompts)
+    {
+        EXPECT_EQ((std::vector<std::string>{"comp.first"}), prompt.restrictions);
+        EXPECT_EQ(ArticleUnread{2}, prompt.minimum_unread);
+    }
+    expect_sources(refreshed, " 1-4");
+}
+
+INSTANTIATE_TEST_SUITE_P(IntervalAndVerbosity, MultircRefetchTest,
+                         testing::Combine(testing::Values(MultircRefetchPolicy{"Expired", true, 1},
+                                                          MultircRefetchPolicy{"Fresh", false, 3600},
+                                                          MultircRefetchPolicy{"Disabled", true, 0}),
+                                          testing::Bool()),
+                         [](const testing::TestParamInfo<std::tuple<MultircRefetchPolicy, bool>> &info)
+                         {
+                             return std::string{std::get<0>(info.param).name} +
+                                    (std::get<1>(info.param) ? "Verbose" : "Terse");
+                         });
+
 struct IneligibleMultircGroup
 {
     const char   *name;
@@ -4051,6 +4196,252 @@ void RemoteNewsgroupReadingStateTest::expect_entry(bool threaded)
     expect_body(2);
     expect_header(3);
 }
+
+class MultircServerLossTest : public RemoteNewsgroupReadingStateTest,
+                              public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_server_loss();
+    void run_outer(std::string commands);
+    void expect_recovery(std::string_view ranges) const;
+
+    std::vector<std::string> m_group_prompts;
+    std::vector<ArticleNum>  m_read_articles;
+
+private:
+    static std::string read_file(const fs::path &path);
+
+    std::optional<MultircLoopContext> m_loop_context;
+    DataSource                        m_remaining_source{};
+    Newsrc                            m_remaining_newsrc{};
+    std::string                       m_original_failed;
+    std::string                       m_original_remaining;
+    std::string                       m_commands;
+    std::size_t                       m_position{};
+    int                               m_pauses{};
+    std::string                       m_diagnostic;
+    TerminalInputReader               m_parent_reader;
+    bool                              m_old_check{g_check_flag};
+    bool                              m_old_suppress{g_suppress_cn};
+    std::string                       m_old_last_group{g_last_newsgroup_name};
+    long                              m_old_last_new_time{g_last_new_time};
+};
+
+void MultircServerLossTest::SetUp()
+{
+    RemoteNewsgroupReadingStateTest::SetUp();
+    const auto [remaining, verbose, threaded] = GetParam();
+    g_verbose = verbose;
+    g_check_flag = false;
+    g_suppress_cn = true;
+    g_thread_always = true;
+    g_newsgroup_min_to_read = TR_ONE;
+    m_loop_context.emplace(m_newsrc, m_output_dir);
+    m_newsrc.old_name = m_output_dir / "newsrc.old";
+    m_data_source.m_flags |= DF_OPEN | DF_ACTIVE;
+    m_remaining_source.m_flags = DF_OPEN | DF_ACTIVE;
+    m_remaining_source.m_news_id = (m_output_dir / "active").generic_string();
+    m_remaining_source.m_spool_dir = m_output_dir.generic_string();
+    ASSERT_EQ(1, m_remaining_source.m_act_sf.open(m_remaining_source.m_news_id, "", ""));
+    m_remaining_newsrc.data_source = &m_remaining_source;
+    m_remaining_newsrc.name = m_output_dir / "remaining-newsrc";
+    m_remaining_newsrc.old_name = m_output_dir / "remaining-newsrc.old";
+    m_remaining_newsrc.new_name = m_output_dir / "remaining-newsrc.new";
+    m_remaining_newsrc.info_name = m_output_dir / "remaining-newsrc.info";
+    m_remaining_newsrc.lock_name = m_output_dir / "remaining-newsrc.lock";
+    m_remaining_newsrc.flags = remaining ? RF_ACTIVE : RF_NONE;
+    m_newsrc.next = remaining ? &m_remaining_newsrc : nullptr;
+    for (NewsgroupData &group : g_newsgroup_data)
+    {
+        const std::string line = std::string{group.rc_name()} + ":" + std::string{group.rc_numbers()} + "\n";
+        if (remaining && group.rc_name() != "comp.lang.cpp")
+        {
+            group.m_rc = &m_remaining_newsrc;
+            m_original_remaining += line;
+        }
+        else
+        {
+            m_original_failed += line;
+        }
+    }
+    std::ofstream{m_newsrc.name} << m_original_failed;
+    std::ofstream{m_newsrc.old_name} << m_original_failed;
+    std::ofstream{m_remaining_newsrc.name} << m_original_remaining;
+    std::ofstream{m_remaining_newsrc.old_name} << m_original_remaining;
+    std::ofstream{m_output_dir / "unrelated"} << "unrelated file\n";
+    g_start_here = &g_newsgroup_data[1];
+    set_newsgroup_to_do("comp.*");
+    m_parent_reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        if (g_mode == MM_ANY_KEY_PROMPT)
+        {
+            ++m_pauses;
+        }
+        else if (g_mode == MM_NEWSGROUP_LIST)
+        {
+            EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+            EXPECT_FALSE(g_in_ng);
+            EXPECT_EQ(nullptr, g_art_fp);
+            m_group_prompts.emplace_back(g_newsgroup_ptr->rc_name());
+        }
+        else
+        {
+            EXPECT_TRUE(g_in_ng);
+            EXPECT_EQ(g_art, g_curr_art);
+            EXPECT_EQ(g_artp, g_curr_artp);
+            m_read_articles.push_back(g_art);
+        }
+        if (m_position == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected outer server-loss input";
+            *buffer = 'q';
+        }
+        else
+        {
+            *buffer = m_commands[m_position++];
+        }
+        return 1;
+    };
+    expect_entry(threaded);
+}
+
+void MultircServerLossTest::TearDown()
+{
+    if (g_multirc == &m_multirc)
+    {
+        unuse_multirc(&m_multirc);
+    }
+    g_nntp_link.connection.reset();
+    m_data_source.m_nntp_link.connection.reset();
+    m_data_source.close();
+    m_remaining_source.close();
+    g_terminal_input_reader = m_parent_reader;
+    g_check_flag = m_old_check;
+    g_suppress_cn = m_old_suppress;
+    g_last_newsgroup_name = m_old_last_group;
+    g_last_new_time = m_old_last_new_time;
+    m_loop_context.reset();
+    RemoteNewsgroupReadingStateTest::TearDown();
+}
+
+void MultircServerLossTest::expect_server_loss()
+{
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("GROUP comp.lang.cpp"), testing::_)).InSequence(m_protocol);
+    EXPECT_CALL(*m_connection, read_line(testing::_))
+        .InSequence(m_protocol)
+        .WillOnce(
+            [](error_code_t &error)
+            {
+                error = boost::asio::error::connection_reset;
+                return std::string{};
+            });
+    EXPECT_CALL(*m_connection, write_line(testing::StrEq("QUIT"), testing::_))
+        .InSequence(m_protocol)
+        .WillOnce([](const std::string &, error_code_t &error) { error = boost::asio::error::connection_reset; });
+}
+
+void MultircServerLossTest::run_outer(std::string commands)
+{
+    m_commands = std::move(commands);
+    set_mode(GM_READ, MM_NEWSGROUP_LIST);
+    errno = 0;
+
+    testing::internal::CaptureStdout();
+    testing::internal::CaptureStderr();
+    do_multirc();
+    m_diagnostic = testing::internal::GetCapturedStderr();
+    m_output = testing::internal::GetCapturedStdout();
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ(m_commands.size(), m_position);
+    EXPECT_EQ(2, m_pauses);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_FALSE(macro_pending());
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_FALSE(g_restore_old_newsrc);
+}
+
+std::string MultircServerLossTest::read_file(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void MultircServerLossTest::expect_recovery(std::string_view ranges) const
+{
+    const bool        remaining = std::get<0>(GetParam());
+    const std::string failed_text =
+        remaining ? "comp.lang.cpp:" + std::string{ranges} + "\n"
+                  : "comp.previous: 1-2\ncomp.lang.cpp:" + std::string{ranges} + "\ncomp.next: 1-2\n";
+    EXPECT_EQ(failed_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_original_failed, read_file(m_newsrc.old_name));
+    EXPECT_EQ(m_original_remaining, read_file(m_remaining_newsrc.name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    EXPECT_FALSE(fs::exists(m_remaining_newsrc.new_name));
+    EXPECT_EQ("unrelated file\n", read_file(m_output_dir / "unrelated"));
+    EXPECT_NE(DF_NONE, m_data_source.m_flags & DF_UNAVAILABLE);
+    EXPECT_EQ(DF_NONE, m_data_source.m_flags & DF_OPEN);
+    EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_ACTIVE);
+    EXPECT_EQ((std::vector<std::string>{"comp.*"}), multirc_restrictions());
+    EXPECT_THAT(m_diagnostic, testing::HasSubstr("503 Server closed connection."));
+    EXPECT_EQ(remaining ? &m_multirc : nullptr, g_multirc);
+    EXPECT_EQ(remaining ? 2 : 0, g_newsgroup_data.size());
+    EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+    if (remaining)
+    {
+        ASSERT_NE(nullptr, g_newsgroup_ptr);
+        EXPECT_EQ("comp.previous", g_newsgroup_ptr->rc_name());
+        EXPECT_EQ(&m_remaining_newsrc, g_newsgroup_ptr->m_rc);
+        EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
+        EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+        EXPECT_EQ("ynq", g_default_cmd);
+        EXPECT_EQ(RF_NONE, m_remaining_newsrc.flags & RF_RC_CHANGED);
+    }
+    else
+    {
+        EXPECT_EQ(nullptr, g_newsgroup_ptr);
+    }
+}
+
+TEST_P(MultircServerLossTest, groupAccessFailureAfterReadingRestartsOrQuitsWithTheReadMarksSaved)
+{
+    expect_server_loss();
+
+    run_outer(std::string{"yQy  "} + (std::get<0>(GetParam()) ? "q" : ""));
+
+    expect_recovery(" 1-2");
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{2}}), m_read_articles);
+    EXPECT_EQ((std::get<0>(GetParam()) ? std::vector<std::string>{"comp.lang.cpp", "comp.lang.cpp", "comp.previous"}
+                                       : std::vector<std::string>{"comp.lang.cpp", "comp.lang.cpp"}),
+              m_group_prompts);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
+}
+
+TEST_P(MultircServerLossTest, serverLossAtExhaustionRestartsOrQuitsWithAllCompletedReadsSaved)
+{
+    expect_body(3);
+    expect_server_loss();
+
+    run_outer(std::string{"ynn  "} + (std::get<0>(GetParam()) ? "q" : ""));
+
+    expect_recovery(" 1-3");
+    EXPECT_EQ((std::vector<ArticleNum>{ArticleNum{2}, ArticleNum{3}}), m_read_articles);
+    EXPECT_EQ((std::get<0>(GetParam()) ? std::vector<std::string>{"comp.lang.cpp", "comp.previous"}
+                                       : std::vector<std::string>{"comp.lang.cpp"}),
+              m_group_prompts);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+}
+
+INSTANTIATE_TEST_SUITE_P(RemainingSourceVerbosityAndThreading, MultircServerLossTest,
+                         testing::Combine(testing::Bool(), testing::Bool(), testing::Bool()));
 
 class RemoteNewsgroupFailureReadingTest : public RemoteNewsgroupReadingStateTest,
                                           public testing::WithParamInterface<std::tuple<ReadingServerFailure, bool>>
