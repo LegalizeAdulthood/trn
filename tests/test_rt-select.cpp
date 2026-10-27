@@ -10,6 +10,8 @@
 #include <trn/final.h>
 #include <trn/intrp.h>
 #include <trn/ng.h>
+#include <trn/ngstuff.h>
+#include <trn/respond.h>
 #include <trn/rt-page.h>
 #include <trn/rt-util.h>
 #include <trn/rthread.h>
@@ -19,6 +21,7 @@
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/univ.h>
+#include <trn/util.h>
 
 #include <config/fdio.h>
 
@@ -28,14 +31,23 @@
 #include <fcntl.h>
 #endif
 
+#include <test_config.h>
+#include <test_process_config.h>
+
+#include "mock_env.h"
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cerrno>
+#include <csignal>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <optional>
 #include <thread>
 #include <tuple>
@@ -837,6 +849,280 @@ TEST_F(SelectorCallbackSearchTest, commandAfterAScrolledErrorIsDispatchedOnceAnd
     EXPECT_NE(std::string::npos, m_output.find("Type ? for help."));
     EXPECT_EQ(0, g_selected_count);
     expect_next_command('q');
+}
+
+class SelectorShellTest : public SelectorCallbackTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::string shell_command(bool output = false, bool fail = false) const;
+    std::string read_file(const std::filesystem::path &path) const;
+    void        expect_directory(const std::filesystem::path &expected);
+    void        expect_selector_preserved();
+    void        expect_one_shell();
+
+    std::filesystem::path m_start;
+    std::filesystem::path m_private;
+    std::filesystem::path m_root;
+
+private:
+    using SignalHandler = void (*)(int);
+    trn::testing::MockEnvironment              m_env;
+    std::vector<std::pair<int, SignalHandler>> m_signals;
+    std::filesystem::path                      m_old_directory{std::filesystem::current_path()};
+    std::string                                m_old_private{g_priv_dir};
+    bool                                       m_old_bizarre{g_bizarre};
+    bool                                       m_old_check{g_check_flag};
+    bool                                       m_old_waiting{g_waiting};
+    bool                                       m_old_no_wait{g_no_wait_fork};
+    bool                                       m_old_one_command{g_one_command};
+    bool                                       m_old_mouse_down{g_mouse_is_down};
+    std::string_view                           m_old_backspace{g_tc_BC};
+    int                                        m_old_perform_count{g_perform_count};
+    int                                        m_old_mail_count{g_mail_count};
+    std::array<ArticleFlags, 2>                m_flags{};
+    Article                                  **m_page{};
+    ArticleNum                                 m_article_number{};
+    Article                                   *m_article{};
+};
+
+void SelectorShellTest::SetUp()
+{
+    EXPECT_CALL(m_env.getter, Call(testing::_)).WillRepeatedly(testing::Invoke(std::getenv));
+    SelectorCallbackTest::SetUp();
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_root = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
+    m_start = m_root / "spool dir";
+    m_private = m_root / "private dir";
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    ASSERT_FALSE(error) << error.message();
+    std::filesystem::create_directories(m_start);
+    std::filesystem::create_directories(m_private);
+    std::ofstream(m_start / "shell-input", std::ios::binary) << "Controlled selector shell output.\n";
+    std::ofstream(m_private / "shell-input", std::ios::binary) << "Controlled selector shell output.\n";
+    std::filesystem::current_path(m_start);
+    g_priv_dir = m_private.generic_string();
+    g_check_flag = false;
+    g_waiting = g_no_wait_fork = g_one_command = false;
+    g_perform_count = 0;
+    for (const int number : {
+             SIGINT,
+#ifdef SIGQUIT
+             SIGQUIT,
+#endif
+#ifdef SIGTSTP
+             SIGTSTP,
+             SIGTTOU,
+             SIGTTIN,
+#endif
+         })
+    {
+        m_signals.emplace_back(number, std::signal(number, SIG_IGN));
+    }
+    m_env.expect_no_envars({"NNTPSERVER", "NNTP_FORCE_AUTH", "NEWSACTIVE", "NEWSDESCRIPTIONS", "QUOTECHARS"});
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", m_root.generic_string().c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "");
+    m_env.expect_env_repeatedly("SHELL", TRN_TEST_PROCESS_TOOL);
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
+    g_sel_items[0].sel = 1;
+    g_sel_items[1].sel = 2;
+    g_sel_item_index = 1;
+    m_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
+    m_page = g_sel_page_app;
+    m_article_number = g_art;
+    m_article = g_artp;
+    g_term_line = g_sel_last_line;
+    g_term_col = 0;
+    g_tc_BC = "\b";
+}
+
+void SelectorShellTest::TearDown()
+{
+    for (const std::pair<int, SignalHandler> &signal : m_signals)
+    {
+        std::signal(signal.first, signal.second);
+    }
+    g_priv_dir = m_old_private;
+    g_bizarre = m_old_bizarre;
+    g_check_flag = m_old_check;
+    g_waiting = m_old_waiting;
+    g_no_wait_fork = m_old_no_wait;
+    g_one_command = m_old_one_command;
+    g_mouse_is_down = m_old_mouse_down;
+    g_tc_BC = m_old_backspace;
+    g_perform_count = m_old_perform_count;
+    g_mail_count = m_old_mail_count;
+    std::error_code error;
+    std::filesystem::current_path(m_old_directory, error);
+    EXPECT_FALSE(error) << error.message();
+    std::filesystem::remove_all(m_root, error);
+    EXPECT_FALSE(error) << error.message();
+    SelectorCallbackTest::TearDown();
+}
+
+std::string SelectorShellTest::shell_command(bool output, bool fail) const
+{
+#ifdef USE_SPAWN_SHELL
+    return std::string(output ? "type shell-input & " : "") + "cd > shell-cwd" + (fail ? " & exit 7" : "");
+#else
+    return std::string(output ? "cat shell-input; " : "") + "pwd > shell-cwd" + (fail ? "; exit 7" : "");
+#endif
+}
+
+std::string SelectorShellTest::read_file(const std::filesystem::path &path) const
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+void SelectorShellTest::expect_directory(const std::filesystem::path &expected)
+{
+    std::string directory = read_file(expected / "shell-cwd");
+    directory.erase(directory.find_last_not_of("\r\n") + 1);
+    ASSERT_FALSE(directory.empty());
+    EXPECT_TRUE(std::filesystem::equivalent(expected, directory));
+    EXPECT_TRUE(std::filesystem::equivalent(m_start, std::filesystem::current_path()));
+}
+
+void SelectorShellTest::expect_selector_preserved()
+{
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    EXPECT_EQ(m_article_number, g_art);
+    EXPECT_EQ(m_article, g_artp);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(m_flags[0], article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(m_flags[1], article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(m_page, g_sel_page_app);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_sel_items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[1].u.ap);
+    EXPECT_EQ(1, g_sel_items[0].sel);
+    EXPECT_EQ(2, g_sel_items[1].sel);
+    EXPECT_FALSE(g_one_command);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+}
+
+void SelectorShellTest::expect_one_shell()
+{
+#ifdef USE_SPAWN_SHELL
+    constexpr std::string_view role = "/c";
+#else
+    constexpr std::string_view role = "-c";
+#endif
+    EXPECT_EQ(role, read_file(m_root / "shell-used"));
+    const std::string log = read_file(m_root / "tools.log");
+    const std::string invocation = std::string(role) + '\n';
+    EXPECT_EQ(0, log.find(invocation));
+    EXPECT_EQ(std::string::npos, log.find(invocation, invocation.size()));
+    EXPECT_EQ(1, g_perform_count);
+}
+
+class SelectorShellCancelTest : public SelectorShellTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorShellCancelTest, erasingTheEscapeReturnsToThePromptWithoutStartingAShell)
+{
+    const DisplayState result = dispatch('!', std::string(1, GetParam()));
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(0, g_perform_count);
+    EXPECT_FALSE(std::filesystem::exists(m_root / "tools.log"));
+    EXPECT_FALSE(std::filesystem::exists(m_private / "shell-cwd"));
+    EXPECT_TRUE(std::filesystem::equivalent(m_start, std::filesystem::current_path()));
+    expect_selector_preserved();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(EraseAndKill, SelectorShellCancelTest, testing::Values(Ctl('_'), Ctl('u')));
+
+class SelectorShellDirectoryTest : public SelectorShellTest, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(SelectorShellDirectoryTest, quietEscapeUsesTheRequestedDirectoryAndRequestsRedisplay)
+{
+    const bool spool = GetParam();
+
+    const DisplayState result = dispatch('!', std::string(spool ? "!" : "") + shell_command() + "\n\n");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_directory(spool ? m_start : m_private);
+    expect_one_shell();
+    expect_selector_preserved();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(PrivateAndSpool, SelectorShellDirectoryTest, testing::Bool());
+
+TEST_F(SelectorShellTest, scrolledEscapeDisplaysItsOutputAndRequestsAFullPage)
+{
+    g_sel_last_line = g_tc_LINES - 1;
+    g_term_line = g_sel_last_line;
+
+    const DisplayState result = dispatch('!', shell_command(true) + "\n\n");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_GT(g_term_scrolled, 0);
+    EXPECT_NE(std::string::npos, m_output.find("Controlled selector shell output."));
+    expect_directory(m_private);
+    expect_one_shell();
+    expect_selector_preserved();
+    expect_next_command('q');
+}
+
+TEST_F(SelectorShellTest, failedEscapeRestoresTheDirectoryAndSelectorBeforeAcceptingMoreInput)
+{
+    g_term_line = g_sel_last_line + 1;
+
+    const DisplayState result = dispatch('!', shell_command(true, true) + "\n\n");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_NE(std::string::npos, m_output.find("Controlled selector shell output."));
+    expect_directory(m_private);
+    expect_one_shell();
+    expect_selector_preserved();
+    expect_next_command('q');
+}
+
+TEST_F(SelectorShellTest, followupCommandUsesTheRestoredArticleCallbackWithoutRepeatingTheShell)
+{
+    g_term_line = g_sel_last_line + 1;
+
+    const DisplayState result = dispatch('!', shell_command() + "\nY");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    expect_directory(m_private);
+    expect_one_shell();
+    expect_selector_preserved();
+    expect_next_command('q');
+}
+
+TEST_F(SelectorShellTest, selectorLoopRedrawsItsRowsAfterTheShellAndRetainsTheFollowingCommand)
+{
+    g_in_ng = true;
+    g_term_line = g_sel_last_line + 1;
+
+    const char result = run_input('!' + shell_command(true) + "\n\nq");
+
+    EXPECT_EQ('Q', result);
+    EXPECT_NE(std::string::npos, m_output.find("Controlled selector shell output."));
+    EXPECT_NE(std::string::npos, m_output.find("Second topic"));
+    expect_directory(m_private);
+    expect_one_shell();
+    expect_selector_preserved();
+    SelectorSessionInputState::expect_next_command('q');
 }
 
 using SelectorExitCommand = std::pair<char, char>;
