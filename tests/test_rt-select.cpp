@@ -11,6 +11,8 @@
 #include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/ngstuff.h>
+#include <trn/opt.h>
+#include <trn/OptionCatalog.h>
 #include <trn/respond.h>
 #include <trn/rt-page.h>
 #include <trn/rt-util.h>
@@ -1124,6 +1126,315 @@ TEST_F(SelectorShellTest, selectorLoopRedrawsItsRowsAfterTheShellAndRetainsTheFo
     expect_selector_preserved();
     SelectorSessionInputState::expect_next_command('q');
 }
+
+class SelectorOptionTest : public SelectorCallbackTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_article_context();
+    char run_option_session(std::string_view commands);
+
+private:
+    const OptionCatalog         m_catalog;
+    OptionValueList             m_old_defaults{std::move(g_option_def_vals)};
+    OptionValueList             m_old_saved{std::move(g_option_saved_vals)};
+    OptionDraft                *m_old_draft{g_option_draft};
+    OptionFlags                *m_old_flags{g_option_flags};
+    int                         m_old_page{g_sel_page_op};
+    bool                        m_old_one_command{g_one_command};
+    bool                        m_old_mouse_down{g_mouse_is_down};
+    bool                        m_old_novice_delays{g_novice_delays};
+    int                         m_old_perform_count{g_perform_count};
+    SelectionMode               m_old_thread_mode{g_sel_thread_mode};
+    SelectionSortMode           m_old_thread_sort{g_sel_thread_sort};
+    std::string                 m_old_commands{g_option_sel_cmds};
+    std::string_view            m_old_backspace{g_tc_BC};
+    std::string_view            m_old_clear{g_tc_CD};
+    std::vector<OptionFlags>    m_flags;
+    std::array<ArticleFlags, 2> m_article_flags{};
+    ArticleNum                  m_article_number{};
+    Article                    *m_article{};
+};
+
+void SelectorOptionTest::SetUp()
+{
+    SelectorCallbackTest::SetUp();
+    m_flags.assign(static_cast<std::size_t>(m_catalog.row_count() + 1), OF_NONE);
+    m_flags[m_catalog.previous_group_row(m_catalog.row_for(OI_TERSE_OUTPUT))] = OF_SEL;
+    g_option_flags = m_flags.data();
+    g_option_def_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
+    g_option_saved_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
+    g_option_draft = nullptr;
+    g_option_sel_cmds = "Z>";
+    g_one_command = false;
+    g_novice_delays = false;
+    g_perform_count = 0;
+    g_tc_BC = "\b";
+    g_tc_CD = "";
+    g_term_line = g_sel_last_line;
+    g_term_col = 0;
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
+    g_sel_items[0].sel = 1;
+    g_sel_items[1].sel = 2;
+    g_sel_item_index = 1;
+    m_article_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
+    m_article_number = g_art;
+    m_article = g_artp;
+}
+
+void SelectorOptionTest::TearDown()
+{
+    g_option_def_vals = std::move(m_old_defaults);
+    g_option_saved_vals = std::move(m_old_saved);
+    g_option_draft = m_old_draft;
+    g_option_flags = m_old_flags;
+    g_sel_page_op = m_old_page;
+    g_one_command = m_old_one_command;
+    g_mouse_is_down = m_old_mouse_down;
+    g_novice_delays = m_old_novice_delays;
+    g_perform_count = m_old_perform_count;
+    g_sel_thread_mode = m_old_thread_mode;
+    g_sel_thread_sort = m_old_thread_sort;
+    g_option_sel_cmds = m_old_commands;
+    g_tc_BC = m_old_backspace;
+    g_tc_CD = m_old_clear;
+    SelectorCallbackTest::TearDown();
+}
+
+void SelectorOptionTest::expect_article_context()
+{
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_FALSE(g_sel_exclusive);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(m_article_flags[0], article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(m_article_flags[1], article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(m_article_number, g_art);
+    EXPECT_EQ(m_article, g_artp);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+    EXPECT_EQ(nullptr, g_option_draft);
+    EXPECT_FALSE(g_one_command);
+}
+
+char SelectorOptionTest::run_option_session(std::string_view commands)
+{
+    g_in_ng = true;
+    article_ptr(ArticleNum{4})->m_flags &= ~AF_DEL;
+    push_string(std::string(commands) + 'q', 0200);
+    testing::internal::CaptureStdout();
+    const char result = article_selector('a');
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+class SelectorInlineOptionTest : public SelectorOptionTest, public testing::WithParamInterface<const char *>
+{
+};
+
+TEST_P(SelectorInlineOptionTest, appliesTheOptionAndReturnsToTheArticlePrompt)
+{
+    Article **const page = g_sel_page_app;
+
+    const DisplayState result = dispatch('&', std::string(GetParam()) + '\n');
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_FALSE(g_verbose);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(page, g_sel_page_app);
+    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(2, g_sel_page_item_cnt);
+    expect_article_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(SwitchAndAssignment, SelectorInlineOptionTest, testing::Values("-t", "Terse Output=yes"));
+
+class SelectorOptionCancelTest : public SelectorOptionTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(SelectorOptionCancelTest, erasedOptionCommandLeavesSettingsAndArticleContextUntouched)
+{
+    const DisplayState result = dispatch('&', std::string(1, GetParam()));
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_TRUE(g_verbose);
+    EXPECT_EQ(0, g_perform_count);
+    expect_article_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(EraseAndKill, SelectorOptionCancelTest, testing::Values(Ctl('_'), Ctl('u')));
+
+class SelectorModeOptionTest : public SelectorOptionTest, public testing::WithParamInterface<const char *>
+{
+};
+
+TEST_P(SelectorModeOptionTest, changingTheRequestedModeRestoresTheCallerAndRequestsARestart)
+{
+    const DisplayState result = dispatch('&', std::string(GetParam()) + '\n');
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(SM_SUBJECT, g_sel_default_mode);
+    EXPECT_EQ(1, g_perform_count);
+    expect_article_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(SwitchAndAssignment, SelectorModeOptionTest,
+                         testing::Values("-Os", "News Selector Mode=subjects"));
+
+TEST_F(SelectorOptionTest, scrolledOptionInputDispatchesTheFollowupThroughTheArticleCallback)
+{
+    g_term_line = g_sel_last_line + 1;
+
+    const DisplayState result = dispatch('&', "Terse Output=yes\nY");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_FALSE(g_verbose);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    EXPECT_EQ(1, g_perform_count);
+    expect_article_context();
+    expect_next_command('q');
+}
+
+using NestedOptionExit = std::pair<char, bool>;
+
+class SelectorNestedOptionTest : public SelectorOptionTest, public testing::WithParamInterface<NestedOptionExit>
+{
+};
+
+TEST_P(SelectorNestedOptionTest, returningFromTheOptionSelectorAppliesOrAbandonsItsDraft)
+{
+    const auto [exit, accepted] = GetParam();
+
+    const DisplayState result = dispatch('&', std::string("\nb \n") + exit);
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_EQ(!accepted, g_verbose);
+    EXPECT_EQ(1, g_perform_count);
+    EXPECT_NE(std::string::npos, m_output.find("Options"));
+    EXPECT_NE(std::string::npos, m_output.find("Change `Terse Output'"));
+    expect_article_context();
+    expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(UseAndAbandon, SelectorNestedOptionTest,
+                         testing::Values(NestedOptionExit{'\t', true}, NestedOptionExit{'Z', true},
+                                         NestedOptionExit{'q', false}, NestedOptionExit{'Q', false},
+                                         NestedOptionExit{'\033', false}));
+
+TEST_F(SelectorOptionTest, acceptingAnUnchangedNestedValueLeavesTheSettingUnmodified)
+{
+    const DisplayState result = dispatch('&', "\nb\n\t");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_TRUE(g_verbose);
+    EXPECT_FALSE(g_option_saved_vals[OI_TERSE_OUTPUT].has_value());
+    expect_article_context();
+    expect_next_command('q');
+}
+
+TEST_F(SelectorOptionTest, abandoningNestedOptionsPreservesTheReadScopeAndItsSelections)
+{
+    prepare_input(SM_ARTICLE, true);
+    article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    const ArticleFlags selected = article_ptr(ArticleNum{3})->m_flags;
+    const ArticleFlags other = article_ptr(ArticleNum{4})->m_flags;
+    ASSERT_EQ(1, g_selected_count);
+
+    const DisplayState result = dispatch('&', "\nq");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_TRUE(g_sel_rereading);
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(selected, article_ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(other, article_ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(nullptr, g_option_draft);
+    EXPECT_TRUE(g_verbose);
+    expect_next_command('q');
+}
+
+class SelectorOptionSaveTest : public SelectorOptionTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    std::string           m_old_ini{g_ini_file};
+    std::filesystem::path m_root;
+};
+
+void SelectorOptionSaveTest::SetUp()
+{
+    SelectorOptionTest::SetUp();
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_root = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    ASSERT_FALSE(error) << error.message();
+    std::filesystem::create_directories(m_root);
+    g_ini_file = (m_root / "trnrc").generic_string();
+    std::ofstream(g_ini_file) << "[options]\nTerse Output = no\n";
+}
+
+void SelectorOptionSaveTest::TearDown()
+{
+    g_ini_file = m_old_ini;
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    EXPECT_FALSE(error) << error.message();
+    SelectorOptionTest::TearDown();
+}
+
+TEST_F(SelectorOptionSaveTest, savingTheNestedDraftAppliesItAndUpdatesTheLocalOptionFile)
+{
+    const DisplayState result = dispatch('&', "\nb \nS");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_FALSE(g_verbose);
+    std::ifstream     input{g_ini_file};
+    const std::string saved{std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+    EXPECT_NE(std::string::npos, saved.find("Terse Output = yes\n"));
+    EXPECT_FALSE(g_option_saved_vals[OI_TERSE_OUTPUT].has_value());
+    expect_article_context();
+    expect_next_command('q');
+}
+
+class SelectorOptionSessionTest : public SelectorOptionTest, public testing::WithParamInterface<NestedOptionExit>
+{
+};
+
+TEST_P(SelectorOptionSessionTest, nestedOptionsReturnToArticleRowsAndRestoreTheArticleCommandHandler)
+{
+    const auto [exit, accepted] = GetParam();
+
+    const char result = run_option_session(std::string("&\nb \n") + exit + "Yq");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(!accepted, g_verbose);
+    const std::size_t options = m_output.rfind("Options");
+    ASSERT_NE(std::string::npos, options);
+    EXPECT_NE(std::string::npos, m_output.find("Second topic", options));
+    EXPECT_NE(std::string::npos, m_output.find("No marked articles to yank back.", options));
+    EXPECT_EQ(SM_ARTICLE, g_sel_mode);
+    EXPECT_EQ(nullptr, g_option_draft);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+    EXPECT_FALSE(g_one_command);
+    EXPECT_EQ(1, g_perform_count);
+    SelectorSessionInputState::expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(UseAndAbandon, SelectorOptionSessionTest,
+                         testing::Values(NestedOptionExit{'\t', true}, NestedOptionExit{'q', false}));
 
 using SelectorExitCommand = std::pair<char, char>;
 
