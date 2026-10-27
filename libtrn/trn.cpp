@@ -413,6 +413,7 @@ reinp_newsgroup:
 
             case ING_DISPLAY:
                 newline();
+                retry = false;
                 break;
 
             case ING_MESSAGE:

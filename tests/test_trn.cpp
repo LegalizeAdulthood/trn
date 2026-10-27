@@ -731,12 +731,24 @@ MultircLoopContext::~MultircLoopContext()
     g_msg = m_old_message;
 }
 
+std::vector<std::string> multirc_restrictions()
+{
+    std::vector<std::string> restrictions;
+    for (int index = 0; index < g_max_newsgroup_to_do; ++index)
+    {
+        restrictions.emplace_back(newsgroup_restriction(index));
+    }
+    return restrictions;
+}
+
 struct MultircGroupPrompt
 {
     std::string   group;
     ArticleUnread unread;
     MinorMode     mode;
     std::string   default_command;
+    std::vector<std::string> restrictions;
+    ArticleUnread            minimum_unread;
 };
 
 class MultircTraversalStateTest : public InputNewsgroupTest
@@ -769,10 +781,17 @@ void MultircTraversalStateTest::SetUp()
     m_data_source.m_flags = DF_NONE;
     g_terminal_input_reader = [this](char *buffer, int)
     {
-        EXPECT_EQ(GM_READ, g_general_mode);
-        EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
-        m_prompts.push_back({g_newsgroup_ptr ? std::string{g_newsgroup_ptr->rc_name()} : "",
-                             g_newsgroup_ptr ? g_newsgroup_ptr->m_to_read : TR_NONE, g_mode, g_default_cmd});
+        if (g_general_mode == GM_READ)
+        {
+            EXPECT_EQ(g_newsgroup_ptr, g_current_newsgroup);
+            m_prompts.push_back({g_newsgroup_ptr ? std::string{g_newsgroup_ptr->rc_name()} : "",
+                                 g_newsgroup_ptr ? g_newsgroup_ptr->m_to_read : TR_NONE, g_mode, g_default_cmd,
+                                 multirc_restrictions(), g_newsgroup_min_to_read});
+        }
+        else
+        {
+            EXPECT_EQ(GM_INPUT, g_general_mode);
+        }
         if (m_input_pos == m_commands.size())
         {
             ADD_FAILURE() << "Unexpected group prompt";
@@ -1215,6 +1234,273 @@ TEST_P(MultircEmptyStartupTest, nextOnAnEmptyCatalogRepeatsTheEndPromptAndAllows
 
 INSTANTIATE_TEST_SUITE_P(ResumeAndVerbosity, MultircEmptyStartupTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
+
+class MultircRestrictionStateTest : public MultircTraversalStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_groups_preserved() const;
+    void expect_exhaustion(std::string_view pattern) const;
+
+private:
+    char                     m_old_empty_only_char{g_empty_only_char};
+    std::vector<std::string> m_original_lines;
+};
+
+void MultircRestrictionStateTest::SetUp()
+{
+    MultircTraversalStateTest::SetUp();
+    g_empty_only_char = 'o';
+    g_newsgroup_min_to_read = TR_ONE;
+    add_newsgroup("comp.first", "1-2", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.match.first", "1-3", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.match.last", "1-4", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.last", "1-5", ArticleNum{1}, ArticleNum{6});
+    add_newsgroup("comp.empty", "1-6", ArticleNum{1}, ArticleNum{6});
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        m_original_lines.push_back(group.m_rc_line);
+    }
+}
+
+void MultircRestrictionStateTest::TearDown()
+{
+    g_empty_only_char = m_old_empty_only_char;
+    MultircTraversalStateTest::TearDown();
+}
+
+void MultircRestrictionStateTest::expect_groups_preserved() const
+{
+    ASSERT_EQ(m_original_lines.size(), g_newsgroup_data.size());
+    for (std::size_t index = 0; index < m_original_lines.size(); ++index)
+    {
+        EXPECT_EQ(m_original_lines[index], g_newsgroup_data[index].m_rc_line) << index;
+        EXPECT_EQ(':', g_newsgroup_data[index].m_subscribe_char) << index;
+    }
+}
+
+void MultircRestrictionStateTest::expect_exhaustion(std::string_view pattern) const
+{
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "No articles under restriction." : "No \"only\" articles."));
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction " + std::string{pattern} + " removed."
+                                                       : "Exiting \"only\"."));
+}
+
+class MultircRetainedRestrictionTest : public MultircRestrictionStateTest,
+                                       public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircRetainedRestrictionTest::SetUp()
+{
+    MultircRestrictionStateTest::SetUp();
+    const auto [multiple, verbose] = GetParam();
+    g_verbose = verbose;
+    if (multiple)
+    {
+        set_newsgroup_to_do("comp.match.first");
+        set_newsgroup_to_do("comp.match.last");
+    }
+    else
+    {
+        set_newsgroup_to_do("comp.match.*");
+    }
+}
+
+TEST_P(MultircRetainedRestrictionTest, skippingMatchingUnreadGroupsRetainsTheRestrictionForAnotherTraversal)
+{
+    const std::vector<std::string> patterns = multirc_restrictions();
+
+    run_groups("nnnq");
+
+    expect_prompts({"comp.match.first", "comp.match.last", "", "comp.match.first"});
+    for (const MultircGroupPrompt &prompt : m_prompts)
+    {
+        EXPECT_EQ(patterns, prompt.restrictions);
+        EXPECT_EQ(TR_ONE, prompt.minimum_unread);
+    }
+    const std::string warning =
+        g_verbose ? "Restriction " + patterns.front() + (patterns.size() > 1 ? ", etc." : "") + " still in effect."
+                  : "(\"Only\" mode.)";
+    EXPECT_THAT(m_output, testing::HasSubstr(warning));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("removed.")));
+    EXPECT_EQ(patterns, multirc_restrictions());
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(PatternCountAndVerbosity, MultircRetainedRestrictionTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+class MultircExhaustedRestrictionTest : public MultircRestrictionStateTest,
+                                        public testing::WithParamInterface<std::tuple<const char *, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircExhaustedRestrictionTest::SetUp()
+{
+    MultircRestrictionStateTest::SetUp();
+    const auto [pattern, verbose] = GetParam();
+    g_verbose = verbose;
+    set_newsgroup_to_do(pattern);
+}
+
+TEST_P(MultircExhaustedRestrictionTest, anExhaustedRestrictionIsReleasedBeforeRestartingWithOtherUnreadGroups)
+{
+    run_groups("nq");
+
+    expect_prompts({"", "comp.first"});
+    EXPECT_TRUE(m_prompts[0].restrictions.empty());
+    EXPECT_TRUE(m_prompts[1].restrictions.empty());
+    EXPECT_EQ(ArticleUnread{4}, m_prompts[1].unread);
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(TR_ONE, g_newsgroup_min_to_read);
+    expect_exhaustion(std::get<0>(GetParam()));
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(MissingOrReadGroupAndVerbosity, MultircExhaustedRestrictionTest,
+                         testing::Combine(testing::Values("soc.missing", "comp.empty"), testing::Bool()));
+
+class MultircRestrictionTest : public MultircRestrictionStateTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircRestrictionTest::SetUp()
+{
+    MultircRestrictionStateTest::SetUp();
+    g_verbose = GetParam();
+    set_newsgroup_to_do("comp.match.*");
+}
+
+TEST_P(MultircRestrictionTest, aBareRestrictionCommandReturnsToEarlierUnrestrictedNews)
+{
+    run_groups("o\nq");
+
+    expect_prompts({"comp.match.first", "comp.first"});
+    EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[0].restrictions);
+    EXPECT_TRUE(m_prompts[1].restrictions.empty());
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(TR_ONE, m_prompts[1].minimum_unread);
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction comp.match.* removed." : "Exiting \"only\"."));
+    expect_groups_preserved();
+}
+
+TEST_P(MultircRestrictionTest, aNewRestrictionReplacesThePreviousPatternAndRestartsTraversal)
+{
+    run_groups("O comp.last\nq");
+
+    expect_prompts({"comp.match.first", "comp.last"});
+    EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[0].restrictions);
+    EXPECT_EQ(std::vector<std::string>{"comp.last"}, m_prompts[1].restrictions);
+    EXPECT_EQ(std::vector<std::string>{"comp.last"}, multirc_restrictions());
+    EXPECT_EQ(TR_ONE, m_prompts[1].minimum_unread);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[1].unread);
+    expect_groups_preserved();
+}
+
+TEST_P(MultircRestrictionTest, multipleNewPatternsReplaceThePreviousRestrictionWithoutLosingEitherMatch)
+{
+    run_groups("O comp.first comp.last\nnnq");
+
+    expect_prompts({"comp.match.first", "comp.first", "comp.last", ""});
+    const std::vector<std::string> patterns{"comp.first", "comp.last"};
+    EXPECT_EQ(patterns, m_prompts[1].restrictions);
+    EXPECT_EQ(patterns, m_prompts[2].restrictions);
+    EXPECT_EQ(patterns, m_prompts[3].restrictions);
+    EXPECT_EQ(patterns, multirc_restrictions());
+    EXPECT_THAT(m_output,
+                testing::HasSubstr(g_verbose ? "Restriction comp.first, etc. still in effect." : "(\"Only\" mode.)"));
+    expect_groups_preserved();
+}
+
+TEST_P(MultircRestrictionTest, aNewRestrictionWithNoMatchesReleasesAndResumesUnrestrictedTraversal)
+{
+    run_groups("O soc.missing\nnq");
+
+    expect_prompts({"comp.match.first", "", "comp.first"});
+    EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[0].restrictions);
+    EXPECT_TRUE(m_prompts[1].restrictions.empty());
+    EXPECT_TRUE(m_prompts[2].restrictions.empty());
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    expect_exhaustion("soc.missing");
+    expect_groups_preserved();
+}
+
+TEST_P(MultircRestrictionTest, aNewRestrictionAtTheEndOffersItsMatchingGroup)
+{
+    run_groups("nnO comp.last\nq");
+
+    expect_prompts({"comp.match.first", "comp.match.last", "", "comp.last"});
+    EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[2].restrictions);
+    EXPECT_EQ(std::vector<std::string>{"comp.last"}, m_prompts[3].restrictions);
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[3].unread);
+    EXPECT_EQ(std::vector<std::string>{"comp.last"}, multirc_restrictions());
+    expect_groups_preserved();
+}
+
+TEST_P(MultircRestrictionTest, clearingTheRestrictionAtTheEndOffersEarlierUnrestrictedNews)
+{
+    run_groups("nno\nq");
+
+    expect_prompts({"comp.match.first", "comp.match.last", "", "comp.first"});
+    EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[2].restrictions);
+    EXPECT_TRUE(m_prompts[3].restrictions.empty());
+    EXPECT_EQ(ArticleUnread{4}, m_prompts[3].unread);
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction comp.match.* removed." : "Exiting \"only\"."));
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(Verbosity, MultircRestrictionTest, testing::Bool());
+
+class MultircRestrictionScopeTest : public MultircRestrictionStateTest,
+                                    public testing::WithParamInterface<std::tuple<char, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircRestrictionScopeTest::SetUp()
+{
+    MultircRestrictionStateTest::SetUp();
+    g_verbose = std::get<1>(GetParam());
+    set_newsgroup_to_do("comp.match.*");
+}
+
+TEST_P(MultircRestrictionScopeTest, theRestrictionCommandControlsWhetherMatchingReadGroupsAreOffered)
+{
+    const char        command = std::get<0>(GetParam());
+    const bool        include_read = command == 'o';
+    const std::string input = std::string{command} + " comp.*\n" + (include_read ? "nnnnnq" : "nnnnq");
+
+    run_groups(input);
+
+    std::vector<std::string> groups{"comp.match.first", "comp.first", "comp.match.first", "comp.match.last",
+                                    "comp.last"};
+    if (include_read)
+    {
+        groups.emplace_back("comp.empty");
+    }
+    groups.emplace_back();
+    expect_prompts(groups);
+    for (std::size_t index = 1; index < m_prompts.size(); ++index)
+    {
+        EXPECT_EQ(std::vector<std::string>{"comp.*"}, m_prompts[index].restrictions) << index;
+        EXPECT_EQ(include_read ? TR_NONE : TR_ONE, m_prompts[index].minimum_unread) << index;
+    }
+    EXPECT_EQ(std::vector<std::string>{"comp.*"}, multirc_restrictions());
+    expect_groups_preserved();
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndVerbosity, MultircRestrictionScopeTest,
+                         testing::Combine(testing::Values('o', 'O'), testing::Bool()));
 
 class InputNewsgroupNavigationTest : public InputNewsgroupTest
 {
@@ -1774,6 +2060,7 @@ struct MultircReadingPrompt
     ArticleUnread              unread;
     std::string                default_command;
     std::array<std::string, 3> read_ranges;
+    std::vector<std::string>   restrictions;
 };
 
 class MultircReadingTest : public InputNewsgroupReadingTest, public testing::WithParamInterface<std::tuple<bool, bool>>
@@ -1850,7 +2137,8 @@ void MultircReadingTest::SetUp()
              g_newsgroup_ptr ? g_newsgroup_ptr->m_to_read : TR_NONE,
              g_default_cmd,
              {std::string{g_newsgroup_data[0].rc_numbers()}, std::string{g_newsgroup_data[1].rc_numbers()},
-              std::string{g_newsgroup_data[2].rc_numbers()}}});
+              std::string{g_newsgroup_data[2].rc_numbers()}},
+             multirc_restrictions()});
         if (m_input_pos == m_commands.size())
         {
             ADD_FAILURE() << "Unexpected reading-session prompt";
@@ -2067,6 +2355,46 @@ TEST_P(MultircReadingTest, explicitPreviousAndNextVisitAReadGroupAfterReading)
 }
 
 INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
+
+class MultircRestrictionReadingTest : public MultircReadingTest
+{
+protected:
+    void SetUp() override;
+};
+
+void MultircRestrictionReadingTest::SetUp()
+{
+    MultircReadingTest::SetUp();
+    set_newsgroup_to_do("comp.lang.cpp");
+}
+
+TEST_P(MultircRestrictionReadingTest, readingAllRestrictedNewsReleasesTheRestrictionOnTheNextTraversal)
+{
+    run_session("ynnnnq");
+
+    expect_prompts({{1, MM_NEWSGROUP_LIST},
+                    {1, MM_ARTICLE},
+                    {1, MM_ARTICLE},
+                    {-1, MM_FINISH_NEWSGROUP_LIST},
+                    {-1, MM_FINISH_NEWSGROUP_LIST},
+                    {0, MM_NEWSGROUP_LIST}});
+    expect_body_order({"comp.lang.cpp article 2", "comp.lang.cpp article 3"});
+    EXPECT_EQ(std::vector<std::string>{"comp.lang.cpp"}, m_prompts[3].restrictions);
+    EXPECT_TRUE(m_prompts[4].restrictions.empty());
+    EXPECT_TRUE(m_prompts[5].restrictions.empty());
+    EXPECT_EQ("npq", m_prompts[3].default_command);
+    EXPECT_EQ("npq", m_prompts[4].default_command);
+    EXPECT_EQ(" 1-3", g_newsgroup_data[1].rc_numbers());
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ(" 1-2", g_newsgroup_data[2].rc_numbers());
+    EXPECT_EQ(ArticleUnread{1}, m_prompts[5].unread);
+    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction comp.lang.cpp removed." : "Exiting \"only\"."));
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndThreading, MultircRestrictionReadingTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
 
 class MultircSaveReadingTest : public MultircReadingTest
 {
