@@ -382,7 +382,7 @@ sel_exit:
         s_sel_ret = 'Q';
     }
     const bool use_article_order = g_sel_mode == SM_ARTICLE && g_sel_sort != SS_GROUPS && g_sel_sort != SS_STRING;
-    const bool rebuild_article_order = g_sel_rereading && use_article_order && s_sel_ret != '+';
+    const bool rebuild_article_order = g_sel_rereading && use_article_order;
     if (g_sel_rereading)
     {
         g_sel_rereading = false;
@@ -419,7 +419,7 @@ sel_exit:
     }
     if (rebuild_article_order)
     {
-        sort_articles();
+        sort_articles(s_sel_ret == '+' ? g_curr_artp : nullptr);
     }
     if (s_sel_ret == '+')
     {
