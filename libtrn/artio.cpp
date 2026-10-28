@@ -483,8 +483,9 @@ read_more:
             const std::string separator = std::string(1, '\002') + g_multipart_separator + '\n';
             (void) mime_set_state(boundary);
             store_art_text(bp, 0, tail + separator);
-            len = static_cast<int>(tail.size());
-            extra_chars = static_cast<int>(separator.size());
+            const std::size_t newline = tail.find('\n');
+            len = static_cast<int>(newline == std::string::npos ? tail.size() : newline + 1);
+            extra_chars = static_cast<int>(tail.size() + separator.size()) - len;
             goto done;
         }
         if (mime_set_state(std::string_view{bp + o}))

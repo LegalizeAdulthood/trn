@@ -1749,7 +1749,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             {
                 if (ncr)
                 {
-                    output += insert_unicode_at(ncr);
+                    output += encode_utf8_scalar(static_cast<CodePoint>(ncr));
                 }
                 pos += static_cast<std::size_t>(ncr_found);
             }

@@ -1114,6 +1114,169 @@ TEST_P(MultipartEndingArticleTest, replaysFinalTextAndSeparatorsFromTheCompleted
 INSTANTIATE_TEST_SUITE_P(NestingAttachmentsAndEof, MultipartEndingArticleTest,
                          testing::ValuesIn(MULTIPART_ENDING_CASES));
 
+const MultipartArticleCase PIPELINE_MULTIPART_CASES[]{
+    {"LegacyHtmlQuotedPrintable",
+     mixed_mime_body("Content-Type: text/html; charset=windows-1252\nContent-Transfer-Encoding: quoted-printable\n",
+                     "<b>Caf=E9 &amp; A=92B</b>\n"),
+     {"Part\n", "First text\n", "Part\n", "Caf\xC3\xA9 & Aleft\n", "rightB \n", "Part\n", "Last text\n", "Part\n"},
+     "rightB \n"},
+    {"Utf8HtmlSoftLine",
+     mixed_mime_body("Content-Type: text/html; charset=UTF-8\nContent-Transfer-Encoding: quoted-printable\n",
+                     "<b>=\nA=E2=80=99B</b>\n"),
+     {"Part\n", "First text\n", "Part\n", "Aleft\n", "rightB \n", "Part\n", "Last text\n", "Part\n"},
+     "rightB \n"},
+    {"Base64Tail",
+     mixed_mime_body("Content-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n", "QeKAmUI=\n"),
+     {"Part\n", "First text\n", "Part\n", "Aleft\n", "rightB\n", "Part\n", "Last text\n", "Part\n"},
+     "rightB\n"},
+    {"Base64Rows",
+     mixed_mime_body("Content-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n",
+                     "QeKAmUIKQ+KAlEQKRfCfmIpGCg==\n"),
+     {"Part\n", "First text\n", "Part\n", "Aleft\n", "rightB\n", "CD\n",
+      "E\xE2\x80\x94"
+      "F\n",
+      "Part\n", "Last text\n", "Part\n"},
+     "rightB\n"},
+    {"Base64HtmlRows",
+     mixed_mime_body("Content-Type: text/html; charset=UTF-8\nContent-Transfer-Encoding: base64\n",
+                     "PGI+Rmlyc3QKQeKAmUI8L2I+Cg==\n"),
+     {"Part\n", "First text\n", "Part\n", "First Aleft\n", "rightB \n", "Part\n", "Last text\n", "Part\n"},
+     "rightB \n"},
+    {"SplitScalarAfterCachedRow",
+     mixed_mime_body("Content-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n",
+                     "cHJlZml4CkHi\ngJlCCg==\n"),
+     {"Part\n", "First text\n", "Part\n", "prefix\n", "Aleft\n", "rightB\n", "Part\n", "Last text\n", "Part\n"},
+     "rightB\n"},
+    {"ChangingPartCharsets",
+     mime_part("Content-Type: text/plain; charset=windows-1252\nContent-Transfer-Encoding: quoted-printable\n",
+               "A=92B\n") +
+         mime_part("Content-Type: text/plain; charset=ISO-8859-15\nContent-Transfer-Encoding: quoted-printable\n",
+                   "=A4 caf=E9\n") +
+         mime_part("Content-Type: text/html; charset=UTF-8\n", "<i>Tail \xF0\x9F\x98\x8A</i>\n") + "--part--\n",
+     {"Part\n", "Aleft\n", "rightB\n", "Part\n", "\xE2\x82\xAC caf\xC3\xA9\n", "Part\n", "Tail \xE2\x80\x94 \n",
+      "Part\n"},
+     "rightB\n"},
+    {"IncompleteScalarBeforeLegacyPart",
+     mime_part("Content-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n", "b2sKQeI=\n") +
+         mime_part("Content-Type: text/plain; charset=Latin1\nContent-Transfer-Encoding: quoted-printable\n",
+                   "caf=E9\n") +
+         "--part--\n",
+     {"Part\n", "ok\n", "A?\n", "Part\n", "caf\xC3\xA9\n", "Part\n"},
+     "caf\xC3\xA9\n"},
+    {"MissingCharsetAfterLegacyPart",
+     mime_part("Content-Type: text/plain; charset=Latin1\nContent-Transfer-Encoding: quoted-printable\n", "caf=E9\n") +
+         mime_part("Content-Type: text/plain\n", "\xE9\n") +
+         mime_part("Content-Type: text/plain; charset=UTF-8\n", "caf\xC3\xA9\n") + "--part--\n",
+     {"Part\n", "caf\xC3\xA9\n", "Part\n", "?\n", "Part\n", "caf\xC3\xA9\n", "Part\n"},
+     "?\n"},
+    {"HtmlEntityAcrossSoftLine",
+     mixed_mime_body("Content-Type: text/html; charset=UTF-8\nContent-Transfer-Encoding: quoted-printable\n",
+                     "<b>A&#82=\n17;B &#x1f60a; end</b>\n"),
+     {"Part\n", "First text\n", "Part\n", "Aleft\n", "rightB \xE2\x80\x94 end \n", "Part\n", "Last text\n", "Part\n"},
+     "rightB \xE2\x80\x94 end \n"}};
+
+class PipelineMultipartArticleTest : public MultipartArticleIoTest,
+                                     public testing::WithParamInterface<MultipartArticleCase>
+{
+protected:
+    void SetUp() override;
+
+    std::vector<ArticlePosition> m_positions;
+    std::vector<ArticlePosition> m_tail_positions;
+    std::vector<std::string>     m_tail;
+    ArticlePosition              m_resume_position{};
+    ArticlePosition              m_expected_size{};
+};
+
+void PipelineMultipartArticleTest::SetUp()
+{
+    MultipartArticleIoTest::SetUp();
+    g_charsets = "up";
+    reset_char_subst_mode();
+    ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
+        "unicode substitutions",
+        {},
+        "U+00E9 = \xC3\xA9\nU+2019 = \"left\\nright\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\nU+FFFD = ?\n"}));
+    utf_init(CHARSET_NAME_WINDOWS_1252, CHARSET_NAME_ASCII);
+    ASSERT_NO_FATAL_FAILURE(open_multipart(GetParam()));
+    m_expected_size = ArticlePosition{ARTICLE_VIEW_HEADER_SIZE};
+    for (const std::string &line : GetParam().lines)
+    {
+        m_positions.push_back(m_expected_size);
+        m_expected_size += ArticlePosition{static_cast<long>(line.size())};
+        if (line == "Part\n")
+        {
+            m_expected_size += ArticlePosition{1};
+        }
+    }
+    const auto target = std::find(GetParam().lines.begin(), GetParam().lines.end(), GetParam().resume);
+    ASSERT_NE(GetParam().lines.end(), target);
+    const std::size_t index = static_cast<std::size_t>(target - GetParam().lines.begin());
+    m_resume_position = m_positions[index];
+    m_tail.assign(target, GetParam().lines.end());
+    m_tail_positions.assign(m_positions.begin() + index, m_positions.end());
+}
+
+TEST_P(PipelineMultipartArticleTest, presentsConvertedAndSubstitutedTextAcrossPartBoundaries)
+{
+    const MimePresentation result = read_presentation();
+
+    EXPECT_EQ(GetParam().lines, result.lines);
+    EXPECT_EQ(m_positions, result.positions);
+    EXPECT_EQ(m_expected_size, g_art_size);
+    EXPECT_EQ(m_expected_size, art_buf_article_pos());
+    EXPECT_EQ(&m_mime_section, g_mime_section);
+    EXPECT_EQ(CHARSET_NAME_WINDOWS_1252, input_charset_name());
+    EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
+}
+
+TEST_P(PipelineMultipartArticleTest, seeksForwardIntoUncachedTransformedText)
+{
+    const int              seek = seek_art_buf(m_resume_position);
+    const MimePresentation result = read_presentation();
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(m_tail, result.lines);
+    EXPECT_EQ(m_tail_positions, result.positions);
+    EXPECT_EQ(m_expected_size, art_buf_article_pos());
+}
+
+TEST_P(PipelineMultipartArticleTest, rereadsASavedPositionWithoutRepeatingThePipeline)
+{
+    const MimePresentation cached = read_presentation();
+    ASSERT_EQ(GetParam().lines, cached.lines);
+    const ArticlePosition source_position = tell_art();
+    const MimeState       state = g_mime_state;
+
+    const int              seek = seek_art_buf(m_resume_position);
+    const MimePresentation result = read_presentation();
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(m_tail, result.lines);
+    EXPECT_EQ(m_tail_positions, result.positions);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(state, g_mime_state);
+}
+
+TEST_P(PipelineMultipartArticleTest, retainsTheOriginalEncodedArticleAfterPresentationReads)
+{
+    read_presentation();
+    ASSERT_EQ(0, seek_art(ArticlePosition{}));
+    std::string raw;
+    std::string line;
+
+    while (read_art(line))
+    {
+        raw += line;
+    }
+
+    EXPECT_EQ(std::string{ARTICLE_VIEW_HEADER} + GetParam().body, raw);
+    EXPECT_EQ(ArticlePosition{static_cast<long>(raw.size())}, g_raw_art_size);
+}
+
+INSTANTIATE_TEST_SUITE_P(TransferCharsetHtmlAndSubstitution, PipelineMultipartArticleTest,
+                         testing::ValuesIn(PIPELINE_MULTIPART_CASES));
+
 enum class InlineHandler
 {
     Viewer,
