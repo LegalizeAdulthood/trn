@@ -5115,6 +5115,7 @@ protected:
     void                     expect_page(std::size_t index, const std::vector<int> &articles) const;
     void                     expect_selected(std::size_t index, std::vector<int> articles) const;
     void                     expect_reading(const std::vector<int> &articles, bool selected_only) const;
+    void                     expect_bodies(const std::vector<int> &articles) const;
     std::vector<std::string> selection_commands() const;
     void                     append_reading(std::vector<std::string> &commands, const std::vector<int> &articles,
                                             bool exhaust = false) const;
@@ -5233,8 +5234,13 @@ void PagedArticleSelectorReadingStateTest::expect_reading(const std::vector<int>
     std::vector<int> expected{1};
     expected.insert(expected.end(), articles.begin(), articles.end());
     EXPECT_EQ(expected, actual);
+    expect_bodies(expected);
+}
+
+void PagedArticleSelectorReadingStateTest::expect_bodies(const std::vector<int> &articles) const
+{
     std::size_t position = 0;
-    for (int number : expected)
+    for (int number : articles)
     {
         const std::string body = "Paged selector body " + std::to_string(number) + " END";
         position = m_output.find(body, position);
@@ -5244,7 +5250,7 @@ void PagedArticleSelectorReadingStateTest::expect_reading(const std::vector<int>
     for (int number = 1; number <= 11; ++number)
     {
         expect_body_count("Paged selector body " + std::to_string(number) + " END",
-                          std::count(expected.begin(), expected.end(), number));
+                          std::count(articles.begin(), articles.end(), number));
     }
 }
 
@@ -5287,6 +5293,93 @@ void PagedArticleSelectorDefaultTest::SetUp()
     PagedArticleSelectorReadingStateTest::SetUp();
     const auto &[input, erase_screen] = GetParam();
     configure_pages(input, erase_screen);
+}
+
+class ArticleSelectorScopeReadingTest : public PagedArticleSelectorReadingStateTest,
+                                        public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool>>
+{
+protected:
+    void SetUp() override;
+    void expect_scope(std::size_t index, bool rereading, const std::vector<int> &read, const std::vector<int> &selected,
+                      const std::vector<int> &marked = {}) const;
+    void expect_returned_context(std::size_t index) const;
+
+    const std::vector<int> m_initial_read{1, 2, 3, 4, 7};
+    std::vector<int>       m_delta;
+    std::vector<int>       m_alpha;
+    std::vector<int>       m_revived_read;
+    std::vector<int>       m_combined;
+    std::vector<int>       m_batch;
+    bool                   m_grouped{};
+
+private:
+    std::vector<std::vector<int>> m_marks;
+    std::vector<int>              m_population;
+};
+
+void ArticleSelectorScopeReadingTest::SetUp()
+{
+    PagedArticleSelectorReadingStateTest::SetUp();
+    const auto &[input, erase_screen] = GetParam();
+    configure_pages(input, erase_screen);
+    set_read_range("1-3,7");
+    m_grouped = input.mode != SM_ARTICLE;
+    m_delta = m_grouped ? std::vector<int>{5, 10} : std::vector<int>{5};
+    m_alpha = m_grouped ? std::vector<int>{2, 7} : std::vector<int>{2};
+    m_revived_read = m_grouped ? std::vector<int>{1, 3, 4} : std::vector<int>{1, 3, 4, 7};
+    m_combined = m_grouped ? std::vector<int>{2, 5, 7, 10} : std::vector<int>{2, 5};
+    m_batch = m_grouped ? std::vector<int>{2, 7, 5, 10} : std::vector<int>{2, 5};
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        std::vector<int> marks;
+        for (int number = 1; number <= 11; ++number)
+        {
+            Article *article = article_find(ArticleNum{number});
+            if (article && (article->m_flags & AF_DEL_SEL))
+            {
+                marks.push_back(number);
+            }
+        }
+        m_marks.push_back(std::move(marks));
+        m_population.push_back(g_sel_total_obj_cnt);
+        return reader(buffer, size);
+    };
+}
+
+void ArticleSelectorScopeReadingTest::expect_scope(std::size_t index, bool rereading, const std::vector<int> &read,
+                                                   const std::vector<int> &selected,
+                                                   const std::vector<int> &marked) const
+{
+    ASSERT_LT(index, m_states.size());
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[index].mode);
+    EXPECT_EQ(std::get<0>(GetParam()).mode, m_states[index].selector_mode);
+    EXPECT_EQ(rereading, m_states[index].selector_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, m_states[index].selector_mask);
+    EXPECT_EQ(read, m_read[index]);
+    EXPECT_EQ(marked, m_marks[index]);
+    expect_selected(index, selected);
+    const std::size_t count = rereading ? marked.size() : selected.size();
+    EXPECT_EQ(ArticleUnread{static_cast<long>(count)}, m_states[index].selected);
+    EXPECT_EQ(ArticleUnread{11 - static_cast<long>(read.size())}, m_states[index].unread);
+    EXPECT_EQ(rereading ? read.size() : 11 - read.size(), m_population[index]);
+    for (ArticleNum number : m_states[index].selector_articles)
+    {
+        const bool was_read = std::find(read.begin(), read.end(), number.value_of()) != read.end();
+        EXPECT_EQ(rereading, was_read) << number.value_of();
+    }
+}
+
+void ArticleSelectorScopeReadingTest::expect_returned_context(std::size_t index) const
+{
+    ASSERT_LT(index, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[index].mode);
+    EXPECT_EQ(m_states[0].article, m_states[index].article);
+    EXPECT_EQ(m_states[0].current, m_states[index].current);
+    EXPECT_EQ(m_states[0].recent, m_states[index].recent);
+    EXPECT_EQ(m_states[0].selected_only, m_states[index].selected_only);
+    EXPECT_FALSE(m_states[index].selector_rereading);
+    EXPECT_EQ(AGF_SEL, m_states[index].selector_mask);
 }
 
 struct SelectorEntryReadingCase
@@ -12065,6 +12158,130 @@ INSTANTIATE_TEST_SUITE_P(PresentationAndReadRange, ForcedNewsgroupEndCountTest,
                                                           ForcedEndReadRange{"1-2", 1}, ForcedEndReadRange{"1-3", 0})));
 
 INSTANTIATE_TEST_SUITE_P(Presentation, NewsgroupEndReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(ArticleSelectorScopeReadingTest, repeatedScopeChangesRetainUnreadSelectionsAndRestoreTheCaller)
+{
+    const DoNewsgroupResult result = run_reading({"+", "a", "U", "U", "U", "U", "+", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(8U, m_states.size());
+    expect_scope(1, false, m_initial_read, {});
+    expect_scope(2, false, m_initial_read, m_delta);
+    expect_scope(3, true, m_initial_read, m_delta);
+    expect_scope(4, false, m_initial_read, m_delta);
+    expect_scope(5, true, m_initial_read, m_delta);
+    expect_scope(6, false, m_initial_read, m_delta);
+    expect_returned_context(7);
+    EXPECT_EQ(m_initial_read, m_read[7]);
+    expect_selected(7, m_delta);
+    expect_bodies({4});
+    EXPECT_EQ(" 1-4,7", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorScopeReadingTest, existingSelectedOnlyReadingSurvivesScopeChanges)
+{
+    fs::current_path(m_output_dir);
+    ASSERT_EQ(1, access_newsgroup());
+    if (m_grouped)
+    {
+        article_ptr(ArticleNum{5})->select_articles_subject(AUTO_KILL_NONE);
+    }
+    else
+    {
+        article_ptr(ArticleNum{5})->select_article(AUTO_KILL_NONE);
+    }
+    g_in_ng = false;
+    g_mode = MM_NEWSGROUP_LIST;
+
+    const DoNewsgroupResult result = run_reading({"+", "U", "U", "+", "Q"}, "4");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(5U, m_states.size());
+    EXPECT_TRUE(m_states[0].selected_only);
+    expect_scope(1, false, m_initial_read, m_delta);
+    expect_scope(2, true, m_initial_read, m_delta);
+    expect_scope(3, false, m_initial_read, m_delta);
+    expect_returned_context(4);
+    expect_selected(4, m_delta);
+    expect_bodies({4});
+    EXPECT_EQ(" 1-4,7", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorScopeReadingTest, revivalsJoinExistingUnreadSelectionsAcrossRepeatedScopeChanges)
+{
+    std::vector<std::string> commands{"+", "a", "U", "b", "U", "U", "U", "Z"};
+    append_reading(commands, m_batch);
+    std::vector<int> bodies{4};
+    bodies.insert(bodies.end(), m_batch.begin(), m_batch.end());
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_scope(3, true, m_initial_read, m_delta);
+    expect_scope(4, true, m_initial_read, m_delta, m_alpha);
+    expect_scope(5, false, m_revived_read, m_combined);
+    expect_scope(6, true, m_revived_read, m_combined);
+    expect_scope(7, false, m_revived_read, m_combined);
+    EXPECT_EQ(ArticleNum{2}, m_states[8].article);
+    EXPECT_TRUE(m_states[8].selected_only);
+    EXPECT_EQ((m_grouped ? std::vector<int>{1, 2, 3, 4, 5, 7, 10} : std::vector<int>{1, 2, 3, 4, 5, 7}), m_read.back());
+    expect_bodies(bodies);
+    EXPECT_EQ(m_grouped ? " 1-5,7,10" : " 1-5,7", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorScopeReadingTest, deselectingReadItemsBeforeSwitchingBackDoesNotReviveThem)
+{
+    std::vector<std::string> commands{"+", "a", "U", "b", "b", "U", "Z"};
+    append_reading(commands, m_delta);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_scope(4, true, m_initial_read, m_delta, m_alpha);
+    expect_scope(5, true, m_initial_read, m_delta);
+    expect_scope(6, false, m_initial_read, m_delta);
+    EXPECT_EQ(ArticleNum{5}, m_states[7].article);
+    expect_bodies(m_grouped ? std::vector<int>{4, 5, 10} : std::vector<int>{4, 5});
+    EXPECT_EQ(m_grouped ? " 1-5,7,10" : " 1-5,7", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorScopeReadingTest, returningAfterARevivalRestoresTheCurrentArticleAndKeepsTheMarks)
+{
+    const DoNewsgroupResult result = run_reading({"+", "a", "U", "b", "U", "+", "^", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(8U, m_states.size());
+    expect_scope(5, false, m_revived_read, m_combined);
+    expect_returned_context(6);
+    EXPECT_EQ(m_revived_read, m_read[6]);
+    expect_selected(6, m_combined);
+    EXPECT_EQ(ArticleNum{2}, m_states[7].article);
+    expect_bodies({4, 2});
+    EXPECT_EQ(m_grouped ? " 1-4" : " 1-4,7", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorScopeReadingTest, revivingTheCurrentArticlePreservesNormalNavigationAfterReturning)
+{
+    const bool             threaded = std::get<0>(GetParam()).mode == SM_THREAD;
+    const std::vector<int> selected = m_grouped ? std::vector<int>{4, 5, 10} : std::vector<int>{4, 5};
+
+    const DoNewsgroupResult result = run_reading({"+", "a", "U", ">", "b", "U", "+", "n", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(9U, m_states.size());
+    expect_scope(5, true, m_initial_read, m_delta, {4});
+    expect_scope(6, false, {1, 2, 3, 7}, selected);
+    expect_returned_context(7);
+    EXPECT_EQ((std::vector<int>{1, 2, 3, 7}), m_read[7]);
+    EXPECT_EQ(ArticleNum{threaded ? 9 : 5}, m_states[8].article);
+    expect_bodies({4, threaded ? 9 : 5});
+    EXPECT_EQ(threaded ? " 1-3,7,9" : " 1-3,5,7", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScreen, ArticleSelectorScopeReadingTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool()));
 
 TEST_P(PagedArticleSelectorAcceptTest, acceptsOffPageSelectionsAndReadsOnlyTheirArticlesInOrder)
 {

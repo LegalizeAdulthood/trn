@@ -285,10 +285,12 @@ static int                 find_line(int y);
 //
 char article_selector(char_int cmd)
 {
-    bool save_selected_only;
+    const bool        save_selected_only = g_selected_only;
+    const bool        initial_rereading = cmd == 'U';
+    bool              scope_changed = false;
     PushSelectorModes saver(MM_THREAD_SELECTOR);
 
-    g_sel_rereading = (cmd == 'U');
+    g_sel_rereading = initial_rereading;
 
     g_art = article_after(g_last_art);
     s_extra_commands = article_commands;
@@ -324,7 +326,6 @@ sel_restart:
         }
         g_sel_mask = AGF_SEL;
     }
-    save_selected_only = g_selected_only;
     g_selected_only = true;
     count_subjects(cmd? CS_UNSEL_STORE : CS_NORM);
 
@@ -362,6 +363,7 @@ sel_restart:
     sel_display();
     if (sel_input() == 'R')
     {
+        scope_changed = scope_changed || g_sel_rereading != initial_rereading;
         goto sel_restart;
     }
 
@@ -411,7 +413,7 @@ sel_exit:
     if (s_sel_ret == '+')
     {
         g_selected_only = save_selected_only;
-        count_subjects(CS_RESELECT);
+        count_subjects(scope_changed ? CS_UNSELECT : CS_RESELECT);
     }
     else
     {
