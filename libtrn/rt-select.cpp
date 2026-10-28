@@ -381,12 +381,14 @@ sel_exit:
     {
         s_sel_ret = 'Q';
     }
+    const bool use_article_order = g_sel_mode == SM_ARTICLE && g_sel_sort != SS_GROUPS && g_sel_sort != SS_STRING;
+    const bool rebuild_article_order = g_sel_rereading && use_article_order && s_sel_ret != '+';
     if (g_sel_rereading)
     {
         g_sel_rereading = false;
         g_sel_mask = AGF_SEL;
     }
-    if (g_sel_mode != SM_ARTICLE || g_sel_sort == SS_GROUPS || g_sel_sort == SS_STRING)
+    if (!use_article_order)
     {
         if (!g_art_ptr_list.empty())
         {
@@ -414,6 +416,10 @@ sel_exit:
     else
     {
         count_subjects(CS_UNSELECT);
+    }
+    if (rebuild_article_order)
+    {
+        sort_articles();
     }
     if (s_sel_ret == '+')
     {
