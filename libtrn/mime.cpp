@@ -1521,13 +1521,15 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     }
     else
     {
-        while (read_art(line))
+        fmt::print(ofp, "{}", g_mime_getc_line);
+        g_mime_getc_line = {};
+        while (read_art(g_art_line))
         {
-            if (mime_end_of_section(line))
+            if (mime_end_of_section(g_art_line))
             {
                 break;
             }
-            fmt::print(ofp, "{}", line);
+            fmt::print(ofp, "{}", g_art_line);
         }
     }
 

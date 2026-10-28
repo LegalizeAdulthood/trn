@@ -701,7 +701,7 @@ TEST_F(CatDecodeTest, copiesArticleInputToDecodedFileUntilBoundary)
     write_input("first line\n--part\nsecond line\n");
     g_art_fp = m_input;
 
-    MimeSection parent;
+    MimeSection parent{};
     parent.m_boundary = "part";
     parent.m_boundary_len = 4;
     m_mime_section.m_prev = &parent;

@@ -11,9 +11,13 @@
 #include <trn/datasrc.h>
 #include <trn/head.h>
 #include <trn/IniSection.h>
+#include <trn/mime-internal.h>
 #include <trn/mime.h>
 #include <trn/terminal.h>
+#include <trn/trn.h>
 #include <trn/utf.h>
+#include <trn/util.h>
+#include <util/env.h>
 
 #include <test_config.h>
 
@@ -23,6 +27,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -868,56 +873,73 @@ struct MimePresentation
     std::vector<ArticlePosition> positions;
 };
 
-class MultipartArticleTest : public ArticleIoTest, public testing::WithParamInterface<MultipartArticleCase>
+class MultipartArticleIoTest : public ArticleIoTest
 {
 protected:
     void             SetUp() override;
     void             TearDown() override;
-    MimePresentation read_presentation();
+    void             open_multipart(const MultipartArticleCase &article);
+    MimePresentation read_presentation(bool view_inline = false);
 
 private:
     bool m_old_multimedia{g_multimedia_mime};
 };
 
-void MultipartArticleTest::SetUp()
+void MultipartArticleIoTest::SetUp()
 {
     ArticleIoTest::SetUp();
     g_charsets = "p";
     reset_char_subst_mode();
     utf_init("UTF-8", "UTF-8");
     g_word_wrap_offset = -1;
-    g_tc_COLS = GetParam().columns;
     g_multipart_separator = "Part";
     g_multimedia_mime = false;
-    m_mime_section.mime_parse_type(GetParam().type);
+}
+
+void MultipartArticleIoTest::open_multipart(const MultipartArticleCase &article)
+{
+    g_tc_COLS = article.columns;
+    m_mime_section.mime_parse_type(article.type);
     g_mime_section = &m_mime_section;
     g_mime_state = MULTIPART_MIME;
     g_is_mime = true;
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
     g_header_type[PAST_HEADER].min_pos = body_start;
-    ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + GetParam().body, "rb"));
+    ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + article.body, "rb"));
     ASSERT_EQ(0, seek_art(body_start));
     set_art_buf_seek(body_start);
 }
 
-void MultipartArticleTest::TearDown()
+void MultipartArticleIoTest::TearDown()
 {
     g_multimedia_mime = m_old_multimedia;
     ArticleIoTest::TearDown();
 }
 
-MimePresentation MultipartArticleTest::read_presentation()
+MimePresentation MultipartArticleIoTest::read_presentation(bool view_inline)
 {
     MimePresentation result;
     std::string      line;
     ArticlePosition  position = art_buf_article_pos();
-    while (read_art_buf(line, false))
+    while (read_art_buf(line, view_inline))
     {
         result.lines.push_back(line);
         result.positions.push_back(position);
         position = art_buf_article_pos();
     }
     return result;
+}
+
+class MultipartArticleTest : public MultipartArticleIoTest, public testing::WithParamInterface<MultipartArticleCase>
+{
+protected:
+    void SetUp() override;
+};
+
+void MultipartArticleTest::SetUp()
+{
+    MultipartArticleIoTest::SetUp();
+    ASSERT_NO_FATAL_FAILURE(open_multipart(GetParam()));
 }
 
 TEST_P(MultipartArticleTest, presentsTextDescriptionsAndSeparatorsWithoutExposingHiddenPayloads)
@@ -1091,6 +1113,298 @@ TEST_P(MultipartEndingArticleTest, replaysFinalTextAndSeparatorsFromTheCompleted
 
 INSTANTIATE_TEST_SUITE_P(NestingAttachmentsAndEof, MultipartEndingArticleTest,
                          testing::ValuesIn(MULTIPART_ENDING_CASES));
+
+enum class InlineHandler
+{
+    Viewer,
+    Missing,
+    NeedsTerminal,
+    CopiousOutput,
+    RejectedProbe,
+    Fallback
+};
+
+struct InlineMimeCase
+{
+    const char   *name;
+    const char   *encoding;
+    std::string   payload;
+    std::string   decoded;
+    const char   *type{"image/x-trn-inline"};
+    InlineHandler handler{InlineHandler::Viewer};
+    bool          inline_disposition{true};
+    bool          view_inline{true};
+    bool          already_viewed{};
+    int           viewer_status{};
+    bool          decode_succeeds{true};
+};
+
+const InlineMimeCase INLINE_MIME_CASES[]{
+    {"PaddedBase64", "base64", "SGVsbG8=\n", "Hello"},
+    {"UnpaddedBase64", "base64", "SGVsbG8h\n", "Hello!"},
+    {"QuotedPrintable", "quoted-printable", "First=20line\nSecond=20line\n", "First line\nSecond line\n"},
+    {"Unencoded", "8bit", "First line\nSecond line\n", "First line\nSecond line\n"},
+    {"Audio", "base64", "SGVsbG8=\n", "Hello", "audio/x-trn-inline"},
+    {"MissingHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Missing},
+    {"TerminalHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::NeedsTerminal},
+    {"CopiousHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::CopiousOutput},
+    {"RejectedProbe", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::RejectedProbe},
+    {"FallbackHandler", "base64", "SGVsbG8=\n", "Hello", "image/x-trn-inline", InlineHandler::Fallback},
+    {"AttachmentDisposition", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Viewer, false},
+    {"ViewingDisabled", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Viewer, true, false},
+    {"AlreadyViewed", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Viewer, true, true, true},
+    {"ViewerFailure", "base64", "SGVsbG8=\n", "Hello", "image/x-trn-inline", InlineHandler::Viewer, true, true, false,
+     1},
+    {"UnsupportedEncoding", "x-trn-unknown", "Hidden payload\n", "", "image/x-trn-inline", InlineHandler::Viewer, true,
+     true, false, 0, false},
+    {"TruncatedBase64", "base64", "SG\n", "", "image/x-trn-inline", InlineHandler::Viewer, true, true, false, 0,
+     false}};
+
+void PrintTo(const InlineMimeCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class InlineMultipartArticleTest : public MultipartArticleIoTest, public testing::WithParamInterface<InlineMimeCase>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    int  execute_viewer(std::string_view command);
+    bool attempts_viewing() const;
+    int  expected_viewers() const;
+
+    std::vector<std::string> m_expected;
+    std::vector<std::string> m_commands;
+    std::vector<std::string> m_decoded;
+    fs::path                 m_viewer_directory;
+    fs::path                 m_news_directory;
+    bool                     m_viewer_no_wait{};
+    int                      m_probes{};
+
+private:
+    fs::path         m_old_directory{fs::current_path()};
+    std::string      m_old_tmp_dir{g_tmp_dir};
+    std::string      m_old_login_name{g_login_name};
+    std::string      m_old_newsgroup_dir{g_newsgroup_dir};
+    std::string      m_old_decode_filename{g_decode_filename};
+    std::string      m_old_art_line{g_art_line};
+    std::string_view m_old_getc_line{g_mime_getc_line};
+    ArticleLine      m_old_first_view{g_first_view};
+    ArticleLine      m_old_art_line_num{g_art_line_num};
+    int              m_old_term_line{g_term_line};
+    int              m_old_term_col{g_term_col};
+    int              m_old_fire_is_out{g_fire_is_out};
+    bool             m_old_no_wait{g_no_wait_fork};
+    bool             m_old_auto_view{g_auto_view_inline};
+    std::string_view m_old_cr{g_tc_CR};
+    std::string_view m_old_ce{g_tc_CE};
+    std::string_view m_old_us{g_tc_US};
+    std::string_view m_old_ue{g_tc_UE};
+};
+
+void InlineMultipartArticleTest::SetUp()
+{
+    MultipartArticleIoTest::SetUp();
+    g_tmp_dir = m_output_dir.generic_string();
+    g_login_name = "inline-reader";
+    g_newsgroup_dir = "news";
+    m_data_source.m_spool_dir = m_output_dir.generic_string();
+    m_news_directory = m_output_dir / g_newsgroup_dir;
+    fs::create_directories(m_news_directory);
+    fs::current_path(m_news_directory);
+    g_first_view = GetParam().already_viewed ? ArticleLine{7} : ArticleLine{};
+    g_art_line_num = ArticleLine{7};
+    g_term_line = 12;
+    g_term_col = 0;
+    g_no_wait_fork = false;
+    g_auto_view_inline = false;
+    g_mime_getc_line = {};
+    g_tc_CR = "<CR>";
+    g_tc_CE = "<CE>";
+    g_tc_US = "<US>";
+    g_tc_UE = "<UE>";
+    mime_final();
+    mime_set_executor([this](std::string_view, std::string_view command) { return execute_viewer(command); });
+    const fs::path cap_file = m_output_dir / "mimecap";
+    {
+        std::ofstream output{cap_file};
+        if (GetParam().handler != InlineHandler::Missing)
+        {
+            output << GetParam().type << "; viewer %s";
+            switch (GetParam().handler)
+            {
+            case InlineHandler::NeedsTerminal:
+                output << "; needsterminal";
+                break;
+            case InlineHandler::CopiousOutput:
+                output << "; copiousoutput";
+                break;
+            case InlineHandler::RejectedProbe:
+            case InlineHandler::Fallback:
+                output << "; test=probe";
+                break;
+            default:
+                break;
+            }
+            output << '\n';
+            if (GetParam().handler == InlineHandler::Fallback)
+            {
+                output << GetParam().type << "; fallback %s\n";
+            }
+        }
+    }
+    mime_read_mimecap(cap_file.generic_string());
+    const std::string disposition = GetParam().inline_disposition ? "inline" : "attachment";
+    const std::string headers = std::string{"Content-Type: "} + GetParam().type +
+                                "; name=inline.bin\nContent-Disposition: " + disposition +
+                                "\nContent-Transfer-Encoding: " + GetParam().encoding + '\n';
+    m_expected = mixed_mime_lines(std::string{"[Attachment type="} + GetParam().type + ", name=inline.bin]\n");
+    ASSERT_NO_FATAL_FAILURE(open_multipart({"Inline", mixed_mime_body(headers, GetParam().payload), m_expected}));
+}
+
+void InlineMultipartArticleTest::TearDown()
+{
+    mime_final();
+    mime_set_executor(do_shell);
+    fs::current_path(m_old_directory);
+    g_tmp_dir = m_old_tmp_dir;
+    g_login_name = m_old_login_name;
+    g_newsgroup_dir = m_old_newsgroup_dir;
+    g_decode_filename = m_old_decode_filename;
+    g_art_line = m_old_art_line;
+    g_mime_getc_line = m_old_getc_line;
+    g_first_view = m_old_first_view;
+    g_art_line_num = m_old_art_line_num;
+    g_term_line = m_old_term_line;
+    g_term_col = m_old_term_col;
+    g_fire_is_out = m_old_fire_is_out;
+    g_no_wait_fork = m_old_no_wait;
+    g_auto_view_inline = m_old_auto_view;
+    g_tc_CR = m_old_cr;
+    g_tc_CE = m_old_ce;
+    g_tc_US = m_old_us;
+    g_tc_UE = m_old_ue;
+    MultipartArticleIoTest::TearDown();
+}
+
+int InlineMultipartArticleTest::execute_viewer(std::string_view command)
+{
+    if (command == "probe")
+    {
+        ++m_probes;
+        return 1;
+    }
+    m_commands.emplace_back(command);
+    m_viewer_directory = fs::current_path();
+    m_viewer_no_wait = g_no_wait_fork;
+    std::ifstream input{g_decode_filename, std::ios::binary};
+    m_decoded.emplace_back(std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{});
+    g_term_line = 37;
+    g_term_col = 11;
+    return GetParam().viewer_status;
+}
+
+bool InlineMultipartArticleTest::attempts_viewing() const
+{
+    return GetParam().inline_disposition && GetParam().view_inline && !GetParam().already_viewed;
+}
+
+int InlineMultipartArticleTest::expected_viewers() const
+{
+    return attempts_viewing() && GetParam().decode_succeeds &&
+           (GetParam().handler == InlineHandler::Viewer || GetParam().handler == InlineHandler::Fallback);
+}
+
+TEST_P(InlineMultipartArticleTest, decodesInlineContentAndContinuesToTheNextTextPart)
+{
+    const MimePresentation result = read_presentation(GetParam().view_inline);
+
+    EXPECT_EQ(m_expected, result.lines);
+    ASSERT_EQ(expected_viewers(), m_commands.size());
+    if (expected_viewers())
+    {
+        EXPECT_EQ(std::vector<std::string>{GetParam().decoded}, m_decoded);
+        EXPECT_EQ(GetParam().handler == InlineHandler::Fallback ? "fallback inline.bin" : "viewer inline.bin",
+                  m_commands.front());
+    }
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+}
+
+TEST_P(InlineMultipartArticleTest, restoresReadingStateAndRemovesTheViewedFile)
+{
+    read_presentation(GetParam().view_inline);
+
+    EXPECT_EQ(m_news_directory, fs::current_path());
+    EXPECT_EQ(12, g_term_line);
+    EXPECT_EQ(0, g_term_col);
+    EXPECT_FALSE(g_no_wait_fork);
+    if (expected_viewers())
+    {
+        EXPECT_TRUE(m_viewer_no_wait);
+        EXPECT_NE(m_news_directory, m_viewer_directory);
+        EXPECT_FALSE(fs::exists(m_viewer_directory / "inline.bin"));
+        EXPECT_FALSE(fs::exists(m_viewer_directory));
+    }
+}
+
+TEST_P(InlineMultipartArticleTest, cachedRereadingDoesNotRepeatTheViewerOrHandlerProbe)
+{
+    const MimePresentation         cached = read_presentation(GetParam().view_inline);
+    const std::vector<std::string> commands = m_commands;
+    const int                      probes = m_probes;
+    const ArticlePosition          source_position = tell_art();
+    const ArticleLine              first_view = g_first_view;
+
+    const int              seek = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+    const MimePresentation replayed = read_presentation(true);
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(cached.lines, replayed.lines);
+    EXPECT_EQ(cached.positions, replayed.positions);
+    EXPECT_EQ(commands, m_commands);
+    EXPECT_EQ(probes, m_probes);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(first_view, g_first_view);
+}
+
+INSTANTIATE_TEST_SUITE_P(HandlersEncodingAndReadingPolicy, InlineMultipartArticleTest,
+                         testing::ValuesIn(INLINE_MIME_CASES));
+
+class MultipleInlinePartsArticleTest : public InlineMultipartArticleTest
+{
+};
+
+TEST_P(MultipleInlinePartsArticleTest, viewsEachInlinePartOnceAsReadingAdvances)
+{
+    std::fclose(g_art_fp);
+    g_art_fp = nullptr;
+    const std::string              headers = "Content-Type: image/x-trn-inline; name=inline.bin\n"
+                                             "Content-Disposition: inline\nContent-Transfer-Encoding: base64\n";
+    const std::string              body = mime_part("Content-Type: text/plain\n", "First text\n") +
+                                          mime_part(headers, "SGVsbG8=\n") + mime_part(headers, "V29ybGQ=\n") +
+                                          mime_part("Content-Type: text/plain\n", "Last text\n") + "--part--\n";
+    const std::string              description = "[Attachment type=image/x-trn-inline, name=inline.bin]\n";
+    const std::vector<std::string> expected{"Part\n",    "First text\n", "Part\n",      description, "Part\n",
+                                            description, "Part\n",       "Last text\n", "Part\n"};
+    ASSERT_NO_FATAL_FAILURE(open_multipart({"MultipleInline", body, expected}));
+    std::vector<std::string> lines;
+    std::string              line;
+
+    while (read_art_buf(line, true))
+    {
+        lines.push_back(line);
+        ++g_art_line_num;
+    }
+
+    EXPECT_EQ(expected, lines);
+    EXPECT_EQ((std::vector<std::string>{"Hello", "World"}), m_decoded);
+    EXPECT_EQ((std::vector<std::string>{"viewer inline.bin", "viewer inline.bin"}), m_commands);
+    EXPECT_EQ(m_news_directory, fs::current_path());
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+}
+
+INSTANTIATE_TEST_SUITE_P(ReadingProgress, MultipleInlinePartsArticleTest, testing::Values(INLINE_MIME_CASES[0]));
 
 } // namespace
 

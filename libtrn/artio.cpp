@@ -615,7 +615,8 @@ mime_switch:
             int save_term_line = g_term_line;
             g_no_wait_fork = true;
             color_object(COLOR_MIME_DESC, true);
-            if (decode_piece(mcp, bp))
+            // A failed decoder can already have consumed the next boundary.
+            if (decode_piece(mcp, bp) || mime_end_of_section(g_art_line))
             {
                 const std::size_t destination = static_cast<std::size_t>(s_art_buf_pos.value_of());
                 if (s_art_buf.size() <= destination + g_art_line.size())
