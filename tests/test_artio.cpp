@@ -570,6 +570,214 @@ TEST_P(LongArticleBufferTest, aPositionSavedBeforeBufferGrowthStillReadsTheCache
 
 INSTANTIATE_TEST_SUITE_P(PlainAndDecodedText, LongArticleBufferTest, testing::ValuesIn(LONG_ARTICLE_CASES));
 
+struct WrappedArticleCase
+{
+    const char              *name;
+    std::string_view         body;
+    int                      margin;
+    std::vector<std::string> rows;
+    const char              *type{"text/plain; charset=UTF-8"};
+    MimeEncoding             encoding{MENCODE_NONE};
+    bool                     substitute{};
+};
+
+void PrintTo(const WrappedArticleCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class WrappedArticleTest : public ArticleIoTest, public testing::WithParamInterface<WrappedArticleCase>
+{
+protected:
+    void                     SetUp() override;
+    void                     TearDown() override;
+    std::vector<std::string> read_rows();
+    std::string              presentation() const;
+
+private:
+    char m_old_wrapped_nl{g_wrapped_nl};
+};
+
+void WrappedArticleTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    const WrappedArticleCase &value = GetParam();
+    g_charsets = value.substitute ? "up" : "p";
+    reset_char_subst_mode();
+    utf_init("UTF-8", "UTF-8");
+    if (value.substitute)
+    {
+        ASSERT_TRUE(g_unicode_substitutions.configure(
+            IniSection{"unicode substitutions", {}, "U+2019 = \xE2\x80\x94\nU+2014 = --\n"}));
+    }
+    g_word_wrap_offset = value.margin;
+    g_wrapped_nl = WRAPPED_NL;
+    g_mime_section = &m_mime_section;
+    m_mime_section.mime_parse_type(value.type);
+    m_mime_section.m_encoding = value.encoding;
+    g_mime_state = TEXT_MIME;
+    g_is_mime = true;
+    g_header_type[PAST_HEADER].min_pos = ArticlePosition{ARTICLE_VIEW_HEADER_SIZE};
+    ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + std::string(value.body), "rb"));
+    ASSERT_EQ(0, seek_art(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
+    set_art_buf_seek(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+}
+
+void WrappedArticleTest::TearDown()
+{
+    g_wrapped_nl = m_old_wrapped_nl;
+    ArticleIoTest::TearDown();
+}
+
+std::vector<std::string> WrappedArticleTest::read_rows()
+{
+    std::vector<std::string> rows;
+    std::string              line;
+    while (read_art_buf(line, false))
+    {
+        rows.push_back(line);
+    }
+    return rows;
+}
+
+std::string WrappedArticleTest::presentation() const
+{
+    std::string result;
+    for (const std::string &row : GetParam().rows)
+    {
+        result += row;
+    }
+    return result;
+}
+
+const WrappedArticleCase WRAPPED_ARTICLE_CASES[]{
+    {"ShortLine", "alpha beta gamma\n", 8, {"alpha beta gamma\n"}},
+    {"ExactWidth", "123456789012345678901234567890\n", 8, {"123456789012345678901234567890\n"}},
+    {"BeforeMargin",
+     "alpha beta gamma delta epsilon zeta eta\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta\n"}},
+    {"AfterMargin", "abcdefghijklmnopqrstuvwxy tail words\n", 8, {"abcdefghijklmnopqrstuvwxy\003", "tail words\n"}},
+    {"UnbrokenWord", "1234567890123456789012345678901234567890\n", 8, {"1234567890123456789012345678901234567890\n"}},
+    {"OverwideWordAndText",
+     "1234567890123456789012345678901234567890 alpha beta gamma delta epsilon zeta eta\n",
+     8,
+     {"1234567890123456789012345678901234567890 alpha beta\003", "gamma delta epsilon\003", "zeta eta\n"}},
+    {"LeadingIndentation",
+     "  alpha beta gamma delta epsilon zeta\n",
+     8,
+     {"  alpha beta gamma\003", "delta epsilon zeta\n"}},
+    {"ContinuationSpaces",
+     "alpha beta gamma delta     epsilon zeta eta\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta\n"}},
+    {"ContinuationTabs",
+     "alpha beta gamma delta \t \tepsilon zeta eta\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta\n"}},
+    {"SeveralWraps",
+     "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta theta\003", "iota kappa lambda mu\n"}},
+    {"SeveralIndentedWraps",
+     "alpha beta gamma delta     epsilon zeta eta theta    iota kappa lambda mu\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta theta\003", "iota kappa lambda mu\n"}},
+    {"NoMargin", "alpha beta gamma delta epsilon zeta eta\n", 0, {"alpha beta gamma delta epsilon\003", "zeta eta\n"}},
+    {"Disabled", "alpha beta gamma delta epsilon zeta eta\n", -1, {"alpha beta gamma delta epsilon zeta eta\n"}}};
+
+TEST_P(WrappedArticleTest, preservesTheExpectedTextAndRowBoundaries)
+{
+    const std::vector<std::string> rows = read_rows();
+
+    EXPECT_EQ(GetParam().rows, rows);
+    EXPECT_EQ(presentation(), art_buf_view(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(static_cast<long>(presentation().size()), art_buf_len().value_of());
+}
+
+INSTANTIATE_TEST_SUITE_P(WordBoundariesAndIndentation, WrappedArticleTest, testing::ValuesIn(WRAPPED_ARTICLE_CASES));
+
+const WrappedArticleCase WRAPPED_CACHE_CASES[]{
+    {"OverwideWord",
+     "1234567890123456789012345678901234567890 alpha beta gamma delta epsilon zeta eta\nNext paragraph\n",
+     8,
+     {"1234567890123456789012345678901234567890 alpha beta\003", "gamma delta epsilon\003", "zeta eta\n",
+      "Next paragraph\n"}},
+    {"Plain",
+     "alpha beta gamma delta     epsilon zeta eta theta    iota kappa lambda mu\nNext paragraph\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta theta\003", "iota kappa lambda mu\n", "Next paragraph\n"}},
+    {"QuotedPrintable",
+     "alpha beta gamma delta =3D20 literal after wrap\nNext paragraph\n",
+     8,
+     {"alpha beta gamma delta\003", "=20 literal after wrap\n", "Next paragraph\n"},
+     "text/plain; charset=UTF-8",
+     MENCODE_QPRINT},
+    {"Base64",
+     "YWxwaGEgYmV0YSBnYW1tYSBkZWx0YSAgICAgZXBzaWxvbiB6ZXRhIGV0YSB0aGV0YSAgICBpb3RhIGthcHBhIGxhbWJkYSBtdQpOZXh0IHBhcmFnc"
+     "mFwaAo=\n",
+     8,
+     {"alpha beta gamma delta\003", "epsilon zeta eta theta\003", "iota kappa lambda mu\n", "Next paragraph\n"},
+     "text/plain; charset=UTF-8",
+     MENCODE_BASE64},
+    {"ConvertedCharset",
+     "alpha beta gamma delta caf\xE9 continuation\nNext paragraph\n",
+     8,
+     {"alpha beta gamma delta\003", "caf\xC3\xA9 continuation\n", "Next paragraph\n"},
+     "text/plain; charset=ISO-8859-1"},
+    {"Substituted",
+     "alpha beta gamma delta \xE2\x80\x99 quoted after wrap\nNext paragraph\n",
+     8,
+     {"alpha beta gamma delta\003", "\xE2\x80\x94 quoted after wrap\n", "Next paragraph\n"},
+     "text/plain; charset=UTF-8",
+     MENCODE_NONE,
+     true}};
+
+class WrappedArticleCacheTest : public WrappedArticleTest
+{
+};
+
+TEST_P(WrappedArticleCacheTest, preservesTheFollowingParagraphWhenWrappingConvertedText)
+{
+    const std::vector<std::string> rows = read_rows();
+
+    EXPECT_EQ(GetParam().rows, rows);
+    EXPECT_EQ(presentation(), art_buf_view(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+}
+
+TEST_P(WrappedArticleCacheTest, aForwardSeekFindsTheWrappedContinuationInUncachedText)
+{
+    const ArticlePosition continuation{ARTICLE_VIEW_HEADER_SIZE + static_cast<long>(GetParam().rows.front().size())};
+    const std::vector<std::string> expected{GetParam().rows.begin() + 1, GetParam().rows.end()};
+
+    const int                      result = seek_art_buf(continuation);
+    const std::vector<std::string> rows = read_rows();
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ(expected, rows);
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+}
+
+TEST_P(WrappedArticleCacheTest, aCachedContinuationRereadsWithoutRepeatingDecodingOrSubstitution)
+{
+    ASSERT_EQ(GetParam().rows, read_rows());
+    const ArticlePosition source_position = tell_art();
+    const ArticlePosition continuation{ARTICLE_VIEW_HEADER_SIZE + static_cast<long>(GetParam().rows.front().size())};
+    const std::vector<std::string> expected{GetParam().rows.begin() + 1, GetParam().rows.end()};
+
+    const int                      result = seek_art_buf(continuation);
+    const std::vector<std::string> rows = read_rows();
+
+    EXPECT_EQ(0, result);
+    EXPECT_EQ(expected, rows);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(presentation(), art_buf_view(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
+}
+
+INSTANTIATE_TEST_SUITE_P(PlainDecodedAndSubstituted, WrappedArticleCacheTest, testing::ValuesIn(WRAPPED_CACHE_CASES));
+
 } // namespace
 
 TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)

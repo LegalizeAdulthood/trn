@@ -812,7 +812,8 @@ done:
                             continue;
                         }
                     }
-                    if (cp == bp)
+                    // The first wrap can follow an overwide word.
+                    if (t < bp + len)
                     {
                         extra_chars += len;
                         len = t - bp + 1;
@@ -835,6 +836,7 @@ done:
                         std::char_traits<char>::move(&s_art_buf[dest_offset], &s_art_buf[source_offset], copy_count);
                         s_art_buf[dest_offset + copy_count] = '\0';
                         extra_chars -= spaces;
+                        s -= spaces;
                         t -= spaces + 1;
                     }
                 } while (s - (cp = t+1) > word_wrap);
