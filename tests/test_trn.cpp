@@ -5068,6 +5068,227 @@ void NewsgroupSelectorReadingTest::SetUp()
     configure_selector(mode, erase_screen);
 }
 
+struct PagedArticleSelectorCase
+{
+    const char      *name;
+    SelectionMode    mode;
+    std::vector<int> first_page;
+    std::vector<int> second_page;
+    std::vector<int> batch;
+    std::vector<int> all_unread;
+    std::vector<int> remaining_page;
+    const char      *batch_range;
+    int              pages;
+};
+
+const PagedArticleSelectorCase PAGED_ARTICLE_SELECTOR_CASES[]{
+    {"Articles", SM_ARTICLE, {2, 3}, {4, 5}, {3, 4}, {2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, {2, 5}, " 1-1,3-4", 5},
+    {"Subjects",
+     SM_SUBJECT,
+     {2, 7, 3, 8},
+     {4, 5, 10},
+     {3, 8, 4},
+     {2, 7, 3, 8, 4, 5, 10, 6, 11, 9},
+     {2, 7, 5, 10},
+     " 1-1,3-4,8",
+     3},
+    {"Threads",
+     SM_THREAD,
+     {2, 7, 3, 8},
+     {4, 9, 5, 10},
+     {3, 8, 4, 9},
+     {2, 7, 3, 8, 4, 9, 5, 10, 6, 11},
+     {2, 7, 5, 10},
+     " 1-1,3-4,8-9",
+     3}};
+
+void PrintTo(const PagedArticleSelectorCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class PagedArticleSelectorReadingStateTest : public NewsgroupSelectorReadingStateTest
+{
+protected:
+    void                     SetUp() override;
+    void                     configure_pages(const PagedArticleSelectorCase &input, bool erase_screen);
+    void                     expect_page(std::size_t index, const std::vector<int> &articles) const;
+    void                     expect_selected(std::size_t index, std::vector<int> articles) const;
+    void                     expect_reading(const std::vector<int> &articles, bool selected_only) const;
+    std::vector<std::string> selection_commands() const;
+    void                     append_reading(std::vector<std::string> &commands, const std::vector<int> &articles,
+                                            bool exhaust = false) const;
+
+    std::vector<std::vector<int>> m_selected;
+    std::vector<std::vector<int>> m_read;
+
+private:
+    void write_article(int number, std::string_view subject, int parent = 0);
+
+    trn::testing::MockEnvironment m_environment;
+};
+
+void PagedArticleSelectorReadingStateTest::SetUp()
+{
+    EXPECT_CALL(m_environment.getter, Call(testing::_))
+        .Times(testing::AnyNumber())
+        .WillRepeatedly(testing::Return(nullptr));
+    NewsgroupEndReadingStateTest::SetUp();
+    m_environment.expect_env_repeatedly("SELECTCHARS", "ab");
+    write_article(1, "Opening");
+    write_article(2, "Alpha");
+    write_article(3, "Beta");
+    write_article(4, "Gamma");
+    write_article(5, "Delta");
+    write_article(6, "Epsilon");
+    write_article(7, "Re: Alpha", 2);
+    write_article(8, "Re: Beta", 3);
+    write_article(9, "Changed branch", 4);
+    write_article(10, "Re: Delta", 5);
+    write_article(11, "Re: Epsilon", 6);
+    set_read_range("");
+    g_newsgroup_ptr->m_ng_max = ArticleNum{11};
+    m_data_source.m_act_sf.close();
+    const fs::path active_file = m_output_dir / "active";
+    std::ofstream{active_file, std::ios::binary} << "comp.previous 3 1 y\ncomp.lang.cpp 11 1 y\ncomp.next 3 1 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(active_file, "", ""));
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        std::vector<int> selected;
+        std::vector<int> read;
+        for (int number = 1; number <= 11; ++number)
+        {
+            Article *article = article_find(ArticleNum{number});
+            if (article && (article->m_flags & (AF_UNREAD | AF_SEL)) == (AF_UNREAD | AF_SEL))
+            {
+                selected.push_back(number);
+            }
+            if (was_read(ArticleNum{number}))
+            {
+                read.push_back(number);
+            }
+        }
+        m_selected.push_back(std::move(selected));
+        m_read.push_back(std::move(read));
+        return reader(buffer, size);
+    };
+}
+
+void PagedArticleSelectorReadingStateTest::write_article(int number, std::string_view subject, int parent)
+{
+    std::ofstream article{m_output_dir / "comp/lang/cpp" / std::to_string(number), std::ios::binary};
+    article << "From: Reader <reader@example.test>\nSubject: " << subject << "\nDate: 21 Oct 2026 " << number + 8
+            << ":00:00 GMT\nMessage-ID: <page" << number << "@example.test>\n";
+    if (parent)
+    {
+        article << "References: <page" << parent << "@example.test>\n";
+    }
+    article << "\nPaged selector body " << number << " END\n";
+}
+
+void PagedArticleSelectorReadingStateTest::configure_pages(const PagedArticleSelectorCase &input, bool erase_screen)
+{
+    configure_selector(input.mode, erase_screen);
+    write_article(3, "Beta");
+}
+
+void PagedArticleSelectorReadingStateTest::expect_page(std::size_t index, const std::vector<int> &articles) const
+{
+    ASSERT_LT(index, m_states.size());
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[index].mode);
+    std::vector<int> actual;
+    for (ArticleNum number : m_states[index].selector_articles)
+    {
+        actual.push_back(static_cast<int>(number.value_of()));
+    }
+    EXPECT_EQ(articles, actual);
+}
+
+void PagedArticleSelectorReadingStateTest::expect_selected(std::size_t index, std::vector<int> articles) const
+{
+    ASSERT_LT(index, m_selected.size());
+    std::sort(articles.begin(), articles.end());
+    EXPECT_EQ(articles, m_selected[index]);
+}
+
+void PagedArticleSelectorReadingStateTest::expect_reading(const std::vector<int> &articles, bool selected_only) const
+{
+    std::vector<int> actual;
+    for (std::size_t index = 0; index < m_states.size(); ++index)
+    {
+        if (m_states[index].mode == MM_ARTICLE)
+        {
+            actual.push_back(static_cast<int>(m_states[index].article.value_of()));
+            if (actual.size() > 1)
+            {
+                EXPECT_EQ(selected_only, m_states[index].selected_only);
+                EXPECT_EQ(ArticleUnread{11 - static_cast<long>(actual.size())}, m_states[index].unread);
+                std::vector<int> completed = actual;
+                std::sort(completed.begin(), completed.end());
+                EXPECT_EQ(completed, m_read[index]);
+            }
+        }
+    }
+    std::vector<int> expected{1};
+    expected.insert(expected.end(), articles.begin(), articles.end());
+    EXPECT_EQ(expected, actual);
+    std::size_t position = 0;
+    for (int number : expected)
+    {
+        const std::string body = "Paged selector body " + std::to_string(number) + " END";
+        position = m_output.find(body, position);
+        ASSERT_NE(std::string::npos, position) << body;
+        position += body.size();
+    }
+    for (int number = 1; number <= 11; ++number)
+    {
+        expect_body_count("Paged selector body " + std::to_string(number) + " END",
+                          std::count(expected.begin(), expected.end(), number));
+    }
+}
+
+std::vector<std::string> PagedArticleSelectorReadingStateTest::selection_commands() const
+{
+    return {"+", "b", ">", "a", "<", ">"};
+}
+
+void PagedArticleSelectorReadingStateTest::append_reading(std::vector<std::string> &commands,
+                                                          const std::vector<int> &articles, bool exhaust) const
+{
+    commands.insert(commands.end(), articles.size() - (exhaust ? 0 : 1), " ");
+    commands.push_back("Q");
+}
+
+class PagedArticleSelectorAcceptTest
+    : public PagedArticleSelectorReadingStateTest,
+      public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool, char>>
+{
+protected:
+    void SetUp() override;
+};
+
+void PagedArticleSelectorAcceptTest::SetUp()
+{
+    PagedArticleSelectorReadingStateTest::SetUp();
+    const auto &[input, erase_screen, accept] = GetParam();
+    configure_pages(input, erase_screen);
+}
+
+class PagedArticleSelectorDefaultTest : public PagedArticleSelectorReadingStateTest,
+                                        public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void PagedArticleSelectorDefaultTest::SetUp()
+{
+    PagedArticleSelectorReadingStateTest::SetUp();
+    const auto &[input, erase_screen] = GetParam();
+    configure_pages(input, erase_screen);
+}
+
 struct SelectorEntryReadingCase
 {
     const char   *name;
@@ -11844,6 +12065,94 @@ INSTANTIATE_TEST_SUITE_P(PresentationAndReadRange, ForcedNewsgroupEndCountTest,
                                                           ForcedEndReadRange{"1-2", 1}, ForcedEndReadRange{"1-3", 0})));
 
 INSTANTIATE_TEST_SUITE_P(Presentation, NewsgroupEndReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(PagedArticleSelectorAcceptTest, acceptsOffPageSelectionsAndReadsOnlyTheirArticlesInOrder)
+{
+    const auto &[input, erase_screen, accept] = GetParam();
+    std::vector<std::string> commands = selection_commands();
+    commands.emplace_back(1, accept);
+    append_reading(commands, input.batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_page(1, input.first_page);
+    expect_page(3, input.second_page);
+    expect_page(5, input.first_page);
+    expect_page(6, input.second_page);
+    expect_selected(4, input.batch);
+    expect_selected(5, input.batch);
+    expect_selected(6, input.batch);
+    expect_reading(input.batch, true);
+    EXPECT_EQ(input.batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(PagedArticleSelectorAcceptTest, acceptanceWithoutSelectionsUsesTheDocumentedCurrentItemOrUnreadScope)
+{
+    const auto &[input, erase_screen, accept] = GetParam();
+    const bool             current_item = accept == '\n';
+    const std::vector<int> expected =
+        current_item ? (input.mode == SM_THREAD ? std::vector<int>{4, 9} : std::vector<int>{4}) : input.all_unread;
+    std::vector<std::string> commands{"+", ">", std::string(1, accept)};
+    append_reading(commands, expected);
+    const std::string_view range = !current_item ? " 1-11" : input.mode == SM_THREAD ? " 1-1,4,9" : " 1-1,4";
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_page(1, input.first_page);
+    expect_page(2, input.second_page);
+    EXPECT_TRUE(m_selected[2].empty());
+    expect_reading(expected, current_item);
+    EXPECT_EQ(range, g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScreenAndAcceptance, PagedArticleSelectorAcceptTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool(),
+                                          testing::Values('Z', '\t', '\n')));
+
+TEST_P(PagedArticleSelectorDefaultTest, spaceAdvancesPagesAndThenAcceptsTheOffPageSelections)
+{
+    const auto &[input, erase_screen] = GetParam();
+    std::vector<std::string> commands = selection_commands();
+    commands.insert(commands.end(), input.pages - 1, " ");
+    append_reading(commands, input.batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_page(1, input.first_page);
+    expect_page(3, input.second_page);
+    expect_selected(4 + input.pages, input.batch);
+    expect_reading(input.batch, true);
+    EXPECT_EQ(input.batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(PagedArticleSelectorDefaultTest, exhaustingTheBatchRebuildsTheSelectorWithTheRemainingUnreadArticles)
+{
+    const auto &[input, erase_screen] = GetParam();
+    std::vector<std::string> commands = selection_commands();
+    commands.push_back("Z");
+    append_reading(commands, input.batch, true);
+    commands.back() = "^";
+    commands.push_back("Q");
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_reading(input.batch, true);
+    expect_page(m_states.size() - 1, input.remaining_page);
+    EXPECT_TRUE(m_selected.back().empty());
+    EXPECT_EQ(ArticleUnread{10 - static_cast<long>(input.batch.size())}, m_states.back().unread);
+    EXPECT_EQ(input.batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScreen, PagedArticleSelectorDefaultTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool()));
 
 TEST_P(NewsgroupSelectorShortcutReadingTest, theRequestedViewSelectsAnArticleAndReturnsToReading)
 {
