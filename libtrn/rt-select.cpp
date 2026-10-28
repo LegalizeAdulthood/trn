@@ -288,6 +288,7 @@ char article_selector(char_int cmd)
     const bool        save_selected_only = g_selected_only;
     const bool        initial_rereading = cmd == 'U';
     bool              scope_changed = false;
+    bool              subjects_saved = false;
     PushSelectorModes saver(MM_THREAD_SELECTOR);
 
     g_sel_rereading = initial_rereading;
@@ -328,6 +329,7 @@ sel_restart:
     }
     g_selected_only = true;
     count_subjects(cmd? CS_UNSEL_STORE : CS_NORM);
+    subjects_saved = true;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_item_index = 0;
@@ -413,7 +415,7 @@ sel_exit:
     if (s_sel_ret == '+')
     {
         g_selected_only = save_selected_only;
-        count_subjects(scope_changed ? CS_UNSELECT : CS_RESELECT);
+        count_subjects(scope_changed || !subjects_saved ? CS_UNSELECT : CS_RESELECT);
     }
     else
     {

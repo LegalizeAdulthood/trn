@@ -3450,9 +3450,16 @@ void NewsgroupEndReadingStateTest::SetUp()
                 }
             }
         }
-        else if (g_mode == MM_Q || g_mode == MM_SELECTOR_ORDER_PROMPT || g_mode == MM_CONFIRM_CATCH_UP_PROMPT)
+        else if (g_mode == MM_Q || g_mode == MM_SELECTOR_ORDER_PROMPT || g_mode == MM_CONFIRM_CATCH_UP_PROMPT ||
+                 g_mode == MM_UNKILL_PROMPT)
         {
             EXPECT_EQ(GM_PROMPT, g_general_mode);
+        }
+        else if (g_mode == MM_PAGER)
+        {
+            EXPECT_EQ(GM_READ, g_general_mode);
+            EXPECT_EQ(g_art, g_parsed_art);
+            EXPECT_EQ(g_art, g_open_art);
         }
         else
         {
@@ -3509,9 +3516,9 @@ void NewsgroupEndReadingStateTest::configure_display(bool verbose, bool erase_sc
 
 void NewsgroupEndReadingStateTest::empty_spool()
 {
-    for (const char *name : {"1", "2", "3"})
+    for (ArticleNum number{1}; number <= g_newsgroup_ptr->m_ng_max; ++number)
     {
-        fs::remove(m_output_dir / "comp/lang/cpp" / name);
+        fs::remove(m_output_dir / "comp/lang/cpp" / std::to_string(number.value_of()));
     }
     g_newsgroup_ptr->m_ng_max = ArticleNum{};
     m_data_source.m_act_sf.close();
@@ -5121,7 +5128,7 @@ protected:
     void                     expect_selected(std::size_t index, std::vector<int> articles) const;
     void expect_reading(const std::vector<int> &articles, bool selected_only, std::vector<int> completed = {1}) const;
     void                     expect_bodies(const std::vector<int> &articles) const;
-    void                     expect_returned_context(std::size_t index) const;
+    void                     expect_returned_context(std::size_t index, std::size_t before = 0) const;
     std::vector<std::string> selection_commands() const;
     void                     append_reading(std::vector<std::string> &commands, const std::vector<int> &articles,
                                             bool exhaust = false) const;
@@ -5377,14 +5384,15 @@ void ArticleSelectorScopeReadingTest::expect_scope(std::size_t index, bool rerea
     }
 }
 
-void PagedArticleSelectorReadingStateTest::expect_returned_context(std::size_t index) const
+void PagedArticleSelectorReadingStateTest::expect_returned_context(std::size_t index, std::size_t before) const
 {
     ASSERT_LT(index, m_states.size());
-    EXPECT_EQ(MM_ARTICLE, m_states[index].mode);
-    EXPECT_EQ(m_states[0].article, m_states[index].article);
-    EXPECT_EQ(m_states[0].current, m_states[index].current);
-    EXPECT_EQ(m_states[0].recent, m_states[index].recent);
-    EXPECT_EQ(m_states[0].selected_only, m_states[index].selected_only);
+    ASSERT_LT(before, m_states.size());
+    EXPECT_EQ(m_states[before].mode, m_states[index].mode);
+    EXPECT_EQ(m_states[before].article, m_states[index].article);
+    EXPECT_EQ(m_states[before].current, m_states[index].current);
+    EXPECT_EQ(m_states[before].recent, m_states[index].recent);
+    EXPECT_EQ(m_states[before].selected_only, m_states[index].selected_only);
     EXPECT_FALSE(m_states[index].selector_rereading);
     EXPECT_EQ(AGF_SEL, m_states[index].selector_mask);
 }
@@ -5687,6 +5695,224 @@ std::vector<int> ArticleSelectorCleanupReadingTest::completed_with(std::vector<i
     std::sort(read.begin(), read.end());
     read.erase(std::unique(read.begin(), read.end()), read.end());
     return read;
+}
+
+struct SelectorCacheReadingState
+{
+    ArticleNum last_cached;
+    bool       all_cached;
+    int        items;
+    int        objects;
+    int        total;
+    int        prior;
+    int        cursor;
+    bool       empty_anchor;
+};
+
+class ArticleSelectorRecoveryReadingStateTest : public PagedArticleSelectorReadingStateTest
+{
+protected:
+    void SetUp() override;
+    void configure_recovery(const PagedArticleSelectorCase &input, bool erase_screen, bool lazy = false);
+    void expect_empty(std::size_t index, bool rereading = false) const;
+
+    std::optional<std::size_t>             m_interrupt_input;
+    int                                    m_interruptions{};
+    std::vector<SelectorCacheReadingState> m_cache;
+};
+
+void ArticleSelectorRecoveryReadingStateTest::SetUp()
+{
+    PagedArticleSelectorReadingStateTest::SetUp();
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        const std::size_t index = m_states.size();
+        const bool empty_anchor = g_sel_mode == SM_ARTICLE ? !g_sel_page_app || g_sel_page_app == article_ptr_list_end()
+                                                           : !g_sel_page_sp || g_sel_page_sp->m_misc == 0;
+        m_cache.push_back({g_last_cached, g_cached_all_in_range, g_sel_page_item_cnt, g_sel_page_obj_cnt,
+                           g_sel_total_obj_cnt, g_sel_prior_obj_cnt, g_sel_item_index, empty_anchor});
+        const int result = reader(buffer, size);
+        if (m_interrupt_input && index == *m_interrupt_input)
+        {
+            EXPECT_FALSE(g_cached_all_in_range);
+            g_int_count = 1;
+            ++m_interruptions;
+        }
+        return result;
+    };
+}
+
+void ArticleSelectorRecoveryReadingStateTest::configure_recovery(const PagedArticleSelectorCase &input,
+                                                                 bool erase_screen, bool lazy)
+{
+    configure_pages(input, erase_screen);
+    g_thread_always = !lazy;
+}
+
+void ArticleSelectorRecoveryReadingStateTest::expect_empty(std::size_t index, bool rereading) const
+{
+    expect_page(index, {});
+    ASSERT_LT(index, m_cache.size());
+    EXPECT_EQ(rereading, m_states[index].selector_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, m_states[index].selector_mask);
+    EXPECT_EQ(TR_NONE, m_states[index].selected);
+    EXPECT_EQ(0, m_cache[index].items);
+    EXPECT_EQ(0, m_cache[index].objects);
+    EXPECT_EQ(0, m_cache[index].total);
+    EXPECT_EQ(0, m_cache[index].prior);
+    EXPECT_EQ(0, m_cache[index].cursor);
+    EXPECT_TRUE(m_cache[index].empty_anchor);
+}
+
+class EmptyArticleSelectorReadingTest
+    : public ArticleSelectorRecoveryReadingStateTest,
+      public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmptyArticleSelectorReadingTest::SetUp()
+{
+    ArticleSelectorRecoveryReadingStateTest::SetUp();
+    const auto &[input, erase_screen, no_files] = GetParam();
+    configure_recovery(input, erase_screen);
+    set_read_range("1-11");
+    if (no_files)
+    {
+        empty_spool();
+        set_read_range("1-0");
+    }
+}
+
+class EmptyReadArticleSelectorReadingTest
+    : public ArticleSelectorRecoveryReadingStateTest,
+      public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void EmptyReadArticleSelectorReadingTest::SetUp()
+{
+    ArticleSelectorRecoveryReadingStateTest::SetUp();
+    const auto &[input, erase_screen] = GetParam();
+    configure_recovery(input, erase_screen);
+    std::ofstream article{m_output_dir / "comp/lang/cpp/1", std::ios::binary};
+    article << "From: Reader <reader@example.test>\nSubject: Opening\n"
+               "Date: 21 Oct 2026 09:00:00 GMT\nMessage-ID: <page1@example.test>\n\n";
+    for (int line = 1; line <= 80; ++line)
+    {
+        article << "Partial selector body line " << line << '\n';
+    }
+    article << "Partial selector body END\n";
+}
+
+class InterruptedArticleSelectorReadingTest
+    : public ArticleSelectorRecoveryReadingStateTest,
+      public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool, bool, bool>>
+{
+protected:
+    void SetUp() override;
+    char interrupt_entry();
+    void expect_interrupted_return() const;
+};
+
+void InterruptedArticleSelectorReadingTest::SetUp()
+{
+    ArticleSelectorRecoveryReadingStateTest::SetUp();
+    const auto &[input, erase_screen, selected_only, rereading] = GetParam();
+    configure_recovery(input, erase_screen, true);
+    set_read_range("1-4");
+    fs::current_path(m_output_dir);
+    ASSERT_EQ(1, access_newsgroup());
+    if (selected_only)
+    {
+        ASSERT_TRUE(parse_header(ArticleNum{5}));
+        article_ptr(ArticleNum{5})->select_article(AUTO_KILL_NONE);
+    }
+    ASSERT_TRUE(parse_header(ArticleNum{4}));
+    g_art = g_curr_art = ArticleNum{4};
+    g_artp = g_curr_artp = article_ptr(ArticleNum{4});
+    g_recent_art = ArticleNum{11};
+    g_recent_artp = article_ptr(ArticleNum{11});
+    g_in_ng = true;
+    set_mode(GM_READ, MM_ARTICLE);
+}
+
+char InterruptedArticleSelectorReadingTest::interrupt_entry()
+{
+    prepare_commands({"Q"});
+    EXPECT_LT(g_last_cached, g_last_art);
+    EXPECT_FALSE(article_ptr(ArticleNum{6})->m_flags & AF_CACHED);
+    g_int_count = 1;
+    testing::internal::CaptureStdout();
+    const char result = article_selector(std::get<3>(GetParam()) ? 'U' : '+');
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void InterruptedArticleSelectorReadingTest::expect_interrupted_return() const
+{
+    const bool selected_only = std::get<2>(GetParam());
+    EXPECT_TRUE(m_states.empty());
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(ArticleNum{4}, g_art);
+    EXPECT_EQ(ArticleNum{4}, g_curr_art);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_artp);
+    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{11}, g_recent_art);
+    EXPECT_EQ(article_ptr(ArticleNum{11}), g_recent_artp);
+    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_FALSE(g_sel_rereading);
+    EXPECT_EQ(AGF_SEL, g_sel_mask);
+    EXPECT_EQ(ArticleUnread{7}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(ArticleUnread{selected_only ? 1 : 0}, g_selected_count);
+    std::vector<int> selected;
+    std::vector<int> read;
+    for (int number = 1; number <= 11; ++number)
+    {
+        const Article *article = article_ptr(ArticleNum{number});
+        if (article->m_flags & AF_SEL)
+        {
+            selected.push_back(number);
+        }
+        if (was_read(ArticleNum{number}))
+        {
+            read.push_back(number);
+        }
+    }
+    EXPECT_EQ(selected_only ? std::vector<int>{5} : std::vector<int>{}, selected);
+    EXPECT_EQ((std::vector<int>{1, 2, 3, 4}), read);
+    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_int_count);
+    EXPECT_LT(g_last_cached, g_last_art);
+    EXPECT_FALSE(g_cached_all_in_range);
+    EXPECT_FALSE(macro_pending());
+}
+
+class InterruptedSelectorRestartReadingTest
+    : public ArticleSelectorRecoveryReadingStateTest,
+      public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool>>
+{
+protected:
+    void SetUp() override;
+
+    std::vector<int> m_delta;
+    std::vector<int> m_unread_page;
+};
+
+void InterruptedSelectorRestartReadingTest::SetUp()
+{
+    ArticleSelectorRecoveryReadingStateTest::SetUp();
+    const auto &[input, erase_screen] = GetParam();
+    configure_recovery(input, erase_screen, true);
+    set_read_range("1-3");
+    m_interrupt_input = 2;
+    m_delta = input.mode == SM_ARTICLE ? std::vector<int>{5} : std::vector<int>{5, 10};
+    m_unread_page = input.mode == SM_ARTICLE ? std::vector<int>{5, 6} : std::vector<int>{5, 10, 6, 11};
 }
 
 struct SelectorEntryReadingCase
@@ -12465,6 +12691,178 @@ INSTANTIATE_TEST_SUITE_P(PresentationAndReadRange, ForcedNewsgroupEndCountTest,
                                                           ForcedEndReadRange{"1-2", 1}, ForcedEndReadRange{"1-3", 0})));
 
 INSTANTIATE_TEST_SUITE_P(Presentation, NewsgroupEndReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(EmptyArticleSelectorReadingTest, returningFromAnEmptySelectorRestoresTheEndPrompt)
+{
+    const DoNewsgroupResult result = run_reading({"+", "+", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(3U, m_states.size());
+    EXPECT_EQ(MM_ARTICLE_END, m_states[0].mode);
+    expect_empty(1);
+    expect_returned_context(2);
+    EXPECT_EQ(TR_NONE, m_states[2].unread);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged selector body")));
+}
+
+TEST_P(EmptyArticleSelectorReadingTest, switchingScopeRebuildsAnEmptyUnreadPopulationWithoutStaleRows)
+{
+    const bool no_files = std::get<2>(GetParam());
+
+    const DoNewsgroupResult result = run_reading({"+", "U", "U", "+", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(5U, m_states.size());
+    expect_empty(1);
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[2].mode);
+    EXPECT_TRUE(m_states[2].selector_rereading);
+    EXPECT_EQ(AGF_DEL_SEL, m_states[2].selector_mask);
+    EXPECT_EQ(no_files ? 0 : 11, m_cache[2].total);
+    if (no_files)
+    {
+        expect_empty(2, true);
+    }
+    expect_empty(3);
+    expect_returned_context(4);
+    EXPECT_EQ(TR_NONE, m_states[4].unread);
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Paged selector body")));
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScreenAndEmptySpool, EmptyArticleSelectorReadingTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool(),
+                                          testing::Bool()));
+
+TEST_P(EmptyReadArticleSelectorReadingTest, anEmptyReadSelectorReturnsToThePartlyReadArticleAndAllowsNextReading)
+{
+    const DoNewsgroupResult result = run_reading({"q", "U+", "+", "n", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(5U, m_states.size());
+    EXPECT_EQ(MM_PAGER, m_states[0].mode);
+    EXPECT_EQ(MM_ARTICLE, m_states[1].mode);
+    EXPECT_EQ(ArticleNum{1}, m_states[1].article);
+    EXPECT_TRUE(m_read[1].empty());
+    expect_empty(2, true);
+    EXPECT_EQ(ArticleUnread{11}, m_states[2].unread);
+    expect_returned_context(3, 1);
+    EXPECT_TRUE(m_read[3].empty());
+    EXPECT_EQ(ArticleNum{2}, m_states[4].article);
+    EXPECT_EQ((std::vector<int>{2}), m_read[4]);
+    expect_bodies({2});
+    EXPECT_THAT(m_output, testing::HasSubstr("Partial selector body line 1"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Partial selector body END")));
+    EXPECT_EQ(" 1-0,2", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScreen, EmptyReadArticleSelectorReadingTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool()));
+
+TEST_P(InterruptedArticleSelectorReadingTest, interruptedEntryRestoresTheCallerAndExistingSelections)
+{
+    const char result = interrupt_entry();
+
+    EXPECT_EQ('+', result);
+    expect_interrupted_return();
+    expect_bodies({});
+    EXPECT_EQ(" 1-4", g_newsgroup_ptr->rc_numbers());
+    EXPECT_EQ(ArticleUnread{7}, g_newsgroup_ptr->m_to_read);
+}
+
+TEST_P(InterruptedArticleSelectorReadingTest, retryingAnInterruptedEntryBuildsACompleteUsableSelector)
+{
+    const auto &[input, erase_screen, selected_only, rereading] = GetParam();
+    const int                      first_unread = rereading && input.mode != SM_ARTICLE && !selected_only ? 7 : 5;
+    const std::vector<std::string> commands =
+        rereading ? std::vector<std::string>{"U+", "+", "^", "Q"} : std::vector<std::string>{"+", "+", "^", "Q"};
+    const std::vector<int> page = rereading                  ? std::vector<int>{1, 2}
+                                  : input.mode == SM_ARTICLE ? std::vector<int>{5, 6}
+                                                             : std::vector<int>{5, 10, 6, 11};
+
+    ASSERT_EQ('+', interrupt_entry());
+    expect_interrupted_return();
+    g_in_ng = false;
+    set_mode(GM_READ, MM_NEWSGROUP_LIST);
+
+    const DoNewsgroupResult result = run_reading(commands, "4");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(4U, m_states.size());
+    expect_page(1, page);
+    EXPECT_EQ(ArticleNum{11}, m_cache[1].last_cached);
+    if (rereading)
+    {
+        EXPECT_TRUE(m_cache[1].all_cached);
+    }
+    EXPECT_EQ(rereading, m_states[1].selector_rereading);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, m_states[1].selector_mask);
+    expect_returned_context(2);
+    EXPECT_EQ(selected_only, std::find(m_selected[2].begin(), m_selected[2].end(), 5) != m_selected[2].end());
+    EXPECT_EQ(ArticleUnread{static_cast<long>(m_selected[2].size())}, m_states[2].selected);
+    EXPECT_EQ(ArticleNum{first_unread}, m_states[3].article);
+    EXPECT_EQ(selected_only, m_states[3].selected_only);
+    expect_bodies({4, first_unread});
+    EXPECT_EQ(first_unread == 7 ? " 1-4,7" : " 1-5", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScreenSelectionAndReadScope, InterruptedArticleSelectorReadingTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool(),
+                                          testing::Bool(), testing::Bool()));
+
+TEST_P(InterruptedSelectorRestartReadingTest, interruptedReadScopeLoadingRetainsTheUnreadPopulationAndChoices)
+{
+    const DoNewsgroupResult result = run_reading({"+", "a", "U", "+", "^", "Q"}, "4");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(6U, m_states.size());
+    EXPECT_EQ(1, m_interruptions);
+    expect_page(3, m_unread_page);
+    EXPECT_FALSE(m_states[3].selector_rereading);
+    EXPECT_EQ(AGF_SEL, m_states[3].selector_mask);
+    EXPECT_FALSE(m_cache[3].all_cached);
+    EXPECT_EQ((std::vector<int>{1, 2, 3, 4}), m_read[3]);
+    expect_selected(3, m_delta);
+    EXPECT_EQ(ArticleUnread{static_cast<long>(m_delta.size())}, m_states[3].selected);
+    expect_returned_context(4);
+    EXPECT_EQ(ArticleNum{5}, m_states[5].article);
+    EXPECT_FALSE(m_states[5].selected_only);
+    expect_bodies({4, 5});
+    EXPECT_EQ(" 1-5", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(InterruptedSelectorRestartReadingTest, retryingTheScopeChangeCanReviveAndReadAnArticleWithExistingChoices)
+{
+    const bool               grouped = std::get<0>(GetParam()).mode != SM_ARTICLE;
+    const std::vector<int>   batch = grouped ? std::vector<int>{2, 5, 10} : std::vector<int>{2, 5};
+    std::vector<std::string> commands{"+", "a", "U", "U", "b", "Z"};
+    append_reading(commands, batch);
+    std::vector<int> bodies{4};
+    bodies.insert(bodies.end(), batch.begin(), batch.end());
+
+    const DoNewsgroupResult result = run_reading(commands, "4");
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    EXPECT_EQ(1, m_interruptions);
+    EXPECT_FALSE(m_states[3].selector_rereading);
+    expect_selected(3, m_delta);
+    expect_page(4, {1, 2});
+    EXPECT_TRUE(m_states[4].selector_rereading);
+    EXPECT_EQ(AGF_DEL_SEL, m_states[4].selector_mask);
+    EXPECT_TRUE(m_cache[4].all_cached);
+    EXPECT_EQ(ArticleNum{11}, m_cache[4].last_cached);
+    expect_selected(4, m_delta);
+    EXPECT_EQ(ArticleUnread{1}, m_states[5].selected);
+    EXPECT_EQ(ArticleNum{2}, m_states[6].article);
+    EXPECT_TRUE(m_states[6].selected_only);
+    EXPECT_EQ((std::vector<int>{1, 2, 3, 4}), m_read[6]);
+    expect_bodies(bodies);
+    EXPECT_EQ(grouped ? " 1-5,10" : " 1-5", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScreen, InterruptedSelectorRestartReadingTest,
+                         testing::Combine(testing::Values(PAGED_ARTICLE_SELECTOR_CASES[0],
+                                                          PAGED_ARTICLE_SELECTOR_CASES[1]),
+                                          testing::Bool()));
 
 TEST_P(ArticleSelectorCleanupReadingTest, acceptingCommitsPendingKillsBeforeReadingTheOffPageSelection)
 {
