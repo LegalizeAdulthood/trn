@@ -591,18 +591,12 @@ mime_switch:
                     goto read_more;
                 }
                 filtered += '\n';
-                const std::string presented = substitute_art_text(filtered);
-                store_art_text(bp, 0, presented);
-                len = static_cast<int>(presented.size());
-                extra_chars = 0;
             }
-            else
-            {
-                const std::string presented = substitute_art_text(filtered);
-                store_art_text(bp, 0, presented);
-                len = static_cast<int>(presented.find('\n')) + 1;
-                extra_chars = static_cast<int>(presented.size()) - len;
-            }
+            const std::string presented = substitute_art_text(filtered);
+            store_art_text(bp, 0, presented);
+            const std::size_t newline = presented.find('\n');
+            len = static_cast<int>(newline == std::string::npos ? presented.size() : newline + 1);
+            extra_chars = static_cast<int>(presented.size()) - len;
         }
         break;
 

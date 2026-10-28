@@ -5,6 +5,7 @@
 #include <config/common.h>
 #include <nntp/nntpinit.h>
 #include <trn/addng.h>
+#include <trn/art-internal.h>
 #include <trn/art.h>
 #include <trn/artio.h>
 #include <trn/artsrch.h>
@@ -18,6 +19,7 @@
 #include <trn/file-contents.h>
 #include <trn/final.h>
 #include <trn/head.h>
+#include <trn/IniSection.h>
 #include <trn/init.h>
 #include <trn/kfile.h>
 #include <trn/last.h>
@@ -1973,6 +1975,296 @@ std::string_view PagerArticleTest::page_text(std::size_t page) const
     }
     return text.substr(0, text.find("--MORE--("));
 }
+
+struct ArticleCacheCase
+{
+    const char              *name;
+    std::string_view         headers;
+    std::string_view         body;
+    std::vector<std::string> plain;
+    std::vector<std::string> converted;
+    std::size_t              partial_rows{1};
+};
+
+const ArticleCacheCase ARTICLE_CACHE_CASES[]{
+    {"Latin1",
+     "Content-Type: text/plain; charset=Latin1\n",
+     "Cafe \xE9\nNext \xC4\n",
+     {"Cafe \xC3\xA9\n", "Next \xC3\x84\n"},
+     {"Cafe ECHO\n", "NEXT\n", "Next AE\n"}},
+    {"QuotedPrintable",
+     "MIME-Version: 1.0\nContent-Type: text/plain; charset=Latin1\n"
+     "Content-Transfer-Encoding: quoted-printable\n",
+     "Cafe =E9\nNext =C4\n",
+     {"Cafe \xC3\xA9\n", "Next \xC3\x84\n"},
+     {"Cafe ECHO\n", "NEXT\n", "Next AE\n"}},
+    {"Base64Rows",
+     "MIME-Version: 1.0\nContent-Type: text/plain; charset=Latin1\n"
+     "Content-Transfer-Encoding: base64\n",
+     "Q2FmZSDpCk5leHQgxAo=\n",
+     {"Cafe \xC3\xA9\n", "Next \xC3\x84\n"},
+     {"Cafe ECHO\n", "NEXT\n", "Next AE\n"}},
+    {"UnfinishedHtmlTag",
+     "MIME-Version: 1.0\nContent-Type: text/html; charset=Latin1\n",
+     "Opening<br>\nCafe \xE9\n<em",
+     {"Opening\n", "Cafe \xC3\xA9 \n"},
+     {"Opening\n", "Cafe ECHO\n", "NEXT \n"}},
+    {"Mixed",
+     "MIME-Version: 1.0\nContent-Type: multipart/mixed; boundary=part\n",
+     "--part\nContent-Type: text/plain; charset=Latin1\nContent-Transfer-Encoding: quoted-printable\n\n"
+     "Cafe =E9\n--part\nContent-Type: text/html; charset=UTF-8\n\nMore &amp; body\n--part--\n",
+     {"Part\n", "Cafe \xC3\xA9\n", "Part\n", "More & body \n", "Part\n"},
+     {"Part\n", "Cafe ECHO\n", "NEXT\n", "Part\n", "More & body \n", "Part\n"},
+     2},
+    {"Alternative",
+     "MIME-Version: 1.0\nContent-Type: multipart/alternative; boundary=part\n",
+     "--part\nContent-Type: text/plain; charset=Latin1\n\nChoice \xE9\n"
+     "--part\nContent-Type: text/html; charset=UTF-8\n\n<b>Hidden alternative</b>\n--part--\n",
+     {"Part\n", "Choice \xC3\xA9\n", "Part\n", "[Alternative: text/html]\n", "Part\n"},
+     {"Part\n", "Choice ECHO\n", "NEXT\n", "Part\n", "[Alternative: text/html]\n", "Part\n"},
+     2},
+    {"Attachment",
+     "MIME-Version: 1.0\nContent-Type: multipart/mixed; boundary=part\n",
+     "--part\nContent-Type: image/png; name=old.png\n\nIMAGE PAYLOAD\n"
+     "--part\nContent-Type: text/plain; charset=Latin1\n\nCafe \xE9\n--part--\n",
+     {"Part\n", "[Attachment type=image/png, name=old.png]\n", "Part\n", "Cafe \xC3\xA9\n", "Part\n"},
+     {"Part\n", "[Attachment type=image/png, name=old.png]\n", "Part\n", "Cafe ECHO\n", "NEXT\n", "Part\n"},
+     2},
+    {"PendingScalar",
+     "MIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\n"
+     "Content-Transfer-Encoding: base64\n",
+     "b2sKww==\n",
+     {"ok\n", "\xEF\xBF\xBD\n"},
+     {"ok\n", "?\n"}}};
+
+void PrintTo(const ArticleCacheCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+using ArticleCacheParam = std::tuple<ArticleCacheCase, bool>;
+
+class ArticleCacheLifecycleTest : public PagerArticleTest, public WithParamInterface<ArticleCacheParam>
+{
+protected:
+    void                     SetUp() override;
+    const ArticleCacheCase  &scenario() const;
+    PageSwitchResult         pager_command(std::string_view command);
+    void                     open_number(ArticleNum number);
+    std::vector<std::string> cached_rows();
+    void                     expect_displayed(const std::vector<std::string> &rows);
+
+    ArticleNum m_original{};
+    ArticleNum m_other{};
+
+private:
+    ValueSaver<UnicodeSubstitutionProfile> m_profile{g_unicode_substitutions, g_unicode_substitutions};
+    ValueSaver<std::string>                m_separator{g_multipart_separator, g_multipart_separator};
+    ValueSaver<bool>                       m_hiding{g_do_hiding, g_do_hiding};
+    ValueSaver<bool>                       m_multimedia{g_multimedia_mime, g_multimedia_mime};
+    ValueSaver<int>                        m_wrap{g_word_wrap_offset, g_word_wrap_offset};
+};
+
+const ArticleCacheCase &ArticleCacheLifecycleTest::scenario() const
+{
+    return std::get<0>(GetParam());
+}
+
+void ArticleCacheLifecycleTest::SetUp()
+{
+    PagerArticleTest::SetUp();
+    ASSERT_FALSE(HasFatalFailure());
+    g_tc_LINES = 1000;
+    g_init_lines = ArticleLine{1000};
+    g_do_hiding = true;
+    g_word_wrap_offset = -1;
+    g_multipart_separator = "Part";
+    g_charsets = "pu";
+    set_char_subst_mode('p');
+    g_unicode_substitutions = UnicodeSubstitutionProfile{};
+    ASSERT_TRUE(g_unicode_substitutions.configure(
+        IniSection{"unicode substitutions", {}, "U+00E9 = \"ECHO\\nNEXT\"\nU+00C4 = AE\nU+FFFD = ?\n"}));
+    m_original = g_art;
+    m_other = m_original + ArticleNum{1};
+    {
+        std::ofstream other{std::to_string(m_other.value_of())};
+        other << "Subject: next article\n\nNext caf\xC3\xA9\nLiteral \"a\n";
+        ASSERT_TRUE(other.good());
+    }
+    load_article(std::string{"Subject: cache lifecycle\n"} + std::string{scenario().headers}, scenario().body);
+    ASSERT_FALSE(HasFatalFailure());
+    g_raw_art_size = ArticlePosition{static_cast<long>(fs::file_size(std::to_string(g_art.value_of())))};
+    g_art_size = g_raw_art_size;
+    const bool        complete = std::get<1>(GetParam());
+    const std::size_t count = complete ? scenario().plain.size() : scenario().partial_rows;
+    std::string       line;
+    for (std::size_t row = 0; row < count; ++row)
+    {
+        ASSERT_TRUE(read_art_buf(line, false));
+        ASSERT_EQ(scenario().plain[row], line);
+        ++g_art_line_num;
+    }
+    if (complete)
+    {
+        ASSERT_FALSE(read_art_buf(line, false));
+    }
+    ASSERT_FALSE(art_buf_empty());
+}
+
+PageSwitchResult ArticleCacheLifecycleTest::pager_command(std::string_view command)
+{
+    testing::internal::CaptureStdout();
+    const PageSwitchResult result = page_switch(command);
+    (void) testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void ArticleCacheLifecycleTest::open_number(ArticleNum number)
+{
+    g_art = number;
+    g_curr_art = number;
+    g_artp = article_ptr(number);
+    g_curr_artp = g_artp;
+    g_artp->m_flags |= AF_EXISTS;
+    g_last_art = std::max(g_last_art, number);
+    ASSERT_NE(nullptr, art_open(number, ArticlePosition{}));
+    g_top_line = ArticleLine{-1};
+    g_art_line_num = ArticleLine{};
+    g_do_fseek = false;
+}
+
+std::vector<std::string> ArticleCacheLifecycleTest::cached_rows()
+{
+    EXPECT_EQ(0, seek_art_buf(g_header_type[PAST_HEADER].min_pos));
+    std::vector<std::string> rows;
+    std::string              line;
+    while (read_art_buf(line, false))
+    {
+        rows.push_back(line);
+    }
+    return rows;
+}
+
+void ArticleCacheLifecycleTest::expect_displayed(const std::vector<std::string> &rows)
+{
+    std::size_t position = 0;
+    for (const std::string &line : rows)
+    {
+        const std::string_view text{line.data(), line.size() - 1};
+        position = m_rendered.find(text, position);
+        ASSERT_NE(std::string::npos, position) << text << '\n' << m_rendered;
+        position += text.size();
+    }
+}
+
+TEST_P(ArticleCacheLifecycleTest, conversionRebuildsTheCachedArticleFromItsFirstPage)
+{
+    const PageSwitchResult command = pager_command("_C");
+    ASSERT_EQ(PS_NORM, command);
+    ASSERT_TRUE(art_buf_empty());
+    ASSERT_EQ(ArticleLine{-1}, g_top_line);
+
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_EQ('u', current_char_subst_mode());
+    EXPECT_EQ(scenario().converted, cached_rows());
+    expect_displayed(scenario().converted);
+}
+
+TEST_P(ArticleCacheLifecycleTest, cyclingConversionBackRebuildsTheOriginalPresentation)
+{
+    ASSERT_EQ(PS_NORM, pager_command("_C"));
+    render_article();
+    ASSERT_EQ(DA_NORM, m_result);
+    ASSERT_EQ(scenario().converted, cached_rows());
+    ASSERT_EQ(PS_NORM, pager_command("_C"));
+
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ(scenario().plain, cached_rows());
+    expect_displayed(scenario().plain);
+}
+
+TEST_P(ArticleCacheLifecycleTest, ordinaryRefreshReusesTheCachedPresentationAndMimeState)
+{
+    const ArticlePosition length = art_buf_len();
+    const ArticlePosition source = tell_art();
+    MimeSection *const    section = g_mime_section;
+    const MimeState       state = g_mime_state;
+    ASSERT_EQ(PS_NORM, pager_command("\f"));
+    ASSERT_EQ(length, art_buf_len());
+    ASSERT_EQ(source, tell_art());
+    ASSERT_EQ(section, g_mime_section);
+    ASSERT_EQ(state, g_mime_state);
+
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ(scenario().plain, cached_rows());
+    expect_displayed(scenario().plain);
+}
+
+TEST_P(ArticleCacheLifecycleTest, switchingArticlesDiscardsCachedMimeAndCharsetState)
+{
+    ASSERT_NO_FATAL_FAILURE(open_number(m_other));
+    ASSERT_TRUE(art_buf_empty());
+    const std::vector<std::string> expected{"Next caf\xC3\xA9\n", "Literal \"a\n"};
+
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_EQ(expected, cached_rows());
+    expect_displayed(expected);
+    EXPECT_EQ(&g_mime_article, g_mime_section);
+    EXPECT_TRUE(g_mime_section->m_decoder_pending.empty());
+    EXPECT_EQ(MENCODE_NONE, g_mime_section->m_encoding);
+    EXPECT_FALSE(g_is_mime);
+    EXPECT_FALSE(g_multimedia_mime);
+    EXPECT_EQ(m_other, g_parsed_art);
+    EXPECT_EQ(g_artp, g_curr_artp);
+}
+
+TEST_P(ArticleCacheLifecycleTest, selectedConversionModePersistsWhenSwitchingArticles)
+{
+    ASSERT_EQ(PS_NORM, pager_command("_C"));
+    ASSERT_NO_FATAL_FAILURE(open_number(m_other));
+    const std::vector<std::string> expected{"Next cafECHO\n", "NEXT\n", "Literal \"a\n"};
+
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_EQ('u', current_char_subst_mode());
+    EXPECT_EQ(expected, cached_rows());
+    expect_displayed(expected);
+    EXPECT_TRUE(g_mime_section->m_decoder_pending.empty());
+    EXPECT_FALSE(g_multimedia_mime);
+}
+
+TEST_P(ArticleCacheLifecycleTest, returningToThePreviousArticleRebuildsItsOwnPresentation)
+{
+    ASSERT_NO_FATAL_FAILURE(open_number(m_other));
+    render_article();
+    ASSERT_EQ(DA_NORM, m_result);
+    ASSERT_NO_FATAL_FAILURE(open_number(m_original));
+
+    render_article();
+
+    EXPECT_EQ(DA_NORM, m_result);
+    EXPECT_EQ(scenario().plain, cached_rows());
+    expect_displayed(scenario().plain);
+    EXPECT_EQ(m_original, g_parsed_art);
+    EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
+    EXPECT_EQ(g_artp, g_curr_artp);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PartialAndCompletedCache, ArticleCacheLifecycleTest, Combine(ValuesIn(ARTICLE_CACHE_CASES), Bool()),
+    [](const TestParamInfo<ArticleCacheParam> &info)
+    { return std::string{std::get<0>(info.param).name} + (std::get<1>(info.param) ? "Complete" : "Partial"); });
 
 struct RemotePagerCase
 {
