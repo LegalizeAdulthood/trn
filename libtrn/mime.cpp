@@ -910,25 +910,25 @@ bool mime_set_state(std::string_view bp)
         g_mime_state = SKIP_MIME;               // Skip anything before 1st part
     }
 
-    int ret = mime_end_of_section(state_line);
+    MimeSection *boundary_section{};
+    const int    ret = mime_end_of_section(state_line, &boundary_section);
+    if (ret)
+    {
+        while (g_mime_section->m_prev != boundary_section)
+        {
+            mime_pop_section();
+        }
+    }
     switch (ret)
     {
     case 0:
         break;
 
     case 1:
-        while (!g_mime_section->m_prev->m_boundary_len)
-        {
-            mime_pop_section();
-        }
         g_mime_state = BETWEEN_MIME;
         break;
 
     case 2:
-        while (!g_mime_section->m_prev->m_boundary_len)
-        {
-            mime_pop_section();
-        }
         mime_pop_section();
         g_mime_state = END_OF_MIME;
         break;
@@ -936,31 +936,45 @@ bool mime_set_state(std::string_view bp)
     return suppress_line;
 }
 
-int mime_end_of_section(std::string_view bp)
+int mime_end_of_section(std::string_view bp, MimeSection **boundary_section)
 {
+    if (boundary_section)
+    {
+        *boundary_section = nullptr;
+    }
     if (bp.size() >= 2 && bp.substr(bp.size() - 2) == "\r\n")
     {
         bp.remove_suffix(2);
     }
-    MimeSection *mp = g_mime_section->m_prev;
-    while (mp && !mp->m_boundary_len)
+    for (MimeSection *mp = g_mime_section->m_prev; mp; mp = mp->m_prev)
     {
-        mp = mp->m_prev;
-    }
-    if (mp)
-    {
+        if (!mp->m_boundary_len)
+        {
+            continue;
+        }
         // have we read all the data in this part?
         const std::string_view boundary{*mp->m_boundary};
         const std::size_t      marker_len = 2 + boundary.size();
         if (bp.size() >= marker_len && bp[0] == '-' && bp[1] == '-' && bp.substr(2, boundary.size()) == boundary)
         {
             const std::string_view rest = bp.substr(marker_len);
-            // have we found the last boundary?
+            int                    result = 0;
             if (rest.size() >= 2 && rest[0] == '-' && rest[1] == '-' && (rest.size() == 2 || rest[2] == '\n'))
             {
-                return 2;
+                result = 2;
             }
-            return rest.empty() || rest[0] == '\n';
+            else if (rest.empty() || rest[0] == '\n')
+            {
+                result = 1;
+            }
+            if (result)
+            {
+                if (boundary_section)
+                {
+                    *boundary_section = mp;
+                }
+                return result;
+            }
         }
     }
     return 0;

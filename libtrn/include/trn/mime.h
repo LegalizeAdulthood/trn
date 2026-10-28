@@ -182,7 +182,7 @@ void          mime_push_section();
 void          mime_set_article();
 void           mime_parse_sub_header(std::FILE *ifp, std::string_view first_line);
 bool           mime_set_state(std::string_view bp);
-int            mime_end_of_section(std::string_view bp);
+int            mime_end_of_section(std::string_view bp, MimeSection **boundary_section = nullptr);
 MimeParamViews mime_parse_params(std::string_view text);
 void          mime_decode_article(bool view);
 std::string    qp_decode_string(std::string_view f, bool in_header);

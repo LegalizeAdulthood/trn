@@ -283,6 +283,39 @@ INSTANTIATE_TEST_SUITE_P(LineEndings, MimeBoundaryLineTest, testing::Values("\n"
                                   : info.index == 1 ? "Crlf"
                                                     : "EndOfString"; });
 
+class MimeBoundaryNestedLineTest : public MimeBoundaryLineTest
+{
+protected:
+    void SetUp() override;
+
+private:
+    MimeSection m_outer{};
+};
+
+void MimeBoundaryNestedLineTest::SetUp()
+{
+    MimeBoundaryLineTest::SetUp();
+    m_outer.m_boundary = "part";
+    m_outer.m_boundary_len = static_cast<short>(m_outer.m_boundary->size());
+    m_parent.m_prev = &m_outer;
+}
+
+TEST_P(MimeBoundaryNestedLineTest, detectsOuterBoundaryBeforeInnerPartEnds)
+{
+    const std::string line = "--part" + std::string{GetParam()};
+
+    EXPECT_EQ(1, end_of_section(line));
+}
+
+TEST_P(MimeBoundaryNestedLineTest, detectsOuterEndingBeforeInnerPartEnds)
+{
+    const std::string line = "--part--" + std::string{GetParam()};
+
+    EXPECT_EQ(2, end_of_section(line));
+}
+
+INSTANTIATE_TEST_SUITE_P(LineEndings, MimeBoundaryNestedLineTest, testing::Values("\n", "\r\n", ""));
+
 TEST_F(MimeBoundaryTest, rejectsBoundaryPrefix)
 {
     EXPECT_EQ(0, end_of_section("--part-boundary-extra\n"));

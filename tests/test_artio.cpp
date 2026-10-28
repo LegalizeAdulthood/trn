@@ -969,6 +969,129 @@ TEST_P(MultipartArticleTest, aSavedPositionResumesAtTheReadablePartAfterSkippedC
 INSTANTIATE_TEST_SUITE_P(MixedAlternativeAndAttachments, MultipartArticleTest,
                          testing::ValuesIn(MULTIPART_ARTICLE_CASES));
 
+const MultipartArticleCase MULTIPART_ENDING_CASES[]{
+    {"NestedThenText",
+     mime_part("Content-Type: multipart/mixed; boundary=inner\n",
+               "--inner\nContent-Type: text/plain\n\nInner text\n--inner--\n") +
+         mime_part("Content-Type: text/plain\n", "Last text\n") + "--part--\nHidden epilogue\n",
+     {"Part\n", "Part\n", "Inner text\n", "Part\n", "Part\n", "Last text\n", "Part\n"}},
+    {"NestedAtEnd",
+     mime_part("Content-Type: text/plain\n", "First text\n") +
+         mime_part("Content-Type: multipart/mixed; boundary=inner\n",
+                   "--inner\nContent-Type: text/plain\n\nInner text\n--inner--\n") +
+         "--part--\n",
+     {"Part\n", "First text\n", "Part\n", "Part\n", "Inner text\n", "Part\n", "Part\n"}},
+    {"DeeplyNested",
+     mime_part("Content-Type: multipart/mixed; boundary=inner\n",
+               "--inner\nContent-Type: multipart/mixed; boundary=deep\n\n"
+               "--deep\nContent-Type: text/plain\n\nDeep text\n--deep--\n--inner--\n") +
+         "--part--\n",
+     {"Part\n", "Part\n", "Part\n", "Deep text\n", "Part\n", "Part\n", "Part\n"}},
+    {"TrailingApplication",
+     mime_part("Content-Type: text/plain\n", "First text\n") +
+         mime_part("Content-Type: application/pdf; name=report.pdf\n", "%PDF-HIDDEN\n") + "--part--\n",
+     {"Part\n", "First text\n", "Part\n", "[Attachment type=application/pdf, name=report.pdf]\n", "Part\n"}},
+    {"OnlyImage",
+     mime_part("Content-Type: image/png; name=picture.png\n", "HIDDEN IMAGE\n") + "--part--\n",
+     {"Part\n", "[Attachment type=image/png, name=picture.png]\n", "Part\n"}},
+    {"Base64Tail",
+     mime_part("Content-Type: text/plain\nContent-Transfer-Encoding: base64\n", "SGVsbG8=\n") + "--part--\n",
+     {"Part\n", "Hello\n", "Part\n"}},
+    {"Base64TailClosingAtEof",
+     mime_part("Content-Type: text/plain\nContent-Transfer-Encoding: base64\n", "SGVsbG8=\n") + "--part--",
+     {"Part\n", "Hello\n", "Part\n"}},
+    {"Base64TailWithoutEnding",
+     mime_part("Content-Type: text/plain\nContent-Transfer-Encoding: base64\n", "SGVsbG8="),
+     {"Part\n", "Hello\n"}},
+    {"TrailingAttachmentWithoutEnding",
+     mime_part("Content-Type: text/plain\n", "First text\n") +
+         mime_part("Content-Type: application/pdf; name=report.pdf\n", "%PDF-HIDDEN"),
+     {"Part\n", "First text\n", "Part\n", "[Attachment type=application/pdf, name=report.pdf]\n"}},
+    {"EmptyText", mime_part("Content-Type: text/plain\n", "") + "--part--\n", {"Part\n", "Part\n"}},
+    {"ClosingBoundaryAtEof",
+     mime_part("Content-Type: text/plain\n", "Last text\n") + "--part--",
+     {"Part\n", "Last text\n", "Part\n"}},
+    {"MissingOuterEnding", mime_part("Content-Type: text/plain\n", "Last text"), {"Part\n", "Last text\n"}},
+    {"HtmlTailAtEof", mime_part("Content-Type: text/html\n", "<b>Last text</b>"), {"Part\n", "Last text \n"}},
+    {"MissingInnerEndingBeforeSibling",
+     mime_part("Content-Type: multipart/mixed; boundary=inner\n", "--inner\nContent-Type: text/plain\n\nInner text\n") +
+         mime_part("Content-Type: text/plain\n", "Last text\n") + "--part--\n",
+     {"Part\n", "Part\n", "Inner text\n", "Part\n", "Last text\n", "Part\n"}},
+    {"MissingInnerEndingBeforeOuterEnding",
+     mime_part("Content-Type: multipart/mixed; boundary=inner\n", "--inner\nContent-Type: text/plain\n\nInner text\n") +
+         "--part--\n",
+     {"Part\n", "Part\n", "Inner text\n", "Part\n"}}};
+
+class MultipartEndingArticleTest : public MultipartArticleTest
+{
+};
+
+TEST_P(MultipartEndingArticleTest, finishesWithTheExpectedTextSeparatorsAndPresentationSize)
+{
+    ArticlePosition expected_size{ARTICLE_VIEW_HEADER_SIZE};
+    for (const std::string &line : GetParam().lines)
+    {
+        expected_size += ArticlePosition{static_cast<long>(line.size())};
+        if (line == "Part\n" || line.front() == '[')
+        {
+            expected_size += ArticlePosition{1}; // Hidden presentation marker.
+        }
+    }
+
+    const MimePresentation result = read_presentation();
+
+    EXPECT_EQ(GetParam().lines, result.lines);
+    EXPECT_EQ(expected_size, g_art_size);
+    EXPECT_EQ(expected_size, art_buf_article_pos());
+}
+
+TEST_P(MultipartEndingArticleTest, repeatedEofDoesNotChangeTheCompletedPresentation)
+{
+    read_presentation();
+    const ArticlePosition position = art_buf_article_pos();
+    const ArticlePosition size = g_art_size;
+    const ArticlePosition source_position = tell_art();
+    const MimeState       state = g_mime_state;
+    MimeSection *const    section = g_mime_section;
+    std::string           first{"stale"};
+    std::string           second{"stale"};
+
+    const bool first_read = read_art_buf(first, false);
+    const bool second_read = read_art_buf(second, false);
+
+    EXPECT_FALSE(first_read);
+    EXPECT_FALSE(second_read);
+    EXPECT_TRUE(first.empty());
+    EXPECT_TRUE(second.empty());
+    EXPECT_EQ(position, art_buf_article_pos());
+    EXPECT_EQ(size, g_art_size);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(state, g_mime_state);
+    EXPECT_EQ(section, g_mime_section);
+}
+
+TEST_P(MultipartEndingArticleTest, replaysFinalTextAndSeparatorsFromTheCompletedCache)
+{
+    const MimePresentation cached = read_presentation();
+    ASSERT_EQ(GetParam().lines, cached.lines);
+    const ArticlePosition source_position = tell_art();
+    const MimeState       state = g_mime_state;
+    MimeSection *const    section = g_mime_section;
+
+    const int              seek = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+    const MimePresentation replayed = read_presentation();
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(cached.lines, replayed.lines);
+    EXPECT_EQ(cached.positions, replayed.positions);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(state, g_mime_state);
+    EXPECT_EQ(section, g_mime_section);
+}
+
+INSTANTIATE_TEST_SUITE_P(NestingAttachmentsAndEof, MultipartEndingArticleTest,
+                         testing::ValuesIn(MULTIPART_ENDING_CASES));
+
 } // namespace
 
 TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)

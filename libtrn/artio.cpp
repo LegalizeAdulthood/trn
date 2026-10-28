@@ -468,12 +468,12 @@ read_more:
         }
         o = line_offset + extra_offset;
         if (mime_end_of_section(std::string_view{bp + o}) &&
-            (read_offset || !g_mime_section->m_decoder_pending.empty()))
+            (line_offset || !g_mime_section->m_decoder_pending.empty()))
         {
             const std::string boundary{bp + o};
             const std::size_t source = static_cast<std::size_t>(converted_offset + extra_offset);
             const std::string decoded = g_mime_section->decode_text_chunk(
-                {bp + source, static_cast<std::size_t>(read_offset - converted_offset)}, true);
+                {bp + source, static_cast<std::size_t>(line_offset - converted_offset)}, true);
             std::string tail = g_mime_state == HTML_TEXT_MIME
                                    ? filter_html(decoded, {bp, static_cast<std::size_t>(filter_offset)},
                                                  static_cast<int>(s_art_buf_pos.value_of()))
@@ -673,6 +673,7 @@ mime_switch:
         else
         {
             *bp = '\0';
+            bp = nullptr;
         }
         len = 0;
         break;
