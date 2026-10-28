@@ -3437,8 +3437,9 @@ void NewsgroupEndReadingStateTest::SetUp()
                 }
                 else
                 {
-                    for (Article *article = g_sel_items[item].u.sp->first_art(); article;
-                         article = article->next_article())
+                    Subject *subject = g_sel_items[item].u.sp;
+                    for (Article *article = g_sel_mode == SM_THREAD ? subject->first_art() : subject->m_articles;
+                         article; article = g_sel_mode == SM_THREAD ? article->next_article() : article->m_subj_next)
                     {
                         const ArticleFlags scope = g_sel_rereading ? AF_EXISTS : AF_EXISTS | AF_UNREAD;
                         if ((article->m_flags & (AF_EXISTS | AF_UNREAD)) == scope)
@@ -3448,6 +3449,10 @@ void NewsgroupEndReadingStateTest::SetUp()
                     }
                 }
             }
+        }
+        else if (g_mode == MM_Q || g_mode == MM_SELECTOR_ORDER_PROMPT)
+        {
+            EXPECT_EQ(GM_PROMPT, g_general_mode);
         }
         else
         {
@@ -5380,6 +5385,203 @@ void ArticleSelectorScopeReadingTest::expect_returned_context(std::size_t index)
     EXPECT_EQ(m_states[0].selected_only, m_states[index].selected_only);
     EXPECT_FALSE(m_states[index].selector_rereading);
     EXPECT_EQ(AGF_SEL, m_states[index].selector_mask);
+}
+
+struct SelectorPresentationState
+{
+    SelectionSortMode sort;
+    int               direction;
+    char              style;
+    int               prior;
+    int               population;
+    ArticleNum        anchor;
+};
+
+class ArticleSelectorPresentationReadingStateTest : public PagedArticleSelectorReadingStateTest
+{
+protected:
+    void                            SetUp() override;
+    void                            TearDown() override;
+    const PagedArticleSelectorCase &configure_presentation(SelectionMode mode, bool erase_screen);
+    void expect_view(std::size_t index, SelectionMode mode, SelectionSortMode sort, int direction,
+                     const std::vector<int> &page, const std::vector<int> &selected, int prior = 0) const;
+
+    std::vector<SelectorPresentationState> m_presentation;
+
+private:
+    std::string m_old_display_mode{g_sel_art_display_mode};
+    std::size_t m_old_display_index{g_sel_art_display_mode_index};
+};
+
+void ArticleSelectorPresentationReadingStateTest::SetUp()
+{
+    PagedArticleSelectorReadingStateTest::SetUp();
+    g_sel_art_display_mode = "lmds";
+    g_sel_art_display_mode_index = 3;
+    const TerminalInputReader reader = g_terminal_input_reader;
+    g_terminal_input_reader = [this, reader](char *buffer, int size)
+    {
+        ArticleNum anchor;
+        if (g_mode == MM_THREAD_SELECTOR && g_sel_page_item_cnt)
+        {
+            const Selection &item = g_sel_items[0].u;
+            Article         *article = g_sel_mode == SM_ARTICLE  ? item.ap
+                                       : g_sel_mode == SM_THREAD ? item.sp->first_art()
+                                                                 : item.sp->m_articles;
+            anchor = article->article_num();
+        }
+        m_presentation.push_back({g_sel_sort, g_sel_direction, current_article_display_mode(), g_sel_prior_obj_cnt,
+                                  g_sel_total_obj_cnt, anchor});
+        return reader(buffer, size);
+    };
+}
+
+void ArticleSelectorPresentationReadingStateTest::TearDown()
+{
+    g_sel_art_display_mode = m_old_display_mode;
+    g_sel_art_display_mode_index = m_old_display_index;
+    PagedArticleSelectorReadingStateTest::TearDown();
+}
+
+void ArticleSelectorPresentationReadingStateTest::expect_view(std::size_t index, SelectionMode mode,
+                                                              SelectionSortMode sort, int direction,
+                                                              const std::vector<int> &page,
+                                                              const std::vector<int> &selected, int prior) const
+{
+    expect_page(index, page);
+    ASSERT_LT(index, m_presentation.size());
+    EXPECT_EQ(mode, m_states[index].selector_mode);
+    EXPECT_EQ(sort, m_presentation[index].sort);
+    EXPECT_EQ(direction, m_presentation[index].direction);
+    EXPECT_EQ(prior, m_presentation[index].prior);
+    EXPECT_EQ(10, m_presentation[index].population);
+    EXPECT_EQ(ArticleNum{page.front()}, m_presentation[index].anchor);
+    EXPECT_FALSE(m_states[index].selector_rereading);
+    EXPECT_EQ(AGF_SEL, m_states[index].selector_mask);
+    EXPECT_EQ(ArticleUnread{10}, m_states[index].unread);
+    EXPECT_EQ(ArticleUnread{static_cast<long>(selected.size())}, m_states[index].selected);
+    EXPECT_EQ((std::vector<int>{1}), m_read[index]);
+    expect_selected(index, selected);
+}
+
+const PagedArticleSelectorCase &ArticleSelectorPresentationReadingStateTest::configure_presentation(SelectionMode mode,
+                                                                                                    bool erase_screen)
+{
+    const auto page = std::find_if(std::begin(PAGED_ARTICLE_SELECTOR_CASES), std::end(PAGED_ARTICLE_SELECTOR_CASES),
+                                   [mode](const PagedArticleSelectorCase &value) { return value.mode == mode; });
+    configure_pages(*page, erase_screen);
+    return *page;
+}
+
+class ArticleSelectorPresentationReadingTest
+    : public ArticleSelectorPresentationReadingStateTest,
+      public testing::WithParamInterface<std::tuple<PagedArticleSelectorCase, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void ArticleSelectorPresentationReadingTest::SetUp()
+{
+    ArticleSelectorPresentationReadingStateTest::SetUp();
+    const auto &[input, erase_screen] = GetParam();
+    configure_pages(input, erase_screen);
+}
+
+struct SelectorSubjectOrderCase
+{
+    SelectionMode    mode;
+    std::vector<int> forward_page;
+    std::vector<int> reverse_page;
+    std::vector<int> forward_batch;
+    std::vector<int> reverse_batch;
+    const char      *read_range;
+};
+
+const SelectorSubjectOrderCase SELECTOR_SUBJECT_ORDER_CASES[]{
+    {SM_ARTICLE, {2, 7}, {4, 11}, {3, 4}, {4, 3}, " 1-1,3-4"},
+    {SM_SUBJECT, {2, 7, 3, 8}, {4, 6, 11}, {3, 8, 4}, {4, 3, 8}, " 1-1,3-4,8"},
+    {SM_THREAD, {2, 7, 3, 8}, {4, 9, 6, 11}, {3, 8, 4, 9}, {4, 9, 3, 8}, " 1-1,3-4,8-9"}};
+
+void PrintTo(const SelectorSubjectOrderCase &value, std::ostream *output)
+{
+    *output << (value.mode == SM_ARTICLE ? "Articles" : value.mode == SM_SUBJECT ? "Subjects" : "Threads");
+}
+
+class ArticleSelectorSubjectOrderReadingTest
+    : public ArticleSelectorPresentationReadingStateTest,
+      public testing::WithParamInterface<std::tuple<SelectorSubjectOrderCase, bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void ArticleSelectorSubjectOrderReadingTest::SetUp()
+{
+    ArticleSelectorPresentationReadingStateTest::SetUp();
+    const auto &[input, reverse, erase_screen] = GetParam();
+    configure_presentation(input.mode, erase_screen);
+}
+
+struct SelectorGroupingReadingCase
+{
+    const char      *name;
+    SelectionMode    initial;
+    SelectionMode    target;
+    char             response;
+    std::vector<int> prompt_page;
+    int              prompt_prior;
+    std::vector<int> toggle_page;
+    int              toggle_prior;
+    std::vector<int> batch;
+};
+
+const SelectorGroupingReadingCase SELECTOR_GROUPING_READING_CASES[]{
+    {"ArticleToSubject", SM_ARTICLE, SM_SUBJECT, 's', {2, 7, 3, 8}, 0, {4, 5, 10}, 4, {3, 4}},
+    {"ArticleToThread", SM_ARTICLE, SM_THREAD, 't', {2, 7, 3, 8}, 0, {4, 9, 5, 10}, 4, {3, 4}},
+    {"SubjectToArticle", SM_SUBJECT, SM_ARTICLE, 'a', {4, 5}, 2, {4, 5}, 2, {3, 4, 8}},
+    {"ThreadToArticle", SM_THREAD, SM_ARTICLE, 'a', {4, 5}, 2, {4, 5}, 2, {3, 4, 8, 9}},
+    {"SubjectToThread", SM_SUBJECT, SM_THREAD, 't', {2, 7, 3, 8}, 0, {}, 0, {3, 8, 4}},
+    {"ThreadToSubject", SM_THREAD, SM_SUBJECT, 's', {4, 5, 10}, 4, {}, 0, {3, 8, 4, 9}}};
+
+void PrintTo(const SelectorGroupingReadingCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class ArticleSelectorGroupingReadingTest
+    : public ArticleSelectorPresentationReadingStateTest,
+      public testing::WithParamInterface<std::tuple<SelectorGroupingReadingCase, bool>>
+{
+protected:
+    void SetUp() override;
+
+    const PagedArticleSelectorCase *m_initial{};
+};
+
+void ArticleSelectorGroupingReadingTest::SetUp()
+{
+    ArticleSelectorPresentationReadingStateTest::SetUp();
+    const auto &[input, erase_screen] = GetParam();
+    m_initial = &configure_presentation(input.initial, erase_screen);
+}
+
+class ArticleSelectorToggleGroupingReadingTest : public ArticleSelectorGroupingReadingTest
+{
+protected:
+    void SetUp() override;
+};
+
+void ArticleSelectorToggleGroupingReadingTest::SetUp()
+{
+    ArticleSelectorGroupingReadingTest::SetUp();
+    const SelectorGroupingReadingCase &input = std::get<0>(GetParam());
+    if (input.initial == SM_ARTICLE)
+    {
+        g_sel_thread_mode = input.target;
+        g_sel_thread_sort = SS_DATE;
+        g_use_threads = g_threaded_group = input.target == SM_THREAD;
+    }
 }
 
 struct SelectorEntryReadingCase
@@ -12158,6 +12360,200 @@ INSTANTIATE_TEST_SUITE_P(PresentationAndReadRange, ForcedNewsgroupEndCountTest,
                                                           ForcedEndReadRange{"1-2", 1}, ForcedEndReadRange{"1-3", 0})));
 
 INSTANTIATE_TEST_SUITE_P(Presentation, NewsgroupEndReadingTest, testing::Combine(testing::Bool(), testing::Bool()));
+
+TEST_P(ArticleSelectorSubjectOrderReadingTest, changingSubjectOrderReadsTheRetainedOffPageSelectionsInThatOrder)
+{
+    const auto &[input, reverse, erase_screen] = GetParam();
+    const std::vector<int>  &batch = reverse ? input.reverse_batch : input.forward_batch;
+    std::vector<std::string> commands{"+", "b", ">", "a", "O", reverse ? "S" : "s", "Z"};
+    append_reading(commands, batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    EXPECT_EQ(MM_Q, m_states[5].mode);
+    expect_view(6, input.mode, SS_STRING, reverse ? -1 : 1, reverse ? input.reverse_page : input.forward_page,
+                input.forward_batch);
+    EXPECT_NE(std::string::npos, m_output.find("Order by Date"));
+    expect_reading(batch, true);
+    EXPECT_EQ(input.read_range, g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeDirectionAndScreen, ArticleSelectorSubjectOrderReadingTest,
+                         testing::Combine(testing::ValuesIn(SELECTOR_SUBJECT_ORDER_CASES), testing::Bool(),
+                                          testing::Bool()));
+
+TEST_P(ArticleSelectorPresentationReadingTest, reversingTwiceRebuildsFromTheFirstPageAndRetainsSelections)
+{
+    const auto &[input, erase_screen] = GetParam();
+    const SelectionSortMode  sort = input.mode == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    const std::vector<int>   reversed = input.mode == SM_ARTICLE  ? std::vector<int>{11, 10}
+                                        : input.mode == SM_THREAD ? std::vector<int>{6, 11, 5, 10}
+                                                                  : std::vector<int>{9, 6, 11};
+    std::vector<std::string> commands{"+", "b", ">", "a", "R", "R", "Z"};
+    append_reading(commands, input.batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_view(5, input.mode, sort, -1, reversed, input.batch);
+    expect_view(6, input.mode, sort, 1, input.first_page, input.batch);
+    expect_reading(input.batch, true);
+    EXPECT_EQ(input.batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorPresentationReadingTest, cancellingTheOrderPromptKeepsTheCurrentPageAndSelections)
+{
+    const auto &[input, erase_screen] = GetParam();
+    const SelectionSortMode  sort = input.mode == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    const int                prior = static_cast<int>(input.first_page.size());
+    std::vector<std::string> commands{"+", "b", ">", "a", "O", "q", "Z"};
+    append_reading(commands, input.batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    EXPECT_EQ(MM_Q, m_states[5].mode);
+    expect_view(6, input.mode, sort, 1, input.second_page, input.batch, prior);
+    expect_reading(input.batch, true);
+    EXPECT_EQ(input.batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorPresentationReadingTest, cyclingDisplayStylesKeepsThePageAnchorAndOffPageSelections)
+{
+    const auto &[input, erase_screen] = GetParam();
+    const SelectionSortMode  sort = input.mode == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    const int                prior = static_cast<int>(input.first_page.size());
+    std::vector<std::string> commands{"+", "b", ">", "a", "L", "L", "L", "L", "Z"};
+    append_reading(commands, input.batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_view(5, input.mode, sort, 1, input.second_page, input.batch, prior);
+    expect_view(6, input.mode, sort, 1, input.second_page, input.batch, prior);
+    expect_view(7, input.mode, sort, 1, input.second_page, input.batch, prior);
+    expect_view(8, input.mode, sort, 1, input.second_page, input.batch, prior);
+    EXPECT_EQ('l', m_presentation[5].style);
+    EXPECT_EQ('m', m_presentation[6].style);
+    EXPECT_EQ('d', m_presentation[7].style);
+    EXPECT_EQ('s', m_presentation[8].style);
+    EXPECT_NE(std::string::npos, m_output.find("(long display style)"));
+    EXPECT_NE(std::string::npos, m_output.find("(medium display style)"));
+    EXPECT_NE(std::string::npos, m_output.find("(date display style)"));
+    EXPECT_NE(std::string::npos, m_output.find("(short display style)"));
+    EXPECT_TRUE(std::regex_search(m_output, std::regex{"Reader[^\\r\\n]*Gamma"}));
+    EXPECT_TRUE(std::regex_search(m_output, std::regex{"Oct[^\\r\\n]*Gamma"}));
+    expect_reading(input.batch, true);
+    EXPECT_EQ(input.batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScreen, ArticleSelectorPresentationReadingTest,
+                         testing::Combine(testing::ValuesIn(PAGED_ARTICLE_SELECTOR_CASES), testing::Bool()));
+
+TEST_P(ArticleSelectorGroupingReadingTest, changingGroupingPreservesPartialSelectionsAndUsesTheNewReadingOrder)
+{
+    const SelectorGroupingReadingCase &input = std::get<0>(GetParam());
+    const SelectionSortMode            sort = input.target == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    std::vector<std::string>           commands{"+", "b", ">", "a", "S", std::string(1, input.response), "Z"};
+    append_reading(commands, input.batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    EXPECT_EQ(MM_SELECTOR_ORDER_PROMPT, m_states[5].mode);
+    expect_view(6, input.target, sort, 1, input.prompt_page, m_initial->batch, input.prompt_prior);
+    EXPECT_EQ(input.initial == SM_THREAD || input.target == SM_THREAD, m_states[6].selector_threaded);
+    EXPECT_NE(std::string::npos, m_output.find("Selector mode:  Threads, Subjects, Articles?"));
+    expect_reading(input.batch, true);
+    EXPECT_EQ(m_initial->batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorGroupingReadingTest, returningAfterChangingGroupingRestoresTheArticleAndAllowsOrdinaryReading)
+{
+    const SelectorGroupingReadingCase &input = std::get<0>(GetParam());
+
+    const DoNewsgroupResult result =
+        run_reading({"+", "b", ">", "a", "S", std::string(1, input.response), "+", "^", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(9U, m_states.size());
+    EXPECT_EQ(MM_ARTICLE, m_states[7].mode);
+    EXPECT_EQ(m_states[0].article, m_states[7].article);
+    EXPECT_EQ(m_states[0].current, m_states[7].current);
+    EXPECT_EQ(m_states[0].recent, m_states[7].recent);
+    EXPECT_FALSE(m_states[7].selected_only);
+    expect_selected(7, m_initial->batch);
+    EXPECT_EQ((std::vector<int>{1}), m_read[7]);
+    EXPECT_EQ(MM_ARTICLE, m_states[8].mode);
+    EXPECT_EQ(ArticleNum{2}, m_states[8].article);
+    EXPECT_FALSE(m_states[8].selected_only);
+    expect_bodies({1, 2});
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(TransitionAndScreen, ArticleSelectorGroupingReadingTest,
+                         testing::Combine(testing::ValuesIn(SELECTOR_GROUPING_READING_CASES), testing::Bool()));
+
+TEST_P(ArticleSelectorToggleGroupingReadingTest, togglingGroupingBackRetainsThePageAnchorAndOriginalSelections)
+{
+    const SelectorGroupingReadingCase &input = std::get<0>(GetParam());
+    const SelectionSortMode            target_sort = input.target == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    const SelectionSortMode            initial_sort = input.initial == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    std::vector<std::string>           commands{"+", "b", ">", "a", "=", "=", "Z"};
+    append_reading(commands, m_initial->batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    expect_view(5, input.target, target_sort, 1, input.toggle_page, m_initial->batch, input.toggle_prior);
+    expect_view(6, input.initial, initial_sort, 1, m_initial->second_page, m_initial->batch,
+                static_cast<int>(m_initial->first_page.size()));
+    expect_reading(m_initial->batch, true);
+    EXPECT_EQ(m_initial->batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(ArticleSelectorToggleGroupingReadingTest, eachGroupingRetainsItsOwnSortWhenReturningToThatView)
+{
+    const SelectorGroupingReadingCase &input = std::get<0>(GetParam());
+    const auto                         order =
+        std::find_if(std::begin(SELECTOR_SUBJECT_ORDER_CASES), std::end(SELECTOR_SUBJECT_ORDER_CASES),
+                     [&input](const SelectorSubjectOrderCase &value) { return value.mode == input.initial; });
+    const SelectionSortMode  target_sort = input.target == SM_ARTICLE ? SS_NATURAL : SS_DATE;
+    std::vector<std::string> commands{"+", "b", ">", "a", "O", "D", "=", "=", "Z"};
+    append_reading(commands, order->reverse_batch);
+
+    const DoNewsgroupResult result = run_reading(commands);
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(commands.size(), m_states.size());
+    EXPECT_EQ(input.initial, m_states[6].selector_mode);
+    EXPECT_EQ(SS_DATE, m_presentation[6].sort);
+    EXPECT_EQ(-1, m_presentation[6].direction);
+    EXPECT_EQ(input.target, m_states[7].selector_mode);
+    EXPECT_EQ(target_sort, m_presentation[7].sort);
+    EXPECT_EQ(1, m_presentation[7].direction);
+    EXPECT_EQ(input.initial, m_states[8].selector_mode);
+    EXPECT_EQ(SS_DATE, m_presentation[8].sort);
+    EXPECT_EQ(-1, m_presentation[8].direction);
+    expect_selected(6, m_initial->batch);
+    expect_selected(7, m_initial->batch);
+    expect_selected(8, m_initial->batch);
+    expect_reading(order->reverse_batch, true);
+    EXPECT_EQ(m_initial->batch_range, g_newsgroup_ptr->rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TransitionAndScreen, ArticleSelectorToggleGroupingReadingTest,
+    testing::Combine(testing::Values(SELECTOR_GROUPING_READING_CASES[0], SELECTOR_GROUPING_READING_CASES[1],
+                                     SELECTOR_GROUPING_READING_CASES[2], SELECTOR_GROUPING_READING_CASES[3]),
+                     testing::Bool()));
 
 TEST_P(ArticleSelectorScopeReadingTest, repeatedScopeChangesRetainUnreadSelectionsAndRestoreTheCaller)
 {
