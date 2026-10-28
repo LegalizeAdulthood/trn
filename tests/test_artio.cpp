@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -777,6 +778,196 @@ TEST_P(WrappedArticleCacheTest, aCachedContinuationRereadsWithoutRepeatingDecodi
 }
 
 INSTANTIATE_TEST_SUITE_P(PlainDecodedAndSubstituted, WrappedArticleCacheTest, testing::ValuesIn(WRAPPED_CACHE_CASES));
+
+std::string mime_part(std::string_view headers, std::string_view body)
+{
+    return "--part\n" + std::string(headers) + '\n' + std::string(body);
+}
+
+std::string mixed_mime_body(std::string_view headers, std::string_view body)
+{
+    return "Hidden preamble\n" + mime_part("Content-Type: text/plain\n", "First text\n") + mime_part(headers, body) +
+           mime_part("Content-Type: text/plain\n", "Last text\n") + "--part--\n";
+}
+
+std::vector<std::string> mixed_mime_lines(std::string_view middle)
+{
+    return {"Part\n", "First text\n", "Part\n", std::string(middle), "Part\n", "Last text\n", "Part\n"};
+}
+
+struct MultipartArticleCase
+{
+    const char              *name;
+    std::string              body;
+    std::vector<std::string> lines;
+    std::string_view         resume{"Last text\n"};
+    const char              *type{"multipart/mixed; boundary=part"};
+    int                      columns{100};
+};
+
+const MultipartArticleCase MULTIPART_ARTICLE_CASES[]{
+    {"MixedText", mixed_mime_body("Content-Type: text/html; charset=UTF-8\n", "<b>HTML text</b>\n"),
+     mixed_mime_lines("HTML text \n")},
+    {"Image",
+     mixed_mime_body("Content-Type: image/png; name=picture.png\nContent-Transfer-Encoding: base64\n",
+                     "SElEREVOX0lNQUdFX1BBWUxPQUQ=\n"),
+     mixed_mime_lines("[Attachment type=image/png, name=picture.png]\n")},
+    {"Audio",
+     mixed_mime_body("Content-Type: audio/basic; name=sound.au\nContent-Transfer-Encoding: base64\n",
+                     "SElEREVOX0FVRElPX1BBWUxPQUQ=\n"),
+     mixed_mime_lines("[Attachment type=audio/basic, name=sound.au]\n")},
+    {"Application",
+     mixed_mime_body("Content-Type: application/pdf; name=old.pdf\n"
+                     "Content-Disposition: attachment; filename=report.pdf\n",
+                     "%PDF-HIDDEN\n"),
+     mixed_mime_lines("[Attachment type=application/pdf, name=report.pdf]\n")},
+    {"UnknownType",
+     mixed_mime_body("Content-Type: application/x-trn-test\n", "HIDDEN PAYLOAD\n--part-not-a-boundary\n"),
+     mixed_mime_lines("[Attachment type=application/x-trn-test, name=unknown]\n")},
+    {"Vcard", mixed_mime_body("Content-Type: text/x-vcard; name=contact.vcf\n", "BEGIN:VCARD\nFN:Hidden\nEND:VCARD\n"),
+     mixed_mime_lines("[Attachment type=text/x-vcard, name=contact.vcf]\n")},
+    {"InlineImage",
+     mixed_mime_body("Content-Type: image/png; name=inline.png\nContent-Disposition: inline\n",
+                     "HIDDEN INLINE IMAGE\n"),
+     mixed_mime_lines("[Attachment type=image/png, name=inline.png]\n")},
+    {"NarrowDescription", mixed_mime_body("Content-Type: application/pdf; name=report.pdf\n", "%PDF-HIDDEN\n"),
+     mixed_mime_lines("[Attachment type=application/pdf, n...]\n"), "Last text\n", "multipart/mixed; boundary=part",
+     40},
+    {"PlainAlternative",
+     mime_part("Content-Type: text/plain\n", "Chosen plain\n") +
+         mime_part("Content-Type: text/html\n", "<b>HIDDEN HTML ALTERNATIVE</b>\n") +
+         mime_part("Content-Type: application/pdf\n", "%PDF-HIDDEN ALTERNATIVE\n") + "--part--\n",
+     {"Part\n", "Chosen plain\n", "Part\n", "[Alternative: text/html]\n", "Part\n", "[Alternative: application/pdf]\n",
+      "Part\n"},
+     "Chosen plain\n",
+     "multipart/alternative; boundary=part"},
+    {"HtmlAlternative",
+     mime_part("Content-Type: text/html\n", "<b>Chosen HTML</b>\n") +
+         mime_part("Content-Type: text/plain\n", "HIDDEN PLAIN ALTERNATIVE\n") + "--part--\n",
+     {"Part\n", "Chosen HTML \n", "Part\n", "[Alternative: text/plain]\n", "Part\n"},
+     "Chosen HTML \n",
+     "multipart/alternative; boundary=part"},
+    {"DefaultTextType",
+     mime_part("", "First text\n") + mime_part("Content-Type: text/plain\n", "Last text\n") + "--part--\n",
+     {"Part\n", "First text\n", "Part\n", "Last text\n", "Part\n"}},
+    {"UnknownMultipart", mixed_mime_body("Content-Type: text/plain\n", "Middle text\n"),
+     mixed_mime_lines("Middle text\n"), "Last text\n", "multipart/x-trn-test; boundary=part"},
+    {"ForwardedMessage",
+     mixed_mime_body("Content-Type: message/rfc822\n", "From: Forwarded <sender@example.test>\n"
+                                                       "Content-Type: text/plain\n\nForwarded text\n"),
+     mixed_mime_lines("Forwarded text\n")}};
+
+void PrintTo(const MultipartArticleCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+struct MimePresentation
+{
+    std::vector<std::string>     lines;
+    std::vector<ArticlePosition> positions;
+};
+
+class MultipartArticleTest : public ArticleIoTest, public testing::WithParamInterface<MultipartArticleCase>
+{
+protected:
+    void             SetUp() override;
+    void             TearDown() override;
+    MimePresentation read_presentation();
+
+private:
+    bool m_old_multimedia{g_multimedia_mime};
+};
+
+void MultipartArticleTest::SetUp()
+{
+    ArticleIoTest::SetUp();
+    g_charsets = "p";
+    reset_char_subst_mode();
+    utf_init("UTF-8", "UTF-8");
+    g_word_wrap_offset = -1;
+    g_tc_COLS = GetParam().columns;
+    g_multipart_separator = "Part";
+    g_multimedia_mime = false;
+    m_mime_section.mime_parse_type(GetParam().type);
+    g_mime_section = &m_mime_section;
+    g_mime_state = MULTIPART_MIME;
+    g_is_mime = true;
+    const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
+    g_header_type[PAST_HEADER].min_pos = body_start;
+    ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + GetParam().body, "rb"));
+    ASSERT_EQ(0, seek_art(body_start));
+    set_art_buf_seek(body_start);
+}
+
+void MultipartArticleTest::TearDown()
+{
+    g_multimedia_mime = m_old_multimedia;
+    ArticleIoTest::TearDown();
+}
+
+MimePresentation MultipartArticleTest::read_presentation()
+{
+    MimePresentation result;
+    std::string      line;
+    ArticlePosition  position = art_buf_article_pos();
+    while (read_art_buf(line, false))
+    {
+        result.lines.push_back(line);
+        result.positions.push_back(position);
+        position = art_buf_article_pos();
+    }
+    return result;
+}
+
+TEST_P(MultipartArticleTest, presentsTextDescriptionsAndSeparatorsWithoutExposingHiddenPayloads)
+{
+    const MimePresentation result = read_presentation();
+
+    EXPECT_EQ(GetParam().lines, result.lines);
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(&m_mime_section, g_mime_section);
+}
+
+TEST_P(MultipartArticleTest, replaysTheCachedPresentationWithoutReparsingMimeParts)
+{
+    const MimePresentation cached = read_presentation();
+    ASSERT_EQ(GetParam().lines, cached.lines);
+    const ArticlePosition source_position = tell_art();
+    const MimeState       state = g_mime_state;
+
+    const int              seek = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+    const MimePresentation replayed = read_presentation();
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(cached.lines, replayed.lines);
+    EXPECT_EQ(cached.positions, replayed.positions);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(state, g_mime_state);
+    EXPECT_EQ(&m_mime_section, g_mime_section);
+}
+
+TEST_P(MultipartArticleTest, aSavedPositionResumesAtTheReadablePartAfterSkippedContent)
+{
+    const MimePresentation cached = read_presentation();
+    ASSERT_EQ(GetParam().lines, cached.lines);
+    const auto target = std::find(cached.lines.begin(), cached.lines.end(), GetParam().resume);
+    ASSERT_NE(cached.lines.end(), target);
+    const std::size_t              index = static_cast<std::size_t>(target - cached.lines.begin());
+    const std::vector<std::string> expected{target, cached.lines.end()};
+    const ArticlePosition          source_position = tell_art();
+
+    const int              seek = seek_art_buf(cached.positions[index]);
+    const MimePresentation resumed = read_presentation();
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(expected, resumed.lines);
+    EXPECT_EQ(source_position, tell_art());
+    EXPECT_EQ(g_art_size, art_buf_article_pos());
+}
+
+INSTANTIATE_TEST_SUITE_P(MixedAlternativeAndAttachments, MultipartArticleTest,
+                         testing::ValuesIn(MULTIPART_ARTICLE_CASES));
 
 } // namespace
 
