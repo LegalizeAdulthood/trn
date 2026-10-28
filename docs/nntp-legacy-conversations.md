@@ -4,9 +4,8 @@
 
 ## Scope
 
-This audit identifies NNTP client conversations in trn that predate, or
-do not fully use, the current RFC 3977 family of behavior.  It focuses on
-wire-level command sequences, not local spool behavior.
+Remaining NNTP client modernization work concerns command selection,
+current-article status, and loopback integration coverage.
 
 Primary references:
 
@@ -15,280 +14,14 @@ Primary references:
 - RFC 4643: <https://www.rfc-editor.org/rfc/rfc4643.html>
 - RFC 8143: <https://www.rfc-editor.org/rfc/rfc8143.html>
 
-## Baseline
-
-RFC 3977 replaces RFC 977, formalizes extension discovery with
-`CAPABILITIES`, and standardizes commands that older clients often used
-through private `X` extensions.
-
-Modern baseline commands relevant to this code include:
-
-- session: `CAPABILITIES`, `MODE READER`, `QUIT`
-- group and article: `GROUP`, `LISTGROUP`, `NEXT`, `LAST`
-- retrieval: `ARTICLE`, `HEAD`, `BODY`, `STAT`
-- posting: `POST`
-- information: `DATE`, `NEWGROUPS`, `LIST`, `LIST ACTIVE`,
-  `LIST NEWSGROUPS`
-- fields: `OVER`, `LIST OVERVIEW.FMT`, `HDR`, `LIST HEADERS`
-
-RFC 4643 defines `AUTHINFO` capability discovery and authentication
-behavior.  RFC 4642 defines `STARTTLS`; RFC 8143 updates TLS use to
-current TLS best practices.
-
-## Audit
-
-### Session Startup
-
-Current code:
-
-- `nntp/nntpinit.cpp` reads the greeting and asks `CAPABILITIES`.
-- It sends `MODE READER` when `MODE-READER` is advertised, or as a
-  legacy fallback when capabilities are unavailable.
-- A `500` or `501` reader-mode reply preserves the initial greeting.
-- It refreshes capabilities after a successful `MODE READER`.
-- A `500` or `501` discovery reply preserves legacy fallback behavior.
-
-Modern concern:
-
-- Current servers advertise commands and extensions through
-  `CAPABILITIES`.
-- The client should not infer support only by trial commands.
-- `MODE READER` should be used when needed, then capabilities should be
-  refreshed because the available command set can change.
-
-### Capability Discovery
-
-Current code:
-
-- `NntpCapabilities` stores capability labels and arguments in `NNTPLink`.
-- Complete multiline replies replace the session's capability state.
-- Closing or reconnecting discards the previous capability list.
-- `OVER`, `HDR`, and `LIST NEWSGROUPS` use advertised commands with
-  compatibility fallbacks for unavailable modern commands.
-- Rejected command names are kept in a sorted vector in the session.
-  Capability refresh, close, and reconnect discard those rejections.
-- `LIST ACTIVE`, `LISTGROUP`, and `LIST SUBSCRIPTIONS` still use
-  optimistic requests and fallback.
-
-Modern concern:
-
-- RFC 3977 made capability discovery central.
-- Fallback can remain for old servers, but modern paths should be chosen
-  from advertised capabilities first.
-
-### Overview
-
-Current code:
-
-- `libtrn/rt-ov.cpp` prefers `OVER first-last` and retains batched ranges.
-- `XOVER` remains a compatibility fallback with rejection caching.
-- Overview format uses `LIST OVERVIEW.FMT`; an unsupported variant falls
-  back to the built-in field layout without repeated format probes.
-
-Modern concern:
-
-- RFC 3977 formalized `XOVER` as `OVER`.
-- RFC 3977 names the format command `LIST OVERVIEW.FMT`.
-- `XOVER` can remain as an old-server fallback.
-
-### Header Fetch
-
-Current code:
-
-- `libtrn/head.cpp` prefers `HDR field article` and `HDR field first-last`.
-- `XHDR` remains a compatibility fallback with rejection caching.
-- Empty `HDR` values preserve the article's existence.
-- `XHDR Broken = y` retains its missing-article inference policy.
-
-Modern concern:
-
-- RFC 3977 formalized this as `HDR`.
-- `LIST HEADERS` can describe available header and metadata fields.
-- `XHDR` can remain as an old-server fallback.
-
-### Group Descriptions
-
-Current code:
-
-- `libtrn/datasrc.cpp` uses cached descriptions first, then prefers
-  `LIST NEWSGROUPS group` for individual lookups.
-- `XGTITLE group` remains an explicit compatibility fallback.
-- Bulk and individual description requests share rejected-command state.
-
-Modern concern:
-
-- `LIST NEWSGROUPS [wildmat]` is the standardized command.
-- `XGTITLE` is a historical extension and should be guarded by explicit
-  extension support or old-server fallback logic.
-
-### Subscriptions
-
-Current code:
-
-- `libtrn/rcstuff.cpp` tries `LIST SUBSCRIPTIONS` for remote initial
-  newsrc creation.
-
-Modern concern:
-
-- `LIST SUBSCRIPTIONS` is not a standard RFC 3977 LIST keyword.
-- It should be treated as an extension, used only if advertised or as a
-  clearly marked compatibility probe.
-
-### Authentication
-
-Current code:
-
-- `nntp/nntpauth.cpp` selects USER/PASS when `AUTHINFO USER` is advertised.
-- `Allow Legacy Auth = yes` is the default.  It permits USER/PASS if
-  `AUTHINFO` is absent; `no` requires an advertised USER method.  Empty
-  or unsupported `AUTHINFO` variants disable fallback in either mode.
-- SASL-only advertisements return an unsupported-method error.  Method
-  selection and USER/PASS exchange are separate functions, with a
-  dispatch point for future SASL mechanisms.
-- USER may finish with `281`; PASS is sent only after `381` and must
-  finish with `281`.  Passwords are obtained only when requested.
-- Password exchange honors the data source's TLS policy before obtaining
-  credentials or sending `AUTHINFO`.  Method selection follows any TLS
-  upgrade, using the refreshed capabilities.
-- A `483` during authentication upgrades TLS when allowed, then starts
-  a new authentication exchange.  PASS is not replayed across upgrades.
-- Success refreshes capabilities, clears cached command rejections, and
-  retries the original command.  A rejected `CAPABILITIES` request is
-  itself the refresh.  Reader mode is not retried after authentication.
-- Session state prevents recursive auth challenges and repeated
-  authentication after success.  Reconnects and closes reset that state.
-- Forced authentication waits until startup discovery and advertised
-  STARTTLS negotiation are complete.
-
-Modern concern:
-
-- RFC 4643 advertises `AUTHINFO` variants through capabilities.
-- RFC 4643 permits `USER/PASS`, but recommends against offering it unless
-  a strong encryption layer is active or compatibility requires it.
-- `AUTHINFO SASL` should be supported when the server advertises it and a
-  suitable mechanism is available.
-
-### TLS
-
-Current code:
-
-- The NNTP transport upgrades its existing socket with Boost.Asio and
-  OpenSSL after a `382` STARTTLS response.
-- Startup attempts advertised STARTTLS unless disabled.  A `483` reply
-  also attempts TLS when allowed, then retries the original command.
-- Successful negotiation discards old capabilities and command
-  rejections, refreshes capabilities, and restores any selected group
-  and article before retrying a read.
-- Failed negotiation closes the connection.  Certificate chains and
-  host names are verified; the minimum TLS version is 1.2.
-- OpenSSL trust paths and `SSL_CERT_FILE` supply CA certificates.  Windows
-  also uses the system ROOT certificate store.
-- Implicit TLS negotiates on connection, before reading the greeting.
-  It uses port 563 (`nntps`) unless the server has an explicit port.
-  Reconnects repeat the handshake; encrypted sessions do not upgrade
-  again or fall back to cleartext after a failure.
-
-Data-source policy options:
-
-- `Implicit TLS = yes` selects direct TLS; the default is `no`.
-  For a custom port, use `NNTP Server = news.example;5563` with this
-  setting.  Certificate and host-name checks match STARTTLS.
-- `STARTTLS = yes` is the default; `no` disables upgrades.
-  This option does not disable implicit TLS.
-- `Require TLS For Auth = yes` protects password authentication.
-- `Require TLS For Posting = yes` protects the `POST` command.
-- The two requirements default to `no` for legacy compatibility.  Values
-  also accept `y` and `n`, without regard to case.
-
-Modern concern:
-
-- RFC 4642 defines `STARTTLS`.
-- RFC 8143 updates NNTP TLS handling to current TLS best practices.
-- SASL mechanisms remain future work.
-
-### STAT With Empty Message-ID
-
-Current code:
-
-- `libtrn/nntp.cpp` can call `nntp_stat_id("")`.
-- That emits `STAT ` with a trailing space.
-
-Modern concern:
-
-- RFC 3977 syntax is `STAT`, `STAT number`, or `STAT message-id`.
-- Empty message-id is not a valid message-id form.
-- If the intent is current-article probing, send bare `STAT`.
-
-### Current Commands That Are Not Legacy
-
-These commands are current RFC 3977 commands and should remain:
-
-- `DATE`
-- `NEWGROUPS`
-- `LIST`
-- `LIST ACTIVE`
-- `LIST NEWSGROUPS`
-- `GROUP`
-- `LISTGROUP`
-- `NEXT`
-- `ARTICLE`
-- `HEAD`
-- `BODY`
-- `STAT`
-- `POST`
-- `QUIT`
-
-Most modernization work is about discovery, secure transport, and using
-the standardized names for former `X` commands.
-
 ## Modernization Slices
-
-### Slice 1: Capability Model
-
-- Add an `NntpCapabilities` data type.
-- Parse multiline `CAPABILITIES` replies.
-- Store capability state in `NNTPLink` or adjacent session state.
-- Add unit tests for base capabilities, LIST variants, `OVER`, `HDR`,
-  `MODE-READER`, `STARTTLS`, and `AUTHINFO`.
-
-### Slice 2: Startup Handshake
-
-- After greeting, send `CAPABILITIES`.
-- If the server requires `MODE READER` or advertises `MODE-READER`, send
-  `MODE READER`.
-- Refresh capabilities after `MODE READER`.
-- Preserve fallback behavior for RFC 977-era servers that return `500`.
 
 ### Slice 3: LIST Capability Selection
 
-- Route `LIST ACTIVE`, `LIST NEWSGROUPS`, `LIST OVERVIEW.FMT`, and
-  `LIST HEADERS` through capability checks.
+- Route remaining optimistic LIST requests through capability checks,
+  including `LIST ACTIVE` and `LIST HEADERS` where used.
 - Keep old optimistic probes only when no capability list is available.
-- Add tests with the mock NNTP server for advertised and missing LIST
-  variants.
-
-### Slice 4: OVER Before XOVER
-
-- Add an overview command selector.
-- Prefer `OVER first-last` when `OVER` is advertised.
-- Use `XOVER first-last` only as an old-server fallback.
-- Prefer uppercase `LIST OVERVIEW.FMT`.
-- Update overview tests to cover both paths.
-
-### Slice 5: HDR Before XHDR
-
-- Add a header command selector.
-- Prefer `HDR field article` and `HDR field first-last` when `HDR` is
-  advertised.
-- Use `XHDR` only as an old-server fallback.
-- Add tests for `HDR`, missing `HDR`, and configured `XHDR Broken`.
-
-### Slice 6: Replace XGTITLE Fallback
-
-- Prefer `LIST NEWSGROUPS group` for one-group descriptions.
-- Use cached description files when available.
-- Keep `XGTITLE` only behind explicit compatibility fallback.
-- Record when `XGTITLE` is disabled so repeated lookups do not probe it.
+- Add loopback tests for advertised and missing LIST variants.
 
 ### Slice 7: Guard LIST SUBSCRIPTIONS
 
@@ -306,34 +39,20 @@ the standardized names for former `X` commands.
 - Send `STAT <message-id>` only for non-empty message-id text.
 - Add tests for both forms.
 
-### Slice 9: TLS State And STARTTLS
-
-- Add session state for cleartext, STARTTLS, and implicit TLS.
-- Parse `STARTTLS` capability.
-- Add a policy option for requiring TLS before auth or posting.
-- Handle response `483` by attempting TLS when allowed.
-- Add mock-server tests for `382`, `483`, `502`, and `580` paths.
-
-### Slice 10: Authentication Modernization
-
-- Drive auth from `AUTHINFO` capability data.
-- Use `AUTHINFO USER/PASS` only when advertised or compatibility fallback
-  is enabled.
-- Refuse password auth on cleartext connections when policy requires TLS.
-- Add a future seam for SASL mechanisms without implementing every
-  mechanism in this slice.
-
 ### Slice 11: Mock Server Coverage
 
-- Extend the mock NNTP server plan to cover capabilities, `OVER`, `HDR`,
-  `STARTTLS`, `AUTHINFO`, and extension rejection.
-- Add tests for each modern path and each legacy fallback.
-- Keep tests deterministic: every command should be an explicit
-  expectation.
+- Extend loopback coverage for `OVER`, `HDR`, `AUTHINFO`, and extension
+  rejection as consumer tests require it.
+- Cover modern paths and legacy fallbacks through the real TCP client.
+- Keep every command an explicit expectation.
+- Coordinate helpers with [the mock-server plan](mock-nntp-server.md).
 
-### Slice 12: Compatibility Policy Cleanup
+### Slice 12: Compatibility Policy Documentation
 
-- Document modern, compatibility, and legacy modes.
-- Default to modern commands when capabilities are available.
-- Keep compatibility probes for old servers.
-- Avoid repeated unsupported-command probes within one session.
+- Document modern command selection and the remaining compatibility
+  probes, including their policy controls and rejection caching.
+
+## Deferred Authentication
+
+SASL mechanisms remain future work. Choose suitable mechanisms before
+extending the authentication dispatch.

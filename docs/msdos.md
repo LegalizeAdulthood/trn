@@ -106,14 +106,6 @@ macro branch.
 
 ## File And Path Behavior
 
-`config/msdos.h` changes absolute-path detection:
-
-- under `MSDOS`, `FILE_REF` accepts `/` and drive-letter paths such as
-  `C:...`
-- otherwise `FILE_REF` accepts only `/`
-
-This should become an explicit path policy in the config library.
-
 `libtrn/decode.cpp` changes attachment filename handling:
 
 - under `MSDOS`, use an allow-list of filename characters
@@ -149,7 +141,6 @@ Replace `MSDOS` sites with narrowly named configuration facts:
 - `TRN_HAS_TERMIOS` or a tty-mode backend for terminal mode changes
 - a terminal capability provider for fixed ANSI versus termcap data
 - a process-launch service for `spawnl` versus `fork` and `exec`
-- a path policy for drive-letter absolute paths
 - a filename policy for reserved names and invalid characters
 - a file-permission capability for `chmod` and `chown`
 - a process-probing capability for stale lock validation
