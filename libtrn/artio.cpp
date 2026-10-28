@@ -350,6 +350,16 @@ static std::string substitute_art_text(std::string_view text)
     return result;
 }
 
+static void finish_mime_article()
+{
+    if (g_data_source->m_flags & DF_REMOTE)
+    {
+        nntp_finish_body(FB_SILENT);
+        g_raw_art_size = nntp_art_size();
+    }
+    seek_art(g_raw_art_size);
+}
+
 char *read_art_buf_raw(bool view_inline)
 {
     char       *bp;
@@ -486,6 +496,10 @@ read_more:
             const std::size_t newline = tail.find('\n');
             len = static_cast<int>(newline == std::string::npos ? tail.size() : newline + 1);
             extra_chars = static_cast<int>(tail.size() + separator.size()) - len;
+            if (g_mime_state == END_OF_MIME && !g_mime_section->m_prev)
+            {
+                finish_mime_article();
+            }
             goto done;
         }
         if (mime_set_state(std::string_view{bp + o}))
@@ -682,12 +696,7 @@ mime_switch:
         }
         else
         {
-            if (g_data_source->m_flags & DF_REMOTE)
-            {
-                nntp_finish_body(FB_SILENT);
-                g_raw_art_size = nntp_art_size();
-            }
-            seek_art(g_raw_art_size);
+            finish_mime_article();
         }
         // FALL THROUGH
 

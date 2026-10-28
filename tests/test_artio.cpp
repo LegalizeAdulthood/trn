@@ -13,11 +13,17 @@
 #include <trn/IniSection.h>
 #include <trn/mime-internal.h>
 #include <trn/mime.h>
+#include <trn/nntp.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 #include <trn/utf.h>
 #include <trn/util.h>
 #include <util/env.h>
+
+#include <nntp/nntpclient.h>
+#include <nntp/nntpinit.h>
+
+#include "support/MockNntpServer.h"
 
 #include <test_config.h>
 
@@ -990,6 +996,199 @@ TEST_P(MultipartArticleTest, aSavedPositionResumesAtTheReadablePartAfterSkippedC
 
 INSTANTIATE_TEST_SUITE_P(MixedAlternativeAndAttachments, MultipartArticleTest,
                          testing::ValuesIn(MULTIPART_ARTICLE_CASES));
+
+const MultipartArticleCase REMOTE_MULTIPART_CASES[]{
+    {"SkippedAttachment", mixed_mime_body("Content-Type: application/pdf; name=report.pdf\n", "%PDF-HIDDEN\n"),
+     mixed_mime_lines("[Attachment type=application/pdf, name=report.pdf]\n")},
+    {"SkippedAlternative",
+     mime_part("Content-Type: text/plain\n", "Chosen text\n") +
+         mime_part("Content-Type: text/html\n", "<b>HIDDEN ALTERNATIVE</b>\n") + "--part--\nHidden epilogue\n",
+     {"Part\n", "Chosen text\n", "Part\n", "[Alternative: text/html]\n", "Part\n"},
+     "Chosen text\n",
+     "multipart/alternative; boundary=part"},
+    {"TrailingAttachment",
+     mime_part("Content-Type: text/plain\n", "First text\n") +
+         mime_part("Content-Type: application/pdf; name=report.pdf\n", "%PDF-HIDDEN\n") +
+         "--part--\nHidden epilogue\n.\n",
+     {"Part\n", "First text\n", "Part\n", "[Attachment type=application/pdf, name=report.pdf]\n", "Part\n"}},
+    {"NestedEnding",
+     mime_part("Content-Type: multipart/mixed; boundary=inner\n",
+               "--inner\nContent-Type: text/plain\n\nInner text\n--inner--\nHidden inner epilogue\n") +
+         "--part--\nHidden outer epilogue\n",
+     {"Part\n", "Part\n", "Inner text\n", "Part\n", "Part\n"}},
+    {"DecodedTail",
+     mime_part("Content-Type: text/plain\nContent-Transfer-Encoding: base64\n", "SGVsbG8=\n") +
+         "--part--\nHidden epilogue\n",
+     {"Part\n", "Hello\n", "Part\n"}},
+    {"MissingEnding",
+     mime_part("Content-Type: text/plain\n", "Visible text\n") +
+         mime_part("Content-Type: application/pdf; name=report.pdf\n", "%PDF-HIDDEN\n"),
+     {"Part\n", "Visible text\n", "Part\n", "[Attachment type=application/pdf, name=report.pdf]\n"}},
+    {"DotStuffedText",
+     mime_part("Content-Type: text/plain\n", ".\n..Text\n") + "--part--\n",
+     {"Part\n", ".\n", "..Text\n", "Part\n"}}};
+
+class RemoteMultipartArticleTest : public MultipartArticleIoTest,
+                                   public testing::WithParamInterface<MultipartArticleCase>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_next_command();
+    void expect_raw_cache();
+
+    std::string m_raw_article;
+
+private:
+    MockNntpServer m_server;
+    fs::path       m_old_directory{fs::current_path()};
+    NNTPLink       m_old_link{g_nntp_link};
+    ArticleNum     m_old_parsed_art{g_parsed_art};
+    ArticleNum     m_old_open_art{g_open_art};
+    std::string    m_old_header{g_head_buf};
+    std::string    m_old_response{g_ser_line};
+    std::string    m_old_command{g_last_command};
+    bool           m_started{};
+};
+
+void RemoteMultipartArticleTest::SetUp()
+{
+    MultipartArticleIoTest::SetUp();
+    fs::current_path(m_output_dir);
+    (void) nntp_art_name(ArticleNum{}, false);
+    g_head_buf = ARTICLE_VIEW_HEADER;
+    g_parsed_art = ArticleNum{7};
+    m_raw_article = g_head_buf + GetParam().body;
+    std::vector<std::string> wire_lines;
+    for (std::size_t start = 0; start < GetParam().body.size();)
+    {
+        const std::size_t end = GetParam().body.find('\n', start);
+        ASSERT_NE(std::string::npos, end);
+        std::string line = GetParam().body.substr(start, end - start);
+        if (!line.empty() && line.front() == '.')
+        {
+            line.insert(line.begin(), '.');
+        }
+        wire_lines.push_back(line);
+        start = end + 1;
+    }
+    m_server.expect_capabilities({"VERSION 2", "READER"});
+    m_server.expect_body(7, wire_lines);
+    m_server.expect_group("example.next", 3, 8, 10);
+    m_server.expect_quit();
+    m_server.start();
+    m_started = true;
+    init_nntp();
+    g_nntp_link = {};
+    g_nntp_link.port_number = m_server.port();
+    ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
+    nntp_gets_clear_buffer();
+    m_data_source.m_flags = DF_REMOTE;
+    nntp_body(ArticleNum{7});
+    ASSERT_NE(nullptr, g_art_fp);
+    g_open_art = ArticleNum{7};
+    g_raw_art_size = ArticlePosition{-1};
+    g_art_size = ArticlePosition{-1};
+    g_tc_COLS = GetParam().columns;
+    m_mime_section.mime_parse_type(GetParam().type);
+    g_mime_section = &m_mime_section;
+    g_mime_state = MULTIPART_MIME;
+    g_is_mime = true;
+    const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
+    g_header_type[PAST_HEADER].min_pos = body_start;
+    ASSERT_EQ(0, seek_art(body_start));
+    set_art_buf_seek(body_start);
+    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+}
+
+void RemoteMultipartArticleTest::TearDown()
+{
+    if (m_started)
+    {
+        art_close();
+        nntp_close(true);
+        m_server.verify();
+    }
+    (void) nntp_art_name(ArticleNum{}, false);
+    nntp_gets_clear_buffer();
+    g_nntp_link = m_old_link;
+    g_parsed_art = m_old_parsed_art;
+    g_open_art = m_old_open_art;
+    g_head_buf = m_old_header;
+    g_ser_line = m_old_response;
+    g_last_command = m_old_command;
+    fs::current_path(m_old_directory);
+    MultipartArticleIoTest::TearDown();
+}
+
+void RemoteMultipartArticleTest::expect_next_command()
+{
+    EXPECT_NE(NNTP_NONE, g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    ASSERT_GT(nntp_command("GROUP example.next"), 0);
+    ASSERT_EQ(1, nntp_check());
+    EXPECT_EQ("211 3 8 10 example.next", g_ser_line);
+}
+
+void RemoteMultipartArticleTest::expect_raw_cache()
+{
+    ASSERT_EQ(0, std::fflush(g_art_fp));
+    std::ifstream cache{nntp_art_name(ArticleNum{7}, false), std::ios::binary};
+    ASSERT_TRUE(cache.is_open());
+    const std::string stored{std::istreambuf_iterator<char>{cache}, std::istreambuf_iterator<char>{}};
+    EXPECT_EQ(m_raw_article, stored);
+}
+
+TEST_P(RemoteMultipartArticleTest, completesThePresentationAndReleasesTheConnectionForTheNextCommand)
+{
+    const MimePresentation result = read_presentation();
+
+    EXPECT_EQ(GetParam().lines, result.lines);
+    EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
+    EXPECT_EQ(art_buf_article_pos(), art_buf_size_from_raw(nntp_art_size()));
+    EXPECT_EQ(nntp_art_size(), tell_art());
+    expect_next_command();
+}
+
+TEST_P(RemoteMultipartArticleTest, replaysTheCachedPresentationWithoutAnotherBodyRequest)
+{
+    const MimePresentation cached = read_presentation();
+    ASSERT_EQ(GetParam().lines, cached.lines);
+    const ArticlePosition raw_position = tell_art();
+
+    const int              seek = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+    const MimePresentation replay = read_presentation();
+
+    EXPECT_EQ(0, seek);
+    EXPECT_EQ(cached.lines, replay.lines);
+    EXPECT_EQ(cached.positions, replay.positions);
+    EXPECT_EQ(raw_position, tell_art());
+    expect_next_command();
+}
+
+TEST_P(RemoteMultipartArticleTest, preservesTheCompleteRawArticleIncludingHiddenPartsAndEpilogues)
+{
+    (void) read_presentation();
+
+    expect_raw_cache();
+    expect_next_command();
+}
+
+TEST_P(RemoteMultipartArticleTest, leavingBeforeTheFirstPartDrainsTheBodyBeforeTheNextCommand)
+{
+    std::string line;
+    ASSERT_TRUE(read_art_buf(line, false));
+    ASSERT_EQ("Part\n", line);
+    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+
+    art_close();
+
+    EXPECT_EQ(nullptr, g_art_fp);
+    EXPECT_EQ(ArticleNum{}, g_open_art);
+    EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
+    expect_next_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(Loopback, RemoteMultipartArticleTest, testing::ValuesIn(REMOTE_MULTIPART_CASES));
 
 const MultipartArticleCase MULTIPART_ENDING_CASES[]{
     {"NestedThenText",
