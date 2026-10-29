@@ -84,6 +84,12 @@ static bool debug_article_output(Article &article, int arg);
 DoNewsgroupResult        g_newsgroup_exit_code{NG_NORM};
 static bool              s_art_sel_lock{};
 
+void ReadingNavigation::commit_current()
+{
+    recent = current; // remember last article (for '-')
+    current = target; // set current article
+}
+
 static std::string_view unread_prompt(bool has_current_article, bool verbose)
 {
     if (!has_current_article)
@@ -457,8 +463,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
             if (g_nav.target != g_nav.current)
             {
-                g_nav.recent = g_nav.current; // remember last article (for '-')
-                g_nav.current = g_nav.target; // set current article
+                g_nav.commit_current();
                 reset_char_subst_mode();
                 g_first_view = ArticleLine{};
             }
@@ -536,8 +541,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         {
             if (g_nav.target != g_nav.current)
             {
-                g_nav.recent = g_nav.current; // remember last article (for '-')
-                g_nav.current = g_nav.target; // set current article
+                g_nav.commit_current();
                 reset_char_subst_mode();
                 g_first_view = ArticleLine{};
                 g_do_hiding = true;

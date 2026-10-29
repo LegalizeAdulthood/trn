@@ -41,6 +41,8 @@ inline bool operator!=(const ArticleLocation &lhs, const ArticleLocation &rhs)
 
 struct ReadingNavigation
 {
+    void commit_current();
+
     ArticleLocation target;  // current or prospective article
     ArticleLocation current; // article currently being read
     ArticleLocation recent;  // previous article for the '-' command

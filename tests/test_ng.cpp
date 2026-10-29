@@ -8927,6 +8927,29 @@ TEST_F(SubjectOrderPreviousArticleTest, previousUnreadPreservesGroupEndWhenAllSu
     EXPECT_NE(std::string::npos, output.find("No previous unread articles"));
 }
 
+class ReadingNavigationCommitTest : public testing::TestWithParam<bool>
+{
+};
+
+TEST_P(ReadingNavigationCommitTest, commitsTheTargetAndRetainsThePreviousLocation)
+{
+    Article               previous_article{};
+    Article               current_article{};
+    Article               target_article{};
+    const ArticleLocation current{ArticleNum{2}, &current_article};
+    const ArticleLocation target{ArticleNum{3}, GetParam() ? nullptr : &target_article};
+    ReadingNavigation     nav{target, current, {ArticleNum{1}, &previous_article}};
+
+    nav.commit_current();
+
+    EXPECT_EQ(target, nav.target);
+    EXPECT_EQ(target, nav.current);
+    EXPECT_EQ(current, nav.recent);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrGroupEnd, ReadingNavigationCommitTest, testing::Bool(),
+                         [](const testing::TestParamInfo<bool> &info) { return info.param ? "GroupEnd" : "Article"; });
+
 TEST_P(NextArticleTest, advancesAnIndependentLocationWithoutChangingTheReadingAnchor)
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
