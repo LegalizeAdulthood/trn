@@ -64,6 +64,7 @@ struct SelectorPolicy
     void set_selector(SelectionMode smode, SelectionSortMode ssort);
     bool set_sort(SelectionMode smode, char_int ch);
     bool set_order(SelectionMode smode, std::string_view str);
+    std::string get_order(SelectionMode smode);
 };
 
 extern SelectorPolicy    g_sel;

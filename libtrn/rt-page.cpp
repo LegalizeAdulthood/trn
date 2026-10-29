@@ -151,16 +151,16 @@ bool set_sel_mode(char_int ch)
 /// @return String containing the sort order description.
 ///
 /// @globals
-/// - g_sel.mode: Temporarily set to switch modes and restored.
+/// - g_threaded_group: Read by set_selector to normalize thread-mode availability.
 ///
-std::string get_sel_order(SelectionMode smode)
+std::string SelectorPolicy::get_order(SelectionMode smode)
 {
-    SelectionMode save_sel_mode = g_sel.mode;
-    g_sel.set_selector(smode, SS_MAGIC_NUMBER);
-    std::string order = g_sel.direction < 0 ? "reverse " : "";
-    order += g_sel.sort_string;
-    g_sel.mode = save_sel_mode;
-    g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
+    SelectionMode save_sel_mode = mode;
+    set_selector(smode, SS_MAGIC_NUMBER);
+    std::string order = direction < 0 ? "reverse " : "";
+    order += sort_string;
+    mode = save_sel_mode;
+    set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
     return order;
 }
 

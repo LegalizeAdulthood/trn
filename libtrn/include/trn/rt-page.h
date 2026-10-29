@@ -64,7 +64,6 @@ extern std::size_t   g_sel_grp_display_mode_index;
 extern std::size_t   g_sel_art_display_mode_index;
 
 bool set_sel_mode(char_int ch);
-std::string get_sel_order(SelectionMode smode);
 char  current_group_display_mode();
 char  current_article_display_mode();
 void init_pages(bool fill_last_page);

@@ -1000,7 +1000,7 @@ std::string option_value(OptionIndex num)
         return expand_mouse_buttons(g_univ_sel_btns);
 
     case OI_UNIV_SEL_ORDER:
-        return get_sel_order(SM_UNIVERSAL);
+        return g_sel.get_order(SM_UNIVERSAL);
 
     case OI_UNIV_FOLLOW:
         return yes_or_no(g_univ_follow);
@@ -1028,7 +1028,7 @@ std::string option_value(OptionIndex num)
         return yes_or_no(g_use_newsgroup_selector);
 
     case OI_NEWSGROUP_SEL_ORDER:
-        return get_sel_order(SM_NEWSGROUP);
+        return g_sel.get_order(SM_NEWSGROUP);
 
     case OI_NEWSGROUP_SEL_CMDS:
         return g_newsgroup_sel_cmds;
@@ -1060,7 +1060,7 @@ std::string option_value(OptionIndex num)
     }
 
     case OI_NEWS_SEL_ORDER:
-        return get_sel_order(g_sel.default_mode);
+        return g_sel.get_order(g_sel.default_mode);
 
     case OI_NEWS_SEL_CMDS:
         return g_news_sel_cmds;
