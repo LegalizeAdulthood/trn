@@ -23,6 +23,7 @@ struct ArticleLocation
     void prev(bool sel_flag, bool rereading);
     void first();
     bool next_with_subject();
+    bool prev_with_subject();
 
     ArticleNum num{};
     Article   *art{};

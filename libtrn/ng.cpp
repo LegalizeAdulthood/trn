@@ -1392,7 +1392,7 @@ no_previous_article:
         {
             g_s_follow_temp = true;     // keep going until change req.
         }
-        if (command_ch == Ctl('n') ? g_nav.target.next_with_subject() : prev_article_with_subj())
+        if (command_ch == Ctl('n') ? g_nav.target.next_with_subject() : g_nav.target.prev_with_subject())
         {
             return AS_NORM;
         }
