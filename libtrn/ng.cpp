@@ -342,7 +342,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     {
         g_selected_only = false;
     }
-    top_article();
+    g_nav.target.first();
 
     // do they want a special top line?
 
@@ -1200,7 +1200,7 @@ no_previous_article:
             {
                 return AS_CLEAN;
             }
-            top_article();
+            g_nav.target.first();
             if (g_sa_in)
             {
                 return AS_SA;
@@ -1260,7 +1260,7 @@ no_previous_article:
             }
             if (g_nav.target.num > g_last_art)
             {
-                top_article();
+                g_nav.target.first();
             }
         }
         g_search_ahead = ArticleNum{};
@@ -1454,7 +1454,7 @@ normal_search:
                 g_nav.target = g_nav.current;
                 return AS_ASK;
             }
-            top_article();
+            g_nav.target.first();
             g_reread = false;
             return AS_NORM;
 
@@ -1464,7 +1464,7 @@ normal_search:
                 g_nav.target = g_nav.current;
                 return AS_SA;
             }
-            top_article();
+            g_nav.target.first();
             g_reread = false;
             return AS_NORM;
 
@@ -1649,7 +1649,7 @@ normal_search:
         }
 
         case '^':
-            top_article();
+            g_nav.target.first();
             g_search_ahead = ArticleNum{};
             return AS_NORM;
 
@@ -1845,7 +1845,7 @@ normal_search:
 
         case 'Y': // yank back M articles
             yank_back();
-            top_article();  // from the beginning
+            g_nav.target.first(); // from the beginning
             return AS_NORM; // pretend nothing happened
 
 #ifdef STRICT_CR

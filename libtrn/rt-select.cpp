@@ -431,7 +431,7 @@ sel_exit:
     }
     else
     {
-        top_article();
+        g_nav.target.first();
     }
     return s_sel_ret;
 }

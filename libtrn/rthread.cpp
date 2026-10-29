@@ -244,13 +244,14 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
     return ret;
 }
 
-void top_article()
+void ArticleLocation::first()
 {
-    g_nav.target = {article_after(g_last_art), nullptr};
-    g_nav.target.next(g_selected_only, false);
-    if (g_nav.target.num > g_last_art && g_last_cached < g_last_art)
+    num = article_after(g_last_art);
+    art = nullptr;
+    next(g_selected_only, false);
+    if (num > g_last_art && g_last_cached < g_last_art)
     {
-        g_nav.target.num = g_first_art;
+        num = g_first_art;
     }
 }
 

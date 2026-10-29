@@ -8943,6 +8943,35 @@ TEST_P(NextArticleTest, advancesAnIndependentLocationWithoutChangingTheReadingAn
     EXPECT_EQ(recent, g_nav.recent);
 }
 
+TEST_P(NextArticleTest, firstPositionsAnIndependentLocationWithoutChangingTheReadingAnchor)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS}, 4);
+    g_selected_only = true;
+    const ArticleLocation target = g_nav.target;
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
+    ArticleLocation       location{ArticleNum{2}, article_ptr(ArticleNum{2})};
+
+    location.first();
+
+    EXPECT_EQ((ArticleLocation{ArticleNum{3}, article_ptr(ArticleNum{3})}), location);
+    EXPECT_EQ(target, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
+}
+
+TEST_P(NextArticleTest, firstFallsBackToTheUncachedTail)
+{
+    set_articles({AF_EXISTS, AF_EXISTS}, 2);
+    g_last_art = ArticleNum{4};
+    g_first_art = ArticleNum{3};
+    ArticleLocation location = g_nav.target;
+
+    location.first();
+
+    EXPECT_EQ((ArticleLocation{ArticleNum{3}, nullptr}), location);
+}
+
 TEST_P(NextArticleTest, includesReadArticles)
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
