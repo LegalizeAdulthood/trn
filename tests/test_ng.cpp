@@ -8927,6 +8927,22 @@ TEST_F(SubjectOrderPreviousArticleTest, previousUnreadPreservesGroupEndWhenAllSu
     EXPECT_NE(std::string::npos, output.find("No previous unread articles"));
 }
 
+TEST_P(NextArticleTest, advancesAnIndependentLocationWithoutChangingTheReadingAnchor)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
+    const ArticleLocation target = g_nav.target;
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
+    ArticleLocation       location{ArticleNum{2}, article_ptr(ArticleNum{2})};
+
+    location.next(false, true);
+
+    EXPECT_EQ((ArticleLocation{ArticleNum{3}, article_ptr(ArticleNum{3})}), location);
+    EXPECT_EQ(target, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
+}
+
 TEST_P(NextArticleTest, includesReadArticles)
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);

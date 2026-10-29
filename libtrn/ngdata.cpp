@@ -478,7 +478,7 @@ void newsgroup_skip()
                 sleep(2);
             }
         }
-        inc_article(g_selected_only,false); // try next article
+        g_nav.target.next(g_selected_only, false); // try next article
     }
 }
 

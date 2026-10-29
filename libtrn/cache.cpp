@@ -594,7 +594,7 @@ void look_ahead()
     if (g_threaded_group)
     {
         g_nav.target.art = g_nav.current.art;
-        inc_article(g_selected_only,false);
+        g_nav.target.next(g_selected_only, false);
         if (g_nav.target.art)
         {
             parse_header(g_nav.target.num);

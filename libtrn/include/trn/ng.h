@@ -19,6 +19,8 @@ struct Article;
 // zero-number temporary article can still have a non-null borrowed pointer.
 struct ArticleLocation
 {
+    void next(bool sel_flag, bool rereading);
+
     ArticleNum num{};
     Article   *art{};
 };

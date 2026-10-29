@@ -247,20 +247,20 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
 void top_article()
 {
     g_nav.target = {article_after(g_last_art), nullptr};
-    inc_article(g_selected_only, false);
+    g_nav.target.next(g_selected_only, false);
     if (g_nav.target.num > g_last_art && g_last_cached < g_last_art)
     {
         g_nav.target.num = g_first_art;
     }
 }
 
-// Bump m_target.m_number/m_target.m_article to the next article, wrapping from thread to thread.
+// Move to the next article, wrapping from thread to thread.
 // If sel_flag is true, only stops at selected articles.
 // If rereading is false, only stops at unread articles.
 //
-void inc_article(bool sel_flag, bool rereading)
+void ArticleLocation::next(bool sel_flag, bool rereading)
 {
-    Article *ap = g_nav.target.art;
+    Article *ap = art;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
@@ -292,11 +292,13 @@ void inc_article(bool sel_flag, bool rereading)
               || (sel_flag && !(ap->m_flags & AF_SEL)));
         if (g_art_ptr < limit)
         {
-            g_nav.target = {(*g_art_ptr)->article_num(), *g_art_ptr};
+            num = (*g_art_ptr)->article_num();
+            art = *g_art_ptr;
         }
         else
         {
-            g_nav.target = {article_after(g_last_art), nullptr};
+            num = article_after(g_last_art);
+            art = nullptr;
             g_art_ptr = article_ptr_list_begin();
         }
         return;
@@ -339,28 +341,28 @@ void inc_article(bool sel_flag, bool rereading)
             }
         } while (ap && ((!rereading && !(ap->m_flags & AF_UNREAD))
                      || (sel_flag && !(ap->m_flags & AF_SEL))));
-        g_nav.target.art = ap;
-        if (g_nav.target.art != nullptr)
+        art = ap;
+        if (art != nullptr)
         {
-            g_nav.target.num = ap->article_num();
+            num = ap->article_num();
         }
         else
         {
-            if (g_nav.target.num <= g_last_cached)
+            if (num <= g_last_cached)
             {
-                g_nav.target.num = article_after(g_last_cached);
+                num = article_after(g_last_cached);
             }
             else
             {
-                ++g_nav.target.num;
+                ++num;
             }
-            if (g_nav.target.num <= g_last_art)
+            if (num <= g_last_art)
             {
-                g_nav.target.art = article_ptr(g_nav.target.num);
+                art = article_ptr(num);
             }
             else
             {
-                g_nav.target.num = article_after(g_last_art);
+                num = article_after(g_last_art);
             }
         }
         return;
@@ -370,18 +372,18 @@ void inc_article(bool sel_flag, bool rereading)
 num_inc:
     if (!ap)
     {
-        g_nav.target.num = article_before(g_first_art);
+        num = article_before(g_first_art);
     }
     while (true)
     {
-        g_nav.target.num = article_next(g_nav.target.num);
-        if (g_nav.target.num > g_last_art)
+        num = article_next(num);
+        if (num > g_last_art)
         {
-            g_nav.target.num = article_after(g_last_art);
+            num = article_after(g_last_art);
             ap = nullptr;
             break;
         }
-        ap = article_ptr(g_nav.target.num);
+        ap = article_ptr(num);
         if (!(ap->m_flags & AF_EXISTS))
         {
             ap->one_less();
@@ -392,7 +394,7 @@ num_inc:
             break;
         }
     }
-    g_nav.target.art = ap;
+    art = ap;
 }
 
 // Bump m_target.m_number/m_target.m_article to the previous article, wrapping from thread to thread.

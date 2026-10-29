@@ -522,8 +522,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         else if (!g_reread && (was_read(g_nav.target.num) //
                                || (g_selected_only && !(g_nav.target.art->m_flags & AF_SEL))))
         {
-                                        // has this article been read?
-            inc_article(g_selected_only,false);// then skip it
+            // has this article been read?
+            g_nav.target.next(g_selected_only, false); // then skip it
             continue;
         }
         else if (!g_reread && (!(g_nav.target.art->m_flags & AF_EXISTS) || !parse_header(g_nav.target.num)))
@@ -1221,7 +1221,7 @@ no_previous_article:
             if (g_sa_in && g_threaded_group)
             {
                 Article *old_artp = g_nav.target.art;
-                inc_article(g_selected_only,false);
+                g_nav.target.next(g_selected_only, false);
                 if (!g_nav.target.art || !old_artp)
                 {
                     return AS_SA;
@@ -1256,7 +1256,7 @@ no_previous_article:
             }
             else
             {
-                inc_article(g_selected_only,false);
+                g_nav.target.next(g_selected_only, false);
             }
             if (g_nav.target.num > g_last_art)
             {
@@ -1290,7 +1290,7 @@ no_previous_article:
             if (!g_art_ptr_list.empty())
             {
                 g_nav.target.art = nullptr;
-                inc_article(false, true);
+                g_nav.target.next(false, true);
             }
             else if (!g_first_subject)
             {
@@ -1302,13 +1302,13 @@ no_previous_article:
                 if (!(g_nav.target.art->m_flags & AF_EXISTS))
                 {
                     g_nav.target.art->one_less();
-                    inc_article(false, true);
+                    g_nav.target.next(false, true);
                 }
             }
         }
         else
         {
-            inc_article(false,true);
+            g_nav.target.next(false, true);
         }
         if (g_nav.target.num <= g_last_art)
         {
