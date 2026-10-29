@@ -112,7 +112,7 @@ void DeferredNewsgroupRecoveryState::prepare_recovery(bool rereading, char mode,
     {
         m_retained.push_back(&add_pending(names[i], numbers));
     }
-    m_retained.back()->m_flags = static_cast<NewsgroupFlags>(g_sel_mask);
+    m_retained.back()->m_flags = static_cast<NewsgroupFlags>(g_sel.mask);
     m_removed[0] = &add_pending("comp.opposite.first", rereading ? "1-7" : "1-10");
     m_removed[1] = &add_pending("comp.opposite.last", rereading ? "1-7" : "1-10");
     prepare_page(rereading, mode);
@@ -137,7 +137,7 @@ void DeferredNewsgroupRecoveryState::expect_refreshed_state(bool rereading) cons
     {
         const NewsgroupData &group = *m_retained[i];
         const bool           selected = i + 1 == m_retained.size();
-        const NewsgroupFlags mark = selected ? static_cast<NewsgroupFlags>(g_sel_mask) : rereading ? NF_DEL : NF_NONE;
+        const NewsgroupFlags mark = selected ? static_cast<NewsgroupFlags>(g_sel.mask) : rereading ? NF_DEL : NF_NONE;
         EXPECT_EQ(NF_INCLUDED | mark, group.m_flags);
         EXPECT_EQ(rereading ? 0 : 3, group.m_to_read);
         EXPECT_EQ(rereading ? " 1-10" : " 1-7", group.rc_numbers());
@@ -164,7 +164,7 @@ void DeferredNewsgroupRecoveryState::expect_row(int row, NewsgroupData *group, i
 std::string DeferredNewsgroupRecoveryState::expected_row(int row, const NewsgroupData &group, int selected) const
 {
     const std::string label = g_use_sel_num ? "0" + std::to_string(row + 1) : std::string(1, "ab"[row]);
-    return label + " +-*"[selected] + (g_sel_rereading ? "    0 " : "    3 ") + std::string{group.rc_name()} + "\n";
+    return label + " +-*"[selected] + (g_sel.rereading ? "    0 " : "    3 ") + std::string{group.rc_name()} + "\n";
 }
 
 class DeferredNewsgroupRecoveryTest : public DeferredNewsgroupRecoveryState,
@@ -207,7 +207,7 @@ private:
     NewsgroupData    *m_old_current{g_current_newsgroup};
     NewsgroupData    *m_old_recent{g_recent_newsgroup};
     NewsgroupData    *m_old_start{g_start_here};
-    SelectionSortMode m_old_group_sort{g_sel_newsgroup_sort};
+    SelectionSortMode m_old_group_sort{g_sel.newsgroup_sort};
     bool              m_old_verify{g_verify};
     bool              m_old_default{g_s_default_cmd};
     bool              m_old_universal_default{g_univ_default_cmd};
@@ -227,7 +227,7 @@ void DeferredNewsgroupCleanupTest::SetUp()
     g_current_newsgroup = nullptr;
     g_recent_newsgroup = nullptr;
     g_start_here = nullptr;
-    g_sel_newsgroup_sort = SS_NATURAL;
+    g_sel.newsgroup_sort = SS_NATURAL;
     g_verify = false;
     errno = 0;
 }
@@ -243,7 +243,7 @@ void DeferredNewsgroupCleanupTest::TearDown()
     g_current_newsgroup = m_old_current;
     g_recent_newsgroup = m_old_recent;
     g_start_here = m_old_start;
-    g_sel_newsgroup_sort = m_old_group_sort;
+    g_sel.newsgroup_sort = m_old_group_sort;
     g_verify = m_old_verify;
     g_s_default_cmd = m_old_default;
     g_univ_default_cmd = m_old_universal_default;

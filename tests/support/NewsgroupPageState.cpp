@@ -28,10 +28,10 @@ void NewsgroupPageStateTest::SetUp()
     g_sel_next_np = nullptr;
     g_newsgroup_count = NewsgroupNum{};
     g_newsgroup_min_to_read = TR_ONE;
-    g_sel_mode = SM_NEWSGROUP;
-    g_sel_sort = SS_NATURAL;
-    g_sel_direction = 1;
-    g_sel_exclusive = false;
+    g_sel.mode = SM_NEWSGROUP;
+    g_sel.sort = SS_NATURAL;
+    g_sel.direction = 1;
+    g_sel.exclusive = false;
     g_paranoid = false;
     g_verbose = false;
     g_tc_LINES = 24;
@@ -55,12 +55,12 @@ void NewsgroupPageStateTest::TearDown()
     g_newsgroup_min_to_read = m_old_minimum;
     g_selected_count = m_old_selected;
     g_obj_count = m_old_objects;
-    g_sel_mode = m_old_mode;
-    g_sel_sort = m_old_sort;
-    g_sel_direction = m_old_direction;
-    g_sel_mask = m_old_mask;
-    g_sel_rereading = m_old_rereading;
-    g_sel_exclusive = m_old_exclusive;
+    g_sel.mode = m_old_mode;
+    g_sel.sort = m_old_sort;
+    g_sel.direction = m_old_direction;
+    g_sel.mask = m_old_mask;
+    g_sel.rereading = m_old_rereading;
+    g_sel.exclusive = m_old_exclusive;
     g_paranoid = m_old_paranoid;
     g_verbose = m_old_verbose;
     g_sel_total_obj_cnt = m_old_total;
@@ -79,8 +79,8 @@ void NewsgroupPageStateTest::TearDown()
 
 void NewsgroupPageStateTest::set_read_scope(bool rereading)
 {
-    g_sel_rereading = rereading;
-    g_sel_mask = rereading ? AGF_DEL_SEL : AGF_SEL;
+    g_sel.rereading = rereading;
+    g_sel.mask = rereading ? AGF_DEL_SEL : AGF_SEL;
 }
 
 NewsgroupData &NewsgroupPageStateTest::add_group(std::string_view name, ArticleUnread unread, NewsgroupFlags flags)
@@ -132,7 +132,7 @@ void NewsgroupPageDisplayState::SetUp()
     m_multirc.m_first = &m_newsrc;
     g_multirc = &m_multirc;
     g_in_ng = false;
-    g_sel_group_listing = false;
+    g_sel.group_listing = false;
     g_erase_screen = false;
     g_erase_each_line = false;
     g_tc_HO = "<home>";
@@ -152,7 +152,7 @@ void NewsgroupPageDisplayState::TearDown()
     g_multirc = m_old_multirc;
     g_newsgroup_ptr = m_old_group;
     g_in_ng = m_old_in_group;
-    g_sel_group_listing = m_old_group_listing;
+    g_sel.group_listing = m_old_group_listing;
     g_erase_screen = m_old_erase_screen;
     g_erase_each_line = m_old_erase_each_line;
     g_sel_grp_display_mode = m_old_display_mode;
@@ -175,7 +175,7 @@ void NewsgroupPageDisplayState::TearDown()
 void NewsgroupPageDisplayState::prepare_display(bool rereading, char mode, bool exclusive)
 {
     set_read_scope(rereading);
-    const NewsgroupFlags                selected = static_cast<NewsgroupFlags>(g_sel_mask);
+    const NewsgroupFlags                selected = static_cast<NewsgroupFlags>(g_sel.mask);
     const NewsgroupFlags                other_selection = rereading ? NF_SEL : NF_DEL_SEL;
     const std::array<ArticleUnread, 8>  unread{3, 4, 12, 0, 7, TR_UNSUB, 1, 9};
     const std::array<NewsgroupFlags, 8> flags{selected, selected, other_selection, other_selection,
@@ -190,7 +190,7 @@ void NewsgroupPageDisplayState::prepare_display(bool rereading, char mode, bool 
         m_entries[index] = &group;
     }
     set_newsgroup_to_do("comp.*");
-    g_sel_exclusive = exclusive;
+    g_sel.exclusive = exclusive;
     g_sel_grp_display_mode.assign(1, mode);
     g_sel_grp_display_mode_index = 0;
     initialize_page();
@@ -235,7 +235,7 @@ std::string NewsgroupPageDisplayState::expected_rows(char mode, std::initializer
     char               label = 'a';
     for (const int index : indices)
     {
-        const char mark = index == 0 ? '+' : index == 6 ? '*' : index == 4 || g_sel_rereading ? '-' : ' ';
+        const char mark = index == 0 ? '+' : index == 6 ? '*' : index == 4 || g_sel.rereading ? '-' : ' ';
         rows << label++ << mark << std::setw(5) << static_cast<long>(m_before[index].m_to_read) << ' ';
         if (mode == 's')
         {

@@ -241,7 +241,7 @@ DoArticleResult do_article(std::string &article_command)
                 title_line.reserve(LINE_BUF_LEN);
                 fmt::format_to(std::back_inserter(title_line), "{}{} #{}", g_newsgroup_name, g_moderated,
                                g_nav.target.num.value_of());
-                if (g_selected_only)
+                if (g_sel.selected_only)
                 {
                     value_of(i) = g_selected_count - (unseen && selected);
                     const long unread_count = static_cast<long>(g_newsgroup_ptr->m_to_read) - g_selected_count //

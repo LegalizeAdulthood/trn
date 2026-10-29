@@ -58,21 +58,7 @@ enum UniversalReadResult
     UR_ERROR = 3  // non-normal return
 };
 
-bool              g_sel_rereading{};
-SelectionMode     g_sel_mode{};
-SelectionMode     g_sel_default_mode{SM_THREAD};
-SelectionMode     g_sel_thread_mode{SM_THREAD};
-std::string_view  g_sel_mode_string{};
-SelectionSortMode g_sel_sort{};
-SelectionSortMode g_sel_art_sort{SS_GROUPS};
-SelectionSortMode g_sel_thread_sort{SS_DATE};
-SelectionSortMode g_sel_newsgroup_sort{SS_NATURAL};
-std::string_view  g_sel_sort_string{};
-int               g_sel_direction{1};
-bool              g_sel_exclusive{};
-AddGroupFlags     g_sel_mask{AGF_SEL};
-bool              g_sel_group_listing{};
-bool              g_selected_only{};
+SelectorPolicy    g_sel{};
 ArticleUnread     g_selected_count{};
 int               g_selected_subj_cnt{};
 int               g_added_articles{};
@@ -187,7 +173,7 @@ public:
     PushSelectorModes(MinorMode new_mode, bool group_listing = false) :
         m_save_mode(g_mode),
         m_save_gmode(g_general_mode),
-        m_save_group_listing(std::exchange(g_sel_group_listing, group_listing))
+        m_save_group_listing(std::exchange(g_sel.group_listing, group_listing))
     {
         g_bos_on_stop = true;
         set_mode(GM_SELECTOR, new_mode);
@@ -195,7 +181,7 @@ public:
     ~PushSelectorModes()
     {
         g_bos_on_stop = false;
-        g_sel_group_listing = m_save_group_listing;
+        g_sel.group_listing = m_save_group_listing;
         set_mode(m_save_gmode, m_save_mode);
     }
 
@@ -207,24 +193,24 @@ private:
 
 }
 
-#define PUSH_SELECTOR()                                   \
-    SelectionMode save_sel_mode = g_sel_mode;             \
-    const bool    save_sel_rereading = g_sel_rereading;   \
-    const bool    save_sel_exclusive = g_sel_exclusive;   \
-    ArticleUnread save_selected_count = g_selected_count; \
+#define PUSH_SELECTOR()                                     \
+    SelectionMode save_sel_mode = g_sel.mode;             \
+    const bool    save_sel_rereading = g_sel.rereading;     \
+    const bool    save_sel_exclusive = g_sel.exclusive;   \
+    ArticleUnread save_selected_count = g_selected_count;   \
     DisplayState (*const save_extra_commands)(char_int) = s_extra_commands
 
 #define POP_SELECTOR()                                      \
     do                                                      \
     {                                                       \
-        g_sel_exclusive = save_sel_exclusive;               \
-        g_sel_rereading = save_sel_rereading;               \
+        g_sel.exclusive = save_sel_exclusive;               \
+        g_sel.rereading = save_sel_rereading;               \
         g_selected_count = save_selected_count;             \
         s_extra_commands = save_extra_commands;             \
         g_bos_on_stop = true;                               \
-        if (g_sel_mode != save_sel_mode)                    \
+        if (g_sel.mode != save_sel_mode)                    \
         {                                                   \
-            g_sel_mode = save_sel_mode;                     \
+            g_sel.mode = save_sel_mode;                     \
             set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER); \
             save_sel_mode = SM_MAGIC_NUMBER;                \
         }                                                   \
@@ -285,22 +271,22 @@ static int                 find_line(int y);
 //
 char article_selector(char_int cmd)
 {
-    const bool        save_selected_only = g_selected_only;
+    const bool        save_selected_only = g_sel.selected_only;
     const bool        initial_rereading = cmd == 'U';
     bool              scope_changed = false;
     bool              subjects_saved = false;
     PushSelectorModes saver(MM_THREAD_SELECTOR);
 
-    g_sel_rereading = initial_rereading;
+    g_sel.rereading = initial_rereading;
 
     g_nav.target.num = article_after(g_last_art);
     s_extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
-    g_sel_mode = SM_ARTICLE;
+    g_sel.mode = SM_ARTICLE;
     set_sel_mode(cmd);
 
-    if (!cache_range(g_sel_rereading ? g_abs_first : g_first_art, g_last_art))
+    if (!cache_range(g_sel.rereading ? g_abs_first : g_first_art, g_last_art))
     {
         s_sel_ret = '+';
         goto sel_exit;
@@ -308,13 +294,13 @@ char article_selector(char_int cmd)
 
 sel_restart:
     // Setup for selecting articles to read or set unread
-    if (g_sel_rereading)
+    if (g_sel.rereading)
     {
         s_end_char = 'Z';
         s_page_char = '>';
         g_sel_page_app = nullptr;
         g_sel_page_sp = nullptr;
-        g_sel_mask = AGF_DEL_SEL;
+        g_sel.mask = AGF_DEL_SEL;
     }
     else
     {
@@ -325,9 +311,9 @@ sel_restart:
             g_sel_last_ap = g_nav.current.art;
             g_sel_last_sp = g_nav.current.art->m_subj;
         }
-        g_sel_mask = AGF_SEL;
+        g_sel.mask = AGF_SEL;
     }
-    g_selected_only = true;
+    g_sel.selected_only = true;
     count_subjects(cmd? CS_UNSEL_STORE : CS_NORM);
     subjects_saved = true;
 
@@ -365,7 +351,7 @@ sel_restart:
     sel_display();
     if (sel_input() == 'R')
     {
-        scope_changed = scope_changed || g_sel_rereading != initial_rereading;
+        scope_changed = scope_changed || g_sel.rereading != initial_rereading;
         goto sel_restart;
     }
 
@@ -385,12 +371,12 @@ sel_exit:
     {
         s_sel_ret = 'Q';
     }
-    const bool use_article_order = g_sel_mode == SM_ARTICLE && g_sel_sort != SS_GROUPS && g_sel_sort != SS_STRING;
-    const bool rebuild_article_order = g_sel_rereading && use_article_order;
-    if (g_sel_rereading)
+    const bool use_article_order = g_sel.mode == SM_ARTICLE && g_sel.sort != SS_GROUPS && g_sel.sort != SS_STRING;
+    const bool rebuild_article_order = g_sel.rereading && use_article_order;
+    if (g_sel.rereading)
     {
-        g_sel_rereading = false;
-        g_sel_mask = AGF_SEL;
+        g_sel.rereading = false;
+        g_sel.mask = AGF_SEL;
     }
     if (!use_article_order)
     {
@@ -411,10 +397,10 @@ sel_exit:
     {
         g_search_ahead = ArticleNum{};
     }
-    g_selected_only = (g_selected_count != 0);
+    g_sel.selected_only = (g_selected_count != 0);
     if (s_sel_ret == '+')
     {
-        g_selected_only = save_selected_only;
+        g_sel.selected_only = save_selected_only;
         count_subjects(scope_changed || !subjects_saved ? CS_UNSELECT : CS_RESELECT);
     }
     else
@@ -535,20 +521,20 @@ loop_break:
 /// actions such as selecting, deselecting, and processing .newsrc files.
 ///
 /// @globals
-/// - g_sel_rereading: Set to false to indicate no rereading mode.
-/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_sel.rereading: Set to false to indicate no rereading mode.
+/// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
-/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel.mask: Set to the selection mask for the selector.
 /// - s_extra_commands: Set to the command handler for multirc commands.
 ///
 char multirc_selector()
 {
     PushSelectorModes saver(MM_NEWSRC_SELECTOR);
 
-    g_sel_rereading = false;
-    g_sel_exclusive = false;
+    g_sel.rereading = false;
+    g_sel.exclusive = false;
     g_selected_count = 0;
 
     set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
@@ -556,7 +542,7 @@ char multirc_selector()
 sel_restart:
     s_end_char = selector_end_command(g_newsrc_sel_cmds);
     s_page_char = selector_page_command(g_newsrc_sel_cmds);
-    g_sel_mask = AGF_SEL;
+    g_sel.mask = AGF_SEL;
     s_extra_commands = multirc_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -612,20 +598,20 @@ sel_restart:
 /// performs actions such as selecting, deselecting, and processing newsgroups.
 ///
 /// @globals
-/// - g_sel_rereading: Set to false to indicate no rereading mode.
-/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_sel.rereading: Set to false to indicate no rereading mode.
+/// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
-/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel.mask: Set to the selection mask for the selector.
 /// - s_extra_commands: Set to the command handler for newsgroup commands.
 ///
 char newsgroup_selector()
 {
     PushSelectorModes saver(MM_NEWSGROUP_SELECTOR);
 
-    g_sel_rereading = false;
-    g_sel_exclusive = false;
+    g_sel.rereading = false;
+    g_sel.exclusive = false;
     g_selected_count = 0;
 
     set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
@@ -652,14 +638,14 @@ sel_restart:
 
     s_end_char = selector_end_command(g_newsgroup_sel_cmds);
     s_page_char = selector_page_command(g_newsgroup_sel_cmds);
-    if (g_sel_rereading)
+    if (g_sel.rereading)
     {
-        g_sel_mask = AGF_DEL_SEL;
+        g_sel.mask = AGF_DEL_SEL;
         g_sel_page_np = nullptr;
     }
     else
     {
-        g_sel_mask = AGF_SEL;
+        g_sel.mask = AGF_SEL;
     }
     s_extra_commands = newsgroup_commands;
 
@@ -683,7 +669,7 @@ sel_restart:
         PUSH_SELECTOR();
         for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
         {
-            if ((np->m_flags & NF_INCLUDED) && (!g_selected_count || (np->m_flags & g_sel_mask)))
+            if ((np->m_flags & NF_INCLUDED) && (!g_selected_count || (np->m_flags & g_sel.mask)))
             {
                 np->m_flags |= NF_VISIT;
             }
@@ -713,12 +699,12 @@ sel_restart:
 /// performs actions such as selecting, deselecting, and adding newsgroups.
 ///
 /// @globals
-/// - g_sel_rereading: Set to false to indicate no rereading mode.
-/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_sel.rereading: Set to false to indicate no rereading mode.
+/// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
-/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel.mask: Set to the selection mask for the selector.
 /// - g_sel_page_gp: Reset to initialize the page group index.
 /// - s_extra_commands: Set to the command handler for add group commands.
 ///
@@ -726,8 +712,8 @@ char add_group_selector(GetNewsgroupFlags flags)
 {
     PushSelectorModes saver(MM_ADD_GROUP_SELECTOR, flags == GNG_NONE);
 
-    g_sel_rereading = false;
-    g_sel_exclusive = false;
+    g_sel.rereading = false;
+    g_sel.exclusive = false;
     g_selected_count = 0;
 
     set_selector(SM_ADD_GROUP, SS_MAGIC_NUMBER);
@@ -748,19 +734,19 @@ sel_restart:
         }
     }
 
-    s_end_char = g_sel_group_listing ? 'q' : selector_end_command(g_add_sel_cmds);
-    s_page_char = g_sel_group_listing ? '>' : selector_page_command(g_add_sel_cmds);
+    s_end_char = g_sel.group_listing ? 'q' : selector_end_command(g_add_sel_cmds);
+    s_page_char = g_sel.group_listing ? '>' : selector_page_command(g_add_sel_cmds);
     // Setup for selecting articles to read or set unread
-    if (g_sel_rereading)
+    if (g_sel.rereading)
     {
-        g_sel_mask = AGF_DEL_SEL;
+        g_sel.mask = AGF_DEL_SEL;
     }
     else
     {
-        g_sel_mask = AGF_SEL;
+        g_sel.mask = AGF_SEL;
     }
     g_sel_page_gp = AddGroupIndex::None;
-    s_extra_commands = g_sel_group_listing ? unsubscribed_group_commands : add_group_commands;
+    s_extra_commands = g_sel.group_listing ? unsubscribed_group_commands : add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_item_index = 0;
@@ -778,7 +764,7 @@ sel_restart:
         clear_rest();
     }
 
-    if (!g_sel_group_listing && (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t'))
+    if (!g_sel.group_listing && (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t'))
     {
         g_add_new_by_default = ADDNEW_SUB;
         for (AddGroupIndex index : g_add_groups.indices())
@@ -803,12 +789,12 @@ sel_restart:
 /// actions such as selecting, deselecting, and saving options.
 ///
 /// @globals
-/// - g_sel_rereading: Set to false to indicate no rereading mode.
-/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_sel.rereading: Set to false to indicate no rereading mode.
+/// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
-/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel.mask: Set to the selection mask for the selector.
 /// - g_sel_page_op: Set to -1 to initialize the page option pointer.
 /// - s_extra_commands: Set to the command handler for option commands.
 ///
@@ -820,8 +806,8 @@ char option_selector()
     PushSelectorModes   saver(MM_OPTION_SELECTOR);
 
     g_option_draft = &draft;
-    g_sel_rereading = false;
-    g_sel_exclusive = false;
+    g_sel.rereading = false;
+    g_sel.exclusive = false;
     g_selected_count = 0;
 
     set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
@@ -829,13 +815,13 @@ char option_selector()
 sel_restart:
     s_end_char = selector_end_command(g_option_sel_cmds);
     s_page_char = selector_page_command(g_option_sel_cmds);
-    if (g_sel_rereading)
+    if (g_sel.rereading)
     {
-        g_sel_mask = AGF_DEL_SEL;
+        g_sel.mask = AGF_DEL_SEL;
     }
     else
     {
-        g_sel_mask = AGF_SEL;
+        g_sel.mask = AGF_SEL;
     }
     g_sel_page_op = -1;
     s_extra_commands = option_commands;
@@ -1090,12 +1076,12 @@ do_group:
 /// @return The character indicating the user's final action or selection.
 ///
 /// @globals
-/// - g_sel_rereading: Set to false to indicate no rereading mode.
-/// - g_sel_exclusive: Set to false to indicate non-exclusive selection mode.
+/// - g_sel.rereading: Set to false to indicate no rereading mode.
+/// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
-/// - g_sel_mask: Set to the selection mask for the selector.
+/// - g_sel.mask: Set to the selection mask for the selector.
 /// - g_sel_page_univ_index: Set to 0 to initialize the universal page position.
 /// - s_extra_commands: Set to the command handler for universal commands.
 /// - s_sel_ret: Updated to store the return character from the universal selector.
@@ -1104,8 +1090,8 @@ char universal_selector()
 {
     PushSelectorModes saver(MM_UNIVERSAL);            // kind of like 'v'irtual...
 
-    g_sel_rereading = false;
-    g_sel_exclusive = false;
+    g_sel.rereading = false;
+    g_sel.exclusive = false;
     g_selected_count = 0;
 
     set_selector(SM_UNIVERSAL, SS_MAGIC_NUMBER);
@@ -1118,13 +1104,13 @@ sel_restart:
     s_page_char = '>';
 
     // Setup for selecting articles to read or set unread
-    if (g_sel_rereading)
+    if (g_sel.rereading)
     {
-        g_sel_mask = AGF_DEL_SEL;
+        g_sel.mask = AGF_DEL_SEL;
     }
     else
     {
-        g_sel_mask = AGF_SEL;
+        g_sel.mask = AGF_SEL;
     }
     g_sel_page_univ_index = {};
     s_extra_commands = universal_commands;
@@ -1382,7 +1368,7 @@ reinp_selector:
         }
         goto reinp_selector;
     }
-    if (g_sel_mode == SM_OPTIONS && (ch == '\r' || ch == '\n'))
+    if (g_sel.mode == SM_OPTIONS && (ch == '\r' || ch == '\n'))
     {
         ch = '.';
     }
@@ -1480,7 +1466,7 @@ reinp_selector:
         }
         else if (g_sel_items[j].sel == 1)
         {
-            action = (g_sel_rereading ? 'k' : '-');
+            action = (g_sel.rereading ? 'k' : '-');
         }
         else
         {
@@ -1507,14 +1493,14 @@ reinp_selector:
         }
         else if (g_sel_items[j].sel == 1)
         {
-            action = (g_sel_rereading ? 'k' : '-');
+            action = (g_sel.rereading ? 'k' : '-');
         }
         else
         {
             action = '+';
         }
     }
-    else if (ch == '*' && g_sel_mode == SM_ARTICLE)
+    else if (ch == '*' && g_sel.mode == SM_ARTICLE)
     {
         if (!g_sel_page_item_cnt)
         {
@@ -1541,7 +1527,7 @@ reinp_selector:
         j = g_sel_item_index;
         if (g_sel_page_item_cnt && g_sel_items[j].sel == 1)
         {
-            action = (g_sel_rereading ? 'k' : '-');
+            action = (g_sel.rereading ? 'k' : '-');
         }
         else
         {
@@ -1704,11 +1690,11 @@ reinp_selector:
         {
             if (sel == 2)
             {
-                ch = (g_sel_rereading ? '+' : ' ');
+                ch = (g_sel.rereading ? '+' : ' ');
             }
             else if (sel == 1)
             {
-                ch = g_sel_rereading ? 'k' : '-';
+                ch = g_sel.rereading ? 'k' : '-';
             }
             else
             {
@@ -1735,17 +1721,17 @@ reinp_selector:
 
         case '-':  case 'k':  case 'M':
         {
-            bool sel_reread_save = g_sel_rereading;
+            bool sel_reread_save = g_sel.rereading;
             if (ch == 'M')
             {
                 delay_return_item(g_sel_items[g_sel_item_index].u);
             }
-            g_sel_rereading = ch != '-';
+            g_sel.rereading = ch != '-';
             if (deselect_item(g_sel_items[g_sel_item_index].u))
             {
                 output_sel(g_sel_item_index, ch == '-' ? 0 : 2, true);
             }
-            g_sel_rereading = sel_reread_save;
+            g_sel.rereading = sel_reread_save;
             if (g_term_line >= g_sel_last_line)
             {
                 sel_display();
@@ -1801,10 +1787,10 @@ static void sel_prompt()
     const std::string mail_call = do_interp(g_mail_call);
     const std::string prompt =
         fmt::format("{}-- {} {} ({}{} order) -- {}", mail_call,
-                    g_sel_group_listing          ? "Browse"
-                    : g_sel_exclusive && g_in_ng ? "SELECTED"
+                    g_sel.group_listing          ? "Browse"
+                    : g_sel.exclusive && g_in_ng ? "SELECTED"
                                                  : "Select",
-                    g_sel_mode_string, g_sel_direction < 0 ? "reverse " : "", g_sel_sort_string, page_prompt);
+                    g_sel.mode_string, g_sel.direction < 0 ? "reverse " : "", g_sel.sort_string, page_prompt);
     color_string(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());
     s_removed_prompt = RP_NONE;
@@ -1813,45 +1799,45 @@ static void sel_prompt()
 /// @brief Selects an item based on the current selection mode and updates its state.
 ///
 /// This function processes the given item according to the current selection mode
-/// (`g_sel_mode`) and modifies its flags or state to reflect its selection. It also
+/// (`g_sel.mode`) and modifies its flags or state to reflect its selection. It also
 /// increments the global selection count (`g_selected_count`) when an item is newly selected.
 ///
 /// @param u The item to be selected, represented as a `Selection` structure.
 /// @return `true` if the item was successfully selected, `false` otherwise.
 ///
 /// @globals
-/// - g_sel_mode: Determines the current selection mode.
-/// - g_sel_mask: Used to apply specific flags during selection.
+/// - g_sel.mode: Determines the current selection mode.
+/// - g_sel.mask: Used to apply specific flags during selection.
 /// - g_selected_count: Incremented when an item is newly selected.
 ///
 static bool select_item(Selection u)
 {
-    switch (g_sel_mode)
+    switch (g_sel.mode)
     {
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
-        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
-        if (!(u.mp->m_flags & static_cast<MultircFlags>(g_sel_mask)))
+        TRN_ASSERT((g_sel.mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
+        if (!(u.mp->m_flags & static_cast<MultircFlags>(g_sel.mask)))
         {
             g_selected_count++;
         }
-        u.mp->m_flags |= static_cast<MultircFlags>(g_sel_mask);
+        u.mp->m_flags |= static_cast<MultircFlags>(g_sel.mask);
         break;
 
     case SM_ADD_GROUP:
-        if (!(g_add_groups[u.gp].m_flags & g_sel_mask))
+        if (!(g_add_groups[u.gp].m_flags & g_sel.mask))
         {
             g_selected_count++;
         }
-        g_add_groups[u.gp].m_flags = (g_add_groups[u.gp].m_flags & ~AGF_DEL) | g_sel_mask;
+        g_add_groups[u.gp].m_flags = (g_add_groups[u.gp].m_flags & ~AGF_DEL) | g_sel.mask;
         break;
 
     case SM_NEWSGROUP:
-        if (!(u.np->m_flags & g_sel_mask))
+        if (!(u.np->m_flags & g_sel.mask))
         {
             g_selected_count++;
         }
-        u.np->m_flags = (u.np->m_flags & ~NF_DEL) | static_cast<NewsgroupFlags>(g_sel_mask);
+        u.np->m_flags = (u.np->m_flags & ~NF_DEL) | static_cast<NewsgroupFlags>(g_sel.mask);
         break;
 
     case SM_OPTIONS:
@@ -1875,11 +1861,11 @@ static bool select_item(Selection u)
         break;
 
     case SM_UNIVERSAL:
-        if (!(u.un->m_flags & g_sel_mask))
+        if (!(u.un->m_flags & g_sel.mask))
         {
             g_selected_count++;
         }
-        u.un->m_flags = (u.un->m_flags & ~UF_DEL) | static_cast<UniversalItemFlags>(g_sel_mask);
+        u.un->m_flags = (u.un->m_flags & ~UF_DEL) | static_cast<UniversalItemFlags>(g_sel.mask);
         break;
     }
     return true;
@@ -1888,19 +1874,19 @@ static bool select_item(Selection u)
 /// @brief Delays the unmarking of items based on the current selection mode.
 ///
 /// This function processes the given item according to the current selection mode
-/// (`g_sel_mode`) and delays the unmarking of articles, threads, or subjects as needed.
+/// (`g_sel.mode`) and delays the unmarking of articles, threads, or subjects as needed.
 /// It handles different selection modes and applies the delay logic accordingly.
 ///
 /// @param u The item to process, represented as a `Selection` structure.
 /// @return `true` if the operation was performed successfully, `false` otherwise.
 ///
 /// @globals
-/// - g_sel_mode: Determines the current selection mode.
-/// - g_sel_rereading: Used to decide whether to delay unmarking based on unread status.
+/// - g_sel.mode: Determines the current selection mode.
+/// - g_sel.rereading: Used to decide whether to delay unmarking based on unread status.
 ///
 static bool delay_return_item(Selection u)
 {
-    switch (g_sel_mode)
+    switch (g_sel.mode)
     {
     case SM_MULTIRC:
     case SM_ADD_GROUP:
@@ -1916,11 +1902,11 @@ static bool delay_return_item(Selection u)
     default:
     {
         Article* ap;
-        if (g_sel_mode == SM_THREAD)
+        if (g_sel.mode == SM_THREAD)
         {
             for (ap = u.sp->first_art(); ap; ap = ap->next_article())
             {
-                if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
+                if (!!(ap->m_flags & AF_UNREAD) ^ g_sel.rereading)
                 {
                     ap->delay_unmark();
                 }
@@ -1930,7 +1916,7 @@ static bool delay_return_item(Selection u)
         {
             for (ap = u.sp->m_articles; ap; ap = ap->m_subj_next)
             {
-                if (!!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading)
+                if (!!(ap->m_flags & AF_UNREAD) ^ g_sel.rereading)
                 {
                     ap->delay_unmark();
                 }
@@ -1945,51 +1931,51 @@ static bool delay_return_item(Selection u)
 /// @brief Deselects an item based on the current selection mode and updates its state.
 ///
 /// This function processes the given item according to the current selection mode
-/// (`g_sel_mode`) and modifies its flags or state to reflect its deselection. It also
+/// (`g_sel.mode`) and modifies its flags or state to reflect its deselection. It also
 /// decrements the global selection count (`g_selected_count`) when an item is deselected.
 ///
 /// @param u The item to be deselected, represented as a `Selection` structure.
 /// @return `true` if the item was successfully deselected, `false` otherwise.
 ///
 /// @globals
-/// - g_sel_mode: Determines the current selection mode.
-/// - g_sel_mask: Used to apply specific flags during deselection.
+/// - g_sel.mode: Determines the current selection mode.
+/// - g_sel.mask: Used to apply specific flags during deselection.
 /// - g_selected_count: Decremented when an item is deselected.
-/// - g_sel_rereading: Used to decide whether to mark items for deletion during rereading.
+/// - g_sel.rereading: Used to decide whether to mark items for deletion during rereading.
 ///
 static bool deselect_item(Selection u)
 {
-    switch (g_sel_mode)
+    switch (g_sel.mode)
     {
     case SM_MULTIRC:
         // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
-        TRN_ASSERT((g_sel_mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
-        if (u.mp->m_flags & static_cast<MultircFlags>(g_sel_mask))
+        TRN_ASSERT((g_sel.mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
+        if (u.mp->m_flags & static_cast<MultircFlags>(g_sel.mask))
         {
-            u.mp->m_flags &= ~static_cast<MultircFlags>(g_sel_mask);
+            u.mp->m_flags &= ~static_cast<MultircFlags>(g_sel.mask);
             g_selected_count--;
         }
         break;
 
     case SM_ADD_GROUP:
-        if (g_add_groups[u.gp].m_flags & g_sel_mask)
+        if (g_add_groups[u.gp].m_flags & g_sel.mask)
         {
-            g_add_groups[u.gp].m_flags &= ~g_sel_mask;
+            g_add_groups[u.gp].m_flags &= ~g_sel.mask;
             g_selected_count--;
         }
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             g_add_groups[u.gp].m_flags |= AGF_DEL;
         }
         break;
 
     case SM_NEWSGROUP:
-        if (u.np->m_flags & static_cast<NewsgroupFlags>(g_sel_mask))
+        if (u.np->m_flags & static_cast<NewsgroupFlags>(g_sel.mask))
         {
-            u.np->m_flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
+            u.np->m_flags &= ~static_cast<NewsgroupFlags>(g_sel.mask);
             g_selected_count--;
         }
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             u.np->m_flags |= NF_DEL;
         }
@@ -2016,12 +2002,12 @@ static bool deselect_item(Selection u)
         break;
 
     case SM_UNIVERSAL:
-        if (u.un->m_flags & static_cast<UniversalItemFlags>(g_sel_mask))
+        if (u.un->m_flags & static_cast<UniversalItemFlags>(g_sel.mask))
         {
-            u.un->m_flags &= ~static_cast<UniversalItemFlags>(g_sel_mask);
+            u.un->m_flags &= ~static_cast<UniversalItemFlags>(g_sel.mask);
             g_selected_count--;
         }
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             u.un->m_flags |= UF_DEL;
         }
@@ -2033,7 +2019,7 @@ static bool deselect_item(Selection u)
 
     default:
         u.ap->deselect_article(AUTO_KILL_NONE);
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             u.ap->m_flags &= ~AF_DEL;
         }
@@ -2143,8 +2129,8 @@ static bool select_option(OptionIndex i)
 /// @brief Cleans up and finalizes selection state after selector operations.
 ///
 /// This function updates selection and deletion flags for items such as add groups,
-/// newsgroups, and subjects, depending on the current selection mode (`g_sel_mode`)
-/// and whether rereading mode (`g_sel_rereading`) is active. It ensures that all
+/// newsgroups, and subjects, depending on the current selection mode (`g_sel.mode`)
+/// and whether rereading mode (`g_sel.rereading`) is active. It ensures that all
 /// selection-related flags and counts are consistent before exiting the selector or
 /// switching modes.
 ///
@@ -2155,13 +2141,13 @@ static bool select_option(OptionIndex i)
 ///
 static void sel_cleanup()
 {
-    switch (g_sel_mode)
+    switch (g_sel.mode)
     {
     case SM_MULTIRC:
         break;
 
     case SM_ADD_GROUP:
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             for (AddGroupIndex index : g_add_groups.indices())
             {
@@ -2191,7 +2177,7 @@ static void sel_cleanup()
         break;
 
     case SM_NEWSGROUP:
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
             {
@@ -2227,7 +2213,7 @@ static void sel_cleanup()
         break;
 
     default:
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             g_sel_last_ap = nullptr;
             g_sel_last_sp = nullptr;
@@ -2238,7 +2224,7 @@ static void sel_cleanup()
         }
         else
         {
-            if (g_sel_mode == SM_ARTICLE)
+            if (g_sel.mode == SM_ARTICLE)
             {
                 article_walk(mark_del_as_read, 0);
             }
@@ -2249,7 +2235,7 @@ static void sel_cleanup()
                     if (sp->m_flags & SF_DEL)
                     {
                         sp->m_flags &= ~SF_DEL;
-                        if (g_sel_mode == SM_THREAD)
+                        if (g_sel.mode == SM_THREAD)
                         {
                             sp->m_thread->kill_thread(AFFECT_UNSEL);
                         }
@@ -2309,7 +2295,7 @@ DisplayState sel_command(char_int ch)
     s_clean_screen = true;
     g_term_scrolled = 0;
     g_page_line = 1;
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         if (g_sel_item_index < g_sel_page_item_cnt)
         {
@@ -2370,7 +2356,7 @@ do_command:
     case '\r':  case '\n':
         if (!g_selected_count && g_sel_page_item_cnt)
         {
-            if (g_sel_rereading || g_sel_items[g_sel_item_index].sel != 2)
+            if (g_sel.rereading || g_sel_items[g_sel_item_index].sel != 2)
             {
                 select_item(g_sel_items[g_sel_item_index].u);
             }
@@ -2448,7 +2434,7 @@ do_command:
     case '\\':
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (g_sel_mode == SM_NEWSGROUP)
+        if (g_sel.mode == SM_NEWSGROUP)
         {
             fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
         }
@@ -2740,13 +2726,13 @@ static char another_command(char_int ch)
 /// @return DisplayState indicating the next action for the selector loop.
 ///
 /// @globals
-/// - g_sel_rereading: Toggled for rereading mode.
+/// - g_sel.rereading: Toggled for rereading mode.
 /// - g_sel_page_sp: Set to nullptr for page state changes.
 /// - g_sel_page_app: Set to nullptr for page state changes.
-/// - g_sel_mode: May be changed when switching selector modes.
-/// - g_sel_thread_mode: Used when switching to thread mode.
+/// - g_sel.mode: May be changed when switching selector modes.
+/// - g_sel.thread_mode: Used when switching to thread mode.
 /// - g_sel_item_index: Reset to 0 for some commands.
-/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_msg: Updated with status or help messages.
 /// - s_disp_status_line: Set to 1 or 0 for status line control.
 /// - s_clean_screen: Set to false to prevent screen clearing.
@@ -2759,12 +2745,12 @@ DisplayState article_commands(char_int ch)
     {
     case 'U':
         sel_cleanup();
-        g_sel_rereading = !g_sel_rereading;
+        g_sel.rereading = !g_sel.rereading;
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
-        if (!cache_range(g_sel_rereading? g_abs_first : g_first_art, g_last_art))
+        if (!cache_range(g_sel.rereading ? g_abs_first : g_first_art, g_last_art))
         {
-            g_sel_rereading = !g_sel_rereading;
+            g_sel.rereading = !g_sel.rereading;
         }
         return DS_RESTART;
 
@@ -2799,7 +2785,7 @@ DisplayState article_commands(char_int ch)
             return DS_STATUS;
         }
         yank_back();
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
@@ -2811,13 +2797,13 @@ DisplayState article_commands(char_int ch)
         return DS_DISPLAY;
 
     case '=':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        if (g_sel_mode == SM_ARTICLE)
+        if (g_sel.mode == SM_ARTICLE)
         {
-            set_selector(g_sel_thread_mode, SS_MAGIC_NUMBER);
+            set_selector(g_sel.thread_mode, SS_MAGIC_NUMBER);
             g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->m_subj : nullptr;
         }
         else
@@ -2832,7 +2818,7 @@ DisplayState article_commands(char_int ch)
 
     case 'S':
     {
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
@@ -2883,7 +2869,7 @@ reask_output:
 
     case 'O':
     {
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
@@ -2891,7 +2877,7 @@ reask_output:
         s_removed_prompt = RP_ALL;
 reask_sort:
         std::string command;
-        if (g_sel_mode == SM_ARTICLE)
+        if (g_sel.mode == SM_ARTICLE)
         {
             command = read_selector_prompt_command(
                 "Order by Date,Subject,Author,Number,subj-date Groups,Points?",
@@ -2911,7 +2897,7 @@ reask_sort:
                            "Type d or SP to order the displayed items by date.\n"
                            "Type s to order the items by subject.\n"
                            "Type p to order the items by score points.\n");
-                if (g_sel_mode == SM_ARTICLE)
+                if (g_sel.mode == SM_ARTICLE)
                 {
                     fmt::print("Type a to order the items by author.\n"
                                "Type n to order the items by number.\n"
@@ -2931,7 +2917,7 @@ reask_sort:
                            "d or SP sorts by date.\n"
                            "s sorts by subject.\n"
                            "p sorts by points.\n");
-                if (g_sel_mode == SM_ARTICLE)
+                if (g_sel.mode == SM_ARTICLE)
                 {
                     fmt::print("a sorts by author.\n"
                                "n sorts by number.\n"
@@ -2957,7 +2943,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode, command_char);
+        set_sel_sort(g_sel.mode, command_char);
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
@@ -2966,11 +2952,11 @@ reask_sort:
     }
 
     case 'R':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
@@ -2978,11 +2964,11 @@ reask_sort:
         return DS_DISPLAY;
 
     case 'E':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        g_sel_exclusive = !g_sel_exclusive;
+        g_sel.exclusive = !g_sel.exclusive;
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
@@ -2991,9 +2977,9 @@ reask_sort:
         return DS_DISPLAY;
 
     case 'X':  case 'D':  case 'J':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
-            if (g_sel_mode == SM_ARTICLE)
+            if (g_sel.mode == SM_ARTICLE)
             {
                 Article** app;
                 Article **limit = article_ptr_list_end();
@@ -3010,7 +2996,7 @@ reask_sort:
                     Article *ap = *app;
                     if ((!(ap->m_flags & AF_SEL) ^ (ch == 'J')) || (ap->m_flags & AF_DEL))
                     {
-                        if (ch == 'J' || !g_sel_exclusive || (ap->m_flags & AF_INCLUDED))
+                        if (ch == 'J' || !g_sel.exclusive || (ap->m_flags & AF_INCLUDED))
                         {
                             ap->set_read();
                         }
@@ -3036,14 +3022,14 @@ reask_sort:
                 const Subject *group_sp = sp;
                 while (sp)
                 {
-                    if (g_sel_mode != SM_THREAD || sp->m_thread != group_sp->m_thread)
+                    if (g_sel.mode != SM_THREAD || sp->m_thread != group_sp->m_thread)
                     {
                         group_sp = sp;
                     }
                     if (((!(sp->m_flags & SF_SEL) ^ (ch == 'J')) && sp->m_misc) //
                         || (sp->m_flags & SF_DEL))
                     {
-                        if (ch == 'J' || !g_sel_exclusive //
+                        if (ch == 'J' || !g_sel.exclusive //
                             || (group_sp->m_flags & SF_INCLUDED))
                         {
                             sp->kill_subject(ch=='J'? AFFECT_ALL:AFFECT_UNSEL);
@@ -3096,14 +3082,14 @@ reask_sort:
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
         s_removed_prompt = RP_ALL;
-        if (g_sel_mode == SM_ARTICLE)
+        if (g_sel.mode == SM_ARTICLE)
         {
             g_nav.target.art = g_sel_items[g_sel_item_index].u.ap;
         }
         else
         {
             Subject* sp = g_sel_items[g_sel_item_index].u.sp;
-            if (g_sel_mode == SM_THREAD)
+            if (g_sel.mode == SM_THREAD)
             {
                 while (!sp->m_misc)
                 {
@@ -3117,7 +3103,7 @@ reask_sort:
         switch (ask_memorize(ch))
         {
         case 'J': case 'j': case 'K':  case ',':
-            count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
+            count_subjects(g_sel.rereading ? CS_NORM : CS_UNSELECT);
             init_pages(PRESERVE_PAGE);
             g_msg = "Kill memorized.";
             s_disp_status_line = 1;
@@ -3152,14 +3138,14 @@ reask_sort:
     case ':':
         if (g_sel_page_item_cnt)
         {
-            if (g_sel_mode == SM_ARTICLE)
+            if (g_sel.mode == SM_ARTICLE)
             {
                 g_nav.target.art = g_sel_items[g_sel_item_index].u.ap;
             }
             else
             {
                 Subject* sp = g_sel_items[g_sel_item_index].u.sp;
-                if (g_sel_mode == SM_THREAD)
+                if (g_sel.mode == SM_THREAD)
                 {
                     while (!sp->m_misc)
                     {
@@ -3204,14 +3190,14 @@ reask_sort:
             if (ch == ':')
             {
                 thread_perform(search_command);
-                if (!g_sel_rereading)
+                if (!g_sel.rereading)
                 {
                     for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
                     {
                         if (sp->m_flags & SF_DEL)
                         {
                             sp->m_flags = SF_NONE;
-                            if (g_sel_mode == SM_THREAD)
+                            if (g_sel.mode == SM_THREAD)
                             {
                                 sp->m_thread->kill_thread(AFFECT_UNSEL);
                             }
@@ -3251,7 +3237,7 @@ reask_sort:
             }
             g_sel_item_index = 0;
             // Recount, in case something has changed.
-            count_subjects(g_sel_rereading? CS_NORM : CS_UNSELECT);
+            count_subjects(g_sel.rereading ? CS_NORM : CS_UNSELECT);
 
             if (sel_perform_change(g_newsgroup_ptr->m_to_read, "article"))
             {
@@ -3326,9 +3312,9 @@ reask_sort:
 /// @return DisplayState indicating the next action for the selector loop.
 ///
 /// @globals
-/// - g_sel_rereading: Toggled for rereading mode.
+/// - g_sel.rereading: Toggled for rereading mode.
 /// - g_sel_page_np: Set to nullptr for page state changes.
-/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_item_index: Reset to 0 for some commands.
 /// - g_msg: Updated with status or help messages.
 /// - s_disp_status_line: Set to 1 for status line control.
@@ -3349,7 +3335,7 @@ DisplayState newsgroup_commands(char_int ch)
 
     case 'U':
         sel_cleanup();
-        g_sel_rereading = !g_sel_rereading;
+        g_sel.rereading = !g_sel.rereading;
         g_sel_page_np = nullptr;
         return DS_RESTART;
 
@@ -3363,7 +3349,7 @@ DisplayState newsgroup_commands(char_int ch)
         return DS_DISPLAY;
 
     case 'X':  case 'D':  case 'J':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             NewsgroupData *np;
             if (ch == 'D')
@@ -3431,7 +3417,7 @@ DisplayState newsgroup_commands(char_int ch)
 
     case 'O':
     {
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
@@ -3482,28 +3468,28 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode, command_char);
+        set_sel_sort(g_sel.mode, command_char);
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
 
     case 'R':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
     case 'E':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        g_sel_exclusive = !g_sel_exclusive;
+        g_sel.exclusive = !g_sel.exclusive;
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         g_sel_item_index = 0;
@@ -3787,10 +3773,10 @@ reask_sort:
 /// @return DisplayState indicating the next action for the selector loop.
 ///
 /// @globals
-/// - g_sel_rereading: Toggled for rereading mode.
+/// - g_sel.rereading: Toggled for rereading mode.
 /// - g_sel_page_gp: Reset for page state changes.
 /// - g_sel_page_np: Set to nullptr for page state changes.
-/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_item_index: Reset to 0 for some commands.
 /// - g_msg: Updated with status or help messages.
 /// - s_disp_status_line: Set to 1 for status line control.
@@ -3804,7 +3790,7 @@ static DisplayState add_group_commands(char_int ch)
     {
     case 'O':
     {
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
@@ -3855,7 +3841,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode, command_char);
+        set_sel_sort(g_sel.mode, command_char);
         g_sel_page_gp = AddGroupIndex::None;
         g_sel_next_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
@@ -3864,26 +3850,26 @@ reask_sort:
 
     case 'U':
         sel_cleanup();
-        g_sel_rereading = !g_sel_rereading;
+        g_sel.rereading = !g_sel.rereading;
         g_sel_page_gp = AddGroupIndex::None;
         return DS_RESTART;
 
     case 'R':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
     case 'E':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        g_sel_exclusive = !g_sel_exclusive;
+        g_sel.exclusive = !g_sel.exclusive;
         g_sel_page_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3898,7 +3884,7 @@ reask_sort:
         return DS_DISPLAY;
 
     case 'X':  case 'D':  case 'J':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             AddGroupIndex index;
             if (ch == 'D')
@@ -4098,8 +4084,8 @@ static DisplayState unsubscribed_group_commands(char_int ch)
 /// @return DisplayState indicating the next action for the selector loop.
 ///
 /// @globals
-/// - g_sel_rereading: Checked to determine if rereading mode is active.
-/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel.rereading: Checked to determine if rereading mode is active.
+/// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page_mp: Set to nullptr for page state changes.
 ///
 static DisplayState multirc_commands(char_int ch)
@@ -4107,17 +4093,17 @@ static DisplayState multirc_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_mp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
     case 'E':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        g_sel_exclusive = !g_sel_exclusive;
+        g_sel.exclusive = !g_sel.exclusive;
         g_sel_page_mp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -4155,8 +4141,8 @@ static DisplayState multirc_commands(char_int ch)
 /// @return DisplayState indicating the next action for the selector loop.
 ///
 /// @globals
-/// - g_sel_rereading: Checked to determine if rereading mode is active.
-/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel.rereading: Checked to determine if rereading mode is active.
+/// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page_op: Set to 1 for page state changes.
 /// - s_removed_prompt: Set to RP_ALL for prompt erasure.
 /// - s_disp_status_line: Set to 1 for status line control.
@@ -4169,17 +4155,17 @@ static DisplayState option_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
     case 'E':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        g_sel_exclusive = !g_sel_exclusive;
+        g_sel.exclusive = !g_sel.exclusive;
         g_sel_page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -4273,8 +4259,8 @@ static DisplayState option_commands(char_int ch)
 /// @return DisplayState indicating the next action for the selector loop.
 ///
 /// @globals
-/// - g_sel_rereading: Checked to determine if rereading mode is active.
-/// - g_sel_exclusive: Toggled for exclusive selection mode.
+/// - g_sel.rereading: Checked to determine if rereading mode is active.
+/// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page_univ_index: Set to 0 for page state changes.
 /// - s_removed_prompt: Set to RP_ALL for prompt erasure.
 /// - s_clean_screen: Set to false to prevent screen clearing.
@@ -4285,17 +4271,17 @@ static DisplayState universal_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel_mode, static_cast<SelectionSortMode>(g_sel_sort * -g_sel_direction));
+        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
     case 'E':
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
-        g_sel_exclusive = !g_sel_exclusive;
+        g_sel.exclusive = !g_sel.exclusive;
         g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -4306,7 +4292,7 @@ static DisplayState universal_commands(char_int ch)
 
     case 'U':
         sel_cleanup();
-        g_sel_rereading = !g_sel_rereading;
+        g_sel.rereading = !g_sel.rereading;
         g_sel_page_univ_index = {};
         return DS_RESTART;
 
@@ -4332,7 +4318,7 @@ static DisplayState universal_commands(char_int ch)
 
     case 'O':
     {
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             sel_cleanup();
         }
@@ -4372,7 +4358,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel_mode, command_char);
+        set_sel_sort(g_sel.mode, command_char);
         g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;

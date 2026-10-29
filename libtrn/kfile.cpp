@@ -406,7 +406,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             switch (command.size() > 1 ? command[1] : '\0')
             {
             case 'X':
-                killmask |= g_sel_mask; // don't kill selected articles
+                killmask |= g_sel.mask; // don't kill selected articles
                 // FALL THROUGH
 
             case 'j':
@@ -445,9 +445,9 @@ static bool kill_file_junk(Article &article, int killmask)
     {
         article.set_read();
     }
-    else if (article.m_flags & g_sel_mask)
+    else if (article.m_flags & g_sel.mask)
     {
-        article.m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+        article.m_flags &= ~static_cast<ArticleFlags>(g_sel.mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;

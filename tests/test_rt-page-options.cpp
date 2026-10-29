@@ -54,7 +54,7 @@ void OptionPageDisplayState::SetUp()
     g_option_saved_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
     g_option_draft = &m_draft;
     g_sel_page_op = -1;
-    g_sel_mode = SM_OPTIONS;
+    g_sel.mode = SM_OPTIONS;
     g_indent_string = ">";
 }
 
@@ -213,7 +213,7 @@ TEST_P(OptionContextRowTest, showsOptionInstructionsWhenEnteredFromReadingOrASel
     EXPECT_THAT(output, testing::HasSubstr("(Press 'S' to save changes, 'q' to abandon, or TAB to use.)"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.reading")));
     EXPECT_EQ(GetParam(), g_in_ng);
-    EXPECT_EQ(SM_OPTIONS, g_sel_mode);
+    EXPECT_EQ(SM_OPTIONS, g_sel.mode);
     EXPECT_EQ(10, g_sel_total_obj_cnt);
 }
 

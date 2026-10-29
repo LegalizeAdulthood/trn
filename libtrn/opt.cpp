@@ -416,19 +416,19 @@ void apply_global_option(OptionIndex num, std::string_view value)
 
     case OI_NEWS_SEL_MODE:
     {
-        const SelectionMode save_sel_mode = g_sel_mode;
+        const SelectionMode save_sel_mode = g_sel.mode;
         set_sel_mode(first_char);
         if (save_sel_mode != SM_ARTICLE && save_sel_mode != SM_SUBJECT //
             && save_sel_mode != SM_THREAD)
         {
-            g_sel_mode = save_sel_mode;
+            g_sel.mode = save_sel_mode;
             set_selector(SM_MAGIC_NUMBER,SS_MAGIC_NUMBER);
         }
         break;
     }
 
     case OI_NEWS_SEL_ORDER:
-        set_sel_order(g_sel_default_mode,value);
+        set_sel_order(g_sel.default_mode, value);
         break;
 
     case OI_NEWS_SEL_CMDS:
@@ -1048,19 +1048,19 @@ std::string option_value(OptionIndex num)
 
     case OI_NEWS_SEL_MODE:
     {
-        const SelectionMode save_sel_mode = g_sel_mode;
+        const SelectionMode save_sel_mode = g_sel.mode;
         const int save_Threaded = g_threaded_group;
         g_threaded_group = true;
-        set_selector(g_sel_default_mode, SS_MAGIC_NUMBER);
-        const std::string s{g_sel_mode_string};
-        g_sel_mode = save_sel_mode;
+        set_selector(g_sel.default_mode, SS_MAGIC_NUMBER);
+        const std::string s{g_sel.mode_string};
+        g_sel.mode = save_sel_mode;
         g_threaded_group = save_Threaded;
         set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
         return s;
     }
 
     case OI_NEWS_SEL_ORDER:
-        return get_sel_order(g_sel_default_mode);
+        return get_sel_order(g_sel.default_mode);
 
     case OI_NEWS_SEL_CMDS:
         return g_news_sel_cmds;

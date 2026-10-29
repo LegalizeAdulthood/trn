@@ -101,9 +101,9 @@ void Article::cache_article()
     m_subj_next = next;
     m_flags |= AF_CACHED;
 
-    if (!!(m_flags & AF_UNREAD) ^ g_sel_rereading)
+    if (!!(m_flags & AF_UNREAD) ^ g_sel.rereading)
     {
-        if (m_subj->m_flags & g_sel_mask)
+        if (m_subj->m_flags & g_sel.mask)
         {
             select_article(AUTO_KILL_NONE);
         }
@@ -268,12 +268,12 @@ void Article::one_more()
         g_newsgroup_ptr->m_to_read++;
         if (m_subj)
         {
-            if (g_selected_only)
+            if (g_sel.selected_only)
             {
-                if ((m_subj->m_flags & static_cast<SubjectFlags>(g_sel_mask)) &&
-                    !(m_flags & static_cast<ArticleFlags>(g_sel_mask)))
+                if ((m_subj->m_flags & static_cast<SubjectFlags>(g_sel.mask)) &&
+                    !(m_flags & static_cast<ArticleFlags>(g_sel.mask)))
                 {
-                    m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+                    m_flags |= static_cast<ArticleFlags>(g_sel.mask);
                     g_selected_count++;
                 }
             }
@@ -293,10 +293,10 @@ void Article::one_less()
     {
         m_flags &= ~AF_UNREAD;
         // Keep g_selected_count accurate
-        if (m_flags & static_cast<ArticleFlags>(g_sel_mask))
+        if (m_flags & static_cast<ArticleFlags>(g_sel.mask))
         {
             g_selected_count--;
-            m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+            m_flags &= ~static_cast<ArticleFlags>(g_sel.mask);
         }
         if (g_newsgroup_ptr->m_to_read > TR_NONE)
         {
@@ -499,12 +499,12 @@ done:
 //
 void Article::select_article(AutoKillFlags auto_flags)
 {
-    const ArticleFlags desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    const ArticleFlags desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
     bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
     if ((m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
     {
-        if (!(m_flags & static_cast<ArticleFlags>(g_sel_mask)))
+        if (!(m_flags & static_cast<ArticleFlags>(g_sel.mask)))
         {
             g_selected_count++;
             if (g_verbose && echo && g_general_mode != GM_SELECTOR)
@@ -512,7 +512,7 @@ void Article::select_article(AutoKillFlags auto_flags)
                 fmt::print("\tSelected");
             }
         }
-        m_flags = (m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
+        m_flags = (m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel.mask);
     }
     if (auto_flags)
     {
@@ -520,13 +520,13 @@ void Article::select_article(AutoKillFlags auto_flags)
     }
     if (m_subj)
     {
-        if (!(m_subj->m_flags & g_sel_mask))
+        if (!(m_subj->m_flags & g_sel.mask))
         {
             g_selected_subj_cnt++;
         }
-        m_subj->m_flags = (m_subj->m_flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
+        m_subj->m_flags = (m_subj->m_flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel.mask) | SF_VISIT;
     }
-    g_selected_only = (g_selected_only || g_selected_count != 0);
+    g_sel.selected_only = (g_sel.selected_only || g_selected_count != 0);
 }
 
 // Select this article's subject.
@@ -575,9 +575,9 @@ void Article::deselect_article(AutoKillFlags auto_flags)
 {
     const bool echo = (auto_flags & ALSO_ECHO) != 0;
     auto_flags &= AUTO_SEL_MASK;
-    if (m_flags & static_cast<ArticleFlags>(g_sel_mask))
+    if (m_flags & static_cast<ArticleFlags>(g_sel.mask))
     {
-        m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+        m_flags &= ~static_cast<ArticleFlags>(g_sel.mask);
         if (!g_selected_count--)
         {
             g_selected_count = 0;
@@ -587,7 +587,7 @@ void Article::deselect_article(AutoKillFlags auto_flags)
             fmt::print("\tDeselected");
         }
     }
-    if (g_sel_rereading && g_sel_mode == SM_ARTICLE)
+    if (g_sel.rereading && g_sel.mode == SM_ARTICLE)
     {
         m_flags |= AF_DEL;
     }
@@ -736,7 +736,7 @@ void Article::perform_auto_flags(AutoKillFlags thread_flags, AutoKillFlags subj_
 {
     if (thread_flags & AUTO_SEL_THD)
     {
-        if (g_sel_mode == SM_THREAD)
+        if (g_sel.mode == SM_THREAD)
         {
             select_articles_thread(AUTO_SEL_THD);
         }
@@ -760,7 +760,7 @@ void Article::perform_auto_flags(AutoKillFlags thread_flags, AutoKillFlags subj_
 
     if (thread_flags & AUTO_KILL_THD)
     {
-        if (g_sel_mode == SM_THREAD)
+        if (g_sel.mode == SM_THREAD)
         {
             kill_articles_thread(AFFECT_ALL | AUTO_KILL_THD);
         }
@@ -1106,7 +1106,7 @@ no_references:
         cache_article();
     }
     AutoKillFlags thread_autofl = chain_autofl;
-    if (g_sel_mode == SM_THREAD)
+    if (g_sel.mode == SM_THREAD)
     {
         Subject* sp = m_subj->m_thread_link;
         while (sp != m_subj)

@@ -158,7 +158,7 @@ bool switcheroo(std::string_view command)
             return false;
         }
         s_option_sel_lock = true;
-        if (g_general_mode != GM_SELECTOR || g_sel_mode != SM_OPTIONS)
+        if (g_general_mode != GM_SELECTOR || g_sel.mode != SM_OPTIONS)
         {
             option_selector();
         }
@@ -427,7 +427,7 @@ int thread_perform(std::string_view command)
     {
         return -1;
     }
-    bool want_unread = !g_sel_rereading && cmdstr[0] != 'm';
+    bool want_unread = !g_sel.rereading && cmdstr[0] != 'm';
 
     perform_status_init(g_newsgroup_ptr->m_to_read);
     len = static_cast<int>(cmdstr.size());
@@ -446,7 +446,7 @@ int thread_perform(std::string_view command)
         g_performed_article_loop = false;
         if (one_thread)
         {
-            sp = (g_sel_mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
+            sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
         }
         else
         {
@@ -454,11 +454,11 @@ int thread_perform(std::string_view command)
         }
         for (; sp; sp = next_subject(sp, bits))
         {
-            if ((!(sp->m_flags & g_sel_mask) ^ !bits) || !sp->m_misc)
+            if ((!(sp->m_flags & g_sel.mask) ^ !bits) || !sp->m_misc)
             {
                 continue;
             }
-            g_nav.target.art = g_sel_mode == SM_SUBJECT ? sp->m_articles : sp->first_art();
+            g_nav.target.art = g_sel.mode == SM_SUBJECT ? sp->m_articles : sp->first_art();
             if (g_nav.target.art)
             {
                 g_nav.target.num = g_nav.target.art->article_num();
@@ -493,7 +493,7 @@ int thread_perform(std::string_view command)
             Article **limit = article_ptr_list_end();
             if (one_thread)
             {
-                sp = (g_sel_mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
+                sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
             }
             for (Article **app = article_ptr_list_begin(); app < limit; app++)
             {
@@ -503,7 +503,7 @@ int thread_perform(std::string_view command)
                     continue;
                 }
                 if ((!(ap->m_flags & AF_UNREAD) ^ want_unread) //
-                    && !(ap->m_flags & g_sel_mask) ^ !!bits)
+                    && !(ap->m_flags & g_sel.mask) ^ !!bits)
                 {
                     g_nav.target = {ap->article_num(), ap};
                     const int result = perform(cmdstr, output_level && g_page_line == 1);
@@ -523,7 +523,7 @@ int thread_perform(std::string_view command)
         {
             if (one_thread)
             {
-                sp = (g_sel_mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
+                sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
             }
             else
             {
@@ -531,11 +531,10 @@ int thread_perform(std::string_view command)
             }
             for (; sp; sp = next_subject(sp, bits))
             {
-                for (ap = g_sel_mode == SM_SUBJECT ? sp->m_articles : sp->first_art(); ap;
-                     ap = g_sel_mode == SM_SUBJECT ? ap->m_subj_next : ap->next_article())
+                for (ap = g_sel.mode == SM_SUBJECT ? sp->m_articles : sp->first_art(); ap;
+                     ap = g_sel.mode == SM_SUBJECT ? ap->m_subj_next : ap->next_article())
                 {
-                    if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
-                        && !(ap->m_flags & g_sel_mask) ^ !!bits)
+                    if ((!(ap->m_flags & AF_UNREAD) ^ want_unread) && !(ap->m_flags & g_sel.mask) ^ !!bits)
                     {
                         g_nav.target = {ap->article_num(), ap};
                         const int result = perform(cmdstr, output_level && g_page_line == 1);
@@ -594,7 +593,7 @@ int perform(std::string_view command_list, int output_level)
                     fmt::print("\tJunked");
                 }
             }
-            if (g_sel_rereading)
+            if (g_sel.rereading)
             {
                 g_nav.target.art->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
@@ -605,7 +604,7 @@ int perform(std::string_view command_list, int output_level)
                 command_pos + 1 < command_list.size() && command_list[command_pos + 1] == '+';
             if (savemode || doubled_plus)
             {
-                if (g_sel_mode == SM_THREAD)
+                if (g_sel.mode == SM_THREAD)
                 {
                     g_nav.target.art->select_articles_thread(savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
                 }
@@ -637,7 +636,7 @@ int perform(std::string_view command_list, int output_level)
                 command_pos + 1 < command_list.size() && command_list[command_pos + 1] == '-';
             if (doubled_minus)
             {
-                if (g_sel_mode == SM_THREAD)
+                if (g_sel.mode == SM_THREAD)
                 {
                     g_nav.target.art->deselect_articles_thread();
                 }
@@ -658,7 +657,7 @@ int perform(std::string_view command_list, int output_level)
         }
         else if (ch == 'J')
         {
-            if (g_sel_mode == SM_THREAD)
+            if (g_sel.mode == SM_THREAD)
             {
                 g_nav.target.art->kill_articles_thread(AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
             }
@@ -681,7 +680,7 @@ int perform(std::string_view command_list, int output_level)
                     fmt::print("\tKilled");
                 }
             }
-            if (g_sel_rereading)
+            if (g_sel.rereading)
             {
                 g_nav.target.art->deselect_article(AUTO_KILL_NONE);
             }
@@ -906,14 +905,14 @@ int newsgroup_sel_perform(std::string_view command)
         {
             continue;
         }
-        if (g_sel_rereading? g_newsgroup_ptr->m_to_read != TR_NONE
+        if (g_sel.rereading ? g_newsgroup_ptr->m_to_read != TR_NONE
                          : g_newsgroup_ptr->m_to_read < g_newsgroup_min_to_read)
         {
             continue;
         }
         set_newsgroup(g_newsgroup_ptr);
         if (dot_scope || ((g_newsgroup_ptr->m_flags & bits) == bits //
-                          && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)) ^ !!bits)))
+                          && (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel.mask)) ^ !!bits)))
         {
             if (newsgroup_perform(cmdstr, 0) < 0)
             {
@@ -950,9 +949,10 @@ int newsgroup_perform(std::string_view cmdlst, int output_level)
         switch (ch)
         {
         case '+':
-            if (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask)))
+            if (!(g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel.mask)))
             {
-                g_newsgroup_ptr->m_flags = ((g_newsgroup_ptr->m_flags | static_cast<NewsgroupFlags>(g_sel_mask)) & ~NF_DEL);
+                g_newsgroup_ptr->m_flags =
+                    ((g_newsgroup_ptr->m_flags | static_cast<NewsgroupFlags>(g_sel.mask)) & ~NF_DEL);
                 g_selected_count++;
             }
             break;
@@ -963,10 +963,10 @@ int newsgroup_perform(std::string_view cmdlst, int output_level)
 
         case '-':
 deselect:
-            if (g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel_mask))
+            if (g_newsgroup_ptr->m_flags & static_cast<NewsgroupFlags>(g_sel.mask))
             {
-                g_newsgroup_ptr->m_flags &= ~static_cast<NewsgroupFlags>(g_sel_mask);
-                if (g_sel_rereading && g_newsgroup_ptr->m_to_read != TR_UNSUB)
+                g_newsgroup_ptr->m_flags &= ~static_cast<NewsgroupFlags>(g_sel.mask);
+                if (g_sel.rereading && g_newsgroup_ptr->m_to_read != TR_UNSUB)
                 {
                     g_newsgroup_ptr->m_flags |= NF_DEL;
                 }
@@ -1032,7 +1032,7 @@ int add_group_sel_perform(std::string_view command)
     }
     else
     {
-        bits = g_sel_mask;
+        bits = g_sel.mask;
     }
     if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
@@ -1055,7 +1055,7 @@ int add_group_sel_perform(std::string_view command)
     for (AddGroupIndex index : g_add_groups.indices())
     {
         AddGroup *gp = &g_add_groups[index];
-        if (!(gp->m_flags & g_sel_mask) ^ !!bits)
+        if (!(gp->m_flags & g_sel.mask) ^ !!bits)
         {
             if (gp->add_group_perform(cmdstr, 0) < 0)
             {

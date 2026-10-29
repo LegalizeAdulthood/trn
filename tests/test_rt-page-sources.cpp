@@ -46,7 +46,7 @@ void SourcePageDisplayState::SetUp()
     g_multircs.reserve(8);
     m_sources.reserve(32);
     m_newsrcs.reserve(32);
-    g_sel_mode = SM_MULTIRC;
+    g_sel.mode = SM_MULTIRC;
     g_sel_page_mp = nullptr;
     g_sel_next_mp = nullptr;
 }
@@ -174,7 +174,7 @@ void NewGroupPageDisplayState::SetUp()
 {
     NewsgroupPageDisplayState::SetUp();
     g_add_groups = {};
-    g_sel_mode = SM_ADD_GROUP;
+    g_sel.mode = SM_ADD_GROUP;
     g_sel_page_gp = AddGroupIndex::None;
     g_sel_next_gp = AddGroupIndex::None;
     g_sel_grp_display_mode = "s";
@@ -244,7 +244,7 @@ void NewGroupPageEndingTest::SetUp()
     m_ids[0] = add_new("comp.first", 1, scope);
     (void) add_new("comp.hidden", 9, rereading ? AGF_NONE : AGF_EXCLUDED);
     m_ids[1] = add_new("comp.second", 2, scope);
-    m_ids[2] = add_new("comp.third", 3, scope | static_cast<AddGroupFlags>(g_sel_mask));
+    m_ids[2] = add_new("comp.third", 3, scope | static_cast<AddGroupFlags>(g_sel.mask));
     if (final_rows == 2)
     {
         m_ids[3] = add_new("comp.fourth", 4, scope);
@@ -404,7 +404,7 @@ TEST_P(NewGroupRowTest, displaysEligibleGroupCountsDescriptionsAndPendingMarkers
     prepare_scope(rereading, mode);
     g_use_sel_num = numeric;
     const AddGroupFlags                   scope = rereading ? AGF_EXCLUDED : AGF_NONE;
-    const AddGroupFlags                   selected = static_cast<AddGroupFlags>(g_sel_mask);
+    const AddGroupFlags                   selected = static_cast<AddGroupFlags>(g_sel.mask);
     const std::array<std::string_view, 4> names{"comp.a", "comp.longer", "comp.c", "comp.d"};
     const std::array<std::string_view, 4> descriptions{"Alpha discussion", "Beta discussion", "Gamma discussion",
                                                        "Delta discussion"};
@@ -576,8 +576,8 @@ TEST_P(NewGroupScopeTest, displaysOnlySelectedGroupsOnAnExclusivePage)
     prepare_scope(rereading);
     const AddGroupFlags scope = rereading ? AGF_EXCLUDED : AGF_NONE;
     (void) add_new("comp.unselected", 1, scope);
-    const AddGroupIndex identity = add_new("comp.selected", 9, scope | static_cast<AddGroupFlags>(g_sel_mask));
-    g_sel_exclusive = true;
+    const AddGroupIndex identity = add_new("comp.selected", 9, scope | static_cast<AddGroupFlags>(g_sel.mask));
+    g_sel.exclusive = true;
     initialize_page();
 
     const std::string output = render_page();

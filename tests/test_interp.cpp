@@ -3657,7 +3657,7 @@ private:
     ValueSaver<bool>          m_reread{g_reread, g_reread};
     ValueSaver<int>           m_checkpoints{g_check_count, g_check_count};
     ValueSaver<ArticleUnread> m_selected{g_selected_count, g_selected_count};
-    ValueSaver<AddGroupFlags> m_selection_mask{g_sel_mask, g_sel_mask};
+    ValueSaver<AddGroupFlags> m_selection_mask{g_sel.mask, g_sel.mask};
     ValueSaver<GeneralMode>   m_general_mode{g_general_mode, g_general_mode};
     ValueSaver<MinorMode>     m_mode{g_mode, g_mode};
 };
@@ -3688,7 +3688,7 @@ void PagerExitArticleTest::SetUp()
         g_nav.target.art->one_less();
     }
     g_nav.target.art->m_flags = (g_nav.target.art->m_flags & ~AF_SEL) | (scenario.initial_flags & AF_SEL);
-    g_sel_mask = static_cast<AddGroupFlags>(AF_SEL);
+    g_sel.mask = static_cast<AddGroupFlags>(AF_SEL);
     g_selected_count = ArticleUnread{(scenario.initial_flags & AF_SEL) ? 1 : 0};
     m_unread_before = g_newsgroup_ptr->m_to_read;
     g_nav.current.num = g_nav.target.num;
@@ -3919,7 +3919,7 @@ private:
     ValueSaver<bool>                m_erase{g_erase_screen, g_erase_screen};
     ValueSaver<MarkingMode>         m_marking{g_marking, g_marking};
     ValueSaver<KillFileStateFlags>  m_kill_state{g_kf_state, g_kf_state};
-    ValueSaver<SelectionSortMode>   m_group_sort{g_sel_newsgroup_sort, g_sel_newsgroup_sort};
+    ValueSaver<SelectionSortMode>   m_group_sort{g_sel.newsgroup_sort, g_sel.newsgroup_sort};
     ValueSaver<TerminalInputReader> m_reader{g_terminal_input_reader, g_terminal_input_reader};
 };
 
@@ -3953,7 +3953,7 @@ void PagerCheckpointArticleTest::SetUp()
     g_multirc = &m_multirc;
     g_doing_ng = true;
     g_kf_state = KFS_NONE;
-    g_sel_newsgroup_sort = SS_NATURAL;
+    g_sel.newsgroup_sort = SS_NATURAL;
     g_do_check_when = scenario.threshold;
     g_check_count = scenario.count;
     g_tc_LINES = scenario.height;
@@ -4068,9 +4068,9 @@ private:
     ValueSaver<std::string>   m_moderated{g_moderated, g_moderated};
     ValueSaver<std::string>   m_first_line{g_first_line, g_first_line};
     ValueSaver<bool>          m_hiding{g_do_hiding, g_do_hiding};
-    ValueSaver<bool>          m_selected_only{g_selected_only, g_selected_only};
-    ValueSaver<bool>          m_sel_rereading{g_sel_rereading, g_sel_rereading};
-    ValueSaver<AddGroupFlags> m_mask{g_sel_mask, g_sel_mask};
+    ValueSaver<bool>          m_selected_only{g_sel.selected_only, g_sel.selected_only};
+    ValueSaver<bool>          m_sel_rereading{g_sel.rereading, g_sel.rereading};
+    ValueSaver<AddGroupFlags> m_mask{g_sel.mask, g_sel.mask};
     ValueSaver<ArticleUnread> m_selected{g_selected_count, g_selected_count};
     ValueSaver<int>           m_selected_subjects{g_selected_subj_cnt, g_selected_subj_cnt};
     ValueSaver<int>           m_delayed{g_dm_count, g_dm_count};
@@ -4086,11 +4086,11 @@ void PagerTitleArticleTest::SetUp()
     g_moderated = scenario.flags & TITLE_MODERATED ? " (moderated)" : "";
     g_first_line = scenario.first_line;
     g_do_hiding = true;
-    g_sel_mask = static_cast<AddGroupFlags>(AF_SEL);
-    g_sel_rereading = false;
+    g_sel.mask = static_cast<AddGroupFlags>(AF_SEL);
+    g_sel.rereading = false;
     g_selected_count = ArticleUnread{};
     g_selected_subj_cnt = 0;
-    g_selected_only = false;
+    g_sel.selected_only = false;
     g_dm_count = 0;
     if (g_threaded_group)
     {
@@ -4116,7 +4116,7 @@ void PagerTitleArticleTest::SetUp()
     {
         article_ptr(g_last_art)->select_article(AUTO_KILL_NONE);
     }
-    g_selected_only = (scenario.flags & TITLE_SELECTED_ONLY) != 0;
+    g_sel.selected_only = (scenario.flags & TITLE_SELECTED_ONLY) != 0;
     m_root_flags = g_nav.target.art->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK);
     open_for_reading(m_root);
     std::ifstream source{std::to_string(m_root.value_of()), std::ios::binary};
@@ -7118,7 +7118,7 @@ TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
     EXPECT_FALSE(article_ptr(g_last_art)->m_flags & (AF_UNREAD | AF_SEL));
     EXPECT_EQ(ArticleUnread{(m_root_flags & AF_UNREAD) ? 1 : 0}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(ArticleUnread{(m_root_flags & AF_SEL) ? 1 : 0}, g_selected_count);
-    EXPECT_EQ((scenario.flags & TITLE_SELECTED_ONLY) != 0, g_selected_only);
+    EXPECT_EQ((scenario.flags & TITLE_SELECTED_ONLY) != 0, g_sel.selected_only);
     EXPECT_EQ((scenario.flags & TITLE_DELAYED_RETURN) ? 1 : 0, g_dm_count);
     EXPECT_EQ(m_root, g_nav.target.num);
     EXPECT_EQ(m_root, g_nav.current.num);
@@ -7129,7 +7129,7 @@ TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
     if (scenario.flags & TITLE_THREADED)
     {
         const std::string_view node =
-            m_root_flags & AF_UNREAD ? (g_selected_only && !(m_root_flags & AF_SEL) ? "<1>" : "[1]") : "(1)";
+            m_root_flags & AF_UNREAD ? (g_sel.selected_only && !(m_root_flags & AF_SEL) ? "<1>" : "[1]") : "(1)";
         EXPECT_THAT(m_initial_output, HasSubstr("<mark>" + std::string{node} + "</mark>"));
         EXPECT_THAT(m_rendered, HasSubstr("<mark>" + std::string{node} + "</mark>"));
         EXPECT_THAT(m_rendered, HasSubstr("-(1)"));

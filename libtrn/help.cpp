@@ -337,7 +337,7 @@ int help_newsgroup_selector()
 
 int help_add_group_selector()
 {
-    if (g_sel_group_listing)
+    if (g_sel.group_listing)
     {
         constexpr std::array<MarkedText, 3> page{MarkedText{"The Unsubscribed-Newsgroups Listing:\n", STANDOUT},
                                                  {"\n"

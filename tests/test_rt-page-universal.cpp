@@ -38,7 +38,7 @@ void UniversalPageDisplayState::SetUp()
     NewsgroupPageDisplayState::SetUp();
     g_univ_items.clear();
     g_univ_items.reserve(16);
-    g_sel_mode = SM_UNIVERSAL;
+    g_sel.mode = SM_UNIVERSAL;
     g_sel_page_univ_index = {};
     g_sel_next_univ_index = {};
     g_univ_title = "Reading menu";
@@ -333,8 +333,8 @@ TEST_P(UniversalOrderTest, keepsLabelsAndPayloadsTogetherAfterSorting)
     add_article("First", -5);
     add_article("Second", 20, UF_SEL);
     add_article("Third", 20);
-    g_sel_sort = sort;
-    g_sel_direction = direction;
+    g_sel.sort = sort;
+    g_sel.direction = direction;
     initialize_page();
     const std::array<int, 3> identities =
         sort == SS_SCORE ? (direction > 0 ? std::array<int, 3>{22, 33, 11} : std::array<int, 3>{11, 33, 22})
@@ -407,7 +407,7 @@ TEST_F(UniversalPageDisplayState, displaysOnlySelectedEntriesInExclusiveMode)
     (void) add_item(UniversalTextFile{"first.txt"}, "Unselected");
     (void) add_item(UniversalConfigFileData{"Menu", "child.menu", ""}, "Selected", UF_SEL);
     (void) add_item(UHELP_UNIV, "Unselected help");
-    g_sel_exclusive = true;
+    g_sel.exclusive = true;
     initialize_page();
 
     const std::string output = render_page();

@@ -223,7 +223,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             {
                 g_newsgroup_ptr->set_to_read(ST_LAX);
             }
-            if (s_newsgroup_do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel_rereading))
+            if (s_newsgroup_do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel.rereading))
             {
                 if (cmdlst.empty())
                 {

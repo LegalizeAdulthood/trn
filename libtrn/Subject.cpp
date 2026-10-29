@@ -78,15 +78,15 @@ Article *Subject::last_art()
 //
 void Subject::select_subject(AutoKillFlags auto_flags)
 {
-    int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    int desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
     int old_count = g_selected_count;
 
     auto_flags &= AUTO_SEL_MASK;
     for (Article *ap = m_articles; ap; ap = ap->m_subj_next)
     {
-        if ((ap->m_flags & (AF_EXISTS | AF_UNREAD | g_sel_mask)) == desired_flags)
+        if ((ap->m_flags & (AF_EXISTS | AF_UNREAD | g_sel.mask)) == desired_flags)
         {
-            ap->m_flags = (ap->m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel_mask);
+            ap->m_flags = (ap->m_flags & ~AF_DEL) | static_cast<ArticleFlags>(g_sel.mask);
             g_selected_count++;
         }
         if (auto_flags)
@@ -96,13 +96,12 @@ void Subject::select_subject(AutoKillFlags auto_flags)
     }
     if (g_selected_count > old_count)
     {
-        if (!(m_flags & g_sel_mask))
+        if (!(m_flags & g_sel.mask))
         {
             g_selected_subj_cnt++;
         }
-        m_flags = (m_flags & ~SF_DEL)
-                    | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT | SF_WAS_SELECTED;
-        g_selected_only = true;
+        m_flags = (m_flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel.mask) | SF_VISIT | SF_WAS_SELECTED;
+        g_sel.selected_only = true;
     }
     else
     {
@@ -116,26 +115,26 @@ void Subject::deselect_subject()
 {
     for (Article *ap = m_articles; ap; ap = ap->m_subj_next)
     {
-        if (ap->m_flags & g_sel_mask)
+        if (ap->m_flags & g_sel.mask)
         {
-            ap->m_flags &= ~static_cast<ArticleFlags>(g_sel_mask);
+            ap->m_flags &= ~static_cast<ArticleFlags>(g_sel.mask);
             if (!g_selected_count--)
             {
                 g_selected_count = 0;
             }
         }
-        if (g_sel_rereading && g_sel_mode == SM_ARTICLE && (ap->m_flags & (AF_EXISTS | AF_UNREAD)) == AF_EXISTS)
+        if (g_sel.rereading && g_sel.mode == SM_ARTICLE && (ap->m_flags & (AF_EXISTS | AF_UNREAD)) == AF_EXISTS)
         {
             ap->m_flags |= AF_DEL;
         }
     }
-    if (m_flags & g_sel_mask)
+    if (m_flags & g_sel.mask)
     {
-        m_flags &= ~static_cast<SubjectFlags>(g_sel_mask);
+        m_flags &= ~static_cast<SubjectFlags>(g_sel.mask);
         g_selected_subj_cnt--;
     }
     m_flags &= ~(SF_VISIT | SF_WAS_SELECTED);
-    if (g_sel_rereading)
+    if (g_sel.rereading)
     {
         m_flags |= SF_DEL;
     }
@@ -149,7 +148,7 @@ void Subject::deselect_subject()
 //
 void Subject::kill_subject(AutoKillFlags auto_flags)
 {
-    int killmask = (auto_flags & AFFECT_ALL)? 0 : g_sel_mask;
+    int        killmask = (auto_flags & AFFECT_ALL) ? 0 : g_sel.mask;
     const bool toreturn = (auto_flags & SET_TO_RETURN) != 0;
 
     auto_flags &= AUTO_KILL_MASK;
@@ -179,7 +178,7 @@ void Subject::unkill_subject()
 
     for (Article *ap = m_articles; ap; ap = ap->m_subj_next)
     {
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             if (all_bits(ap->m_flags, AF_DEL_SEL | AF_EXISTS))
             {
@@ -187,7 +186,7 @@ void Subject::unkill_subject()
                 {
                     g_newsgroup_ptr->m_to_read++;
                 }
-                if (g_selected_only && !(ap->m_flags & AF_SEL))
+                if (g_sel.selected_only && !(ap->m_flags & AF_SEL))
                 {
                     g_selected_count++;
                 }
@@ -204,7 +203,7 @@ void Subject::unkill_subject()
             {
                 ap->one_more();
             }
-            if (g_selected_only && (ap->m_flags & (AF_SEL | AF_UNREAD)) == AF_UNREAD)
+            if (g_sel.selected_only && (ap->m_flags & (AF_SEL | AF_UNREAD)) == AF_UNREAD)
             {
                 ap->m_flags = (ap->m_flags & ~AF_DEL) | AF_SEL;
                 g_selected_count++;
@@ -212,7 +211,7 @@ void Subject::unkill_subject()
         }
     }
     if (g_selected_count != save_sel_count //
-        && g_selected_only && !(m_flags & SF_SEL))
+        && g_sel.selected_only && !(m_flags & SF_SEL))
     {
         m_flags |= SF_SEL | SF_VISIT | SF_WAS_SELECTED;
         g_selected_subj_cnt++;
@@ -232,10 +231,10 @@ void Subject::clear_subject()
 
 Article *Subject::subj_article()
 {
-    int art_mask = (g_selected_only? (AF_SEL|AF_UNREAD) : AF_UNREAD);
+    int  art_mask = (g_sel.selected_only ? (AF_SEL | AF_UNREAD) : AF_UNREAD);
     bool TG_save = g_threaded_group;
 
-    g_threaded_group = (g_sel_mode == SM_THREAD);
+    g_threaded_group = (g_sel.mode == SM_THREAD);
     Article *ap = first_art();
     while (ap && (ap->m_flags & art_mask) != art_mask)
     {
@@ -245,7 +244,7 @@ Article *Subject::subj_article()
     {
         g_reread = true;
         ap = first_art();
-        if (g_selected_only)
+        if (g_sel.selected_only)
         {
             while (ap && !(ap->m_flags & AF_SEL))
             {

@@ -1330,7 +1330,7 @@ void sort_univ()
         return;
     }
 
-    switch (g_sel_sort)
+    switch (g_sel.sort)
     {
     case SS_SCORE:
         std::sort(g_univ_items.begin(), g_univ_items.end(),
@@ -1338,16 +1338,16 @@ void sort_univ()
                   {
                       if (left.m_score != right.m_score)
                       {
-                          return g_sel_direction > 0 ? left.m_score > right.m_score : left.m_score < right.m_score;
+                          return g_sel.direction > 0 ? left.m_score > right.m_score : left.m_score < right.m_score;
                       }
-                      return g_sel_direction > 0 ? left.m_num < right.m_num : left.m_num > right.m_num;
+                      return g_sel.direction > 0 ? left.m_num < right.m_num : left.m_num > right.m_num;
                   });
         break;
 
     case SS_NATURAL:
     default:
         std::sort(g_univ_items.begin(), g_univ_items.end(), [](const UniversalItem &left, const UniversalItem &right)
-                  { return g_sel_direction > 0 ? left.m_num < right.m_num : left.m_num > right.m_num; });
+                  { return g_sel.direction > 0 ? left.m_num < right.m_num : left.m_num > right.m_num; });
         break;
     }
 }

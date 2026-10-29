@@ -215,7 +215,7 @@ static void append_tree_node(std::string &line, Article *article)
         line += '(';
         ch = ')';
     }
-    else if (!g_selected_only || (article->m_flags & AF_SEL))
+    else if (!g_sel.selected_only || (article->m_flags & AF_SEL))
     {
         line += '[';
         ch = ']';

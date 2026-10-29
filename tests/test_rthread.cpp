@@ -27,9 +27,9 @@ protected:
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
         m_old_obj_count = g_obj_count;
-        m_old_sel_rereading = g_sel_rereading;
-        m_old_sel_sort = g_sel_sort;
-        m_old_sel_direction = g_sel_direction;
+        m_old_sel_rereading = g_sel.rereading;
+        m_old_sel_sort = g_sel.sort;
+        m_old_sel_direction = g_sel.direction;
         m_old_sel_page_app = g_sel_page_app;
         m_old_art_ptr_list = std::move(g_art_ptr_list);
         m_old_art_ptr = g_art_ptr;
@@ -39,9 +39,9 @@ protected:
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{3};
         g_obj_count = ArticleNum{3};
-        g_sel_rereading = false;
-        g_sel_sort = SS_DATE;
-        g_sel_direction = 1;
+        g_sel.rereading = false;
+        g_sel.sort = SS_DATE;
+        g_sel.direction = 1;
         g_sel_page_app = reinterpret_cast<Article **>(1);
         g_art_ptr_list.clear();
         g_art_ptr = nullptr;
@@ -52,9 +52,9 @@ protected:
         g_art_ptr_list = std::move(m_old_art_ptr_list);
         g_art_ptr = m_old_art_ptr;
         g_sel_page_app = m_old_sel_page_app;
-        g_sel_direction = m_old_sel_direction;
-        g_sel_sort = m_old_sel_sort;
-        g_sel_rereading = m_old_sel_rereading;
+        g_sel.direction = m_old_sel_direction;
+        g_sel.sort = m_old_sel_sort;
+        g_sel.rereading = m_old_sel_rereading;
         g_obj_count = m_old_obj_count;
         g_last_art = m_old_last_art;
         g_first_art = m_old_first_art;

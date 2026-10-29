@@ -13,7 +13,7 @@
 #include <trn/artstate.h>  // for g_reread
 #include <trn/ng.h>        // variable m_target.m_number, the next article to read.
 #include <trn/ngdata.h>
-#include <trn/rt-select.h> // g_selected_only
+#include <trn/rt-select.h> // g_sel.selected_only
 #include <trn/samain.h>
 #include <trn/samisc.h>
 #include <trn/scan.h>
@@ -96,8 +96,8 @@ SaMainResult sa_main()
             g_nav.target.num = g_sa_ents[a].artnum;
             g_reread = true;
             sa_clear_mark(a);
-            // trn 3.x won't read an unselected article if g_selected_only
-            g_selected_only = false;
+            // trn 3.x won't read an unselected article if g_sel.selected_only
+            g_sel.selected_only = false;
             s_save_context();
             return SA_NORM;
         }
@@ -123,8 +123,8 @@ SaMainResult sa_main()
     if (i == SA_NORM || i == SA_FAKE)
     {
         g_nav.target.num = g_sa_art;
-        // trn 3.x won't read an unselected article if g_selected_only
-        g_selected_only = false;
+        // trn 3.x won't read an unselected article if g_sel.selected_only
+        g_sel.selected_only = false;
         if (g_sa_mode_read_elig)
         {
             g_reread = true;

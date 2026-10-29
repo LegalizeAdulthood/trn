@@ -1180,7 +1180,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         break;
                     }
                     const bool unseen = g_nav.target.num <= g_last_art && !was_read(g_nav.target.num);
-                    if (g_selected_only)
+                    if (g_sel.selected_only)
                     {
                         const bool selected =
                             g_nav.current.art != nullptr && (g_nav.current.art->m_flags & AF_SEL) != AF_NONE;

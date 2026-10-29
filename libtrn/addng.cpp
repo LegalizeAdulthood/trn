@@ -538,12 +538,12 @@ static int add_group_order_number(const AddGroup *left, const AddGroup *right)
     {
         return 0;
     }
-    return eq.value_of() > 0 ? g_sel_direction : -g_sel_direction;
+    return eq.value_of() > 0 ? g_sel.direction : -g_sel.direction;
 }
 
 static int add_group_order_group_name(const AddGroup *left, const AddGroup *right)
 {
-    return string_case_compare(left->m_name, right->m_name) * g_sel_direction;
+    return string_case_compare(left->m_name, right->m_name) * g_sel.direction;
 }
 
 static int add_group_order_count(const AddGroup *left, const AddGroup *right)
@@ -551,7 +551,7 @@ static int add_group_order_count(const AddGroup *left, const AddGroup *right)
     const ArticleNum eq = left->m_to_read - right->m_to_read;
     if (eq != 0)
     {
-        return eq > 0 ? g_sel_direction : -g_sel_direction;
+        return eq > 0 ? g_sel.direction : -g_sel.direction;
     }
     return add_group_order_group_name(left, right);
 }
@@ -561,7 +561,7 @@ void sort_add_groups()
 {
     int (*sort_procedure)(const AddGroup *left, const AddGroup *right);
 
-    switch (g_sel_sort)
+    switch (g_sel.sort)
     {
     case SS_NATURAL:
     default:

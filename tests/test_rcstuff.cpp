@@ -97,9 +97,9 @@ protected:
         m_old_use_newsrc_selector = g_use_newsrc_selector;
         m_old_nntp_link = g_nntp_link;
         m_old_newsrc_hash = g_newsrc_hash;
-        m_old_sel_sort = g_sel_sort;
-        m_old_sel_newsgroup_sort = g_sel_newsgroup_sort;
-        m_old_sel_direction = g_sel_direction;
+        m_old_sel_sort = g_sel.sort;
+        m_old_sel_newsgroup_sort = g_sel.newsgroup_sort;
+        m_old_sel_direction = g_sel.direction;
         m_old_add_new_by_default = g_add_new_by_default;
         m_old_append_unsub = g_append_unsub;
         m_old_fuzzy_get = g_fuzzy_get;
@@ -133,9 +133,9 @@ protected:
         fs::create_directories(m_output_dir, error);
         ASSERT_FALSE(error) << error.message();
 
-        g_sel_sort = SS_NATURAL;
-        g_sel_newsgroup_sort = SS_NATURAL;
-        g_sel_direction = 1;
+        g_sel.sort = SS_NATURAL;
+        g_sel.newsgroup_sort = SS_NATURAL;
+        g_sel.direction = 1;
         g_newsgroup_data.clear();
         g_newsgroup_order.clear();
         g_newsgroup_count = NewsgroupNum{};
@@ -222,9 +222,9 @@ protected:
         g_nntp_link = m_old_nntp_link;
         nntp_gets_clear_buffer();
         g_newsrc_hash = m_old_newsrc_hash;
-        g_sel_sort = m_old_sel_sort;
-        g_sel_newsgroup_sort = m_old_sel_newsgroup_sort;
-        g_sel_direction = m_old_sel_direction;
+        g_sel.sort = m_old_sel_sort;
+        g_sel.newsgroup_sort = m_old_sel_newsgroup_sort;
+        g_sel.direction = m_old_sel_direction;
         g_add_new_by_default = m_old_add_new_by_default;
         g_append_unsub = m_old_append_unsub;
         g_fuzzy_get = m_old_fuzzy_get;

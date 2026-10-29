@@ -313,12 +313,12 @@ protected:
     {
         m_previous_char_subst = current_char_subst_mode();
         m_previous_threaded_group = g_threaded_group;
-        m_previous_sel_rereading = g_sel_rereading;
+        m_previous_sel_rereading = g_sel.rereading;
         m_previous_unbroken_subjects = g_unbroken_subjects;
 
         reset_char_subst_mode();
         g_threaded_group = false;
-        g_sel_rereading = false;
+        g_sel.rereading = false;
         g_unbroken_subjects = false;
 
         m_subject.m_str = "    Plain subject";
@@ -332,7 +332,7 @@ protected:
     {
         set_char_subst_mode(m_previous_char_subst);
         g_threaded_group = m_previous_threaded_group;
-        g_sel_rereading = m_previous_sel_rereading;
+        g_sel.rereading = m_previous_sel_rereading;
         g_unbroken_subjects = m_previous_unbroken_subjects;
     }
 
@@ -428,7 +428,7 @@ protected:
         m_old_performed_article_loop = g_performed_article_loop;
         m_old_selected_count = g_selected_count;
         m_old_missing_count = g_missing_count;
-        m_old_sel_mode = g_sel_mode;
+        m_old_sel_mode = g_sel.mode;
         m_old_spin_count = g_spin_count;
         m_old_tc_BC = g_tc_BC;
     }
@@ -443,7 +443,7 @@ protected:
         g_performed_article_loop = m_old_performed_article_loop;
         g_selected_count = m_old_selected_count;
         g_missing_count = m_old_missing_count;
-        g_sel_mode = m_old_sel_mode;
+        g_sel.mode = m_old_sel_mode;
         g_spin_count = m_old_spin_count;
         g_tc_BC = m_old_tc_BC;
     }
@@ -483,7 +483,7 @@ TEST_F(PerformStatusEndTest, reportsThreadMatchesWithoutArticleLoop)
 {
     begin_status(0);
     g_performed_article_loop = false;
-    g_sel_mode = SM_THREAD;
+    g_sel.mode = SM_THREAD;
     g_perform_count = 1;
 
     const int result = perform_status_end(0, "article");

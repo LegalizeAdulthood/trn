@@ -69,7 +69,7 @@ private:
     Subject                 *m_old_page_sp{g_sel_page_sp};
     Subject                 *m_old_next_sp{g_sel_next_sp};
     int                      m_old_selected_subjects{g_selected_subj_cnt};
-    bool                     m_old_selected_only{g_selected_only};
+    bool                     m_old_selected_only{g_sel.selected_only};
     bool                     m_old_threaded{g_threaded_group};
     bool                     m_old_redirected{g_redirected};
     bool                     m_old_can_home{g_can_home};
@@ -104,7 +104,7 @@ void SelectorPagingStateTest::SetUp()
     g_sel_page_univ_index = g_sel_next_univ_index = {};
     g_tc_LINES = 7;
     g_can_home = false;
-    g_selected_only = false;
+    g_sel.selected_only = false;
     g_redirected = false;
     g_newsgroup_name = "comp.paging";
     g_moderated.clear();
@@ -141,7 +141,7 @@ void SelectorPagingStateTest::TearDown()
     g_sel_page_sp = m_old_page_sp;
     g_sel_next_sp = m_old_next_sp;
     g_selected_subj_cnt = m_old_selected_subjects;
-    g_selected_only = m_old_selected_only;
+    g_sel.selected_only = m_old_selected_only;
     g_threaded_group = m_old_threaded;
     g_redirected = m_old_redirected;
     g_can_home = m_old_can_home;
@@ -168,7 +168,7 @@ void SelectorPagingStateTest::TearDown()
 void SelectorPagingStateTest::prepare(SelectionMode mode, bool rereading, int count)
 {
     set_read_scope(rereading);
-    g_sel_mode = mode;
+    g_sel.mode = mode;
     g_general_mode = GM_SELECTOR;
     g_mode = mode == SM_UNIVERSAL ? MM_UNIVERSAL : mode == SM_NEWSGROUP ? MM_NEWSGROUP_SELECTOR : MM_THREAD_SELECTOR;
     g_in_ng = mode == SM_ARTICLE || mode == SM_SUBJECT || mode == SM_THREAD;
@@ -227,13 +227,13 @@ void SelectorPagingStateTest::prepare_articles(int count)
         article->m_from = "Paging <paging@example.test>";
         article->m_date = index + 1;
         article->m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
-        if (!g_sel_rereading)
+        if (!g_sel.rereading)
         {
             article->m_flags |= AF_UNREAD;
         }
         if (index == 0 || index == 4)
         {
-            article->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+            article->m_flags |= static_cast<ArticleFlags>(g_sel.mask);
         }
     }
     count_subjects(CS_UNSEL_STORE);
@@ -243,9 +243,9 @@ void SelectorPagingStateTest::prepare_groups(int count)
 {
     for (int index = 0; index < count; ++index)
     {
-        const NewsgroupFlags selected = index == 0 || index == 4 ? static_cast<NewsgroupFlags>(g_sel_mask) : NF_NONE;
+        const NewsgroupFlags selected = index == 0 || index == 4 ? static_cast<NewsgroupFlags>(g_sel.mask) : NF_NONE;
         NewsgroupData       &group = add_group("comp.paging-row-" + std::to_string(index + 1),
-                                               g_sel_rereading ? TR_NONE : ArticleUnread{3}, selected);
+                                         g_sel.rereading ? TR_NONE : ArticleUnread{3}, selected);
         group.m_rc = &m_newsrc;
         group.m_rc_line += "1-3";
     }
@@ -255,10 +255,10 @@ void SelectorPagingStateTest::prepare_menu(int count)
 {
     if (count)
     {
-        NewsgroupData &group = add_group("comp.paging", g_sel_rereading ? TR_NONE : ArticleUnread{count});
+        NewsgroupData &group = add_group("comp.paging", g_sel.rereading ? TR_NONE : ArticleUnread{count});
         group.m_rc = &m_newsrc;
         group.m_ng_max = ArticleNum{count};
-        group.m_rc_line += g_sel_rereading ? "1-6" : "0";
+        group.m_rc_line += g_sel.rereading ? "1-6" : "0";
         hash_store(g_newsrc_hash, group.rc_name(),
                    HashDatum{reinterpret_cast<char *>(&group), static_cast<unsigned>(group.rc_name().size())});
     }
@@ -272,7 +272,7 @@ void SelectorPagingStateTest::prepare_menu(int count)
                                               "Paging", item.m_desc, ArticleNum{index + 1}};
         if (index == 0 || index == 4)
         {
-            item.m_flags |= static_cast<UniversalItemFlags>(g_sel_mask);
+            item.m_flags |= static_cast<UniversalItemFlags>(g_sel.mask);
         }
     }
 }
@@ -297,30 +297,30 @@ DisplayState SelectorPagingStateTest::dispatch(char command)
 
 int SelectorPagingStateTest::row_number(int index) const
 {
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         const auto item = std::find(g_newsgroup_order.begin(), g_newsgroup_order.end(), g_sel_items[index].u.np);
         return static_cast<int>(item - g_newsgroup_order.begin()) + 1;
     }
-    if (g_sel_mode == SM_UNIVERSAL)
+    if (g_sel.mode == SM_UNIVERSAL)
     {
         return g_sel_items[index].u.un->m_num;
     }
-    const Article *article = g_sel_mode == SM_ARTICLE ? g_sel_items[index].u.ap : g_sel_items[index].u.sp->m_articles;
+    const Article *article = g_sel.mode == SM_ARTICLE ? g_sel_items[index].u.ap : g_sel_items[index].u.sp->m_articles;
     return static_cast<int>(article->article_num().value_of());
 }
 
 std::vector<int> SelectorPagingStateTest::flags() const
 {
     std::vector<int> result;
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         for (const NewsgroupData *group : g_newsgroup_order)
         {
             result.push_back(group->m_flags);
         }
     }
-    else if (g_sel_mode == SM_UNIVERSAL)
+    else if (g_sel.mode == SM_UNIVERSAL)
     {
         for (const UniversalItem &item : univ_items())
         {
@@ -343,11 +343,11 @@ void SelectorPagingStateTest::expect_preserved() const
     EXPECT_EQ(m_flags, flags());
     EXPECT_EQ(m_selected, g_selected_count);
     EXPECT_EQ(m_selected_subjects, g_selected_subj_cnt);
-    EXPECT_EQ(SS_NATURAL, g_sel_sort);
-    EXPECT_EQ(1, g_sel_direction);
+    EXPECT_EQ(SS_NATURAL, g_sel.sort);
+    EXPECT_EQ(1, g_sel.direction);
     for (const NewsgroupData *group : g_newsgroup_order)
     {
-        EXPECT_EQ(g_sel_mode == SM_UNIVERSAL ? (g_sel_rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
+        EXPECT_EQ(g_sel.mode == SM_UNIVERSAL ? (g_sel.rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
         EXPECT_EQ(':', group->m_subscribe_char);
     }
 }
@@ -400,8 +400,8 @@ TEST_P(SelectorPagingCommandTest, pageCommandMovesOrRetainsThePageWithoutChangin
     EXPECT_EQ(0, g_term_scrolled);
     EXPECT_EQ(1, g_page_line);
     EXPECT_TRUE(g_output_chase_phrase);
-    EXPECT_EQ(mode, g_sel_mode);
-    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(mode, g_sel.mode);
+    EXPECT_EQ(rereading, g_sel.rereading);
     expect_page(command.destination, command.key == Ctl('l') ? 1 : 0, false, result == DS_DISPLAY);
 }
 
@@ -520,8 +520,8 @@ TEST_P(SelectorBlankEscapeTest, blankEscapeRetainsThePageCursorSelectionsAndQueu
     const DisplayState result = escape(blank);
 
     EXPECT_EQ(DS_ASK, result);
-    EXPECT_EQ(mode, g_sel_mode);
-    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(mode, g_sel.mode);
+    EXPECT_EQ(rereading, g_sel.rereading);
     EXPECT_NE(std::string::npos, m_output.find("Cmd: "));
     expect_page(1, 1, false, false);
     expect_next_command();
@@ -547,8 +547,8 @@ TEST_P(SelectorRefreshEscapeTest, escapedControlCommandRequestsRefreshWithoutCha
     const DisplayState result = escape(Ctl('l'));
 
     EXPECT_EQ(DS_DISPLAY, result);
-    EXPECT_EQ(mode, g_sel_mode);
-    EXPECT_EQ(rereading, g_sel_rereading);
+    EXPECT_EQ(mode, g_sel.mode);
+    EXPECT_EQ(rereading, g_sel.rereading);
     expect_page(1, 1, false, false);
     expect_next_command();
 }
@@ -648,7 +648,7 @@ void SelectorExitStateTest::prepare_exit(SelectionMode mode, bool rereading, boo
 
 void SelectorExitStateTest::group_current_row()
 {
-    if (g_sel_mode != SM_SUBJECT && g_sel_mode != SM_THREAD)
+    if (g_sel.mode != SM_SUBJECT && g_sel.mode != SM_THREAD)
     {
         return;
     }
@@ -656,7 +656,7 @@ void SelectorExitStateTest::group_current_row()
     Article *reply = article_ptr(ArticleNum{3});
     Subject *first_subject = first->m_subj;
     Subject *reply_subject = reply->m_subj;
-    if (g_sel_mode == SM_SUBJECT)
+    if (g_sel.mode == SM_SUBJECT)
     {
         first->m_subj_next = reply;
         reply->m_subj = first_subject;
@@ -677,16 +677,16 @@ void SelectorExitStateTest::group_current_row()
 
 std::vector<int> SelectorExitStateTest::current_objects() const
 {
-    return g_sel_mode == SM_SUBJECT || g_sel_mode == SM_THREAD ? std::vector<int>{2, 3} : std::vector<int>{2};
+    return g_sel.mode == SM_SUBJECT || g_sel.mode == SM_THREAD ? std::vector<int>{2, 3} : std::vector<int>{2};
 }
 
 void SelectorExitStateTest::set_object_flags(int number, int value)
 {
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         g_newsgroup_order[number - 1]->m_flags = static_cast<NewsgroupFlags>(value);
     }
-    else if (g_sel_mode == SM_UNIVERSAL)
+    else if (g_sel.mode == SM_UNIVERSAL)
     {
         g_univ_items[number - 1].m_flags = static_cast<UniversalItemFlags>(value);
     }
@@ -731,11 +731,11 @@ void SelectorExitStateTest::set_selection(std::vector<int> selected, bool killed
         int value = values[index * stride] & ~selection_bits;
         if (std::find(selected.begin(), selected.end(), index + 1) != selected.end())
         {
-            value |= g_sel_mask;
+            value |= g_sel.mask;
         }
         if (index == 4)
         {
-            value |= g_sel_rereading ? AGF_SEL : AGF_DEL_SEL;
+            value |= g_sel.rereading ? AGF_SEL : AGF_DEL_SEL;
         }
         set_object_flags(index + 1, value);
     }
@@ -780,16 +780,16 @@ void SelectorExitStateTest::set_selection(std::vector<int> selected, bool killed
     m_objects = g_sel_page_obj_cnt;
     m_items = g_sel_page_item_cnt;
     m_end = g_sel_at_end;
-    EXPECT_EQ(selected, marked_objects(g_sel_mask));
+    EXPECT_EQ(selected, marked_objects(g_sel.mask));
     EXPECT_EQ(ArticleUnread{static_cast<long>(selected.size())}, g_selected_count);
 }
 
 void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit) const
 {
-    EXPECT_EQ(selected, marked_objects(g_sel_mask));
+    EXPECT_EQ(selected, marked_objects(g_sel.mask));
     EXPECT_EQ(ArticleUnread{static_cast<long>(selected.size())}, g_selected_count);
     EXPECT_EQ(m_empty ? std::vector<int>{} : std::vector<int>{5},
-              marked_objects(g_sel_rereading ? AGF_SEL : AGF_DEL_SEL));
+              marked_objects(g_sel.rereading ? AGF_SEL : AGF_DEL_SEL));
     std::vector<int> killed = m_before_killed;
     if (implicit)
     {
@@ -829,14 +829,14 @@ void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit
     }
     EXPECT_EQ(selected_subjects.size(), g_selected_subj_cnt);
     EXPECT_EQ(killed, marked_objects(AGF_DEL));
-    EXPECT_EQ(m_mode, g_sel_mode);
-    EXPECT_EQ(m_rereading, g_sel_rereading);
+    EXPECT_EQ(m_mode, g_sel.mode);
+    EXPECT_EQ(m_rereading, g_sel.rereading);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(m_mode == SM_UNIVERSAL   ? MM_UNIVERSAL
               : m_mode == SM_NEWSGROUP ? MM_NEWSGROUP_SELECTOR
                                        : MM_THREAD_SELECTOR,
               g_mode);
-    EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel_mask);
+    EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
     EXPECT_EQ(m_empty ? 0 : 1, g_sel_item_index);
     EXPECT_EQ(m_page_app, g_sel_page_app);
     EXPECT_EQ(m_page_sp, g_sel_page_sp);
@@ -848,20 +848,20 @@ void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit
     EXPECT_EQ(m_items, g_sel_page_item_cnt);
     EXPECT_EQ(m_end, g_sel_at_end);
     EXPECT_EQ(m_before_rows, rows());
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         EXPECT_EQ(m_empty ? nullptr : g_sel_items[1].u.np, g_newsgroup_ptr);
     }
     EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
     for (const NewsgroupData *group : g_newsgroup_order)
     {
-        EXPECT_EQ(g_sel_mode == SM_UNIVERSAL ? (g_sel_rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
+        EXPECT_EQ(g_sel.mode == SM_UNIVERSAL ? (g_sel.rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
         EXPECT_EQ(':', group->m_subscribe_char);
     }
     for (const auto &[number, article] : g_article_list)
     {
         EXPECT_NE(AF_NONE, article.m_flags & AF_EXISTS);
-        EXPECT_EQ(!g_sel_rereading, (article.m_flags & AF_UNREAD) != 0);
+        EXPECT_EQ(!g_sel.rereading, (article.m_flags & AF_UNREAD) != 0);
     }
 }
 

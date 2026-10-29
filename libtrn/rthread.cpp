@@ -96,13 +96,13 @@ void thread_open()
         }
     }
 
-    if (g_sel_mode == SM_ARTICLE)
+    if (g_sel.mode == SM_ARTICLE)
     {
-        set_selector(g_sel_mode, g_sel_art_sort);
+        set_selector(g_sel.mode, g_sel.art_sort);
     }
     else
     {
-        set_selector(g_sel_thread_mode, g_sel_thread_sort);
+        set_selector(g_sel.thread_mode, g_sel.thread_sort);
     }
 
     if ((g_data_source->m_flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range)
@@ -213,8 +213,8 @@ void thread_close()
     g_sel_page_app = nullptr;
     g_sel_last_ap = nullptr;
     g_sel_last_sp = nullptr;
-    g_selected_only = false;
-    g_sel_exclusive = false;
+    g_sel.selected_only = false;
+    g_sel.exclusive = false;
     ov_close();
 }
 
@@ -248,7 +248,7 @@ void ArticleLocation::first()
 {
     num = article_after(g_last_art);
     art = nullptr;
-    next(g_selected_only, false);
+    next(g_sel.selected_only, false);
     if (num > g_last_art && g_last_cached < g_last_art)
     {
         num = g_first_art;
@@ -539,8 +539,7 @@ bool ArticleLocation::next_with_subject()
             }
             return false;
         }
-    } while (!all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD)
-          || (g_selected_only && !(ap->m_flags & AF_SEL)));
+    } while (!all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD) || (g_sel.selected_only && !(ap->m_flags & AF_SEL)));
     num = ap->article_num();
     art = ap;
     g_search_ahead = ArticleNum{-1};
@@ -582,8 +581,7 @@ bool ArticleLocation::prev_with_subject()
             }
             return false;
         }
-    } while (!(ap->m_flags & AF_EXISTS)
-          || (g_selected_only && !(ap->m_flags & AF_SEL)));
+    } while (!(ap->m_flags & AF_EXISTS) || (g_sel.selected_only && !(ap->m_flags & AF_SEL)));
     num = ap->article_num();
     art = ap;
     return true;
@@ -597,7 +595,7 @@ Subject *next_subject(Subject *sp, int subj_mask)
     {
         sp = g_first_subject;
     }
-    else if (g_sel_mode == SM_THREAD)
+    else if (g_sel.mode == SM_THREAD)
     {
         Article* ap = sp->m_thread;
         do
@@ -625,7 +623,7 @@ static Subject *prev_subject(Subject *sp, int subj_mask)
     {
         sp = g_last_subject;
     }
-    else if (g_sel_mode == SM_THREAD)
+    else if (g_sel.mode == SM_THREAD)
     {
         Article* ap = sp->m_thread;
         do
@@ -652,7 +650,7 @@ static Subject *prev_subject(Subject *sp, int subj_mask)
 void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
 {
     Article*limit;
-    int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    int     desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
     int     old_count = g_selected_count;
 
     if (!ap)
@@ -672,9 +670,9 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
     auto_flags &= AUTO_SEL_MASK;
     for (; ap != limit; ap = ap->bump_article())
     {
-        if ((ap->m_flags & (AF_EXISTS | AF_UNREAD | g_sel_mask)) == desired_flags)
+        if ((ap->m_flags & (AF_EXISTS | AF_UNREAD | g_sel.mask)) == desired_flags)
         {
-            ap->m_flags |= static_cast<ArticleFlags>(g_sel_mask);
+            ap->m_flags |= static_cast<ArticleFlags>(g_sel.mask);
             g_selected_count++;
         }
         if (auto_flags)
@@ -684,12 +682,12 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
     }
     if (subj && g_selected_count > old_count)
     {
-        if (!(subj->m_flags & g_sel_mask))
+        if (!(subj->m_flags & g_sel.mask))
         {
             g_selected_subj_cnt++;
         }
-        subj->m_flags = (subj->m_flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel_mask) | SF_VISIT;
-        g_selected_only = true;
+        subj->m_flags = (subj->m_flags & ~SF_DEL) | static_cast<SubjectFlags>(g_sel.mask) | SF_VISIT;
+        g_sel.selected_only = true;
     }
 }
 
@@ -707,7 +705,7 @@ void deselect_all()
     g_sel_page_app = nullptr;
     g_sel_last_ap = nullptr;
     g_sel_last_sp = nullptr;
-    g_selected_only = false;
+    g_sel.selected_only = false;
 }
 
 // Kill the subthread attached to this article.
@@ -778,17 +776,17 @@ void unkill_sub_thread(Article *ap)
         {
             ap->one_more();
         }
-        if (g_selected_only && (ap->m_flags & AF_EXISTS))
+        if (g_sel.selected_only && (ap->m_flags & AF_EXISTS))
         {
             ap->select_article(AUTO_KILL_NONE);
         }
     }
-    if (!(sp->m_flags & g_sel_mask))
+    if (!(sp->m_flags & g_sel.mask))
     {
         g_selected_subj_cnt++;
     }
     sp->m_flags = (sp->m_flags & ~SF_DEL) | SF_SEL | SF_VISIT;
-    g_selected_only = (g_selected_only || g_selected_count != 0);
+    g_sel.selected_only = (g_sel.selected_only || g_selected_count != 0);
 }
 
 // Clear the auto flags in the subthread attached to this article.
@@ -1027,7 +1025,7 @@ static Article *last_sib(Article *ta, int depth, Article *limit)
 }
 
 // Get each subject's article count; count total articles and selected
-// articles (use g_sel_rereading to determine whether to count read or
+// articles (use g_sel.rereading to determine whether to count read or
 // unread articles); deselect any subjects we find that are empty if
 // CS_UNSELECT or CS_UNSEL_STORE is specified.  If g_mode is CS_RESELECT
 // is specified, the selections from the last CS_UNSEL_STORE are
@@ -1036,7 +1034,7 @@ static Article *last_sib(Article *ta, int depth, Article *limit)
 void count_subjects(CountSubjectMode cmode)
 {
     Subject*sp;
-    int     desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    int     desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
 
     g_obj_count = ArticleNum{};
     g_selected_count = 0;
@@ -1096,7 +1094,7 @@ void count_subjects(CountSubjectMode cmode)
             if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
             {
                 count++;
-                if (ap->m_flags & g_sel_mask)
+                if (ap->m_flags & g_sel.mask)
                 {
                     sel_count++;
                 }
@@ -1121,41 +1119,41 @@ void count_subjects(CountSubjectMode cmode)
         {
             if (sp->m_flags & SF_VISIT)
             {
-                sp->m_flags = (sp->m_flags & ~(SF_SEL|SF_DEL)) | static_cast<SubjectFlags>(g_sel_mask);
+                sp->m_flags = (sp->m_flags & ~(SF_SEL | SF_DEL)) | static_cast<SubjectFlags>(g_sel.mask);
                 g_selected_count += sel_count;
                 g_selected_subj_cnt++;
             }
             else
             {
-                sp->m_flags &= ~static_cast<SubjectFlags>(g_sel_mask);
+                sp->m_flags &= ~static_cast<SubjectFlags>(g_sel.mask);
             }
         }
         else
         {
             if (sel_count //
-                && (cmode >= CS_UNSEL_STORE || (sp->m_flags & g_sel_mask)))
+                && (cmode >= CS_UNSEL_STORE || (sp->m_flags & g_sel.mask)))
             {
-                sp->m_flags = (sp->m_flags & ~(SF_SEL|SF_DEL)) | static_cast<SubjectFlags>(g_sel_mask);
+                sp->m_flags = (sp->m_flags & ~(SF_SEL | SF_DEL)) | static_cast<SubjectFlags>(g_sel.mask);
                 g_selected_count += sel_count;
                 g_selected_subj_cnt++;
             }
             else if (cmode >= CS_UNSELECT)
             {
-                sp->m_flags &= ~static_cast<SubjectFlags>(g_sel_mask);
+                sp->m_flags &= ~static_cast<SubjectFlags>(g_sel.mask);
             }
-            else if (sp->m_flags & g_sel_mask)
+            else if (sp->m_flags & g_sel.mask)
             {
                 sp->m_flags &= ~SF_DEL;
                 g_selected_subj_cnt++;
             }
-            if (count && (!g_selected_only || (sp->m_flags & g_sel_mask)))
+            if (count && (!g_sel.selected_only || (sp->m_flags & g_sel.mask)))
             {
                 sp->m_flags |= SF_VISIT;
             }
         }
     }
     if (cmode != CS_RETAIN && cmode != CS_RESELECT //
-        && !g_obj_count && !g_selected_only)
+        && !g_obj_count && !g_sel.selected_only)
     {
         for (sp = g_first_subject; sp; sp = sp->m_next)
         {
@@ -1166,19 +1164,19 @@ void count_subjects(CountSubjectMode cmode)
 
 static int subject_order_subject(const Subject **spp1, const Subject**spp2)
 {
-    return string_case_compare((*spp1)->stripped_view(), (*spp2)->stripped_view()) * g_sel_direction;
+    return string_case_compare((*spp1)->stripped_view(), (*spp2)->stripped_view()) * g_sel.direction;
 }
 
 static int subject_order_date(const Subject **spp1, const Subject**spp2)
 {
     std::time_t eq = (*spp1)->m_date - (*spp2)->m_date;
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : 0;
 }
 
 static int subject_order_count(const Subject **spp1, const Subject**spp2)
 {
     short eq = (*spp1)->m_misc - (*spp2)->m_misc;
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : subject_order_date(spp1,spp2);
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : subject_order_date(spp1, spp2);
 }
 
 static int subject_order_lines(const Subject **spp1, const Subject**spp2)
@@ -1186,13 +1184,13 @@ static int subject_order_lines(const Subject **spp1, const Subject**spp2)
     long l1 = (*spp1)->m_articles ? (*spp1)->m_articles->m_lines : 0;
     long l2 = (*spp2)->m_articles ? (*spp2)->m_articles->m_lines : 0;
     long eq = l1 - l2;
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : subject_order_date(spp1,spp2);
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : subject_order_date(spp1, spp2);
 }
 
 // for now, highest eligible article score
 static int subject_score_high(const Subject *sp)
 {
-    int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    int desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
     int hiscore = 0;
     int hiscore_found = 0;
 
@@ -1220,7 +1218,7 @@ static int subject_order_score(const Subject** spp1, const Subject** spp2)
 
     if (sc1 != sc2)
     {
-        return (sc2 - sc1) * g_sel_direction;
+        return (sc2 - sc1) * g_sel.direction;
     }
     return subject_order_date(spp1, spp2);
 }
@@ -1231,7 +1229,7 @@ static int thread_order_subject(const Subject **spp1, const Subject**spp2)
     Article* t2 = (*spp2)->m_thread;
     if (t1 != t2 && t1 && t2)
     {
-        return string_case_compare(t1->m_subj->stripped_view(), t2->m_subj->stripped_view()) * g_sel_direction;
+        return string_case_compare(t1->m_subj->stripped_view(), t2->m_subj->stripped_view()) * g_sel.direction;
     }
     return subject_order_date(spp1, spp2);
 }
@@ -1269,7 +1267,7 @@ static int thread_order_date(const Subject **spp1, const Subject**spp2)
         {
             return string_case_compare(sp1->stripped_view(), sp2->stripped_view());
         }
-        return eq > 0? g_sel_direction : -g_sel_direction;
+        return eq > 0 ? g_sel.direction : -g_sel.direction;
     }
     return subject_order_date(spp1, spp2);
 }
@@ -1292,7 +1290,7 @@ static int thread_order_count(const Subject **spp1, const Subject**spp2)
     }
     if (size1 != size2)
     {
-        return (size1 - size2) * g_sel_direction;
+        return (size1 - size2) * g_sel.direction;
     }
     return thread_order_date(spp1, spp2);
 }
@@ -1330,10 +1328,10 @@ static int thread_order_lines(const Subject **spp1, const Subject**spp2)
         long eq = l1 - l2;
         if (eq != 0)
         {
-            return eq > 0 ? g_sel_direction : -g_sel_direction;
+            return eq > 0 ? g_sel.direction : -g_sel.direction;
         }
         eq = sp1->m_date - sp2->m_date;
-        return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
+        return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : 0;
     }
     return subject_order_date(spp1, spp2);
 }
@@ -1372,7 +1370,7 @@ static int thread_order_score(const Subject** spp1, const Subject** spp2)
     }
     if (sc1 != sc2)
     {
-        return (sc2 - sc1) * g_sel_direction;
+        return (sc2 - sc1) * g_sel.direction;
     }
     return thread_order_date(spp1, spp2);
 }
@@ -1391,33 +1389,28 @@ void sort_subjects()
         return;
     }
 
-    switch (g_sel_sort)
+    switch (g_sel.sort)
     {
     case SS_DATE:
     default:
-        sort_procedure = (g_sel_mode == SM_THREAD?
-                          thread_order_date : subject_order_date);
+        sort_procedure = (g_sel.mode == SM_THREAD ? thread_order_date : subject_order_date);
         break;
 
     case SS_STRING:
-        sort_procedure = (g_sel_mode == SM_THREAD?
-                          thread_order_subject : subject_order_subject);
+        sort_procedure = (g_sel.mode == SM_THREAD ? thread_order_subject : subject_order_subject);
         break;
 
     case SS_COUNT:
-        sort_procedure = (g_sel_mode == SM_THREAD?
-                          thread_order_count : subject_order_count);
+        sort_procedure = (g_sel.mode == SM_THREAD ? thread_order_count : subject_order_count);
         break;
 
     case SS_LINES:
-        sort_procedure = (g_sel_mode == SM_THREAD?
-                          thread_order_lines : subject_order_lines);
+        sort_procedure = (g_sel.mode == SM_THREAD ? thread_order_lines : subject_order_lines);
         break;
 
     // if SCORE is undefined, use the default above
     case SS_SCORE:
-        sort_procedure = (g_sel_mode == SM_THREAD?
-                          thread_order_score : subject_order_score);
+        sort_procedure = (g_sel.mode == SM_THREAD ? thread_order_score : subject_order_score);
         break;
     }
 
@@ -1439,7 +1432,7 @@ void sort_subjects()
     {
         lp[0]->m_next = lp[1];
         lp[1]->m_prev = lp[0];
-        if (g_sel_mode == SM_THREAD)
+        if (g_sel.mode == SM_THREAD)
         {
             if (lp[0]->m_thread && lp[0]->m_thread == lp[1]->m_thread)
             {
@@ -1454,7 +1447,7 @@ void sort_subjects()
     }
     g_last_subject = lp[0];
     g_last_subject->m_next = nullptr;
-    if (g_sel_mode == SM_THREAD)
+    if (g_sel.mode == SM_THREAD)
     {
         g_last_subject->m_thread_link = sp;
     }
@@ -1463,7 +1456,7 @@ void sort_subjects()
 static int article_order_date(const Article **art1, const Article **art2)
 {
     long eq = (*art1)->m_date - (*art2)->m_date;
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : 0;
 }
 
 static int article_order_subject(const Article **art1, const Article **art2)
@@ -1472,19 +1465,19 @@ static int article_order_subject(const Article **art1, const Article **art2)
     {
         return article_order_date(art1, art2);
     }
-    return string_case_compare((*art1)->m_subj->stripped_view(), (*art2)->m_subj->stripped_view()) * g_sel_direction;
+    return string_case_compare((*art1)->m_subj->stripped_view(), (*art2)->m_subj->stripped_view()) * g_sel.direction;
 }
 
 static int article_order_author(const Article **art1, const Article **art2)
 {
     int eq = string_case_compare((*art1)->from_view(), (*art2)->from_view());
-    return eq? eq * g_sel_direction : article_order_date(art1, art2);
+    return eq ? eq * g_sel.direction : article_order_date(art1, art2);
 }
 
 static int article_order_number(const Article **art1, const Article **art2)
 {
     const long eq{((*art1)->article_num() - (*art2)->article_num()).value_of()};
-    return eq > 0 ? g_sel_direction : -g_sel_direction;
+    return eq > 0 ? g_sel.direction : -g_sel.direction;
 }
 
 static int article_order_groups(const Article **art1, const Article **art2)
@@ -1499,20 +1492,20 @@ static int article_order_groups(const Article **art1, const Article **art2)
         return article_order_date(art1, art2);
     }
     eq = (*art1)->m_subj->m_date - (*art2)->m_subj->m_date;
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : 0;
 }
 
 static int article_order_lines(const Article **art1, const Article **art2)
 {
     long eq = (*art1)->m_lines - (*art2)->m_lines;
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : article_order_date(art1,art2);
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : article_order_date(art1, art2);
 }
 
 static int article_order_score(const Article **art1, const Article **art2)
 {
     int eq = sc_score_art((*art2)->article_num(),false)
            - sc_score_art((*art1)->article_num(),false);
-    return eq? eq > 0? g_sel_direction : -g_sel_direction : 0;
+    return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : 0;
 }
 
 // Sort the articles according to the chosen order.
@@ -1535,7 +1528,7 @@ void sort_articles(Article *anchor)
         return;
     }
 
-    switch (g_sel_sort)
+    switch (g_sel.sort)
     {
     case SS_DATE:
     default:
@@ -1574,7 +1567,7 @@ void sort_articles(Article *anchor)
 static void build_article_ptrs()
 {
     ArticleNum count = g_obj_count;
-    int desired_flags = (g_sel_rereading? AF_EXISTS : (AF_EXISTS|AF_UNREAD));
+    int        desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
 
     g_art_ptr = nullptr;
     g_sel_page_app = nullptr;

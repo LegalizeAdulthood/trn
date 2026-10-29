@@ -35,7 +35,7 @@ protected:
         m_old_page_line = g_page_line;
         m_old_perform_count = g_perform_count;
         m_old_selected_count = g_selected_count;
-        m_old_sel_mask = g_sel_mask;
+        m_old_sel_mask = g_sel.mask;
         m_old_int_count = g_int_count;
 
         m_group = g_add_groups.add("comp/lang", 0, 0, nullptr);
@@ -48,7 +48,7 @@ protected:
         g_page_line = 0;
         g_perform_count = 0;
         g_selected_count = ArticleUnread{};
-        g_sel_mask = AGF_SEL;
+        g_sel.mask = AGF_SEL;
         g_int_count = 0;
 
         newsgroup_search_init();
@@ -66,7 +66,7 @@ protected:
         g_page_line = m_old_page_line;
         g_perform_count = m_old_perform_count;
         g_selected_count = m_old_selected_count;
-        g_sel_mask = m_old_sel_mask;
+        g_sel.mask = m_old_sel_mask;
         g_int_count = m_old_int_count;
     }
 

@@ -41,21 +41,28 @@ enum SelectionSortMode
     SS_SCORE
 };
 
-extern bool              g_sel_rereading;
-extern SelectionMode     g_sel_mode;
-extern SelectionMode     g_sel_default_mode;
-extern SelectionMode     g_sel_thread_mode;
-extern std::string_view  g_sel_mode_string;
-extern SelectionSortMode g_sel_sort;
-extern SelectionSortMode g_sel_art_sort;
-extern SelectionSortMode g_sel_thread_sort;
-extern SelectionSortMode g_sel_newsgroup_sort;
-extern std::string_view  g_sel_sort_string;
-extern int               g_sel_direction;
-extern bool              g_sel_exclusive;
-extern AddGroupFlags     g_sel_mask;
-extern bool              g_sel_group_listing;
-extern bool              g_selected_only;
+struct SelectorPolicy
+{
+    bool              rereading{};
+    SelectionMode     mode{};
+    SelectionMode     default_mode{SM_THREAD};
+    SelectionMode     thread_mode{SM_THREAD};
+    std::string_view  mode_string{};
+    SelectionSortMode sort{};
+    SelectionSortMode art_sort{SS_GROUPS};
+    SelectionSortMode thread_sort{SS_DATE};
+    SelectionSortMode newsgroup_sort{SS_NATURAL};
+    std::string_view  sort_string{};
+    int               direction{1};
+    bool              exclusive{};
+    AddGroupFlags     mask{AGF_SEL};
+    bool              group_listing{};
+    bool              selected_only{};
+    SelectionSortMode add_group_sort{SS_NATURAL};
+    SelectionSortMode universal_sort{SS_NATURAL};
+};
+
+extern SelectorPolicy    g_sel;
 extern ArticleUnread     g_selected_count;
 extern int               g_selected_subj_cnt;
 extern int               g_added_articles;

@@ -211,7 +211,7 @@ void merge_threads(Subject *s1, Subject *s2)
 
     // If thread mode is set, ensure the subjects are adjacent in the list.
     // Don't do this if the selector is active, because it gets messed up.
-    if (g_sel_mode == SM_THREAD && g_general_mode != GM_SELECTOR)
+    if (g_sel.mode == SM_THREAD && g_general_mode != GM_SELECTOR)
     {
         for (sp = s2; sp->m_prev && sp->m_prev->m_thread == t1;)
         {

@@ -385,7 +385,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
     {
         if (cmd_lst.empty())
         {
-            if (g_sel_mode == SM_ARTICLE)// set the selector's default command
+            if (g_sel.mode == SM_ARTICLE) // set the selector's default command
             {
                 cmd_lst = "+";
             }
@@ -456,8 +456,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
     {
         ignore_thru = 1;
     }
-    search_first = do_read || g_sel_rereading? g_abs_first
-                      : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
+    search_first = do_read || g_sel.rereading                      ? g_abs_first
+                   : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0) ? g_first_art
+                                                                       : g_kill_first;
     if (top_start || g_nav.target.num == 0)
     {
         g_nav.target.num = article_after(g_last_art);
@@ -510,11 +511,11 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             break;
         }
         g_nav.target.art = article_ptr(g_nav.target.num);
-        const bool matches_selection = !g_selected_only                        //
+        const bool matches_selection = !g_sel.selected_only                    //
                                        || (g_nav.target.art->m_flags & AF_SEL) //
                                        || (cmd_chr != Ctl('n') && cmd_chr != Ctl('p'));
         if (matches_selection &&
-            (do_read || (!(g_nav.target.art->m_flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE))))
+            (do_read || (!(g_nav.target.art->m_flags & AF_UNREAD) ^ (!g_sel.rereading ? AF_SEL : AF_NONE))))
         {
             if (wanted(compex, g_nav.target.num, how_much))
             {

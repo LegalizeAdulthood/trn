@@ -130,7 +130,7 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
         order_indexes.push_back(newsgroup_pointer_index(old_base, old_count, np));
     }
     std::vector<std::ptrdiff_t> selection_indexes;
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         for (int i = 0; i != g_sel_page_item_cnt; ++i)
         {
@@ -154,7 +154,7 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     g_sel_page_np = newsgroup_pointer_from_index(new_base, sel_page_index);
     g_sel_next_np = newsgroup_pointer_from_index(new_base, sel_next_index);
     g_ng_go_newsgroup_ptr = newsgroup_pointer_from_index(new_base, go_index);
-    if (g_sel_mode == SM_NEWSGROUP)
+    if (g_sel.mode == SM_NEWSGROUP)
     {
         for (int i = 0; i != g_sel_page_item_cnt; ++i)
         {
@@ -1404,9 +1404,9 @@ static void print_prompt_command(std::string_view command)
 bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
 {
     const std::string_view dflt = (this != g_current_newsgroup ? "$^.Lq" : "$^Lq");
-    SelectionSortMode save_sort = g_sel_sort;
+    SelectionSortMode      save_sort = g_sel.sort;
 
-    if (g_sel_newsgroup_sort != SS_NATURAL)
+    if (g_sel.newsgroup_sort != SS_NATURAL)
     {
         if (newnum < 0)
         {
@@ -1421,15 +1421,15 @@ bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
             }
             else
             {
-                g_sel_sort = SS_NATURAL;
-                g_sel_direction = 1;
+                g_sel.sort = SS_NATURAL;
+                g_sel.direction = 1;
                 sort_newsgroups();
             }
         }
         else
         {
-            g_sel_sort = SS_NATURAL;
-            g_sel_direction = 1;
+            g_sel.sort = SS_NATURAL;
+            g_sel.direction = 1;
             sort_newsgroups();
         }
     }
@@ -1587,11 +1587,11 @@ reinp_reloc:
             return false;
         }
     }
-    if (g_sel_newsgroup_sort != SS_NATURAL)
+    if (g_sel.newsgroup_sort != SS_NATURAL)
     {
-        g_sel_sort = g_sel_newsgroup_sort;
+        g_sel.sort = g_sel.newsgroup_sort;
         sort_newsgroups();
-        g_sel_sort = save_sort;
+        g_sel.sort = save_sort;
     }
     return true;
 }
@@ -1835,7 +1835,7 @@ void checkpoint_newsrcs()
 //
 bool write_newsrcs(Multirc *mptr)
 {
-    SelectionSortMode save_sort = g_sel_sort;
+    SelectionSortMode save_sort = g_sel.sort;
     bool          total_success = true;
 
     if (!mptr)
@@ -1843,10 +1843,10 @@ bool write_newsrcs(Multirc *mptr)
         return true;
     }
 
-    if (g_sel_newsgroup_sort != SS_NATURAL)
+    if (g_sel.newsgroup_sort != SS_NATURAL)
     {
-        g_sel_sort = SS_NATURAL;
-        g_sel_direction = 1;
+        g_sel.sort = SS_NATURAL;
+        g_sel.direction = 1;
         sort_newsgroups();
     }
 
@@ -1969,11 +1969,11 @@ write_error:
         fs::rename(rp->new_name, rp->name, error);
     }
 
-    if (g_sel_newsgroup_sort != SS_NATURAL)
+    if (g_sel.newsgroup_sort != SS_NATURAL)
     {
-        g_sel_sort = g_sel_newsgroup_sort;
+        g_sel.sort = g_sel.newsgroup_sort;
         sort_newsgroups();
-        g_sel_sort = save_sort;
+        g_sel.sort = save_sort;
     }
     return total_success;
 }

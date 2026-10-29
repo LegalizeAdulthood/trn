@@ -369,12 +369,12 @@ void grow_newsgroup(ArticleNum new_last)
 
 static int newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    return (int) (np1->m_num.value_of() - np2->m_num.value_of()) * g_sel_direction;
+    return (int) (np1->m_num.value_of() - np2->m_num.value_of()) * g_sel.direction;
 }
 
 static int newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2)
 {
-    return string_case_compare(np1->m_rc_line, np2->m_rc_line) * g_sel_direction;
+    return string_case_compare(np1->m_rc_line, np2->m_rc_line) * g_sel.direction;
 }
 
 static int newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2)
@@ -382,7 +382,7 @@ static int newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *
     int eq = (int) (np1->m_to_read - np2->m_to_read);
     if (eq != 0)
     {
-        return eq * g_sel_direction;
+        return eq * g_sel.direction;
     }
     return (int) (np1->m_num.value_of() - np2->m_num.value_of());
 }
@@ -398,7 +398,7 @@ void sort_newsgroups()
         return;
     }
 
-    switch (g_sel_sort)
+    switch (g_sel.sort)
     {
     case SS_NATURAL:
     default:
@@ -478,7 +478,7 @@ void newsgroup_skip()
                 sleep(2);
             }
         }
-        g_nav.target.next(g_selected_only, false); // try next article
+        g_nav.target.next(g_sel.selected_only, false); // try next article
     }
 }
 

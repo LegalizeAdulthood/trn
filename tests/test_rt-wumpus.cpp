@@ -45,7 +45,7 @@ protected:
         m_old_tmp_dir = g_tmp_dir;
         m_old_curr_artp = g_nav.current.art;
         m_old_recent_artp = g_nav.recent.art;
-        m_old_selected_only = g_selected_only;
+        m_old_selected_only = g_sel.selected_only;
         m_old_do_hiding = g_do_hiding;
         m_old_char_subst = current_char_subst_mode();
         m_old_max_tree_lines = g_max_tree_lines;
@@ -79,7 +79,7 @@ protected:
 
         g_nav.current.art = &m_current;
         g_nav.recent.art = &m_recent;
-        g_selected_only = false;
+        g_sel.selected_only = false;
         g_do_hiding = false;
         set_char_subst_mode('\0');
         g_max_tree_lines = 6;
@@ -107,7 +107,7 @@ protected:
 
         g_nav.current.art = m_old_curr_artp;
         g_nav.recent.art = m_old_recent_artp;
-        g_selected_only = m_old_selected_only;
+        g_sel.selected_only = m_old_selected_only;
         g_do_hiding = m_old_do_hiding;
         set_char_subst_mode(m_old_char_subst);
         g_max_tree_lines = m_old_max_tree_lines;
@@ -400,7 +400,7 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
     const SubjectFlags                     branch_subject_flags = m_branch_subject.m_flags;
     const ArticleUnread                    unread = m_group.m_to_read;
     const ArticleUnread                    selected = g_selected_count;
-    const bool                             selected_only = g_selected_only;
+    const bool                             selected_only = g_sel.selected_only;
     const MinorMode                        mode = g_mode;
     const char                             interrupts = g_int_count;
     push_char('q');
@@ -425,7 +425,7 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
     EXPECT_EQ(unread, m_group.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
-    EXPECT_EQ(selected_only, g_selected_only);
+    EXPECT_EQ(selected_only, g_sel.selected_only);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(mode, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
@@ -781,7 +781,7 @@ INSTANTIATE_TEST_SUITE_P(ProspectiveArticleOrGroupEnd, ThreadTreeContextArticleT
 
 TEST_F(ThreadTreeArticleTest, selectedOnlyModeDistinguishesUnselectedUnreadReplies)
 {
-    g_selected_only = true;
+    g_sel.selected_only = true;
 
     const std::string output = display_tree();
 

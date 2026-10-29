@@ -48,12 +48,12 @@ private:
     ArticleUnread                m_old_minimum{g_newsgroup_min_to_read};
     ArticleUnread                m_old_selected{g_selected_count};
     ArticleNum                   m_old_objects{g_obj_count};
-    SelectionMode                m_old_mode{g_sel_mode};
-    SelectionSortMode            m_old_sort{g_sel_sort};
-    int                          m_old_direction{g_sel_direction};
-    AddGroupFlags                m_old_mask{g_sel_mask};
-    bool                         m_old_rereading{g_sel_rereading};
-    bool                         m_old_exclusive{g_sel_exclusive};
+    SelectionMode                m_old_mode{g_sel.mode};
+    SelectionSortMode            m_old_sort{g_sel.sort};
+    int                          m_old_direction{g_sel.direction};
+    AddGroupFlags                m_old_mask{g_sel.mask};
+    bool                         m_old_rereading{g_sel.rereading};
+    bool                         m_old_exclusive{g_sel.exclusive};
     bool                         m_old_paranoid{g_paranoid};
     bool                         m_old_verbose{g_verbose};
     int                          m_old_total{g_sel_total_obj_cnt};
@@ -93,7 +93,7 @@ private:
     Multirc                           *m_old_multirc{g_multirc};
     NewsgroupData                     *m_old_group{g_newsgroup_ptr};
     bool                               m_old_in_group{g_in_ng};
-    bool                               m_old_group_listing{g_sel_group_listing};
+    bool                               m_old_group_listing{g_sel.group_listing};
     bool                               m_old_erase_screen{g_erase_screen};
     bool                               m_old_erase_each_line{g_erase_each_line};
     std::string                        m_old_display_mode{g_sel_grp_display_mode};

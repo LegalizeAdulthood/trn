@@ -61,16 +61,16 @@ struct SelectorRestorer
 
     ~SelectorRestorer()
     {
-        g_sel_mode = mode;
-        g_sel_default_mode = default_mode;
-        g_sel_thread_mode = thread_mode;
-        g_sel_sort = sort;
-        g_sel_art_sort = article_sort;
-        g_sel_thread_sort = thread_sort;
-        g_sel_newsgroup_sort = newsgroup_sort;
-        g_sel_mode_string = mode_string;
-        g_sel_sort_string = sort_string;
-        g_sel_direction = direction;
+        g_sel.mode = mode;
+        g_sel.default_mode = default_mode;
+        g_sel.thread_mode = thread_mode;
+        g_sel.sort = sort;
+        g_sel.art_sort = article_sort;
+        g_sel.thread_sort = thread_sort;
+        g_sel.newsgroup_sort = newsgroup_sort;
+        g_sel.mode_string = mode_string;
+        g_sel.sort_string = sort_string;
+        g_sel.direction = direction;
     }
 };
 
@@ -313,13 +313,13 @@ TEST(SwitchTest, decodeSwitchTrimsLeadingSpaceBeforeSuffixOption)
 
 TEST(SwitchTest, decodeSelectorModeAlsoSetsSelectorOrder)
 {
-    SelectorRestorer restore{g_sel_mode,        g_sel_default_mode, g_sel_thread_mode,    g_sel_sort,
-                             g_sel_art_sort,    g_sel_thread_sort,  g_sel_newsgroup_sort, g_sel_mode_string,
-                             g_sel_sort_string, g_sel_direction};
+    SelectorRestorer restore{g_sel.mode,        g_sel.default_mode, g_sel.thread_mode,    g_sel.sort,
+                             g_sel.art_sort,    g_sel.thread_sort,  g_sel.newsgroup_sort, g_sel.mode_string,
+                             g_sel.sort_string, g_sel.direction};
 
     decode_switch("-OaD");
 
-    EXPECT_EQ(SM_ARTICLE, g_sel_default_mode);
+    EXPECT_EQ(SM_ARTICLE, g_sel.default_mode);
     EXPECT_EQ("articles", option_value(OI_NEWS_SEL_MODE));
     EXPECT_EQ("reverse date", option_value(OI_NEWS_SEL_ORDER));
 }

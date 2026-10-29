@@ -175,13 +175,13 @@ void build_cache()
     if (s_cached_ng == g_newsgroup_ptr && std::time(nullptr) < s_cached_time + 6 * 60 * 60L)
     {
         s_cached_time = std::time(nullptr);
-        if (g_sel_mode == SM_ARTICLE)
+        if (g_sel.mode == SM_ARTICLE)
         {
-            set_selector(g_sel_mode, g_sel_art_sort);
+            set_selector(g_sel.mode, g_sel.art_sort);
         }
         else
         {
-            set_selector(g_sel_thread_mode, g_sel_thread_sort);
+            set_selector(g_sel.thread_mode, g_sel.thread_sort);
         }
         for (ArticleNum an{article_after(g_last_cached)}; an <= g_last_art; ++an)
         {
@@ -594,7 +594,7 @@ void look_ahead()
     if (g_threaded_group)
     {
         g_nav.target.art = g_nav.current.art;
-        g_nav.target.next(g_selected_only, false);
+        g_nav.target.next(g_sel.selected_only, false);
         if (g_nav.target.art)
         {
             parse_header(g_nav.target.num);
@@ -867,7 +867,7 @@ static bool cache_all_arts()
         push_char('\f' | 0200);
     }
     // A completely empty group needs a count & a sort
-    if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_selected_only)
+    if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_sel.selected_only)
     {
         thread_grow();
     }
@@ -950,10 +950,10 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
 bool cache_range(ArticleNum first, ArticleNum last)
 {
     bool success = true;
-    bool all_arts = (g_sel_rereading || g_thread_always);
+    bool       all_arts = (g_sel.rereading || g_thread_always);
     ArticleNum count{};
 
-    if (g_sel_rereading && !g_cached_all_in_range)
+    if (g_sel.rereading && !g_cached_all_in_range)
     {
         g_first_cached = first;
         g_last_cached = article_before(first);
@@ -974,7 +974,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
     if (g_first_cached > g_last_cached)
     {
-        if (g_sel_rereading)
+        if (g_sel.rereading)
         {
             if (g_first_subject)
             {

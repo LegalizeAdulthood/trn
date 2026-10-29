@@ -83,11 +83,11 @@ protected:
         m_old_page = std::exchange(g_sel_page_gp, AddGroupIndex::None);
         m_old_next = std::exchange(g_sel_next_gp, AddGroupIndex::None);
         m_old_data_source = g_data_source;
-        m_old_sel_sort = g_sel_sort;
-        m_old_sel_direction = g_sel_direction;
+        m_old_sel_sort = g_sel.sort;
+        m_old_sel_direction = g_sel.direction;
         g_data_source = nullptr;
-        g_sel_sort = SS_NATURAL;
-        g_sel_direction = 1;
+        g_sel.sort = SS_NATURAL;
+        g_sel.direction = 1;
     }
 
     void TearDown() override
@@ -96,8 +96,8 @@ protected:
         g_sel_page_gp = m_old_page;
         g_sel_next_gp = m_old_next;
         g_data_source = m_old_data_source;
-        g_sel_sort = m_old_sel_sort;
-        g_sel_direction = m_old_sel_direction;
+        g_sel.sort = m_old_sel_sort;
+        g_sel.direction = m_old_sel_direction;
     }
 
     AddGroupTable     m_old_groups;
@@ -198,7 +198,7 @@ void GrownAddGroupIdentityTest::SetUp()
     {
         add_to_list("news.test." + std::to_string(i), i, 0);
     }
-    g_sel_sort = SS_STRING;
+    g_sel.sort = SS_STRING;
 }
 
 class NaturalAddGroupOrderTest : public GrownAddGroupIdentityTest
@@ -213,7 +213,7 @@ void NaturalAddGroupOrderTest::SetUp()
     ASSERT_FALSE(HasFatalFailure());
     sort_add_groups();
     ASSERT_EQ(m_beta, add_to_list("comp.lang.beta", 99, '!'));
-    g_sel_sort = SS_NATURAL;
+    g_sel.sort = SS_NATURAL;
 }
 
 struct AddGroupSortCase
@@ -252,11 +252,11 @@ void AddGroupSortTest::SetUp()
     {
         ASSERT_NE(AddGroupIndex::None, index);
     }
-    g_sel_sort = GetParam().previous_mode;
-    g_sel_direction = GetParam().previous_direction;
+    g_sel.sort = GetParam().previous_mode;
+    g_sel.direction = GetParam().previous_direction;
     sort_add_groups();
-    g_sel_sort = GetParam().mode;
-    g_sel_direction = GetParam().direction;
+    g_sel.sort = GetParam().mode;
+    g_sel.direction = GetParam().direction;
 }
 
 class ScanActiveTest : public testing::Test
@@ -465,15 +465,15 @@ protected:
     {
         ScanActiveTest::SetUp();
         m_old_errno = errno;
-        m_old_sel_mode = g_sel_mode;
-        m_old_sel_sort = g_sel_sort;
-        m_old_sel_direction = g_sel_direction;
-        m_old_sel_sort_string = g_sel_sort_string;
-        m_old_sel_mode_string = g_sel_mode_string;
-        m_old_sel_rereading = g_sel_rereading;
-        m_old_sel_exclusive = g_sel_exclusive;
+        m_old_sel_mode = g_sel.mode;
+        m_old_sel_sort = g_sel.sort;
+        m_old_sel_direction = g_sel.direction;
+        m_old_sel_sort_string = g_sel.sort_string;
+        m_old_sel_mode_string = g_sel.mode_string;
+        m_old_sel_rereading = g_sel.rereading;
+        m_old_sel_exclusive = g_sel.exclusive;
         m_old_selected_count = g_selected_count;
-        m_old_sel_mask = g_sel_mask;
+        m_old_sel_mask = g_sel.mask;
         m_old_display_mode = g_sel_grp_display_mode;
         m_old_display_index = g_sel_grp_display_mode_index;
         m_old_use_sel_num = g_use_sel_num;
@@ -495,15 +495,15 @@ protected:
         drain_input();
         errno = m_old_errno;
         set_selector(SM_ADD_GROUP, SS_NATURAL);
-        g_sel_mode = m_old_sel_mode;
-        g_sel_sort = m_old_sel_sort;
-        g_sel_direction = m_old_sel_direction;
-        g_sel_sort_string = m_old_sel_sort_string;
-        g_sel_mode_string = m_old_sel_mode_string;
-        g_sel_rereading = m_old_sel_rereading;
-        g_sel_exclusive = m_old_sel_exclusive;
+        g_sel.mode = m_old_sel_mode;
+        g_sel.sort = m_old_sel_sort;
+        g_sel.direction = m_old_sel_direction;
+        g_sel.sort_string = m_old_sel_sort_string;
+        g_sel.mode_string = m_old_sel_mode_string;
+        g_sel.rereading = m_old_sel_rereading;
+        g_sel.exclusive = m_old_sel_exclusive;
         g_selected_count = m_old_selected_count;
-        g_sel_mask = m_old_sel_mask;
+        g_sel.mask = m_old_sel_mask;
         g_sel_grp_display_mode = m_old_display_mode;
         g_sel_grp_display_mode_index = m_old_display_index;
         g_use_sel_num = m_old_use_sel_num;
@@ -682,7 +682,7 @@ TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
     add_to_list("comp.lang.beta", 5, ':');
     add_to_list("comp.lang.alpha", 3, ':');
     add_to_list("comp.lang.gamma", 9, ':');
-    g_sel_sort = SS_COUNT;
+    g_sel.sort = SS_COUNT;
 
     sort_add_groups();
 

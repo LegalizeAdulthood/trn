@@ -668,7 +668,7 @@ std::string compress_subj(const Article *ap, int max)
     std::string subject;
     subject.reserve(LINE_BUF_LEN);
     Article *first = (g_threaded_group ? ap->m_subj->m_thread : ap->m_subj->m_articles);
-    if (ap != first || (ap->m_flags & AF_HAS_RE) || (!(ap->m_flags & AF_UNREAD) ^ g_sel_rereading))
+    if (ap != first || (ap->m_flags & AF_HAS_RE) || (!(ap->m_flags & AF_UNREAD) ^ g_sel.rereading))
     {
         subject += '>';
     }
@@ -1045,9 +1045,8 @@ int perform_status_end(long cnt, std::string_view obj_type)
 
     if (!g_performed_article_loop)
     {
-        output_change(g_msg, (long)g_perform_count,
-                           g_sel_mode == SM_THREAD? "thread" : "subject",
-                           {}, "ERR|match|ed");
+        output_change(g_msg, (long) g_perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {},
+                      "ERR|match|ed");
     }
     else if (g_perform_count != sels && g_perform_count != -sels //
              && g_perform_count != kills && g_perform_count != -kills)

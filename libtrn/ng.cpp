@@ -302,8 +302,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     // initialize the newsgroup data structures
 
-    g_sel_rereading = false;
-    g_sel_mask = AGF_SEL;
+    g_sel.rereading = false;
+    g_sel.mask = AGF_SEL;
     int ret = access_newsgroup();
     if (ret == -2)
     {
@@ -346,7 +346,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     }
     if (!g_selected_count)
     {
-        g_selected_only = false;
+        g_sel.selected_only = false;
     }
     g_nav.target.first();
 
@@ -452,7 +452,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         if (g_nav.target.num > g_last_art) // are we off the end still?
         {
             g_nav.target.num = article_after(g_last_art); // keep pointer references sane
-            if (!g_force_last && g_newsgroup_ptr->m_to_read && g_selected_only && !g_selected_count)
+            if (!g_force_last && g_newsgroup_ptr->m_to_read && g_sel.selected_only && !g_selected_count)
             {
                 g_nav.target = g_nav.current;
                 article_command = "+";
@@ -492,7 +492,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             if (g_obj_count)
             {
-                if (g_selected_only)
+                if (g_sel.selected_only)
                 {
                     fmt::print("  ({} + {} articles still unread)", static_cast<long>(g_selected_count),
                                g_obj_count.value_of() - g_selected_count);
@@ -525,10 +525,10 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             term_down(2);
         }
         else if (!g_reread && (was_read(g_nav.target.num) //
-                               || (g_selected_only && !(g_nav.target.art->m_flags & AF_SEL))))
+                               || (g_sel.selected_only && !(g_nav.target.art->m_flags & AF_SEL))))
         {
             // has this article been read?
-            g_nav.target.next(g_selected_only, false); // then skip it
+            g_nav.target.next(g_sel.selected_only, false); // then skip it
             continue;
         }
         else if (!g_reread && (!(g_nav.target.art->m_flags & AF_EXISTS) || !parse_header(g_nav.target.num)))
@@ -1131,7 +1131,7 @@ not_threaded:
         g_univ_follow_temp = true;
         do
         {
-            g_nav.target.prev(g_selected_only, false);
+            g_nav.target.prev(g_sel.selected_only, false);
         } while (g_nav.target.num >= g_first_art && (was_read(g_nav.target.num) || !parse_header(g_nav.target.num)));
         g_search_ahead = ArticleNum{};
         if (g_nav.target.num >= g_first_art)
@@ -1151,12 +1151,12 @@ no_previous_article:
             if (g_verbose)
             {
                 fmt::print("\nThere are no{}{} articles prior to this one.\n", command_ch == 'p' ? " unread" : "",
-                           g_selected_only && command_ch != '_' ? " selected" : "");
+                           g_sel.selected_only && command_ch != '_' ? " selected" : "");
             }
             else
             {
                 fmt::print("\nNo previous{}{} articles\n", command_ch == 'p' ? " unread" : "",
-                           g_selected_only && command_ch != '_' ? " selected" : "");
+                           g_sel.selected_only && command_ch != '_' ? " selected" : "");
             }
             term_down(2);
             g_nav.restore_current();
@@ -1225,12 +1225,12 @@ no_previous_article:
             if (g_sa_in && g_threaded_group)
             {
                 Article *old_artp = g_nav.target.art;
-                g_nav.target.next(g_selected_only, false);
+                g_nav.target.next(g_sel.selected_only, false);
                 if (!g_nav.target.art || !old_artp)
                 {
                     return AS_SA;
                 }
-                switch (g_sel_mode)
+                switch (g_sel.mode)
                 {
                 case SM_ARTICLE:
                     if (g_s_default_cmd)
@@ -1260,7 +1260,7 @@ no_previous_article:
             }
             else
             {
-                g_nav.target.next(g_selected_only, false);
+                g_nav.target.next(g_sel.selected_only, false);
             }
             if (g_nav.target.num > g_last_art)
             {
@@ -1909,7 +1909,7 @@ normal_search:
                 }
                 term_down(2);
                 Article           *first = g_nav.target.art->m_subj->first_art();
-                const ArticleFlags desired = g_sel_rereading ? AF_EXISTS : AF_EXISTS | AF_UNREAD;
+                const ArticleFlags desired = g_sel.rereading ? AF_EXISTS : AF_EXISTS | AF_UNREAD;
                 while (first && (first->m_flags & (AF_EXISTS | AF_UNREAD)) != desired)
                 {
                     first = first->next_article();
@@ -2125,7 +2125,7 @@ reask_catchup:
         {
             g_selected_count = false;
             g_selected_subj_cnt = false;
-            g_selected_only = false;
+            g_sel.selected_only = false;
             g_newsgroup_ptr->m_to_read = 0;
             if (g_dm_count)
             {
@@ -2170,7 +2170,7 @@ static bool mark_all_read(Article &article, int leave_unread)
     {
         return true;
     }
-    article.m_flags &= ~(static_cast<ArticleFlags>(g_sel_mask) | AF_UNREAD);
+    article.m_flags &= ~(static_cast<ArticleFlags>(g_sel.mask) | AF_UNREAD);
     return false;
 }
 
