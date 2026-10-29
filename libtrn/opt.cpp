@@ -351,7 +351,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_UNIV_SEL_ORDER:
-        set_sel_order(SM_UNIVERSAL,value);
+        g_sel.set_order(SM_UNIVERSAL, value);
         break;
 
     case OI_UNIV_FOLLOW:
@@ -387,7 +387,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_NEWSGROUP_SEL_ORDER:
-        set_sel_order(SM_NEWSGROUP,value);
+        g_sel.set_order(SM_NEWSGROUP, value);
         break;
 
     case OI_NEWSGROUP_SEL_CMDS:
@@ -428,7 +428,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
     }
 
     case OI_NEWS_SEL_ORDER:
-        set_sel_order(g_sel.default_mode, value);
+        g_sel.set_order(g_sel.default_mode, value);
         break;
 
     case OI_NEWS_SEL_CMDS:

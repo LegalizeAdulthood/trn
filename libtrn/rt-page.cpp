@@ -174,7 +174,10 @@ std::string get_sel_order(SelectionMode smode)
 /// @param str   The string specifying the sort order and direction.
 /// @return      True if the sort order was set successfully, false otherwise.
 ///
-bool set_sel_order(SelectionMode smode, std::string_view str)
+/// @globals
+/// - g_threaded_group: Read by set_selector through set_sort for thread-mode availability.
+///
+bool SelectorPolicy::set_order(SelectionMode smode, std::string_view str)
 {
     bool reverse = false;
 
@@ -199,7 +202,7 @@ bool set_sel_order(SelectionMode smode, std::string_view str)
         ch = std::isupper(ch) ? std::tolower(ch) : ch;
     }
 
-    return g_sel.set_sort(smode, ch);
+    return set_sort(smode, ch);
 }
 
 /// @brief Sets the selection sort mode for a given selection mode and sort key character.
