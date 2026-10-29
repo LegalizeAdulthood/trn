@@ -833,13 +833,11 @@ bool Article::valid_article()
             }
             if (g_nav.current.art == fake_ap)
             {
-                g_nav.current.art = this;
-                g_nav.current.num = m_num;
+                g_nav.current = {m_num, this};
             }
             if (g_nav.recent.art == fake_ap)
             {
-                g_nav.recent.art = this;
-                g_nav.recent.num = m_num;
+                g_nav.recent = {m_num, this};
             }
             Article *ap = m_parent;
             if (ap != nullptr)

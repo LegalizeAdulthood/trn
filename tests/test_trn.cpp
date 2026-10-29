@@ -193,12 +193,9 @@ protected:
         m_old_first_cached = g_first_cached;
         m_old_last_cached = g_last_cached;
         m_old_cached_all_in_range = g_cached_all_in_range;
-        m_old_art = g_nav.target.num;
-        m_old_recent_art = g_nav.recent.num;
-        m_old_curr_art = g_nav.current.num;
-        m_old_artp = g_nav.target.art;
-        m_old_recent_artp = g_nav.recent.art;
-        m_old_curr_artp = g_nav.current.art;
+        m_old_target = g_nav.target;
+        m_old_recent = g_nav.recent;
+        m_old_current = g_nav.current;
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_multirc = g_multirc;
         m_old_data_source = g_data_source;
@@ -432,12 +429,9 @@ protected:
         g_first_cached = m_old_first_cached;
         g_last_cached = m_old_last_cached;
         g_cached_all_in_range = m_old_cached_all_in_range;
-        g_nav.target.num = m_old_art;
-        g_nav.recent.num = m_old_recent_art;
-        g_nav.current.num = m_old_curr_art;
-        g_nav.target.art = m_old_artp;
-        g_nav.recent.art = m_old_recent_artp;
-        g_nav.current.art = m_old_curr_artp;
+        g_nav.target = m_old_target;
+        g_nav.recent = m_old_recent;
+        g_nav.current = m_old_current;
         g_newsrc_hash = m_old_newsrc_hash;
         g_multirc = m_old_multirc;
         g_data_source = m_old_data_source;
@@ -610,12 +604,9 @@ protected:
     ArticleNum                        m_old_first_cached{};
     ArticleNum                        m_old_last_cached{};
     bool                              m_old_cached_all_in_range{};
-    ArticleNum                        m_old_art{};
-    ArticleNum                        m_old_recent_art{};
-    ArticleNum                        m_old_curr_art{};
-    Article                          *m_old_artp{};
-    Article                          *m_old_recent_artp{};
-    Article                          *m_old_curr_artp{};
+    ArticleLocation                   m_old_target{};
+    ArticleLocation                   m_old_recent{};
+    ArticleLocation                   m_old_current{};
     HashTable                        *m_old_newsrc_hash{};
     Multirc                          *m_old_multirc{};
     DataSource                       *m_old_data_source{};
@@ -3147,12 +3138,9 @@ INSTANTIATE_TEST_SUITE_P(FailedSourceEndPromptVerbosityAndThreading, MultircFail
 
 struct LocalArticleReadingState
 {
-    ArticleNum          article;
-    Article            *article_ptr;
-    ArticleNum          current;
-    Article            *current_ptr;
-    ArticleNum          recent;
-    Article            *recent_ptr;
+    ArticleLocation     article;
+    ArticleLocation     current;
+    ArticleLocation     recent;
     ArticleUnread       unread;
     std::array<bool, 3> read;
 };
@@ -3178,12 +3166,9 @@ void SuccessiveLocalArticlesTest::SetUp()
     g_allow_typeahead = true;
     g_terminal_input_reader = [this](char *buffer, int)
     {
-        m_states.push_back({g_nav.target.num,
-                            g_nav.target.art,
-                            g_nav.current.num,
-                            g_nav.current.art,
-                            g_nav.recent.num,
-                            g_nav.recent.art,
+        m_states.push_back({g_nav.target,
+                            g_nav.current,
+                            g_nav.recent,
                             g_newsgroup_ptr->m_to_read,
                             {was_read(ArticleNum{1}), was_read(ArticleNum{2}), was_read(ArticleNum{3})}});
         *buffer = m_states.size() <= 3 ? GetParam() : 'q';
@@ -6521,8 +6506,7 @@ std::string NewsgroupSelectorKillEditorTest::editor_text(const char *name) const
 TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSelectedNewsgroup)
 {
     NewsgroupData *const cursor = g_newsgroup_ptr;
-    const ArticleNum     article = g_nav.target.num;
-    Article *const       article_pointer = g_nav.target.art;
+    const ArticleLocation article_location = g_nav.target;
 
     const char result = run_selector_session(std::string(1, Ctl('k')) + "qQ");
 
@@ -6535,8 +6519,7 @@ TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSe
     EXPECT_FALSE(fs::exists(m_output_dir / "unused-local"));
     EXPECT_EQ(nullptr, g_local_kfp);
     EXPECT_EQ(cursor, g_newsgroup_ptr);
-    EXPECT_EQ(article, g_nav.target.num);
-    EXPECT_EQ(article_pointer, g_nav.target.art);
+    EXPECT_EQ(article_location, g_nav.target);
     EXPECT_FALSE(g_in_ng);
     EXPECT_EQ(&m_multirc, g_multirc);
     EXPECT_EQ(&m_data_source, g_data_source);
@@ -6558,8 +6541,7 @@ TEST_F(NewsgroupSelectorDelegationStateTest, versionInformationReturnsToTheSameS
     g_verbose = true;
     prepare_selector();
     NewsgroupData *const cursor = g_newsgroup_ptr;
-    const ArticleNum     article = g_nav.target.num;
-    Article *const       article_pointer = g_nav.target.art;
+    const ArticleLocation article_location = g_nav.target;
 
     const char result = run_selector_session("\\v qQ");
 
@@ -6575,8 +6557,7 @@ TEST_F(NewsgroupSelectorDelegationStateTest, versionInformationReturnsToTheSameS
     ASSERT_NE(std::string::npos, pause);
     EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp", pause));
     EXPECT_EQ(cursor, g_newsgroup_ptr);
-    EXPECT_EQ(article, g_nav.target.num);
-    EXPECT_EQ(article_pointer, g_nav.target.art);
+    EXPECT_EQ(article_location, g_nav.target);
     EXPECT_EQ(&m_multirc, g_multirc);
     EXPECT_EQ(&m_data_source, g_data_source);
     expect_selector_context();
@@ -8163,8 +8144,8 @@ protected:
 
 std::string OnDemandThreadArticleTest::display_tree()
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const ArticlePosition                  position = g_art_pos;
     const ArticlePosition                  file_position = tell_art();
     const ArticlePosition                  header_end = g_header_type[PAST_HEADER].min_pos;
@@ -8180,9 +8161,9 @@ std::string OnDemandThreadArticleTest::display_tree()
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(AS_ASK, result);
     EXPECT_TRUE(g_threaded_group);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(current, g_nav.target);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_only, g_selected_only);
@@ -8296,8 +8277,8 @@ void SaveArticleTest::TearDown()
 
 std::string SaveArticleTest::save(char command, std::string_view input, ArticleSwitchResult expected, bool next_command)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const ArticlePosition                  position = g_art_pos;
     const ArticleLine                      line = g_art_line_num;
     const ArticleLine                      top = g_top_line;
@@ -8323,9 +8304,9 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(current, g_nav.target);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(position, g_art_pos);
     EXPECT_EQ(line, g_art_line_num);
@@ -12255,12 +12236,9 @@ TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticle
         const LocalArticleReadingState &state = m_states[index];
         const ArticleNum                number{index + 1};
         const ArticleNum                recent{index == 0 ? 4 : index};
-        EXPECT_EQ(number, state.article);
-        EXPECT_EQ(article_find(number), state.article_ptr);
-        EXPECT_EQ(number, state.current);
-        EXPECT_EQ(state.article_ptr, state.current_ptr);
-        EXPECT_EQ(recent, state.recent);
-        EXPECT_EQ(index == 0 ? nullptr : article_find(recent), state.recent_ptr);
+        EXPECT_EQ((ArticleLocation{number, article_find(number)}), state.article);
+        EXPECT_EQ(state.article, state.current);
+        EXPECT_EQ((ArticleLocation{recent, index == 0 ? nullptr : article_find(recent)}), state.recent);
         EXPECT_EQ(ArticleUnread{2 - index}, state.unread);
         EXPECT_EQ((std::array<bool, 3>{true, index >= 1, index >= 2}), state.read);
     }

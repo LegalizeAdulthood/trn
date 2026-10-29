@@ -232,8 +232,7 @@ NumNumResult num_num(std::string_view command)
     ArticleNum       max;
     std::string      cmdlst;
     std::string_view ranges;
-    const ArticleNum oldart = g_nav.target.num;
-    Article *const   oldartp = g_nav.target.art;
+    const ArticleLocation old_location = g_nav.target;
     bool             output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool             justone = true; // assume only one article
     const auto       parse_article_num = [](std::string_view text)
@@ -304,7 +303,7 @@ NumNumResult num_num(std::string_view command)
         const std::string_view min_text = dash == std::string_view::npos ? range : range.substr(0, dash);
         if (!min_text.empty() && min_text.front() == '.')
         {
-            min = oldart;
+            min = old_location.num;
         }
         else
         {
@@ -325,7 +324,7 @@ NumNumResult num_num(std::string_view command)
             }
             else if (!max_text.empty() && max_text.front() == '.')
             {
-                max = oldart;
+                max = old_location.num;
             }
             else
             {
@@ -346,8 +345,7 @@ NumNumResult num_num(std::string_view command)
         if (max < min)
         {
             error_msg("Bad range");
-            g_nav.target.num = oldart;
-            g_nav.target.art = oldartp;
+            g_nav.target = old_location;
             return NN_ASK;
         }
         if (justone)
@@ -376,8 +374,7 @@ NumNumResult num_num(std::string_view command)
                     g_msg = fmt::format("(Intr at {})", g_nav.target.num.value_of());
                     error_msg(g_msg);
                 }
-                g_nav.target.num = oldart;
-                g_nav.target.art = oldartp;
+                g_nav.target = old_location;
                 return NN_ASK;
             }
             if (!output_level)
@@ -390,8 +387,7 @@ NumNumResult num_num(std::string_view command)
             ranges.remove_prefix(comma + 1);
         }
     }
-    g_nav.target.num = oldart;
-    g_nav.target.art = oldartp;
+    g_nav.target = old_location;
     return NN_NORM;
 }
 
@@ -509,8 +505,7 @@ int thread_perform(std::string_view command)
                 if ((!(ap->m_flags & AF_UNREAD) ^ want_unread) //
                     && !(ap->m_flags & g_sel_mask) ^ !!bits)
                 {
-                    g_nav.target.num = ap->article_num();
-                    g_nav.target.art = ap;
+                    g_nav.target = {ap->article_num(), ap};
                     const int result = perform(cmdstr, output_level && g_page_line == 1);
                     if (result < 0)
                     {
@@ -542,8 +537,7 @@ int thread_perform(std::string_view command)
                     if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
                         && !(ap->m_flags & g_sel_mask) ^ !!bits)
                     {
-                        g_nav.target.num = ap->article_num();
-                        g_nav.target.art = ap;
+                        g_nav.target = {ap->article_num(), ap};
                         const int result = perform(cmdstr, output_level && g_page_line == 1);
                         if (result < 0)
                         {

@@ -460,10 +460,8 @@ protected:
     void expect_next_command(char command);
 
 private:
-    ArticleNum        m_old_art{g_nav.target.num};
-    Article          *m_old_artp{g_nav.target.art};
-    ArticleNum        m_old_current{g_nav.current.num};
-    Article          *m_old_currentp{g_nav.current.art};
+    ArticleLocation   m_old_target{g_nav.target};
+    ArticleLocation   m_old_current{g_nav.current};
     ArticleNum        m_old_search_ahead{g_search_ahead};
     SelectionMode     m_old_default_mode{g_sel_default_mode};
     SelectionSortMode m_old_article_sort{g_sel_art_sort};
@@ -489,8 +487,7 @@ void SelectorSessionInputState::SetUp()
     SelectorInputTest::SetUp();
     g_nav.current.num = ArticleNum{3};
     g_nav.current.art = article_ptr(g_nav.current.num);
-    g_nav.target.num = g_nav.current.num;
-    g_nav.target.art = g_nav.current.art;
+    g_nav.target = g_nav.current;
     g_sel_default_mode = SM_ARTICLE;
     g_sel_art_sort = SS_NATURAL;
     g_news_sel_cmds = "Z>";
@@ -511,10 +508,8 @@ void SelectorSessionInputState::SetUp()
 
 void SelectorSessionInputState::TearDown()
 {
-    g_nav.target.num = m_old_art;
-    g_nav.target.art = m_old_artp;
-    g_nav.current.num = m_old_current;
-    g_nav.current.art = m_old_currentp;
+    g_nav.target = m_old_target;
+    g_nav.current = m_old_current;
     g_search_ahead = m_old_search_ahead;
     g_sel_default_mode = m_old_default_mode;
     g_sel_art_sort = m_old_article_sort;
@@ -1307,8 +1302,7 @@ private:
     int                                        m_old_mail_count{g_mail_count};
     std::array<ArticleFlags, 2>                m_flags{};
     Article                                  **m_page{};
-    ArticleNum                                 m_article_number{};
-    Article                                   *m_article{};
+    ArticleLocation                            m_article_location{};
 };
 
 void SelectorShellTest::SetUp()
@@ -1356,8 +1350,7 @@ void SelectorShellTest::SetUp()
     g_sel_item_index = 1;
     m_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
     m_page = g_sel_page_app;
-    m_article_number = g_nav.target.num;
-    m_article = g_nav.target.art;
+    m_article_location = g_nav.target;
     g_term_line = g_sel_last_line;
     g_term_col = 0;
     g_tc_BC = "\b";
@@ -1417,8 +1410,7 @@ void SelectorShellTest::expect_selector_preserved()
     EXPECT_FALSE(g_sel_rereading);
     EXPECT_FALSE(g_sel_exclusive);
     EXPECT_EQ(AGF_SEL, g_sel_mask);
-    EXPECT_EQ(m_article_number, g_nav.target.num);
-    EXPECT_EQ(m_article, g_nav.target.art);
+    EXPECT_EQ(m_article_location, g_nav.target);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(m_flags[0], article_ptr(ArticleNum{3})->m_flags);
@@ -1744,8 +1736,7 @@ private:
     std::string_view            m_old_clear{g_tc_CD};
     std::vector<OptionFlags>    m_flags;
     std::array<ArticleFlags, 2> m_article_flags{};
-    ArticleNum                  m_article_number{};
-    Article                    *m_article{};
+    ArticleLocation             m_article_location{};
 };
 
 void SelectorOptionTest::SetUp()
@@ -1771,8 +1762,7 @@ void SelectorOptionTest::SetUp()
     g_sel_items[1].sel = 2;
     g_sel_item_index = 1;
     m_article_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
-    m_article_number = g_nav.target.num;
-    m_article = g_nav.target.art;
+    m_article_location = g_nav.target;
 }
 
 void SelectorOptionTest::TearDown()
@@ -1803,8 +1793,7 @@ void SelectorOptionTest::expect_article_context()
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(m_article_flags[0], article_ptr(ArticleNum{3})->m_flags);
     EXPECT_EQ(m_article_flags[1], article_ptr(ArticleNum{4})->m_flags);
-    EXPECT_EQ(m_article_number, g_nav.target.num);
-    EXPECT_EQ(m_article, g_nav.target.art);
+    EXPECT_EQ(m_article_location, g_nav.target);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
     EXPECT_EQ(nullptr, g_option_draft);
@@ -5346,8 +5335,7 @@ protected:
     DisplayState run_inline(std::string_view input);
 
 private:
-    Article                   *m_old_article{g_nav.target.art};
-    ArticleNum                 m_old_article_number{g_nav.target.num};
+    ArticleLocation            m_old_location{g_nav.target};
     SelectionItem              m_old_item{g_sel_items[0]};
     int                        m_old_page_line{g_page_line};
     int                        m_old_perform_count{g_perform_count};
@@ -5383,8 +5371,7 @@ void ArticleSelectorInlineStateTest::SetUp()
 
 void ArticleSelectorInlineStateTest::TearDown()
 {
-    g_nav.target.art = m_old_article;
-    g_nav.target.num = m_old_article_number;
+    g_nav.target = m_old_location;
     g_sel_items[0] = m_old_item;
     g_page_line = m_old_page_line;
     g_perform_count = m_old_perform_count;

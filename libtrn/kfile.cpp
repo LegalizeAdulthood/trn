@@ -381,8 +381,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 }
                 else
                 {
-                    g_nav.target.num = ap->article_num();
-                    g_nav.target.art = ap;
+                    g_nav.target = {ap->article_num(), ap};
                     perform(cmd,false);
                     if (ap->m_auto_flags & AUTO_SEL_MASK)
                     {

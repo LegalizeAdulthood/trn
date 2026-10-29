@@ -42,9 +42,8 @@ protected:
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
-        m_old_art = g_nav.target.num;
+        m_old_target = g_nav.target;
         m_old_curr_artp = g_nav.current.art;
-        m_old_artp = g_nav.target.art;
         m_old_in_ng = g_in_ng;
         m_old_kf_state = g_kf_state;
         m_old_threaded_group = g_threaded_group;
@@ -115,9 +114,8 @@ protected:
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
-        g_nav.target.num = m_old_art;
+        g_nav.target = m_old_target;
         g_nav.current.art = m_old_curr_artp;
-        g_nav.target.art = m_old_artp;
         g_in_ng = m_old_in_ng;
         g_kf_state = m_old_kf_state;
         g_threaded_group = m_old_threaded_group;
@@ -142,9 +140,8 @@ protected:
     ArticleNum                    m_old_abs_first{};
     ArticleNum                    m_old_first_art{};
     ArticleNum                    m_old_last_art{};
-    ArticleNum                    m_old_art{};
+    ArticleLocation               m_old_target{};
     Article                      *m_old_curr_artp{};
-    Article                      *m_old_artp{};
     bool                          m_old_in_ng{};
     KillFileStateFlags            m_old_kf_state{KFS_NONE};
     bool                          m_old_threaded_group{};

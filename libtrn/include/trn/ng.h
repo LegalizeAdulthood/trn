@@ -23,6 +23,16 @@ struct ArticleLocation
     Article   *art{};
 };
 
+inline bool operator==(const ArticleLocation &lhs, const ArticleLocation &rhs)
+{
+    return lhs.num == rhs.num && lhs.art == rhs.art;
+}
+
+inline bool operator!=(const ArticleLocation &lhs, const ArticleLocation &rhs)
+{
+    return !(lhs == rhs);
+}
+
 struct ReadingNavigation
 {
     ArticleLocation target;  // current or prospective article

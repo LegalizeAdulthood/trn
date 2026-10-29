@@ -246,8 +246,7 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
 
 void top_article()
 {
-    g_nav.target.num = article_after(g_last_art);
-    g_nav.target.art = nullptr;
+    g_nav.target = {article_after(g_last_art), nullptr};
     inc_article(g_selected_only, false);
     if (g_nav.target.num > g_last_art && g_last_cached < g_last_art)
     {
@@ -293,13 +292,11 @@ void inc_article(bool sel_flag, bool rereading)
               || (sel_flag && !(ap->m_flags & AF_SEL)));
         if (g_art_ptr < limit)
         {
-            g_nav.target.art = *g_art_ptr;
-            g_nav.target.num = g_nav.target.art->article_num();
+            g_nav.target = {(*g_art_ptr)->article_num(), *g_art_ptr};
         }
         else
         {
-            g_nav.target.art = nullptr;
-            g_nav.target.num = article_after(g_last_art);
+            g_nav.target = {article_after(g_last_art), nullptr};
             g_art_ptr = article_ptr_list_begin();
         }
         return;
@@ -432,13 +429,11 @@ void dec_article(bool sel_flag, bool rereading)
             if ((rereading || (ap->m_flags & AF_UNREAD)) && (!sel_flag || (ap->m_flags & AF_SEL)))
             {
                 g_art_ptr = previous;
-                g_nav.target.art = ap;
-                g_nav.target.num = ap->article_num();
+                g_nav.target = {ap->article_num(), ap};
                 return;
             }
         }
-        g_nav.target.art = nullptr;
-        g_nav.target.num = article_before(g_abs_first);
+        g_nav.target = {article_before(g_abs_first), nullptr};
         return;
     }
 
@@ -541,8 +536,7 @@ bool next_article_with_subj()
         }
     } while (!all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
-    g_nav.target.art = ap;
-    g_nav.target.num = ap->article_num();
+    g_nav.target = {ap->article_num(), ap};
     g_search_ahead = ArticleNum{-1};
     return true;
 }
@@ -584,8 +578,7 @@ bool prev_article_with_subj()
         }
     } while (!(ap->m_flags & AF_EXISTS)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
-    g_nav.target.art = ap;
-    g_nav.target.num = ap->article_num();
+    g_nav.target = {ap->article_num(), ap};
     return true;
 }
 
@@ -831,14 +824,12 @@ void visit_next_thread()
         ap = sp->subj_article();
         if (ap != nullptr)
         {
-            g_nav.target.num = ap->article_num();
-            g_nav.target.art = ap;
+            g_nav.target = {ap->article_num(), ap};
             return;
         }
         g_reread = false;
     }
-    g_nav.target.art = nullptr;
-    g_nav.target.num = article_after(g_last_art);
+    g_nav.target = {article_after(g_last_art), nullptr};
     g_force_last = true;
 }
 
@@ -855,14 +846,12 @@ void visit_prev_thread()
         ap = sp->subj_article();
         if (ap != nullptr)
         {
-            g_nav.target.num = ap->article_num();
-            g_nav.target.art = ap;
+            g_nav.target = {ap->article_num(), ap};
             return;
         }
         g_reread = false;
     }
-    g_nav.target.art = nullptr;
-    g_nav.target.num = article_after(g_last_art);
+    g_nav.target = {article_after(g_last_art), nullptr};
     g_force_last = true;
 }
 
@@ -883,8 +872,7 @@ bool find_parent(bool keep_going)
         ap = ap->m_parent;
     } while (keep_going && ap->m_parent);
 
-    g_nav.target.art = ap;
-    g_nav.target.num = ap->article_num();
+    g_nav.target = {ap->article_num(), ap};
     return true;
 }
 
@@ -905,8 +893,7 @@ bool find_leaf(bool keep_going)
         ap = ap->m_child1;
     } while (keep_going && ap->m_child1);
 
-    g_nav.target.art = ap;
-    g_nav.target.num = ap->article_num();
+    g_nav.target = {ap->article_num(), ap};
     return true;
 }
 
@@ -926,8 +913,7 @@ bool find_next_sib()
             Article *tb = first_sib(ta, ascent);
             if (tb != nullptr)
             {
-                g_nav.target.art = tb;
-                g_nav.target.num = tb->article_num();
+                g_nav.target = {tb->article_num(), tb};
                 return true;
             }
         }
@@ -990,8 +976,7 @@ bool find_prev_sib()
         tb = last_sib(ta, ascent, tb);
         if (tb != nullptr)
         {
-            g_nav.target.art = tb;
-            g_nav.target.num = tb->article_num();
+            g_nav.target = {tb->article_num(), tb};
             return true;
         }
         if (!(ta = ta->m_parent))

@@ -75,12 +75,9 @@ private:
     decltype(g_article_list) m_old_article_list{std::move(g_article_list)};
     decltype(g_art_ptr_list) m_old_art_ptr_list{std::move(g_art_ptr_list)};
     Article                **m_old_art_ptr{g_art_ptr};
-    ArticleNum               m_old_art{g_nav.target.num};
-    Article                 *m_old_artp{g_nav.target.art};
-    ArticleNum               m_old_curr_art{g_nav.current.num};
-    Article                 *m_old_curr_artp{g_nav.current.art};
-    ArticleNum               m_old_recent_art{g_nav.recent.num};
-    Article                 *m_old_recent_artp{g_nav.recent.art};
+    ArticleLocation          m_old_target{g_nav.target};
+    ArticleLocation          m_old_current{g_nav.current};
+    ArticleLocation          m_old_recent{g_nav.recent};
     ArticleNum               m_old_parsed_art{g_parsed_art};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
@@ -153,12 +150,9 @@ void ArticleStateTest::TearDown()
     g_article_list = std::move(m_old_article_list);
     g_art_ptr_list = std::move(m_old_art_ptr_list);
     g_art_ptr = m_old_art_ptr;
-    g_nav.target.num = m_old_art;
-    g_nav.target.art = m_old_artp;
-    g_nav.current.num = m_old_curr_art;
-    g_nav.current.art = m_old_curr_artp;
-    g_nav.recent.num = m_old_recent_art;
-    g_nav.recent.art = m_old_recent_artp;
+    g_nav.target = m_old_target;
+    g_nav.current = m_old_current;
+    g_nav.recent = m_old_recent;
     g_parsed_art = m_old_parsed_art;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
@@ -225,8 +219,7 @@ void ArticleStateTest::set_articles(std::initializer_list<ArticleFlags> flags, l
     g_last_cached = g_last_art;
     g_nav.target.num = ArticleNum{current};
     g_nav.target.art = g_nav.target.num <= g_last_art ? article_ptr(g_nav.target.num) : nullptr;
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
 }
 
 class ArticleNavigationTest : public ArticleStateTest, public testing::WithParamInterface<bool>
@@ -419,8 +412,8 @@ void ScopeSelectionArticleTest::set_selection_scope(std::initializer_list<Articl
 
 std::string ScopeSelectionArticleTest::change_scope(char action, long target, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
     const ArticleUnread unread = m_newsgroup.m_to_read;
     const ArticleNum    first = g_first_art;
     push_char('n');
@@ -434,8 +427,8 @@ std::string ScopeSelectionArticleTest::change_scope(char action, long target, Ar
     EXPECT_EQ(expected, result);
     EXPECT_EQ(ArticleNum{target}, g_nav.target.num);
     EXPECT_EQ(target <= g_last_art.value_of() ? article_ptr(ArticleNum{target}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleNum{3}, g_parsed_art);
@@ -595,9 +588,9 @@ void ThreadKillArticleTest::set_thread(long current)
 
 std::string ThreadKillArticleTest::kill_articles(std::string command, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation article = g_nav.target;
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
     push_char('n');
     testing::internal::CaptureStdout();
 
@@ -606,9 +599,9 @@ std::string ThreadKillArticleTest::kill_articles(std::string command, ArticleSwi
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(ArticleNum{3}, g_parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_TRUE(g_reread);
@@ -667,9 +660,9 @@ void DelayScopeArticleTest::set_delay_articles(long current)
 
 std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  article = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
     const bool          threaded = g_threaded_group;
@@ -688,9 +681,9 @@ std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult 
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(threaded, g_threaded_group);
@@ -754,8 +747,8 @@ void RestoreDelayedArticleTest::TearDown()
 
 std::string RestoreDelayedArticleTest::restore_delayed(long first)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     const ArticleNum    parsed = g_parsed_art;
     const ArticleNum    search_ahead = g_search_ahead;
@@ -778,8 +771,8 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
     EXPECT_EQ(AS_NORM, result);
     EXPECT_EQ(ArticleNum{first}, g_nav.target.num);
     EXPECT_EQ(first <= g_last_art.value_of() ? article_find(ArticleNum{first}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
@@ -910,8 +903,8 @@ void CatchupArticleTest::set_catchup_articles(long current)
 
 std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
     const bool threaded = g_threaded_group;
@@ -931,8 +924,8 @@ std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchRe
     EXPECT_EQ(expected, result);
     EXPECT_NE(std::string::npos,
               output.find(g_verbose ? "Mark everything in comp.test.catchup as read?" : "Catchup comp.test.catchup?"));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(threaded, g_threaded_group);
@@ -1085,8 +1078,8 @@ void NumericJumpArticleTest::TearDown()
 
 std::string NumericJumpArticleTest::enter_number(std::string_view input, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                            current = g_nav.current;
+    const ArticleLocation                            recent = g_nav.recent;
     const std::vector<Article *>                     order = g_art_ptr_list;
     Article **const                                  cursor = g_art_ptr;
     const ArticleNum                                 first = g_first_art;
@@ -1113,8 +1106,8 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(first, g_first_art);
@@ -1208,9 +1201,9 @@ void NumericRangeArticleTest::TearDown()
 std::string NumericRangeArticleTest::apply_range(std::string_view input, ArticleSwitchResult expected,
                                                  long search_ahead)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  article = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
     const ArticleNum                       parsed = g_parsed_art;
@@ -1233,9 +1226,9 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(parsed, g_parsed_art);
@@ -1246,7 +1239,7 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(0, g_missing_count);
     EXPECT_EQ(GM_READ, g_general_mode);
-    EXPECT_EQ(current.first > g_last_art ? MM_ARTICLE_END : MM_ARTICLE, g_mode);
+    EXPECT_EQ(current.num > g_last_art ? MM_ARTICLE_END : MM_ARTICLE, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
     EXPECT_TRUE(macro_pending());
     if (macro_pending())
@@ -1385,9 +1378,9 @@ void UnsubscribeArticleTest::TearDown()
 
 std::string UnsubscribeArticleTest::unsubscribe()
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  article = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
     const ArticleNum    first = g_first_art;
@@ -1421,9 +1414,9 @@ std::string UnsubscribeArticleTest::unsubscribe()
     EXPECT_EQ(newsrc_flags | RF_RC_CHANGED, m_newsrc.flags);
     EXPECT_EQ(groups - NewsgroupNum{1}, g_newsgroup_to_read);
     EXPECT_EQ(rc_line, m_newsgroup.m_rc_line);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(first, g_first_art);
@@ -1519,8 +1512,8 @@ std::string SelectorEntryArticleTest::run_selector(std::string command, char_int
                                                    const std::function<char(char_int)> &selector,
                                                    ArticleSwitchResult expected, DoNewsgroupResult exit_code)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
     int        calls = 0;
     const auto invoke = [&](char_int selector_command)
     {
@@ -1538,8 +1531,8 @@ std::string SelectorEntryArticleTest::run_selector(std::string command, char_int
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
     EXPECT_EQ(1, calls);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_FALSE(g_sa_in);
     EXPECT_TRUE(g_s_follow_temp);
     EXPECT_TRUE(g_univ_follow_temp);
@@ -1661,17 +1654,17 @@ void QuitCommandArticleTest::SetUp()
 
 void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupResult expected)
 {
-    const std::pair<ArticleNum, Article *> position = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  position = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const MinorMode                        mode = g_mode;
 
     EXPECT_EQ(AS_CLEAN, art_switch(std::string{command}));
 
     EXPECT_EQ(expected, g_newsgroup_exit_code);
-    EXPECT_EQ(position, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(position, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD});
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
@@ -1863,8 +1856,8 @@ void ScanContinuationArticleTest::set_scan_articles(std::initializer_list<Articl
 void ScanContinuationArticleTest::dispatch(std::string command, long number, ArticleSwitchResult expected,
                                            DoNewsgroupResult exit_code)
 {
-    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                            current = g_nav.current;
+    const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
@@ -1900,8 +1893,8 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     EXPECT_TRUE(output.empty()) << output;
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
     EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -2151,8 +2144,8 @@ std::string SearchCommandArticleTest::search_articles(char direction, std::strin
 std::string SearchCommandArticleTest::enter_search(char direction, std::string_view input, ArticleSwitchResult expected,
                                                    const std::function<void(ArticleNum)> &progress)
 {
-    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                            current = g_nav.current;
+    const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
@@ -2177,8 +2170,8 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_TRUE(g_reread);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -2360,8 +2353,8 @@ void SearchActionArticleTest::set_action_articles(long current)
 std::string SearchActionArticleTest::perform_search(std::string_view command, ArticleSwitchResult expected,
                                                     const std::function<void(ArticleNum)> &progress)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const ArticleNum                       parsed = g_parsed_art;
     push_char('q');
     push_char('\n');
@@ -2377,8 +2370,8 @@ std::string SearchActionArticleTest::perform_search(std::string_view command, Ar
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -2481,8 +2474,8 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
                                              const std::function<void(ArticleNum)> &progress,
                                              DoNewsgroupResult                      exit_code)
 {
-    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                            current = g_nav.current;
+    const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
@@ -2510,8 +2503,8 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     EXPECT_EQ(expected, result);
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
     EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -2690,8 +2683,8 @@ void KillSubjectArticleTest::set_kill_articles(long current)
 std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, long target,
                                                  const std::function<void(ArticleNum)> &progress, std::string command)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
     push_char('n');
     testing::internal::CaptureStdout();
 
@@ -2702,8 +2695,8 @@ std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, l
     EXPECT_EQ(expected, result);
     EXPECT_EQ(ArticleNum{target}, g_nav.target.num);
     EXPECT_EQ(target <= g_last_art.value_of() ? article_ptr(ArticleNum{target}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
@@ -2768,9 +2761,9 @@ void BulkSelectionArticleTest::TearDown()
 
 std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  article = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
     push_char('n');
@@ -2785,9 +2778,9 @@ std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, Article
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(ArticleNum{3}, g_parsed_art);
@@ -2972,9 +2965,9 @@ void MemorizeArticleTest::TearDown()
 
 std::string MemorizeArticleTest::memorize(char command, std::string_view replies, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation article = g_nav.target;
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
     push_char('n');
     for (auto it = replies.rbegin(); it != replies.rend(); ++it)
     {
@@ -2987,9 +2980,9 @@ std::string MemorizeArticleTest::memorize(char command, std::string_view replies
     const std::string output = testing::internal::GetCapturedStdout();
     SCOPED_TRACE(output);
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
@@ -3149,8 +3142,8 @@ std::string SortedArticleNavigationTest::expect_previous(char command, long numb
 std::string SortedArticleNavigationTest::expect_navigation(char command, long number, long index,
                                                            ArticleSwitchResult result)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     const ArticleUnread                    unread = m_newsgroup.m_to_read;
     const ArticleUnread                    selected = g_selected_count;
@@ -3177,8 +3170,8 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     EXPECT_EQ(number <= g_last_art.value_of() ? article_ptr(ArticleNum{number}) : nullptr, g_nav.target.art);
     EXPECT_EQ(article_ptr_list_begin() + index, g_art_ptr);
     EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(first, g_first_art);
@@ -3436,8 +3429,8 @@ std::string ArticleTraversalTest::expect_previous(char command, long number, std
 std::string ArticleTraversalTest::expect_navigation(char command, long number, std::initializer_list<long> missing,
                                                     ArticleSwitchResult result)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const ArticleNum                       first = g_first_art;
     const ArticleNum                       parsed = g_parsed_art;
     const ArticleNum                       search_ahead = g_search_ahead;
@@ -3481,8 +3474,8 @@ std::string ArticleTraversalTest::expect_navigation(char command, long number, s
 
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
     EXPECT_EQ(number <= 12 ? article_ptr(ArticleNum{number}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -3975,8 +3968,8 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
                                                   ArticleSwitchResult result, long search_ahead, long order_index,
                                                   char typed_second)
 {
-    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                            current = g_nav.current;
+    const ArticleLocation                            recent = g_nav.recent;
     const std::vector<Article *>                     order = g_art_ptr_list;
     Article **const                                  cursor = g_art_ptr;
     const ArticleNum                                 first = g_first_art;
@@ -4014,8 +4007,8 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     EXPECT_EQ(result, actual);
     EXPECT_EQ(ArticleNum{target}, g_nav.target.num);
     EXPECT_EQ(article_find(ArticleNum{target}), g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(order_index < 0 ? cursor : article_ptr_list_begin() + order_index, g_art_ptr);
     EXPECT_EQ(first, g_first_art);
@@ -4664,8 +4657,8 @@ void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char comma
                                                                       std::initializer_list<long> missing,
                                                                       bool                        force_last)
 {
-    const std::pair<ArticleNum, Article *>  current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>  recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                   current = g_nav.current;
+    const ArticleLocation                   recent = g_nav.recent;
     const ArticleNum                        first = g_first_art;
     const ArticleNum                        parsed = g_parsed_art;
     const ArticleNum                        search_ahead = g_search_ahead;
@@ -4711,8 +4704,8 @@ void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char comma
     EXPECT_TRUE(output.empty());
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
     EXPECT_EQ(number <= g_last_art.value_of() ? article_ptr(ArticleNum{number}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -4819,8 +4812,7 @@ void SubjectFallbackArticleStateTest::set_navigation_origin(long current)
 {
     g_nav.target.num = ArticleNum{current};
     g_nav.target.art = article_ptr(g_nav.target.num);
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
 }
 
 void SubjectFallbackArticleStateTest::expect_from(char command, long current, long target, bool reread,
@@ -5060,9 +5052,9 @@ std::string RereadArticleTest::display(char command)
 
 std::string RereadArticleTest::display(std::string command, std::string_view input, ArticleSwitchResult expected)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  article = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const ArticleNum                       first = g_first_art;
     const ArticleNum                       parsed = g_parsed_art;
     const ArticleNum                       search_ahead = g_search_ahead;
@@ -5083,9 +5075,9 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
@@ -5657,9 +5649,9 @@ void SubjectListingArticleTest::set_listing_articles(long current)
 
 std::string SubjectListingArticleTest::list_subjects(std::string_view input)
 {
-    const std::pair<ArticleNum, Article *>           article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *>           current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *>           recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                            article = g_nav.target;
+    const ArticleLocation                            current = g_nav.current;
+    const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_art;
     const ArticleNum                                 search_ahead = g_search_ahead;
@@ -5692,9 +5684,9 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(AS_ASK, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
@@ -8007,13 +7999,13 @@ TEST_F(CatchupArticleTest, aTailLargerThanTheGroupDoesNotMarkAnyArticlesRead)
 TEST_P(CatchupUnsubscribeArticleTest, unsubscribeCatchesUpAndRequestsCleanupWhilePreservingTheReadingAnchor)
 {
     set_catchup_articles(GetParam() ? 8 : 4);
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
+    const ArticleLocation article = g_nav.target;
 
     const std::string output = catch_up("u", AS_CLEAN);
 
     EXPECT_NE(std::string::npos, output.find("Unsubscribed to newsgroup comp.test.catchup"));
     EXPECT_NE(std::string::npos, output.find("If you meant to hit 'y' instead of 'u'"));
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
+    EXPECT_EQ(article, g_nav.target);
     expect_flags({CACHED, CACHED, CACHED | AF_DEL, CACHED, AF_CACHED | AF_THREADED, CACHED, CACHED | AF_UNREAD});
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
@@ -8746,8 +8738,7 @@ TEST_P(DepthFirstMissingArticleTest, previousSkipsMissingDescendantsParentsAndRo
         {
             EXPECT_TRUE(expect_previous('P', 7, {8}).empty());
         }
-        g_nav.current.num = g_nav.target.num;
-        g_nav.current.art = g_nav.target.art;
+        g_nav.current = g_nav.target;
         g_search_ahead = ArticleNum{2};
 
         const std::string output = expect_previous(
@@ -9580,8 +9571,7 @@ TEST_P(SelectedPreviousSubjectThreadArticleTest, skipsMissingScopesAndClearsThei
     for (int attempt = 0; attempt < 2; ++attempt)
     {
         SCOPED_TRACE(attempt);
-        g_nav.target.num = g_nav.current.num;
-        g_nav.target.art = g_nav.current.art;
+        g_nav.target = g_nav.current;
         expect_previous(GetParam() ? 2 : 4, {5, 6, 7, 8});
     }
 }
@@ -11177,8 +11167,7 @@ TEST_F(SearchAheadArticleTest, repeatedAdvancementUsesTheCachedReplyThenFallsBac
 
     next(2, AS_NORM, progress);
     EXPECT_TRUE(visited.empty());
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
 
     next(6, AS_NORM, progress);
 
@@ -12725,8 +12714,7 @@ TEST_P(ScanNextCommandArticleTest, explicitNextEstablishesTemporaryUniversalFoll
     EXPECT_FALSE(g_univ_default_cmd);
     EXPECT_TRUE(g_s_follow_temp);
     EXPECT_TRUE(g_univ_follow_temp);
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
 
     dispatch(" ", 4);
 
@@ -12765,8 +12753,7 @@ TEST_F(ScanContinuationArticleTest, articleModeExplicitNextReadsOneArticleThenTh
     EXPECT_TRUE(g_s_follow_temp);
     EXPECT_TRUE(g_univ_follow_temp);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
     g_search_ahead = ArticleNum{5};
 
     dispatch(" ", 3, AS_SA);
@@ -12798,8 +12785,7 @@ TEST_F(ScanContinuationArticleTest, subjectModeTemporaryFollowStopsAtTheFirstArt
 
     dispatch("n", 2);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
     g_search_ahead = ArticleNum{5};
 
     dispatch(" ", 3, AS_SA);
@@ -12823,13 +12809,11 @@ TEST_F(ScanContinuationArticleTest, threadModeTemporaryFollowCrossesSubjectsAndR
     for (const long number : {4, 5})
     {
         SCOPED_TRACE(number);
-        g_nav.current.num = g_nav.target.num;
-        g_nav.current.art = g_nav.target.art;
+        g_nav.current = g_nav.target;
         dispatch(" ", number);
         EXPECT_EQ(ArticleNum{}, g_search_ahead);
     }
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
     g_search_ahead = ArticleNum{5};
 
     dispatch(" ", 6, AS_SA);
@@ -13213,8 +13197,7 @@ TEST_P(NumericJumpNavigationArticleTest, continuesFromTheJumpTargetInTheConfigur
     enter_number("2\n");
     expect_target(2);
     // The reading loop accepts the jump before the user's next command.
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
 
     EXPECT_EQ(AS_NORM, art_switch(std::string{test_case.command}));
 
@@ -13447,7 +13430,7 @@ INSTANTIATE_TEST_SUITE_P(Verbosity, NumericRangeFailureArticleTest, testing::Boo
 
 TEST_F(NumericRangeArticleTest, rangeExecutorStopsAtAnInterruptionAndRestoresTheReadingAnchor)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
+    const ArticleLocation article = g_nav.target;
     g_int_count = 1;
     testing::internal::CaptureStdout();
 
@@ -13456,7 +13439,7 @@ TEST_F(NumericRangeArticleTest, rangeExecutorStopsAtAnInterruptionAndRestoresThe
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(NN_ASK, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
+    EXPECT_EQ(article, g_nav.target);
     EXPECT_EQ(CACHED, article_ptr(ArticleNum{1})->m_flags);
     EXPECT_EQ(CACHED | AF_UNREAD, article_ptr(ArticleNum{3})->m_flags);
     EXPECT_EQ(CACHED | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{4})->m_flags);
@@ -13668,8 +13651,7 @@ TEST_F(DirectNavigationArticleTest, configuredNavigationAfterANumericStepRepairs
     position(1);
     set_order({11, 4, 6, 1, 12, 3, 2, 7, 8, 9, 10});
     navigate("_N", 2, true);
-    g_nav.current.num = g_nav.target.num;
-    g_nav.current.art = g_nav.target.art;
+    g_nav.current = g_nav.target;
 
     EXPECT_EQ(AS_NORM, art_switch("N"));
 

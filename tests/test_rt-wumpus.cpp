@@ -251,8 +251,7 @@ protected:
     NewsgroupData m_group{};
 
 private:
-    ArticleNum        m_old_art{g_nav.target.num};
-    Article          *m_old_artp{g_nav.target.art};
+    ArticleLocation   m_old_target{g_nav.target};
     ArticleNum        m_old_curr_art{g_nav.current.num};
     ArticleNum        m_old_recent_art{g_nav.recent.num};
     ArticleNum        m_old_last_art{g_last_art};
@@ -354,8 +353,7 @@ void ThreadTreeArticleTest::TearDown()
     {
         push_char(*ch);
     }
-    g_nav.target.num = m_old_art;
-    g_nav.target.art = m_old_artp;
+    g_nav.target = m_old_target;
     g_nav.current.num = m_old_curr_art;
     g_nav.recent.num = m_old_recent_art;
     g_last_art = m_old_last_art;
@@ -392,9 +390,9 @@ void ThreadTreeArticleTest::TearDown()
 
 std::string ThreadTreeArticleTest::display_tree(std::string_view input)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
+    const ArticleLocation                  article = g_nav.target;
+    const ArticleLocation                  current = g_nav.current;
+    const ArticleLocation                  recent = g_nav.recent;
     const ArticleFlags                     current_flags = m_current.m_flags;
     const ArticleFlags                     recent_flags = m_recent.m_flags;
     const ArticleFlags                     branch_flags = m_branch.m_flags;
@@ -416,9 +414,9 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(AS_ASK, result);
-    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
-    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
-    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
+    EXPECT_EQ(article, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(current_flags, m_current.m_flags);
     EXPECT_EQ(recent_flags, m_recent.m_flags);
     EXPECT_EQ(branch_flags, m_branch.m_flags);

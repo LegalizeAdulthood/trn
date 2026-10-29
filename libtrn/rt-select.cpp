@@ -427,8 +427,7 @@ sel_exit:
     }
     if (s_sel_ret == '+')
     {
-        g_nav.target.num = g_nav.current.num;
-        g_nav.target.art = g_nav.current.art;
+        g_nav.target = g_nav.current;
     }
     else
     {

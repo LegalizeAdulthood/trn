@@ -1580,8 +1580,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             {
                 return;
             }
-            g_nav.target.art = ap;
-            g_nav.target.num = ap->article_num();
+            g_nav.target = {ap->article_num(), ap};
             g_reread = true;
             push_char(Ctl('r'));
         }

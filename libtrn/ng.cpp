@@ -314,10 +314,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     // FROM HERE ON, RETURN THRU CLEANUP OR WE ARE SCREWED
 
     g_force_last = true;                 // if 0 unread, do not bomb out
-    g_nav.recent.art = nullptr;
-    g_nav.current.art = nullptr;
-    g_nav.recent.num = article_after(g_last_art);
-    g_nav.current.num = article_after(g_last_art);
+    g_nav.current = g_nav.recent = {article_after(g_last_art), nullptr};
     g_prompt = whatnext;
     reset_char_subst_mode();
 
@@ -372,8 +369,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         ng_virtual = true;
         if (g_ng_go_art_num >= g_abs_first)
         {
-            g_nav.target.num = g_ng_go_art_num;
-            g_nav.target.art = article_ptr(g_nav.target.num);
+            g_nav.target = {g_ng_go_art_num, article_ptr(g_ng_go_art_num)};
         }
         g_ng_go_art_num = ArticleNum{};
     }
@@ -443,10 +439,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             start_command.reset();
             if (input_pending())
             {
-                g_nav.target.num = article_after(g_last_art);
-                g_nav.current.num = article_after(g_last_art);
-                g_nav.target.art = nullptr;
-                g_nav.current.art = nullptr;
+                g_nav.target = g_nav.current = {article_after(g_last_art), nullptr};
                 goto reinp_article;
             }
         }
@@ -455,20 +448,17 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             g_nav.target.num = article_after(g_last_art); // keep pointer references sane
             if (!g_force_last && g_newsgroup_ptr->m_to_read && g_selected_only && !g_selected_count)
             {
-                g_nav.target.num = g_nav.current.num;
-                g_nav.target.art = g_nav.current.art;
+                g_nav.target = g_nav.current;
                 article_command = "+";
                 goto article_level;
             }
             count_subjects(CS_RETAIN);
             article_walk(count_uncached_article, 0);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
-            if (g_nav.target.num != g_nav.current.num || g_nav.target.art != g_nav.current.art)
+            if (g_nav.target != g_nav.current)
             {
-                g_nav.recent.num = g_nav.current.num; // remember last article # (for '-')
-                g_nav.current.num = g_nav.target.num; // set current article #
-                g_nav.recent.art = g_nav.current.art;
-                g_nav.current.art = g_nav.target.art;
+                g_nav.recent = g_nav.current; // remember last article (for '-')
+                g_nav.current = g_nav.target; // set current article
                 reset_char_subst_mode();
                 g_first_view = ArticleLine{};
             }
@@ -544,12 +534,10 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         }
         else                            // we have a real live article
         {
-            if (g_nav.target.num != g_nav.current.num || g_nav.target.art != g_nav.current.art)
+            if (g_nav.target != g_nav.current)
             {
-                g_nav.recent.num = g_nav.current.num; // remember last article # (for '-')
-                g_nav.current.num = g_nav.target.num; // set current article #
-                g_nav.recent.art = g_nav.current.art;
-                g_nav.current.art = g_nav.target.art;
+                g_nav.recent = g_nav.current; // remember last article (for '-')
+                g_nav.current = g_nav.target; // set current article
                 reset_char_subst_mode();
                 g_first_view = ArticleLine{};
                 g_do_hiding = true;
@@ -660,8 +648,7 @@ reinp_article:
         look_ahead();                   // see what we can do in advance
         cache_until_key();
 #endif
-        g_nav.target.num = g_nav.current.num;
-        g_nav.target.art = g_nav.current.art;
+        g_nav.target = g_nav.current;
         article_command = get_cmd();
         if (errno || article_command_char(article_command) == '\f')
         {
@@ -1053,8 +1040,7 @@ not_threaded:
         }
         // first, write kill-subject command
         (void)art_search(command, false);
-        g_nav.target.num = g_nav.current.num;
-        g_nav.target.art = g_nav.current.art;
+        g_nav.target = g_nav.current;
         g_nav.target.art->m_subj->kill_subject(AFFECT_ALL); // take care of any prior subjects
         if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
         {
@@ -1132,8 +1118,7 @@ not_threaded:
         perform_status_end(g_newsgroup_ptr->m_to_read, "article");
         fmt::print("{}", g_msg);
         newline();
-        g_nav.target.num = g_nav.current.num;
-        g_nav.target.art = g_nav.current.art;
+        g_nav.target = g_nav.current;
         return AS_ASK;
     }
 
@@ -1170,8 +1155,7 @@ no_previous_article:
                            g_selected_only && command_ch != '_' ? " selected" : "");
             }
             term_down(2);
-            g_nav.target.num = g_nav.current.num;
-            g_nav.target.art = g_nav.current.art;
+            g_nav.target = g_nav.current;
             return AS_ASK;
         }
         g_reread = true;
@@ -1182,8 +1166,7 @@ no_previous_article:
     case '\b':  case '\177':
         if (g_nav.recent.num >= 0)
         {
-            g_nav.target.num = g_nav.recent.num;
-            g_nav.target.art = g_nav.recent.art;
+            g_nav.target = g_nav.recent;
             g_reread = true;
             g_force_last = true;
             g_search_ahead = ArticleNum{-(g_search_ahead.value_of() != 0)};
@@ -1311,13 +1294,11 @@ no_previous_article:
             }
             else if (!g_first_subject)
             {
-                g_nav.target.num = g_abs_first;
-                g_nav.target.art = article_ptr(g_nav.target.num);
+                g_nav.target = {g_abs_first, article_ptr(g_abs_first)};
             }
             else
             {
-                g_nav.target.art = g_first_subject->m_articles;
-                g_nav.target.num = g_nav.target.art->article_num();
+                g_nav.target = {g_first_subject->m_articles->article_num(), g_first_subject->m_articles};
                 if (!(g_nav.target.art->m_flags & AF_EXISTS))
                 {
                     g_nav.target.art->one_less();
@@ -1341,8 +1322,7 @@ no_previous_article:
         return AS_NORM;
 
     case '$':
-        g_nav.target.num = article_after(g_last_art);
-        g_nav.target.art = nullptr;
+        g_nav.target = {article_after(g_last_art), nullptr};
         g_force_last = true;
         g_search_ahead = ArticleNum{};
         return AS_NORM;
@@ -1436,8 +1416,7 @@ normal_search:
         switch (art_search(command, false, search_progress))
         {
         case SRCH_ERROR:
-            g_nav.target.num = g_nav.current.num;
-            g_nav.target.art = g_nav.current.art;
+            g_nav.target = g_nav.current;
             return AS_ASK;
 
         case SRCH_ABORT:
@@ -1454,8 +1433,7 @@ normal_search:
                 fmt::print("\n(Intr at {})\n", g_nav.target.num.value_of());
             }
             term_down(2);
-            g_nav.target.num = g_nav.current.num; // restore to current article
-            g_nav.target.art = g_nav.current.art;
+            g_nav.target = g_nav.current; // restore to current article
             return AS_ASK;
 
         case SRCH_DONE:
@@ -1473,8 +1451,7 @@ normal_search:
             pad(g_just_a_sec / 3); // 1/3 second
             if (!g_search_ahead)
             {
-                g_nav.target.num = g_nav.current.num;
-                g_nav.target.art = g_nav.current.art;
+                g_nav.target = g_nav.current;
                 return AS_ASK;
             }
             top_article();
@@ -1484,8 +1461,7 @@ normal_search:
         case SRCH_SUBJ_DONE:
             if (g_sa_in)
             {
-                g_nav.target.num = g_nav.current.num;
-                g_nav.target.art = g_nav.current.art;
+                g_nav.target = g_nav.current;
                 return AS_SA;
             }
             top_article();
@@ -1495,8 +1471,7 @@ normal_search:
         case SRCH_NOT_FOUND:
             fmt::print("\n\n\n\nNot found.");
             term_down(5);
-            g_nav.target.num = g_nav.current.num; // restore to current article
-            g_nav.target.art = g_nav.current.art;
+            g_nav.target = g_nav.current; // restore to current article
             if (g_sa_in)
             {
                 return AS_SA;
@@ -1550,8 +1525,7 @@ normal_search:
         case 'u':
             return AS_CLEAN;
         }
-        g_nav.target.num = article_after(g_last_art);
-        g_nav.target.art = nullptr;
+        g_nav.target = {article_after(g_last_art), nullptr};
         g_force_last = false;
         return AS_NORM;
 
@@ -1665,14 +1639,12 @@ normal_search:
 
         case '=': // list subjects
         {
-            ArticleNum     old_num = g_nav.target.num;
-            Article *const old_art = g_nav.target.art;
+            const ArticleLocation old_location = g_nav.target;
             page_start();
             article_walk(output_subject, AF_UNREAD);
             g_int_count = 0;
             g_subj_line = std::nullopt;
-            g_nav.target.num = old_num;
-            g_nav.target.art = old_art;
+            g_nav.target = old_location;
             return AS_ASK;
         }
 
@@ -1942,8 +1914,7 @@ normal_search:
                 {
                     return AS_ASK;
                 }
-                g_nav.target.num = first->article_num();
-                g_nav.target.art = first;
+                g_nav.target = {first->article_num(), first};
                 return AS_NORM;
             }
 
@@ -2234,8 +2205,7 @@ bool output_subject(Article &article, int flag)
         if (custom_subject_line)
         {
             subject_line.reserve(256);
-            g_nav.target.num = i;
-            g_nav.target.art = &article;
+            g_nav.target = {i, &article};
             fmt::format_to(std::back_inserter(subject_line), "{:<5} {}", i.value_of(), do_interp(*g_subj_line));
         }
         else
@@ -2278,8 +2248,7 @@ char ask_memorize(char_int ch)
     bool             global_save = false;
     std::string_view mode_string = thread_cmd ? "thread" : "subject";
     std::string_view mode_phrase = thread_cmd ? "replies to this article" : "this subject and all replies";
-    ArticleNum       art_hold = g_nav.target.num;
-    Article         *artp_hold = g_nav.target.art;
+    const ArticleLocation held_location = g_nav.target;
 
     if (!use_one_line)
     {
@@ -2375,8 +2344,7 @@ reask_memorize:
         if (!thread_cmd)
         {
             (void)art_search(article_search_command, true);
-            g_nav.target.num = art_hold;
-            g_nav.target.art = artp_hold;
+            g_nav.target = held_location;
             ch = '.';
         }
         else
@@ -2405,8 +2373,7 @@ reask_memorize:
         if (!thread_cmd)
         {
             (void) art_search(article_search_command, true);
-            g_nav.target.num = art_hold;
-            g_nav.target.art = artp_hold;
+            g_nav.target = held_location;
         }
         else
         {
@@ -2438,8 +2405,7 @@ reask_memorize:
         {
             article_search_command[0] = 'K';
             (void) art_search(article_search_command, true);
-            g_nav.target.num = art_hold;
-            g_nav.target.art = artp_hold;
+            g_nav.target = held_location;
         }
         else
         {
@@ -2478,8 +2444,7 @@ reask_memorize:
         if (!thread_cmd)
         {
             (void) art_search(article_search_command, true);
-            g_nav.target.num = art_hold;
-            g_nav.target.art = artp_hold;
+            g_nav.target = held_location;
         }
         else
         {
