@@ -162,7 +162,11 @@ foreach ($case in @('accepted', 'oauth2', 'implicit', 'rejected', 'recipient', '
             if ([DateTime]::UtcNow -gt $deadline) { Receive-Job $job; throw 'SMTP fixture did not start.' }
             Start-Sleep -Milliseconds 50
         }
-        $port = [IO.File]::ReadAllText($portFile)
+        # The new name can be visible before the rename handle closes.
+        $portReader = [IO.StreamReader]::new([IO.File]::Open($portFile, 'Open', 'Read',
+            ([IO.FileShare]::Read -bor [IO.FileShare]::Delete)))
+        try { $port = $portReader.ReadToEnd() }
+        finally { $portReader.Dispose() }
         $config = Join-Path $directory 'account.conf'
         $options = "url = smtp://localhost:$port`nuser = fixture:test-password`nlogin-options = AUTH=PLAIN`n"
         if ($case -ne 'certificate') { $options += 'cacert = "' + $ca.Replace('\', '/') + '"' + "`n" }
