@@ -42,6 +42,10 @@ inline bool operator!=(const ArticleLocation &lhs, const ArticleLocation &rhs)
 struct ReadingNavigation
 {
     void commit_current();
+    void restore_current()
+    {
+        target = current;
+    }
 
     ArticleLocation target;  // current or prospective article
     ArticleLocation current; // article currently being read

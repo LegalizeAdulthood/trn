@@ -8927,27 +8927,43 @@ TEST_F(SubjectOrderPreviousArticleTest, previousUnreadPreservesGroupEndWhenAllSu
     EXPECT_NE(std::string::npos, output.find("No previous unread articles"));
 }
 
-class ReadingNavigationCommitTest : public testing::TestWithParam<bool>
+class ReadingNavigationTest : public testing::TestWithParam<bool>
 {
+protected:
+    Article           m_recent_article{};
+    Article           m_current_article{};
+    Article           m_target_article{};
+    ReadingNavigation m_nav{
+        {ArticleNum{3}, &m_target_article}, {ArticleNum{2}, &m_current_article}, {ArticleNum{1}, &m_recent_article}};
 };
 
-TEST_P(ReadingNavigationCommitTest, commitsTheTargetAndRetainsThePreviousLocation)
+TEST_P(ReadingNavigationTest, commitsTheTargetAndRetainsThePreviousLocation)
 {
-    Article               previous_article{};
-    Article               current_article{};
-    Article               target_article{};
-    const ArticleLocation current{ArticleNum{2}, &current_article};
-    const ArticleLocation target{ArticleNum{3}, GetParam() ? nullptr : &target_article};
-    ReadingNavigation     nav{target, current, {ArticleNum{1}, &previous_article}};
+    m_nav.target.art = GetParam() ? nullptr : &m_target_article;
+    const ArticleLocation current = m_nav.current;
+    const ArticleLocation target = m_nav.target;
 
-    nav.commit_current();
+    m_nav.commit_current();
 
-    EXPECT_EQ(target, nav.target);
-    EXPECT_EQ(target, nav.current);
-    EXPECT_EQ(current, nav.recent);
+    EXPECT_EQ(target, m_nav.target);
+    EXPECT_EQ(target, m_nav.current);
+    EXPECT_EQ(current, m_nav.recent);
 }
 
-INSTANTIATE_TEST_SUITE_P(ArticleOrGroupEnd, ReadingNavigationCommitTest, testing::Bool(),
+TEST_P(ReadingNavigationTest, restoresTheCurrentLocationWithoutChangingHistory)
+{
+    m_nav.current.art = GetParam() ? nullptr : &m_current_article;
+    const ArticleLocation current = m_nav.current;
+    const ArticleLocation recent = m_nav.recent;
+
+    m_nav.restore_current();
+
+    EXPECT_EQ(current, m_nav.target);
+    EXPECT_EQ(current, m_nav.current);
+    EXPECT_EQ(recent, m_nav.recent);
+}
+
+INSTANTIATE_TEST_SUITE_P(ArticleOrGroupEnd, ReadingNavigationTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "GroupEnd" : "Article"; });
 
 TEST_P(NextArticleTest, advancesAnIndependentLocationWithoutChangingTheReadingAnchor)

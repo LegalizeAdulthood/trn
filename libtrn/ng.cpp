@@ -1044,7 +1044,7 @@ not_threaded:
         }
         // first, write kill-subject command
         (void)art_search(command, false);
-        g_nav.target = g_nav.current;
+        g_nav.restore_current();
         g_nav.target.art->m_subj->kill_subject(AFFECT_ALL); // take care of any prior subjects
         if (g_sa_in && !(g_sa_follow || g_s_follow_temp))
         {
@@ -1122,7 +1122,7 @@ not_threaded:
         perform_status_end(g_newsgroup_ptr->m_to_read, "article");
         fmt::print("{}", g_msg);
         newline();
-        g_nav.target = g_nav.current;
+        g_nav.restore_current();
         return AS_ASK;
     }
 
@@ -1159,7 +1159,7 @@ no_previous_article:
                            g_selected_only && command_ch != '_' ? " selected" : "");
             }
             term_down(2);
-            g_nav.target = g_nav.current;
+            g_nav.restore_current();
             return AS_ASK;
         }
         g_reread = true;
@@ -1420,7 +1420,7 @@ normal_search:
         switch (art_search(command, false, search_progress))
         {
         case SRCH_ERROR:
-            g_nav.target = g_nav.current;
+            g_nav.restore_current();
             return AS_ASK;
 
         case SRCH_ABORT:
@@ -1437,7 +1437,7 @@ normal_search:
                 fmt::print("\n(Intr at {})\n", g_nav.target.num.value_of());
             }
             term_down(2);
-            g_nav.target = g_nav.current; // restore to current article
+            g_nav.restore_current(); // restore to current article
             return AS_ASK;
 
         case SRCH_DONE:
@@ -1455,7 +1455,7 @@ normal_search:
             pad(g_just_a_sec / 3); // 1/3 second
             if (!g_search_ahead)
             {
-                g_nav.target = g_nav.current;
+                g_nav.restore_current();
                 return AS_ASK;
             }
             g_nav.target.first();
@@ -1465,7 +1465,7 @@ normal_search:
         case SRCH_SUBJ_DONE:
             if (g_sa_in)
             {
-                g_nav.target = g_nav.current;
+                g_nav.restore_current();
                 return AS_SA;
             }
             g_nav.target.first();
@@ -1475,7 +1475,7 @@ normal_search:
         case SRCH_NOT_FOUND:
             fmt::print("\n\n\n\nNot found.");
             term_down(5);
-            g_nav.target = g_nav.current; // restore to current article
+            g_nav.restore_current(); // restore to current article
             if (g_sa_in)
             {
                 return AS_SA;
