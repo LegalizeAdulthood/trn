@@ -33,7 +33,6 @@ void     thread_open();
 void     thread_grow();
 void     thread_close();
 void     top_article();
-void     dec_article(bool sel_flag, bool rereading);
 bool     next_article_with_subj();
 bool     prev_article_with_subj();
 Subject *next_subject(Subject *sp, int subj_mask);

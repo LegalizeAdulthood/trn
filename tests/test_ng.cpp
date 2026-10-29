@@ -9227,6 +9227,22 @@ TEST_P(PreviousUnreadArticleTest, preservesCurrentArticleWhenNoEarlierSelectedUn
 INSTANTIATE_TEST_SUITE_P(ArticleOrder, PreviousUnreadArticleTest, testing::Bool(),
                          [](const testing::TestParamInfo<bool> &info) { return info.param ? "Threaded" : "Numeric"; });
 
+TEST_P(PreviousArticleTest, movesAnIndependentLocationBackwardWithoutChangingTheReadingAnchor)
+{
+    set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 3);
+    const ArticleLocation target = g_nav.target;
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
+    ArticleLocation       location{ArticleNum{2}, article_ptr(ArticleNum{2})};
+
+    location.prev(false, true);
+
+    EXPECT_EQ((ArticleLocation{ArticleNum{1}, article_ptr(ArticleNum{1})}), location);
+    EXPECT_EQ(target, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
+}
+
 TEST_P(PreviousArticleTest, includesReadUnselectedArticlesBeforeFirstUnread)
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL}, 3);

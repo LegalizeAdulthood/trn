@@ -20,6 +20,7 @@ struct Article;
 struct ArticleLocation
 {
     void next(bool sel_flag, bool rereading);
+    void prev(bool sel_flag, bool rereading);
 
     ArticleNum num{};
     Article   *art{};

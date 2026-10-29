@@ -397,13 +397,13 @@ num_inc:
     art = ap;
 }
 
-// Bump m_target.m_number/m_target.m_article to the previous article, wrapping from thread to thread.
+// Move to the previous article, wrapping from thread to thread.
 // If sel_flag is true, only stops at selected articles.
 // If rereading is false, only stops at unread articles.
 //
-void dec_article(bool sel_flag, bool rereading)
+void ArticleLocation::prev(bool sel_flag, bool rereading)
 {
-    Article *ap = g_nav.target.art;
+    Article *ap = art;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
@@ -431,11 +431,13 @@ void dec_article(bool sel_flag, bool rereading)
             if ((rereading || (ap->m_flags & AF_UNREAD)) && (!sel_flag || (ap->m_flags & AF_SEL)))
             {
                 g_art_ptr = previous;
-                g_nav.target = {ap->article_num(), ap};
+                num = ap->article_num();
+                art = ap;
                 return;
             }
         }
-        g_nav.target = {article_before(g_abs_first), nullptr};
+        num = article_before(g_abs_first);
+        art = nullptr;
         return;
     }
 
@@ -476,14 +478,14 @@ void dec_article(bool sel_flag, bool rereading)
             }
         } while (ap && ((!rereading && !(ap->m_flags & AF_UNREAD))
                      || (sel_flag && !(ap->m_flags & AF_SEL))));
-        g_nav.target.art = ap;
-        if (g_nav.target.art != nullptr)
+        art = ap;
+        if (art != nullptr)
         {
-            g_nav.target.num = ap->article_num();
+            num = ap->article_num();
         }
         else
         {
-            g_nav.target.num = article_before(g_abs_first);
+            num = article_before(g_abs_first);
         }
         return;
     }
@@ -492,14 +494,14 @@ void dec_article(bool sel_flag, bool rereading)
 num_dec:
     while (true)
     {
-        g_nav.target.num = article_prev(g_nav.target.num);
-        if (g_nav.target.num < g_abs_first)
+        num = article_prev(num);
+        if (num < g_abs_first)
         {
-            g_nav.target.num = article_before(g_abs_first);
+            num = article_before(g_abs_first);
             ap = nullptr;
             break;
         }
-        ap = article_ptr(g_nav.target.num);
+        ap = article_ptr(num);
         if (!(ap->m_flags & AF_EXISTS))
         {
             ap->one_less();
@@ -510,7 +512,7 @@ num_dec:
             break;
         }
     }
-    g_nav.target.art = ap;
+    art = ap;
 }
 
 // Find the next m_target.m_number/m_target.m_article with the same subject as this one.  Returns

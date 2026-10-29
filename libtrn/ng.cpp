@@ -1127,7 +1127,7 @@ not_threaded:
         g_univ_follow_temp = true;
         do
         {
-            dec_article(g_selected_only,false);
+            g_nav.target.prev(g_selected_only, false);
         } while (g_nav.target.num >= g_first_art && (was_read(g_nav.target.num) || !parse_header(g_nav.target.num)));
         g_search_ahead = ArticleNum{};
         if (g_nav.target.num >= g_first_art)
@@ -1139,7 +1139,7 @@ not_threaded:
     case 'P':         // goto previous article
         g_s_follow_temp = true; // keep going until change req.
         g_univ_follow_temp = true;
-        dec_article(false,true);
+        g_nav.target.prev(false, true);
 check_dec_art:
         if (g_nav.target.num < g_abs_first)
         {
