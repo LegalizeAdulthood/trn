@@ -61,7 +61,7 @@ protected:
         m_old_spin_todo = g_spin_todo;
         m_old_spin_estimate = g_spin_estimate;
         m_old_int_count = g_int_count;
-        m_old_curr_artp = g_curr_artp;
+        m_old_curr_artp = g_nav.current.art;
         m_old_sentinel_art_ptr = g_sentinel_art_ptr;
         m_old_nntp_link = g_nntp_link;
 
@@ -101,7 +101,7 @@ protected:
         g_spin_todo = 1;
         g_spin_estimate = 1;
         g_int_count = 0;
-        g_curr_artp = nullptr;
+        g_nav.current.art = nullptr;
         g_sentinel_art_ptr = nullptr;
         g_nntp_link = {};
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
@@ -142,7 +142,7 @@ protected:
         g_spin_todo = m_old_spin_todo;
         g_spin_estimate = m_old_spin_estimate;
         g_int_count = m_old_int_count;
-        g_curr_artp = m_old_curr_artp;
+        g_nav.current.art = m_old_curr_artp;
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
         g_nntp_link = std::move(m_old_nntp_link);
         nntp_gets_clear_buffer();

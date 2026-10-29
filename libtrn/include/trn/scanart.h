@@ -15,14 +15,14 @@
 // return codes for sa_main
 enum SaMainResult
 {
-    SA_READ = -7,     // read article pointed to by g_art (always)
+    SA_READ = -7,     // read article pointed to by m_target.m_number (always)
     SA_QUIT_SEL = -6, // quit, and return to previous selector (backtick)
     SA_PRIOR = -5,    // go to and enter prior newsgroup
     SA_NEXT = -4,     // go to and enter next newsgroup
-    SA_FAKE = -3,     // Fake an article-level command (g_art already set up)
+    SA_FAKE = -3,     // Fake an article-level command (m_target.m_number already set up)
     SA_ERR = -2,      // error, quit out one level
     SA_QUIT = -1,     // quit out one level and clean up...
-    SA_NORM = 0       // do the normal thing (usually read article pointed to by g_art)
+    SA_NORM = 0       // do the normal thing (usually read article pointed to by m_target.m_number)
 };
 
 // sa_flags character bitmap:

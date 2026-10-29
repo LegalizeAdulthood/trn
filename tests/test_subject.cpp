@@ -42,9 +42,9 @@ protected:
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
-        m_old_art = g_art;
-        m_old_curr_artp = g_curr_artp;
-        m_old_artp = g_artp;
+        m_old_art = g_nav.target.num;
+        m_old_curr_artp = g_nav.current.art;
+        m_old_artp = g_nav.target.art;
         m_old_in_ng = g_in_ng;
         m_old_kf_state = g_kf_state;
         m_old_threaded_group = g_threaded_group;
@@ -77,9 +77,9 @@ protected:
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{2};
-        g_art = ArticleNum{};
-        g_curr_artp = nullptr;
-        g_artp = nullptr;
+        g_nav.target.num = ArticleNum{};
+        g_nav.current.art = nullptr;
+        g_nav.target.art = nullptr;
         g_in_ng = false;
         g_kf_state = KFS_NONE;
         g_threaded_group = false;
@@ -115,9 +115,9 @@ protected:
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
-        g_art = m_old_art;
-        g_curr_artp = m_old_curr_artp;
-        g_artp = m_old_artp;
+        g_nav.target.num = m_old_art;
+        g_nav.current.art = m_old_curr_artp;
+        g_nav.target.art = m_old_artp;
         g_in_ng = m_old_in_ng;
         g_kf_state = m_old_kf_state;
         g_threaded_group = m_old_threaded_group;
@@ -240,7 +240,7 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsCustomSubjectLine)
     article->set_subj_line("A Subject");
     g_subj_line = std::string{"[%s]"};
     g_in_ng = true;
-    g_artp = article;
+    g_nav.target.art = article;
 
     testing::internal::CaptureStdout();
     const bool        stopped = output_subject(*article, 0);
@@ -258,7 +258,7 @@ TEST_F(SubjectStorageTest, outputSubjectReadsCustomSubjectLineFromEnvironment)
     article->set_subj_line("A Subject");
     g_subj_line = std::nullopt;
     g_in_ng = true;
-    g_artp = article;
+    g_nav.target.art = article;
 
     testing::internal::CaptureStdout();
     const bool        stopped = output_subject(*article, 0);

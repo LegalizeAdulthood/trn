@@ -293,7 +293,7 @@ char article_selector(char_int cmd)
 
     g_sel_rereading = initial_rereading;
 
-    g_art = article_after(g_last_art);
+    g_nav.target.num = article_after(g_last_art);
     s_extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
@@ -320,10 +320,10 @@ sel_restart:
     {
         s_end_char = selector_end_command(g_news_sel_cmds);
         s_page_char = selector_page_command(g_news_sel_cmds);
-        if (g_curr_artp)
+        if (g_nav.current.art)
         {
-            g_sel_last_ap = g_curr_artp;
-            g_sel_last_sp = g_curr_artp->m_subj;
+            g_sel_last_ap = g_nav.current.art;
+            g_sel_last_sp = g_nav.current.art->m_subj;
         }
         g_sel_mask = AGF_SEL;
     }
@@ -423,12 +423,12 @@ sel_exit:
     }
     if (rebuild_article_order)
     {
-        sort_articles(s_sel_ret == '+' ? g_curr_artp : nullptr);
+        sort_articles(s_sel_ret == '+' ? g_nav.current.art : nullptr);
     }
     if (s_sel_ret == '+')
     {
-        g_art = g_curr_art;
-        g_artp = g_curr_artp;
+        g_nav.target.num = g_nav.current.num;
+        g_nav.target.art = g_nav.current.art;
     }
     else
     {
@@ -3099,7 +3099,7 @@ reask_sort:
         s_removed_prompt = RP_ALL;
         if (g_sel_mode == SM_ARTICLE)
         {
-            g_artp = g_sel_items[g_sel_item_index].u.ap;
+            g_nav.target.art = g_sel_items[g_sel_item_index].u.ap;
         }
         else
         {
@@ -3111,9 +3111,9 @@ reask_sort:
                     sp = sp->m_thread_link;
                 }
             }
-            g_artp = sp->m_articles;
+            g_nav.target.art = sp->m_articles;
         }
-        g_art = g_artp->article_num();
+        g_nav.target.num = g_nav.target.art->article_num();
         // This call executes the action too
         switch (ask_memorize(ch))
         {
@@ -3155,7 +3155,7 @@ reask_sort:
         {
             if (g_sel_mode == SM_ARTICLE)
             {
-                g_artp = g_sel_items[g_sel_item_index].u.ap;
+                g_nav.target.art = g_sel_items[g_sel_item_index].u.ap;
             }
             else
             {
@@ -3167,13 +3167,13 @@ reask_sort:
                         sp = sp->m_thread_link;
                     }
                 }
-                g_artp = sp->m_articles;
+                g_nav.target.art = sp->m_articles;
             }
-            g_art = g_artp->article_num();
+            g_nav.target.num = g_nav.target.art->article_num();
         }
         else
         {
-            g_art = ArticleNum{};
+            g_nav.target.num = ArticleNum{};
         }
         // FALL THROUGH
 
@@ -3229,7 +3229,7 @@ reask_sort:
                 // Force the search to begin at g_absfirst or g_firstart,
                 // depending upon whether they specified the 'r' option.
                 //
-                g_art = article_after(g_last_art);
+                g_nav.target.num = article_after(g_last_art);
                 switch (art_search(search_command, false))
                 {
                 case SRCH_ERROR:

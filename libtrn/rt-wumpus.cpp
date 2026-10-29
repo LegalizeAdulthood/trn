@@ -81,7 +81,7 @@ void init_tree()
     s_tree_lines.clear();
     s_max_line = -1;
 
-    if (!(s_tree_article = g_curr_artp) || !s_tree_article->m_subj)
+    if (!(s_tree_article = g_nav.current.art) || !s_tree_article->m_subj)
     {
         return;
     }
@@ -206,7 +206,7 @@ static void append_tree_node(std::string &line, Article *article)
     char ch;
 
     line += ((article->m_flags & AF_HAS_RE) || article->m_parent) ? '-' : ' ';
-    if (article == g_curr_artp)
+    if (article == g_nav.current.art)
     {
         line += '*';
     }
@@ -225,7 +225,7 @@ static void append_tree_node(std::string &line, Article *article)
         line += '<';
         ch = '>';
     }
-    if (article == g_recent_artp && article != g_curr_artp)
+    if (article == g_nav.recent.art && article != g_nav.current.art)
     {
         line += '@';
     }
@@ -474,7 +474,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         if (g_threaded_group)
         {
             color_object(COLOR_TREE_MARK, true);
-            fmt::print("[{}]", g_curr_artp->thread_letter());
+            fmt::print("[{}]", g_nav.current.art->thread_letter());
             color_pop();
             fmt::print(" ");
             s_header_indent = 4;

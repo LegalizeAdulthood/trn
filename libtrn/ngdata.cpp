@@ -331,7 +331,7 @@ void grow_newsgroup(ArticleNum new_last)
     g_force_grow = false;
     if (new_last > g_last_art)
     {
-        ArticleNum tmpart = g_art;
+        ArticleNum tmpart = g_nav.target.num;
         g_newsgroup_ptr->m_to_read += (ArticleUnread)(new_last-g_last_art).value_of();
         ArticleNum tmpfirst = article_after(g_last_art);
         // Increase the size of article scan arrays.
@@ -358,12 +358,12 @@ void grow_newsgroup(ArticleNum new_last)
         if (g_kf_state & KFS_NORMAL_LINES)
         {
             bool forcelast_save = g_force_last;
-            Article* artp_save = g_artp;
+            Article *artp_save = g_nav.target.art;
             kill_unwanted(tmpfirst, message, true);
-            g_artp = artp_save;
+            g_nav.target.art = artp_save;
             g_force_last = forcelast_save;
         }
-        g_art = tmpart;
+        g_nav.target.num = tmpart;
     }
 }
 
@@ -439,24 +439,24 @@ void newsgroup_skip()
             pad(g_just_a_sec/3);
             sleep(1);
         }
-        g_art = article_next(g_art);
-        g_artp = article_ptr(g_art);
+        g_nav.target.num = article_next(g_nav.target.num);
+        g_nav.target.art = article_ptr(g_nav.target.num);
         do
         {
             // tries to grab PREFETCH_SIZE XHDRS, flagging missing articles
-            prefetch_subj(g_art);
-            ArticleNum artnum = g_art + ArticleNum{PREFETCH_SIZE - 1};
+            prefetch_subj(g_nav.target.num);
+            ArticleNum artnum = g_nav.target.num + ArticleNum{PREFETCH_SIZE - 1};
             artnum = std::min(artnum, g_last_art);
-            while (g_art <= artnum)
+            while (g_nav.target.num <= artnum)
             {
-                if (g_artp->m_flags & AF_EXISTS)
+                if (g_nav.target.art->m_flags & AF_EXISTS)
                 {
                     return;
                 }
-                g_art = article_next(g_art);
-                g_artp = article_ptr(g_art);
+                g_nav.target.num = article_next(g_nav.target.num);
+                g_nav.target.art = article_ptr(g_nav.target.num);
             }
-        } while (g_art <= g_last_art);
+        } while (g_nav.target.num <= g_last_art);
     }
     else
     {
@@ -465,11 +465,11 @@ void newsgroup_skip()
             clear();
             if (g_verbose)
             {
-                fmt::print("\n(Article {} exists but is unreadable.)\n", g_art.value_of());
+                fmt::print("\n(Article {} exists but is unreadable.)\n", g_nav.target.num.value_of());
             }
             else
             {
-                fmt::print("\n({} unreadable.)\n", g_art.value_of());
+                fmt::print("\n({} unreadable.)\n", g_nav.target.num.value_of());
             }
             term_down(2);
             if (g_novice_delays)

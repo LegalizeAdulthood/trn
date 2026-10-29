@@ -508,7 +508,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         HeaderLineType which_line;
                         if (!scratch.empty() && (which_line = get_header_num(scratch)) != SOME_LINE)
                         {
-                            line_buf = fetch_lines(g_art, which_line);
+                            line_buf = fetch_lines(g_nav.target.num, which_line);
                             set_value(*line_buf);
                         }
                         else
@@ -728,7 +728,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 'a':
                     if (g_in_ng)
                     {
-                        set_owned_value(std::to_string(g_art.value_of()));
+                        set_owned_value(std::to_string(g_nav.target.num.value_of()));
                     }
                     else
                     {
@@ -741,11 +741,11 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     {
                         if (g_data_source->m_flags & DF_REMOTE)
                         {
-                            if (art_open(g_art, (ArticlePosition) 0))
+                            if (art_open(g_nav.target.num, (ArticlePosition) 0))
                             {
                                 nntp_finish_body(FB_SILENT);
-                                set_owned_value(
-                                    fmt::format("{}/{}", g_data_source->m_spool_dir, nntp_art_name(g_art, false)));
+                                set_owned_value(fmt::format("{}/{}", g_data_source->m_spool_dir,
+                                                            nntp_art_name(g_nav.target.num, false)));
                             }
                             else
                             {
@@ -754,8 +754,8 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         }
                         else
                         {
-                            set_owned_value(
-                                fmt::format("{}/{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir, g_art.value_of()));
+                            set_owned_value(fmt::format("{}/{}/{}", g_data_source->m_spool_dir, g_newsgroup_dir,
+                                                        g_nav.target.num.value_of()));
                         }
                     }
                     else
@@ -794,7 +794,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 'D':
                     if (g_in_ng)
                     {
-                        dist_buf = fetch_lines(g_art, DIST_LINE);
+                        dist_buf = fetch_lines(g_nav.target.num, DIST_LINE);
                         set_value(*dist_buf);
                     }
                     else
@@ -830,13 +830,13 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 'f': // from line
                     if (g_in_ng)
                     {
-                        parse_header(g_art);
+                        parse_header(g_nav.target.num);
                         if (g_header_type[REPLY_LINE].min_pos >= 0 && !comment_parse)
                         {
                             // was there a reply line?
                             if (!reply_buf)
                             {
-                                reply_buf = fetch_lines(g_art, REPLY_LINE);
+                                reply_buf = fetch_lines(g_nav.target.num, REPLY_LINE);
                             }
                             set_value(*reply_buf);
                         }
@@ -844,7 +844,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         {
                             if (!from_buf)
                             {
-                                from_buf = fetch_lines(g_art, FROM_LINE);
+                                from_buf = fetch_lines(g_nav.target.num, FROM_LINE);
                             }
                             set_value(*from_buf);
                         }
@@ -858,16 +858,16 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 'F':
                     if (g_in_ng)
                     {
-                        parse_header(g_art);
+                        parse_header(g_nav.target.num);
                         if (g_header_type[FOLLOW_LINE].min_pos >= 0)
                         // is there a Followup-To line?
                         {
-                            follow_buf = fetch_lines(g_art, FOLLOW_LINE);
+                            follow_buf = fetch_lines(g_nav.target.num, FOLLOW_LINE);
                             set_value(*follow_buf);
                         }
                         else
                         {
-                            ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
+                            ngs_buf = fetch_lines(g_nav.target.num, NEWSGROUPS_LINE);
                             set_value(*ngs_buf);
                         }
                     }
@@ -894,7 +894,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     {
                         if (!artid_buf)
                         {
-                            artid_buf = fetch_lines(g_art, MSG_ID_LINE);
+                            artid_buf = fetch_lines(g_nav.target.num, MSG_ID_LINE);
                         }
                         if (!artid_buf->empty() && artid_buf->front() != '<')
                         {
@@ -942,7 +942,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 'n': // newsgroups
                     if (g_in_ng)
                     {
-                        ngs_buf = fetch_lines(g_art, NEWSGROUPS_LINE);
+                        ngs_buf = fetch_lines(g_nav.target.num, NEWSGROUPS_LINE);
                         set_value(*ngs_buf);
                     }
                     else
@@ -1015,11 +1015,11 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 'r':
                     if (g_in_ng)
                     {
-                        parse_header(g_art);
+                        parse_header(g_nav.target.num);
                         refs_buf.reset();
                         if (g_header_type[REFS_LINE].min_pos >= 0)
                         {
-                            refs_buf = normalize_refs(fetch_lines(g_art, REFS_LINE));
+                            refs_buf = normalize_refs(fetch_lines(g_nav.target.num, REFS_LINE));
                             const std::string_view refs_text{*refs_buf};
                             const std::size_t      last_ref = refs_text.rfind('<');
                             if (last_ref != std::string_view::npos)
@@ -1039,11 +1039,11 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         set_value({});
                         break;
                     }
-                    parse_header(g_art);
+                    parse_header(g_nav.target.num);
                     refs_buf.reset();
                     if (g_header_type[REFS_LINE].min_pos >= 0)
                     {
-                        refs_buf = normalize_refs(fetch_lines(g_art, REFS_LINE));
+                        refs_buf = normalize_refs(fetch_lines(g_nav.target.num, REFS_LINE));
                         // no more than 3 prior references PLUS the
                         // root article allowed, including the one
                         // concatenated below
@@ -1063,7 +1063,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     if (!artid_buf)
                     {
-                        artid_buf = fetch_lines(g_art, MSG_ID_LINE);
+                        artid_buf = fetch_lines(g_nav.target.num, MSG_ID_LINE);
                     }
                     if (!refs_buf)
                     {
@@ -1090,14 +1090,14 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case 's':
                 case 'S':
                 {
-                    if (!g_in_ng || !g_art || !g_artp)
+                    if (!g_in_ng || !g_nav.target.num || !g_nav.target.art)
                     {
                         set_value({});
                         break;
                     }
                     if (!subj_buf)
                     {
-                        subj_buf = fetch_subj_copy(g_art);
+                        subj_buf = fetch_subj_copy(g_nav.target.num);
                     }
                     std::string_view subject{*subj_buf};
                     if (pattern.front() == 's')
@@ -1121,20 +1121,20 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         set_value({});
                         break;
                     }
-                    parse_header(g_art);
+                    parse_header(g_nav.target.num);
                     std::string_view author;
                     if (g_header_type[REPLY_LINE].min_pos >= 0)
                     {
                         // was there a reply line?
                         if (!reply_buf)
                         {
-                            reply_buf = fetch_lines(g_art, REPLY_LINE);
+                            reply_buf = fetch_lines(g_nav.target.num, REPLY_LINE);
                         }
                         author = *reply_buf;
                     }
                     else if (!from_buf)
                     {
-                        from_buf = fetch_lines(g_art, FROM_LINE);
+                        from_buf = fetch_lines(g_nav.target.num, FROM_LINE);
                         author = *from_buf;
                     }
                     else
@@ -1146,7 +1146,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         if (g_header_type[PATH_LINE].min_pos >= 0)
                         {
                             // should we substitute path?
-                            path_buf = fetch_lines(g_art, PATH_LINE);
+                            path_buf = fetch_lines(g_nav.target.num, PATH_LINE);
                             author = *path_buf;
                         }
                         const std::string_view host{g_p_host_name};
@@ -1179,10 +1179,11 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         set_value({});
                         break;
                     }
-                    const bool unseen = g_art <= g_last_art && !was_read(g_art);
+                    const bool unseen = g_nav.target.num <= g_last_art && !was_read(g_nav.target.num);
                     if (g_selected_only)
                     {
-                        const bool selected = g_curr_artp != nullptr && (g_curr_artp->m_flags & AF_SEL) != AF_NONE;
+                        const bool selected =
+                            g_nav.current.art != nullptr && (g_nav.current.art->m_flags & AF_SEL) != AF_NONE;
                         set_owned_value(std::to_string(g_selected_count - (selected && unseen ? 1 : 0)));
                     }
                     else
@@ -1196,8 +1197,8 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 {
                     if (g_in_ng)
                     {
-                        const bool selected = g_curr_artp && g_curr_artp->m_flags & AF_SEL;
-                        const bool unseen = g_art <= g_last_art && !was_read(g_art);
+                        const bool selected = g_nav.current.art && g_nav.current.art->m_flags & AF_SEL;
+                        const bool unseen = g_nav.target.num <= g_last_art && !was_read(g_nav.target.num);
                         set_owned_value(std::to_string(g_newsgroup_ptr->m_to_read - g_selected_count -
                                                        (!selected && unseen ? 1 : 0)));
                     }
@@ -1227,7 +1228,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         break;
                     }
                     {
-                        from_buf = fetch_lines(g_art, FROM_LINE);
+                        from_buf = fetch_lines(g_nav.target.num, FROM_LINE);
                         const std::string_view from{*from_buf};
                         const std::size_t      at_pos = from.find_first_of("@ ");
                         if (at_pos != std::string_view::npos && from[at_pos] == '@') // we have normal form...
@@ -1267,7 +1268,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         set_value({});
                         break;
                     }
-                    set_owned_value(fmt::format("{:>5}", fs::file_size(std::to_string(g_art.value_of()))));
+                    set_owned_value(fmt::format("{:>5}", fs::file_size(std::to_string(g_nav.target.num.value_of()))));
                     break;
 
                 case 'Z':

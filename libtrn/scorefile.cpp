@@ -987,7 +987,7 @@ void sf_append(std::string_view line)
 
         case 'S': // current subject
         {
-            const std::string subject = fetch_cache(g_art, SUBJ_LINE, true);
+            const std::string subject = fetch_cache(g_nav.target.num, SUBJ_LINE, true);
             if (subject.empty())
             {
                 fmt::print("No subject: score entry aborted.\n");

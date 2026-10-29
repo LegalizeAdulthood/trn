@@ -10,7 +10,7 @@
 #include <trn/artio.h> // for g_openart var.
 #include <trn/bits.h>
 #include <trn/cache.h>
-#include <trn/ng.h> // g_art
+#include <trn/ng.h> // m_target.m_number
 #include <trn/ngdata.h>
 #include <trn/rt-util.h> // spinner
 #include <trn/samisc.h>
@@ -609,11 +609,11 @@ void sc_score_cmd(std::string_view line)
         // XXX CONSIDER: A VERBOSE-SCORE ROUTINE (instead of this hack)
         i = 0; // total score
         g_sf_score_verbose = true;
-        j = sf_score(g_art);
+        j = sf_score(g_nav.target.num);
         g_sf_score_verbose = false;
         fmt::print("Scorefile total score: {}\n", j);
         i += j;
-        j = sc_score_art(g_art, true);
+        j = sc_score_art(g_nav.target.num, true);
         if (i != j)
         {
             // Consider resubmitting article to filter?

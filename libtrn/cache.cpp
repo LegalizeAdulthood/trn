@@ -593,16 +593,16 @@ void look_ahead()
 
     if (g_threaded_group)
     {
-        g_artp = g_curr_artp;
+        g_nav.target.art = g_nav.current.art;
         inc_article(g_selected_only,false);
-        if (g_artp)
+        if (g_nav.target.art)
         {
-            parse_header(g_art);
+            parse_header(g_nav.target.num);
         }
     }
     else
 #ifdef ARTSEARCH
-    if (g_srchahead && g_srchahead < g_art)     // in ^N mode?
+        if (g_srchahead && g_srchahead < g_nav.target.num) // in ^N mode?
     {
         std::string pattern;
         pattern.reserve(LINE_BUF_LEN);
@@ -641,7 +641,7 @@ void look_ahead()
         }
         if (g_srchahead)
         {
-            g_srchahead = g_art;
+            g_srchahead = g_nav.target.num;
             while (true)
             {
                 g_srchahead++;  // go forward one article
@@ -679,9 +679,9 @@ void look_ahead()
     else
 #endif // ARTSEARCH
     {
-        if (article_next(g_art) <= g_last_art)   // how about a pre-fetch?
+        if (article_next(g_nav.target.num) <= g_last_art) // how about a pre-fetch?
         {
-            parse_header(article_next(g_art));   // look for the next article
+            parse_header(article_next(g_nav.target.num)); // look for the next article
         }
     }
 }
@@ -715,7 +715,7 @@ void cache_until_key()
     }
 
     g_untrim_cache = true;
-    g_sentinel_art_ptr = g_curr_artp;
+    g_sentinel_art_ptr = g_nav.current.art;
 
     // Prioritize our caching based on what mode we're in
     if (g_general_mode == GM_SELECTOR)
@@ -862,7 +862,7 @@ static bool cache_all_arts()
     }
     // We're all done threading the group, so if the current article is
     // still in doubt, tell them it's missing.
-    if (g_curr_artp && !(g_curr_artp->m_flags & AF_CACHED) && !input_pending())
+    if (g_nav.current.art && !(g_nav.current.art->m_flags & AF_CACHED) && !input_pending())
     {
         push_char('\f' | 0200);
     }
@@ -929,7 +929,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
                 break;
             }
             // If the current article is no longer a '?', let them know.
-            if (g_curr_artp != g_sentinel_art_ptr)
+            if (g_nav.current.art != g_sentinel_art_ptr)
             {
                 push_char('\f' | 0200);
                 break;

@@ -349,7 +349,7 @@ beginning:
                 success = false;
                 break;
             }
-            if (g_curr_artp != g_sentinel_art_ptr)
+            if (g_nav.current.art != g_sentinel_art_ptr)
             {
                 push_char('\f' | 0200);
                 success = false;
@@ -393,7 +393,7 @@ exit:
     }
     else if (remote)
     {
-        if (cheating && g_curr_artp != g_sentinel_art_ptr)
+        if (cheating && g_nav.current.art != g_sentinel_art_ptr)
         {
             push_char('\f' | 0200);
             success = false;

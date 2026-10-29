@@ -318,11 +318,11 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
                 }
                 if (cmd_chr == ',')
                 {
-                    kill_sub_thread(article_ptr(g_art), AFFECT_ALL);
+                    kill_sub_thread(article_ptr(g_nav.target.num), AFFECT_ALL);
                 }
                 else
                 {
-                    article_ptr(g_art)->mark_as_read();
+                    article_ptr(g_nav.target.num)->mark_as_read();
                 }
             }
             const std::string finding_text = pattern_text.substr(finding_start);
@@ -458,34 +458,34 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
     }
     search_first = do_read || g_sel_rereading? g_abs_first
                       : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0)? g_first_art : g_kill_first;
-    if (top_start || g_art == 0)
+    if (top_start || g_nav.target.num == 0)
     {
-        g_art = article_after(g_last_art);
+        g_nav.target.num = article_after(g_last_art);
         top_start = false;
     }
     if (backward)
     {
-        if (!cmd_lst.empty() && g_art <= g_last_art)
+        if (!cmd_lst.empty() && g_nav.target.num <= g_last_art)
         {
-            ++g_art;                // include current article
+            ++g_nav.target.num; // include current article
         }
     }
     else
     {
-        if (g_art > g_last_art)
+        if (g_nav.target.num > g_last_art)
         {
-            g_art = article_before(search_first);
+            g_nav.target.num = article_before(search_first);
         }
-        else if (!cmd_lst.empty() && g_art >= g_abs_first)
+        else if (!cmd_lst.empty() && g_nav.target.num >= g_abs_first)
         {
-            --g_art;                // include current article
+            --g_nav.target.num; // include current article
         }
     }
     if (g_search_ahead > 0)
     {
         if (!backward)
         {
-            g_art = article_before(g_search_ahead);
+            g_nav.target.num = article_before(g_search_ahead);
         }
         g_search_ahead = ArticleNum{-1};
     }
@@ -494,14 +494,14 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
     while (true)
     {
         // check if we're out of articles
-        if (backward? ((g_art = article_prev(g_art)) < search_first)
-                    : ((g_art = article_next(g_art)) > g_last_art))
+        if (backward ? ((g_nav.target.num = article_prev(g_nav.target.num)) < search_first)
+                     : ((g_nav.target.num = article_next(g_nav.target.num)) > g_last_art))
         {
             break;
         }
         if (progress)
         {
-            progress(g_art);
+            progress(g_nav.target.num);
         }
         if (g_int_count)
         {
@@ -509,12 +509,14 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             ret = SRCH_INTR;
             break;
         }
-        g_artp = article_ptr(g_art);
-        const bool matches_selection =
-            !g_selected_only || (g_artp->m_flags & AF_SEL) || (cmd_chr != Ctl('n') && cmd_chr != Ctl('p'));
-        if (matches_selection && (do_read || (!(g_artp->m_flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE))))
+        g_nav.target.art = article_ptr(g_nav.target.num);
+        const bool matches_selection = !g_selected_only                        //
+                                       || (g_nav.target.art->m_flags & AF_SEL) //
+                                       || (cmd_chr != Ctl('n') && cmd_chr != Ctl('p'));
+        if (matches_selection &&
+            (do_read || (!(g_nav.target.art->m_flags & AF_UNREAD) ^ (!g_sel_rereading ? AF_SEL : AF_NONE))))
         {
-            if (wanted(compex, g_art, how_much))
+            if (wanted(compex, g_nav.target.num, how_much))
             {
                                     // does the shoe fit?
                 if (cmd_lst.empty())
@@ -526,9 +528,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
                     return SRCH_INTR;
                 }
             }
-            else if (output_level && cmd_lst.empty() && !(g_art % ArticleNum{50}))
+            else if (output_level && cmd_lst.empty() && !(g_nav.target.num % ArticleNum{50}))
             {
-                fmt::print("...{}", g_art.value_of());
+                fmt::print("...{}", g_nav.target.num.value_of());
                 std::fflush(stdout);
             }
         }

@@ -189,7 +189,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
     int  thread_kill_cnt = 0;
     int  thread_select_cnt = 0;
 
-    g_art = article_after(g_last_art);
+    g_nav.target.num = article_after(g_last_art);
     g_kill_first = g_first_art;
     std::fseek(kfp,0L,0);                    // rewind file
     for (std::string kill_line = get_a_line(kfp); !kill_line.empty(); kill_line = get_a_line(kfp))
@@ -300,11 +300,11 @@ static int do_kill_file(std::FILE *kfp, int entering)
             case SRCH_INTR:
                 if (g_verbose)
                 {
-                    fmt::print("\n(Interrupted at article {})\n", g_art.value_of());
+                    fmt::print("\n(Interrupted at article {})\n", g_nav.target.num.value_of());
                 }
                 else
                 {
-                    fmt::print("\n(Intr at {})\n", g_art.value_of());
+                    fmt::print("\n(Intr at {})\n", g_nav.target.num.value_of());
                 }
                 term_down(2);
                 return -1;
@@ -381,8 +381,8 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 }
                 else
                 {
-                    g_art = ap->article_num();
-                    g_artp = ap;
+                    g_nav.target.num = ap->article_num();
+                    g_nav.target.art = ap;
                     perform(cmd,false);
                     if (ap->m_auto_flags & AUTO_SEL_MASK)
                     {
@@ -394,7 +394,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                     }
                 }
             }
-            g_art = article_after(g_last_art);
+            g_nav.target.num = article_after(g_last_art);
             g_kf_state |= KFS_THREAD_LINES;
         }
         else if (!command.empty() && command.front() == '<')

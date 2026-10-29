@@ -529,16 +529,16 @@ void mime_set_article()
             && g_header_type[MIME_VER_LINE].min_pos >= 0;
 
     {
-        std::string s = fetch_lines(g_art, CONT_TYPE_LINE);
+        std::string s = fetch_lines(g_nav.target.num, CONT_TYPE_LINE);
         g_mime_section->mime_parse_type(s);
     }
 
     if (g_is_mime)
     {
-        std::string s = fetch_lines(g_art, CONT_XFER_LINE);
+        std::string s = fetch_lines(g_nav.target.num, CONT_XFER_LINE);
         g_mime_section->mime_parse_encoding(s);
 
-        s = fetch_lines(g_art, CONT_DISP_LINE);
+        s = fetch_lines(g_nav.target.num, CONT_DISP_LINE);
         g_mime_section->mime_parse_disposition(s);
 
         g_mime_state = g_mime_section->m_type;

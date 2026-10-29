@@ -15,12 +15,22 @@
 
 struct Article;
 
-extern ArticleNum g_art;         // current or prospective article #
-extern ArticleNum g_recent_art;  // previous article # for '-' command
-extern ArticleNum g_curr_art;    // current article #
-extern Article   *g_recent_artp; // article_ptr equivalents
-extern Article   *g_curr_artp;   //
-extern Article   *g_artp;        // the article ptr we use when g_art is 0
+// A number can name a prospective, missing, or past-end article. A
+// zero-number temporary article can still have a non-null borrowed pointer.
+struct ArticleLocation
+{
+    ArticleNum num{};
+    Article   *art{};
+};
+
+struct ReadingNavigation
+{
+    ArticleLocation target;  // current or prospective article
+    ArticleLocation current; // article currently being read
+    ArticleLocation recent;  // previous article for the '-' command
+};
+
+extern ReadingNavigation g_nav;
 extern int        g_check_count; // how many articles have we read in the current newsgroup since the last checkpoint?
 extern int        g_do_check_when; // how often to do checkpoint
 extern std::optional<std::string> g_subj_line; // what format to use for '='

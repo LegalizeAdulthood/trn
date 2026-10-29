@@ -460,10 +460,10 @@ protected:
     void expect_next_command(char command);
 
 private:
-    ArticleNum        m_old_art{g_art};
-    Article          *m_old_artp{g_artp};
-    ArticleNum        m_old_current{g_curr_art};
-    Article          *m_old_currentp{g_curr_artp};
+    ArticleNum        m_old_art{g_nav.target.num};
+    Article          *m_old_artp{g_nav.target.art};
+    ArticleNum        m_old_current{g_nav.current.num};
+    Article          *m_old_currentp{g_nav.current.art};
     ArticleNum        m_old_search_ahead{g_search_ahead};
     SelectionMode     m_old_default_mode{g_sel_default_mode};
     SelectionSortMode m_old_article_sort{g_sel_art_sort};
@@ -487,10 +487,10 @@ private:
 void SelectorSessionInputState::SetUp()
 {
     SelectorInputTest::SetUp();
-    g_curr_art = ArticleNum{3};
-    g_curr_artp = article_ptr(g_curr_art);
-    g_art = g_curr_art;
-    g_artp = g_curr_artp;
+    g_nav.current.num = ArticleNum{3};
+    g_nav.current.art = article_ptr(g_nav.current.num);
+    g_nav.target.num = g_nav.current.num;
+    g_nav.target.art = g_nav.current.art;
     g_sel_default_mode = SM_ARTICLE;
     g_sel_art_sort = SS_NATURAL;
     g_news_sel_cmds = "Z>";
@@ -511,10 +511,10 @@ void SelectorSessionInputState::SetUp()
 
 void SelectorSessionInputState::TearDown()
 {
-    g_art = m_old_art;
-    g_artp = m_old_artp;
-    g_curr_art = m_old_current;
-    g_curr_artp = m_old_currentp;
+    g_nav.target.num = m_old_art;
+    g_nav.target.art = m_old_artp;
+    g_nav.current.num = m_old_current;
+    g_nav.current.art = m_old_currentp;
     g_search_ahead = m_old_search_ahead;
     g_sel_default_mode = m_old_default_mode;
     g_sel_art_sort = m_old_article_sort;
@@ -667,8 +667,8 @@ TEST_F(SelectorCallbackTest, cancelledMultilineMemorizeRequestsARowUpdateWithout
     const DisplayState result = dispatch('A', "hq");
 
     EXPECT_EQ(DS_UPDATE, result);
-    EXPECT_EQ(ArticleNum{3}, g_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
+    EXPECT_EQ(ArticleNum{3}, g_nav.target.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
     EXPECT_EQ(0, g_selected_count);
     EXPECT_FALSE(article_ptr(ArticleNum{3})->m_flags & AF_SEL);
     EXPECT_NE(std::string::npos, m_output.find("Memorize subject command:"));
@@ -1041,10 +1041,10 @@ void SelectorInformationTest::TearDown()
 void SelectorInformationTest::expect_reading_context()
 {
     expect_article_page();
-    EXPECT_EQ(ArticleNum{3}, g_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{3}, g_nav.target.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_FALSE(g_sel_exclusive);
     EXPECT_EQ(AGF_SEL, g_sel_mask);
     EXPECT_EQ(SS_NATURAL, g_sel_sort);
@@ -1356,8 +1356,8 @@ void SelectorShellTest::SetUp()
     g_sel_item_index = 1;
     m_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
     m_page = g_sel_page_app;
-    m_article_number = g_art;
-    m_article = g_artp;
+    m_article_number = g_nav.target.num;
+    m_article = g_nav.target.art;
     g_term_line = g_sel_last_line;
     g_term_col = 0;
     g_tc_BC = "\b";
@@ -1417,8 +1417,8 @@ void SelectorShellTest::expect_selector_preserved()
     EXPECT_FALSE(g_sel_rereading);
     EXPECT_FALSE(g_sel_exclusive);
     EXPECT_EQ(AGF_SEL, g_sel_mask);
-    EXPECT_EQ(m_article_number, g_art);
-    EXPECT_EQ(m_article, g_artp);
+    EXPECT_EQ(m_article_number, g_nav.target.num);
+    EXPECT_EQ(m_article, g_nav.target.art);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(m_flags[0], article_ptr(ArticleNum{3})->m_flags);
@@ -1771,8 +1771,8 @@ void SelectorOptionTest::SetUp()
     g_sel_items[1].sel = 2;
     g_sel_item_index = 1;
     m_article_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
-    m_article_number = g_art;
-    m_article = g_artp;
+    m_article_number = g_nav.target.num;
+    m_article = g_nav.target.art;
 }
 
 void SelectorOptionTest::TearDown()
@@ -1803,8 +1803,8 @@ void SelectorOptionTest::expect_article_context()
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(m_article_flags[0], article_ptr(ArticleNum{3})->m_flags);
     EXPECT_EQ(m_article_flags[1], article_ptr(ArticleNum{4})->m_flags);
-    EXPECT_EQ(m_article_number, g_art);
-    EXPECT_EQ(m_article, g_artp);
+    EXPECT_EQ(m_article_number, g_nav.target.num);
+    EXPECT_EQ(m_article, g_nav.target.art);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
     EXPECT_EQ(nullptr, g_option_draft);
@@ -5346,8 +5346,8 @@ protected:
     DisplayState run_inline(std::string_view input);
 
 private:
-    Article                   *m_old_article{g_artp};
-    ArticleNum                 m_old_article_number{g_art};
+    Article                   *m_old_article{g_nav.target.art};
+    ArticleNum                 m_old_article_number{g_nav.target.num};
     SelectionItem              m_old_item{g_sel_items[0]};
     int                        m_old_page_line{g_page_line};
     int                        m_old_perform_count{g_perform_count};
@@ -5366,8 +5366,8 @@ private:
 void ArticleSelectorInlineStateTest::SetUp()
 {
     ArticleSelectorBulkStateTest::SetUp();
-    g_artp = nullptr;
-    g_art = ArticleNum{};
+    g_nav.target.art = nullptr;
+    g_nav.target.num = ArticleNum{};
     g_page_line = 1;
     g_perform_count = 0;
     g_error_occurred = false;
@@ -5383,8 +5383,8 @@ void ArticleSelectorInlineStateTest::SetUp()
 
 void ArticleSelectorInlineStateTest::TearDown()
 {
-    g_artp = m_old_article;
-    g_art = m_old_article_number;
+    g_nav.target.art = m_old_article;
+    g_nav.target.num = m_old_article_number;
     g_sel_items[0] = m_old_item;
     g_page_line = m_old_page_line;
     g_perform_count = m_old_perform_count;
@@ -5514,7 +5514,7 @@ void ArticleSelectorSearchStateTest::TearDown()
 void ArticleSelectorSearchStateTest::remember_search(std::string_view command)
 {
     g_general_mode = GM_READ;
-    g_art = article_after(g_last_art);
+    g_nav.target.num = article_after(g_last_art);
     EXPECT_EQ(SRCH_FOUND, art_search(command, false));
     g_general_mode = GM_SELECTOR;
 }
@@ -6425,8 +6425,8 @@ TEST_P(ArticleSelectorInlineCancelTest, erasedCommandRetainsSelection)
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(false);
     EXPECT_EQ(0, g_perform_count);
-    EXPECT_EQ(article_ptr(ArticleNum{1}), g_artp);
-    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(article_ptr(ArticleNum{1}), g_nav.target.art);
+    EXPECT_EQ(ArticleNum{1}, g_nav.target.num);
 }
 
 TEST_P(ArticleSelectorInlineScopeTest, dotCommandLimitsJunkingToCurrentSubjectOrThread)
@@ -6547,8 +6547,8 @@ TEST_P(ArticleSelectorSearchReadTest, matchingSearchAddsSelectionsStartingAtTheB
     prepare_inline(mode, rereading);
     ASSERT_TRUE(last_page());
     calculate_page();
-    g_art = ArticleNum{4};
-    g_artp = article_ptr(g_art);
+    g_nav.target.num = ArticleNum{4};
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     const DisplayState result = run_search("Bravo/");
 
@@ -6701,16 +6701,16 @@ TEST_P(ArticleSelectorSearchCancelTest, cancellingSearchRetainsThePreviousPatter
     const auto &[mode, rereading, cancel] = GetParam();
     prepare_inline(mode, rereading);
     remember_search(rereading ? "/Bravo/r" : "/Bravo/");
-    g_art = ArticleNum{4};
-    g_artp = article_ptr(g_art);
+    g_nav.target.num = ArticleNum{4};
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     const DisplayState result = run_search(std::string(1, cancel));
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(rereading);
     EXPECT_EQ("Bravo", g_last_pat);
-    EXPECT_EQ(ArticleNum{4}, g_art);
-    EXPECT_EQ(article_ptr(ArticleNum{4}), g_artp);
+    EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_nav.target.art);
     EXPECT_EQ(0, g_perform_count);
 }
 

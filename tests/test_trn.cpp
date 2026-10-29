@@ -193,12 +193,12 @@ protected:
         m_old_first_cached = g_first_cached;
         m_old_last_cached = g_last_cached;
         m_old_cached_all_in_range = g_cached_all_in_range;
-        m_old_art = g_art;
-        m_old_recent_art = g_recent_art;
-        m_old_curr_art = g_curr_art;
-        m_old_artp = g_artp;
-        m_old_recent_artp = g_recent_artp;
-        m_old_curr_artp = g_curr_artp;
+        m_old_art = g_nav.target.num;
+        m_old_recent_art = g_nav.recent.num;
+        m_old_curr_art = g_nav.current.num;
+        m_old_artp = g_nav.target.art;
+        m_old_recent_artp = g_nav.recent.art;
+        m_old_curr_artp = g_nav.current.art;
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_multirc = g_multirc;
         m_old_data_source = g_data_source;
@@ -301,12 +301,12 @@ protected:
         g_first_cached = ArticleNum{};
         g_last_cached = ArticleNum{};
         g_cached_all_in_range = false;
-        g_art = ArticleNum{};
-        g_recent_art = ArticleNum{};
-        g_curr_art = ArticleNum{};
-        g_artp = nullptr;
-        g_recent_artp = nullptr;
-        g_curr_artp = nullptr;
+        g_nav.target.num = ArticleNum{};
+        g_nav.recent.num = ArticleNum{};
+        g_nav.current.num = ArticleNum{};
+        g_nav.target.art = nullptr;
+        g_nav.recent.art = nullptr;
+        g_nav.current.art = nullptr;
         g_newsrc_hash = hash_create(17, compare_newsgroup_name);
         g_multirc = &m_multirc;
         g_data_source = &m_data_source;
@@ -432,12 +432,12 @@ protected:
         g_first_cached = m_old_first_cached;
         g_last_cached = m_old_last_cached;
         g_cached_all_in_range = m_old_cached_all_in_range;
-        g_art = m_old_art;
-        g_recent_art = m_old_recent_art;
-        g_curr_art = m_old_curr_art;
-        g_artp = m_old_artp;
-        g_recent_artp = m_old_recent_artp;
-        g_curr_artp = m_old_curr_artp;
+        g_nav.target.num = m_old_art;
+        g_nav.recent.num = m_old_recent_art;
+        g_nav.current.num = m_old_curr_art;
+        g_nav.target.art = m_old_artp;
+        g_nav.recent.art = m_old_recent_artp;
+        g_nav.current.art = m_old_curr_artp;
         g_newsrc_hash = m_old_newsrc_hash;
         g_multirc = m_old_multirc;
         g_data_source = m_old_data_source;
@@ -2293,18 +2293,18 @@ void LocalSpoolArticleTest::open_group(bool cache_all)
     g_last_art = ArticleNum{3};
     g_thread_always = cache_all;
     build_cache();
-    g_art = g_curr_art = ArticleNum{1};
-    g_artp = g_curr_artp = article_ptr(g_art);
-    g_recent_art = ArticleNum{2};
-    g_recent_artp = article_ptr(g_recent_art);
-    ASSERT_TRUE(parse_header(g_curr_art));
-    ASSERT_NE(nullptr, art_open(g_curr_art, g_header_type[PAST_HEADER].min_pos));
+    g_nav.target.num = g_nav.current.num = ArticleNum{1};
+    g_nav.target.art = g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.recent.num = ArticleNum{2};
+    g_nav.recent.art = article_ptr(g_nav.recent.num);
+    ASSERT_TRUE(parse_header(g_nav.current.num));
+    ASSERT_NE(nullptr, art_open(g_nav.current.num, g_header_type[PAST_HEADER].min_pos));
     std::string line;
     ASSERT_TRUE(read_art(line));
     ASSERT_EQ("Root first line\n", line);
     g_art_pos = tell_art();
     ASSERT_FALSE(g_threaded_group);
-    ASSERT_EQ(AF_NONE, g_curr_artp->m_flags & AF_THREADED);
+    ASSERT_EQ(AF_NONE, g_nav.current.art->m_flags & AF_THREADED);
 }
 
 class InputNewsgroupReadingTest : public LocalSpoolArticleTest
@@ -2474,9 +2474,9 @@ void MultircReadingStateTest::SetUp()
         {
             EXPECT_TRUE(g_in_ng);
             EXPECT_TRUE(g_doing_ng);
-            EXPECT_EQ(g_art, g_curr_art);
-            EXPECT_EQ(g_artp, g_curr_artp);
-            EXPECT_EQ(article_find(g_art), g_artp);
+            EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+            EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+            EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
         }
         else
         {
@@ -2488,7 +2488,7 @@ void MultircReadingStateTest::SetUp()
             {g_newsgroup_ptr ? static_cast<int>(g_newsgroup_ptr->m_num.value_of()) : -1,
              g_recent_newsgroup ? static_cast<int>(g_recent_newsgroup->m_num.value_of()) : -1,
              g_mode,
-             reading ? g_art : ArticleNum{},
+             reading ? g_nav.target.num : ArticleNum{},
              g_newsgroup_ptr ? g_newsgroup_ptr->m_to_read : TR_NONE,
              g_default_cmd,
              {std::string{g_newsgroup_data[0].rc_numbers()}, std::string{g_newsgroup_data[1].rc_numbers()},
@@ -3178,12 +3178,12 @@ void SuccessiveLocalArticlesTest::SetUp()
     g_allow_typeahead = true;
     g_terminal_input_reader = [this](char *buffer, int)
     {
-        m_states.push_back({g_art,
-                            g_artp,
-                            g_curr_art,
-                            g_curr_artp,
-                            g_recent_art,
-                            g_recent_artp,
+        m_states.push_back({g_nav.target.num,
+                            g_nav.target.art,
+                            g_nav.current.num,
+                            g_nav.current.art,
+                            g_nav.recent.num,
+                            g_nav.recent.art,
                             g_newsgroup_ptr->m_to_read,
                             {was_read(ArticleNum{1}), was_read(ArticleNum{2}), was_read(ArticleNum{3})}});
         *buffer = m_states.size() <= 3 ? GetParam() : 'q';
@@ -3268,10 +3268,10 @@ void LocalArticleTraversalTest::SetUp()
     g_terminal_input_reader = [this](char *buffer, int)
     {
         EXPECT_EQ(MM_ARTICLE, g_mode);
-        EXPECT_EQ(g_art, g_curr_art);
-        EXPECT_EQ(g_artp, g_curr_artp);
-        EXPECT_EQ(article_find(g_art), g_artp);
-        m_articles.push_back(static_cast<int>(g_art.value_of()));
+        EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+        EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+        EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+        m_articles.push_back(static_cast<int>(g_nav.target.num.value_of()));
         m_unread.push_back(g_newsgroup_ptr->m_to_read);
         if (m_input_pos == m_commands.size())
         {
@@ -3417,10 +3417,11 @@ void NewsgroupEndReadingStateTest::SetUp()
     g_mouse_bar_cnt = g_mouse_bar_width = 0;
     g_terminal_input_reader = [this](char *buffer, int)
     {
-        NewsgroupEndReadingState state{g_mode, g_art, g_newsgroup_ptr->m_to_read, g_selected_count, g_default_cmd, {}};
+        NewsgroupEndReadingState state{g_mode,           g_nav.target.num, g_newsgroup_ptr->m_to_read,
+                                       g_selected_count, g_default_cmd,    {}};
         state.selector_mode = g_sel_mode;
-        state.current = g_curr_art;
-        state.recent = g_recent_art;
+        state.current = g_nav.current.num;
+        state.recent = g_nav.recent.num;
         state.selected_only = g_selected_only;
         state.selector_rereading = g_sel_rereading;
         state.selector_threaded = g_threaded_group;
@@ -3458,21 +3459,21 @@ void NewsgroupEndReadingStateTest::SetUp()
         else if (g_mode == MM_PAGER)
         {
             EXPECT_EQ(GM_READ, g_general_mode);
-            EXPECT_EQ(g_art, g_parsed_art);
-            EXPECT_EQ(g_art, g_open_art);
+            EXPECT_EQ(g_nav.target.num, g_parsed_art);
+            EXPECT_EQ(g_nav.target.num, g_open_art);
         }
         else
         {
             EXPECT_EQ(GM_READ, g_general_mode);
-            EXPECT_EQ(g_art, g_curr_art);
-            EXPECT_EQ(g_artp, g_curr_artp);
-            if (g_art == 0 && g_artp && (g_artp->m_flags & AF_TMP_MEM))
+            EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+            EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+            if (g_nav.target.num == 0 && g_nav.target.art && (g_nav.target.art->m_flags & AF_TMP_MEM))
             {
-                EXPECT_EQ(ArticleNum{}, g_artp->article_num());
+                EXPECT_EQ(ArticleNum{}, g_nav.target.art->article_num());
             }
             else
             {
-                EXPECT_EQ(article_find(g_art), g_artp);
+                EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
             }
         }
         m_states.push_back(std::move(state));
@@ -3784,8 +3785,8 @@ TEST_P(NewsgroupInterruptedInputReadingTest, interruptedInputRetainsContextAndCo
         if (!interrupted)
         {
             interrupted = true;
-            EXPECT_EQ(ArticleNum{2}, g_curr_art);
-            EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+            EXPECT_EQ(ArticleNum{2}, g_nav.current.num);
+            EXPECT_EQ(article_ptr(ArticleNum{2}), g_nav.current.art);
             EXPECT_TRUE(was_read(ArticleNum{2}));
             EXPECT_FALSE(was_read(ArticleNum{3}));
             errno = EINTR;
@@ -3829,8 +3830,8 @@ TEST_P(NewsgroupSearchInputRecoveryTest, rewritingAnIncompleteSearchRetainsItsTe
         {
             return reading_input(buffer, size);
         }
-        EXPECT_EQ(ArticleNum{2}, g_curr_art);
-        EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+        EXPECT_EQ(ArticleNum{2}, g_nav.current.num);
+        EXPECT_EQ(article_ptr(ArticleNum{2}), g_nav.current.art);
         if (++continuation_requests == 1)
         {
             if (interrupt)
@@ -4309,9 +4310,9 @@ void MultircServerLossTest::SetUp()
         else
         {
             EXPECT_TRUE(g_in_ng);
-            EXPECT_EQ(g_art, g_curr_art);
-            EXPECT_EQ(g_artp, g_curr_artp);
-            m_read_articles.push_back(g_art);
+            EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+            EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+            m_read_articles.push_back(g_nav.target.num);
         }
         if (m_position == m_commands.size())
         {
@@ -4556,8 +4557,8 @@ TEST_P(RemoteNewsgroupFailureReadingTest, serverLossDuringRefreshClosesTheCurren
     EXPECT_EQ(NG_NO_SERVER, result);
     ASSERT_EQ(1U, m_states.size());
     EXPECT_EQ(ArticleNum{2}, m_states[0].article);
-    EXPECT_EQ(ArticleNum{2}, g_curr_art);
-    EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{2}, g_nav.current.num);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_nav.current.art);
     expect_saved_range(" 1-2", ArticleUnread{1});
 }
 
@@ -4573,8 +4574,8 @@ TEST_P(RemoteNewsgroupFailureReadingTest, serverLossResolvingAMissingParentRetur
     ASSERT_EQ(1U, m_states.size());
     EXPECT_EQ(ArticleNum{2}, m_states[0].article);
     EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
-    EXPECT_EQ(ArticleNum{2}, g_recent_art);
-    EXPECT_EQ(article_ptr(ArticleNum{2}), g_recent_artp);
+    EXPECT_EQ(ArticleNum{2}, g_nav.recent.num);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_nav.recent.art);
     expect_saved_range(" 1-2", ArticleUnread{1});
 }
 
@@ -4600,13 +4601,13 @@ void RemoteNewsgroupParentReadingTest::SetUp()
     const TerminalInputReader reading_input = g_terminal_input_reader;
     g_terminal_input_reader = [reading_input](char *buffer, int size)
     {
-        if (g_recent_artp)
+        if (g_nav.recent.art)
         {
-            EXPECT_EQ(g_recent_art, g_recent_artp->article_num());
+            EXPECT_EQ(g_nav.recent.num, g_nav.recent.art->article_num());
         }
         else
         {
-            EXPECT_EQ(article_after(g_last_art), g_recent_art);
+            EXPECT_EQ(article_after(g_last_art), g_nav.recent.num);
         }
         return reading_input(buffer, size);
     };
@@ -4683,8 +4684,8 @@ TEST_P(RemoteNewsgroupParentReadingTest, anUnavailableParentShowsADiagnosticAndA
     EXPECT_EQ(ArticleNum{3}, m_states[3].article);
     EXPECT_THAT(m_output, testing::HasSubstr("article is not available."));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
-    EXPECT_EQ(ArticleNum{2}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{2}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
     expect_saved_range(" 1-3", TR_NONE);
 }
 
@@ -4822,8 +4823,8 @@ TEST_P(RemoteNewsgroupRefreshReadingTest, exhaustionRefreshesTheGroupAndContinue
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
     expect_arrivals(true);
     expect_saved_range(" 1-" + std::to_string(3 + m_arrivals), TR_NONE);
-    EXPECT_EQ(ArticleNum{3 + m_arrivals}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{3 + m_arrivals}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(RemoteNewsgroupRefreshReadingTest, aForcedEndJumpRefreshesBoundsAndPreservesSkippedArticles)
@@ -5833,10 +5834,10 @@ void InterruptedArticleSelectorReadingTest::SetUp()
         article_ptr(ArticleNum{5})->select_article(AUTO_KILL_NONE);
     }
     ASSERT_TRUE(parse_header(ArticleNum{4}));
-    g_art = g_curr_art = ArticleNum{4};
-    g_artp = g_curr_artp = article_ptr(ArticleNum{4});
-    g_recent_art = ArticleNum{11};
-    g_recent_artp = article_ptr(ArticleNum{11});
+    g_nav.target.num = g_nav.current.num = ArticleNum{4};
+    g_nav.target.art = g_nav.current.art = article_ptr(ArticleNum{4});
+    g_nav.recent.num = ArticleNum{11};
+    g_nav.recent.art = article_ptr(ArticleNum{11});
     g_in_ng = true;
     set_mode(GM_READ, MM_ARTICLE);
 }
@@ -5859,12 +5860,12 @@ void InterruptedArticleSelectorReadingTest::expect_interrupted_return() const
     EXPECT_TRUE(m_states.empty());
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_EQ(ArticleNum{4}, g_art);
-    EXPECT_EQ(ArticleNum{4}, g_curr_art);
-    EXPECT_EQ(article_ptr(ArticleNum{4}), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
-    EXPECT_EQ(ArticleNum{11}, g_recent_art);
-    EXPECT_EQ(article_ptr(ArticleNum{11}), g_recent_artp);
+    EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
+    EXPECT_EQ(ArticleNum{4}, g_nav.current.num);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+    EXPECT_EQ(ArticleNum{11}, g_nav.recent.num);
+    EXPECT_EQ(article_ptr(ArticleNum{11}), g_nav.recent.art);
     EXPECT_EQ(selected_only, g_selected_only);
     EXPECT_FALSE(g_sel_rereading);
     EXPECT_EQ(AGF_SEL, g_sel_mask);
@@ -6136,11 +6137,11 @@ void NewsgroupPagerReadingTest::SetUp()
     }
     g_terminal_input_reader = [this](char *buffer, int)
     {
-        m_states.push_back({g_mode, g_art, was_read(g_art), g_newsgroup_ptr->m_to_read});
+        m_states.push_back({g_mode, g_nav.target.num, was_read(g_nav.target.num), g_newsgroup_ptr->m_to_read});
         if (g_mode == MM_PAGER)
         {
-            EXPECT_EQ(g_art, g_parsed_art);
-            EXPECT_EQ(g_art, g_open_art);
+            EXPECT_EQ(g_nav.target.num, g_parsed_art);
+            EXPECT_EQ(g_nav.target.num, g_open_art);
         }
         if (m_input_pos == m_commands.size())
         {
@@ -6180,9 +6181,9 @@ DoNewsgroupResult NewsgroupPagerReadingTest::run_reading(std::string_view comman
     EXPECT_FALSE(g_in_ng);
     EXPECT_FALSE(g_doing_ng);
     EXPECT_EQ(nullptr, g_art_fp);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
-    EXPECT_EQ(article_find(g_art), g_artp);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+    EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
     return result;
 }
 
@@ -6520,8 +6521,8 @@ std::string NewsgroupSelectorKillEditorTest::editor_text(const char *name) const
 TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSelectedNewsgroup)
 {
     NewsgroupData *const cursor = g_newsgroup_ptr;
-    const ArticleNum     article = g_art;
-    Article *const       article_pointer = g_artp;
+    const ArticleNum     article = g_nav.target.num;
+    Article *const       article_pointer = g_nav.target.art;
 
     const char result = run_selector_session(std::string(1, Ctl('k')) + "qQ");
 
@@ -6534,8 +6535,8 @@ TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSe
     EXPECT_FALSE(fs::exists(m_output_dir / "unused-local"));
     EXPECT_EQ(nullptr, g_local_kfp);
     EXPECT_EQ(cursor, g_newsgroup_ptr);
-    EXPECT_EQ(article, g_art);
-    EXPECT_EQ(article_pointer, g_artp);
+    EXPECT_EQ(article, g_nav.target.num);
+    EXPECT_EQ(article_pointer, g_nav.target.art);
     EXPECT_FALSE(g_in_ng);
     EXPECT_EQ(&m_multirc, g_multirc);
     EXPECT_EQ(&m_data_source, g_data_source);
@@ -6557,8 +6558,8 @@ TEST_F(NewsgroupSelectorDelegationStateTest, versionInformationReturnsToTheSameS
     g_verbose = true;
     prepare_selector();
     NewsgroupData *const cursor = g_newsgroup_ptr;
-    const ArticleNum     article = g_art;
-    Article *const       article_pointer = g_artp;
+    const ArticleNum     article = g_nav.target.num;
+    Article *const       article_pointer = g_nav.target.art;
 
     const char result = run_selector_session("\\v qQ");
 
@@ -6574,8 +6575,8 @@ TEST_F(NewsgroupSelectorDelegationStateTest, versionInformationReturnsToTheSameS
     ASSERT_NE(std::string::npos, pause);
     EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp", pause));
     EXPECT_EQ(cursor, g_newsgroup_ptr);
-    EXPECT_EQ(article, g_art);
-    EXPECT_EQ(article_pointer, g_artp);
+    EXPECT_EQ(article, g_nav.target.num);
+    EXPECT_EQ(article_pointer, g_nav.target.art);
     EXPECT_EQ(&m_multirc, g_multirc);
     EXPECT_EQ(&m_data_source, g_data_source);
     expect_selector_context();
@@ -6655,7 +6656,7 @@ void MultircSelectorStateTest::SetUp()
         prompt.source = g_multirc ? g_multirc->m_num : -1;
         prompt.group = g_newsgroup_ptr ? std::string{g_newsgroup_ptr->rc_name()} : "";
         prompt.restrictions = multirc_restrictions();
-        prompt.article = g_in_ng ? g_art : ArticleNum{};
+        prompt.article = g_in_ng ? g_nav.target.num : ArticleNum{};
         for (const NewsgroupData &group : g_newsgroup_data)
         {
             prompt.ranges.emplace_back(group.rc_numbers());
@@ -8162,8 +8163,8 @@ protected:
 
 std::string OnDemandThreadArticleTest::display_tree()
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
     const ArticlePosition                  position = g_art_pos;
     const ArticlePosition                  file_position = tell_art();
     const ArticlePosition                  header_end = g_header_type[PAST_HEADER].min_pos;
@@ -8179,16 +8180,16 @@ std::string OnDemandThreadArticleTest::display_tree()
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(AS_ASK, result);
     EXPECT_TRUE(g_threaded_group);
-    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
-    EXPECT_EQ(current, std::make_pair(g_art, g_artp));
-    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
+    EXPECT_EQ(current, std::make_pair(g_nav.target.num, g_nav.target.art));
+    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
     EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_only, g_selected_only);
     EXPECT_EQ(position, g_art_pos);
-    EXPECT_EQ(g_curr_art, g_open_art);
+    EXPECT_EQ(g_nav.current.num, g_open_art);
     EXPECT_EQ(file_position, tell_art());
-    EXPECT_EQ(g_curr_art, g_parsed_art);
+    EXPECT_EQ(g_nav.current.num, g_parsed_art);
     EXPECT_EQ(header_end, g_header_type[PAST_HEADER].min_pos);
     EXPECT_EQ(header, g_head_buf);
     EXPECT_EQ(ArticleLine{6}, g_art_line_num);
@@ -8270,7 +8271,7 @@ void SaveArticleTest::SetUp()
     g_mime_article = {};
     g_mime_section = &g_mime_article;
     open_group(false);
-    g_curr_artp->select_article(AUTO_KILL_NONE);
+    g_nav.current.art->select_article(AUTO_KILL_NONE);
     g_selected_only = true;
     ASSERT_EQ(0, std::fseek(g_art_fp, 0, SEEK_END));
     g_art_pos = tell_art();
@@ -8295,13 +8296,13 @@ void SaveArticleTest::TearDown()
 
 std::string SaveArticleTest::save(char command, std::string_view input, ArticleSwitchResult expected, bool next_command)
 {
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
     const ArticlePosition                  position = g_art_pos;
     const ArticleLine                      line = g_art_line_num;
     const ArticleLine                      top = g_top_line;
     const ArticleNum                       first = g_first_art;
-    const SubjectFlags                     subject_flags = g_curr_artp->m_subj->m_flags;
+    const SubjectFlags                     subject_flags = g_nav.current.art->m_subj->m_flags;
     const ArticleUnread                    unread = g_newsgroup_ptr->m_to_read;
     const ArticleUnread                    selected = g_selected_count;
     const int                              selected_subjects = g_selected_subj_cnt;
@@ -8322,16 +8323,16 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
-    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
-    EXPECT_EQ(current, std::make_pair(g_art, g_artp));
-    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
+    EXPECT_EQ(current, std::make_pair(g_nav.target.num, g_nav.target.art));
+    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(position, g_art_pos);
     EXPECT_EQ(line, g_art_line_num);
     EXPECT_EQ(top, g_top_line);
-    EXPECT_EQ(g_curr_art, g_parsed_art);
-    EXPECT_EQ(g_curr_art, g_open_art);
-    EXPECT_EQ(subject_flags, g_curr_artp->m_subj->m_flags);
+    EXPECT_EQ(g_nav.current.num, g_parsed_art);
+    EXPECT_EQ(g_nav.current.num, g_open_art);
+    EXPECT_EQ(subject_flags, g_nav.current.art->m_subj->m_flags);
     EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -8401,8 +8402,8 @@ void ScoreArticleTest::SetUp()
     {
         (void) sc_score_art(ArticleNum{number}, true);
     }
-    ASSERT_TRUE(parse_header(g_art));
-    ASSERT_NE(nullptr, art_open(g_art, position));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
+    ASSERT_NE(nullptr, art_open(g_nav.target.num, position));
     g_art_pos = position;
     g_s_order_changed = false;
     expect_scores({10, 10, 0});
@@ -8948,8 +8949,8 @@ void ExtractSaveArticleTest::article(std::string_view body, std::string_view hea
     output << m_article_text;
     output.close();
     ASSERT_FALSE(output.fail());
-    ASSERT_TRUE(parse_header(g_art));
-    ASSERT_NE(nullptr, art_open(g_art, ArticlePosition{}));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
+    ASSERT_NE(nullptr, art_open(g_nav.target.num, ArticlePosition{}));
     ASSERT_EQ(0, std::fseek(g_art_fp, 0, SEEK_END));
     g_art_pos = tell_art();
 }
@@ -10280,15 +10281,15 @@ TEST_F(ScoreArticleTest, anUnwritableScoreFileReturnsToReadingWithoutApplyingThe
 TEST_F(ScoreArticleTest, rescoringClearsAuthorMatchesFromRemovedRules)
 {
     sf_append("! 5 from: root@example.test");
-    g_artp->m_score_flags = SFLAG_NONE;
-    ASSERT_EQ(15, sc_score_art(g_art, true));
-    ASSERT_NE(0, g_artp->m_score_flags & SFLAG_AUTHOR);
+    g_nav.target.art->m_score_flags = SFLAG_NONE;
+    ASSERT_EQ(15, sc_score_art(g_nav.target.num, true));
+    ASSERT_NE(0, g_nav.target.art->m_score_flags & SFLAG_AUTHOR);
     std::ofstream{m_scores / "comp.lang.cpp"} << "newauthor=7\n";
 
     score('\'', "r\n", false);
 
     expect_scores({17, 17, 7});
-    EXPECT_EQ(0, g_artp->m_score_flags & SFLAG_AUTHOR);
+    EXPECT_EQ(0, g_nav.target.art->m_score_flags & SFLAG_AUTHOR);
 }
 
 TEST_F(ScoreArticleTest, interruptedRescoringInvalidatesOldScoresForLaterOnDemandScoring)
@@ -10300,9 +10301,9 @@ TEST_F(ScoreArticleTest, interruptedRescoringInvalidatesOldScoresForLaterOnDeman
 
     score('\'', "r\n");
 
-    EXPECT_FALSE(article_scored(g_art));
-    EXPECT_EQ(35, sc_score_art(g_art, true));
-    EXPECT_TRUE(article_scored(g_art));
+    EXPECT_FALSE(article_scored(g_nav.target.num));
+    EXPECT_EQ(35, sc_score_art(g_nav.target.num, true));
+    EXPECT_TRUE(article_scored(g_nav.target.num));
 }
 
 TEST_F(DeferredScoreArticleTest, appendingARuleInitializesDeferredScoring)
@@ -10318,8 +10319,8 @@ TEST_F(DeferredScoreArticleTest, explainingTheCurrentScoreInitializesDeferredSco
     const std::string output = score('\'', "s\n");
 
     EXPECT_FALSE(g_sc_delay);
-    EXPECT_TRUE(article_scored(g_art));
-    EXPECT_EQ(10, g_artp->m_score);
+    EXPECT_TRUE(article_scored(g_nav.target.num));
+    EXPECT_EQ(10, g_nav.target.art->m_score);
     EXPECT_THAT(output, testing::HasSubstr("Total score is 10\n"));
 }
 
@@ -11284,12 +11285,12 @@ TEST_P(ArticleRevisionDisplayTest, aMissingArticleDoesNotCreateARevisionDraft)
         g_verbose ? command == 'C' ? "Can't cancel an empty article." : "Can't supersede an empty article."
                   : "Empty article.";
     EXPECT_THAT(output, testing::HasSubstr(message));
-    EXPECT_EQ(g_curr_art, g_art);
-    EXPECT_EQ(g_curr_artp, g_artp);
+    EXPECT_EQ(g_nav.current.num, g_nav.target.num);
+    EXPECT_EQ(g_nav.current.art, g_nav.target.art);
     EXPECT_EQ(position, g_art_pos);
     EXPECT_EQ(2, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(0, g_selected_count);
-    EXPECT_EQ(0, g_artp->m_flags & (AF_EXISTS | AF_UNREAD | AF_SEL));
+    EXPECT_EQ(0, g_nav.target.art->m_flags & (AF_EXISTS | AF_UNREAD | AF_SEL));
     EXPECT_TRUE(g_selected_only);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -11624,9 +11625,9 @@ TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSe
     const std::string current_marker = GetParam() ? "<1>" : "[1]";
     EXPECT_NE(std::string::npos, output.find("<so>" + current_marker + "<se>+-[<so>1<se>]"));
     EXPECT_NE(std::string::npos, output.find("\\-(2)"));
-    EXPECT_EQ(g_curr_artp, article_ptr(ArticleNum{2})->m_parent);
-    EXPECT_EQ(g_curr_artp, article_ptr(ArticleNum{3})->m_parent);
-    EXPECT_EQ(article_ptr(ArticleNum{2}), g_curr_artp->m_child1);
+    EXPECT_EQ(g_nav.current.art, article_ptr(ArticleNum{2})->m_parent);
+    EXPECT_EQ(g_nav.current.art, article_ptr(ArticleNum{3})->m_parent);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_nav.current.art->m_child1);
     EXPECT_EQ(article_ptr(ArticleNum{3}), article_ptr(ArticleNum{2})->m_sibling);
     EXPECT_NE(AF_NONE, article_ptr(ArticleNum{2})->m_flags & AF_SEL);
     EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{3})->m_flags & AF_UNREAD);
@@ -11642,7 +11643,7 @@ TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSe
         }
         SCOPED_TRACE(number.value_of());
         EXPECT_NE(AF_NONE, article.m_flags & AF_THREADED);
-        EXPECT_EQ(g_curr_artp, article.m_subj->m_thread);
+        EXPECT_EQ(g_nav.current.art, article.m_subj->m_thread);
     }
 }
 
@@ -11658,9 +11659,9 @@ TEST_F(OnDemandThreadArticleTest, threadsCurrentHeaderWithoutEagerCaching)
     SCOPED_TRACE(output);
     EXPECT_NE(std::string::npos, output.find("Threading the group. "));
     EXPECT_NE(std::string::npos, output.find("[1] Topic\n\n  <so>[1]<se>\n"));
-    EXPECT_NE(AF_NONE, g_curr_artp->m_flags & AF_THREADED);
-    EXPECT_EQ(g_curr_artp, g_curr_artp->m_subj->m_thread);
-    EXPECT_EQ(nullptr, g_curr_artp->m_child1);
+    EXPECT_NE(AF_NONE, g_nav.current.art->m_flags & AF_THREADED);
+    EXPECT_EQ(g_nav.current.art, g_nav.current.art->m_subj->m_thread);
+    EXPECT_EQ(nullptr, g_nav.current.art->m_child1);
     EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{2})->m_flags & (AF_CACHED | AF_THREADED));
     EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{3})->m_flags & (AF_CACHED | AF_THREADED));
     EXPECT_EQ(3, g_newsgroup_ptr->m_to_read);
@@ -12276,12 +12277,12 @@ TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticle
     EXPECT_EQ(std::string::npos, output.find("Branch body", branch + 1));
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
-    EXPECT_EQ(ArticleNum{4}, g_art);
-    EXPECT_EQ(nullptr, g_artp);
-    EXPECT_EQ(ArticleNum{4}, g_curr_art);
-    EXPECT_EQ(nullptr, g_curr_artp);
-    EXPECT_EQ(ArticleNum{3}, g_recent_art);
-    EXPECT_EQ(article_find(ArticleNum{3}), g_recent_artp);
+    EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
+    EXPECT_EQ(nullptr, g_nav.target.art);
+    EXPECT_EQ(ArticleNum{4}, g_nav.current.num);
+    EXPECT_EQ(nullptr, g_nav.current.art);
+    EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
+    EXPECT_EQ(article_find(ArticleNum{3}), g_nav.recent.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
     EXPECT_FALSE(g_in_ng);
@@ -12359,8 +12360,8 @@ TEST_P(LocalArticleTraversalTest, previousUnreadAtTheFirstArticleKeepsTheCurrent
     EXPECT_EQ((std::vector<int>{1, 1}), m_articles);
     EXPECT_EQ((std::vector<ArticleUnread>{4, 4}), m_unread);
     EXPECT_THAT(m_output, testing::HasSubstr("No previous unread articles"));
-    EXPECT_EQ(ArticleNum{1}, g_curr_art);
-    EXPECT_EQ(article_find(g_curr_art), g_curr_artp);
+    EXPECT_EQ(ArticleNum{1}, g_nav.current.num);
+    EXPECT_EQ(article_find(g_nav.current.num), g_nav.current.art);
 }
 
 TEST_P(LocalArticleTraversalTest, firstUnreadReturnsFromAnExplicitReadArticle)
@@ -12370,8 +12371,8 @@ TEST_P(LocalArticleTraversalTest, firstUnreadReturnsFromAnExplicitReadArticle)
     EXPECT_EQ(NG_ASK, result);
     expect_articles({5, 1});
     EXPECT_EQ((std::vector<ArticleUnread>{5, 4}), m_unread);
-    EXPECT_EQ(ArticleNum{5}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{5}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalArticleTraversalTest, anExplicitReadTargetBypassesSelectedOnlyFiltering)
@@ -12413,8 +12414,8 @@ TEST_P(LocalArticleTraversalTest, previousArticleIncludesReadArticlesInTheChosen
     EXPECT_EQ(NG_ASK, result);
     expect_articles({1, second, previous});
     EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3}), m_unread);
-    EXPECT_EQ(ArticleNum{second}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{second}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalArticleTraversalTest, nextArticleCanRereadAnAlreadyReadArticle)
@@ -12439,8 +12440,8 @@ TEST_P(LocalArticleTraversalTest, minusRereadsTheMostRecentlyDisplayedArticle)
     EXPECT_EQ(NG_ASK, result);
     expect_articles({1, second, 1});
     EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3}), m_unread);
-    EXPECT_EQ(ArticleNum{second}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{second}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalArticleTraversalTest, restartingTheCurrentArticleDoesNotMarkItReadTwice)
@@ -12486,7 +12487,7 @@ TEST_P(EmptyNewsgroupEndTest, entryOffersAnEndPromptWithoutDisplayingAnArticle)
     expect_end_heading();
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("still unread")));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("body")));
-    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(nullptr, g_nav.current.art);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
 }
 
@@ -12543,10 +12544,10 @@ TEST_P(NewsgroupEndReadingTest, finishingTheLastUnreadArticleLeavesWithoutAnothe
     EXPECT_EQ(TR_NONE, m_states[0].unread);
     EXPECT_EQ("npq", m_states[0].default_command);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
-    EXPECT_EQ(ArticleNum{4}, g_curr_art);
-    EXPECT_EQ(nullptr, g_curr_artp);
-    EXPECT_EQ(ArticleNum{3}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{4}, g_nav.current.num);
+    EXPECT_EQ(nullptr, g_nav.current.art);
+    EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("What next? [npq]")));
 }
@@ -12567,8 +12568,8 @@ TEST_P(NewsgroupEndReadingTest, anExplicitEndJumpStillPromptsAfterTheLastUnreadA
     EXPECT_EQ("npq", m_states[1].default_command);
     expect_end_heading();
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
-    EXPECT_EQ(ArticleNum{3}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(NewsgroupEndReadingTest, nextAtAForcedEndPromptReadsTheFirstUnreadArticle)
@@ -14032,8 +14033,8 @@ TEST_P(LocalNewsgroupArrivalTest, reachingTheEndDiscoversAndReadsTheNewLocalArti
     expect_arrival_bodies(1);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-" + std::to_string(3 + m_arrival_count), g_newsgroup_ptr->rc_numbers());
-    EXPECT_EQ(ArticleNum{3 + m_arrival_count}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{3 + m_arrival_count}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalNewsgroupArrivalTest, aForcedEndJumpRetainsNewArrivalsAsUnreadAtTheEndPrompt)
@@ -14048,8 +14049,8 @@ TEST_P(LocalNewsgroupArrivalTest, aForcedEndJumpRetainsNewArrivalsAsUnreadAtTheE
     EXPECT_EQ(ArticleNum{4 + m_arrival_count}, m_states[1].article);
     EXPECT_EQ(ArticleNum{3 + m_arrival_count}, m_arrival_states[1].last);
     EXPECT_EQ(ArticleUnread{1 + m_arrival_count}, m_states[1].unread);
-    EXPECT_EQ(ArticleNum{3}, g_recent_art);
-    EXPECT_EQ(article_find(g_recent_art), g_recent_artp);
+    EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
+    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
     expect_arrival_bodies(0);
     for (int number = 4; number < 4 + m_arrival_count; ++number)
     {
@@ -14307,10 +14308,10 @@ TEST_P(NewsgroupPagerReadingTest, anArticleExpiringDuringReadingIsSkippedWithout
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
     EXPECT_EQ(ArticleUnread{0}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_missing_count);
-    EXPECT_EQ(ArticleNum{4}, g_art);
-    EXPECT_EQ(nullptr, g_artp);
-    EXPECT_EQ(ArticleNum{2}, g_recent_art);
-    EXPECT_EQ(article_find(ArticleNum{2}), g_recent_artp);
+    EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
+    EXPECT_EQ(nullptr, g_nav.target.art);
+    EXPECT_EQ(ArticleNum{2}, g_nav.recent.num);
+    EXPECT_EQ(article_find(ArticleNum{2}), g_nav.recent.art);
     EXPECT_FALSE(article_find(ArticleNum{3})->m_flags & AF_EXISTS);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
 }
@@ -14345,8 +14346,8 @@ TEST_F(LocalArticleFailureReadingTest, aHoleInTheLocalSpoolSkipsToTheNextReadabl
     EXPECT_FALSE(macro_pending());
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
-    EXPECT_EQ(ArticleNum{3}, g_curr_art);
-    EXPECT_EQ(article_find(ArticleNum{3}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{3}, g_nav.current.num);
+    EXPECT_EQ(article_find(ArticleNum{3}), g_nav.current.art);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
 }
@@ -14366,8 +14367,8 @@ TEST_F(LocalArticleFailureReadingTest, anUnavailableExplicitArticleReportsTheFai
     EXPECT_FALSE(macro_pending());
     EXPECT_THAT(m_output, testing::HasSubstr("article is not available"));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
-    EXPECT_EQ(ArticleNum{2}, g_curr_art);
-    EXPECT_EQ(article_find(ArticleNum{2}), g_curr_artp);
+    EXPECT_EQ(ArticleNum{2}, g_nav.current.num);
+    EXPECT_EQ(article_find(ArticleNum{2}), g_nav.current.art);
     EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
 }
@@ -14385,8 +14386,8 @@ TEST_F(LocalArticleFailureReadingTest, aSpoolWithNoRemainingFilesReachesTheGroup
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Branch body")));
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
-    EXPECT_EQ(article_after(g_last_art), g_curr_art);
-    EXPECT_EQ(nullptr, g_curr_artp);
+    EXPECT_EQ(article_after(g_last_art), g_nav.current.num);
+    EXPECT_EQ(nullptr, g_nav.current.art);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
 }
 
@@ -14457,7 +14458,7 @@ TEST_P(LocalArticleAccessFailureTest, anUnreadableArticleReportsItsNumberAndCont
     EXPECT_FALSE(macro_pending());
     EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Article 2 exists but is unreadable" : "2 unreadable"));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
-    EXPECT_EQ(ArticleNum{3}, g_curr_art);
+    EXPECT_EQ(ArticleNum{3}, g_nav.current.num);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
 }

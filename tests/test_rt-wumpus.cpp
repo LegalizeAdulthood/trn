@@ -43,8 +43,8 @@ protected:
     void SetUp() override
     {
         m_old_tmp_dir = g_tmp_dir;
-        m_old_curr_artp = g_curr_artp;
-        m_old_recent_artp = g_recent_artp;
+        m_old_curr_artp = g_nav.current.art;
+        m_old_recent_artp = g_nav.recent.art;
         m_old_selected_only = g_selected_only;
         m_old_do_hiding = g_do_hiding;
         m_old_char_subst = current_char_subst_mode();
@@ -77,8 +77,8 @@ protected:
         m_recent.m_parent = &m_current;
         m_recent.m_flags = AF_EXISTS | AF_CACHED | AF_UNREAD;
 
-        g_curr_artp = &m_current;
-        g_recent_artp = &m_recent;
+        g_nav.current.art = &m_current;
+        g_nav.recent.art = &m_recent;
         g_selected_only = false;
         g_do_hiding = false;
         set_char_subst_mode('\0');
@@ -102,11 +102,11 @@ protected:
         std::filesystem::remove_all(m_output_dir, error);
         EXPECT_FALSE(error) << error.message();
 
-        g_curr_artp = nullptr;
+        g_nav.current.art = nullptr;
         init_tree();
 
-        g_curr_artp = m_old_curr_artp;
-        g_recent_artp = m_old_recent_artp;
+        g_nav.current.art = m_old_curr_artp;
+        g_nav.recent.art = m_old_recent_artp;
         g_selected_only = m_old_selected_only;
         g_do_hiding = m_old_do_hiding;
         set_char_subst_mode(m_old_char_subst);
@@ -251,10 +251,10 @@ protected:
     NewsgroupData m_group{};
 
 private:
-    ArticleNum        m_old_art{g_art};
-    Article          *m_old_artp{g_artp};
-    ArticleNum        m_old_curr_art{g_curr_art};
-    ArticleNum        m_old_recent_art{g_recent_art};
+    ArticleNum        m_old_art{g_nav.target.num};
+    Article          *m_old_artp{g_nav.target.art};
+    ArticleNum        m_old_curr_art{g_nav.current.num};
+    ArticleNum        m_old_recent_art{g_nav.recent.num};
     ArticleNum        m_old_last_art{g_last_art};
     NewsgroupData    *m_old_newsgroup_ptr{g_newsgroup_ptr};
     DoNewsgroupResult m_old_exit_code{g_newsgroup_exit_code};
@@ -314,9 +314,9 @@ void ThreadTreeArticleTest::SetUp()
     g_newsgroup_exit_code = NG_NORM;
     g_selected_count = 1;
     g_selected_subj_cnt = 1;
-    g_art = g_recent_art = ArticleNum{2};
-    g_artp = &m_recent;
-    g_curr_art = ArticleNum{1};
+    g_nav.target.num = g_nav.recent.num = ArticleNum{2};
+    g_nav.target.art = &m_recent;
+    g_nav.current.num = ArticleNum{1};
     g_last_art = ArticleNum{3};
     g_threaded_group = true;
     g_reread = g_force_last = g_do_fseek = g_rotate = false;
@@ -354,10 +354,10 @@ void ThreadTreeArticleTest::TearDown()
     {
         push_char(*ch);
     }
-    g_art = m_old_art;
-    g_artp = m_old_artp;
-    g_curr_art = m_old_curr_art;
-    g_recent_art = m_old_recent_art;
+    g_nav.target.num = m_old_art;
+    g_nav.target.art = m_old_artp;
+    g_nav.current.num = m_old_curr_art;
+    g_nav.recent.num = m_old_recent_art;
     g_last_art = m_old_last_art;
     g_newsgroup_ptr = m_old_newsgroup_ptr;
     g_newsgroup_exit_code = m_old_exit_code;
@@ -392,9 +392,9 @@ void ThreadTreeArticleTest::TearDown()
 
 std::string ThreadTreeArticleTest::display_tree(std::string_view input)
 {
-    const std::pair<ArticleNum, Article *> article = std::make_pair(g_art, g_artp);
-    const std::pair<ArticleNum, Article *> current = std::make_pair(g_curr_art, g_curr_artp);
-    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_recent_art, g_recent_artp);
+    const std::pair<ArticleNum, Article *> article = std::make_pair(g_nav.target.num, g_nav.target.art);
+    const std::pair<ArticleNum, Article *> current = std::make_pair(g_nav.current.num, g_nav.current.art);
+    const std::pair<ArticleNum, Article *> recent = std::make_pair(g_nav.recent.num, g_nav.recent.art);
     const ArticleFlags                     current_flags = m_current.m_flags;
     const ArticleFlags                     recent_flags = m_recent.m_flags;
     const ArticleFlags                     branch_flags = m_branch.m_flags;
@@ -416,9 +416,9 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
 
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(AS_ASK, result);
-    EXPECT_EQ(article, std::make_pair(g_art, g_artp));
-    EXPECT_EQ(current, std::make_pair(g_curr_art, g_curr_artp));
-    EXPECT_EQ(recent, std::make_pair(g_recent_art, g_recent_artp));
+    EXPECT_EQ(article, std::make_pair(g_nav.target.num, g_nav.target.art));
+    EXPECT_EQ(current, std::make_pair(g_nav.current.num, g_nav.current.art));
+    EXPECT_EQ(recent, std::make_pair(g_nav.recent.num, g_nav.recent.art));
     EXPECT_EQ(current_flags, m_current.m_flags);
     EXPECT_EQ(recent_flags, m_recent.m_flags);
     EXPECT_EQ(branch_flags, m_branch.m_flags);
@@ -476,7 +476,7 @@ TEST_F(TreeRenderingTest, currentAndRecentArticlesAreMarked)
 
 TEST_F(TreeRenderingTest, normalHeaderKeywordIsSplitFromValue)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     init_tree();
 
     testing::internal::CaptureStdout();
@@ -489,7 +489,7 @@ TEST_F(TreeRenderingTest, normalHeaderKeywordIsSplitFromValue)
 
 TEST_F(TreeRenderingTest, hiddenHeaderDecodesEncodedWords)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_do_hiding = true;
     init_tree();
 
@@ -503,7 +503,7 @@ TEST_F(TreeRenderingTest, hiddenHeaderDecodesEncodedWords)
 
 TEST_F(TreeRenderingTest, hiddenHeaderSubstitutesDecodedLatinScalars)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_do_hiding = true;
     set_char_subst_mode('a');
     init_tree();
@@ -523,7 +523,7 @@ TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
     const std::string previous_charsets = g_charsets;
     g_charsets = "up";
     reset_char_subst_mode();
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_do_hiding = true;
     init_tree();
 
@@ -536,7 +536,7 @@ TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
 
 TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_do_hiding = true;
     set_char_subst_mode('t');
     init_tree();
@@ -552,7 +552,7 @@ TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
 
 TEST_F(TreeRenderingTest, headerWrapMeasuresUtf8Columns)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_do_hiding = true;
     g_tc_COLS = 10;
     init_tree();
@@ -567,7 +567,7 @@ TEST_F(TreeRenderingTest, headerWrapMeasuresUtf8Columns)
 
 TEST_F(TreeRenderingTest, headerHardWrapRetainsWholeUnicodeScalars)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_do_hiding = true;
     g_tc_COLS = 8;
     init_tree();
@@ -582,7 +582,7 @@ TEST_F(TreeRenderingTest, headerHardWrapRetainsWholeUnicodeScalars)
 
 TEST_F(TreeRenderingTest, continuationLineUsesPreviousHeaderIndent)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     init_tree();
 
     testing::internal::CaptureStdout();
@@ -597,7 +597,7 @@ TEST_F(TreeRenderingTest, continuationLineUsesPreviousHeaderIndent)
 
 TEST_F(TreeRenderingTest, longHeaderValueWrapsAtWordBoundary)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_tc_COLS = 20;
     init_tree();
 
@@ -611,7 +611,7 @@ TEST_F(TreeRenderingTest, longHeaderValueWrapsAtWordBoundary)
 
 TEST_F(TreeRenderingTest, subjectLineGetsSubjectPrefixWhenUnthreaded)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_threaded_group = false;
     init_tree();
 
@@ -625,7 +625,7 @@ TEST_F(TreeRenderingTest, subjectLineGetsSubjectPrefixWhenUnthreaded)
 
 TEST_F(TreeRenderingTest, issue30SubjectRestoresUnderlineBeforeFollowingText)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_threaded_group = false;
     g_do_hiding = true;
     g_tc_COLS = 120;
@@ -644,7 +644,7 @@ TEST_F(TreeRenderingTest, issue30SubjectRestoresUnderlineBeforeFollowingText)
 
 TEST_F(TreeRenderingTest, issue30SubjectUnderlinesWholeScalarsOnUndercharTerminal)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_threaded_group = false;
     g_do_hiding = true;
     g_tc_COLS = 120;
@@ -673,7 +673,7 @@ TEST_F(TreeRenderingTest, issue30SubjectUnderlinesWholeScalarsOnUndercharTermina
 
 TEST_F(TreeRenderingTest, issue30WrappedSubjectRestoresUnderlineOnEveryLine)
 {
-    g_curr_artp = nullptr;
+    g_nav.current.art = nullptr;
     g_threaded_group = false;
     g_do_hiding = true;
     g_tc_COLS = 40;
@@ -764,8 +764,8 @@ TEST_P(ThreadTreeContextArticleTest, displaysTheLastReadArticleTreeWhilePreservi
 {
     if (GetParam())
     {
-        g_art = ArticleNum{4};
-        g_artp = nullptr;
+        g_nav.target.num = ArticleNum{4};
+        g_nav.target.art = nullptr;
         g_mode = MM_ARTICLE_END;
     }
 
@@ -814,8 +814,8 @@ TEST_F(ThreadTreeArticleTest, aSingleArticleThreadDisplaysItsSubjectAndCurrentAr
 
 TEST_P(ThreadTreeUnavailableArticleTest, aGroupWithNoLastReadArticleReportsThatNoTreeIsAvailable)
 {
-    g_art = g_curr_art = ArticleNum{4};
-    g_artp = g_curr_artp = nullptr;
+    g_nav.target.num = g_nav.current.num = ArticleNum{4};
+    g_nav.target.art = g_nav.current.art = nullptr;
     g_mode = MM_ARTICLE_END;
     g_verbose = GetParam();
 
@@ -887,10 +887,10 @@ TEST_F(ThreadTreeArticleTest, aDeepReplyChainRetainsItsVisibleAncestorsWhenTheWi
         reply.m_child1 = index + 1 < replies.size() ? &replies[index + 1] : nullptr;
         reply.m_flags = AF_EXISTS | AF_CACHED | AF_THREADED | AF_UNREAD;
     }
-    g_art = ArticleNum{1};
-    g_artp = &m_current;
-    g_recent_art = ArticleNum{};
-    g_recent_artp = nullptr;
+    g_nav.target.num = ArticleNum{1};
+    g_nav.target.art = &m_current;
+    g_nav.recent.num = ArticleNum{};
+    g_nav.recent.art = nullptr;
     g_last_art = ArticleNum{19};
     m_group.m_to_read = 19;
     g_tc_COLS = 80;

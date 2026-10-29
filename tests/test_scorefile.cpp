@@ -60,7 +60,7 @@ protected:
         m_old_pid = g_our_pid;
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_article_list = std::move(g_article_list);
-        m_old_art = g_art;
+        m_old_art = g_nav.target.num;
         m_old_last_art = g_last_art;
         m_old_in_ng = g_in_ng;
         m_old_parsed_art = g_parsed_art;
@@ -80,7 +80,7 @@ protected:
         article->m_subj = &m_subject;
         article->set_cached_line(FROM_LINE, "casey@news.example.test");
         m_subject.m_str = "Re: Compact Subject";
-        g_art = TEST_ARTICLE_NUM;
+        g_nav.target.num = TEST_ARTICLE_NUM;
         g_last_art = TEST_ARTICLE_NUM;
         g_in_ng = true;
         g_parsed_art = ArticleNum{};
@@ -99,7 +99,7 @@ protected:
         g_tmp_dir = m_old_tmp_dir;
         g_our_pid = m_old_pid;
         g_newsgroup_name = m_old_newsgroup_name;
-        g_art = m_old_art;
+        g_nav.target.num = m_old_art;
         g_last_art = m_old_last_art;
         g_in_ng = m_old_in_ng;
         g_parsed_art = m_old_parsed_art;

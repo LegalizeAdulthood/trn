@@ -208,7 +208,7 @@ SaveResult save_article(std::string_view command)
         completed_command = finish_command(command.substr(0, 1), true);
         if (completed_command.empty())
         {
-            g_msg = fmt::format("Save aborted at article {}", g_art.value_of());
+            g_msg = fmt::format("Save aborted at article {}", g_nav.target.num.value_of());
             return SAVE_ABORT;
         }
         command = completed_command;
@@ -220,11 +220,11 @@ SaveResult save_article(std::string_view command)
         cmd = static_cast<char>(std::tolower(static_cast<unsigned char>(cmd)));
     }
     const ArticlePosition reading_position = g_art_pos;
-    parse_header(g_art);
+    parse_header(g_nav.target.num);
     mime_set_article();
     clear_art_buf();
     g_save_from = (cmd == 'w' || cmd == 'e') ? g_header_type[PAST_HEADER].min_pos : ArticlePosition{};
-    if (art_open(g_art, g_save_from) == nullptr)
+    if (art_open(g_nav.target.num, g_save_from) == nullptr)
     {
         if (g_verbose)
         {
@@ -365,7 +365,7 @@ SaveResult save_article(std::string_view command)
             int cnt = 0;
 
             // Scan subject for filename and part number information
-            std::string filename = decode_subject(g_art, &part, &total);
+            std::string filename = decode_subject(g_nav.target.num, &part, &total);
             if (partOpt)
             {
                 part = partOpt;
@@ -663,9 +663,10 @@ reask_save:
                     quote_From = true;
 #endif
                 }
-                if (g_save_from == 0 && g_art != 0)
+                if (g_save_from == 0 && g_nav.target.num != 0)
                 {
-                    write_save_text(s_tmp_fp, fmt::format("Article: {} of {}\n", g_art.value_of(), g_newsgroup_name));
+                    write_save_text(s_tmp_fp,
+                                    fmt::format("Article: {} of {}\n", g_nav.target.num.value_of(), g_newsgroup_name));
                 }
                 seek_art(g_save_from);
                 std::string article_line;
@@ -725,11 +726,11 @@ s_bomb:
 SaveResult view_article()
 {
     const ArticlePosition reading_position = g_art_pos;
-    parse_header(g_art);
+    parse_header(g_nav.target.num);
     mime_set_article();
     clear_art_buf();
     g_save_from = g_header_type[PAST_HEADER].min_pos;
-    if (art_open(g_art, g_save_from) == nullptr)
+    if (art_open(g_nav.target.num, g_save_from) == nullptr)
     {
         if (g_verbose)
         {
@@ -755,7 +756,7 @@ SaveResult view_article()
         int cnt = 0;
 
         // Scan subject for filename and part number information
-        std::string filename = decode_subject(g_art, &part, &total);
+        std::string filename = decode_subject(g_nav.target.num, &part, &total);
         for (g_art_pos = g_save_from; read_art(g_art_line); g_art_pos = tell_art())
         {
             if (g_art_line.empty() || g_art_line.front() <= ' ')
@@ -808,7 +809,7 @@ int cancel_article()
     int  myuid = current_user_id();
     int  r = -1;
 
-    if (art_open(g_art, (ArticlePosition) 0) == nullptr)
+    if (art_open(g_nav.target.num, (ArticlePosition) 0) == nullptr)
     {
         if (g_verbose)
         {
@@ -821,8 +822,8 @@ int cancel_article()
         term_down(2);
         return r;
     }
-    std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
-    std::string from_buf = fetch_lines(g_art, FROM_LINE);
+    std::string reply_buf = fetch_lines(g_nav.target.num, REPLY_LINE);
+    std::string from_buf = fetch_lines(g_nav.target.num, FROM_LINE);
     if (!string_case_equal(get_env_var("FROM"), from_buf)                    //
         && (!in_string(from_buf, g_host_name, false)                         //
             || (!in_string(from_buf, g_login_name, true)                     //
@@ -875,7 +876,7 @@ int supersede_article(std::string_view command) // Supersedes:
     int  r = -1;
     bool incl_body = (response_command_char(command) == 'Z');
 
-    if (art_open(g_art, (ArticlePosition) 0) == nullptr)
+    if (art_open(g_nav.target.num, (ArticlePosition) 0) == nullptr)
     {
         if (g_verbose)
         {
@@ -888,8 +889,8 @@ int supersede_article(std::string_view command) // Supersedes:
         term_down(2);
         return r;
     }
-    std::string reply_buf = fetch_lines(g_art, REPLY_LINE);
-    std::string from_buf = fetch_lines(g_art, FROM_LINE);
+    std::string reply_buf = fetch_lines(g_nav.target.num, REPLY_LINE);
+    std::string from_buf = fetch_lines(g_nav.target.num, FROM_LINE);
     if (!string_case_equal(get_env_var("FROM"), from_buf)    //
         && (!in_string(from_buf, g_host_name, false)         //
             || (!in_string(from_buf, g_login_name, true)     //
@@ -929,7 +930,7 @@ int supersede_article(std::string_view command) // Supersedes:
         fmt::print(header, "{}", do_interp(get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER)));
         if (incl_body && g_art_fp != nullptr)
         {
-            parse_header(g_art);
+            parse_header(g_nav.target.num);
             seek_art(g_header_type[PAST_HEADER].min_pos);
             std::string article_line;
             article_line.reserve(LINE_BUF_LEN);
@@ -1137,10 +1138,10 @@ static void follow_it_up()
 
 void reply(std::string_view command)
 {
-    bool incl_body = (response_command_char(command) == 'R' && g_art);
+    bool              incl_body = (response_command_char(command) == 'R' && g_nav.target.num);
     const std::string mail_doer = get_env_var("MAILPOSTER", MAIL_POSTER);
 
-    art_open(g_art,(ArticlePosition)0);
+    art_open(g_nav.target.num, (ArticlePosition) 0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");       // open header file
     if (header == nullptr)
     {
@@ -1168,7 +1169,7 @@ void reply(std::string_view command)
         article_line.reserve(LINE_BUF_LEN);
         const std::string introduction = do_interp(get_env_var("YOUSAID", YOU_SAID));
         fmt::print(header, "{}\n", introduction);
-        parse_header(g_art);
+        parse_header(g_nav.target.num);
         mime_set_article();
         clear_art_buf();
         seek_art(g_header_type[PAST_HEADER].min_pos);
@@ -1204,7 +1205,7 @@ void forward()
 #ifdef REGEX_WORKS_RIGHT
     mime_compex.init_compex();
 #endif
-    art_open(g_art, (ArticlePosition) 0);
+    art_open(g_nav.target.num, (ArticlePosition) 0);
     std::FILE *header = std::fopen(g_head_name.c_str(), "w"); // open header file
     if (header == nullptr)
     {
@@ -1314,7 +1315,7 @@ void forward()
         {
             fmt::print(header, "{}\n", forward_message);
         }
-        parse_header(g_art);
+        parse_header(g_nav.target.num);
         seek_art((ArticlePosition)0);
         std::string article_line;
         article_line.reserve(LINE_BUF_LEN + 1);
@@ -1351,10 +1352,10 @@ done:
 
 void followup(std::string_view command)
 {
-    bool       incl_body = (response_command_char(command) == 'F' && g_art);
-    ArticleNum oldart = g_art;
+    bool       incl_body = (response_command_char(command) == 'F' && g_nav.target.num);
+    ArticleNum oldart = g_nav.target.num;
 
-    if (!incl_body && g_art <= g_last_art)
+    if (!incl_body && g_nav.target.num <= g_last_art)
     {
         term_down(2);
         const std::string prompt_answer =
@@ -1367,16 +1368,16 @@ void followup(std::string_view command)
         }
         if (answer_char != 'n')
         {
-            g_art = article_after(g_last_art);
+            g_nav.target.num = article_after(g_last_art);
         }
     }
-    art_open(g_art,(ArticlePosition)0);
+    art_open(g_nav.target.num, (ArticlePosition) 0);
     std::FILE *header = std::fopen(g_head_name.c_str(),"w");
     if (header == nullptr)
     {
         fmt::print("Can't create {}\n", g_head_name);
         term_down(1);
-        g_art = oldart;
+        g_nav.target.num = oldart;
         return;
     }
     fmt::print(header, "{}", do_interp(get_env_var("NEWSHEADER", NEWS_HEADER)));
@@ -1392,7 +1393,7 @@ void followup(std::string_view command)
         }
         const std::string attribution = do_interp(get_env_var("ATTRIBUTION", ATTRIBUTION));
         fmt::print(header, "{}\n", attribution);
-        parse_header(g_art);
+        parse_header(g_nav.target.num);
         mime_set_article();
         clear_art_buf();
         seek_art(g_header_type[PAST_HEADER].min_pos);
@@ -1410,7 +1411,7 @@ void followup(std::string_view command)
     }
     std::fclose(header);
     follow_it_up();
-    g_art = oldart;
+    g_nav.target.num = oldart;
 }
 
 static int invoke(const char *cmd, const char *dir)

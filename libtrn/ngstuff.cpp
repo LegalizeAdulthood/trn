@@ -232,8 +232,8 @@ NumNumResult num_num(std::string_view command)
     ArticleNum       max;
     std::string      cmdlst;
     std::string_view ranges;
-    const ArticleNum oldart = g_art;
-    Article *const   oldartp = g_artp;
+    const ArticleNum oldart = g_nav.target.num;
+    Article *const   oldartp = g_nav.target.art;
     bool             output_level = (!g_use_threads && g_general_mode != GM_SELECTOR);
     bool             justone = true; // assume only one article
     const auto       parse_article_num = [](std::string_view text)
@@ -346,18 +346,19 @@ NumNumResult num_num(std::string_view command)
         if (max < min)
         {
             error_msg("Bad range");
-            g_art = oldart;
-            g_artp = oldartp;
+            g_nav.target.num = oldart;
+            g_nav.target.art = oldartp;
             return NN_ASK;
         }
         if (justone)
         {
-            g_art = min;
+            g_nav.target.num = min;
             return NN_REREAD;
         }
-        for (g_art = article_first(min); g_art <= max; g_art = article_next(g_art))
+        for (g_nav.target.num = article_first(min); g_nav.target.num <= max;
+             g_nav.target.num = article_next(g_nav.target.num))
         {
-            g_artp = article_ptr(g_art);
+            g_nav.target.art = article_ptr(g_nav.target.num);
             const int result = perform(cmdlst, output_level && g_page_line == 1);
             if (result < 0)
             {
@@ -367,16 +368,16 @@ NumNumResult num_num(std::string_view command)
                 }
                 else if (g_verbose)
                 {
-                    g_msg = fmt::format("(Interrupted at article {})", g_art.value_of());
+                    g_msg = fmt::format("(Interrupted at article {})", g_nav.target.num.value_of());
                     error_msg(g_msg);
                 }
                 else
                 {
-                    g_msg = fmt::format("(Intr at {})", g_art.value_of());
+                    g_msg = fmt::format("(Intr at {})", g_nav.target.num.value_of());
                     error_msg(g_msg);
                 }
-                g_art = oldart;
-                g_artp = oldartp;
+                g_nav.target.num = oldart;
+                g_nav.target.art = oldartp;
                 return NN_ASK;
             }
             if (!output_level)
@@ -389,8 +390,8 @@ NumNumResult num_num(std::string_view command)
             ranges.remove_prefix(comma + 1);
         }
     }
-    g_art = oldart;
-    g_artp = oldartp;
+    g_nav.target.num = oldart;
+    g_nav.target.art = oldartp;
     return NN_NORM;
 }
 
@@ -418,7 +419,7 @@ int thread_perform(std::string_view command)
     }
     if (len < static_cast<int>(command.size()) && command[static_cast<std::size_t>(len)] == '.')
     {
-        if (!g_artp)
+        if (!g_nav.target.art)
         {
             return -1;
         }
@@ -449,7 +450,7 @@ int thread_perform(std::string_view command)
         g_performed_article_loop = false;
         if (one_thread)
         {
-            sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
+            sp = (g_sel_mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
         }
         else
         {
@@ -461,10 +462,10 @@ int thread_perform(std::string_view command)
             {
                 continue;
             }
-            g_artp = g_sel_mode == SM_SUBJECT ? sp->m_articles : sp->first_art();
-            if (g_artp)
+            g_nav.target.art = g_sel_mode == SM_SUBJECT ? sp->m_articles : sp->first_art();
+            if (g_nav.target.art)
             {
-                g_art = g_artp->article_num();
+                g_nav.target.num = g_nav.target.art->article_num();
                 const int result = perform(cmdstr, 0);
                 if (result < 0)
                 {
@@ -480,11 +481,11 @@ int thread_perform(std::string_view command)
     }
     else if (!cmdstr.empty() && cmdstr[0] == 'p')
     {
-        ArticleNum oldart = g_art;
-        g_art = article_after(g_last_art);
+        ArticleNum oldart = g_nav.target.num;
+        g_nav.target.num = article_after(g_last_art);
         followup("f");
         g_force_grow = true;
-        g_art = oldart;
+        g_nav.target.num = oldart;
         g_page_line++;
     }
     else
@@ -496,7 +497,7 @@ int thread_perform(std::string_view command)
             Article **limit = article_ptr_list_end();
             if (one_thread)
             {
-                sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
+                sp = (g_sel_mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
             }
             for (Article **app = article_ptr_list_begin(); app < limit; app++)
             {
@@ -508,8 +509,8 @@ int thread_perform(std::string_view command)
                 if ((!(ap->m_flags & AF_UNREAD) ^ want_unread) //
                     && !(ap->m_flags & g_sel_mask) ^ !!bits)
                 {
-                    g_art = ap->article_num();
-                    g_artp = ap;
+                    g_nav.target.num = ap->article_num();
+                    g_nav.target.art = ap;
                     const int result = perform(cmdstr, output_level && g_page_line == 1);
                     if (result < 0)
                     {
@@ -527,7 +528,7 @@ int thread_perform(std::string_view command)
         {
             if (one_thread)
             {
-                sp = (g_sel_mode == SM_THREAD ? g_artp->m_subj->m_thread->m_subj : g_artp->m_subj);
+                sp = (g_sel_mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
             }
             else
             {
@@ -541,8 +542,8 @@ int thread_perform(std::string_view command)
                     if ((!(ap->m_flags & AF_UNREAD) ^ want_unread)
                         && !(ap->m_flags & g_sel_mask) ^ !!bits)
                     {
-                        g_art = ap->article_num();
-                        g_artp = ap;
+                        g_nav.target.num = ap->article_num();
+                        g_nav.target.art = ap;
                         const int result = perform(cmdstr, output_level && g_page_line == 1);
                         if (result < 0)
                         {
@@ -572,7 +573,7 @@ int perform(std::string_view command_list, int output_level)
 
     if (output_level == 1)
     {
-        fmt::print("{:<6} ", g_art.value_of());
+        fmt::print("{:<6} ", g_nav.target.num.value_of());
         std::fflush(stdout);
     }
 
@@ -588,12 +589,12 @@ int perform(std::string_view command_list, int output_level)
         {
             if (savemode)
             {
-                g_artp->mark_as_read();
-                g_artp->change_auto_flags(AUTO_KILL_1);
+                g_nav.target.art->mark_as_read();
+                g_nav.target.art->change_auto_flags(AUTO_KILL_1);
             }
-            else if (!was_read(g_art))
+            else if (!was_read(g_nav.target.num))
             {
-                g_artp->mark_as_read();
+                g_nav.target.art->mark_as_read();
                 if (output_level && g_verbose)
                 {
                     fmt::print("\tJunked");
@@ -601,7 +602,7 @@ int perform(std::string_view command_list, int output_level)
             }
             if (g_sel_rereading)
             {
-                g_artp->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+                g_nav.target.art->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
         }
         else if (ch == '+')
@@ -612,11 +613,11 @@ int perform(std::string_view command_list, int output_level)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
-                    g_artp->select_articles_thread(savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
+                    g_nav.target.art->select_articles_thread(savemode ? AUTO_SEL_THD : AUTO_KILL_NONE);
                 }
                 else
                 {
-                    g_artp->select_articles_subject(savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
+                    g_nav.target.art->select_articles_subject(savemode ? AUTO_SEL_SBJ : AUTO_KILL_NONE);
                 }
                 if (doubled_plus)
                 {
@@ -625,16 +626,16 @@ int perform(std::string_view command_list, int output_level)
             }
             else
             {
-                g_artp->select_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+                g_nav.target.art->select_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
         }
         else if (ch == 'S')
         {
-            g_artp->select_articles_subject(AUTO_SEL_SBJ);
+            g_nav.target.art->select_articles_subject(AUTO_SEL_SBJ);
         }
         else if (ch == '.')
         {
-            select_sub_thread(g_artp, savemode? AUTO_SEL_FOL : AUTO_KILL_NONE);
+            select_sub_thread(g_nav.target.art, savemode ? AUTO_SEL_FOL : AUTO_KILL_NONE);
         }
         else if (ch == '-')
         {
@@ -644,43 +645,43 @@ int perform(std::string_view command_list, int output_level)
             {
                 if (g_sel_mode == SM_THREAD)
                 {
-                    g_artp->deselect_articles_thread();
+                    g_nav.target.art->deselect_articles_thread();
                 }
                 else
                 {
-                    g_artp->deselect_articles_subject();
+                    g_nav.target.art->deselect_articles_subject();
                 }
                 ++command_pos;
             }
             else
             {
-                g_artp->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
+                g_nav.target.art->deselect_article(output_level ? ALSO_ECHO : AUTO_KILL_NONE);
             }
         }
         else if (ch == ',')
         {
-            kill_sub_thread(g_artp, AFFECT_ALL | (savemode? AUTO_KILL_FOL : AUTO_KILL_NONE));
+            kill_sub_thread(g_nav.target.art, AFFECT_ALL | (savemode ? AUTO_KILL_FOL : AUTO_KILL_NONE));
         }
         else if (ch == 'J')
         {
             if (g_sel_mode == SM_THREAD)
             {
-                g_artp->kill_articles_thread(AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
+                g_nav.target.art->kill_articles_thread(AFFECT_ALL | (savemode ? AUTO_KILL_THD : AUTO_KILL_NONE));
             }
             else
             {
-                g_artp->kill_articles_subject(AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+                g_nav.target.art->kill_articles_subject(AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
             }
         }
         else if (ch == 'K' || ch == 'k')
         {
-            g_artp->kill_articles_subject(AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
+            g_nav.target.art->kill_articles_subject(AFFECT_ALL | (savemode ? AUTO_KILL_SBJ : AUTO_KILL_NONE));
         }
         else if (ch == 'x')
         {
-            if (!was_read(g_art))
+            if (!was_read(g_nav.target.num))
             {
-                g_artp->one_less();
+                g_nav.target.art->one_less();
                 if (output_level && g_verbose)
                 {
                     fmt::print("\tKilled");
@@ -688,12 +689,12 @@ int perform(std::string_view command_list, int output_level)
             }
             if (g_sel_rereading)
             {
-                g_artp->deselect_article(AUTO_KILL_NONE);
+                g_nav.target.art->deselect_article(AUTO_KILL_NONE);
             }
         }
         else if (ch == 't')
         {
-            entire_tree(g_artp);
+            entire_tree(g_nav.target.art);
         }
         else if (ch == 'T')
         {
@@ -707,11 +708,11 @@ int perform(std::string_view command_list, int output_level)
         {
             if (savemode)
             {
-                g_artp->change_auto_flags(AUTO_SEL_1);
+                g_nav.target.art->change_auto_flags(AUTO_SEL_1);
             }
-            else if ((g_artp->m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
+            else if ((g_nav.target.art->m_flags & (AF_UNREAD | AF_EXISTS)) == AF_EXISTS)
             {
-                g_artp->unmark_as_read();
+                g_nav.target.art->unmark_as_read();
                 if (output_level && g_verbose)
                 {
                     fmt::print("\tMarked unread");
@@ -720,8 +721,8 @@ int perform(std::string_view command_list, int output_level)
         }
         else if (ch == 'M')
         {
-            g_artp->delay_unmark();
-            g_artp->one_less();
+            g_nav.target.art->delay_unmark();
+            g_nav.target.art->one_less();
             if (output_level && g_verbose)
             {
                 fmt::print("\tWill return");
@@ -730,7 +731,7 @@ int perform(std::string_view command_list, int output_level)
         else if (ch == '=')
         {
             carriage_return();
-            output_subject(*g_artp, 0);
+            output_subject(*g_nav.target.art, 0);
             output_level = 0;
         }
         else if (ch == 'C')
@@ -815,7 +816,7 @@ int perform(std::string_view command_list, int output_level)
                 if (output_level != 1)
                 {
                     erase_line(false);
-                    fmt::print("{:<6} ", g_art.value_of());
+                    fmt::print("{:<6} ", g_nav.target.num.value_of());
                 }
                 if (ch == 'a')
                 {
@@ -828,7 +829,7 @@ int perform(std::string_view command_list, int output_level)
                     {
                         if (g_msg.empty())
                         {
-                            g_msg = fmt::format("Save aborted at article {}", g_art.value_of());
+                            g_msg = fmt::format("Save aborted at article {}", g_nav.target.num.value_of());
                         }
                         return s_perform_aborted;
                     }

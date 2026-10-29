@@ -47,7 +47,7 @@ protected:
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
-        m_old_art = g_art;
+        m_old_art = g_nav.target.num;
         m_old_mode = g_mode;
         m_old_general_mode = g_general_mode;
         m_old_use_threads = g_use_threads;
@@ -76,7 +76,7 @@ protected:
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{};
-        g_art = ArticleNum{};
+        g_nav.target.num = ArticleNum{};
         g_mode = MM_ARTICLE;
         g_general_mode = GM_READ;
         g_use_threads = false;
@@ -115,7 +115,7 @@ protected:
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
-        g_art = m_old_art;
+        g_nav.target.num = m_old_art;
         g_mode = m_old_mode;
         g_general_mode = m_old_general_mode;
         g_use_threads = m_old_use_threads;

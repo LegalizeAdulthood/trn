@@ -831,15 +831,15 @@ bool Article::valid_article()
                 m_auto_flags |= fake_ap->m_auto_flags;
                 g_kf_state |= g_kfs_thread_change_set;
             }
-            if (g_curr_artp == fake_ap)
+            if (g_nav.current.art == fake_ap)
             {
-                g_curr_artp = this;
-                g_curr_art = m_num;
+                g_nav.current.art = this;
+                g_nav.current.num = m_num;
             }
-            if (g_recent_artp == fake_ap)
+            if (g_nav.recent.art == fake_ap)
             {
-                g_recent_artp = this;
-                g_recent_art = m_num;
+                g_nav.recent.art = this;
+                g_nav.recent.num = m_num;
             }
             Article *ap = m_parent;
             if (ap != nullptr)

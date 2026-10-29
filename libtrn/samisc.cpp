@@ -11,7 +11,7 @@
 #include <trn/artio.h> // g_openart
 #include <trn/bits.h>
 #include <trn/cache.h>
-#include <trn/ng.h>     // for "g_art"
+#include <trn/ng.h>     // for "m_target.m_number"
 #include <trn/ngdata.h> // several
 #include <trn/rthread.h>
 #include <trn/samain.h>
@@ -158,11 +158,11 @@ int sa_number_arts()
 //
 void sa_go_art(ArticleNum a)
 {
-    g_art = a;
-    (void)article_find(g_art);
-    if (g_open_art != g_art)
+    g_nav.target.num = a;
+    (void) article_find(g_nav.target.num);
+    if (g_open_art != g_nav.target.num)
     {
-        art_open(g_art, (ArticlePosition) 0);
+        art_open(g_nav.target.num, (ArticlePosition) 0);
     }
 }
 

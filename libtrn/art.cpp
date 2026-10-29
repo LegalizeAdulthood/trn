@@ -165,18 +165,18 @@ DoArticleResult do_article(std::string &article_command)
     }
     if (g_mouse_bar_cnt > 3)
     {
-        g_prompt = fmt::format("%sEnd of art {} (of {}) %s[%s]", g_art.value_of(), g_last_art.value_of());
+        g_prompt = fmt::format("%sEnd of art {} (of {}) %s[%s]", g_nav.target.num.value_of(), g_last_art.value_of());
     }
     else
     {
-        g_prompt =
-            fmt::format("%sEnd of article {} (of {}) %s-- what next? [%s]", g_art.value_of(), g_last_art.value_of());
+        g_prompt = fmt::format("%sEnd of article {} (of {}) %s-- what next? [%s]", g_nav.target.num.value_of(),
+                               g_last_art.value_of());
     }
     g_int_count = 0;            // interrupt count is 0
     s_first_page = g_top_line < 0;
     if (s_first_page != 0)
     {
-        parse_header(g_art);
+        parse_header(g_nav.target.num);
         mime_set_article();
         clear_art_buf();
         set_art_buf_seek(g_header_type[PAST_HEADER].min_pos);
@@ -190,10 +190,10 @@ DoArticleResult do_article(std::string &article_command)
         {
             init_tree(); // init tree display
         }
-        TRN_ASSERT(g_art == g_open_art);
+        TRN_ASSERT(g_nav.target.num == g_open_art);
         if (g_do_fseek)
         {
-            parse_header(g_art);         // make sure header is ours
+            parse_header(g_nav.target.num); // make sure header is ours
             if (art_buf_empty())
             {
                 mime_set_article();
@@ -234,13 +234,13 @@ DoArticleResult do_article(std::string &article_command)
             {
                 ArticleNum i;
 
-                int selected = (g_curr_artp->m_flags & AF_SEL);
-                int unseen = article_unread(g_art) ? 1 : 0;
+                int         selected = (g_nav.current.art->m_flags & AF_SEL);
+                int         unseen = article_unread(g_nav.target.num) ? 1 : 0;
                 std::string title_line;
                 bool        has_title_suffix = false;
                 title_line.reserve(LINE_BUF_LEN);
                 fmt::format_to(std::back_inserter(title_line), "{}{} #{}", g_newsgroup_name, g_moderated,
-                               g_art.value_of());
+                               g_nav.target.num.value_of());
                 if (g_selected_only)
                 {
                     value_of(i) = g_selected_count - (unseen && selected);
@@ -266,7 +266,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
                 line_num += tree_puts(title_line, line_num + g_top_line, 0);
             }
-            restart_header(g_art);
+            restart_header(g_nav.target.num);
             g_force_last = false;        // we will have our day in court
             s_restart = ArticlePosition{};
             g_art_line_num = ArticleLine{};              // start counting lines
@@ -380,7 +380,7 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     if (!s_continuation)
                     {
-                        const std::string      value = decode_header(fetch_lines(g_art, NEWSGROUPS_LINE));
+                        const std::string      value = decode_header(fetch_lines(g_nav.target.num, NEWSGROUPS_LINE));
                         const std::string_view newsgroups = skip_hor_space(value);
                         hide_this_line =
                             newsgroups.find(',') == std::string_view::npos && newsgroups == g_newsgroup_name;
@@ -402,7 +402,7 @@ DoArticleResult do_article(std::string &article_command)
 
                 case FROM_LINE:
                 {
-                    const std::string name{extract_name(decode_header(fetch_lines(g_art, FROM_LINE)))};
+                    const std::string name{extract_name(decode_header(fetch_lines(g_nav.target.num, FROM_LINE)))};
                     if (!name.empty())
                     {
                         if (s_continuation)
@@ -419,7 +419,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
 
                 case DATE_LINE:
-                    if (g_curr_artp->m_date != -1)
+                    if (g_nav.current.art->m_date != -1)
                     {
                         if (s_continuation)
                         {
@@ -433,7 +433,7 @@ DoArticleResult do_article(std::string &article_command)
                         const std::string local_time_format = get_env_var("LOCALTIMEFMT", LOCALTIME_FMT);
                         const std::size_t date_length =
                             std::strftime(date_line.data() + 6, date_line.size() - 6, local_time_format.c_str(),
-                                          std::localtime(&g_curr_artp->m_date));
+                                          std::localtime(&g_nav.current.art->m_date));
                         date_line.resize(6 + date_length);
                         set_line(date_line);
                     }
@@ -443,7 +443,7 @@ DoArticleResult do_article(std::string &article_command)
             if (g_in_header == SUBJ_LINE && g_do_hiding   //
                 && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
-                const std::string_view cached_subj = g_artp->get_cached_line_view(SUBJ_LINE, false);
+                const std::string_view cached_subj = g_nav.target.art->get_cached_line_view(SUBJ_LINE, false);
                 if (!cached_subj.empty() && s_continuation)
                 {
                     // continuation lines were already output
@@ -1315,7 +1315,7 @@ refresh_screen:
 
     case 't':         // output thread data
         g_page_line = 1;
-        entire_tree(g_curr_artp);
+        entire_tree(g_nav.current.art);
         return PS_ASK;
 
     case '_':
@@ -1352,7 +1352,7 @@ refresh_screen:
     case 'u':
     case 'w': case 'W':
     case '|':
-        g_artp->mark_as_read();   // mark article as read
+        g_nav.target.art->mark_as_read(); // mark article as read
         // FALL THROUGH
 
     case 'U': case ',':
@@ -1576,12 +1576,12 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     case 0:
         if (ap)
         {
-            if (ap == g_artp)
+            if (ap == g_nav.target.art)
             {
                 return;
             }
-            g_artp = ap;
-            g_art = ap->article_num();
+            g_nav.target.art = ap;
+            g_nav.target.num = ap->article_num();
             g_reread = true;
             push_char(Ctl('r'));
         }

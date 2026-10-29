@@ -200,8 +200,8 @@ void thread_grow()
 
 void thread_close()
 {
-    g_curr_artp = nullptr;
-    g_artp = nullptr;
+    g_nav.current.art = nullptr;
+    g_nav.target.art = nullptr;
     init_tree();                        // free any tree lines
 
     update_thread_kill_file();
@@ -246,22 +246,22 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
 
 void top_article()
 {
-    g_art = article_after(g_last_art);
-    g_artp = nullptr;
+    g_nav.target.num = article_after(g_last_art);
+    g_nav.target.art = nullptr;
     inc_article(g_selected_only, false);
-    if (g_art > g_last_art && g_last_cached < g_last_art)
+    if (g_nav.target.num > g_last_art && g_last_cached < g_last_art)
     {
-        g_art = g_first_art;
+        g_nav.target.num = g_first_art;
     }
 }
 
-// Bump g_art/g_artp to the next article, wrapping from thread to thread.
+// Bump m_target.m_number/m_target.m_article to the next article, wrapping from thread to thread.
 // If sel_flag is true, only stops at selected articles.
 // If rereading is false, only stops at unread articles.
 //
 void inc_article(bool sel_flag, bool rereading)
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
@@ -293,13 +293,13 @@ void inc_article(bool sel_flag, bool rereading)
               || (sel_flag && !(ap->m_flags & AF_SEL)));
         if (g_art_ptr < limit)
         {
-            g_artp = *g_art_ptr;
-            g_art = g_artp->article_num();
+            g_nav.target.art = *g_art_ptr;
+            g_nav.target.num = g_nav.target.art->article_num();
         }
         else
         {
-            g_artp = nullptr;
-            g_art = article_after(g_last_art);
+            g_nav.target.art = nullptr;
+            g_nav.target.num = article_after(g_last_art);
             g_art_ptr = article_ptr_list_begin();
         }
         return;
@@ -342,28 +342,28 @@ void inc_article(bool sel_flag, bool rereading)
             }
         } while (ap && ((!rereading && !(ap->m_flags & AF_UNREAD))
                      || (sel_flag && !(ap->m_flags & AF_SEL))));
-        g_artp = ap;
-        if (g_artp != nullptr)
+        g_nav.target.art = ap;
+        if (g_nav.target.art != nullptr)
         {
-            g_art = ap->article_num();
+            g_nav.target.num = ap->article_num();
         }
         else
         {
-            if (g_art <= g_last_cached)
+            if (g_nav.target.num <= g_last_cached)
             {
-                g_art = article_after(g_last_cached);
+                g_nav.target.num = article_after(g_last_cached);
             }
             else
             {
-                ++g_art;
+                ++g_nav.target.num;
             }
-            if (g_art <= g_last_art)
+            if (g_nav.target.num <= g_last_art)
             {
-                g_artp = article_ptr(g_art);
+                g_nav.target.art = article_ptr(g_nav.target.num);
             }
             else
             {
-                g_art = article_after(g_last_art);
+                g_nav.target.num = article_after(g_last_art);
             }
         }
         return;
@@ -373,18 +373,18 @@ void inc_article(bool sel_flag, bool rereading)
 num_inc:
     if (!ap)
     {
-        g_art = article_before(g_first_art);
+        g_nav.target.num = article_before(g_first_art);
     }
     while (true)
     {
-        g_art = article_next(g_art);
-        if (g_art > g_last_art)
+        g_nav.target.num = article_next(g_nav.target.num);
+        if (g_nav.target.num > g_last_art)
         {
-            g_art = article_after(g_last_art);
+            g_nav.target.num = article_after(g_last_art);
             ap = nullptr;
             break;
         }
-        ap = article_ptr(g_art);
+        ap = article_ptr(g_nav.target.num);
         if (!(ap->m_flags & AF_EXISTS))
         {
             ap->one_less();
@@ -395,16 +395,16 @@ num_inc:
             break;
         }
     }
-    g_artp = ap;
+    g_nav.target.art = ap;
 }
 
-// Bump g_art/g_artp to the previous article, wrapping from thread to thread.
+// Bump m_target.m_number/m_target.m_article to the previous article, wrapping from thread to thread.
 // If sel_flag is true, only stops at selected articles.
 // If rereading is false, only stops at unread articles.
 //
 void dec_article(bool sel_flag, bool rereading)
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
@@ -432,13 +432,13 @@ void dec_article(bool sel_flag, bool rereading)
             if ((rereading || (ap->m_flags & AF_UNREAD)) && (!sel_flag || (ap->m_flags & AF_SEL)))
             {
                 g_art_ptr = previous;
-                g_artp = ap;
-                g_art = ap->article_num();
+                g_nav.target.art = ap;
+                g_nav.target.num = ap->article_num();
                 return;
             }
         }
-        g_artp = nullptr;
-        g_art = article_before(g_abs_first);
+        g_nav.target.art = nullptr;
+        g_nav.target.num = article_before(g_abs_first);
         return;
     }
 
@@ -479,14 +479,14 @@ void dec_article(bool sel_flag, bool rereading)
             }
         } while (ap && ((!rereading && !(ap->m_flags & AF_UNREAD))
                      || (sel_flag && !(ap->m_flags & AF_SEL))));
-        g_artp = ap;
-        if (g_artp != nullptr)
+        g_nav.target.art = ap;
+        if (g_nav.target.art != nullptr)
         {
-            g_art = ap->article_num();
+            g_nav.target.num = ap->article_num();
         }
         else
         {
-            g_art = article_before(g_abs_first);
+            g_nav.target.num = article_before(g_abs_first);
         }
         return;
     }
@@ -495,14 +495,14 @@ void dec_article(bool sel_flag, bool rereading)
 num_dec:
     while (true)
     {
-        g_art = article_prev(g_art);
-        if (g_art < g_abs_first)
+        g_nav.target.num = article_prev(g_nav.target.num);
+        if (g_nav.target.num < g_abs_first)
         {
-            g_art = article_before(g_abs_first);
+            g_nav.target.num = article_before(g_abs_first);
             ap = nullptr;
             break;
         }
-        ap = article_ptr(g_art);
+        ap = article_ptr(g_nav.target.num);
         if (!(ap->m_flags & AF_EXISTS))
         {
             ap->one_less();
@@ -513,15 +513,15 @@ num_dec:
             break;
         }
     }
-    g_artp = ap;
+    g_nav.target.art = ap;
 }
 
-// Find the next g_art/g_artp with the same subject as this one.  Returns
+// Find the next m_target.m_number/m_target.m_article with the same subject as this one.  Returns
 // false if no such article exists.
 //
 bool next_article_with_subj()
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
 
     if (!ap)
     {
@@ -533,26 +533,26 @@ bool next_article_with_subj()
         ap = ap->m_subj_next;
         if (!ap)
         {
-            if (!g_art)
+            if (!g_nav.target.num)
             {
-                g_art = g_first_art;
+                g_nav.target.num = g_first_art;
             }
             return false;
         }
     } while (!all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
-    g_artp = ap;
-    g_art = ap->article_num();
+    g_nav.target.art = ap;
+    g_nav.target.num = ap->article_num();
     g_search_ahead = ArticleNum{-1};
     return true;
 }
 
-// Find the previous g_art/g_artp with the same subject as this one.  Returns
+// Find the previous m_target.m_number/m_target.m_article with the same subject as this one.  Returns
 // false if no such article exists.
 //
 bool prev_article_with_subj()
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
 
     if (!ap)
     {
@@ -576,16 +576,16 @@ bool prev_article_with_subj()
         }
         if (!ap)
         {
-            if (!g_art)
+            if (!g_nav.target.num)
             {
-                g_art = g_last_art;
+                g_nav.target.num = g_last_art;
             }
             return false;
         }
     } while (!(ap->m_flags & AF_EXISTS)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
-    g_artp = ap;
-    g_art = ap->article_num();
+    g_nav.target.art = ap;
+    g_nav.target.num = ap->article_num();
     return true;
 }
 
@@ -818,12 +818,12 @@ void clear_sub_thread(Article *ap)
     }
 }
 
-// Find the next thread (first if g_art > g_lastart).  If articles are selected,
+// Find the next thread (first if m_target.m_number > g_lastart).  If articles are selected,
 // only choose from threads with selected articles.
 //
 void visit_next_thread()
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
 
     Subject *sp = (ap ? ap->m_subj : nullptr);
     while ((sp = next_subject(sp, SF_VISIT)) != nullptr)
@@ -831,23 +831,23 @@ void visit_next_thread()
         ap = sp->subj_article();
         if (ap != nullptr)
         {
-            g_art = ap->article_num();
-            g_artp = ap;
+            g_nav.target.num = ap->article_num();
+            g_nav.target.art = ap;
             return;
         }
         g_reread = false;
     }
-    g_artp = nullptr;
-    g_art = article_after(g_last_art);
+    g_nav.target.art = nullptr;
+    g_nav.target.num = article_after(g_last_art);
     g_force_last = true;
 }
 
-// Find previous thread (or last if g_artp == nullptr).  If articles are selected,
+// Find previous thread (or last if m_target.m_article == nullptr).  If articles are selected,
 // only choose from threads with selected articles.
 //
 void visit_prev_thread()
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
 
     Subject *sp = (ap ? ap->m_subj : nullptr);
     while ((sp = prev_subject(sp, SF_VISIT)) != nullptr)
@@ -855,23 +855,23 @@ void visit_prev_thread()
         ap = sp->subj_article();
         if (ap != nullptr)
         {
-            g_art = ap->article_num();
-            g_artp = ap;
+            g_nav.target.num = ap->article_num();
+            g_nav.target.art = ap;
             return;
         }
         g_reread = false;
     }
-    g_artp = nullptr;
-    g_art = article_after(g_last_art);
+    g_nav.target.art = nullptr;
+    g_nav.target.num = article_after(g_last_art);
     g_force_last = true;
 }
 
-// Find g_artp's parent or oldest ancestor.  Returns false if no such
-// article.  Sets g_art and g_artp otherwise.
+// Find m_target.m_article's parent or oldest ancestor.  Returns false if no such
+// article.  Sets m_target.m_number and m_target.m_article otherwise.
 //
 bool find_parent(bool keep_going)
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
 
     if (!ap->m_parent)
     {
@@ -883,17 +883,17 @@ bool find_parent(bool keep_going)
         ap = ap->m_parent;
     } while (keep_going && ap->m_parent);
 
-    g_artp = ap;
-    g_art = ap->article_num();
+    g_nav.target.art = ap;
+    g_nav.target.num = ap->article_num();
     return true;
 }
 
-// Find g_artp's first child or youngest descendant.  Returns false if no
-// such article.  Sets g_art and g_artp otherwise.
+// Find m_target.m_article's first child or youngest descendant.  Returns false if no
+// such article.  Sets m_target.m_number and m_target.m_article otherwise.
 //
 bool find_leaf(bool keep_going)
 {
-    Article* ap = g_artp;
+    Article *ap = g_nav.target.art;
 
     if (!ap->m_child1)
     {
@@ -905,19 +905,19 @@ bool find_leaf(bool keep_going)
         ap = ap->m_child1;
     } while (keep_going && ap->m_child1);
 
-    g_artp = ap;
-    g_art = ap->article_num();
+    g_nav.target.art = ap;
+    g_nav.target.num = ap->article_num();
     return true;
 }
 
-// Find the next "sibling" of g_artp, including cousins that are the
+// Find the next "sibling" of m_target.m_article, including cousins that are the
 // same distance down the thread as we are.  Returns false if no such
-// article.  Sets g_art and g_artp otherwise.
+// article.  Sets m_target.m_number and m_target.m_article otherwise.
 //
 bool find_next_sib()
 {
     int      ascent = 0;
-    Article *ta = g_artp;
+    Article *ta = g_nav.target.art;
     while (true)
     {
         while (ta->m_sibling)
@@ -926,8 +926,8 @@ bool find_next_sib()
             Article *tb = first_sib(ta, ascent);
             if (tb != nullptr)
             {
-                g_artp = tb;
-                g_art = tb->article_num();
+                g_nav.target.art = tb;
+                g_nav.target.num = tb->article_num();
                 return true;
             }
         }
@@ -968,14 +968,14 @@ static Article *first_sib(Article *ta, int depth)
     }
 }
 
-// Find the previous "sibling" of g_artp, including cousins that are
+// Find the previous "sibling" of m_target.m_article, including cousins that are
 // the same distance down the thread as we are.  Returns false if no
-// such article.  Sets g_art and g_artp otherwise.
+// such article.  Sets m_target.m_number and m_target.m_article otherwise.
 //
 bool find_prev_sib()
 {
     int      ascent = 0;
-    Article *ta = g_artp;
+    Article *ta = g_nav.target.art;
     while (true)
     {
         Article *tb = ta;
@@ -990,8 +990,8 @@ bool find_prev_sib()
         tb = last_sib(ta, ascent, tb);
         if (tb != nullptr)
         {
-            g_artp = tb;
-            g_art = tb->article_num();
+            g_nav.target.art = tb;
+            g_nav.target.num = tb->article_num();
             return true;
         }
         if (!(ta = ta->m_parent))

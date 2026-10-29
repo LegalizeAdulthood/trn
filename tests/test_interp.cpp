@@ -257,7 +257,7 @@ void InterpolatorTest::TearDown()
     g_mode = MM_INITIALIZING;
     g_dm_count = 0;
     g_last_art = ArticleNum{};
-    g_art = ArticleNum{};
+    g_nav.target.num = ArticleNum{};
     g_in_ng = false;
     g_data_source = nullptr;
 
@@ -494,7 +494,7 @@ TEST_F(InterpolatorTest, articleNumberOutsideNewsgroupIsEmpty)
 TEST_F(InterpolatorTest, articleNumberInsideNewsgroup)
 {
     g_in_ng = true;
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NUM};
 
     const std::string_view new_pattern = interpolate("%a");
 
@@ -515,7 +515,7 @@ TEST_F(InterpolatorTest, articleNameInsideLocalNewsgroupArticleClosed)
     g_in_ng = true;
     g_newsgroup_dir = TRN_TEST_NEWSGROUP_SUBDIR;
     g_last_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NUM};
 
     const std::string_view new_pattern = interpolate("%A");
 
@@ -1630,7 +1630,7 @@ void InterpolatorNewsgroupTest::SetUp()
 {
     InterpolatorTest::SetUp();
     g_in_ng = true;
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NUM};
     g_last_art = ArticleNum{TRN_TEST_NEWSGROUP_HIGH};
     g_newsgroup_ptr = g_first_newsgroup;
     ASSERT_NE(nullptr, g_data_source);
@@ -1646,7 +1646,7 @@ void InterpolatorNewsgroupTest::TearDown()
     art_close();
     close_cache();
     g_in_ng = false;
-    g_art = ArticleNum{-1};
+    g_nav.target.num = ArticleNum{-1};
     g_last_art = ArticleNum{-1};
     g_newsgroup_ptr = nullptr;
     m_curdir.pop();
@@ -1676,8 +1676,8 @@ private:
     std::string                              m_old_charsets{g_charsets};
     char                                     m_old_subst{current_char_subst_mode()};
     std::string                              m_old_prompt{g_prompt};
-    Article                                 *m_old_current_article{g_curr_artp};
-    Article                                 *m_old_article{g_artp};
+    Article                                 *m_old_current_article{g_nav.current.art};
+    Article                                 *m_old_article{g_nav.target.art};
     bool                                     m_capturing{};
 };
 
@@ -1692,10 +1692,10 @@ void ArticleHeaderPresentationTest::SetUp()
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 }
 
 void ArticleHeaderPresentationTest::TearDown()
@@ -1716,8 +1716,8 @@ void ArticleHeaderPresentationTest::TearDown()
     g_charsets = m_old_charsets;
     set_char_subst_mode(m_old_subst);
     g_prompt = m_old_prompt;
-    g_curr_artp = m_old_current_article;
-    g_artp = m_old_article;
+    g_nav.current.art = m_old_current_article;
+    g_nav.target.art = m_old_article;
 }
 
 void ArticleHeaderPresentationTest::render_article()
@@ -1836,7 +1836,7 @@ protected:
 private:
     fs::path                     m_previous_directory;
     ValueSaver<std::string>      m_group_dir{g_newsgroup_dir, g_newsgroup_dir};
-    ValueSaver<ArticleNum>       m_current_article{g_curr_art, g_curr_art};
+    ValueSaver<ArticleNum>       m_current_article{g_nav.current.num, g_nav.current.num};
     ValueSaver<ArticleLine>      m_line{g_art_line_num, g_art_line_num};
     ValueSaver<ArticlePosition>  m_position{g_art_pos, g_art_pos};
     ValueSaver<HeaderLineType>   m_in_header{g_in_header, g_in_header};
@@ -1885,7 +1885,7 @@ void PagerArticleTest::SetUp()
     g_page_stop.clear();
     g_check_count = 0;
     g_erase_char = '\b';
-    g_curr_art = g_art;
+    g_nav.current.num = g_nav.target.num;
     g_tc_LINES = 10;
     g_init_lines = ArticleLine{g_tc_LINES};
     g_erase_screen = false;
@@ -1914,14 +1914,14 @@ void PagerArticleTest::load_article(std::string_view headers, std::string_view b
 {
     art_close();
     {
-        std::ofstream article{std::to_string(g_art.value_of())};
+        std::ofstream article{std::to_string(g_nav.target.num.value_of())};
         article << headers << '\n';
         m_body_start = ArticlePosition{static_cast<long>(article.tellp())};
         article << body;
         ASSERT_TRUE(article.good());
     }
     g_parsed_art = ArticleNum{};
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
     mime_set_article();
     clear_art_buf();
     set_art_buf_seek(m_body_start);
@@ -2084,7 +2084,7 @@ void ArticleCacheLifecycleTest::SetUp()
     g_unicode_substitutions = UnicodeSubstitutionProfile{};
     ASSERT_TRUE(g_unicode_substitutions.configure(
         IniSection{"unicode substitutions", {}, "U+00E9 = \"ECHO\\nNEXT\"\nU+00C4 = AE\nU+FFFD = ?\n"}));
-    m_original = g_art;
+    m_original = g_nav.target.num;
     m_other = m_original + ArticleNum{1};
     {
         std::ofstream other{std::to_string(m_other.value_of())};
@@ -2093,7 +2093,7 @@ void ArticleCacheLifecycleTest::SetUp()
     }
     load_article(std::string{"Subject: cache lifecycle\n"} + std::string{scenario().headers}, scenario().body);
     ASSERT_FALSE(HasFatalFailure());
-    g_raw_art_size = ArticlePosition{static_cast<long>(fs::file_size(std::to_string(g_art.value_of())))};
+    g_raw_art_size = ArticlePosition{static_cast<long>(fs::file_size(std::to_string(g_nav.target.num.value_of())))};
     g_art_size = g_raw_art_size;
     const bool        complete = std::get<1>(GetParam());
     const std::size_t count = complete ? scenario().plain.size() : scenario().partial_rows;
@@ -2121,11 +2121,11 @@ PageSwitchResult ArticleCacheLifecycleTest::pager_command(std::string_view comma
 
 void ArticleCacheLifecycleTest::open_number(ArticleNum number)
 {
-    g_art = number;
-    g_curr_art = number;
-    g_artp = article_ptr(number);
-    g_curr_artp = g_artp;
-    g_artp->m_flags |= AF_EXISTS;
+    g_nav.target.num = number;
+    g_nav.current.num = number;
+    g_nav.target.art = article_ptr(number);
+    g_nav.current.art = g_nav.target.art;
+    g_nav.target.art->m_flags |= AF_EXISTS;
     g_last_art = std::max(g_last_art, number);
     ASSERT_NE(nullptr, art_open(number, ArticlePosition{}));
     g_top_line = ArticleLine{-1};
@@ -2225,7 +2225,7 @@ TEST_P(ArticleCacheLifecycleTest, switchingArticlesDiscardsCachedMimeAndCharsetS
     EXPECT_FALSE(g_is_mime);
     EXPECT_FALSE(g_multimedia_mime);
     EXPECT_EQ(m_other, g_parsed_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
 }
 
 TEST_P(ArticleCacheLifecycleTest, selectedConversionModePersistsWhenSwitchingArticles)
@@ -2258,7 +2258,7 @@ TEST_P(ArticleCacheLifecycleTest, returningToThePreviousArticleRebuildsItsOwnPre
     expect_displayed(scenario().plain);
     EXPECT_EQ(m_original, g_parsed_art);
     EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -2360,7 +2360,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     }
     m_raw_size = ArticlePosition{static_cast<long>(m_raw_article.size())};
     m_server.expect_capabilities({"VERSION 2", "READER"});
-    m_server.expect_body(g_art.value_of(), std::move(wire_lines));
+    m_server.expect_body(g_nav.target.num.value_of(), std::move(wire_lines));
     m_server.expect_quit();
     m_server.start();
     m_started = true;
@@ -2398,7 +2398,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     g_data_source = &m_remote_source;
     nntp_gets_clear_buffer();
     (void) nntp_art_name(ArticleNum{}, false);
-    ASSERT_NE(nullptr, art_open(g_art, m_body_start));
+    ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     mime_set_article();
     clear_art_buf();
     set_art_buf_seek(m_body_start);
@@ -2430,11 +2430,11 @@ void RemotePagerArticleTest::expect_complete_article()
     }
     EXPECT_THAT(m_rendered, Not(HasSubstr("Hidden ")));
     EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(100%)")));
-    EXPECT_TRUE(g_artp->m_flags & AF_UNREAD);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_art, g_open_art);
-    EXPECT_EQ(g_art, g_parsed_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_TRUE(g_nav.target.art->m_flags & AF_UNREAD);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.num, g_open_art);
+    EXPECT_EQ(g_nav.target.num, g_parsed_art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_FALSE(g_do_fseek);
@@ -2442,7 +2442,7 @@ void RemotePagerArticleTest::expect_complete_article()
     ASSERT_TRUE(macro_pending());
     EXPECT_EQ('n', read_tty_char());
     EXPECT_FALSE(macro_pending());
-    std::ifstream source{nntp_art_name(g_art, false), std::ios::binary};
+    std::ifstream source{nntp_art_name(g_nav.target.num, false), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     EXPECT_EQ(m_raw_article, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
 }
@@ -2540,7 +2540,7 @@ void InterruptedPagerInputTest::SetUp()
     g_tc_LINES = scenario.height;
     g_init_lines = ArticleLine{scenario.height};
     g_in_ng = false;
-    m_flags = g_artp->m_flags;
+    m_flags = g_nav.target.art->m_flags;
     m_unread = g_newsgroup_ptr->m_to_read;
     m_failures = scenario.failures;
     m_continue_first = scenario.continue_first;
@@ -2642,7 +2642,7 @@ void InterruptedPagerRenderingTest::SetUp()
     ASSERT_FALSE(HasFatalFailure());
     g_in_ng = false;
     g_tc_COLS = scenario.columns;
-    m_flags = g_artp->m_flags;
+    m_flags = g_nav.target.art->m_flags;
     m_unread = g_newsgroup_ptr->m_to_read;
     std::ostringstream trigger;
     trigger << (scenario.decoded ? "=42ody " : "Body ") << std::setw(3) << std::setfill('0') << scenario.row << "\r\n";
@@ -2679,7 +2679,7 @@ void InterruptedPagerRenderingTest::interrupt_and_refresh()
     m_refresh_result = art_switch("\f");
     (void) testing::internal::GetCapturedStdout();
     ASSERT_EQ(AS_NORM, m_refresh_result);
-    ASSERT_NE(nullptr, art_open(g_art, ArticlePosition{}));
+    ASSERT_NE(nullptr, art_open(g_nav.target.num, ArticlePosition{}));
     render_article();
 }
 
@@ -2847,7 +2847,7 @@ void PagerTerminalArticleTest::SetUp()
         }
     }
     load_body(body, headers);
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
 }
@@ -2965,7 +2965,7 @@ void PagerFilteringArticleTest::load_filtered_body(std::string body, std::string
 {
     m_body = std::move(body);
     load_body(m_body, headers);
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     std::ostringstream raw;
     raw << source.rdbuf();
@@ -3200,19 +3200,19 @@ void PagerFormattedHeaderArticleTest::SetUp()
     headers += scenario.header;
     load_article(headers, numbered_pager_body());
     // The overview cache describes the same private article as its header.
-    g_artp->m_flags &= ~AF_HAS_RE;
-    g_artp->set_subj_line(fetch_lines(g_art, SUBJ_LINE));
-    g_artp->set_cached_line(FROM_LINE, fetch_lines(g_art, FROM_LINE));
-    g_artp->m_date = scenario.known_date ? 1070514367 : -1;
+    g_nav.target.art->m_flags &= ~AF_HAS_RE;
+    g_nav.target.art->set_subj_line(fetch_lines(g_nav.target.num, SUBJ_LINE));
+    g_nav.target.art->set_cached_line(FROM_LINE, fetch_lines(g_nav.target.num, FROM_LINE));
+    g_nav.target.art->m_date = scenario.known_date ? 1070514367 : -1;
     g_top_line = ArticleLine{-1};
     m_headers = g_head_buf;
-    m_subject = g_artp->get_cached_line_view(SUBJ_LINE, false);
-    m_from = g_artp->get_cached_line_view(FROM_LINE, false);
+    m_subject = g_nav.target.art->get_cached_line_view(SUBJ_LINE, false);
+    m_from = g_nav.target.art->get_cached_line_view(FROM_LINE, false);
     for (std::size_t i = 0; i < m_header_spans.size(); ++i)
     {
         m_header_spans[i] = {g_header_type[i].min_pos, g_header_type[i].max_pos};
     }
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
     const std::vector<std::string> &shown = g_do_hiding ? scenario.formatted : scenario.raw;
@@ -3384,7 +3384,7 @@ void PagerResumeArticleTest::SetUp()
     {
         g_top_line = ArticleLine{-1};
     }
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
 }
@@ -3460,11 +3460,11 @@ void PagerPresentationArticleTest::SetUp()
     }
     load_body(body, "Path: gateway!reader\nMIME-Version: 1.0\nContent-Type: text/plain\n"
                     "Content-Transfer-Encoding: quoted-printable\n");
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     m_source.assign(std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{});
     m_headers = g_head_buf;
-    m_flags = g_artp->m_flags & (AF_UNREAD | AF_SEL);
+    m_flags = g_nav.target.art->m_flags & (AF_UNREAD | AF_SEL);
     m_unread = g_newsgroup_ptr->m_to_read;
 }
 
@@ -3487,7 +3487,7 @@ void PagerPresentationArticleTest::read_session()
             g_art_line_num = ArticleLine{};
             g_top_line = ArticleLine{-1};
         }
-        ASSERT_NE(nullptr, art_open(g_art, ArticlePosition{}));
+        ASSERT_NE(nullptr, art_open(g_nav.target.num, ArticlePosition{}));
         render_article();
         output += m_rendered;
     }
@@ -3651,7 +3651,7 @@ protected:
     ArticleUnread m_unread_before{};
 
 private:
-    ValueSaver<ArticleNum>    m_current_article{g_curr_art, g_curr_art};
+    ValueSaver<ArticleNum>    m_current_article{g_nav.current.num, g_nav.current.num};
     ValueSaver<char>          m_erase_char{g_erase_char, g_erase_char};
     ValueSaver<char>          m_kill_char{g_kill_char, g_kill_char};
     ValueSaver<bool>          m_reread{g_reread, g_reread};
@@ -3681,17 +3681,17 @@ void PagerExitArticleTest::SetUp()
     }
     if (scenario.initial_flags & AF_UNREAD)
     {
-        g_artp->one_more();
+        g_nav.target.art->one_more();
     }
     else
     {
-        g_artp->one_less();
+        g_nav.target.art->one_less();
     }
-    g_artp->m_flags = (g_artp->m_flags & ~AF_SEL) | (scenario.initial_flags & AF_SEL);
+    g_nav.target.art->m_flags = (g_nav.target.art->m_flags & ~AF_SEL) | (scenario.initial_flags & AF_SEL);
     g_sel_mask = static_cast<AddGroupFlags>(AF_SEL);
     g_selected_count = ArticleUnread{(scenario.initial_flags & AF_SEL) ? 1 : 0};
     m_unread_before = g_newsgroup_ptr->m_to_read;
-    g_curr_art = g_art;
+    g_nav.current.num = g_nav.target.num;
     g_erase_char = '\b';
     g_kill_char = '\025';
     g_check_count = 0;
@@ -3752,7 +3752,7 @@ protected:
 private:
     PushDir                      m_private_group;
     ValueSaver<std::string>      m_group_dir{g_newsgroup_dir, g_newsgroup_dir};
-    ValueSaver<ArticleNum>       m_current_article{g_curr_art, g_curr_art};
+    ValueSaver<ArticleNum>       m_current_article{g_nav.current.num, g_nav.current.num};
     ValueSaver<ArticleNum>       m_abs_first{g_abs_first, g_abs_first};
     ValueSaver<bool>             m_threaded{g_threaded_group, g_threaded_group};
     ValueSaver<bool>             m_thread_always{g_thread_always, g_thread_always};
@@ -3772,8 +3772,8 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, lon
     m_private_group.push(m_output.path());
     g_newsgroup_dir = ".";
     g_data_source->m_flags &= ~DF_TRY_OVERVIEW;
-    g_abs_first = g_art;
-    g_last_art = article_after(g_art);
+    g_abs_first = g_nav.target.num;
+    g_last_art = article_after(g_nav.target.num);
     g_newsgroup_ptr->m_abs_first = g_abs_first;
     g_newsgroup_ptr->m_ng_max = g_last_art;
     g_newsgroup_ptr->m_rc_line.resize(g_newsgroup_ptr->m_num_offset);
@@ -3782,7 +3782,7 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, lon
     g_thread_always = true;
     g_max_tree_lines = 0;
     {
-        std::ofstream article{std::to_string(g_art.value_of())};
+        std::ofstream article{std::to_string(g_nav.target.num.value_of())};
         article << "Subject: Pager thread\nMessage-ID: <pager-root@example.test>\n";
         if (quoted_printable)
         {
@@ -3804,10 +3804,10 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, lon
         ASSERT_TRUE(reply.good());
     }
     build_cache();
-    g_artp = g_curr_artp = article_ptr(g_art);
-    g_curr_art = g_art;
-    ASSERT_TRUE(parse_header(g_art));
-    ASSERT_TRUE(g_artp->m_flags & AF_UNREAD);
+    g_nav.target.art = g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.current.num = g_nav.target.num;
+    ASSERT_TRUE(parse_header(g_nav.target.num));
+    ASSERT_TRUE(g_nav.target.art->m_flags & AF_UNREAD);
     ASSERT_TRUE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
     ASSERT_EQ(ArticleUnread{2}, g_newsgroup_ptr->m_to_read);
     mime_set_article();
@@ -3929,15 +3929,15 @@ void PagerCheckpointArticleTest::SetUp()
     load_group(false, false, scenario.body_lines);
     ASSERT_FALSE(HasFatalFailure());
     ASSERT_TRUE(parse_header(g_last_art));
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
     article_ptr(g_last_art)->mark_as_read();
     g_dm_count = 0;
     if (scenario.delayed_return)
     {
-        g_artp->mark_as_read();
-        g_artp->delay_unmark();
+        g_nav.target.art->mark_as_read();
+        g_nav.target.art->delay_unmark();
     }
-    m_root_flags = g_artp->m_flags;
+    m_root_flags = g_nav.target.art->m_flags;
     m_newsrc.data_source = g_data_source;
     m_newsrc.name = fs::path{m_output.path()} / "checkpoint-newsrc";
     m_newsrc.new_name = fs::path{m_output.path()} / "checkpoint-newsrc.new";
@@ -3993,7 +3993,7 @@ std::string PagerCheckpointArticleTest::expected_newsrc() const
     }
     else
     {
-        line += std::to_string(g_art.value_of() - 1) + ',' + std::to_string(g_last_art.value_of());
+        line += std::to_string(g_nav.target.num.value_of() - 1) + ',' + std::to_string(g_last_art.value_of());
     }
     return line + '\n';
 }
@@ -4081,7 +4081,7 @@ void PagerTitleArticleTest::SetUp()
     const PagerTitleCase &scenario = GetParam();
     load_group((scenario.flags & TITLE_THREADED) != 0, scenario.quoted_printable);
     ASSERT_FALSE(HasFatalFailure());
-    m_root = g_art;
+    m_root = g_nav.target.num;
     g_newsgroup_name = "title.group";
     g_moderated = scenario.flags & TITLE_MODERATED ? " (moderated)" : "";
     g_first_line = scenario.first_line;
@@ -4096,28 +4096,28 @@ void PagerTitleArticleTest::SetUp()
     {
         ASSERT_TRUE(parse_header(g_last_art));
         ASSERT_TRUE(parse_header(m_root));
-        ASSERT_EQ(article_ptr(g_last_art), g_artp->m_child1);
-        ASSERT_EQ(g_artp, article_ptr(g_last_art)->m_parent);
+        ASSERT_EQ(article_ptr(g_last_art), g_nav.target.art->m_child1);
+        ASSERT_EQ(g_nav.target.art, article_ptr(g_last_art)->m_parent);
         g_max_tree_lines = 3;
     }
     if (scenario.flags & (TITLE_READ | TITLE_DELAYED_RETURN))
     {
-        g_artp->mark_as_read();
+        g_nav.target.art->mark_as_read();
     }
     if (scenario.flags & TITLE_DELAYED_RETURN)
     {
-        g_artp->delay_unmark();
+        g_nav.target.art->delay_unmark();
     }
     if (scenario.flags & TITLE_SELECT_CURRENT)
     {
-        g_artp->select_article(AUTO_KILL_NONE);
+        g_nav.target.art->select_article(AUTO_KILL_NONE);
     }
     if (scenario.flags & TITLE_SELECT_REPLY)
     {
         article_ptr(g_last_art)->select_article(AUTO_KILL_NONE);
     }
     g_selected_only = (scenario.flags & TITLE_SELECTED_ONLY) != 0;
-    m_root_flags = g_artp->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK);
+    m_root_flags = g_nav.target.art->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK);
     open_for_reading(m_root);
     std::ifstream source{std::to_string(m_root.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
@@ -4126,8 +4126,8 @@ void PagerTitleArticleTest::SetUp()
 
 void PagerTitleArticleTest::open_for_reading(ArticleNum number)
 {
-    g_art = g_curr_art = number;
-    g_artp = g_curr_artp = article_ptr(number);
+    g_nav.target.num = g_nav.current.num = number;
+    g_nav.target.art = g_nav.current.art = article_ptr(number);
     g_art_line_num = ArticleLine{};
     g_top_line = ArticleLine{-1};
     g_do_fseek = false;
@@ -4146,7 +4146,7 @@ void PagerTitleArticleTest::read_reply_and_return()
     ASSERT_EQ(DA_NORM, m_result);
     m_reply_output = m_rendered;
     // The reading loop marks an article read after its normal EOF return.
-    g_artp->mark_as_read();
+    g_nav.target.art->mark_as_read();
     open_for_reading(m_root);
     ASSERT_FALSE(HasFatalFailure());
     read_pages("\f ");
@@ -4789,7 +4789,7 @@ TEST_F(ModeratorPostingTest, routesNewTopicToModerator)
 
     EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "mail-used"));
     EXPECT_EQ("To: list@example.test\nNewsgroups: list.test\nSubject: new topic\n\n", file_contents(m_header));
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
 }
 
 TEST_F(ModeratorPostingTest, unmoderatedGroupsKeepNewsPosting)
@@ -4922,7 +4922,7 @@ TEST_F(InterpolatorNewsgroupTest, followupPromptDefaultStartsNewTopic)
 
     EXPECT_THAT(output, HasSubstr("Are you starting an unrelated topic? [ynq]"));
     EXPECT_EQ("Message-Id: \n\n", file_contents(head_file));
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
 }
 
 TEST_F(ArticleHeaderPresentationTest, displaysFromNameWhilePreservingTheCachedHeader)
@@ -4932,7 +4932,7 @@ TEST_F(ArticleHeaderPresentationTest, displaysFromNameWhilePreservingTheCachedHe
     EXPECT_EQ(DA_NORM, m_result);
     EXPECT_NE(std::string::npos, m_rendered.find("From: " TRN_TEST_HEADER_FROM_NAME));
     EXPECT_EQ(std::string::npos, m_rendered.find("From: " TRN_TEST_HEADER_FROM));
-    EXPECT_EQ(TRN_TEST_HEADER_FROM, fetch_lines(g_art, FROM_LINE));
+    EXPECT_EQ(TRN_TEST_HEADER_FROM, fetch_lines(g_nav.target.num, FROM_LINE));
 }
 
 TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
@@ -4969,10 +4969,10 @@ TEST_P(PagerEndArticleTest, completesAfterTheLastDisplayedPageWithoutConsumingTh
     EXPECT_FALSE(g_in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_TRUE(m_article_command.empty());
     ASSERT_TRUE(macro_pending());
     EXPECT_EQ('q', read_tty_char());
@@ -5103,7 +5103,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(PagerFormattedHeaderArticleTest, pagesThroughFormattedHeadersWithoutChangingCachedTextOrBodyOffsets)
 {
-    const std::time_t original_date = g_artp->m_date;
+    const std::time_t original_date = g_nav.target.art->m_date;
 
     read_headers();
 
@@ -5121,9 +5121,9 @@ TEST_P(PagerFormattedHeaderArticleTest, pagesThroughFormattedHeadersWithoutChang
     }
     EXPECT_EQ(m_pages.size(), prompts);
     EXPECT_EQ(m_headers, g_head_buf);
-    EXPECT_EQ(m_subject, g_artp->get_cached_line_view(SUBJ_LINE, false));
-    EXPECT_EQ(m_from, g_artp->get_cached_line_view(FROM_LINE, false));
-    EXPECT_EQ(original_date, g_artp->m_date);
+    EXPECT_EQ(m_subject, g_nav.target.art->get_cached_line_view(SUBJ_LINE, false));
+    EXPECT_EQ(m_from, g_nav.target.art->get_cached_line_view(FROM_LINE, false));
+    EXPECT_EQ(original_date, g_nav.target.art->m_date);
     for (std::size_t i = 0; i < m_header_spans.size(); ++i)
     {
         EXPECT_EQ(m_header_spans[i].first, g_header_type[i].min_pos) << "Header " << i;
@@ -5143,10 +5143,10 @@ TEST_P(PagerFormattedHeaderArticleTest, pagesThroughFormattedHeadersWithoutChang
     EXPECT_FALSE(g_in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_TRUE(m_article_command.empty());
     EXPECT_FALSE(macro_pending());
 }
@@ -5579,7 +5579,7 @@ TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
             EXPECT_EQ(m_rows[row], cached.substr(offset, m_rows[row].size())) << "Cached row " << row;
         }
     }
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
 }
@@ -5721,18 +5721,18 @@ TEST_P(PagerPresentationArticleTest, restartsAndResumesWithTheRequestedPresentat
     }
     EXPECT_EQ(m_headers, g_head_buf);
     EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
-    EXPECT_EQ(m_flags, g_artp->m_flags & (AF_UNREAD | AF_SEL));
+    EXPECT_EQ(m_flags, g_nav.target.art->m_flags & (AF_UNREAD | AF_SEL));
     EXPECT_EQ(m_unread, g_newsgroup_ptr->m_to_read);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_FALSE(g_do_fseek);
     EXPECT_FALSE(g_in_header);
     EXPECT_FALSE(macro_pending());
     EXPECT_TRUE(m_article_command.empty());
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
 }
@@ -5941,7 +5941,7 @@ TEST_P(PagerTerminalArticleTest, preservesColumnsStopsAndAttributesAcrossThePage
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_TRUE(m_article_command.empty());
     EXPECT_EQ(at_end, macro_pending());
-    std::ifstream source{std::to_string(g_art.value_of()), std::ios::binary};
+    std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     EXPECT_EQ(m_source, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
 }
@@ -6103,10 +6103,10 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
     EXPECT_EQ(g_art_pos, art_buf_article_pos());
     const ArticlePosition saved_position = virtual_read(g_art_line_num);
     EXPECT_EQ(g_art_pos, saved_position < 0 ? -saved_position : saved_position);
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_FALSE(g_do_fseek);
@@ -6665,17 +6665,17 @@ TEST_P(PagerExitArticleTest, returnsTheCommandAndItsReadStateToTheArticleLoop)
     EXPECT_EQ(scenario.result, m_result);
     EXPECT_EQ(scenario.command, m_article_command);
     EXPECT_EQ(scenario.pending, pending_input());
-    EXPECT_EQ(scenario.expected_flags, g_artp->m_flags & (AF_UNREAD | AF_SEL));
+    EXPECT_EQ(scenario.expected_flags, g_nav.target.art->m_flags & (AF_UNREAD | AF_SEL));
     const int unread_change =
         ((scenario.initial_flags & AF_UNREAD) ? 1 : 0) - ((scenario.expected_flags & AF_UNREAD) ? 1 : 0);
     EXPECT_EQ(m_unread_before - ArticleUnread{unread_change}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(ArticleUnread{(scenario.expected_flags & AF_SEL) ? 1 : 0}, g_selected_count);
     EXPECT_EQ(scenario.checkpoints, g_check_count);
     EXPECT_EQ(scenario.reread, g_reread);
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_THAT(m_rendered, HasSubstr("--MORE--("));
@@ -6805,12 +6805,12 @@ TEST_P(InterruptedPagerInputTest, retainsTheReadingContextAcrossInterruptedInput
     const bool refreshes = scenario.height < 100 && !scenario.control_c;
     EXPECT_EQ(scenario.failures + (scenario.continue_first ? 1 : 0) + (refreshes ? 2 : 0), m_reads);
     EXPECT_EQ(scenario.control_c ? 1 : 0, g_int_count);
-    EXPECT_EQ(m_flags, g_artp->m_flags);
+    EXPECT_EQ(m_flags, g_nav.target.art->m_flags);
     EXPECT_EQ(m_unread, g_newsgroup_ptr->m_to_read);
-    EXPECT_EQ(g_art, g_open_art);
-    EXPECT_EQ(g_art, g_parsed_art);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_nav.target.num, g_open_art);
+    EXPECT_EQ(g_nav.target.num, g_parsed_art);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(0, g_term_col);
@@ -6872,11 +6872,11 @@ TEST_P(InterruptedPagerRenderingTest, refreshesAndContinuesAfterRenderingIsInter
         EXPECT_EQ(m_filtered_body, art_buf_view(m_body_start));
     }
     EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(100%)")));
-    EXPECT_EQ(m_flags, g_artp->m_flags);
+    EXPECT_EQ(m_flags, g_nav.target.art->m_flags);
     EXPECT_EQ(m_unread, g_newsgroup_ptr->m_to_read);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_art, g_open_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.num, g_open_art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(0, g_int_count);
@@ -6964,9 +6964,9 @@ TEST_F(RemotePagerArticleTest, quittingLeavesTheDownloadIncomplete)
     EXPECT_THAT(m_rendered, HasSubstr("--MORE--(?%)"));
     EXPECT_THAT(m_rendered, HasSubstr("Body 008\n"));
     EXPECT_THAT(m_rendered, Not(HasSubstr("Body 009\n")));
-    EXPECT_TRUE(g_artp->m_flags & AF_UNREAD);
-    EXPECT_EQ(g_artp, g_curr_artp);
-    EXPECT_EQ(g_art, g_curr_art);
+    EXPECT_TRUE(g_nav.target.art->m_flags & AF_UNREAD);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
     EXPECT_FALSE(macro_pending());
 }
 
@@ -6975,7 +6975,7 @@ TEST_F(RemotePagerArticleTest, reopensTheCompletedDownloadWithAKnownSize)
     ASSERT_NO_FATAL_FAILURE(start_article({"PlainText", false, false, 27, false}));
     nntp_finish_body(FB_SILENT);
     art_close();
-    ASSERT_NE(nullptr, art_open(g_art, m_body_start));
+    ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     set_art_buf_seek(m_body_start);
     push_char('n');
     push_char(' ');
@@ -7038,15 +7038,15 @@ TEST_P(PagerCheckpointArticleTest, checkpointsAtTheDocumentedReadingPauseAndCont
     EXPECT_EQ(expected_body, displayed_body_lines());
     EXPECT_EQ(scenario.commands.empty() ? DA_NORM : DA_TO_END, m_result);
     EXPECT_EQ(m_body_start + ArticlePosition{scenario.next_row * 9}, g_art_pos);
-    EXPECT_EQ(m_root_flags, g_artp->m_flags);
+    EXPECT_EQ(m_root_flags, g_nav.target.art->m_flags);
     EXPECT_FALSE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
     EXPECT_EQ(ArticleUnread{scenario.delayed_return ? 0 : 1}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(scenario.delayed_return ? 1 : 0, g_dm_count);
     EXPECT_EQ(saved ? 0 : scenario.count, g_check_count);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_art, g_open_art);
-    EXPECT_EQ(g_art, g_parsed_art);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.num, g_open_art);
+    EXPECT_EQ(g_nav.target.num, g_parsed_art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_FALSE(macro_pending());
@@ -7114,18 +7114,18 @@ TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
     EXPECT_EQ(m_body_start + ArticlePosition{14 * 9}, g_art_pos);
     EXPECT_EQ(g_art_pos, virtual_read(g_art_line_num));
     EXPECT_EQ(m_body_start, g_header_type[PAST_HEADER].min_pos);
-    EXPECT_EQ(m_root_flags, g_artp->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK));
+    EXPECT_EQ(m_root_flags, g_nav.target.art->m_flags & (AF_UNREAD | AF_SEL | AF_YANK_BACK));
     EXPECT_FALSE(article_ptr(g_last_art)->m_flags & (AF_UNREAD | AF_SEL));
     EXPECT_EQ(ArticleUnread{(m_root_flags & AF_UNREAD) ? 1 : 0}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(ArticleUnread{(m_root_flags & AF_SEL) ? 1 : 0}, g_selected_count);
     EXPECT_EQ((scenario.flags & TITLE_SELECTED_ONLY) != 0, g_selected_only);
     EXPECT_EQ((scenario.flags & TITLE_DELAYED_RETURN) ? 1 : 0, g_dm_count);
-    EXPECT_EQ(m_root, g_art);
-    EXPECT_EQ(m_root, g_curr_art);
+    EXPECT_EQ(m_root, g_nav.target.num);
+    EXPECT_EQ(m_root, g_nav.current.num);
     EXPECT_EQ(m_root, g_open_art);
     EXPECT_EQ(m_root, g_parsed_art);
-    EXPECT_EQ(article_ptr(m_root), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(article_ptr(m_root), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     if (scenario.flags & TITLE_THREADED)
     {
         const std::string_view node =
@@ -7133,8 +7133,8 @@ TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
         EXPECT_THAT(m_initial_output, HasSubstr("<mark>" + std::string{node} + "</mark>"));
         EXPECT_THAT(m_rendered, HasSubstr("<mark>" + std::string{node} + "</mark>"));
         EXPECT_THAT(m_rendered, HasSubstr("-(1)"));
-        EXPECT_EQ(article_ptr(g_last_art), g_artp->m_child1);
-        EXPECT_EQ(g_artp, article_ptr(g_last_art)->m_parent);
+        EXPECT_EQ(article_ptr(g_last_art), g_nav.target.art->m_child1);
+        EXPECT_EQ(g_nav.target.art, article_ptr(g_last_art)->m_parent);
     }
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -7203,19 +7203,19 @@ TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
     EXPECT_THAT(m_rendered, HasSubstr("<mark>[1]</mark>"));
     EXPECT_EQ(!scenario.threaded, m_rendered.find("Threading the group.") != std::string::npos);
     EXPECT_TRUE(g_threaded_group);
-    EXPECT_TRUE(g_artp->m_flags & AF_THREADED);
-    EXPECT_EQ(article_ptr(g_last_art), g_artp->m_child1);
-    EXPECT_EQ(g_artp, article_ptr(g_last_art)->m_parent);
-    EXPECT_TRUE(g_artp->m_flags & AF_UNREAD);
+    EXPECT_TRUE(g_nav.target.art->m_flags & AF_THREADED);
+    EXPECT_EQ(article_ptr(g_last_art), g_nav.target.art->m_child1);
+    EXPECT_EQ(g_nav.target.art, article_ptr(g_last_art)->m_parent);
+    EXPECT_TRUE(g_nav.target.art->m_flags & AF_UNREAD);
     EXPECT_TRUE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
     EXPECT_EQ(ArticleUnread{2}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
-    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_art);
-    EXPECT_EQ(g_art, g_curr_art);
-    EXPECT_EQ(g_art, g_open_art);
-    EXPECT_EQ(g_art, g_parsed_art);
-    EXPECT_EQ(article_ptr(g_art), g_artp);
-    EXPECT_EQ(g_artp, g_curr_artp);
+    EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
+    EXPECT_EQ(g_nav.target.num, g_nav.current.num);
+    EXPECT_EQ(g_nav.target.num, g_open_art);
+    EXPECT_EQ(g_nav.target.num, g_parsed_art);
+    EXPECT_EQ(article_ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(ArticleLine{scenario.next_line}, g_art_line_num);
     EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line}, g_art_pos);
     EXPECT_EQ(g_art_pos, art_buf_article_pos());
@@ -7253,10 +7253,10 @@ TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_env("LOCALTIMEFMT", "%Y");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
     const DoArticleResult result = do_article();
@@ -7270,17 +7270,17 @@ TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
     ValueSaver<std::string> newsgroup_name(g_newsgroup_name, TRN_TEST_NEWSGROUP);
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
     g_header_type[NEWSGROUPS_LINE].flags |= HT_MAGIC;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
     const DoArticleResult result = do_article();
@@ -7327,10 +7327,10 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
     const DoArticleResult result = do_article();
@@ -7354,10 +7354,10 @@ TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
     const DoArticleResult result = do_article();
@@ -7384,10 +7384,10 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
     const DoArticleResult result = do_article();
@@ -7406,10 +7406,10 @@ TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
     m_env.expect_no_envar("LOCALTIMEFMT");
-    ASSERT_TRUE(parse_header(g_art));
+    ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
     const DoArticleResult result = do_article();
@@ -7421,14 +7421,14 @@ TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
 
 TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentSubjectCommandCompletes)
 {
-    g_artp = article_ptr(g_art);
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     EXPECT_EQ(SRCH_DONE, art_search("k", false));
 }
 
 TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentAuthorCommandCompletes)
 {
-    g_artp = article_ptr(g_art);
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     EXPECT_EQ(SRCH_DONE, art_search("kf", false));
 }
@@ -7445,9 +7445,9 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     g_tc_LINES = 4;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
-    ASSERT_TRUE(parse_header(g_art));
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
+    ASSERT_TRUE(parse_header(g_nav.target.num));
     push_char('?');
     std::string article_command;
 
@@ -7474,9 +7474,9 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
     g_tc_LINES = 4;
     g_tc_COLS = 80;
     reset_char_subst_mode();
-    g_curr_artp = article_ptr(g_art);
-    g_artp = g_curr_artp;
-    ASSERT_TRUE(parse_header(g_art));
+    g_nav.current.art = article_ptr(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art;
+    ASSERT_TRUE(parse_header(g_nav.target.num));
     push_char('n');
     std::string article_command;
 
@@ -7501,7 +7501,7 @@ TEST_F(InterpolatorNewsgroupTest, oldDistributionLineInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, fromLineInNewsgroupNoReplyTo)
 {
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
 
     const std::string_view new_pattern = interpolate("%f");
 
@@ -7527,7 +7527,7 @@ TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupWithFollowupToLine)
 
 TEST_F(InterpolatorNewsgroupTest, followupInNewsgroupFromNewsgroupsLine)
 {
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
 
     const std::string_view new_pattern = interpolate("%F");
 
@@ -7545,7 +7545,7 @@ TEST_F(InterpolatorNewsgroupTest, messageIdInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, messageIdAddsAngleBrackets)
 {
-    g_art = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
 
     const std::string_view new_pattern = interpolate("%i");
 
@@ -7571,7 +7571,7 @@ TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, lastReferenceInNewsgroupNoArticleIsEmpty)
 {
-    g_art = ArticleNum{};
+    g_nav.target.num = ArticleNum{};
 
     const std::string_view new_pattern = interpolate("%r");
 
@@ -7594,7 +7594,7 @@ TEST_F(InterpolatorNewsgroupTest, newReferencesInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, newReferencesAddsMessageIdAngleBrackets)
 {
-    g_art = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_BARE_MESSAGE_ID_NUM};
 
     const std::string_view new_pattern = interpolate("%R");
 
@@ -7604,7 +7604,7 @@ TEST_F(InterpolatorNewsgroupTest, newReferencesAddsMessageIdAngleBrackets)
 
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroupNoArticleIsEmpty)
 {
-    g_art = ArticleNum{};
+    g_nav.target.num = ArticleNum{};
 
     const std::string_view new_pattern = interpolate("%s");
 
@@ -7614,7 +7614,7 @@ TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroupNoArticleIsEmpty)
 
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
 {
-    g_artp = article_ptr(g_art);
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     const std::string_view new_pattern = interpolate("%s");
 
@@ -7624,8 +7624,8 @@ TEST_F(InterpolatorNewsgroupTest, strippedSubjectInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, strippedSubjectDropsNotesFileSuffix)
 {
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NOTES_FILE_SUBJECT_NUM};
-    g_artp = article_ptr(g_art);
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NOTES_FILE_SUBJECT_NUM};
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     const std::string_view new_pattern = interpolate("%s");
 
@@ -7635,7 +7635,7 @@ TEST_F(InterpolatorNewsgroupTest, strippedSubjectDropsNotesFileSuffix)
 
 TEST_F(InterpolatorNewsgroupTest, oneReStrippedSubjectInNewsgroup)
 {
-    g_artp = article_ptr(g_art);
+    g_nav.target.art = article_ptr(g_nav.target.num);
 
     const std::string_view new_pattern = interpolate("%S");
 
@@ -7653,7 +7653,7 @@ TEST_F(InterpolatorNewsgroupTest, toFromReplyToInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, toFromFromInNewsgroup)
 {
-    g_art = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
+    g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
 
     const std::string_view new_pattern = interpolate("%t");
 
@@ -7713,7 +7713,7 @@ TEST_F(InterpolatorNewsgroupTest, shortenedFromInNewsgroup)
 
 TEST_F(InterpolatorNewsgroupTest, shortenedFromShortensMultiPartDomain)
 {
-    article_ptr(g_art)->set_cached_line(FROM_LINE, "casey@host.news.example.test (Casey)");
+    article_ptr(g_nav.target.num)->set_cached_line(FROM_LINE, "casey@host.news.example.test (Casey)");
     g_parsed_art = ArticleNum{};
 
     const std::string_view new_pattern = interpolate("%y");

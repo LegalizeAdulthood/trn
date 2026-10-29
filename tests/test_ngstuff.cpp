@@ -104,13 +104,13 @@ protected:
     {
         m_old_abs_first = g_abs_first;
         m_old_last_art = g_last_art;
-        m_old_art = g_art;
+        m_old_art = g_nav.target.num;
         m_old_search_ahead = g_search_ahead;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
 
         g_abs_first = ArticleNum{1};
         g_last_art = ArticleNum{10};
-        g_art = ArticleNum{1};
+        g_nav.target.num = ArticleNum{1};
         g_search_ahead = ArticleNum{};
         m_newsgroup.m_to_read = 10;
         g_newsgroup_ptr = &m_newsgroup;
@@ -120,7 +120,7 @@ protected:
     {
         g_abs_first = m_old_abs_first;
         g_last_art = m_old_last_art;
-        g_art = m_old_art;
+        g_nav.target.num = m_old_art;
         g_search_ahead = m_old_search_ahead;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
     }
@@ -216,7 +216,7 @@ TEST_F(NumNumTest, selectsSingleArticle)
     const NumNumResult result = num_num("5");
 
     EXPECT_EQ(NN_REREAD, result);
-    EXPECT_EQ(ArticleNum{5}, g_art);
+    EXPECT_EQ(ArticleNum{5}, g_nav.target.num);
 }
 
 TEST_F(NumNumTest, rejectsOpenEndedRange)
@@ -227,7 +227,7 @@ TEST_F(NumNumTest, rejectsOpenEndedRange)
 
     EXPECT_EQ(NN_ASK, result);
     EXPECT_NE(std::string::npos, output.find("\nBad range\n"));
-    EXPECT_EQ(ArticleNum{1}, g_art);
+    EXPECT_EQ(ArticleNum{1}, g_nav.target.num);
 }
 
 TEST_F(NumNumTest, rejectsOpenEndedRangeAfterComma)

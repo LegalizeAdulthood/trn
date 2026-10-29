@@ -400,11 +400,11 @@ void end_header()
     {
         if (ap->valid_article())
         {
-            Article* artp_hold = g_artp;
+            Article    *artp_hold = g_nav.target.art;
             std::string references = fetch_lines(g_parsed_art, REFS_LINE);
             references += fetch_lines(g_parsed_art, IN_REPLY_LINE);
             ap->thread_article(references);
-            g_artp = artp_hold;
+            g_nav.target.art = artp_hold;
             ap->check_poster();
         }
     }
