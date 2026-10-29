@@ -6,6 +6,7 @@
 #include <config/common.h>
 #include <trn/cache.h>
 #include <trn/hash.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select-internal.h>
 #include <trn/Subject.h>
 #include <trn/univ.h>
@@ -64,10 +65,10 @@ private:
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
     int                      m_old_subject_count{g_subject_count};
-    Article                **m_old_page_app{g_sel_page_app};
-    Article                **m_old_next_app{g_sel_next_app};
-    Subject                 *m_old_page_sp{g_sel_page_sp};
-    Subject                 *m_old_next_sp{g_sel_next_sp};
+    Article                **m_old_page_app{g_sel_page.page_art};
+    Article                **m_old_next_app{g_sel_page.next_art};
+    Subject                 *m_old_page_sp{g_sel_page.page_subj};
+    Subject                 *m_old_next_sp{g_sel_page.next_subj};
     int                      m_old_selected_subjects{g_selected_subj_cnt};
     bool                     m_old_selected_only{g_sel.selected_only};
     bool                     m_old_threaded{g_threaded_group};
@@ -84,8 +85,8 @@ private:
     std::string              m_old_display{g_sel_art_display_mode};
     std::size_t              m_old_display_index{g_sel_art_display_mode_index};
     UniversalItemList        m_old_menu{std::move(g_univ_items)};
-    UniversalItemIndex       m_old_menu_page{g_sel_page_univ_index};
-    UniversalItemIndex       m_old_menu_next{g_sel_next_univ_index};
+    UniversalItemIndex       m_old_menu_page{g_sel_page.page_univ_index};
+    UniversalItemIndex       m_old_menu_next{g_sel_page.next_univ_index};
     std::string              m_old_title{g_univ_title};
     int                      m_old_level{g_univ_level};
     HashTable               *m_old_hash{g_newsrc_hash};
@@ -97,11 +98,11 @@ void SelectorPagingStateTest::SetUp()
     g_article_list.clear();
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
-    g_sel_page_app = g_sel_next_app = nullptr;
-    g_sel_page_sp = g_sel_next_sp = nullptr;
+    g_sel_page.page_art = g_sel_page.next_art = nullptr;
+    g_sel_page.page_subj = g_sel_page.next_subj = nullptr;
     g_univ_items.clear();
     g_univ_items.reserve(6);
-    g_sel_page_univ_index = g_sel_next_univ_index = {};
+    g_sel_page.page_univ_index = g_sel_page.next_univ_index = {};
     g_tc_LINES = 7;
     g_can_home = false;
     g_sel.selected_only = false;
@@ -113,7 +114,7 @@ void SelectorPagingStateTest::SetUp()
     g_sel_art_display_mode_index = 0;
     g_sel_grp_display_mode = "s";
     g_sel_grp_display_mode_index = 0;
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
     g_univ_title = "Paging menu";
     g_univ_level = 1;
     g_selected_count = TR_NONE;
@@ -136,10 +137,10 @@ void SelectorPagingStateTest::TearDown()
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
     g_subject_count = m_old_subject_count;
-    g_sel_page_app = m_old_page_app;
-    g_sel_next_app = m_old_next_app;
-    g_sel_page_sp = m_old_page_sp;
-    g_sel_next_sp = m_old_next_sp;
+    g_sel_page.page_art = m_old_page_app;
+    g_sel_page.next_art = m_old_next_app;
+    g_sel_page.page_subj = m_old_page_sp;
+    g_sel_page.next_subj = m_old_next_sp;
     g_selected_subj_cnt = m_old_selected_subjects;
     g_sel.selected_only = m_old_selected_only;
     g_threaded_group = m_old_threaded;
@@ -156,8 +157,8 @@ void SelectorPagingStateTest::TearDown()
     g_sel_art_display_mode = m_old_display;
     g_sel_art_display_mode_index = m_old_display_index;
     g_univ_items = std::move(m_old_menu);
-    g_sel_page_univ_index = m_old_menu_page;
-    g_sel_next_univ_index = m_old_menu_next;
+    g_sel_page.page_univ_index = m_old_menu_page;
+    g_sel_page.next_univ_index = m_old_menu_next;
     g_univ_title = m_old_title;
     g_univ_level = m_old_level;
     hash_destroy(g_newsrc_hash);
@@ -299,14 +300,15 @@ int SelectorPagingStateTest::row_number(int index) const
 {
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        const auto item = std::find(g_newsgroup_order.begin(), g_newsgroup_order.end(), g_sel_items[index].u.np);
+        const auto item = std::find(g_newsgroup_order.begin(), g_newsgroup_order.end(), g_sel_page.items[index].u.np);
         return static_cast<int>(item - g_newsgroup_order.begin()) + 1;
     }
     if (g_sel.mode == SM_UNIVERSAL)
     {
-        return g_sel_items[index].u.un->m_num;
+        return g_sel_page.items[index].u.un->m_num;
     }
-    const Article *article = g_sel.mode == SM_ARTICLE ? g_sel_items[index].u.ap : g_sel_items[index].u.sp->m_articles;
+    const Article *article =
+        g_sel.mode == SM_ARTICLE ? g_sel_page.items[index].u.ap : g_sel_page.items[index].u.sp->m_articles;
     return static_cast<int>(article->article_num().value_of());
 }
 
@@ -359,12 +361,12 @@ void SelectorPagingStateTest::expect_page(int page, int cursor, bool empty, bool
         m_rendered = render_page();
     }
 
-    EXPECT_EQ(empty ? 0 : 6, g_sel_total_obj_cnt);
-    ASSERT_EQ(empty ? 0 : 2, g_sel_page_item_cnt);
-    EXPECT_EQ(empty ? 0 : 2, g_sel_page_obj_cnt);
-    EXPECT_EQ(empty ? 0 : page * 2, g_sel_prior_obj_cnt);
-    EXPECT_EQ(cursor, g_sel_item_index);
-    EXPECT_EQ(empty || page == 2, g_sel_at_end);
+    EXPECT_EQ(empty ? 0 : 6, g_sel_page.total_obj_cnt);
+    ASSERT_EQ(empty ? 0 : 2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(empty ? 0 : 2, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(empty ? 0 : page * 2, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(cursor, g_sel_page.item_index);
+    EXPECT_EQ(empty || page == 2, g_sel_page.at_end);
     for (int number = 1; number <= 6; ++number)
     {
         const bool visible = !empty && number > page * 2 && number <= page * 2 + 2;
@@ -388,7 +390,7 @@ TEST_P(SelectorPagingCommandTest, pageCommandMovesOrRetainsThePageWithoutChangin
     const auto [command, mode, rereading] = GetParam();
     prepare(mode, rereading);
     ASSERT_NO_FATAL_FAILURE(position_page(command.origin));
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
     g_term_scrolled = 4;
     g_page_line = 37;
     g_output_chase_phrase = false;
@@ -396,7 +398,7 @@ TEST_P(SelectorPagingCommandTest, pageCommandMovesOrRetainsThePageWithoutChangin
     const DisplayState result = dispatch(command.key);
 
     EXPECT_EQ(command.result, result);
-    EXPECT_EQ(command.key == Ctl('l') ? 1 : 0, g_sel_item_index);
+    EXPECT_EQ(command.key == Ctl('l') ? 1 : 0, g_sel_page.item_index);
     EXPECT_EQ(0, g_term_scrolled);
     EXPECT_EQ(1, g_page_line);
     EXPECT_TRUE(g_output_chase_phrase);
@@ -437,7 +439,7 @@ TEST_P(EmptySelectorPagingCommandTest, anEmptySelectorRetainsItsEmptyPageAndSele
     const DisplayState result = dispatch(command);
 
     EXPECT_EQ(command == Ctl('l') ? DS_DISPLAY : DS_ASK, result);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
     expect_page(0, 0, true, result == DS_DISPLAY);
 }
 
@@ -515,7 +517,7 @@ TEST_P(SelectorBlankEscapeTest, blankEscapeRetainsThePageCursorSelectionsAndQueu
     const auto [mode, rereading, blank] = GetParam();
     prepare(mode, rereading);
     ASSERT_NO_FATAL_FAILURE(position_page(1));
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     const DisplayState result = escape(blank);
 
@@ -542,7 +544,7 @@ TEST_P(SelectorRefreshEscapeTest, escapedControlCommandRequestsRefreshWithoutCha
     const auto [mode, rereading] = GetParam();
     prepare(mode, rereading);
     ASSERT_NO_FATAL_FAILURE(position_page(1));
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     const DisplayState result = escape(Ctl('l'));
 
@@ -565,8 +567,8 @@ TEST_P(SelectorGroupEscapeTest, commandPromptUsesTheCursorGroupInsteadOfThePrevi
 {
     prepare(SM_NEWSGROUP, GetParam());
     ASSERT_NO_FATAL_FAILURE(position_page(1));
-    g_sel_item_index = 1;
-    NewsgroupData *const target = g_sel_items[1].u.np;
+    g_sel_page.item_index = 1;
+    NewsgroupData *const target = g_sel_page.items[1].u.np;
     std::string          directory{target->rc_line()};
     std::replace(directory.begin(), directory.end(), '.', '/');
     g_newsgroup_ptr = g_newsgroup_order.front();
@@ -714,7 +716,7 @@ std::vector<int> SelectorExitStateTest::marked_objects(int mask) const
 std::vector<int> SelectorExitStateTest::rows() const
 {
     std::vector<int> result;
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
         result.push_back(row_number(index));
     }
@@ -767,19 +769,19 @@ void SelectorExitStateTest::set_selection(std::vector<int> selected, bool killed
         }
     }
     ASSERT_NO_FATAL_FAILURE(position_page(0));
-    g_sel_item_index = m_empty ? 0 : 1;
+    g_sel_page.item_index = m_empty ? 0 : 1;
     m_before_flags = flags();
     m_before_killed = marked_objects(AGF_DEL);
     m_before_rows = rows();
-    m_page_app = g_sel_page_app;
-    m_page_sp = g_sel_page_sp;
-    m_page_np = g_sel_page_np;
-    m_page_menu = g_sel_page_univ_index;
-    m_prior = g_sel_prior_obj_cnt;
-    m_total = g_sel_total_obj_cnt;
-    m_objects = g_sel_page_obj_cnt;
-    m_items = g_sel_page_item_cnt;
-    m_end = g_sel_at_end;
+    m_page_app = g_sel_page.page_art;
+    m_page_sp = g_sel_page.page_subj;
+    m_page_np = g_sel_page.page_ngd;
+    m_page_menu = g_sel_page.page_univ_index;
+    m_prior = g_sel_page.prior_obj_cnt;
+    m_total = g_sel_page.total_obj_cnt;
+    m_objects = g_sel_page.page_obj_cnt;
+    m_items = g_sel_page.page_item_cnt;
+    m_end = g_sel_page.at_end;
     EXPECT_EQ(selected, marked_objects(g_sel.mask));
     EXPECT_EQ(ArticleUnread{static_cast<long>(selected.size())}, g_selected_count);
 }
@@ -837,20 +839,20 @@ void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit
                                        : MM_THREAD_SELECTOR,
               g_mode);
     EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
-    EXPECT_EQ(m_empty ? 0 : 1, g_sel_item_index);
-    EXPECT_EQ(m_page_app, g_sel_page_app);
-    EXPECT_EQ(m_page_sp, g_sel_page_sp);
-    EXPECT_EQ(m_page_np, g_sel_page_np);
-    EXPECT_EQ(m_page_menu, g_sel_page_univ_index);
-    EXPECT_EQ(m_prior, g_sel_prior_obj_cnt);
-    EXPECT_EQ(m_total, g_sel_total_obj_cnt);
-    EXPECT_EQ(m_objects, g_sel_page_obj_cnt);
-    EXPECT_EQ(m_items, g_sel_page_item_cnt);
-    EXPECT_EQ(m_end, g_sel_at_end);
+    EXPECT_EQ(m_empty ? 0 : 1, g_sel_page.item_index);
+    EXPECT_EQ(m_page_app, g_sel_page.page_art);
+    EXPECT_EQ(m_page_sp, g_sel_page.page_subj);
+    EXPECT_EQ(m_page_np, g_sel_page.page_ngd);
+    EXPECT_EQ(m_page_menu, g_sel_page.page_univ_index);
+    EXPECT_EQ(m_prior, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(m_total, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(m_objects, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(m_items, g_sel_page.page_item_cnt);
+    EXPECT_EQ(m_end, g_sel_page.at_end);
     EXPECT_EQ(m_before_rows, rows());
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        EXPECT_EQ(m_empty ? nullptr : g_sel_items[1].u.np, g_newsgroup_ptr);
+        EXPECT_EQ(m_empty ? nullptr : g_sel_page.items[1].u.np, g_newsgroup_ptr);
     }
     EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
     for (const NewsgroupData *group : g_newsgroup_order)

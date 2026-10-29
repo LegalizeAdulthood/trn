@@ -16,6 +16,7 @@
 #include <trn/nntp.h>
 #include <trn/only.h>
 #include <trn/rcstuff.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/search.h>
 #include <trn/size_cast.h>
@@ -49,8 +50,6 @@ struct ActiveLineFields
 };
 
 AddGroupTable g_add_groups;
-AddGroupIndex g_sel_page_gp{};
-AddGroupIndex g_sel_next_gp{};
 bool      g_quick_start{};           // -q
 bool      g_use_add_selector{true}; //
 
@@ -231,8 +230,8 @@ static void process_list(GetNewsgroupFlags flag)
         }
     }
     g_add_groups.clear();
-    g_sel_page_gp = AddGroupIndex::None;
-    g_sel_next_gp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::None;
+    g_sel_page.next_grp = AddGroupIndex::None;
 }
 
 void new_nntp_groups(DataSource *dp)
@@ -423,8 +422,8 @@ std::string active_list_pattern()
 static void collect_active_groups()
 {
     g_add_groups.clear();
-    g_sel_page_gp = AddGroupIndex::None;
-    g_sel_next_gp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::None;
+    g_sel_page.next_grp = AddGroupIndex::None;
 
     for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {

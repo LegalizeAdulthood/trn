@@ -40,26 +40,13 @@
 #include <string_view>
 #include <variant>
 
-SelectionItem g_sel_items[MAX_SEL];
-int           g_sel_total_obj_cnt{};
-int           g_sel_prior_obj_cnt{};
-int           g_sel_page_obj_cnt{};
-int           g_sel_page_item_cnt{};
-Article     **g_sel_page_app{};
-Article     **g_sel_next_app{};
-Article      *g_sel_last_ap{};
-Subject      *g_sel_page_sp{};
-Subject      *g_sel_next_sp{};
-Subject      *g_sel_last_sp{};
+SelectorPage  g_sel_page;
 std::string   g_sel_grp_display_mode{"slm"};
 std::string   g_sel_art_display_mode{"lmds"};
 std::size_t   g_sel_grp_display_mode_index{};
 std::size_t   g_sel_art_display_mode_index{};
 
 static bool              s_group_init_done{true};
-static int               s_sel_max_line_cnt{};
-static int               s_sel_max_per_page{};
-static int               s_sel_next_op{};
 
 char current_group_display_mode()
 {
@@ -452,45 +439,46 @@ thread_subj_sort:
 
 /// @brief Initializes selection page parameters.
 /// 
-/// This function calculates and sets the maximum number of lines (`s_sel_max_line_cnt`) and the maximum
-/// number of selectable items per page (`s_sel_max_per_page`) based on terminal dimensions and selection
+/// This function calculates and sets the maximum number of lines (`g_sel_page.max_line_cnt`) and the maximum
+/// number of selectable items per page (`g_sel_page.max_per_page`) based on terminal dimensions and selection
 /// mode. It also initializes the selection character set and resets the current page object and item counts.
 /// 
 /// @globals
-/// - s_sel_max_line_cnt
-/// - g_sel_chars
-/// - s_sel_max_per_page
-/// - g_sel_page_obj_cnt
-/// - g_sel_page_item_cnt
+/// - g_sel_page.max_line_cnt
+/// - g_sel_page.chars
+/// - g_sel_page.max_per_page
+/// - g_sel_page.page_obj_cnt
+/// - g_sel_page.page_item_cnt
 ///
 static void sel_page_init()
 {
-    s_sel_max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50? 6 : 5);
-    g_sel_chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
+    g_sel_page.max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50 ? 6 : 5);
+    g_sel_page.chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
     if (g_sel.group_listing)
     {
-        g_sel_chars.erase(std::remove(g_sel_chars.begin(), g_sel_chars.end(), 'l'), g_sel_chars.end());
-        if (g_sel_chars.empty())
+        g_sel_page.chars.erase(std::remove(g_sel_page.chars.begin(), g_sel_page.chars.end(), 'l'),
+                               g_sel_page.chars.end());
+        if (g_sel_page.chars.empty())
         {
-            g_sel_chars = "1234567890";
+            g_sel_page.chars = "1234567890";
         }
     }
     // The numeric option of up to 99 lines will require many adaptations
     // to be able to switch from a large numeric page (more than
-    // g_sel_chars.size() lines) to an alphanumeric page. XXX
+    // g_sel_page.chars.size() lines) to an alphanumeric page. XXX
     //
     if (g_use_sel_num)
     {
-        s_sel_max_per_page = 99;
+        g_sel_page.max_per_page = 99;
     }
     else
     {
-        s_sel_max_per_page = static_cast<int>(g_sel_chars.size());
+        g_sel_page.max_per_page = static_cast<int>(g_sel_page.chars.size());
     }
-    s_sel_max_per_page = std::min(s_sel_max_per_page, static_cast<int>(MAX_SEL));
-    s_sel_max_per_page = std::min(s_sel_max_per_page, s_sel_max_line_cnt);
-    g_sel_page_obj_cnt = 0;
-    g_sel_page_item_cnt = 0;
+    g_sel_page.max_per_page = std::min(g_sel_page.max_per_page, static_cast<int>(MAX_SEL));
+    g_sel_page.max_per_page = std::min(g_sel_page.max_per_page, g_sel_page.max_line_cnt);
+    g_sel_page.page_obj_cnt = 0;
+    g_sel_page.page_item_cnt = 0;
 }
 
 /// @brief Initializes and populates the selection pages for the current
@@ -505,16 +493,16 @@ static void sel_page_init()
 /// selection and rereading modes.
 ///
 /// @globals
-/// - g_sel_prior_obj_cnt: Reset to 0 and updated to count objects before the current page.
-/// - g_sel_total_obj_cnt: Reset to 0 and incremented for each included object.
+/// - g_sel_page.prior_obj_cnt: Reset to 0 and updated to count objects before the current page.
+/// - g_sel_page.total_obj_cnt: Reset to 0 and incremented for each included object.
 /// - g_sel.exclusive: May be set to false if no objects are included in exclusive mode.
-/// - g_sel_page_np: Set to the current newsgroup page pointer or reset to nullptr.
-/// - g_sel_page_mp: Set to the current multirc page pointer or reset to nullptr.
-/// - g_sel_page_gp: Set to the current add group page index or reset.
-/// - g_sel_page_univ_index: Set to the current universal item page index or reset to 0.
-/// - g_sel_page_op: Set to the current option page index.
-/// - g_sel_page_app: Set to the current article page pointer or reset to nullptr.
-/// - g_sel_page_sp: Set to the current subject page pointer or reset to nullptr.
+/// - g_sel_page.page_np: Set to the current newsgroup page pointer or reset to nullptr.
+/// - g_sel_page.page_mp: Set to the current multirc page pointer or reset to nullptr.
+/// - g_sel_page.page_gp: Set to the current add group page index or reset.
+/// - g_sel_page.page_univ_index: Set to the current universal item page index or reset to 0.
+/// - g_sel_page.page_op: Set to the current option page index.
+/// - g_sel_page.page_app: Set to the current article page pointer or reset to nullptr.
+/// - g_sel_page.page_sp: Set to the current subject page pointer or reset to nullptr.
 /// - s_group_init_done: Set to true or false to indicate group initialization state.
 /// - g_selected_count: Reset to 0 and incremented for each selected object (newsgroups).
 /// - g_obj_count: Reset to 0 and incremented for each object considered.
@@ -525,8 +513,8 @@ void init_pages(bool fill_last_page)
     no_search.op = OI_NONE;
     sel_page_init();
 try_again:
-    g_sel_prior_obj_cnt = 0;
-    g_sel_total_obj_cnt = 0;
+    g_sel_page.prior_obj_cnt = 0;
+    g_sel_page.total_obj_cnt = 0;
 
     switch (g_sel.mode)
     {
@@ -537,14 +525,14 @@ try_again:
             if (mp->m_first)
             {
                 mp->m_flags |= MF_INCLUDED;
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
             }
             else
             {
                 mp->m_flags &= ~MF_INCLUDED;
             }
         }
-        if (g_sel_page_mp == nullptr)
+        if (g_sel_page.page_mrc == nullptr)
         {
             (void) first_page();
         }
@@ -560,9 +548,9 @@ try_again:
         g_obj_count = ArticleNum{};
         for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
         {
-            if (g_sel_page_np == np)
+            if (g_sel_page.page_ngd == np)
             {
-                g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+                g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
             }
             np->m_flags &= ~NF_INCLUDED;
             if (np->m_to_read < TR_NONE)
@@ -617,15 +605,15 @@ try_again:
                     np->m_flags |= NF_DEL;
                 }
                 np->m_flags |= NF_INCLUDED;
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
             }
         }
-        if (!g_sel_total_obj_cnt)
+        if (!g_sel_page.total_obj_cnt)
         {
             if (g_sel.exclusive)
             {
                 g_sel.exclusive = false;
-                g_sel_page_np = nullptr;
+                g_sel_page.page_ngd = nullptr;
                 goto try_again;
             }
             if (g_max_newsgroup_to_do)
@@ -637,22 +625,22 @@ try_again:
                 {
                     get_anything();
                 }
-                g_sel_page_np = nullptr;
+                g_sel_page.page_ngd = nullptr;
                 goto try_again;
             }
         }
-        if (!g_sel_page_np)
+        if (!g_sel_page.page_ngd)
         {
             (void) first_page();
         }
-        else if (g_sel_page_np == newsgroup_last())
+        else if (g_sel_page.page_ngd == newsgroup_last())
         {
             (void) last_page();
         }
-        else if (g_sel_prior_obj_cnt && fill_last_page)
+        else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
-            if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
                 (void) last_page();
             }
@@ -667,9 +655,9 @@ try_again:
         for (AddGroupIndex index : g_add_groups.indices())
         {
             AddGroup *gp = &g_add_groups[index];
-            if (g_sel_page_gp == index)
+            if (g_sel_page.page_grp == index)
             {
-                g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+                g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
             }
             gp->m_flags &= ~AGF_INCLUDED;
             if (!g_sel.rereading ^ !(gp->m_flags & AGF_EXCLUDED))
@@ -683,28 +671,28 @@ try_again:
                     gp->m_flags |= AGF_DEL;
                 }
                 gp->m_flags |= AGF_INCLUDED;
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
             }
             ++g_obj_count;
         }
-        if (!g_sel_total_obj_cnt && g_sel.exclusive)
+        if (!g_sel_page.total_obj_cnt && g_sel.exclusive)
         {
             g_sel.exclusive = false;
-            g_sel_page_gp = AddGroupIndex::None;
+            g_sel_page.page_grp = AddGroupIndex::None;
             goto try_again;
         }
-        if (g_sel_page_gp == AddGroupIndex::None)
+        if (g_sel_page.page_grp == AddGroupIndex::None)
         {
             (void) first_page();
         }
-        else if (g_sel_page_gp == g_add_groups.last())
+        else if (g_sel_page.page_grp == g_add_groups.last())
         {
             (void) last_page();
         }
-        else if (g_sel_prior_obj_cnt && fill_last_page)
+        else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
-            if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
                 (void) last_page();
             }
@@ -715,15 +703,15 @@ try_again:
     case SM_UNIVERSAL:
     {
         g_obj_count = ArticleNum{};
-        bool found_page_univ = !g_sel_page_univ_index;
+        bool found_page_univ = !g_sel_page.page_univ_index;
 
         sort_univ();
         for (UniversalItem &item : univ_items())
         {
-            if (g_sel_page_univ_index == univ_index(&item))
+            if (g_sel_page.page_univ_index == univ_index(&item))
             {
                 found_page_univ = true;
-                g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+                g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
             }
             item.m_flags &= ~UF_INCLUDED;
             bool ui_elig = true;
@@ -789,32 +777,32 @@ try_again:
                     item.m_flags |= UF_DEL;
                 }
                 item.m_flags |= UF_INCLUDED;
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
             }
             ++g_obj_count;
         }
-        if (!g_sel_total_obj_cnt && g_sel.exclusive)
+        if (!g_sel_page.total_obj_cnt && g_sel.exclusive)
         {
             g_sel.exclusive = false;
-            g_sel_page_univ_index = {};
+            g_sel_page.page_univ_index = {};
             goto try_again;
         }
         if (!found_page_univ)
         {
-            g_sel_page_univ_index = {};
+            g_sel_page.page_univ_index = {};
         }
-        if (!g_sel_page_univ_index)
+        if (!g_sel_page.page_univ_index)
         {
             (void) first_page();
         }
-        else if (g_sel_page_univ_index == univ_index(univ_last_item()))
+        else if (g_sel_page.page_univ_index == univ_index(univ_last_item()))
         {
             (void) last_page();
         }
-        else if (g_sel_prior_obj_cnt && fill_last_page)
+        else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
-            if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
                 (void) last_page();
             }
@@ -829,19 +817,19 @@ try_again:
         g_obj_count = ArticleNum{};
         for (int op = catalog.first_row(); op <= catalog.row_count(); op++)
         {
-            if (g_sel_page_op == op)
+            if (g_sel_page.page_op == op)
             {
-                g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+                g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
             }
             if (catalog.is_group(op))
             {
                 included = (g_option_flags[op] & OF_SEL);
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
                 g_option_flags[op] |= OF_INCLUDED;
             }
             else if (included)
             {
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
                 g_option_flags[op] |= OF_INCLUDED;
             }
             else
@@ -850,18 +838,18 @@ try_again:
             }
             ++g_obj_count;
         }
-        if (g_sel_page_op < 1)
+        if (g_sel_page.page_op < 1)
         {
             (void) first_page();
         }
-        else if (g_sel_page_op >= g_obj_count.value_of())
+        else if (g_sel_page.page_op >= g_obj_count.value_of())
         {
             (void) last_page();
         }
-        else if (g_sel_prior_obj_cnt && fill_last_page)
+        else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
-            if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
                 (void) last_page();
             }
@@ -875,12 +863,12 @@ try_again:
         Article** app;
         Article** limit;
 
-        if (g_sel_page_app)
+        if (g_sel_page.page_art)
         {
             int desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
             limit = article_ptr_list_end();
             ap = nullptr;
-            for (app = g_sel_page_app; app < limit; app++)
+            for (app = g_sel_page.page_art; app < limit; app++)
             {
                 Article *candidate = *app;
                 if ((candidate->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
@@ -892,7 +880,7 @@ try_again:
             sort_articles();
             if (ap == nullptr)
             {
-                g_sel_page_app = article_ptr_list_end();
+                g_sel_page.page_art = article_ptr_list_end();
             }
             else
             {
@@ -901,7 +889,7 @@ try_again:
                 {
                     if (*app == ap)
                     {
-                        g_sel_page_app = app;
+                        g_sel_page.page_art = app;
                         break;
                     }
                 }
@@ -912,9 +900,9 @@ try_again:
             sort_articles();
         }
 
-        while (g_sel_page_sp && g_sel_page_sp->m_misc == 0)
+        while (g_sel_page.page_subj && g_sel_page.page_subj->m_misc == 0)
         {
-            g_sel_page_sp = g_sel_page_sp->m_next;
+            g_sel_page.page_subj = g_sel_page.page_subj->m_next;
         }
         // The g_artptr_list contains only unread or read articles, never both
         limit = article_ptr_list_end();
@@ -925,15 +913,15 @@ try_again:
             {
                 ap->m_flags |= AF_DEL;
             }
-            if (g_sel_page_app == app //
-                || (!g_sel_page_app && ap->m_subj == g_sel_page_sp))
+            if (g_sel_page.page_art == app //
+                || (!g_sel_page.page_art && ap->m_subj == g_sel_page.page_subj))
             {
-                g_sel_page_app = app;
-                g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+                g_sel_page.page_art = app;
+                g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
             }
             if (!g_sel.exclusive || (ap->m_flags & g_sel.mask))
             {
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
                 ap->m_flags |= AF_INCLUDED;
             }
             else
@@ -941,24 +929,24 @@ try_again:
                 ap->m_flags &= ~AF_INCLUDED;
             }
         }
-        if (g_sel.exclusive && !g_sel_total_obj_cnt)
+        if (g_sel.exclusive && !g_sel_page.total_obj_cnt)
         {
             g_sel.exclusive = false;
-            g_sel_page_app = nullptr;
+            g_sel_page.page_art = nullptr;
             goto try_again;
         }
-        if (!g_sel_page_app)
+        if (!g_sel_page.page_art)
         {
             (void) first_page();
         }
-        else if (g_sel_page_app >= limit)
+        else if (g_sel_page.page_art >= limit)
         {
             (void) last_page();
         }
-        else if (g_sel_prior_obj_cnt && fill_last_page)
+        else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
-            if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
                 (void) last_page();
             }
@@ -968,16 +956,16 @@ try_again:
 
     default:
     {
-        if (g_sel_page_sp)
+        if (g_sel_page.page_subj)
         {
-            while (g_sel_page_sp && g_sel_page_sp->m_misc == 0)
+            while (g_sel_page.page_subj && g_sel_page.page_subj->m_misc == 0)
             {
-                g_sel_page_sp = g_sel_page_sp->m_next;
+                g_sel_page.page_subj = g_sel_page.page_subj->m_next;
             }
             sort_subjects();
-            if (!g_sel_page_sp)
+            if (!g_sel_page.page_subj)
             {
-                g_sel_page_sp = g_last_subject;
+                g_sel_page.page_subj = g_last_subject;
             }
         }
         else
@@ -1003,19 +991,19 @@ try_again:
                 sp->m_flags &= ~SF_INCLUDED;
             }
 
-            if (g_sel_page_sp == group_sp)
+            if (g_sel_page.page_subj == group_sp)
             {
-                g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+                g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
             }
             if (g_sel.mode == SM_THREAD)
             {
                 while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
                 {
                     sp = sp->m_next;
-                    if (sp == g_sel_page_sp)
+                    if (sp == g_sel_page.page_subj)
                     {
-                        g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
-                        g_sel_page_sp = group_sp;
+                        g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
+                        g_sel_page.page_subj = group_sp;
                     }
                     sp->m_flags &= ~SF_INCLUDED;
                     if (sp->m_flags & g_sel.mask)
@@ -1031,27 +1019,27 @@ try_again:
             }
             if (group_sp->m_flags & SF_INCLUDED)
             {
-                g_sel_total_obj_cnt += group_arts;
+                g_sel_page.total_obj_cnt += group_arts;
             }
         }
-        if (g_sel.exclusive && !g_sel_total_obj_cnt)
+        if (g_sel.exclusive && !g_sel_page.total_obj_cnt)
         {
             g_sel.exclusive = false;
-            g_sel_page_sp = nullptr;
+            g_sel_page.page_subj = nullptr;
             goto try_again;
         }
-        if (!g_sel_page_sp)
+        if (!g_sel_page.page_subj)
         {
             (void) first_page();
         }
-        else if (g_sel_page_sp == g_last_subject)
+        else if (g_sel_page.page_subj == g_last_subject)
         {
             (void) last_page();
         }
-        else if (g_sel_prior_obj_cnt && fill_last_page)
+        else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
-            if (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt)
+            if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
                 (void) last_page();
             }
@@ -1069,18 +1057,18 @@ try_again:
 /// was changed, otherwise false.
 ///
 /// @globals
-/// - g_sel_prior_obj_cnt: Reset to 0 at the start of the function.
-/// - g_sel_page_mp: Set to the first included Multirc if in SM_MULTIRC mode.
-/// - g_sel_page_np: Set to the first included NewsgroupData if in SM_NEWSGROUP mode.
-/// - g_sel_page_gp: Set to the first included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ_index: Set to the first included UniversalItem if in SM_UNIVERSAL mode.
-/// - g_sel_page_op: Set to 1 if not already 1 in SM_OPTIONS mode.
-/// - g_sel_page_app: Set to the first included Article** if in SM_ARTICLE mode.
-/// - g_sel_page_sp: Set to the first included Subject if in default/subject/thread mode.
+/// - g_sel_page.prior_obj_cnt: Reset to 0 at the start of the function.
+/// - g_sel_page.page_mp: Set to the first included Multirc if in SM_MULTIRC mode.
+/// - g_sel_page.page_np: Set to the first included NewsgroupData if in SM_NEWSGROUP mode.
+/// - g_sel_page.page_gp: Set to the first included AddGroup if in SM_ADD_GROUP mode.
+/// - g_sel_page.page_univ_index: Set to the first included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page.page_op: Set to 1 if not already 1 in SM_OPTIONS mode.
+/// - g_sel_page.page_app: Set to the first included Article** if in SM_ARTICLE mode.
+/// - g_sel_page.page_sp: Set to the first included Subject if in default/subject/thread mode.
 ///
 bool first_page()
 {
-    g_sel_prior_obj_cnt = 0;
+    g_sel_page.prior_obj_cnt = 0;
 
     switch (g_sel.mode)
     {
@@ -1090,9 +1078,9 @@ bool first_page()
         {
             if (mp->m_flags & MF_INCLUDED)
             {
-                if (g_sel_page_mp != mp)
+                if (g_sel_page.page_mrc != mp)
                 {
-                    g_sel_page_mp = mp;
+                    g_sel_page.page_mrc = mp;
                     return true;
                 }
                 break;
@@ -1107,9 +1095,9 @@ bool first_page()
         {
             if (np->m_flags & NF_INCLUDED)
             {
-                if (g_sel_page_np != np)
+                if (g_sel_page.page_ngd != np)
                 {
-                    g_sel_page_np = np;
+                    g_sel_page.page_ngd = np;
                     return true;
                 }
                 break;
@@ -1124,9 +1112,9 @@ bool first_page()
         {
             if (g_add_groups[index].m_flags & AGF_INCLUDED)
             {
-                if (g_sel_page_gp != index)
+                if (g_sel_page.page_grp != index)
                 {
-                    g_sel_page_gp = index;
+                    g_sel_page.page_grp = index;
                     return true;
                 }
                 break;
@@ -1141,9 +1129,9 @@ bool first_page()
         {
             if (item.m_flags & UF_INCLUDED)
             {
-                if (g_sel_page_univ_index != univ_index(&item))
+                if (g_sel_page.page_univ_index != univ_index(&item))
                 {
-                    g_sel_page_univ_index = univ_index(&item);
+                    g_sel_page.page_univ_index = univ_index(&item);
                     return true;
                 }
                 break;
@@ -1154,9 +1142,9 @@ bool first_page()
 
     case SM_OPTIONS:
     {
-        if (g_sel_page_op != 1)
+        if (g_sel_page.page_op != 1)
         {
-            g_sel_page_op = 1;
+            g_sel_page.page_op = 1;
             return true;
         }
         break;
@@ -1169,9 +1157,9 @@ bool first_page()
         {
             if ((*app)->m_flags & AF_INCLUDED)
             {
-                if (g_sel_page_app != app)
+                if (g_sel_page.page_art != app)
                 {
-                    g_sel_page_app = app;
+                    g_sel_page.page_art = app;
                     return true;
                 }
                 break;
@@ -1186,9 +1174,9 @@ bool first_page()
         {
             if (sp->m_flags & SF_INCLUDED)
             {
-                if (g_sel_page_sp != sp)
+                if (g_sel_page.page_subj != sp)
                 {
-                    g_sel_page_sp = sp;
+                    g_sel_page.page_subj = sp;
                     return true;
                 }
                 break;
@@ -1210,37 +1198,37 @@ bool first_page()
 /// changed, otherwise false.
 ///
 /// @globals
-/// - g_sel_prior_obj_cnt: Set to g_sel_total_obj_cnt at the start of the function.
-/// - g_sel_page_mp: Temporarily set to nullptr and possibly updated to the last
+/// - g_sel_page.prior_obj_cnt: Set to g_sel_page.total_obj_cnt at the start of the function.
+/// - g_sel_page.page_mp: Temporarily set to nullptr and possibly updated to the last
 ///   included Multirc if in SM_MULTIRC mode.
-/// - g_sel_page_np: Temporarily set to nullptr and possibly updated to the last
+/// - g_sel_page.page_np: Temporarily set to nullptr and possibly updated to the last
 ///   included NewsgroupData if in SM_NEWSGROUP mode.
-/// - g_sel_page_gp: Temporarily reset and possibly updated to the last
+/// - g_sel_page.page_gp: Temporarily reset and possibly updated to the last
 ///   included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ_index: Temporarily set to 0 and possibly updated to the last
+/// - g_sel_page.page_univ_index: Temporarily set to 0 and possibly updated to the last
 ///   included UniversalItem if in SM_UNIVERSAL mode.
-/// - g_sel_page_op: Temporarily set to g_obj_count.value_of() + 1 and possibly
+/// - g_sel_page.page_op: Temporarily set to g_obj_count.value_of() + 1 and possibly
 ///   updated to the last included option index if in SM_OPTIONS mode.
-/// - g_sel_page_app: Temporarily set to the end of the article pointer list and
+/// - g_sel_page.page_app: Temporarily set to the end of the article pointer list and
 ///   possibly updated to the last included Article** if in SM_ARTICLE mode.
-/// - g_sel_page_sp: Temporarily set to nullptr and possibly updated to the last
+/// - g_sel_page.page_sp: Temporarily set to nullptr and possibly updated to the last
 ///   included Subject if in default/subject/thread mode.
 ///
 bool last_page()
 {
-    g_sel_prior_obj_cnt = g_sel_total_obj_cnt;
+    g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
 
     switch (g_sel.mode)
     {
     case SM_MULTIRC:
     {
-        Multirc* mp = g_sel_page_mp;
-        g_sel_page_mp = nullptr;
+        Multirc *mp = g_sel_page.page_mrc;
+        g_sel_page.page_mrc = nullptr;
         if (!prev_page())
         {
-            g_sel_page_mp = mp;
+            g_sel_page.page_mrc = mp;
         }
-        else if (mp != g_sel_page_mp)
+        else if (mp != g_sel_page.page_mrc)
         {
             return true;
         }
@@ -1249,13 +1237,13 @@ bool last_page()
 
     case SM_NEWSGROUP:
     {
-        NewsgroupData* np = g_sel_page_np;
-        g_sel_page_np = nullptr;
+        NewsgroupData *np = g_sel_page.page_ngd;
+        g_sel_page.page_ngd = nullptr;
         if (!prev_page())
         {
-            g_sel_page_np = np;
+            g_sel_page.page_ngd = np;
         }
-        else if (np != g_sel_page_np)
+        else if (np != g_sel_page.page_ngd)
         {
             return true;
         }
@@ -1264,13 +1252,13 @@ bool last_page()
 
     case SM_ADD_GROUP:
     {
-        const AddGroupIndex gp = g_sel_page_gp;
-        g_sel_page_gp = AddGroupIndex::None;
+        const AddGroupIndex gp = g_sel_page.page_grp;
+        g_sel_page.page_grp = AddGroupIndex::None;
         if (!prev_page())
         {
-            g_sel_page_gp = gp;
+            g_sel_page.page_grp = gp;
         }
-        else if (gp != g_sel_page_gp)
+        else if (gp != g_sel_page.page_grp)
         {
             return true;
         }
@@ -1279,13 +1267,13 @@ bool last_page()
 
     case SM_UNIVERSAL:
     {
-        const UniversalItemIndex ui = g_sel_page_univ_index;
-        g_sel_page_univ_index = {};
+        const UniversalItemIndex ui = g_sel_page.page_univ_index;
+        g_sel_page.page_univ_index = {};
         if (!prev_page())
         {
-            g_sel_page_univ_index = ui;
+            g_sel_page.page_univ_index = ui;
         }
-        else if (ui != g_sel_page_univ_index)
+        else if (ui != g_sel_page.page_univ_index)
         {
             return true;
         }
@@ -1294,13 +1282,13 @@ bool last_page()
 
     case SM_OPTIONS:
     {
-        int op = g_sel_page_op;
-        g_sel_page_op = g_obj_count.value_of() + 1;
+        int op = g_sel_page.page_op;
+        g_sel_page.page_op = g_obj_count.value_of() + 1;
         if (!prev_page())
         {
-            g_sel_page_op = op;
+            g_sel_page.page_op = op;
         }
-        else if (op != g_sel_page_op)
+        else if (op != g_sel_page.page_op)
         {
             return true;
         }
@@ -1309,13 +1297,13 @@ bool last_page()
 
     case SM_ARTICLE:
     {
-        Article** app = g_sel_page_app;
-        g_sel_page_app = article_ptr_list_end();
+        Article **app = g_sel_page.page_art;
+        g_sel_page.page_art = article_ptr_list_end();
         if (!prev_page())
         {
-            g_sel_page_app = app;
+            g_sel_page.page_art = app;
         }
-        else if (app != g_sel_page_app)
+        else if (app != g_sel_page.page_art)
         {
             return true;
         }
@@ -1324,13 +1312,13 @@ bool last_page()
 
     default:
     {
-        Subject* sp = g_sel_page_sp;
-        g_sel_page_sp = nullptr;
+        Subject *sp = g_sel_page.page_subj;
+        g_sel_page.page_subj = nullptr;
         if (!prev_page())
         {
-            g_sel_page_sp = sp;
+            g_sel_page.page_subj = sp;
         }
-        else if (sp != g_sel_page_sp)
+        else if (sp != g_sel_page.page_subj)
         {
             return true;
         }
@@ -1349,18 +1337,18 @@ bool last_page()
 /// selection was advanced, otherwise false.
 ///
 /// @globals
-/// - g_sel_page_mp: Set to g_sel_next_mp if in SM_MULTIRC mode.
-/// - g_sel_page_np: Set to g_sel_next_np if in SM_NEWSGROUP mode.
-/// - g_sel_page_gp: Set to g_sel_next_gp if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ_index: Set to g_sel_next_univ_index if in SM_UNIVERSAL mode.
-/// - g_sel_page_op: Set to s_sel_next_op if in SM_OPTIONS mode.
-/// - g_sel_page_app: Set to g_sel_next_app if in SM_ARTICLE mode.
-/// - g_sel_page_sp: Set to g_sel_next_sp if in default/subject/thread mode.
-/// - g_sel_prior_obj_cnt: Incremented by g_sel_page_obj_cnt when advancing page.
+/// - g_sel_page.page_mp: Set to g_sel_page.next_mp if in SM_MULTIRC mode.
+/// - g_sel_page.page_np: Set to g_sel_page.next_np if in SM_NEWSGROUP mode.
+/// - g_sel_page.page_gp: Set to g_sel_page.next_gp if in SM_ADD_GROUP mode.
+/// - g_sel_page.page_univ_index: Set to g_sel_page.next_univ_index if in SM_UNIVERSAL mode.
+/// - g_sel_page.page_op: Set to g_sel_page.next_op if in SM_OPTIONS mode.
+/// - g_sel_page.page_app: Set to g_sel_page.next_app if in SM_ARTICLE mode.
+/// - g_sel_page.page_sp: Set to g_sel_page.next_sp if in default/subject/thread mode.
+/// - g_sel_page.prior_obj_cnt: Incremented by g_sel_page.page_obj_cnt when advancing page.
 ///
 bool next_page()
 {
-    if (!g_sel_total_obj_cnt || g_sel_prior_obj_cnt + g_sel_page_obj_cnt >= g_sel_total_obj_cnt)
+    if (!g_sel_page.total_obj_cnt || g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt >= g_sel_page.total_obj_cnt)
     {
         return false;
     }
@@ -1368,10 +1356,10 @@ bool next_page()
     {
     case SM_MULTIRC:
     {
-        if (g_sel_next_mp)
+        if (g_sel_page.next_mrc)
         {
-            g_sel_page_mp = g_sel_next_mp;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_mrc = g_sel_page.next_mrc;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1379,10 +1367,10 @@ bool next_page()
 
     case SM_NEWSGROUP:
     {
-        if (g_sel_next_np)
+        if (g_sel_page.next_ngd)
         {
-            g_sel_page_np = g_sel_next_np;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_ngd = g_sel_page.next_ngd;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1390,10 +1378,10 @@ bool next_page()
 
     case SM_ADD_GROUP:
     {
-        if (g_sel_next_gp != AddGroupIndex::None)
+        if (g_sel_page.next_grp != AddGroupIndex::None)
         {
-            g_sel_page_gp = g_sel_next_gp;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_grp = g_sel_page.next_grp;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1401,10 +1389,10 @@ bool next_page()
 
     case SM_UNIVERSAL:
     {
-        if (g_sel_next_univ_index)
+        if (g_sel_page.next_univ_index)
         {
-            g_sel_page_univ_index = g_sel_next_univ_index;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_univ_index = g_sel_page.next_univ_index;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1412,10 +1400,10 @@ bool next_page()
 
     case SM_OPTIONS:
     {
-        if (s_sel_next_op <= g_obj_count.value_of())
+        if (g_sel_page.next_op <= g_obj_count.value_of())
         {
-            g_sel_page_op = s_sel_next_op;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_op = g_sel_page.next_op;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1423,10 +1411,10 @@ bool next_page()
 
     case SM_ARTICLE:
     {
-        if (g_sel_next_app < article_ptr_list_end())
+        if (g_sel_page.next_art < article_ptr_list_end())
         {
-            g_sel_page_app = g_sel_next_app;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_art = g_sel_page.next_art;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1434,10 +1422,10 @@ bool next_page()
 
     default:
     {
-        if (g_sel_next_sp)
+        if (g_sel_page.next_subj)
         {
-            g_sel_page_sp = g_sel_next_sp;
-            g_sel_prior_obj_cnt += g_sel_page_obj_cnt;
+            g_sel_page.page_subj = g_sel_page.next_subj;
+            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
             return true;
         }
         break;
@@ -1455,14 +1443,14 @@ bool next_page()
 /// selection was moved to a previous page, otherwise false.
 ///
 /// @globals
-/// - g_sel_page_mp: Set to the previous included Multirc if in SM_MULTIRC mode.
-/// - g_sel_page_np: Set to the previous included NewsgroupData if in SM_NEWSGROUP mode.
-/// - g_sel_page_gp: Set to the previous included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page_univ_index: Set to the previous included UniversalItem if in SM_UNIVERSAL mode.
-/// - g_sel_page_op: Set to the previous included option index if in SM_OPTIONS mode.
-/// - g_sel_page_app: Set to the previous included Article** if in SM_ARTICLE mode.
-/// - g_sel_page_sp: Set to the previous included Subject if in default/subject/thread mode.
-/// - g_sel_prior_obj_cnt: Decremented for each object moved back during paging.
+/// - g_sel_page.page_mp: Set to the previous included Multirc if in SM_MULTIRC mode.
+/// - g_sel_page.page_np: Set to the previous included NewsgroupData if in SM_NEWSGROUP mode.
+/// - g_sel_page.page_gp: Set to the previous included AddGroup if in SM_ADD_GROUP mode.
+/// - g_sel_page.page_univ_index: Set to the previous included UniversalItem if in SM_UNIVERSAL mode.
+/// - g_sel_page.page_op: Set to the previous included option index if in SM_OPTIONS mode.
+/// - g_sel_page.page_app: Set to the previous included Article** if in SM_ARTICLE mode.
+/// - g_sel_page.page_sp: Set to the previous included Subject if in default/subject/thread mode.
+/// - g_sel_page.prior_obj_cnt: Decremented for each object moved back during paging.
 ///
 bool prev_page()
 {
@@ -1473,8 +1461,8 @@ bool prev_page()
     {
     case SM_MULTIRC:
     {
-        Multirc* mp = g_sel_page_mp;
-        Multirc* page_mp = g_sel_page_mp;
+        Multirc *mp = g_sel_page.page_mrc;
+        Multirc *page_mp = g_sel_page.page_mrc;
 
         if (!mp)
         {
@@ -1489,17 +1477,17 @@ bool prev_page()
             if (mp->m_flags & MF_INCLUDED)
             {
                 page_mp = mp;
-                g_sel_prior_obj_cnt--;
-                if (++item_cnt >= s_sel_max_per_page)
+                g_sel_page.prior_obj_cnt--;
+                if (++item_cnt >= g_sel_page.max_per_page)
                 {
                     break;
                 }
             }
             mp = multirc_prev(mp);
         }
-        if (g_sel_page_mp != page_mp)
+        if (g_sel_page.page_mrc != page_mp)
         {
-            g_sel_page_mp = page_mp;
+            g_sel_page.page_mrc = page_mp;
             return true;
         }
         break;
@@ -1507,8 +1495,8 @@ bool prev_page()
 
     case SM_NEWSGROUP:
     {
-        NewsgroupData *np = g_sel_page_np;
-        NewsgroupData *page_np = g_sel_page_np;
+        NewsgroupData *np = g_sel_page.page_ngd;
+        NewsgroupData *page_np = g_sel_page.page_ngd;
 
         if (!np)
         {
@@ -1523,17 +1511,17 @@ bool prev_page()
             if (np->m_flags & NF_INCLUDED)
             {
                 page_np = np;
-                g_sel_prior_obj_cnt--;
-                if (++item_cnt >= s_sel_max_per_page)
+                g_sel_page.prior_obj_cnt--;
+                if (++item_cnt >= g_sel_page.max_per_page)
                 {
                     break;
                 }
             }
             np = newsgroup_prev(np);
         }
-        if (g_sel_page_np != page_np)
+        if (g_sel_page.page_ngd != page_np)
         {
-            g_sel_page_np = page_np;
+            g_sel_page.page_ngd = page_np;
             return true;
         }
         break;
@@ -1541,8 +1529,8 @@ bool prev_page()
 
     case SM_ADD_GROUP:
     {
-        AddGroupIndex gp = g_sel_page_gp;
-        AddGroupIndex page_gp = g_sel_page_gp;
+        AddGroupIndex gp = g_sel_page.page_grp;
+        AddGroupIndex page_gp = g_sel_page.page_grp;
 
         if (gp == AddGroupIndex::None)
         {
@@ -1557,17 +1545,17 @@ bool prev_page()
             if (g_add_groups[gp].m_flags & AGF_INCLUDED)
             {
                 page_gp = gp;
-                g_sel_prior_obj_cnt--;
-                if (++item_cnt >= s_sel_max_per_page)
+                g_sel_page.prior_obj_cnt--;
+                if (++item_cnt >= g_sel_page.max_per_page)
                 {
                     break;
                 }
             }
             gp = g_add_groups.prev(gp);
         }
-        if (g_sel_page_gp != page_gp)
+        if (g_sel_page.page_grp != page_gp)
         {
-            g_sel_page_gp = page_gp;
+            g_sel_page.page_grp = page_gp;
             return true;
         }
         break;
@@ -1575,8 +1563,8 @@ bool prev_page()
 
     case SM_UNIVERSAL:
     {
-        UniversalItem     *ui = univ_item(g_sel_page_univ_index);
-        UniversalItemIndex page_ui = g_sel_page_univ_index;
+        UniversalItem     *ui = univ_item(g_sel_page.page_univ_index);
+        UniversalItemIndex page_ui = g_sel_page.page_univ_index;
 
         if (!ui)
         {
@@ -1591,17 +1579,17 @@ bool prev_page()
             if (ui->m_flags & UF_INCLUDED)
             {
                 page_ui = univ_index(ui);
-                g_sel_prior_obj_cnt--;
-                if (++item_cnt >= s_sel_max_per_page)
+                g_sel_page.prior_obj_cnt--;
+                if (++item_cnt >= g_sel_page.max_per_page)
                 {
                     break;
                 }
             }
             ui = univ_prev_item(ui);
         }
-        if (g_sel_page_univ_index != page_ui)
+        if (g_sel_page.page_univ_index != page_ui)
         {
-            g_sel_page_univ_index = page_ui;
+            g_sel_page.page_univ_index = page_ui;
             return true;
         }
         break;
@@ -1609,24 +1597,24 @@ bool prev_page()
 
     case SM_OPTIONS:
     {
-        int op = g_sel_page_op;
-        int page_op = g_sel_page_op;
+        int op = g_sel_page.page_op;
+        int page_op = g_sel_page.page_op;
 
         while (--op > 0)
         {
             if (g_option_flags[op] & OF_INCLUDED)
             {
                 page_op = op;
-                g_sel_prior_obj_cnt--;
-                if (++item_cnt >= s_sel_max_per_page)
+                g_sel_page.prior_obj_cnt--;
+                if (++item_cnt >= g_sel_page.max_per_page)
                 {
                     break;
                 }
             }
         }
-        if (g_sel_page_op != page_op)
+        if (g_sel_page.page_op != page_op)
         {
-            g_sel_page_op = page_op;
+            g_sel_page.page_op = page_op;
             return true;
         }
         break;
@@ -1634,31 +1622,31 @@ bool prev_page()
 
     case SM_ARTICLE:
     {
-        Article** page_app = g_sel_page_app;
+        Article **page_app = g_sel_page.page_art;
 
-        for (Article **app = g_sel_page_app; app > article_ptr_list_begin();)
+        for (Article **app = g_sel_page.page_art; app > article_ptr_list_begin();)
         {
             --app;
             if ((*app)->m_flags & AF_INCLUDED)
             {
                 page_app = app;
-                g_sel_prior_obj_cnt--;
-                if (++item_cnt >= s_sel_max_per_page)
+                g_sel_page.prior_obj_cnt--;
+                if (++item_cnt >= g_sel_page.max_per_page)
                 {
                     break;
                 }
             }
         }
-        if (g_sel_page_app != page_app)
+        if (g_sel_page.page_art != page_app)
         {
-            g_sel_page_app = page_app;
+            g_sel_page.page_art = page_app;
             return true;
         }
     }
 
     default:
     {
-        Subject*page_sp = g_sel_page_sp;
+        Subject  *page_sp = g_sel_page.page_subj;
         int       line_cnt;
 
         int line = 2;
@@ -1682,23 +1670,23 @@ bool prev_page()
             {
                 continue;
             }
-            line_cnt = std::min(line_cnt, s_sel_max_line_cnt);
+            line_cnt = std::min(line_cnt, g_sel_page.max_line_cnt);
             line += line_cnt;
-            if (line > s_sel_max_line_cnt + 2)
+            if (line > g_sel_page.max_line_cnt + 2)
             {
                 sp = page_sp;
                 break;
             }
-            g_sel_prior_obj_cnt -= item_arts;
+            g_sel_page.prior_obj_cnt -= item_arts;
             page_sp = sp;
-            if (++item_cnt >= s_sel_max_per_page)
+            if (++item_cnt >= g_sel_page.max_per_page)
             {
                 break;
             }
         }
-        if (g_sel_page_sp != page_sp)
+        if (g_sel_page.page_subj != page_sp)
         {
-            g_sel_page_sp = (page_sp? page_sp : g_first_subject);
+            g_sel_page.page_subj = (page_sp ? page_sp : g_first_subject);
             return true;
         }
         break;
@@ -1722,163 +1710,164 @@ bool prev_page()
 /// otherwise.
 ///
 /// @globals
-/// - g_sel_item_index: Set to the index of the target item or -1 if not found.
-/// - g_sel_page_obj_cnt: Set to the number of objects on the current page.
-/// - g_sel_page_item_cnt: Set to the number of selectable items on the page.
+/// - g_sel_page.item_index: Set to the index of the target item or -1 if not found.
+/// - g_sel_page.page_obj_cnt: Set to the number of objects on the current page.
+/// - g_sel_page.page_item_cnt: Set to the number of selectable items on the page.
 /// - g_term_line: Reset to 2 at the start of the function.
-/// - g_sel_next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
-/// - g_sel_next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
-/// - g_sel_next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
-/// - g_sel_next_univ_index: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
-/// - s_sel_next_op: Set to the next option index for paging in SM_OPTIONS mode.
-/// - g_sel_next_app: Set to the next Article** for paging in SM_ARTICLE mode.
-/// - g_sel_next_sp: Set to the next Subject for paging in subject/thread mode.
+/// - g_sel_page.next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
+/// - g_sel_page.next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
+/// - g_sel_page.next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
+/// - g_sel_page.next_univ_index: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
+/// - g_sel_page.next_op: Set to the next option index for paging in SM_OPTIONS mode.
+/// - g_sel_page.next_app: Set to the next Article** for paging in SM_ARTICLE mode.
+/// - g_sel_page.next_sp: Set to the next Subject for paging in subject/thread mode.
 ///
 bool calc_page(Selection u)
 {
     int ret = false;
     if (u.op != -1)
     {
-        g_sel_item_index = -1;
+        g_sel_page.item_index = -1;
     }
 try_again:
-    g_sel_page_obj_cnt = 0;
-    g_sel_page_item_cnt = 0;
+    g_sel_page.page_obj_cnt = 0;
+    g_sel_page.page_item_cnt = 0;
     g_term_line = 2;
 
     switch (g_sel.mode)
     {
     case SM_MULTIRC:
     {
-        Multirc *mp = g_sel_page_mp;
-        for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
+        Multirc *mp = g_sel_page.page_mrc;
+        for (; mp && g_sel_page.page_item_cnt < g_sel_page.max_per_page; mp = multirc_next(mp))
         {
             if (mp == u.mp)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (mp->m_flags & MF_INCLUDED)
             {
-                g_sel_page_item_cnt++;
+                g_sel_page.page_item_cnt++;
             }
         }
-        g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_mp = mp;
+        g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
+        g_sel_page.next_mrc = mp;
         break;
     }
 
     case SM_NEWSGROUP:
     {
-        NewsgroupData *np = g_sel_page_np;
-        for (; np && g_sel_page_item_cnt < s_sel_max_per_page; np = newsgroup_next(np))
+        NewsgroupData *np = g_sel_page.page_ngd;
+        for (; np && g_sel_page.page_item_cnt < g_sel_page.max_per_page; np = newsgroup_next(np))
         {
             if (np == u.np)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (np->m_flags & NF_INCLUDED)
             {
-                g_sel_page_item_cnt++;
+                g_sel_page.page_item_cnt++;
             }
         }
-        g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_np = np;
+        g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
+        g_sel_page.next_ngd = np;
         break;
     }
 
     case SM_ADD_GROUP:
     {
-        AddGroupIndex gp = g_sel_page_gp;
-        for (; gp != AddGroupIndex::None && g_sel_page_item_cnt < s_sel_max_per_page; gp = g_add_groups.next(gp))
+        AddGroupIndex gp = g_sel_page.page_grp;
+        for (; gp != AddGroupIndex::None && g_sel_page.page_item_cnt < g_sel_page.max_per_page;
+             gp = g_add_groups.next(gp))
         {
             if (gp == u.gp)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (g_add_groups[gp].m_flags & AGF_INCLUDED)
             {
-                g_sel_page_item_cnt++;
+                g_sel_page.page_item_cnt++;
             }
         }
-        g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_gp = gp;
+        g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
+        g_sel_page.next_grp = gp;
         break;
     }
 
     case SM_UNIVERSAL:
     {
         UniversalItemIndex next_univ = {};
-        for (UniversalItem &item : univ_items(g_sel_page_univ_index))
+        for (UniversalItem &item : univ_items(g_sel_page.page_univ_index))
         {
-            if (g_sel_page_item_cnt >= s_sel_max_per_page)
+            if (g_sel_page.page_item_cnt >= g_sel_page.max_per_page)
             {
                 next_univ = univ_index(&item);
                 break;
             }
             if (&item == u.un)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (item.m_flags & UF_INCLUDED)
             {
-                g_sel_page_item_cnt++;
+                g_sel_page.page_item_cnt++;
             }
             next_univ = univ_index(univ_next_item(&item));
         }
-        g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_univ_index = next_univ;
+        g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
+        g_sel_page.next_univ_index = next_univ;
         break;
     }
 
     case SM_OPTIONS:
     {
-        int op = g_sel_page_op;
-        for (; op <= g_obj_count.value_of() && g_sel_page_item_cnt < s_sel_max_per_page; op++)
+        int op = g_sel_page.page_op;
+        for (; op <= g_obj_count.value_of() && g_sel_page.page_item_cnt < g_sel_page.max_per_page; op++)
         {
             if (op == u.op)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (g_option_flags[op] & OF_INCLUDED)
             {
-                g_sel_page_item_cnt++;
+                g_sel_page.page_item_cnt++;
             }
         }
-        g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        s_sel_next_op = op;
+        g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
+        g_sel_page.next_op = op;
         break;
     }
 
     case SM_ARTICLE:
     {
-        Article** app = g_sel_page_app;
+        Article **app = g_sel_page.page_art;
         Article** limit = article_ptr_list_end();
-        for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
+        for (; app < limit && g_sel_page.page_item_cnt < g_sel_page.max_per_page; app++)
         {
             if (*app == u.ap)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if ((*app)->m_flags & AF_INCLUDED)
             {
-                g_sel_page_item_cnt++;
+                g_sel_page.page_item_cnt++;
             }
         }
-        g_sel_page_obj_cnt = g_sel_page_item_cnt;
-        g_sel_next_app = app;
+        g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
+        g_sel_page.next_art = app;
         break;
     }
 
     default:
     {
-          Subject *sp = g_sel_page_sp;
+        Subject *sp = g_sel_page.page_subj;
           int      line_cnt;
           int      sel;
-          for (; sp && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->m_next)
+        for (; sp && g_sel_page.page_item_cnt < g_sel_page.max_per_page; sp = sp->m_next)
           {
             if (sp == u.sp)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (sp->m_flags & SF_INCLUDED)
             {
@@ -1892,13 +1881,13 @@ try_again:
                 }
                 if (line_cnt)
                 {
-                    line_cnt = std::min(line_cnt, s_sel_max_line_cnt);
-                    if (g_term_line + line_cnt > s_sel_max_line_cnt+2)
+                    line_cnt = std::min(line_cnt, g_sel_page.max_line_cnt);
+                    if (g_term_line + line_cnt > g_sel_page.max_line_cnt + 2)
                     {
                         break;
                     }
-                    g_sel_page_obj_cnt += sp->m_misc;
-                    g_sel_page_item_cnt++;
+                    g_sel_page.page_obj_cnt += sp->m_misc;
+                    g_sel_page.page_item_cnt++;
                 }
             }
             else
@@ -1914,15 +1903,15 @@ try_again:
                     {
                         continue;
                     }
-                    g_sel_page_obj_cnt += sp->m_misc;
+                    g_sel_page.page_obj_cnt += sp->m_misc;
                 }
             }
         }
-        g_sel_next_sp = sp;
+        g_sel_page.next_subj = sp;
         break;
     }
     }
-    if (u.op != -1 && g_sel_item_index < 0)
+    if (u.op != -1 && g_sel_page.item_index < 0)
     {
         if (!ret)
         {
@@ -1938,7 +1927,7 @@ try_again:
             goto try_again;
         }
         first_page();
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
     }
     return ret;
 }
@@ -2031,8 +2020,8 @@ static void display_page_title(bool home_only)
     }
     else if (g_in_ng && !g_sel.group_listing)
     {
-        fmt::print("          {} {}article{}", g_sel_total_obj_cnt, g_sel.rereading ? "read " : "",
-                   g_sel_total_obj_cnt == 1 ? "" : "s");
+        fmt::print("          {} {}article{}", g_sel_page.total_obj_cnt, g_sel.rereading ? "read " : "",
+                   g_sel_page.total_obj_cnt == 1 ? "" : "s");
         if (g_sel.exclusive)
         {
             fmt::print(" out of {}", g_obj_count.value_of());
@@ -2041,8 +2030,8 @@ static void display_page_title(bool home_only)
     }
     else
     {
-        fmt::print("       {}{} group{}", s_group_init_done ? "" : "~", g_sel_total_obj_cnt,
-                   plural(g_sel_total_obj_cnt));
+        fmt::print("       {}{} group{}", s_group_init_done ? "" : "~", g_sel_page.total_obj_cnt,
+                   plural(g_sel_page.total_obj_cnt));
         if (g_sel.exclusive)
         {
             fmt::print(" out of {}", g_obj_count.value_of());
@@ -2075,20 +2064,20 @@ static void display_page_title(bool home_only)
 /// the previous page. Updates navigation and selection state for the page.
 ///
 /// @globals
-/// - g_sel_item_index: Set to the index of the last selected item on the page.
-/// - g_sel_page_obj_cnt: Set to the number of objects displayed on the page.
-/// - g_sel_page_item_cnt: Set to the number of selectable items on the page.
-/// - g_sel_next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
-/// - g_sel_next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
-/// - g_sel_next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
-/// - g_sel_next_univ_index: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
-/// - s_sel_next_op: Set to the next option index for paging in SM_OPTIONS mode.
-/// - g_sel_next_app: Set to the next Article** for paging in SM_ARTICLE mode.
-/// - g_sel_next_sp: Set to the next Subject for paging in subject/thread mode.
-/// - g_sel_last_ap: Reset to nullptr at the end of the function.
-/// - g_sel_last_sp: Reset to nullptr at the end of the function.
-/// - g_sel_at_end: Set to true if at the end of the selectable items.
-/// - g_sel_last_line: Set to the last terminal line used for display.
+/// - g_sel_page.item_index: Set to the index of the last selected item on the page.
+/// - g_sel_page.page_obj_cnt: Set to the number of objects displayed on the page.
+/// - g_sel_page.page_item_cnt: Set to the number of selectable items on the page.
+/// - g_sel_page.next_mp: Set to the next Multirc for paging in SM_MULTIRC mode.
+/// - g_sel_page.next_np: Set to the next NewsgroupData for paging in SM_NEWSGROUP mode.
+/// - g_sel_page.next_gp: Set to the next AddGroup for paging in SM_ADD_GROUP mode.
+/// - g_sel_page.next_univ_index: Set to the next UniversalItem for paging in SM_UNIVERSAL mode.
+/// - g_sel_page.next_op: Set to the next option index for paging in SM_OPTIONS mode.
+/// - g_sel_page.next_app: Set to the next Article** for paging in SM_ARTICLE mode.
+/// - g_sel_page.next_sp: Set to the next Subject for paging in subject/thread mode.
+/// - g_sel_page.last_ap: Reset to nullptr at the end of the function.
+/// - g_sel_page.last_sp: Reset to nullptr at the end of the function.
+/// - g_sel_page.at_end: Set to true if at the end of the selectable items.
+/// - g_sel_page.last_line: Set to the last terminal line used for display.
 ///
 void display_page()
 {
@@ -2099,14 +2088,14 @@ void display_page()
 try_again:
     sel_page_init();
 
-    if (!g_sel_total_obj_cnt)
+    if (!g_sel_page.total_obj_cnt)
     {
     }
     else if (g_sel.mode == SM_MULTIRC)
     {
-        Multirc *mp = g_sel_page_mp;
+        Multirc *mp = g_sel_page.page_mrc;
         Newsrc  *rp;
-        for (; mp && g_sel_page_item_cnt < s_sel_max_per_page; mp = multirc_next(mp))
+        for (; mp && g_sel_page.page_item_cnt < g_sel_page.max_per_page; mp = multirc_next(mp))
         {
             if (!(mp->m_flags & MF_INCLUDED))
             {
@@ -2116,10 +2105,10 @@ try_again:
             // multirc_flags have no equivalent to AGF_DEL, AGF_DELSEL
             TRN_ASSERT((g_sel.mask & (AGF_DEL | AGF_DEL_SEL)) == 0);
             sel = !!(mp->m_flags & static_cast<MultircFlags>(g_sel.mask));
-            g_sel_items[g_sel_page_item_cnt].u.mp = mp;
-            g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-            g_sel_items[g_sel_page_item_cnt].sel = sel;
-            g_sel_page_obj_cnt++;
+            g_sel_page.items[g_sel_page.page_item_cnt].u.mp = mp;
+            g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+            g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+            g_sel_page.page_obj_cnt++;
 
             maybe_eol();
             std::string news_sources;
@@ -2135,19 +2124,19 @@ try_again:
             {
                 news_sources += ", ...";
             }
-            output_sel(g_sel_page_item_cnt, sel, false);
+            output_sel(g_sel_page.page_item_cnt, sel, false);
             fmt::print("{:5} {}\n", mp->m_num, news_sources);
             term_down(1);
-            g_sel_page_item_cnt++;
+            g_sel_page.page_item_cnt++;
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        g_sel_next_mp = mp;
+        g_sel_page.next_mrc = mp;
     }
     else if (g_sel.mode == SM_NEWSGROUP)
     {
@@ -2155,11 +2144,11 @@ try_again:
         int            max_len = 0;
         int            outputting = (current_group_display_mode() != 'l');
 start_of_loop:
-        for (np = g_sel_page_np; np; np = newsgroup_next(np))
+        for (np = g_sel_page.page_ngd; np; np = newsgroup_next(np))
         {
             if (np == g_newsgroup_ptr)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
 
             if (!(np->m_flags & NF_INCLUDED))
@@ -2185,13 +2174,13 @@ start_of_loop:
                                     : (np->m_to_read < g_newsgroup_min_to_read))
                 {
                     np->m_flags &= ~NF_INCLUDED;
-                    g_sel_total_obj_cnt--;
+                    g_sel_page.total_obj_cnt--;
                     --g_obj_count;
                     continue;
                 }
             }
 
-            if (g_sel_page_item_cnt >= s_sel_max_per_page)
+            if (g_sel_page.page_item_cnt >= g_sel_page.max_per_page)
             {
                 break;
             }
@@ -2199,13 +2188,13 @@ start_of_loop:
             if (outputting)
             {
                 sel = !!(np->m_flags & g_sel.mask) + (np->m_flags & NF_DEL);
-                g_sel_items[g_sel_page_item_cnt].u.np = np;
-                g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-                g_sel_items[g_sel_page_item_cnt].sel = sel;
-                g_sel_page_obj_cnt++;
+                g_sel_page.items[g_sel_page.page_item_cnt].u.np = np;
+                g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+                g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+                g_sel_page.page_obj_cnt++;
 
                 maybe_eol();
-                output_sel(g_sel_page_item_cnt, sel, false);
+                output_sel(g_sel_page.page_item_cnt, sel, false);
                 fmt::print("{:5} ", static_cast<long>(np->m_to_read));
                 display_group(np->m_rc->data_source, np->rc_name(), max_len);
             }
@@ -2213,7 +2202,7 @@ start_of_loop:
             {
                 max_len = np->m_num_offset + 1;
             }
-            g_sel_page_item_cnt++;
+            g_sel_page.page_item_cnt++;
         }
         if (!outputting)
         {
@@ -2221,14 +2210,14 @@ start_of_loop:
             sel_page_init();
             goto start_of_loop;
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        g_sel_next_np = np;
+        g_sel_page.next_ngd = np;
         if (!s_group_init_done)
         {
             for (; np; np = newsgroup_next(np))
@@ -2249,12 +2238,12 @@ start_of_loop:
     }
     else if (g_sel.mode == SM_ADD_GROUP)
     {
-        AddGroupIndex gp = g_sel_page_gp;
+        AddGroupIndex gp = g_sel_page.page_grp;
         int max_len = 0;
         if (current_group_display_mode() == 'l')
         {
             int i = 0;
-            for (; gp != AddGroupIndex::None && i < s_sel_max_per_page; gp = g_add_groups.next(gp))
+            for (; gp != AddGroupIndex::None && i < g_sel_page.max_per_page; gp = g_add_groups.next(gp))
             {
                 if (!(g_add_groups[gp].m_flags & AGF_INCLUDED))
                 {
@@ -2264,9 +2253,10 @@ start_of_loop:
                 max_len = std::max(len, max_len);
                 i++;
             }
-            gp = g_sel_page_gp;
+            gp = g_sel_page.page_grp;
         }
-        for (; gp != AddGroupIndex::None && g_sel_page_item_cnt < s_sel_max_per_page; gp = g_add_groups.next(gp))
+        for (; gp != AddGroupIndex::None && g_sel_page.page_item_cnt < g_sel_page.max_per_page;
+             gp = g_add_groups.next(gp))
         {
             const AddGroup &group = g_add_groups[gp];
             if (!(group.m_flags & AGF_INCLUDED))
@@ -2275,32 +2265,32 @@ start_of_loop:
             }
 
             sel = !!(group.m_flags & g_sel.mask) + (group.m_flags & AGF_DEL);
-            g_sel_items[g_sel_page_item_cnt].u.gp = gp;
-            g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-            g_sel_items[g_sel_page_item_cnt].sel = sel;
-            g_sel_page_obj_cnt++;
+            g_sel_page.items[g_sel_page.page_item_cnt].u.gp = gp;
+            g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+            g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+            g_sel_page.page_obj_cnt++;
 
             maybe_eol();
-            output_sel(g_sel_page_item_cnt, sel, false);
+            output_sel(g_sel_page.page_item_cnt, sel, false);
             fmt::print("{:5} ", group.m_to_read.value_of());
             display_group(group.m_data_src, group.m_name, max_len);
-            g_sel_page_item_cnt++;
+            g_sel_page.page_item_cnt++;
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        g_sel_next_gp = gp;
+        g_sel_page.next_grp = gp;
     }
     else if (g_sel.mode == SM_UNIVERSAL)
     {
         UniversalItemIndex next_univ = {};
-        for (UniversalItem &item : univ_items(g_sel_page_univ_index))
+        for (UniversalItem &item : univ_items(g_sel_page.page_univ_index))
         {
-            if (g_sel_page_item_cnt >= s_sel_max_per_page)
+            if (g_sel_page.page_item_cnt >= g_sel_page.max_per_page)
             {
                 next_univ = univ_index(&item);
                 break;
@@ -2312,32 +2302,32 @@ start_of_loop:
             }
 
             sel = !!(item.m_flags & static_cast<UniversalItemFlags>(g_sel.mask)) + (item.m_flags & UF_DEL);
-            g_sel_items[g_sel_page_item_cnt].u.un = &item;
-            g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-            g_sel_items[g_sel_page_item_cnt].sel = sel;
-            g_sel_page_obj_cnt++;
+            g_sel_page.items[g_sel_page.page_item_cnt].u.un = &item;
+            g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+            g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+            g_sel_page.page_obj_cnt++;
 
             maybe_eol();
-            output_sel(g_sel_page_item_cnt, sel, false);
+            output_sel(g_sel_page.page_item_cnt, sel, false);
             std::putchar(' ');
             display_universal(&item);
-            g_sel_page_item_cnt++;
+            g_sel_page.page_item_cnt++;
             next_univ = univ_index(univ_next_item(&item));
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        g_sel_next_univ_index = next_univ;
+        g_sel_page.next_univ_index = next_univ;
     }
     else if (g_sel.mode == SM_OPTIONS)
     {
-        int                 op = g_sel_page_op;
+        int                 op = g_sel_page.page_op;
         const OptionCatalog catalog;
-        for (; op <= g_obj_count.value_of() && g_sel_page_item_cnt < s_sel_max_per_page; op++)
+        for (; op <= g_obj_count.value_of() && g_sel_page.page_item_cnt < g_sel_page.max_per_page; op++)
         {
             if (!(g_option_flags[op] & OF_INCLUDED))
             {
@@ -2355,56 +2345,56 @@ start_of_loop:
                           (g_option_saved_vals[option]? 3 :
                                (g_option_def_vals[option]? 0 : 2));
             }
-            g_sel_items[g_sel_page_item_cnt].u.op = static_cast<OptionIndex>(op);
-            g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-            g_sel_items[g_sel_page_item_cnt].sel = sel;
-            g_sel_page_obj_cnt++;
+            g_sel_page.items[g_sel_page.page_item_cnt].u.op = static_cast<OptionIndex>(op);
+            g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+            g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+            g_sel_page.page_obj_cnt++;
 
             maybe_eol();
-            display_option(op,g_sel_page_item_cnt);
-            g_sel_page_item_cnt++;
+            display_option(op, g_sel_page.page_item_cnt);
+            g_sel_page.page_item_cnt++;
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        s_sel_next_op = op;
+        g_sel_page.next_op = op;
     }
     else if (g_sel.mode == SM_ARTICLE)
     {
         Article **limit = article_ptr_list_end();
-        Article **app = g_sel_page_app;
-        for (; app < limit && g_sel_page_item_cnt < s_sel_max_per_page; app++)
+        Article **app = g_sel_page.page_art;
+        for (; app < limit && g_sel_page.page_item_cnt < g_sel_page.max_per_page; app++)
         {
             Article *ap = *app;
-            if (ap == g_sel_last_ap)
+            if (ap == g_sel_page.last_art)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
             if (!(ap->m_flags & AF_INCLUDED))
             {
                 continue;
             }
             sel = !!(ap->m_flags & g_sel.mask) + (ap->m_flags & AF_DEL);
-            g_sel_items[g_sel_page_item_cnt].u.ap = ap;
-            g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-            g_sel_items[g_sel_page_item_cnt].sel = sel;
-            g_sel_page_obj_cnt++;
+            g_sel_page.items[g_sel_page.page_item_cnt].u.ap = ap;
+            g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+            g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+            g_sel_page.page_obj_cnt++;
             // Output the article, with optional author
-            display_article(ap, g_sel_page_item_cnt, sel);
-            g_sel_page_item_cnt++;
+            display_article(ap, g_sel_page.page_item_cnt, sel);
+            g_sel_page.page_item_cnt++;
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        g_sel_next_app = app;
+        g_sel_page.next_art = app;
     }
     else
     {
@@ -2412,12 +2402,12 @@ start_of_loop:
         int etc = 0;
         int ix = -1;    // item # or -1
 
-        Subject *sp = g_sel_page_sp;
-        for (; sp && !etc && g_sel_page_item_cnt < s_sel_max_per_page; sp = sp->m_next)
+        Subject *sp = g_sel_page.page_subj;
+        for (; sp && !etc && g_sel_page.page_item_cnt < g_sel_page.max_per_page; sp = sp->m_next)
         {
-            if (sp == g_sel_last_sp)
+            if (sp == g_sel_page.last_subj)
             {
-                g_sel_item_index = g_sel_page_item_cnt;
+                g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
 
             if (sp->m_flags & SF_INCLUDED)
@@ -2435,24 +2425,24 @@ start_of_loop:
                 {
                     // If this item is too long to fit on the screen all by
                     // itself, trim it to fit and set the "etc" flag.
-                    if (line_cnt > s_sel_max_line_cnt)
+                    if (line_cnt > g_sel_page.max_line_cnt)
                     {
                         etc = line_cnt;
-                        line_cnt = s_sel_max_line_cnt;
+                        line_cnt = g_sel_page.max_line_cnt;
                     }
                     // If it doesn't fit, save it for the next page
-                    if (g_term_line + line_cnt > s_sel_max_line_cnt + 2)
+                    if (g_term_line + line_cnt > g_sel_page.max_line_cnt + 2)
                     {
                         break;
                     }
-                    g_sel_items[g_sel_page_item_cnt].u.sp = sp;
-                    g_sel_items[g_sel_page_item_cnt].line = g_term_line;
-                    g_sel_items[g_sel_page_item_cnt].sel = sel;
-                    g_sel_page_obj_cnt += sp->m_misc;
+                    g_sel_page.items[g_sel_page.page_item_cnt].u.sp = sp;
+                    g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
+                    g_sel_page.items[g_sel_page.page_item_cnt].sel = sel;
+                    g_sel_page.page_obj_cnt += sp->m_misc;
 
-                    ix = g_sel_page_item_cnt;
-                    sel = g_sel_items[g_sel_page_item_cnt].sel;
-                    g_sel_page_item_cnt++;
+                    ix = g_sel_page.page_item_cnt;
+                    sel = g_sel_page.items[g_sel_page.page_item_cnt].sel;
+                    g_sel_page.page_item_cnt++;
                     if (sp->m_misc)
                     {
                         display_subject(sp, ix, sel);
@@ -2473,12 +2463,12 @@ start_of_loop:
                     {
                         continue;
                     }
-                    if (g_term_line < s_sel_max_line_cnt + 2)
+                    if (g_term_line < g_sel_page.max_line_cnt + 2)
                     {
                         display_subject(sp, ix, sel);
                     }
                     ix = -1;
-                    g_sel_page_obj_cnt += sp->m_misc;
+                    g_sel_page.page_obj_cnt += sp->m_misc;
                 }
             }
             if (etc)
@@ -2486,21 +2476,21 @@ start_of_loop:
                 fmt::print("     ... etc. [{} lines total]", etc);
             }
         }
-        if (!g_sel_page_obj_cnt)
+        if (!g_sel_page.page_obj_cnt)
         {
             if (last_page())
             {
                 goto try_again;
             }
         }
-        g_sel_next_sp = sp;
+        g_sel_page.next_subj = sp;
     }
-    g_sel_last_ap = nullptr;
-    g_sel_last_sp = nullptr;
-    g_sel_at_end = (g_sel_prior_obj_cnt + g_sel_page_obj_cnt == g_sel_total_obj_cnt);
+    g_sel_page.last_art = nullptr;
+    g_sel_page.last_subj = nullptr;
+    g_sel_page.at_end = (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt);
     maybe_eol();
     newline();
-    g_sel_last_line = g_term_line;
+    g_sel_page.last_line = g_term_line;
 }
 
 /// @brief Updates the display of selection items on the current page.
@@ -2510,15 +2500,15 @@ start_of_loop:
 /// index to the next item, wrapping to zero if at the end.
 ///
 /// @globals
-/// - g_sel_item_index: Set to the index of the last updated item, or reset to 0
+/// - g_sel_page.item_index: Set to the index of the last updated item, or reset to 0
 ///   if the end of the page is reached.
 ///
 void update_page()
 {
     int sel;
-    for (int j = 0; j < g_sel_page_item_cnt; j++)
+    for (int j = 0; j < g_sel_page.page_item_cnt; j++)
     {
-        Selection u = g_sel_items[j].u;
+        Selection u = g_sel_page.items[j].u;
         switch (g_sel.mode)
         {
         case SM_MULTIRC:
@@ -2569,17 +2559,17 @@ void update_page()
             (void) count_subject_lines(u.sp, &sel);
             break;
         }
-        if (sel == g_sel_items[j].sel)
+        if (sel == g_sel_page.items[j].sel)
         {
             continue;
         }
-        goto_xy(0,g_sel_items[j].line);
-        g_sel_item_index = j;
-        output_sel(g_sel_item_index, sel, true);
+        goto_xy(0, g_sel_page.items[j].line);
+        g_sel_page.item_index = j;
+        output_sel(g_sel_page.item_index, sel, true);
     }
-    if (++g_sel_item_index == g_sel_page_item_cnt)
+    if (++g_sel_page.item_index == g_sel_page.page_item_cnt)
     {
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
     }
 }
 
@@ -2603,7 +2593,7 @@ void output_sel(int ix, int sel, bool update)
     }
     else
     {
-        std::putchar(g_sel_chars[ix]);
+        std::putchar(g_sel_page.chars[ix]);
     }
 
     switch (sel)
@@ -2630,7 +2620,7 @@ void output_sel(int ix, int sel, bool update)
 
     if (update)
     {
-        g_sel_items[ix].sel = sel;
+        g_sel_page.items[ix].sel = sel;
     }
 }
 
@@ -2825,7 +2815,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                             {
                                 newline();
                             }
-                            if (g_term_line >= s_sel_max_line_cnt + 2)
+                            if (g_term_line >= g_sel_page.max_line_cnt + 2)
                             {
                                 return;
                             }
@@ -2844,7 +2834,7 @@ static void display_subject(const Subject *subj, int ix, int sel)
                         continue;
                     }
                 }
-                if (g_term_line >= s_sel_max_line_cnt + 2)
+                if (g_term_line >= g_sel_page.max_line_cnt + 2)
                 {
                     return;
                 }
@@ -2893,7 +2883,7 @@ void display_option(int op, int item_index)
         val = *option_val;
     }
     post = post.substr(len);
-    output_sel(item_index, g_sel_items[item_index].sel, false);
+    output_sel(item_index, g_sel_page.items[item_index].sel, false);
     fmt::print(" {}{}{} {}\n", pre, item, post, val.substr(0, 39));
     term_down(1);
 }

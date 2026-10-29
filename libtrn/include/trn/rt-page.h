@@ -7,6 +7,7 @@
 
 #include <trn/opt.h>
 #include <trn/rt-select.h>
+#include <trn/univ.h>
 
 #include <cstddef>
 #include <string>
@@ -47,17 +48,39 @@ struct SelectionItem
     int       sel;
 };
 
-extern SelectionItem g_sel_items[MAX_SEL];
-extern int           g_sel_total_obj_cnt;
-extern int           g_sel_prior_obj_cnt;
-extern int           g_sel_page_obj_cnt;
-extern int           g_sel_page_item_cnt;
-extern Article     **g_sel_page_app;
-extern Article     **g_sel_next_app;
-extern Article      *g_sel_last_ap;
-extern Subject      *g_sel_page_sp;
-extern Subject      *g_sel_next_sp;
-extern Subject      *g_sel_last_sp;
+struct SelectorPage
+{
+    SelectionItem      items[MAX_SEL]{};
+    int                total_obj_cnt{};
+    int                prior_obj_cnt{};
+    int                page_obj_cnt{};
+    int                page_item_cnt{};
+    Article          **page_art{};
+    Article          **next_art{};
+    Article           *last_art{};
+    Subject           *page_subj{};
+    Subject           *next_subj{};
+    Subject           *last_subj{};
+    int                max_line_cnt{};
+    int                max_per_page{};
+    int                next_op{};
+    int                item_index{};
+    int                last_line{};
+    bool               at_end{};
+    std::string        chars;
+    NewsgroupData     *page_ngd{};
+    NewsgroupData     *next_ngd{};
+    AddGroupIndex      page_grp{};
+    AddGroupIndex      next_grp{};
+    Multirc           *page_mrc{};
+    Multirc           *next_mrc{};
+    int                page_op{};
+    UniversalItemIndex page_univ_index{};
+    UniversalItemIndex next_univ_index{};
+};
+
+extern SelectorPage g_sel_page;
+
 extern std::string   g_sel_grp_display_mode;
 extern std::string   g_sel_art_display_mode;
 extern std::size_t   g_sel_grp_display_mode_index;

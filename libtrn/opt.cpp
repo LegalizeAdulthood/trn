@@ -71,7 +71,6 @@ OptionValueList g_option_def_vals;
 OptionValueList g_option_saved_vals;
 OptionFlags *g_option_flags{};
 OptionDraft *g_option_draft{};
-int          g_sel_page_op{};
 
 static std::string s_univ_sel_cmds{"Z>"};
 

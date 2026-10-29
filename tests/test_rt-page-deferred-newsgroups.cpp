@@ -6,6 +6,7 @@
 
 #include <nntp/nntpinit.h>
 #include <trn/hash.h>
+#include <trn/rt-page.h>
 #include <trn/smisc.h>
 #include <trn/univ.h>
 
@@ -117,18 +118,18 @@ void DeferredNewsgroupRecoveryState::prepare_recovery(bool rereading, char mode,
     m_removed[1] = &add_pending("comp.opposite.last", rereading ? "1-7" : "1-10");
     prepare_page(rereading, mode);
     (void) render_page();
-    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     ASSERT_EQ(ArticleNum{}, m_removed[0]->m_abs_first);
     ASSERT_EQ(ArticleNum{}, m_removed[1]->m_abs_first);
     ASSERT_TRUE(last_page());
-    ASSERT_EQ(m_removed[capacity == 1 ? 1 : 0], g_sel_page_np);
+    ASSERT_EQ(m_removed[capacity == 1 ? 1 : 0], g_sel_page.page_ngd);
     g_newsgroup_ptr = m_retained.back();
 }
 
 void DeferredNewsgroupRecoveryState::expect_refreshed_state(bool rereading) const
 {
     const int retained = static_cast<int>(m_retained.size());
-    EXPECT_EQ(retained, g_sel_total_obj_cnt);
+    EXPECT_EQ(retained, g_sel_page.total_obj_cnt);
     EXPECT_EQ(ArticleNum{retained}, g_obj_count);
     EXPECT_EQ(NewsgroupNum{rereading ? 2 : retained}, g_newsgroup_to_read);
     EXPECT_EQ(rereading ? retained : 2, g_missing_count);
@@ -156,9 +157,9 @@ void DeferredNewsgroupRecoveryState::expect_refreshed_state(bool rereading) cons
 
 void DeferredNewsgroupRecoveryState::expect_row(int row, NewsgroupData *group, int selected) const
 {
-    EXPECT_EQ(group, g_sel_items[row].u.np);
-    EXPECT_EQ(row + 2, g_sel_items[row].line);
-    EXPECT_EQ(selected, g_sel_items[row].sel);
+    EXPECT_EQ(group, g_sel_page.items[row].u.np);
+    EXPECT_EQ(row + 2, g_sel_page.items[row].line);
+    EXPECT_EQ(selected, g_sel_page.items[row].sel);
 }
 
 std::string DeferredNewsgroupRecoveryState::expected_row(int row, const NewsgroupData &group, int selected) const
@@ -315,7 +316,7 @@ TEST_P(DeferredNewsgroupDisplayTest, refreshesPendingCountsAndReplacesTheApproxi
 
     const std::string output = render_page();
 
-    ASSERT_EQ(3, g_sel_page_item_cnt);
+    ASSERT_EQ(3, g_sel_page.page_item_cnt);
     const std::array<NewsgroupData *, 3> groups{&first, &second, &third};
     for (std::size_t i = 0; i < groups.size(); ++i)
     {
@@ -323,17 +324,17 @@ TEST_P(DeferredNewsgroupDisplayTest, refreshesPendingCountsAndReplacesTheApproxi
         EXPECT_EQ(ArticleNum{10}, groups[i]->m_ng_max);
         EXPECT_EQ(rereading ? 0 : 3, groups[i]->m_to_read);
         EXPECT_EQ(" " + numbers, groups[i]->rc_numbers());
-        EXPECT_EQ(groups[i], g_sel_items[i].u.np);
-        EXPECT_EQ(static_cast<int>(i) + 2, g_sel_items[i].line);
+        EXPECT_EQ(groups[i], g_sel_page.items[i].u.np);
+        EXPECT_EQ(static_cast<int>(i) + 2, g_sel_page.items[i].line);
     }
     EXPECT_THAT(output.substr(output.rfind("Newsgroups")), testing::HasSubstr("3 groups"));
     EXPECT_THAT(output.substr(output.rfind("Newsgroups")), testing::Not(testing::HasSubstr("~")));
-    EXPECT_EQ(3, g_sel_page_obj_cnt);
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
     EXPECT_EQ(rereading ? 3 : 0, g_missing_count);
-    EXPECT_EQ(6, g_sel_last_line);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(6, g_sel_page.last_line);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupDisplayTest, removesNewlyIneligibleRowsWithoutCountingTheirReadStateTwice)
@@ -351,18 +352,18 @@ TEST_P(DeferredNewsgroupDisplayTest, removesNewlyIneligibleRowsWithoutCountingTh
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
     EXPECT_FALSE(opposite.m_flags & NF_INCLUDED);
     EXPECT_EQ(rereading ? 3 : 0, opposite.m_to_read);
-    ASSERT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(&first, g_sel_items[0].u.np);
-    EXPECT_EQ(&last, g_sel_items[1].u.np);
-    EXPECT_EQ(3, g_sel_items[1].line);
-    EXPECT_EQ(1, g_sel_item_index);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
-    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(&first, g_sel_page.items[0].u.np);
+    EXPECT_EQ(&last, g_sel_page.items[1].u.np);
+    EXPECT_EQ(3, g_sel_page.items[1].line);
+    EXPECT_EQ(1, g_sel_page.item_index);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.page_obj_cnt);
     EXPECT_EQ(ArticleNum{2}, g_obj_count);
     EXPECT_EQ(NewsgroupNum{rereading ? 1 : 2}, g_newsgroup_to_read);
     EXPECT_EQ(rereading ? 2 : 1, g_missing_count);
-    EXPECT_EQ(nullptr, g_sel_next_np);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(nullptr, g_sel_page.next_ngd);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupDisplayTest, keepsTheApproximateHeadingWhileLaterPagesStillHavePendingCounts)
@@ -380,13 +381,13 @@ TEST_P(DeferredNewsgroupDisplayTest, keepsTheApproximateHeadingWhileLaterPagesSt
 
     EXPECT_THAT(output, testing::HasSubstr("~4 groups"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.fourth")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(&first, g_sel_items[0].u.np);
-    EXPECT_EQ(&second, g_sel_items[1].u.np);
-    EXPECT_EQ(&third, g_sel_next_np);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(&first, g_sel_page.items[0].u.np);
+    EXPECT_EQ(&second, g_sel_page.items[1].u.np);
+    EXPECT_EQ(&third, g_sel_page.next_ngd);
     EXPECT_EQ(ArticleNum{}, fourth.m_abs_first);
-    EXPECT_EQ(4, g_sel_total_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(4, g_sel_page.total_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupDisplayTest, finishesLoadingOnTheFinalPageWithoutRepeatingEarlierRows)
@@ -408,15 +409,15 @@ TEST_P(DeferredNewsgroupDisplayTest, finishesLoadingOnTheFinalPageWithoutRepeati
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.second")));
     EXPECT_THAT(output.substr(output.rfind("Newsgroups")), testing::HasSubstr("4 groups"));
     EXPECT_THAT(output.substr(output.rfind("Newsgroups")), testing::Not(testing::HasSubstr("~")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(&third, g_sel_items[0].u.np);
-    EXPECT_EQ(&fourth, g_sel_items[1].u.np);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(&third, g_sel_page.items[0].u.np);
+    EXPECT_EQ(&fourth, g_sel_page.items[1].u.np);
     EXPECT_EQ(ArticleNum{1}, fourth.m_abs_first);
-    EXPECT_EQ(2, g_sel_prior_obj_cnt);
-    EXPECT_EQ(2, g_sel_page_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.page_obj_cnt);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 4}, g_newsgroup_to_read);
-    EXPECT_EQ(nullptr, g_sel_next_np);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(nullptr, g_sel_page.next_ngd);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -430,7 +431,7 @@ TEST_P(DeferredNewsgroupRecoveryTest, replacesAnEmptyDeferredPageWithEarlierIncl
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
-    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     for (int row = 0; row < capacity; ++row)
     {
         NewsgroupData *group = m_retained[row + 1];
@@ -439,13 +440,13 @@ TEST_P(DeferredNewsgroupRecoveryTest, replacesAnEmptyDeferredPageWithEarlierIncl
         EXPECT_THAT(output, testing::HasSubstr(expected_row(row, *group, selected)));
     }
     expect_refreshed_state(rereading);
-    EXPECT_EQ(m_retained[1], g_sel_page_np);
-    EXPECT_EQ(nullptr, g_sel_next_np);
-    EXPECT_EQ(1, g_sel_prior_obj_cnt);
-    EXPECT_EQ(capacity, g_sel_page_obj_cnt);
-    EXPECT_EQ(capacity - 1, g_sel_item_index);
-    EXPECT_EQ(capacity + 3, g_sel_last_line);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(m_retained[1], g_sel_page.page_ngd);
+    EXPECT_EQ(nullptr, g_sel_page.next_ngd);
+    EXPECT_EQ(1, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(capacity, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(capacity - 1, g_sel_page.item_index);
+    EXPECT_EQ(capacity + 3, g_sel_page.last_line);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
     const std::size_t heading = output.rfind("Newsgroups");
     ASSERT_NE(std::string::npos, heading);
@@ -464,7 +465,7 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, redrawingTheRecoveredPageDoesNot
 
     const std::string output = render_page();
 
-    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     for (int row = 0; row < capacity; ++row)
     {
         NewsgroupData *group = m_retained[row + 1];
@@ -473,9 +474,9 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, redrawingTheRecoveredPageDoesNot
         EXPECT_THAT(output, testing::HasSubstr(expected_row(row, *group, selected)));
     }
     expect_refreshed_state(rereading);
-    EXPECT_EQ(1, g_sel_prior_obj_cnt);
-    EXPECT_EQ(nullptr, g_sel_next_np);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(1, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_page.next_ngd);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupRecoveryNavigationTest, movesBackToTheEarlierPageAfterDeferredRecovery)
@@ -486,17 +487,17 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, movesBackToTheEarlierPageAfterDe
 
     const std::string output = render_page();
 
-    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     for (int row = 0; row < capacity; ++row)
     {
         expect_row(row, m_retained[row], rereading ? 2 : 0);
         EXPECT_THAT(output, testing::HasSubstr(expected_row(row, *m_retained[row], rereading ? 2 : 0)));
     }
     expect_refreshed_state(rereading);
-    EXPECT_EQ(m_retained.front(), g_sel_page_np);
-    EXPECT_EQ(m_retained.back(), g_sel_next_np);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(m_retained.front(), g_sel_page.page_ngd);
+    EXPECT_EQ(m_retained.back(), g_sel_page.next_ngd);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupRecoveryNavigationTest, advancesFromTheEarlierPageToTheFinalRetainedGroup)
@@ -509,14 +510,14 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, advancesFromTheEarlierPageToTheF
     ASSERT_TRUE(next_page());
     const std::string output = render_page();
 
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, m_retained.back(), 1);
     EXPECT_THAT(output, testing::HasSubstr(expected_row(0, *m_retained.back(), 1)));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
     expect_refreshed_state(rereading);
-    EXPECT_EQ(capacity, g_sel_prior_obj_cnt);
-    EXPECT_EQ(nullptr, g_sel_next_np);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(capacity, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_page.next_ngd);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -541,11 +542,11 @@ TEST_P(DeferredNewsgroupCleanupTest, rebuildsRowsAndPointersAfterCleanupMovesOrD
     EXPECT_THAT(visible, testing::HasSubstr("comp.first\n"));
     EXPECT_THAT(visible, testing::HasSubstr("comp.last\n"));
     EXPECT_THAT(visible, testing::Not(testing::HasSubstr("comp.bogus")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(&first, g_sel_items[0].u.np);
-    EXPECT_EQ(&last, g_sel_items[1].u.np);
-    EXPECT_EQ(&first, g_sel_page_np);
-    EXPECT_EQ(nullptr, g_sel_next_np);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(&first, g_sel_page.items[0].u.np);
+    EXPECT_EQ(&last, g_sel_page.items[1].u.np);
+    EXPECT_EQ(&first, g_sel_page.page_ngd);
+    EXPECT_EQ(nullptr, g_sel_page.next_ngd);
     EXPECT_EQ(NewsgroupNum{remove ? 2 : 3}, g_newsgroup_count);
     ASSERT_EQ(remove ? 2U : 3U, g_newsgroup_order.size());
     EXPECT_EQ(&first, g_newsgroup_order[0]);
@@ -564,9 +565,9 @@ TEST_P(DeferredNewsgroupCleanupTest, rebuildsRowsAndPointersAfterCleanupMovesOrD
     }
     EXPECT_TRUE(m_newsrc.flags & RF_RC_CHANGED);
     EXPECT_FALSE(g_paranoid);
-    EXPECT_EQ(2, g_sel_page_obj_cnt);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndCleanupChoice, DeferredNewsgroupCleanupTest,
@@ -591,9 +592,9 @@ TEST_P(DeferredNewsgroupDescriptionTest, fetchesDescriptionsOnlyForVisibleRows)
     EXPECT_THAT(output, testing::HasSubstr("First discussion\n"));
     EXPECT_THAT(output, testing::HasSubstr("Second discussion\n"));
     EXPECT_EQ(2U, m_source.m_desc_sf.m_lines.size());
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(4, g_sel_total_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(4, g_sel_page.total_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupDescriptionTest, reusesFetchedDescriptionsWhenThePageIsRedrawn)
@@ -610,8 +611,8 @@ TEST_P(DeferredNewsgroupDescriptionTest, reusesFetchedDescriptionsWhenThePageIsR
 
     EXPECT_THAT(output, testing::HasSubstr("First discussion\n"));
     EXPECT_EQ(1U, m_source.m_desc_sf.m_lines.size());
-    EXPECT_EQ(1, g_sel_page_item_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(1, g_sel_page.page_item_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupDescriptionTest, fallsBackToTheGroupNameWhenTheServerReturnsNoDescription)
@@ -628,8 +629,8 @@ TEST_P(DeferredNewsgroupDescriptionTest, fallsBackToTheGroupNameWhenTheServerRet
 
     EXPECT_THAT(output, testing::HasSubstr("comp.first\n"));
     EXPECT_EQ(1U, m_source.m_desc_sf.m_lines.size());
-    EXPECT_EQ(1, g_sel_page_item_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(1, g_sel_page.page_item_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(DeferredNewsgroupDescriptionTest, fallsBackToNamesWhenDescriptionsAreUnsupported)
@@ -647,8 +648,8 @@ TEST_P(DeferredNewsgroupDescriptionTest, fallsBackToNamesWhenDescriptionsAreUnsu
 
     EXPECT_THAT(output, testing::HasSubstr("comp.first\n"));
     EXPECT_THAT(output, testing::HasSubstr("comp.second\n"));
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndPresentation, DeferredNewsgroupDescriptionTest,

@@ -6,6 +6,7 @@
 #include <trn/OptionCatalog.h>
 #include <trn/OptionDraft.h>
 #include <trn/respond.h>
+#include <trn/rt-page.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -39,7 +40,7 @@ private:
     OptionValueList          m_old_saved{std::move(g_option_saved_vals)};
     OptionDraft             *m_old_draft{g_option_draft};
     OptionFlags             *m_old_flags{g_option_flags};
-    int                      m_old_page{g_sel_page_op};
+    int                      m_old_page{g_sel_page.page_op};
     std::string              m_old_indent{g_indent_string};
     std::string              m_old_group_name{g_newsgroup_name};
     std::vector<OptionFlags> m_flags;
@@ -53,7 +54,7 @@ void OptionPageDisplayState::SetUp()
     g_option_def_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
     g_option_saved_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
     g_option_draft = &m_draft;
-    g_sel_page_op = -1;
+    g_sel_page.page_op = -1;
     g_sel.mode = SM_OPTIONS;
     g_indent_string = ">";
 }
@@ -64,7 +65,7 @@ void OptionPageDisplayState::TearDown()
     g_option_saved_vals = std::move(m_old_saved);
     g_option_draft = m_old_draft;
     g_option_flags = m_old_flags;
-    g_sel_page_op = m_old_page;
+    g_sel_page.page_op = m_old_page;
     g_indent_string = m_old_indent;
     g_newsgroup_name = m_old_group_name;
     NewsgroupPageDisplayState::TearDown();
@@ -78,16 +79,16 @@ int OptionPageDisplayState::group_for(OptionIndex option) const
 void OptionPageDisplayState::start_at_option(OptionIndex option)
 {
     g_option_flags[group_for(option)] |= OF_SEL;
-    g_sel_page_op = m_catalog.row_for(option);
+    g_sel_page.page_op = m_catalog.row_for(option);
     g_tc_LINES = 6;
     initialize_page();
 }
 
 void OptionPageDisplayState::expect_row(int row, int catalog_row, int selected) const
 {
-    EXPECT_EQ(static_cast<OptionIndex>(catalog_row), g_sel_items[row].u.op);
-    EXPECT_EQ(row + 2, g_sel_items[row].line);
-    EXPECT_EQ(selected, g_sel_items[row].sel);
+    EXPECT_EQ(static_cast<OptionIndex>(catalog_row), g_sel_page.items[row].u.op);
+    EXPECT_EQ(row + 2, g_sel_page.items[row].line);
+    EXPECT_EQ(selected, g_sel_page.items[row].sel);
 }
 
 std::string OptionPageDisplayState::label(int row) const
@@ -169,7 +170,7 @@ void OptionExpansionRowTest::SetUp()
 {
     OptionPageDisplayState::SetUp();
     g_use_sel_num = GetParam();
-    g_sel_page_op = group_for(OI_CITED_TEXT_STRING);
+    g_sel_page.page_op = group_for(OI_CITED_TEXT_STRING);
 }
 
 class OptionPageEndingTest : public OptionPageDisplayState, public testing::WithParamInterface<std::tuple<bool, int>>
@@ -214,7 +215,7 @@ TEST_P(OptionContextRowTest, showsOptionInstructionsWhenEnteredFromReadingOrASel
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.reading")));
     EXPECT_EQ(GetParam(), g_in_ng);
     EXPECT_EQ(SM_OPTIONS, g_sel.mode);
-    EXPECT_EQ(10, g_sel_total_obj_cnt);
+    EXPECT_EQ(10, g_sel_page.total_obj_cnt);
 }
 
 INSTANTIATE_TEST_SUITE_P(CallerContext, OptionContextRowTest, testing::Bool());
@@ -234,12 +235,12 @@ TEST_P(OptionHeadingRowTest, marksTheGroupHeadingWithoutChangingItsExpansion)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(0, "Display Options", expanded)));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, m_catalog.first_row(), expanded ? 1 : 0);
     EXPECT_EQ(before, g_option_flags[m_catalog.first_row()]);
-    EXPECT_EQ(expanded ? 18 : 10, g_sel_total_obj_cnt);
-    EXPECT_EQ(1, g_sel_page_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(expanded ? 18 : 10, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.page_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelAndExpansion, OptionHeadingRowTest, testing::Combine(testing::Bool(), testing::Bool()));
@@ -268,7 +269,7 @@ TEST_P(OptionValueMarkerTest, distinguishesDefaultsConfiguredValuesUnsavedChange
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr(expected_value(0, "Terse Output", edited ? "no" : "yes", marker)));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, m_catalog.row_for(OI_TERSE_OUTPUT), marker);
     EXPECT_EQ(defaults, g_option_def_vals);
     EXPECT_EQ(saved, g_option_saved_vals);
@@ -302,7 +303,7 @@ TEST_P(OptionTextRowTest, showsTheCurrentOrEditedTextWithinTheValueColumn)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr(expected_value(0, "Cited Text String", expected, edited ? 1 : 2)));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, m_catalog.row_for(OI_CITED_TEXT_STRING), edited ? 1 : 2);
     EXPECT_EQ(original, g_indent_string);
     EXPECT_EQ(edited ? 1U : 0U, m_draft.size());
@@ -326,14 +327,14 @@ TEST_P(OptionExpansionRowTest, insertsAnExpandedGroupsOptionsBeforeTheNextHeadin
     EXPECT_THAT(output, testing::HasSubstr(expected_value(1, "Cited Text String", ">", 2)));
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(2, "Save Options")));
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(3, "Mouse Options")));
-    ASSERT_EQ(4, g_sel_page_item_cnt);
+    ASSERT_EQ(4, g_sel_page.page_item_cnt);
     expect_row(0, group_for(OI_CITED_TEXT_STRING), 1);
     expect_row(1, m_catalog.row_for(OI_CITED_TEXT_STRING), 2);
     expect_row(2, group_for(OI_SAVE_DIR), 0);
     expect_row(3, group_for(OI_USE_MOUSE), 0);
-    EXPECT_EQ(11, g_sel_total_obj_cnt);
-    EXPECT_EQ(3, g_sel_prior_obj_cnt);
-    EXPECT_EQ(7, g_sel_last_line);
+    EXPECT_EQ(11, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(7, g_sel_page.last_line);
 }
 
 TEST_P(OptionExpansionRowTest, collapsingAGroupHidesItsPendingEditWithoutDiscardingIt)
@@ -351,9 +352,9 @@ TEST_P(OptionExpansionRowTest, collapsingAGroupHidesItsPendingEditWithoutDiscard
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Cited Text String")));
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(0, "Posting Options")));
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(1, "Save Options")));
-    ASSERT_EQ(4, g_sel_page_item_cnt);
+    ASSERT_EQ(4, g_sel_page.page_item_cnt);
     expect_row(1, group_for(OI_SAVE_DIR), 0);
-    EXPECT_EQ(10, g_sel_total_obj_cnt);
+    EXPECT_EQ(10, g_sel_page.total_obj_cnt);
     EXPECT_EQ("Pending citation", m_draft.value(OI_CITED_TEXT_STRING));
     EXPECT_EQ(">", g_indent_string);
 }
@@ -373,11 +374,11 @@ TEST_P(OptionExpansionRowTest, reopeningAGroupRestoresItsPendingEditAndMarker)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr(expected_value(1, "Cited Text String", "Pending citation", 1)));
-    ASSERT_EQ(4, g_sel_page_item_cnt);
+    ASSERT_EQ(4, g_sel_page.page_item_cnt);
     expect_row(1, m_catalog.row_for(OI_CITED_TEXT_STRING), 1);
     EXPECT_EQ("Pending citation", m_draft.value(OI_CITED_TEXT_STRING));
     EXPECT_EQ(">", g_indent_string);
-    EXPECT_EQ(11, g_sel_total_obj_cnt);
+    EXPECT_EQ(11, g_sel_page.total_obj_cnt);
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelStyle, OptionExpansionRowTest, testing::Bool());
@@ -386,47 +387,47 @@ TEST_P(OptionPageEndingTest, skipsCollapsedOptionsWhenAdvancingToTheNextPage)
 {
     const int capacity = std::get<1>(GetParam());
     (void) render_page();
-    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     ASSERT_TRUE(next_page());
 
     const std::string output = render_page();
 
-    ASSERT_EQ(capacity, g_sel_page_item_cnt);
+    ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     for (int row = 0; row < capacity; ++row)
     {
         expect_row(row, m_headings[capacity + row], 0);
         EXPECT_THAT(output, testing::HasSubstr(expected_heading(row, OPTION_HEADINGS[capacity + row])));
     }
-    EXPECT_EQ(capacity, g_sel_prior_obj_cnt);
-    EXPECT_EQ(10, g_sel_total_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(capacity, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(10, g_sel_page.total_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(OptionPageEndingTest, displaysThePartialOrFullFinalPageAndRejectsFurtherAdvancement)
 {
     const int capacity = std::get<1>(GetParam());
     (void) render_page();
-    for (int page = 0; page < 10 && !g_sel_at_end; ++page)
+    for (int page = 0; page < 10 && !g_sel_page.at_end; ++page)
     {
         ASSERT_TRUE(next_page());
         (void) render_page();
     }
-    ASSERT_TRUE(g_sel_at_end);
+    ASSERT_TRUE(g_sel_page.at_end);
     const int final_rows = capacity == 2 ? 2 : 1;
     const int prior = 10 - final_rows;
 
     const std::string output = render_page();
 
-    ASSERT_EQ(final_rows, g_sel_page_item_cnt);
+    ASSERT_EQ(final_rows, g_sel_page.page_item_cnt);
     for (int row = 0; row < final_rows; ++row)
     {
         expect_row(row, m_headings[prior + row], 0);
         EXPECT_THAT(output, testing::HasSubstr(expected_heading(row, OPTION_HEADINGS[prior + row])));
     }
-    EXPECT_EQ(prior, g_sel_prior_obj_cnt);
-    EXPECT_EQ(final_rows, g_sel_page_obj_cnt);
-    EXPECT_EQ(final_rows + 3, g_sel_last_line);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(prior, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(final_rows + 3, g_sel_page.last_line);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -438,7 +439,7 @@ TEST_P(OptionRecoveryRowTest, returnsToVisibleHeadingsAfterTheFinalOptionsGroupC
     g_use_sel_num = GetParam();
     g_tc_LINES = 7;
     g_option_flags[group_for(OI_SC_VERBOSE)] |= OF_SEL;
-    g_sel_page_op = m_catalog.row_for(OI_SC_VERBOSE);
+    g_sel_page.page_op = m_catalog.row_for(OI_SC_VERBOSE);
     m_draft.set(OI_SC_VERBOSE, "yes");
     initialize_page();
     (void) render_page();
@@ -450,12 +451,12 @@ TEST_P(OptionRecoveryRowTest, returnsToVisibleHeadingsAfterTheFinalOptionsGroupC
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Verbose scoring")));
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(0, "Article Scan Mode Options")));
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(1, "Scoring Options")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, group_for(OI_SCAN_ART_FOLLOW), 0);
     expect_row(1, group_for(OI_SC_VERBOSE), 0);
-    EXPECT_EQ(8, g_sel_prior_obj_cnt);
-    EXPECT_EQ(10, g_sel_total_obj_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(8, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(10, g_sel_page.total_obj_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_EQ("yes", m_draft.value(OI_SC_VERBOSE));
 }
 

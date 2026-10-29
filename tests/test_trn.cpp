@@ -2310,22 +2310,22 @@ protected:
 private:
     bool                               m_old_doing_ng{g_doing_ng};
     DoNewsgroupResult                  m_old_exit_code{g_newsgroup_exit_code};
-    std::string                        m_old_sel_chars{g_sel_chars};
+    std::string                        m_old_sel_chars{g_sel_page.chars};
     SelectionMode                      m_old_default_mode{g_sel.default_mode};
     ArticleLine                        m_old_init_lines{g_init_lines};
-    Article                          **m_old_page_app{g_sel_page_app};
-    Article                          **m_old_next_app{g_sel_next_app};
-    Article                           *m_old_last_ap{g_sel_last_ap};
-    Subject                           *m_old_page_sp{g_sel_page_sp};
-    Subject                           *m_old_next_sp{g_sel_next_sp};
-    Subject                           *m_old_last_sp{g_sel_last_sp};
-    int                                m_old_total{g_sel_total_obj_cnt};
-    int                                m_old_prior{g_sel_prior_obj_cnt};
-    int                                m_old_page_objects{g_sel_page_obj_cnt};
-    int                                m_old_page_items{g_sel_page_item_cnt};
-    int                                m_old_item_index{g_sel_item_index};
-    int                                m_old_last_line{g_sel_last_line};
-    bool                               m_old_at_end{g_sel_at_end};
+    Article                          **m_old_page_app{g_sel_page.page_art};
+    Article                          **m_old_next_app{g_sel_page.next_art};
+    Article                           *m_old_last_ap{g_sel_page.last_art};
+    Subject                           *m_old_page_sp{g_sel_page.page_subj};
+    Subject                           *m_old_next_sp{g_sel_page.next_subj};
+    Subject                           *m_old_last_sp{g_sel_page.last_subj};
+    int                                m_old_total{g_sel_page.total_obj_cnt};
+    int                                m_old_prior{g_sel_page.prior_obj_cnt};
+    int                                m_old_page_objects{g_sel_page.page_obj_cnt};
+    int                                m_old_page_items{g_sel_page.page_item_cnt};
+    int                                m_old_item_index{g_sel_page.item_index};
+    int                                m_old_last_line{g_sel_page.last_line};
+    bool                               m_old_at_end{g_sel_page.at_end};
     std::array<SelectionItem, MAX_SEL> m_old_items;
     decltype(g_missing_count)          m_old_missing_count{g_missing_count};
     int                                m_old_dm_count{g_dm_count};
@@ -2333,7 +2333,7 @@ private:
 
 void InputNewsgroupReadingTest::SetUp()
 {
-    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    std::copy(std::begin(g_sel_page.items), std::end(g_sel_page.items), m_old_items.begin());
     LocalSpoolArticleTest::SetUp();
     const fs::path group_dir = m_output_dir / "comp/lang/cpp";
     fs::create_directories(group_dir);
@@ -2352,12 +2352,12 @@ void InputNewsgroupReadingTest::SetUp()
     set_current_newsgroup(1);
     g_in_ng = false;
     g_mode = MM_NEWSGROUP_LIST;
-    g_sel_chars = "abcdefghijklmnopqrstuvwxyz";
+    g_sel_page.chars = "abcdefghijklmnopqrstuvwxyz";
     g_sel.default_mode = SM_ARTICLE;
     g_init_lines = ArticleLine{g_tc_LINES};
-    g_sel_page_app = g_sel_next_app = nullptr;
-    g_sel_last_ap = nullptr;
-    g_sel_page_sp = g_sel_next_sp = g_sel_last_sp = nullptr;
+    g_sel_page.page_art = g_sel_page.next_art = nullptr;
+    g_sel_page.last_art = nullptr;
+    g_sel_page.page_subj = g_sel_page.next_subj = g_sel_page.last_subj = nullptr;
 }
 
 void InputNewsgroupReadingTest::TearDown()
@@ -2365,23 +2365,23 @@ void InputNewsgroupReadingTest::TearDown()
     LocalSpoolArticleTest::TearDown();
     g_doing_ng = m_old_doing_ng;
     g_newsgroup_exit_code = m_old_exit_code;
-    g_sel_chars = m_old_sel_chars;
+    g_sel_page.chars = m_old_sel_chars;
     g_sel.default_mode = m_old_default_mode;
     g_init_lines = m_old_init_lines;
-    g_sel_page_app = m_old_page_app;
-    g_sel_next_app = m_old_next_app;
-    g_sel_last_ap = m_old_last_ap;
-    g_sel_page_sp = m_old_page_sp;
-    g_sel_next_sp = m_old_next_sp;
-    g_sel_last_sp = m_old_last_sp;
-    g_sel_total_obj_cnt = m_old_total;
-    g_sel_prior_obj_cnt = m_old_prior;
-    g_sel_page_obj_cnt = m_old_page_objects;
-    g_sel_page_item_cnt = m_old_page_items;
-    g_sel_item_index = m_old_item_index;
-    g_sel_last_line = m_old_last_line;
-    g_sel_at_end = m_old_at_end;
-    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    g_sel_page.page_art = m_old_page_app;
+    g_sel_page.next_art = m_old_next_app;
+    g_sel_page.last_art = m_old_last_ap;
+    g_sel_page.page_subj = m_old_page_sp;
+    g_sel_page.next_subj = m_old_next_sp;
+    g_sel_page.last_subj = m_old_last_sp;
+    g_sel_page.total_obj_cnt = m_old_total;
+    g_sel_page.prior_obj_cnt = m_old_prior;
+    g_sel_page.page_obj_cnt = m_old_page_objects;
+    g_sel_page.page_item_cnt = m_old_page_items;
+    g_sel_page.item_index = m_old_item_index;
+    g_sel_page.last_line = m_old_last_line;
+    g_sel_page.at_end = m_old_at_end;
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_page.items));
     g_missing_count = m_old_missing_count;
     g_dm_count = m_old_dm_count;
 }
@@ -3415,15 +3415,15 @@ void NewsgroupEndReadingStateTest::SetUp()
         if (g_mode == MM_THREAD_SELECTOR)
         {
             EXPECT_EQ(GM_SELECTOR, g_general_mode);
-            for (int item = 0; item < g_sel_page_item_cnt; ++item)
+            for (int item = 0; item < g_sel_page.page_item_cnt; ++item)
             {
                 if (g_sel.mode == SM_ARTICLE)
                 {
-                    state.selector_articles.push_back(g_sel_items[item].u.ap->article_num());
+                    state.selector_articles.push_back(g_sel_page.items[item].u.ap->article_num());
                 }
                 else
                 {
-                    Subject *subject = g_sel_items[item].u.sp;
+                    Subject *subject = g_sel_page.items[item].u.sp;
                     for (Article *article = g_sel.mode == SM_THREAD ? subject->first_art() : subject->m_articles;
                          article; article = g_sel.mode == SM_THREAD ? article->next_article() : article->m_subj_next)
                     {
@@ -3932,8 +3932,8 @@ void NewsgroupExitReadingTest::expect_final_state(std::string_view numbers, Arti
     EXPECT_EQ(TR_NONE, g_selected_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
     EXPECT_FALSE(g_sel.selected_only);
-    EXPECT_EQ(nullptr, g_sel_page_sp);
-    EXPECT_EQ(nullptr, g_sel_page_app);
+    EXPECT_EQ(nullptr, g_sel_page.page_subj);
+    EXPECT_EQ(nullptr, g_sel_page.page_art);
     EXPECT_EQ(nullptr, g_local_kfp);
     EXPECT_EQ(nullptr, g_art_fp);
     EXPECT_EQ(ArticleNum{}, g_open_art);
@@ -5342,7 +5342,7 @@ void ArticleSelectorScopeReadingTest::SetUp()
             }
         }
         m_marks.push_back(std::move(marks));
-        m_population.push_back(g_sel_total_obj_cnt);
+        m_population.push_back(g_sel_page.total_obj_cnt);
         return reader(buffer, size);
     };
 }
@@ -5418,16 +5418,16 @@ void ArticleSelectorPresentationReadingStateTest::SetUp()
     g_terminal_input_reader = [this, reader](char *buffer, int size)
     {
         ArticleNum anchor;
-        if (g_mode == MM_THREAD_SELECTOR && g_sel_page_item_cnt)
+        if (g_mode == MM_THREAD_SELECTOR && g_sel_page.page_item_cnt)
         {
-            const Selection &item = g_sel_items[0].u;
+            const Selection &item = g_sel_page.items[0].u;
             Article         *article = g_sel.mode == SM_ARTICLE  ? item.ap
                                        : g_sel.mode == SM_THREAD ? item.sp->first_art()
                                                                  : item.sp->m_articles;
             anchor = article->article_num();
         }
-        m_presentation.push_back({g_sel.sort, g_sel.direction, current_article_display_mode(), g_sel_prior_obj_cnt,
-                                  g_sel_total_obj_cnt, anchor});
+        m_presentation.push_back({g_sel.sort, g_sel.direction, current_article_display_mode(), g_sel_page.prior_obj_cnt,
+                                  g_sel_page.total_obj_cnt, anchor});
         return reader(buffer, size);
     };
 }
@@ -5714,10 +5714,11 @@ void ArticleSelectorRecoveryReadingStateTest::SetUp()
     g_terminal_input_reader = [this, reader](char *buffer, int size)
     {
         const std::size_t index = m_states.size();
-        const bool empty_anchor = g_sel.mode == SM_ARTICLE ? !g_sel_page_app || g_sel_page_app == article_ptr_list_end()
-                                                           : !g_sel_page_sp || g_sel_page_sp->m_misc == 0;
-        m_cache.push_back({g_last_cached, g_cached_all_in_range, g_sel_page_item_cnt, g_sel_page_obj_cnt,
-                           g_sel_total_obj_cnt, g_sel_prior_obj_cnt, g_sel_item_index, empty_anchor});
+        const bool        empty_anchor = g_sel.mode == SM_ARTICLE
+                                             ? !g_sel_page.page_art || g_sel_page.page_art == article_ptr_list_end()
+                                             : !g_sel_page.page_subj || g_sel_page.page_subj->m_misc == 0;
+        m_cache.push_back({g_last_cached, g_cached_all_in_range, g_sel_page.page_item_cnt, g_sel_page.page_obj_cnt,
+                           g_sel_page.total_obj_cnt, g_sel_page.prior_obj_cnt, g_sel_page.item_index, empty_anchor});
         const int result = reader(buffer, size);
         if (m_interrupt_input && index == *m_interrupt_input)
         {
@@ -5872,7 +5873,7 @@ void InterruptedArticleSelectorReadingTest::expect_interrupted_return() const
     }
     EXPECT_EQ(selected_only ? std::vector<int>{5} : std::vector<int>{}, selected);
     EXPECT_EQ((std::vector<int>{1, 2, 3, 4}), read);
-    EXPECT_EQ(0, g_sel_page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.page_item_cnt);
     EXPECT_EQ(0, g_int_count);
     EXPECT_LT(g_last_cached, g_last_art);
     EXPECT_FALSE(g_cached_all_in_range);
@@ -6269,8 +6270,8 @@ private:
     std::array<std::string, 3>    m_numbers;
     std::array<ArticleUnread, 3>  m_counts{};
     std::array<NewsgroupFlags, 3> m_flags{};
-    NewsgroupData                *m_old_page{g_sel_page_np};
-    NewsgroupData                *m_old_next{g_sel_next_np};
+    NewsgroupData                *m_old_page{g_sel_page.page_ngd};
+    NewsgroupData                *m_old_next{g_sel_page.next_ngd};
     NewsgroupData                *m_old_recent{g_recent_newsgroup};
     SelectionSortMode             m_old_group_sort{g_sel.newsgroup_sort};
     std::string                   m_old_display{g_sel_grp_display_mode};
@@ -6278,7 +6279,7 @@ private:
     std::string                   m_old_group_commands{g_newsgroup_sel_cmds};
     std::string                   m_old_option_commands{g_option_sel_cmds};
     OptionFlags                  *m_old_options{g_option_flags};
-    int                           m_old_option_page{g_sel_page_op};
+    int                           m_old_option_page{g_sel_page.page_op};
     bool                          m_old_can_home{g_can_home};
     bool                          m_old_numbered{g_use_sel_num};
     bool                          m_old_bos{g_bos_on_stop};
@@ -6290,7 +6291,7 @@ private:
 void NewsgroupSelectorDelegationStateTest::SetUp()
 {
     InputNewsgroupReadingTest::SetUp();
-    g_sel_page_np = g_sel_next_np = nullptr;
+    g_sel_page.page_ngd = g_sel_page.next_ngd = nullptr;
     g_recent_newsgroup = &g_newsgroup_data[0];
     g_sel.newsgroup_sort = SS_STRING;
     g_sel_grp_display_mode = "s";
@@ -6309,8 +6310,8 @@ void NewsgroupSelectorDelegationStateTest::SetUp()
 void NewsgroupSelectorDelegationStateTest::TearDown()
 {
     pop_only();
-    g_sel_page_np = m_old_page;
-    g_sel_next_np = m_old_next;
+    g_sel_page.page_ngd = m_old_page;
+    g_sel_page.next_ngd = m_old_next;
     g_recent_newsgroup = m_old_recent;
     g_sel.newsgroup_sort = m_old_group_sort;
     g_sel_grp_display_mode = m_old_display;
@@ -6318,7 +6319,7 @@ void NewsgroupSelectorDelegationStateTest::TearDown()
     g_newsgroup_sel_cmds = m_old_group_commands;
     g_option_sel_cmds = m_old_option_commands;
     g_option_flags = m_old_options;
-    g_sel_page_op = m_old_option_page;
+    g_sel_page.page_op = m_old_option_page;
     g_can_home = m_old_can_home;
     g_use_sel_num = m_old_numbered;
     g_bos_on_stop = m_old_bos;
@@ -6348,16 +6349,16 @@ void NewsgroupSelectorDelegationStateTest::prepare_selector(bool rereading)
         }
     }
     g_sel.set_selector(SM_NEWSGROUP, SS_STRING);
-    g_sel_page_np = &g_newsgroup_data[1];
+    g_sel_page.page_ngd = &g_newsgroup_data[1];
     init_pages(PRESERVE_PAGE);
     Selection no_search{};
     no_search.op = OI_NONE;
     (void) calc_page(no_search);
-    g_sel_item_index = g_sel_page_item_cnt;
+    g_sel_page.item_index = g_sel_page.page_item_cnt;
     ASSERT_EQ(DS_DISPLAY, sel_command(Ctl('l')));
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
     set_newsgroup(&g_newsgroup_data[1]);
-    g_sel_last_line = 3;
+    g_sel_page.last_line = 3;
     g_term_line = 3;
     for (int index = 0; index < 3; ++index)
     {
@@ -6644,9 +6645,9 @@ void MultircSelectorStateTest::SetUp()
         }
         if (g_general_mode == GM_SELECTOR && g_sel.mode == SM_NEWSGROUP)
         {
-            for (int index = 0; index < g_sel_page_item_cnt; ++index)
+            for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
             {
-                prompt.rows.emplace_back(g_sel_items[index].u.np->rc_name());
+                prompt.rows.emplace_back(g_sel_page.items[index].u.np->rc_name());
             }
         }
         m_prompts.push_back(std::move(prompt));
@@ -7149,24 +7150,24 @@ void NewsgroupSelectorDelegatedRecoveryTest::prepare_recovery(bool rereading, bo
 {
     g_tc_LINES = 7;
     prepare_selector(rereading);
-    g_sel_page_np = &g_newsgroup_data[later_page ? 2 : 1];
+    g_sel_page.page_ngd = &g_newsgroup_data[later_page ? 2 : 1];
     init_pages(PRESERVE_PAGE);
     Selection no_search{};
     no_search.op = OI_NONE;
     (void) calc_page(no_search);
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
     g_newsgroup_ptr = &g_newsgroup_data[later_page ? 0 : 2];
     set_newsgroup_name(g_newsgroup_ptr->rc_line());
-    g_term_line = g_sel_last_line;
+    g_term_line = g_sel_page.last_line;
     g_term_scrolled = 0;
 }
 
 void NewsgroupSelectorDelegatedRecoveryTest::expect_page(bool later_page, int cursor) const
 {
-    EXPECT_EQ(&g_newsgroup_data[later_page ? 2 : 1], g_sel_page_np);
-    EXPECT_EQ(later_page ? 1 : 0, g_sel_prior_obj_cnt);
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(cursor, g_sel_item_index);
+    EXPECT_EQ(&g_newsgroup_data[later_page ? 2 : 1], g_sel_page.page_ngd);
+    EXPECT_EQ(later_page ? 1 : 0, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(cursor, g_sel_page.item_index);
 }
 
 class NewsgroupSelectorDelegatedEraseTest : public NewsgroupSelectorDelegatedRecoveryTest,
@@ -7767,7 +7768,7 @@ void NewsgroupSelectorDelegatedServerLossTest::prepare_server_loss(bool rereadin
     (void) calc_page(origin);
     g_newsgroup_ptr = origin.np;
     set_newsgroup_name(origin.np->rc_name());
-    g_term_line = g_sel_last_line;
+    g_term_line = g_sel_page.last_line;
     g_check_flag = false;
     g_suppress_cn = true;
     g_paranoid = false;
@@ -7943,7 +7944,7 @@ void NewsgroupSelectorDelegatedPageTest::locate_group(int index)
     target.np = &g_newsgroup_data[index];
     (void) calc_page(target);
     g_newsgroup_ptr = target.np;
-    g_term_line = g_sel_last_line;
+    g_term_line = g_sel_page.last_line;
 }
 
 class NewsgroupSelectorDelegatedPagedNavigationTest : public NewsgroupSelectorDelegatedPageTest,
@@ -8008,14 +8009,14 @@ void NewsgroupSelectorDelegatedPopulationTest::prepare_population(bool rereading
     g_newsgroup_data[0].m_flags = static_cast<NewsgroupFlags>(g_sel.mask) | NF_DEL;
     g_newsgroup_data[1].m_flags = NF_NONE;
     g_newsgroup_data[target].m_flags = selected ? static_cast<NewsgroupFlags>(g_sel.mask) : NF_NONE;
-    g_sel_page_np = &g_newsgroup_data[target];
+    g_sel_page.page_ngd = &g_newsgroup_data[target];
     init_pages(PRESERVE_PAGE);
     Selection origin{};
     origin.np = &g_newsgroup_data[target];
     (void) calc_page(origin);
     g_newsgroup_ptr = origin.np;
     set_newsgroup_name(origin.np->rc_name());
-    g_term_line = g_sel_last_line;
+    g_term_line = g_sel_page.last_line;
     m_newsrc.name = m_output_dir / "newsrc";
     m_newsrc.new_name = m_output_dir / "newsrc.new";
     m_newsrc.old_name = m_output_dir / "old-newsrc";
@@ -8084,15 +8085,15 @@ void NewsgroupSelectorDelegatedPopulationTest::expect_checkpoint(int target, std
 
 void NewsgroupSelectorDelegatedPopulationTest::expect_rebuilt_page()
 {
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
     testing::internal::CaptureStdout();
     display_page();
     testing::internal::GetCapturedStdout();
-    ASSERT_EQ(1, g_sel_page_item_cnt);
-    EXPECT_EQ(1, g_sel_page_obj_cnt);
-    ASSERT_NE(nullptr, g_sel_items[0].u.np);
-    EXPECT_EQ(NF_INCLUDED, g_sel_items[0].u.np->m_flags & NF_INCLUDED);
-    EXPECT_NE('!', g_sel_items[0].u.np->m_subscribe_char);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
+    EXPECT_EQ(1, g_sel_page.page_obj_cnt);
+    ASSERT_NE(nullptr, g_sel_page.items[0].u.np);
+    EXPECT_EQ(NF_INCLUDED, g_sel_page.items[0].u.np->m_flags & NF_INCLUDED);
+    EXPECT_NE('!', g_sel_page.items[0].u.np->m_subscribe_char);
 }
 
 using DelegatedUnsubscribeState = std::tuple<bool, int, bool>;
@@ -15038,7 +15039,7 @@ TEST_P(NewsgroupSelectorRefreshRebuildTest, restartingAfterRefreshRecountsGroups
 
     EXPECT_EQ('q', result);
     EXPECT_EQ(NewsgroupNum{rereading && !new_articles ? 0 : 3}, g_newsgroup_to_read);
-    EXPECT_EQ(rereading && new_articles ? 0 : 3, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading && new_articles ? 0 : 3, g_sel_page.total_obj_cnt);
     for (int index = 0; index < 3; ++index)
     {
         const NewsgroupData &group = g_newsgroup_data[index];
@@ -15072,7 +15073,7 @@ TEST_F(NewsgroupSelectorRefreshStateTest, repeatedRefreshesKeepReadAndUnsubscrib
 
     EXPECT_EQ('q', result);
     EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
-    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.total_obj_cnt);
     EXPECT_EQ(TR_NONE, read_group.m_to_read);
     EXPECT_EQ(TR_UNSUB, g_newsgroup_data[2].m_to_read);
     EXPECT_EQ('!', g_newsgroup_data[2].m_subscribe_char);
@@ -15166,7 +15167,7 @@ TEST_F(NewsgroupSelectorRefreshStateTest, aRefreshOfAnEmptyCatalogStillRefreshes
     g_newsgroup_data.clear();
     g_newsgroup_order.clear();
     g_first_newsgroup = g_last_newsgroup = g_newsgroup_ptr = g_current_newsgroup = g_recent_newsgroup = nullptr;
-    g_sel_page_np = g_sel_next_np = nullptr;
+    g_sel_page.page_ngd = g_sel_page.next_ngd = nullptr;
     g_newsgroup_count = g_newsgroup_to_read = NewsgroupNum{};
 
     const DisplayState result = run_delegated('=', "Q");
@@ -15318,10 +15319,10 @@ TEST_P(NewsgroupSelectorDelegatedServerLossTest, serverLossRestartsOnlyWhenAnoth
     EXPECT_EQ(remaining_source ? DS_RESTART : DS_QUIT, result);
     EXPECT_EQ(remaining_source ? &m_multirc : nullptr, g_multirc);
     EXPECT_EQ(remaining_source ? 2 : 0, g_newsgroup_data.size());
-    EXPECT_EQ(nullptr, g_sel_page_np);
+    EXPECT_EQ(nullptr, g_sel_page.page_ngd);
     if (remaining_source)
     {
-        EXPECT_EQ(0, g_sel_prior_obj_cnt);
+        EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
         for (const NewsgroupData &group : g_newsgroup_data)
         {
             EXPECT_NE(&m_data_source, group.m_rc->data_source);
@@ -15343,7 +15344,7 @@ TEST_P(NewsgroupSelectorDelegatedServerLossTest, theSelectorRecoversOrQuitsAfter
     prepare_server_loss(rereading, later_page, remaining_source);
     const std::string input =
         std::string{rereading ? "U" : ""} + (later_page ? ">" : "") + "\\\\y  " + (remaining_source ? "qQ" : "Q");
-    g_sel_page_np = nullptr;
+    g_sel_page.page_ngd = nullptr;
 
     testing::internal::CaptureStderr();
     const char result = run_selector_session(input);
@@ -15353,10 +15354,10 @@ TEST_P(NewsgroupSelectorDelegatedServerLossTest, theSelectorRecoversOrQuitsAfter
     EXPECT_EQ(remaining_source ? &m_multirc : nullptr, g_multirc);
     if (remaining_source)
     {
-        EXPECT_EQ(0, g_sel_prior_obj_cnt);
-        EXPECT_EQ(0, g_sel_item_index);
-        EXPECT_EQ(2, g_sel_total_obj_cnt);
-        EXPECT_EQ(newsgroup_first(), g_sel_page_np);
+        EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+        EXPECT_EQ(0, g_sel_page.item_index);
+        EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+        EXPECT_EQ(newsgroup_first(), g_sel_page.page_ngd);
         EXPECT_EQ(0, g_selected_count);
     }
     EXPECT_THAT(m_diagnostic, testing::HasSubstr("503 Server closed connection."));
@@ -15650,7 +15651,7 @@ TEST_P(NewsgroupSelectorDelegatedOptionsTest, aForcedOptionCommandRestoresTheGro
     expect_selector_context(rereading, -1);
     EXPECT_TRUE(g_sel.exclusive);
     EXPECT_EQ(-SS_STRING, g_sel.newsgroup_sort);
-    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.total_obj_cnt);
     EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & (NF_SEL | NF_DEL_SEL));
     for (int index = 0; index < 3; ++index)
     {
@@ -15685,17 +15686,17 @@ TEST_P(NewsgroupSelectorDelegatedNavigationTest, aVisibleTargetKeepsThePageAndMo
     const DelegatedGroupNavigation &navigation = GetParam();
     prepare_selector();
     g_newsgroup_ptr = &g_newsgroup_data[navigation.start];
-    g_sel_item_index = 2;
+    g_sel_page.item_index = 2;
     const std::string input = std::string{navigation.input} + "Q";
 
     const DisplayState result = run_delegated('\\', input);
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_EQ(&g_newsgroup_data[navigation.target], g_newsgroup_ptr);
-    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page_np);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    EXPECT_EQ(3, g_sel_page_item_cnt);
-    EXPECT_EQ(navigation.row, g_sel_item_index);
+    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page.page_ngd);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.page_item_cnt);
+    EXPECT_EQ(navigation.row, g_sel_page.item_index);
     expect_groups_preserved();
     expect_selector_context();
     expect_next_command('Q');
@@ -15720,10 +15721,10 @@ TEST_P(NewsgroupSelectorDelegatedPagedNavigationTest, anOffPageTargetRelocatesTh
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ(&g_newsgroup_data[navigation.target], g_newsgroup_ptr);
-    EXPECT_EQ(g_newsgroup_ptr, g_sel_page_np);
-    EXPECT_EQ(navigation.row, g_sel_prior_obj_cnt);
-    EXPECT_EQ(1, g_sel_page_item_cnt);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(g_newsgroup_ptr, g_sel_page.page_ngd);
+    EXPECT_EQ(navigation.row, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.item_index);
     expect_groups_preserved();
     expect_selector_context();
     expect_next_command('Q');
@@ -15742,16 +15743,16 @@ INSTANTIATE_TEST_SUITE_P(Command, NewsgroupSelectorDelegatedPagedNavigationTest,
 TEST_F(NewsgroupSelectorDelegatedPageTest, lookingUpTheVisibleGroupOnALaterPageRetainsThatPage)
 {
     locate_group(2);
-    ASSERT_EQ(1, g_sel_prior_obj_cnt);
+    ASSERT_EQ(1, g_sel_page.prior_obj_cnt);
 
     const DisplayState result = run_delegated('g', "comp.next\nQ");
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
-    EXPECT_EQ(g_newsgroup_ptr, g_sel_page_np);
-    EXPECT_EQ(1, g_sel_prior_obj_cnt);
-    EXPECT_EQ(1, g_sel_page_item_cnt);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(g_newsgroup_ptr, g_sel_page.page_ngd);
+    EXPECT_EQ(1, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.item_index);
     expect_groups_preserved();
     expect_selector_context();
     expect_next_command('Q');
@@ -15762,16 +15763,16 @@ TEST_P(NewsgroupSelectorDelegatedEndTest, goingPastTheLastGroupReturnsToTheFirst
     if (GetParam())
     {
         ASSERT_TRUE(next_page());
-        g_newsgroup_ptr = g_sel_page_np;
+        g_newsgroup_ptr = g_sel_page.page_ngd;
     }
 
     const DisplayState result = run_delegated('\\', "$Q");
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ(nullptr, g_newsgroup_ptr);
-    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page_np);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page.page_ngd);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.item_index);
     expect_groups_preserved();
     expect_selector_context();
     expect_next_command('Q');
@@ -15794,9 +15795,9 @@ TEST_P(NewsgroupSelectorDelegatedReadLookupTest, explicitlyRequestedReadGroupsAr
     EXPECT_EQ(NF_NONE, g_newsgroup_ptr->m_flags & NF_SEL);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
-    EXPECT_EQ(3, g_sel_page_item_cnt);
-    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.page_item_cnt);
+    EXPECT_EQ(2, g_sel_page.item_index);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
@@ -15815,15 +15816,15 @@ TEST_F(NewsgroupSelectorDelegatedReadGroupTest, lookingUpAnAlreadySelectedReadGr
 {
     g_newsgroup_data[0].m_flags |= NF_SEL;
     init_pages(PRESERVE_PAGE);
-    ASSERT_EQ(3, g_sel_total_obj_cnt);
+    ASSERT_EQ(3, g_sel_page.total_obj_cnt);
 
     const DisplayState result = run_delegated('g', "comp.previous\nQ");
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ(&g_newsgroup_data[0], g_newsgroup_ptr);
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
-    EXPECT_EQ(3, g_sel_page_item_cnt);
-    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.page_item_cnt);
+    EXPECT_EQ(2, g_sel_page.item_index);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_EQ(NF_SEL, g_newsgroup_ptr->m_flags & NF_SEL);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
@@ -15844,10 +15845,10 @@ TEST_P(NewsgroupSelectorDelegatedRestrictedLookupTest, lookupRetainsTheActiveRes
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_EQ(&g_newsgroup_data[2], g_newsgroup_ptr);
-    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page_np);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(&g_newsgroup_data[1], g_sel_page.page_ngd);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & NF_INCLUDED);
     EXPECT_EQ(1, g_max_newsgroup_to_do);
     EXPECT_EQ("comp.[ln]*", newsgroup_restriction(0));
@@ -15875,14 +15876,14 @@ TEST_P(NewsgroupSelectorDelegatedUnsubscribeTest, unsubscribeRemovesTheGroupAndR
     EXPECT_EQ(numbers, g_newsgroup_data[target].rc_numbers());
     EXPECT_EQ(NF_NONE, g_newsgroup_data[target].m_flags & NF_INCLUDED);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(target);
     expect_files_unchanged();
     expect_selector_context(rereading);
     expect_rebuilt_page();
-    EXPECT_NE(&g_newsgroup_data[target], g_sel_items[0].u.np);
+    EXPECT_NE(&g_newsgroup_data[target], g_sel_page.items[0].u.np);
     expect_next_command('Q');
 }
 
@@ -15904,7 +15905,7 @@ TEST_P(NewsgroupSelectorDelegatedSubscriptionTest, acceptingResubscriptionRebuil
     EXPECT_EQ(NF_NONE, g_newsgroup_ptr->m_flags & g_sel.mask);
     EXPECT_EQ(rereading ? NF_DEL : NF_NONE, g_newsgroup_ptr->m_flags & NF_DEL);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(2);
@@ -15926,7 +15927,7 @@ TEST_P(NewsgroupSelectorDelegatedSubscriptionTest, decliningResubscriptionRetain
     EXPECT_EQ(TR_UNSUB, g_newsgroup_data[2].m_to_read);
     EXPECT_EQ(NF_NONE, g_newsgroup_data[2].m_flags & NF_INCLUDED);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(2);
@@ -15951,7 +15952,7 @@ TEST_P(NewsgroupSelectorDelegatedCatchupTest, fullCatchupRebuildsThePopulationAn
     EXPECT_EQ(':', g_newsgroup_data[target].m_subscribe_char);
     EXPECT_EQ(rereading ? NF_INCLUDED : NF_NONE, g_newsgroup_data[target].m_flags & NF_INCLUDED);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
-    EXPECT_EQ(rereading ? 3 : 2, g_sel_total_obj_cnt);
+    EXPECT_EQ(rereading ? 3 : 2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(target);
@@ -15976,7 +15977,7 @@ TEST_P(NewsgroupSelectorDelegatedSelectedCatchupTest, catchingUpASelectedGroupKe
     EXPECT_EQ(TR_NONE, g_newsgroup_data[target].m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_data[target].rc_numbers());
     EXPECT_EQ(NF_SEL | NF_INCLUDED, g_newsgroup_data[target].m_flags & (NF_SEL | NF_INCLUDED));
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
@@ -16002,14 +16003,14 @@ TEST_P(NewsgroupSelectorDelegatedUnsubscribeTest, catchupAndUnsubscribeRemovesTh
     EXPECT_EQ(" 1-3", g_newsgroup_data[target].rc_numbers());
     EXPECT_EQ(NF_NONE, g_newsgroup_data[target].m_flags & NF_INCLUDED);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 2}, g_newsgroup_to_read);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(target);
     expect_checkpoint(target, " 1-3");
     expect_selector_context(rereading);
     expect_rebuilt_page();
-    EXPECT_NE(&g_newsgroup_data[target], g_sel_items[0].u.np);
+    EXPECT_NE(&g_newsgroup_data[target], g_sel_page.items[0].u.np);
     expect_next_command('Q');
 }
 
@@ -16026,14 +16027,14 @@ TEST_F(NewsgroupSelectorDelegatedPopulationTest, partialCatchupRetainsTheUnreadT
     EXPECT_EQ(':', g_newsgroup_ptr->m_subscribe_char);
     EXPECT_EQ(NF_INCLUDED, g_newsgroup_ptr->m_flags & NF_INCLUDED);
     EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(1);
     expect_checkpoint(1, " 1-2");
     expect_selector_context();
     expect_rebuilt_page();
-    EXPECT_EQ(g_newsgroup_ptr, g_sel_items[0].u.np);
+    EXPECT_EQ(g_newsgroup_ptr, g_sel_page.items[0].u.np);
     expect_next_command('Q');
 }
 
@@ -16051,7 +16052,7 @@ TEST_P(NewsgroupSelectorDelegatedCatchupCancelTest, decliningCatchupKeepsReadRan
     EXPECT_EQ(rereading ? " 1-3" : " 1", g_newsgroup_ptr->rc_numbers());
     EXPECT_EQ(static_cast<NewsgroupFlags>(g_sel.mask), g_newsgroup_ptr->m_flags & g_sel.mask);
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);
     expect_other_groups_preserved(1);

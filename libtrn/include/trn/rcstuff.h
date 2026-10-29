@@ -87,8 +87,6 @@ struct Multirc
 };
 
 extern HashTable           *g_newsrc_hash;
-extern Multirc             *g_sel_page_mp;
-extern Multirc             *g_sel_next_mp;
 extern std::vector<Multirc> g_multircs;           // all MULTIRCs
 extern Multirc             *g_multirc;            // the current MULTIRC
 extern bool                 g_paranoid;           // did we detect some inconsistency in .newsrc?

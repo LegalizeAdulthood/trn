@@ -61,8 +61,6 @@ NewsgroupData *g_newsgroup_ptr{};          // current newsgroup data ptr
 NewsgroupData *g_current_newsgroup{};      // stable current newsgroup so we can ditz with g_ngptr
 NewsgroupData *g_recent_newsgroup{};       // the prior newsgroup we visited
 NewsgroupData *g_start_here{};             // set to the first newsgroup with unread news on startup
-NewsgroupData *g_sel_page_np{};            //
-NewsgroupData *g_sel_next_np{};            //
 ArticleNum     g_abs_first{};              // 1st real article in current newsgroup
 ArticleNum     g_first_art{};              // minimum unread article number in newsgroup
 ArticleNum     g_last_art{};               // maximum article number in newsgroup

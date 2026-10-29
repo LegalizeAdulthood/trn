@@ -182,8 +182,6 @@ extern bool g_univ_follow_temp;
 extern UniversalItemList  g_univ_items;
 extern UniversalNameSet   g_univ_ng_names;
 extern UniversalNameSet   g_univ_vg_names;
-extern UniversalItemIndex g_sel_page_univ_index;
-extern UniversalItemIndex g_sel_next_univ_index;
 extern std::string    g_univ_fname;    // current filename (may be empty)
 extern std::string    g_univ_label;    // current label (may be empty)
 extern std::string    g_univ_title;    // title of current level

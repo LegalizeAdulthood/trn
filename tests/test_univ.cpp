@@ -5,6 +5,7 @@
 
 #include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/rt-page.h>
 #include <trn/util.h>
 #include <util/util2.h>
 
@@ -40,8 +41,8 @@ void reset_test_newsgroups()
     g_current_newsgroup = nullptr;
     g_recent_newsgroup = nullptr;
     g_start_here = nullptr;
-    g_sel_page_np = nullptr;
-    g_sel_next_np = nullptr;
+    g_sel_page.page_ngd = nullptr;
+    g_sel_page.next_ngd = nullptr;
 }
 
 NewsgroupData *add_test_newsgroup(std::string_view group_name)

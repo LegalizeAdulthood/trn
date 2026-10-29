@@ -8,6 +8,7 @@
 #include <trn/init.h>
 #include <trn/last.h>
 #include <trn/ngdata.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -86,8 +87,8 @@ protected:
         m_old_current_newsgroup = g_current_newsgroup;
         m_old_recent_newsgroup = g_recent_newsgroup;
         m_old_start_here = g_start_here;
-        m_old_sel_page_np = g_sel_page_np;
-        m_old_sel_next_np = g_sel_next_np;
+        m_old_sel_page_np = g_sel_page.page_ngd;
+        m_old_sel_next_np = g_sel_page.next_ngd;
         m_old_ng_go_newsgroup_ptr = g_ng_go_newsgroup_ptr;
         m_old_multirc = g_multirc;
         m_saved_multircs.swap(g_multircs);
@@ -146,8 +147,8 @@ protected:
         g_current_newsgroup = nullptr;
         g_recent_newsgroup = nullptr;
         g_start_here = nullptr;
-        g_sel_page_np = nullptr;
-        g_sel_next_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
+        g_sel_page.next_ngd = nullptr;
         g_ng_go_newsgroup_ptr = nullptr;
         g_multirc = nullptr;
         g_multircs.clear();
@@ -208,8 +209,8 @@ protected:
         g_current_newsgroup = m_old_current_newsgroup;
         g_recent_newsgroup = m_old_recent_newsgroup;
         g_start_here = m_old_start_here;
-        g_sel_page_np = m_old_sel_page_np;
-        g_sel_next_np = m_old_sel_next_np;
+        g_sel_page.page_ngd = m_old_sel_page_np;
+        g_sel_page.next_ngd = m_old_sel_next_np;
         g_ng_go_newsgroup_ptr = m_old_ng_go_newsgroup_ptr;
         g_multirc = m_old_multirc;
         g_multircs.clear();

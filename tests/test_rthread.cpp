@@ -30,7 +30,7 @@ protected:
         m_old_sel_rereading = g_sel.rereading;
         m_old_sel_sort = g_sel.sort;
         m_old_sel_direction = g_sel.direction;
-        m_old_sel_page_app = g_sel_page_app;
+        m_old_sel_page_app = g_sel_page.page_art;
         m_old_art_ptr_list = std::move(g_art_ptr_list);
         m_old_art_ptr = g_art_ptr;
 
@@ -42,7 +42,7 @@ protected:
         g_sel.rereading = false;
         g_sel.sort = SS_DATE;
         g_sel.direction = 1;
-        g_sel_page_app = reinterpret_cast<Article **>(1);
+        g_sel_page.page_art = reinterpret_cast<Article **>(1);
         g_art_ptr_list.clear();
         g_art_ptr = nullptr;
     }
@@ -51,7 +51,7 @@ protected:
     {
         g_art_ptr_list = std::move(m_old_art_ptr_list);
         g_art_ptr = m_old_art_ptr;
-        g_sel_page_app = m_old_sel_page_app;
+        g_sel_page.page_art = m_old_sel_page_app;
         g_sel.direction = m_old_sel_direction;
         g_sel.sort = m_old_sel_sort;
         g_sel.rereading = m_old_sel_rereading;
@@ -97,5 +97,5 @@ TEST_F(ArticlePointerListTest, sortArticlesBuildsDateOrderedPointerList)
     EXPECT_EQ(ArticleNum{2}, g_art_ptr_list[0]->article_num());
     EXPECT_EQ(ArticleNum{3}, g_art_ptr_list[1]->article_num());
     EXPECT_EQ(ArticleNum{1}, g_art_ptr_list[2]->article_num());
-    EXPECT_EQ(nullptr, g_sel_page_app);
+    EXPECT_EQ(nullptr, g_sel_page.page_art);
 }

@@ -62,10 +62,6 @@ SelectorPolicy    g_sel{};
 ArticleUnread     g_selected_count{};
 int               g_selected_subj_cnt{};
 int               g_added_articles{};
-std::string       g_sel_chars;
-int               g_sel_item_index{};
-int               g_sel_last_line{};
-bool              g_sel_at_end{};
 int               g_keep_the_group_static{}; // -K
 std::string       g_newsrc_sel_cmds{"Z>"};
 std::string       g_add_sel_cmds{"Z>"};
@@ -220,8 +216,8 @@ private:
     UniversalItemList        save_univ_items = std::move(g_univ_items);       \
     UniversalNameSet         save_univ_ng_names = std::move(g_univ_ng_names); \
     UniversalNameSet         save_univ_vg_names = std::move(g_univ_vg_names); \
-    const UniversalItemIndex save_page_univ = g_sel_page_univ_index;          \
-    const UniversalItemIndex save_next_univ = g_sel_next_univ_index;          \
+    const UniversalItemIndex save_page_univ = g_sel_page.page_univ_index;     \
+    const UniversalItemIndex save_next_univ = g_sel_page.next_univ_index;     \
     std::string const        save_univ_fname = g_univ_fname;                  \
     std::string const        save_univ_label = g_univ_label;                  \
     std::string const        save_univ_title = g_univ_title;                  \
@@ -234,8 +230,8 @@ private:
         g_univ_items = std::move(save_univ_items);       \
         g_univ_ng_names = std::move(save_univ_ng_names); \
         g_univ_vg_names = std::move(save_univ_vg_names); \
-        g_sel_page_univ_index = save_page_univ;          \
-        g_sel_next_univ_index = save_next_univ;          \
+        g_sel_page.page_univ_index = save_page_univ;     \
+        g_sel_page.next_univ_index = save_next_univ;     \
         g_univ_fname = save_univ_fname;                  \
         g_univ_label = save_univ_label;                  \
         g_univ_title = save_univ_title;                  \
@@ -298,8 +294,8 @@ sel_restart:
     {
         s_end_char = 'Z';
         s_page_char = '>';
-        g_sel_page_app = nullptr;
-        g_sel_page_sp = nullptr;
+        g_sel_page.page_art = nullptr;
+        g_sel_page.page_subj = nullptr;
         g_sel.mask = AGF_DEL_SEL;
     }
     else
@@ -308,8 +304,8 @@ sel_restart:
         s_page_char = selector_page_command(g_news_sel_cmds);
         if (g_nav.current.art)
         {
-            g_sel_last_ap = g_nav.current.art;
-            g_sel_last_sp = g_nav.current.art->m_subj;
+            g_sel_page.last_art = g_nav.current.art;
+            g_sel_page.last_subj = g_nav.current.art->m_subj;
         }
         g_sel.mask = AGF_SEL;
     }
@@ -318,7 +314,7 @@ sel_restart:
     subjects_saved = true;
 
     init_pages(FILL_LAST_PAGE);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
     g_msg.clear();
     if (g_added_articles)
     {
@@ -383,8 +379,8 @@ sel_exit:
         if (!g_art_ptr_list.empty())
         {
             g_art_ptr_list.clear();
-            g_sel_page_app = nullptr;
-            g_sel_next_app = nullptr;
+            g_sel_page.page_art = nullptr;
+            g_sel_page.next_art = nullptr;
             sort_subjects();
         }
         g_art_ptr = nullptr;
@@ -546,7 +542,7 @@ sel_restart:
     s_extra_commands = multirc_commands;
 
     init_pages(FILL_LAST_PAGE);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
 
     sel_display();
     if (sel_input() == 'R')
@@ -641,7 +637,7 @@ sel_restart:
     if (g_sel.rereading)
     {
         g_sel.mask = AGF_DEL_SEL;
-        g_sel_page_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
     }
     else
     {
@@ -650,7 +646,7 @@ sel_restart:
     s_extra_commands = newsgroup_commands;
 
     init_pages(FILL_LAST_PAGE);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
 
     sel_display();
     if (sel_input() == 'R')
@@ -705,7 +701,7 @@ sel_restart:
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
-/// - g_sel_page_gp: Reset to initialize the page group index.
+/// - g_sel_page.page_gp: Reset to initialize the page group index.
 /// - s_extra_commands: Set to the command handler for add group commands.
 ///
 char add_group_selector(GetNewsgroupFlags flags)
@@ -745,11 +741,11 @@ sel_restart:
     {
         g_sel.mask = AGF_SEL;
     }
-    g_sel_page_gp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::None;
     s_extra_commands = g_sel.group_listing ? unsubscribed_group_commands : add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
 
     sel_display();
     if (sel_input() == 'R')
@@ -795,7 +791,7 @@ sel_restart:
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
-/// - g_sel_page_op: Set to -1 to initialize the page option pointer.
+/// - g_sel_page.page_op: Set to -1 to initialize the page option pointer.
 /// - s_extra_commands: Set to the command handler for option commands.
 ///
 char option_selector()
@@ -823,11 +819,11 @@ sel_restart:
     {
         g_sel.mask = AGF_SEL;
     }
-    g_sel_page_op = -1;
+    g_sel_page.page_op = -1;
     s_extra_commands = option_commands;
 
     init_pages(FILL_LAST_PAGE);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
 
     sel_display();
     if (sel_input() == 'R' || s_sel_ret=='\r' || s_sel_ret=='\n')
@@ -1082,7 +1078,7 @@ do_group:
 /// - s_end_char: Set to the end character for the selector.
 /// - s_page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
-/// - g_sel_page_univ_index: Set to 0 to initialize the universal page position.
+/// - g_sel_page.page_univ_index: Set to 0 to initialize the universal page position.
 /// - s_extra_commands: Set to the command handler for universal commands.
 /// - s_sel_ret: Updated to store the return character from the universal selector.
 ///
@@ -1112,11 +1108,11 @@ sel_restart:
     {
         g_sel.mask = AGF_SEL;
     }
-    g_sel_page_univ_index = {};
+    g_sel_page.page_univ_index = {};
     s_extra_commands = universal_commands;
 
     init_pages(FILL_LAST_PAGE);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
 
     sel_display();
     if (sel_input() == 'R')
@@ -1173,7 +1169,7 @@ sel_restart:
 /// the item index if necessary, and displaying any status messages.
 ///
 /// @globals
-/// - g_sel_item_index: Reset to 0 if it exceeds the number of items on the page.
+/// - g_sel_page.item_index: Reset to 0 if it exceeds the number of items on the page.
 /// - g_term_col: Updated to the length of the displayed status message.
 /// - s_disp_status_line: Updated to 2 after displaying the status message.
 ///
@@ -1186,9 +1182,9 @@ static void sel_display()
         erase_line(true);
     }
 
-    if (g_sel_item_index >= g_sel_page_item_cnt)
+    if (g_sel_page.item_index >= g_sel_page.page_item_cnt)
     {
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
     }
 
     if (s_disp_status_line == 1)
@@ -1204,7 +1200,7 @@ static void sel_status_msg(std::string_view cp)
 {
     if (g_can_home)
     {
-        goto_xy(0, g_sel_last_line + 1);
+        goto_xy(0, g_sel_page.last_line + 1);
     }
     else
     {
@@ -1215,7 +1211,7 @@ static void sel_status_msg(std::string_view cp)
         std::fwrite(cp.data(), 1, cp.size(), stdout);
     }
     g_term_col = static_cast<int>(cp.size());
-    goto_xy(0,g_sel_items[g_sel_item_index].line);
+    goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
     std::fflush(stdout);     // otherwise may not be visible
     s_disp_status_line = 2;
 }
@@ -1234,7 +1230,7 @@ static void sel_status_msg(std::string_view cp)
 /// - s_removed_prompt: Updated to manage the state of removed prompts.
 /// - g_spin_char: Updated to display the current spin character.
 /// - s_disp_status_line: Updated to manage the status line display state.
-/// - g_sel_item_index: Updated to track the currently selected item index.
+/// - g_sel_page.item_index: Updated to track the currently selected item index.
 /// - s_sel_ret: Updated to store the return character from the selector.
 ///
 char sel_input()
@@ -1265,7 +1261,7 @@ position_selector:
     }
     if (g_can_home)
     {
-        goto_xy(0, g_sel_items[g_sel_item_index].line);
+        goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
     }
 
 reinp_selector:
@@ -1278,13 +1274,13 @@ reinp_selector:
     eat_typeahead();
     if (g_use_sel_num)
     {
-        g_spin_char = '0' + (g_sel_item_index + 1) / 10; // first digit
+        g_spin_char = '0' + (g_sel_page.item_index + 1) / 10; // first digit
     }
     else
     {
-        g_spin_char = g_sel_chars[g_sel_item_index];
+        g_spin_char = g_sel_page.chars[g_sel_page.item_index];
     }
-    const std::string command = read_selector_command(s_page_char, s_end_char, g_sel_at_end);
+    const std::string command = read_selector_command(s_page_char, s_end_char, g_sel_page.at_end);
     int               ch = command.empty() ? '\0' : command.front();
     if (errno)
     {
@@ -1294,7 +1290,7 @@ reinp_selector:
     {
         if (g_can_home)
         {
-            goto_xy(0,g_sel_last_line+1);
+            goto_xy(0, g_sel_page.last_line + 1);
             erase_line(false);
             if (g_term_line == g_tc_LINES-1)
             {
@@ -1303,7 +1299,7 @@ reinp_selector:
         }
         s_disp_status_line = 0;
     }
-    if (ch == '-' && g_sel_page_item_cnt)
+    if (ch == '-' && g_sel_page.page_item_cnt)
     {
         got_dash = 1;
         got_goto = 0;   // right action is not clear if both are true
@@ -1311,14 +1307,14 @@ reinp_selector:
         {
             if (!input_pending())
             {
-                j = range_start >= 0 ? range_start : g_sel_item_index + 1;
+                j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
                 if (g_use_sel_num)
                 {
                     sel_status_msg(fmt::format("Range: {}-", j));
                 }
                 else
                 {
-                    sel_status_msg(fmt::format("Range: {}-", g_sel_chars[j - 1]));
+                    sel_status_msg(fmt::format("Range: {}-", g_sel_page.chars[j - 1]));
                 }
             }
         }
@@ -1340,7 +1336,7 @@ reinp_selector:
         {
             if (g_can_home)
             {
-                goto_xy(0,g_sel_last_line+1);
+                goto_xy(0, g_sel_page.last_line + 1);
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
@@ -1372,7 +1368,7 @@ reinp_selector:
     {
         ch = '.';
     }
-    const std::size_t in_select = g_sel_chars.find(static_cast<char>(ch));
+    const std::size_t in_select = g_sel_page.chars.find(static_cast<char>(ch));
     if (g_use_sel_num && ch >= '0' && ch <= '9')
     {
         int ch_num1 = ch;
@@ -1381,7 +1377,7 @@ reinp_selector:
         {
             if (got_dash)
             {
-                j = range_start >= 0 ? range_start : g_sel_item_index + 1;
+                j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
                 sel_status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
             }
             else
@@ -1404,7 +1400,7 @@ reinp_selector:
         {
             if (g_can_home)
             {
-                goto_xy(0,g_sel_last_line+1);
+                goto_xy(0, g_sel_page.last_line + 1);
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
@@ -1427,7 +1423,7 @@ reinp_selector:
             //
             if (got_dash)
             {
-                j = range_start >= 0 ? range_start : g_sel_item_index + 1;
+                j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
                 sel_status_msg(fmt::format("Range: {}- ", j));
                 goto reinp_selector;
             }
@@ -1448,7 +1444,7 @@ reinp_selector:
             sel_number = (ch_num1 - '0');
         }
         j = sel_number-1;
-        if ((j < 0) || (j >= g_sel_page_item_cnt))
+        if ((j < 0) || (j >= g_sel_page.page_item_cnt))
         {
             dingaling();
             sel_status_msg(fmt::format("No item {} on this page.", sel_number));
@@ -1457,14 +1453,14 @@ reinp_selector:
         else if (got_goto || (g_sel_num_goto && !got_dash))
         {
             // (but only do always-goto if there was not a dash)
-            g_sel_item_index = j;
+            g_sel_page.item_index = j;
             range_start = j + 1;
             goto position_selector;
         }
         else if (got_dash)
         {
         }
-        else if (g_sel_items[j].sel == 1)
+        else if (g_sel_page.items[j].sel == 1)
         {
             action = (g_sel.rereading ? 'k' : '-');
         }
@@ -1476,7 +1472,7 @@ reinp_selector:
     else if (in_select != std::string::npos && !g_use_sel_num)
     {
         j = static_cast<int>(in_select);
-        if (j >= g_sel_page_item_cnt)
+        if (j >= g_sel_page.page_item_cnt)
         {
             dingaling();
             sel_status_msg(fmt::format("No item '{}' on this page.", static_cast<char>(ch)));
@@ -1484,14 +1480,14 @@ reinp_selector:
         }
         else if (got_goto)
         {
-            g_sel_item_index = j;
+            g_sel_page.item_index = j;
             range_start = j + 1;
             goto position_selector;
         }
         else if (got_dash)
         {
         }
-        else if (g_sel_items[j].sel == 1)
+        else if (g_sel_page.items[j].sel == 1)
         {
             action = (g_sel.rereading ? 'k' : '-');
         }
@@ -1502,15 +1498,15 @@ reinp_selector:
     }
     else if (ch == '*' && g_sel.mode == SM_ARTICLE)
     {
-        if (!g_sel_page_item_cnt)
+        if (!g_sel_page.page_item_cnt)
         {
             dingaling();
         }
         else
         {
             range_start = -1;
-            Article *ap = g_sel_items[g_sel_item_index].u.ap;
-            if (g_sel_items[g_sel_item_index].sel == 1)
+            Article *ap = g_sel_page.items[g_sel_page.item_index].u.ap;
+            if (g_sel_page.items[g_sel_page.item_index].sel == 1)
             {
                 ap->m_subj->deselect_subject();
             }
@@ -1524,8 +1520,8 @@ reinp_selector:
     }
     else if (ch == 'y' || ch == '.' || ch == '*' || ch == Ctl('t'))
     {
-        j = g_sel_item_index;
-        if (g_sel_page_item_cnt && g_sel_items[j].sel == 1)
+        j = g_sel_page.item_index;
+        if (g_sel_page.page_item_cnt && g_sel_page.items[j].sel == 1)
         {
             action = (g_sel.rereading ? 'k' : '-');
         }
@@ -1540,42 +1536,42 @@ reinp_selector:
     }
     else if (ch == 'k' || ch == 'j' || ch == ',')
     {
-        j = g_sel_item_index;
+        j = g_sel_page.item_index;
         action = 'k';
     }
     else if (ch == 'm' || ch == '|')
     {
-        j = g_sel_item_index;
+        j = g_sel_page.item_index;
         action = '-';
     }
     else if (ch == 'M' && g_in_ng)
     {
-        j = g_sel_item_index;
+        j = g_sel_page.item_index;
         action = 'M';
     }
     else if (ch == '@')
     {
         range_start = -1;
-        g_sel_item_index = 0;
-        j = g_sel_page_item_cnt-1;
+        g_sel_page.item_index = 0;
+        j = g_sel_page.page_item_cnt - 1;
         got_dash = 1;
         action = '@';
     }
     else if (ch == '[' || ch == 'p')
     {
         range_start = -1;
-        if (--g_sel_item_index < 0)
+        if (--g_sel_page.item_index < 0)
         {
-            g_sel_item_index = g_sel_page_item_cnt ? g_sel_page_item_cnt - 1 : 0;
+            g_sel_page.item_index = g_sel_page.page_item_cnt ? g_sel_page.page_item_cnt - 1 : 0;
         }
         goto position_selector;
     }
     else if (ch == ']' || ch == 'n')
     {
         range_start = -1;
-        if (++g_sel_item_index >= g_sel_page_item_cnt)
+        if (++g_sel_page.item_index >= g_sel_page.page_item_cnt)
         {
-            g_sel_item_index = 0;
+            g_sel_page.item_index = 0;
         }
         goto position_selector;
     }
@@ -1623,7 +1619,7 @@ reinp_selector:
             update_page();
             if (g_can_home)
             {
-                goto_xy(0, g_sel_last_line);
+                goto_xy(0, g_sel_page.last_line);
             }
             goto reask_selector;
 
@@ -1654,7 +1650,7 @@ reinp_selector:
         }
     }
 
-    if (!g_sel_page_item_cnt)
+    if (!g_sel_page.page_item_cnt)
     {
         dingaling();
         goto position_selector;
@@ -1663,28 +1659,28 @@ reinp_selector:
     // The user manipulated one of the letters -- handle it.
     if (!got_dash)
     {
-        g_sel_item_index = j;
+        g_sel_page.item_index = j;
     }
     else
     {
-        const int after_start = range_start >= 0 ? range_start : g_sel_item_index + 1;
+        const int after_start = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
         if (j < after_start)
         {
-            g_sel_item_index = j;
+            g_sel_page.item_index = j;
             j = after_start - 1;
         }
     }
 
-    if (++j == g_sel_page_item_cnt)
+    if (++j == g_sel_page.page_item_cnt)
     {
         j = 0;
     }
     do
     {
-        int sel = g_sel_items[g_sel_item_index].sel;
+        int sel = g_sel_page.items[g_sel_page.item_index].sel;
         if (g_can_home)
         {
-            goto_xy(0, g_sel_items[g_sel_item_index].line);
+            goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
         }
         if (action == '@')
         {
@@ -1708,11 +1704,11 @@ reinp_selector:
         switch (ch)
         {
         case '+':
-            if (select_item(g_sel_items[g_sel_item_index].u))
+            if (select_item(g_sel_page.items[g_sel_page.item_index].u))
             {
-                output_sel(g_sel_item_index, 1, true);
+                output_sel(g_sel_page.item_index, 1, true);
             }
-            if (g_term_line >= g_sel_last_line)
+            if (g_term_line >= g_sel_page.last_line)
             {
                 sel_display();
                 goto reask_selector;
@@ -1724,15 +1720,15 @@ reinp_selector:
             bool sel_reread_save = g_sel.rereading;
             if (ch == 'M')
             {
-                delay_return_item(g_sel_items[g_sel_item_index].u);
+                delay_return_item(g_sel_page.items[g_sel_page.item_index].u);
             }
             g_sel.rereading = ch != '-';
-            if (deselect_item(g_sel_items[g_sel_item_index].u))
+            if (deselect_item(g_sel_page.items[g_sel_page.item_index].u))
             {
-                output_sel(g_sel_item_index, ch == '-' ? 0 : 2, true);
+                output_sel(g_sel_page.item_index, ch == '-' ? 0 : 2, true);
             }
             g_sel.rereading = sel_reread_save;
-            if (g_term_line >= g_sel_last_line)
+            if (g_term_line >= g_sel_page.last_line)
             {
                 sel_display();
                 goto reask_selector;
@@ -1745,15 +1741,15 @@ reinp_selector:
             carriage_return();
         }
         std::fflush(stdout);
-        if (++g_sel_item_index == g_sel_page_item_cnt)
+        if (++g_sel_page.item_index == g_sel_page.page_item_cnt)
         {
-            g_sel_item_index = 0;
+            g_sel_page.item_index = 0;
         }
-    } while (g_sel_item_index != j);
-    range_start = g_sel_item_index ? g_sel_item_index : g_sel_page_item_cnt;
+    } while (g_sel_page.item_index != j);
+    range_start = g_sel_page.item_index ? g_sel_page.item_index : g_sel_page.page_item_cnt;
     if (s_force_sel_pos >= 0)
     {
-        g_sel_item_index = s_force_sel_pos;
+        g_sel_page.item_index = s_force_sel_pos;
     }
     goto position_selector;
 }
@@ -1773,16 +1769,17 @@ static void sel_prompt()
     draw_mouse_bar(g_tc_COLS,false);
     if (g_can_home)
     {
-        goto_xy(0, g_sel_last_line);
+        goto_xy(0, g_sel_page.last_line);
     }
 #ifdef MAIL_CALL
     set_mail(false);
 #endif
     const std::string page_prompt =
-        g_sel_at_end
-            ? fmt::format("{} [{}{}] --", !g_sel_prior_obj_cnt ? "All" : "Bot", s_end_char, s_page_char)
-            : fmt::format("{}{}% [{}{}] --", !g_sel_prior_obj_cnt ? "Top " : "",
-                          static_cast<long>((g_sel_prior_obj_cnt + g_sel_page_obj_cnt) * 100 / g_sel_total_obj_cnt),
+        g_sel_page.at_end
+            ? fmt::format("{} [{}{}] --", !g_sel_page.prior_obj_cnt ? "All" : "Bot", s_end_char, s_page_char)
+            : fmt::format("{}{}% [{}{}] --", !g_sel_page.prior_obj_cnt ? "Top " : "",
+                          static_cast<long>((g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt) * 100 /
+                                            g_sel_page.total_obj_cnt),
                           s_page_char, s_end_char);
     const std::string mail_call = do_interp(g_mail_call);
     const std::string prompt =
@@ -2041,7 +2038,7 @@ static bool deselect_item(Selection u)
 /// - OptionCatalog: Used to retrieve the available options and their properties.
 /// - g_option_flags: Updated to reflect the selection state of the option.
 /// - g_selected_count: Incremented or decremented based on the selection state of the option.
-/// - g_sel_last_line: Used to position the cursor for displaying prompts.
+/// - g_sel_page.last_line: Used to position the cursor for displaying prompts.
 /// - s_clean_screen: Updated to indicate whether the screen should be cleared after input.
 ///
 static bool select_option(OptionIndex i)
@@ -2058,7 +2055,7 @@ static bool select_option(OptionIndex i)
     {
         g_option_flags[row] ^= OF_SEL;
         init_pages(FILL_LAST_PAGE);
-        g_term_line = g_sel_last_line;
+        g_term_line = g_sel_page.last_line;
         return false;
     }
     if (!catalog.is_option(row))
@@ -2066,7 +2063,7 @@ static bool select_option(OptionIndex i)
         return false;
     }
 
-    goto_xy(0,g_sel_last_line);
+    goto_xy(0, g_sel_page.last_line);
     erase_line(g_mouse_bar_cnt > 0);     // erase the prompt
     color_object(COLOR_CMD, true);
     const OptionIndex      option = catalog.option(row);
@@ -2111,11 +2108,11 @@ static bool select_option(OptionIndex i)
         up_line();
         erase_line(true);
         sel_prompt();
-        goto_xy(0,g_sel_items[g_sel_item_index].line);
+        goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
         if (changed)
         {
             erase_line(false);
-            display_option(row,g_sel_item_index);
+            display_option(row, g_sel_page.item_index);
             up_line();
         }
     }
@@ -2136,8 +2133,8 @@ static bool select_option(OptionIndex i)
 ///
 /// @globals
 /// - g_selected_count: May be incremented to reflect restored selections.
-/// - g_sel_last_ap: Set to nullptr when un-killing subjects in rereading mode.
-/// - g_sel_last_sp: Set to nullptr when un-killing subjects in rereading mode.
+/// - g_sel_page.last_ap: Set to nullptr when un-killing subjects in rereading mode.
+/// - g_sel_page.last_sp: Set to nullptr when un-killing subjects in rereading mode.
 ///
 static void sel_cleanup()
 {
@@ -2215,8 +2212,8 @@ static void sel_cleanup()
     default:
         if (g_sel.rereading)
         {
-            g_sel_last_ap = nullptr;
-            g_sel_last_sp = nullptr;
+            g_sel_page.last_art = nullptr;
+            g_sel_page.last_subj = nullptr;
             for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
             {
                 sp->unkill_subject();
@@ -2279,7 +2276,7 @@ static bool mark_del_as_read(Article &article, int arg)
 /// - `g_page_line`
 /// - `g_newsgroup_ptr` (may be set to `nullptr` when no newsgroup selected)
 /// - `g_output_chase_phrase`
-/// - `g_sel_item_index`
+/// - `g_sel_page.item_index`
 /// - `s_removed_prompt`
 /// - `g_one_command`
 /// - `s_sel_ret`
@@ -2290,16 +2287,16 @@ DisplayState sel_command(char_int ch)
     DisplayState ret;
     if (g_can_home)
     {
-        goto_xy(0, g_sel_last_line);
+        goto_xy(0, g_sel_page.last_line);
     }
     s_clean_screen = true;
     g_term_scrolled = 0;
     g_page_line = 1;
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        if (g_sel_item_index < g_sel_page_item_cnt)
+        if (g_sel_page.item_index < g_sel_page.page_item_cnt)
         {
-            set_newsgroup(g_sel_items[g_sel_item_index].u.np);
+            set_newsgroup(g_sel_page.items[g_sel_page.item_index].u.np);
         }
         else
         {
@@ -2311,7 +2308,7 @@ do_command:
     switch (ch)
     {
     case '>':
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         if (next_page())
         {
             return DS_DISPLAY;
@@ -2319,7 +2316,7 @@ do_command:
         break;
 
     case '<':
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         if (prev_page())
         {
             return DS_DISPLAY;
@@ -2327,7 +2324,7 @@ do_command:
         break;
 
     case '^':  case Ctl('r'):
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         if (first_page())
         {
             return DS_DISPLAY;
@@ -2335,7 +2332,7 @@ do_command:
         break;
 
     case '$':
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         if (last_page())
         {
             return DS_DISPLAY;
@@ -2354,11 +2351,11 @@ do_command:
         break;
 
     case '\r':  case '\n':
-        if (!g_selected_count && g_sel_page_item_cnt)
+        if (!g_selected_count && g_sel_page.page_item_cnt)
         {
-            if (g_sel.rereading || g_sel_items[g_sel_item_index].sel != 2)
+            if (g_sel.rereading || g_sel_page.items[g_sel_page.item_index].sel != 2)
             {
-                select_item(g_sel_items[g_sel_item_index].u);
+                select_item(g_sel_page.items[g_sel_page.item_index].u);
             }
         }
         return DS_QUIT;
@@ -2398,7 +2395,7 @@ do_command:
             g_one_command = true;
             perform(command, false);
             g_one_command = false;
-            if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
+            if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
             {
                 s_clean_screen = false;
             }
@@ -2518,7 +2515,7 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
     if (g_page_line == 1)
     {
         s_disp_status_line = 1;
-        if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
+        if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
         {
             s_clean_screen = false;
         }
@@ -2703,7 +2700,7 @@ static char another_command(char_int ch)
         if (ch > 0)
         {
             // try to optimize the screen update for some commands.
-            if (g_sel_chars.find(static_cast<char>(ch)) == std::string::npos //
+            if (g_sel_page.chars.find(static_cast<char>(ch)) == std::string::npos //
                 && (SPECIAL_CMD_LETTERS.find(static_cast<char>(ch)) != std::string_view::npos || ch == Ctl('k')))
             {
                 s_sel_ret = ch;
@@ -2727,11 +2724,11 @@ static char another_command(char_int ch)
 ///
 /// @globals
 /// - g_sel.rereading: Toggled for rereading mode.
-/// - g_sel_page_sp: Set to nullptr for page state changes.
-/// - g_sel_page_app: Set to nullptr for page state changes.
+/// - g_sel_page.page_sp: Set to nullptr for page state changes.
+/// - g_sel_page.page_app: Set to nullptr for page state changes.
 /// - g_sel.mode: May be changed when switching selector modes.
 /// - g_sel.thread_mode: Used when switching to thread mode.
-/// - g_sel_item_index: Reset to 0 for some commands.
+/// - g_sel_page.item_index: Reset to 0 for some commands.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_msg: Updated with status or help messages.
 /// - s_disp_status_line: Set to 1 or 0 for status line control.
@@ -2746,8 +2743,8 @@ DisplayState article_commands(char_int ch)
     case 'U':
         sel_cleanup();
         g_sel.rereading = !g_sel.rereading;
-        g_sel_page_sp = nullptr;
-        g_sel_page_app = nullptr;
+        g_sel_page.page_subj = nullptr;
+        g_sel_page.page_art = nullptr;
         if (!cache_range(g_sel.rereading ? g_abs_first : g_first_art, g_last_art))
         {
             g_sel.rereading = !g_sel.rereading;
@@ -2755,15 +2752,15 @@ DisplayState article_commands(char_int ch)
         return DS_RESTART;
 
     case '#':
-        if (g_sel_page_item_cnt)
+        if (g_sel_page.page_item_cnt)
         {
             for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
             {
                 sp->m_flags &= ~SF_SEL;
             }
             g_selected_count = 0;
-            deselect_item(g_sel_items[g_sel_item_index].u);
-            select_item(g_sel_items[g_sel_item_index].u);
+            deselect_item(g_sel_page.items[g_sel_page.item_index].u);
+            select_item(g_sel_page.items[g_sel_page.item_index].u);
             if (!g_keep_the_group_static)
             {
                 g_keep_the_group_static = 2;
@@ -2791,8 +2788,8 @@ DisplayState article_commands(char_int ch)
         }
         s_disp_status_line = 1;
         count_subjects(CS_NORM);
-        g_sel_page_sp = nullptr;
-        g_sel_page_app = nullptr;
+        g_sel_page.page_subj = nullptr;
+        g_sel_page.page_art = nullptr;
         init_pages(PRESERVE_PAGE);
         return DS_DISPLAY;
 
@@ -2804,15 +2801,15 @@ DisplayState article_commands(char_int ch)
         if (g_sel.mode == SM_ARTICLE)
         {
             g_sel.set_selector(g_sel.thread_mode, SS_MAGIC_NUMBER);
-            g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->m_subj : nullptr;
+            g_sel_page.page_subj = g_sel_page.page_art ? g_sel_page.page_art[0]->m_subj : nullptr;
         }
         else
         {
             g_sel.set_selector(SM_ARTICLE, SS_MAGIC_NUMBER);
-            g_sel_page_app = nullptr;
+            g_sel_page.page_art = nullptr;
         }
         count_subjects(CS_NORM);
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -2945,8 +2942,8 @@ reask_sort:
         }
         g_sel.set_sort(g_sel.mode, command_char);
         count_subjects(CS_NORM);
-        g_sel_page_sp = nullptr;
-        g_sel_page_app = nullptr;
+        g_sel_page.page_subj = nullptr;
+        g_sel_page.page_art = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -2958,8 +2955,8 @@ reask_sort:
         }
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         count_subjects(CS_NORM);
-        g_sel_page_sp = nullptr;
-        g_sel_page_app = nullptr;
+        g_sel_page.page_subj = nullptr;
+        g_sel_page.page_art = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -2970,10 +2967,10 @@ reask_sort:
         }
         g_sel.exclusive = !g_sel.exclusive;
         count_subjects(CS_NORM);
-        g_sel_page_sp = nullptr;
-        g_sel_page_app = nullptr;
+        g_sel_page.page_subj = nullptr;
+        g_sel_page.page_art = nullptr;
         init_pages(FILL_LAST_PAGE);
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         return DS_DISPLAY;
 
     case 'X':  case 'D':  case 'J':
@@ -2985,7 +2982,7 @@ reask_sort:
                 Article **limit = article_ptr_list_end();
                 if (ch == 'D')
                 {
-                    app = g_sel_page_app;
+                    app = g_sel_page.page_art;
                 }
                 else
                 {
@@ -3002,7 +2999,7 @@ reask_sort:
                         }
                     }
                     app++;
-                    if (ch == 'D' && app == g_sel_next_app)
+                    if (ch == 'D' && app == g_sel_page.next_art)
                     {
                         break;
                     }
@@ -3013,7 +3010,7 @@ reask_sort:
                 Subject* sp;
                 if (ch == 'D')
                 {
-                    sp = g_sel_page_sp;
+                    sp = g_sel_page.page_subj;
                 }
                 else
                 {
@@ -3036,7 +3033,7 @@ reask_sort:
                         }
                     }
                     sp = sp->m_next;
-                    if (ch == 'D' && sp == g_sel_next_sp)
+                    if (ch == 'D' && sp == g_sel_page.next_subj)
                     {
                         break;
                     }
@@ -3046,7 +3043,7 @@ reask_sort:
             if (g_obj_count && (ch == 'J' || (ch == 'D' && !g_selected_count)))
             {
                 init_pages(FILL_LAST_PAGE);
-                g_sel_item_index = 0;
+                g_sel_page.item_index = 0;
                 return DS_DISPLAY;
             }
             if (!g_art_ptr_list.empty() && g_obj_count)
@@ -3075,7 +3072,7 @@ reask_sort:
         // FALL THROUGH
 
     case 'A':
-        if (!g_sel_page_item_cnt)
+        if (!g_sel_page.page_item_cnt)
         {
             dingaling();
             break;
@@ -3084,11 +3081,11 @@ reask_sort:
         s_removed_prompt = RP_ALL;
         if (g_sel.mode == SM_ARTICLE)
         {
-            g_nav.target.art = g_sel_items[g_sel_item_index].u.ap;
+            g_nav.target.art = g_sel_page.items[g_sel_page.item_index].u.ap;
         }
         else
         {
-            Subject* sp = g_sel_items[g_sel_item_index].u.sp;
+            Subject *sp = g_sel_page.items[g_sel_page.item_index].u.sp;
             if (g_sel.mode == SM_THREAD)
             {
                 while (!sp->m_misc)
@@ -3136,15 +3133,15 @@ reask_sort:
         return DS_QUIT;
 
     case ':':
-        if (g_sel_page_item_cnt)
+        if (g_sel_page.page_item_cnt)
         {
             if (g_sel.mode == SM_ARTICLE)
             {
-                g_nav.target.art = g_sel_items[g_sel_item_index].u.ap;
+                g_nav.target.art = g_sel_page.items[g_sel_page.item_index].u.ap;
             }
             else
             {
-                Subject* sp = g_sel_items[g_sel_item_index].u.sp;
+                Subject *sp = g_sel_page.items[g_sel_page.item_index].u.sp;
                 if (g_sel.mode == SM_THREAD)
                 {
                     while (!sp->m_misc)
@@ -3235,7 +3232,7 @@ reask_sort:
                     break;
                 }
             }
-            g_sel_item_index = 0;
+            g_sel_page.item_index = 0;
             // Recount, in case something has changed.
             count_subjects(g_sel.rereading ? CS_NORM : CS_UNSELECT);
 
@@ -3264,8 +3261,8 @@ reask_sort:
             count_subjects(CS_UNSELECT);
             if (ch != 'u' && g_obj_count)
             {
-                g_sel_page_sp = nullptr;
-                g_sel_page_app = nullptr;
+                g_sel_page.page_subj = nullptr;
+                g_sel_page.page_art = nullptr;
                 init_pages(FILL_LAST_PAGE);
                 return DS_DISPLAY;
             }
@@ -3313,9 +3310,9 @@ reask_sort:
 ///
 /// @globals
 /// - g_sel.rereading: Toggled for rereading mode.
-/// - g_sel_page_np: Set to nullptr for page state changes.
+/// - g_sel_page.page_np: Set to nullptr for page state changes.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
-/// - g_sel_item_index: Reset to 0 for some commands.
+/// - g_sel_page.item_index: Reset to 0 for some commands.
 /// - g_msg: Updated with status or help messages.
 /// - s_disp_status_line: Set to 1 for status line control.
 /// - s_clean_screen: Set to false to prevent screen clearing.
@@ -3336,7 +3333,7 @@ DisplayState newsgroup_commands(char_int ch)
     case 'U':
         sel_cleanup();
         g_sel.rereading = !g_sel.rereading;
-        g_sel_page_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
         return DS_RESTART;
 
     case 'L':
@@ -3354,7 +3351,7 @@ DisplayState newsgroup_commands(char_int ch)
             NewsgroupData *np;
             if (ch == 'D')
             {
-                np = g_sel_page_np;
+                np = g_sel_page.page_ngd;
             }
             else
             {
@@ -3372,7 +3369,7 @@ DisplayState newsgroup_commands(char_int ch)
                     np->m_flags &= ~(NF_DEL | NF_SEL);
                 }
                 np = newsgroup_next(np);
-                if (ch == 'D' && np == g_sel_next_np)
+                if (ch == 'D' && np == g_sel_page.next_ngd)
                 {
                     break;
                 }
@@ -3380,9 +3377,9 @@ DisplayState newsgroup_commands(char_int ch)
             if (ch == 'J' || (ch == 'D' && !g_selected_count))
             {
                 init_pages(FILL_LAST_PAGE);
-                if (g_sel_total_obj_cnt)
+                if (g_sel_page.total_obj_cnt)
                 {
-                    g_sel_item_index = 0;
+                    g_sel_page.item_index = 0;
                     return DS_DISPLAY;
                 }
             }
@@ -3469,7 +3466,7 @@ reask_sort:
             return DS_ASK;
         }
         g_sel.set_sort(g_sel.mode, command_char);
-        g_sel_page_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -3480,7 +3477,7 @@ reask_sort:
             sel_cleanup();
         }
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
-        g_sel_page_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3490,9 +3487,9 @@ reask_sort:
             sel_cleanup();
         }
         g_sel.exclusive = !g_sel.exclusive;
-        g_sel_page_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
         init_pages(FILL_LAST_PAGE);
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         return DS_DISPLAY;
 
     case ':':
@@ -3555,16 +3552,16 @@ reask_sort:
             }
             if (!command_group)
             {
-                g_sel_item_index = 0;
+                g_sel_page.item_index = 0;
             }
 
-            const int            prior_population = g_sel_total_obj_cnt;
-            NewsgroupData *const prior_page = g_sel_page_np;
+            const int            prior_population = g_sel_page.total_obj_cnt;
+            NewsgroupData *const prior_page = g_sel_page.page_ngd;
             if (sel_perform_change(g_newsgroup_to_read.value_of(), "newsgroup"))
             {
                 const int term_line = g_term_line;
                 init_pages(PRESERVE_PAGE);
-                if (g_sel_total_obj_cnt == prior_population && g_sel_page_np == prior_page)
+                if (g_sel_page.total_obj_cnt == prior_population && g_sel_page.page_ngd == prior_page)
                 {
                     Selection no_search{};
                     no_search.op = OI_NONE;
@@ -3583,7 +3580,7 @@ reask_sort:
                 }
                 else
                 {
-                    g_sel_item_index = 0;
+                    g_sel_page.item_index = 0;
                 }
             }
             if (s_clean_screen)
@@ -3599,9 +3596,9 @@ reask_sort:
     }
 
     case 'c':
-        if (g_sel_item_index < g_sel_page_item_cnt)
+        if (g_sel_page.item_index < g_sel_page.page_item_cnt)
         {
-            set_newsgroup(g_sel_items[g_sel_item_index].u.np);
+            set_newsgroup(g_sel_page.items[g_sel_page.item_index].u.np);
         }
         else
         {
@@ -3652,7 +3649,7 @@ reask_sort:
     {
         Selection u;
         InputNewsgroupResult ret;
-        bool was_at_top = !g_sel_prior_obj_cnt;
+        bool                 was_at_top = !g_sel_page.prior_obj_cnt;
         PUSH_SELECTOR();
         if (!(s_removed_prompt & RP_NEWLINE))
         {
@@ -3711,24 +3708,24 @@ reask_sort:
             {
                 return DS_RESTART;
             }
-            if (g_term_line == g_sel_last_line)
+            if (g_term_line == g_sel_page.last_line)
             {
                 newline();
             }
-            if (g_term_line != g_sel_last_line+1 || g_term_scrolled)
+            if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
             {
                 s_clean_screen = false;
             }
             break;
         }
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         init_pages(PRESERVE_PAGE);
         if (ret == ING_SPECIAL && g_newsgroup_ptr && g_newsgroup_ptr->m_to_read < g_newsgroup_min_to_read)
         {
             if (!(g_newsgroup_ptr->m_flags & NF_INCLUDED))
             {
                 g_newsgroup_ptr->m_flags |= NF_INCLUDED;
-                g_sel_total_obj_cnt++;
+                g_sel_page.total_obj_cnt++;
             }
             ret = ING_DISPLAY;
         }
@@ -3774,10 +3771,10 @@ reask_sort:
 ///
 /// @globals
 /// - g_sel.rereading: Toggled for rereading mode.
-/// - g_sel_page_gp: Reset for page state changes.
-/// - g_sel_page_np: Set to nullptr for page state changes.
+/// - g_sel_page.page_gp: Reset for page state changes.
+/// - g_sel_page.page_np: Set to nullptr for page state changes.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
-/// - g_sel_item_index: Reset to 0 for some commands.
+/// - g_sel_page.item_index: Reset to 0 for some commands.
 /// - g_msg: Updated with status or help messages.
 /// - s_disp_status_line: Set to 1 for status line control.
 /// - s_clean_screen: Set to false to prevent screen clearing.
@@ -3842,8 +3839,8 @@ reask_sort:
             return DS_ASK;
         }
         g_sel.set_sort(g_sel.mode, command_char);
-        g_sel_page_gp = AddGroupIndex::None;
-        g_sel_next_gp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::None;
+        g_sel_page.next_grp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -3851,7 +3848,7 @@ reask_sort:
     case 'U':
         sel_cleanup();
         g_sel.rereading = !g_sel.rereading;
-        g_sel_page_gp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::None;
         return DS_RESTART;
 
     case 'R':
@@ -3860,7 +3857,7 @@ reask_sort:
             sel_cleanup();
         }
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
-        g_sel_page_gp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3870,7 +3867,7 @@ reask_sort:
             sel_cleanup();
         }
         g_sel.exclusive = !g_sel.exclusive;
-        g_sel_page_gp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3889,7 +3886,7 @@ reask_sort:
             AddGroupIndex index;
             if (ch == 'D')
             {
-                index = g_sel_page_gp;
+                index = g_sel_page.page_grp;
             }
             else
             {
@@ -3908,7 +3905,7 @@ reask_sort:
                     gp->m_flags &= ~(AGF_DEL|AGF_SEL);
                 }
                 index = g_add_groups.next(index);
-                if (ch == 'D' && index == g_sel_next_gp)
+                if (ch == 'D' && index == g_sel_page.next_grp)
                 {
                     break;
                 }
@@ -3916,9 +3913,9 @@ reask_sort:
             if (ch == 'J' || (ch == 'D' && !g_selected_count))
             {
                 init_pages(FILL_LAST_PAGE);
-                if (g_sel_total_obj_cnt)
+                if (g_sel_page.total_obj_cnt)
                 {
-                    g_sel_item_index = 0;
+                    g_sel_page.item_index = 0;
                     return DS_DISPLAY;
                 }
             }
@@ -3982,7 +3979,7 @@ reask_sort:
                     break;
                 }
             }
-            g_sel_item_index = 0;
+            g_sel_page.item_index = 0;
 
             if (sel_perform_change(g_newsgroup_to_read.value_of(), "newsgroup"))
             {
@@ -4053,7 +4050,7 @@ static DisplayState unsubscribed_group_commands(char_int ch)
             error_msg(error);
             return DS_DISPLAY;
         }
-        g_sel_item_index = 0;
+        g_sel_page.item_index = 0;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -4086,7 +4083,7 @@ static DisplayState unsubscribed_group_commands(char_int ch)
 /// @globals
 /// - g_sel.rereading: Checked to determine if rereading mode is active.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
-/// - g_sel_page_mp: Set to nullptr for page state changes.
+/// - g_sel_page.page_mp: Set to nullptr for page state changes.
 ///
 static DisplayState multirc_commands(char_int ch)
 {
@@ -4094,7 +4091,7 @@ static DisplayState multirc_commands(char_int ch)
     {
     case 'R':
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
-        g_sel_page_mp = nullptr;
+        g_sel_page.page_mrc = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4104,7 +4101,7 @@ static DisplayState multirc_commands(char_int ch)
             sel_cleanup();
         }
         g_sel.exclusive = !g_sel.exclusive;
-        g_sel_page_mp = nullptr;
+        g_sel_page.page_mrc = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4143,7 +4140,7 @@ static DisplayState multirc_commands(char_int ch)
 /// @globals
 /// - g_sel.rereading: Checked to determine if rereading mode is active.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
-/// - g_sel_page_op: Set to 1 for page state changes.
+/// - g_sel_page.page_op: Set to 1 for page state changes.
 /// - s_removed_prompt: Set to RP_ALL for prompt erasure.
 /// - s_disp_status_line: Set to 1 for status line control.
 /// - s_clean_screen: Set to false to prevent screen clearing.
@@ -4156,7 +4153,7 @@ static DisplayState option_commands(char_int ch)
     {
     case 'R':
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
-        g_sel_page_op = 1;
+        g_sel_page.page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4166,7 +4163,7 @@ static DisplayState option_commands(char_int ch)
             sel_cleanup();
         }
         g_sel.exclusive = !g_sel.exclusive;
-        g_sel_page_op = 1;
+        g_sel_page.page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4196,8 +4193,8 @@ static DisplayState option_commands(char_int ch)
             return DS_STATUS;
         }
         const OptionCatalog catalog;
-        int i = g_sel_items[g_sel_item_index].u.op;
-        int j = g_sel_items[g_sel_item_index].u.op;
+        int                 i = g_sel_page.items[g_sel_page.item_index].u.op;
+        int                 j = g_sel_page.items[g_sel_page.item_index].u.op;
         do
         {
             if (++i > g_obj_count.value_of())
@@ -4261,7 +4258,7 @@ static DisplayState option_commands(char_int ch)
 /// @globals
 /// - g_sel.rereading: Checked to determine if rereading mode is active.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
-/// - g_sel_page_univ_index: Set to 0 for page state changes.
+/// - g_sel_page.page_univ_index: Set to 0 for page state changes.
 /// - s_removed_prompt: Set to RP_ALL for prompt erasure.
 /// - s_clean_screen: Set to false to prevent screen clearing.
 /// - s_sel_ret: Set to the quit or special command character.
@@ -4272,7 +4269,7 @@ static DisplayState universal_commands(char_int ch)
     {
     case 'R':
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
-        g_sel_page_univ_index = {};
+        g_sel_page.page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4282,7 +4279,7 @@ static DisplayState universal_commands(char_int ch)
             sel_cleanup();
         }
         g_sel.exclusive = !g_sel.exclusive;
-        g_sel_page_univ_index = {};
+        g_sel_page.page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -4293,14 +4290,14 @@ static DisplayState universal_commands(char_int ch)
     case 'U':
         sel_cleanup();
         g_sel.rereading = !g_sel.rereading;
-        g_sel_page_univ_index = {};
+        g_sel_page.page_univ_index = {};
         return DS_RESTART;
 
     case Ctl('e'):
         univ_edit();
         univ_redo_file();
         sel_cleanup();
-        g_sel_page_univ_index = {};
+        g_sel_page.page_univ_index = {};
         return DS_RESTART;
 
     case 'h':
@@ -4359,7 +4356,7 @@ reask_sort:
             return DS_ASK;
         }
         g_sel.set_sort(g_sel.mode, command_char);
-        g_sel_page_univ_index = {};
+        g_sel_page.page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -4367,7 +4364,7 @@ reask_sort:
     case '~':
         univ_virt_pass();
         sel_cleanup();
-        g_sel_page_univ_index = {};
+        g_sel_page.page_univ_index = {};
         return DS_RESTART;
 
     default:
@@ -4436,9 +4433,9 @@ static void switch_dmode(std::string &dmode, std::size_t &dmode_index)
 static int find_line(int y)
 {
     int i;
-    for (i = 0; i < g_sel_page_item_cnt; i++)
+    for (i = 0; i < g_sel_page.page_item_cnt; i++)
     {
-        if (g_sel_items[i].line > y)
+        if (g_sel_page.items[i].line > y)
         {
             break;
         }
@@ -4472,7 +4469,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         {
         case 0:
         case 1:
-            if (y > 0 && y < g_sel_last_line)
+            if (y > 0 && y < g_sel_page.last_line)
             {
                 if (btn & 4)
                 {
@@ -4489,7 +4486,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     }
                     else
                     {
-                        push_char(g_sel_chars[s_force_sel_pos] | 0200);
+                        push_char(g_sel_page.chars[s_force_sel_pos] | 0200);
                     }
                     if (btn == 1)
                     {
@@ -4513,14 +4510,14 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             {
                 push_char('<' | 0200);
             }
-            else if (y >= g_sel_last_line)
+            else if (y >= g_sel_page.last_line)
             {
                 push_char(' ');
             }
             else
             {
                 int i = find_line(y);
-                if (g_sel_items[i].line != g_term_line)
+                if (g_sel_page.items[i].line != g_term_line)
                 {
                     if (g_use_sel_num)
                     {
@@ -4529,7 +4526,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     }
                     else
                     {
-                        push_char(g_sel_chars[i] | 0200);
+                        push_char(g_sel_page.chars[i] | 0200);
                     }
                     push_char('-' | 0200);
                     s_force_sel_pos = i;
@@ -4542,7 +4539,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             {
                 push_char('<' | 0200);
             }
-            else if (y >= g_sel_last_line)
+            else if (y >= g_sel_page.last_line)
             {
                 push_char('>' | 0200);
             }

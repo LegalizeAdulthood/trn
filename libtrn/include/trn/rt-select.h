@@ -71,10 +71,6 @@ extern SelectorPolicy    g_sel;
 extern ArticleUnread     g_selected_count;
 extern int               g_selected_subj_cnt;
 extern int               g_added_articles;
-extern std::string       g_sel_chars;
-extern int               g_sel_item_index;
-extern int               g_sel_last_line;
-extern bool              g_sel_at_end;
 extern int               g_keep_the_group_static; // -K
 extern std::string       g_newsrc_sel_cmds;
 extern std::string       g_add_sel_cmds;

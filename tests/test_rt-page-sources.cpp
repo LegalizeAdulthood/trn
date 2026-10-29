@@ -4,6 +4,7 @@
 #include "support/NewsgroupPageState.h"
 
 #include <trn/addng.h>
+#include <trn/rt-page.h>
 
 #include <iomanip>
 #include <sstream>
@@ -33,8 +34,8 @@ protected:
 
 private:
     std::vector<Multirc>    m_old_sources{std::move(g_multircs)};
-    Multirc                *m_old_page{g_sel_page_mp};
-    Multirc                *m_old_next{g_sel_next_mp};
+    Multirc                *m_old_page{g_sel_page.page_mrc};
+    Multirc                *m_old_next{g_sel_page.next_mrc};
     std::vector<DataSource> m_sources;
     std::vector<Newsrc>     m_newsrcs;
 };
@@ -47,15 +48,15 @@ void SourcePageDisplayState::SetUp()
     m_sources.reserve(32);
     m_newsrcs.reserve(32);
     g_sel.mode = SM_MULTIRC;
-    g_sel_page_mp = nullptr;
-    g_sel_next_mp = nullptr;
+    g_sel_page.page_mrc = nullptr;
+    g_sel_page.next_mrc = nullptr;
 }
 
 void SourcePageDisplayState::TearDown()
 {
     g_multircs = std::move(m_old_sources);
-    g_sel_page_mp = m_old_page;
-    g_sel_next_mp = m_old_next;
+    g_sel_page.page_mrc = m_old_page;
+    g_sel_page.next_mrc = m_old_next;
     NewsgroupPageDisplayState::TearDown();
 }
 
@@ -87,11 +88,11 @@ Multirc &SourcePageDisplayState::add_sources(int number, const std::vector<std::
 
 void SourcePageDisplayState::expect_row(int row, int number, int selected) const
 {
-    ASSERT_NE(nullptr, g_sel_items[row].u.mp);
-    EXPECT_EQ(multirc_ptr(number), g_sel_items[row].u.mp);
-    EXPECT_EQ(number, g_sel_items[row].u.mp->m_num);
-    EXPECT_EQ(row + 2, g_sel_items[row].line);
-    EXPECT_EQ(selected, g_sel_items[row].sel);
+    ASSERT_NE(nullptr, g_sel_page.items[row].u.mp);
+    EXPECT_EQ(multirc_ptr(number), g_sel_page.items[row].u.mp);
+    EXPECT_EQ(number, g_sel_page.items[row].u.mp->m_num);
+    EXPECT_EQ(row + 2, g_sel_page.items[row].line);
+    EXPECT_EQ(selected, g_sel_page.items[row].sel);
 }
 
 class SourceRowTest : public SourcePageDisplayState, public testing::WithParamInterface<bool>
@@ -166,8 +167,8 @@ protected:
 
 private:
     AddGroupTable m_old_groups{std::move(g_add_groups)};
-    AddGroupIndex m_old_page{g_sel_page_gp};
-    AddGroupIndex m_old_next{g_sel_next_gp};
+    AddGroupIndex m_old_page{g_sel_page.page_grp};
+    AddGroupIndex m_old_next{g_sel_page.next_grp};
 };
 
 void NewGroupPageDisplayState::SetUp()
@@ -175,8 +176,8 @@ void NewGroupPageDisplayState::SetUp()
     NewsgroupPageDisplayState::SetUp();
     g_add_groups = {};
     g_sel.mode = SM_ADD_GROUP;
-    g_sel_page_gp = AddGroupIndex::None;
-    g_sel_next_gp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::None;
+    g_sel_page.next_grp = AddGroupIndex::None;
     g_sel_grp_display_mode = "s";
     g_sel_grp_display_mode_index = 0;
     ASSERT_EQ(1, m_source.m_desc_sf.open({}, "", ""));
@@ -185,8 +186,8 @@ void NewGroupPageDisplayState::SetUp()
 void NewGroupPageDisplayState::TearDown()
 {
     g_add_groups = std::move(m_old_groups);
-    g_sel_page_gp = m_old_page;
-    g_sel_next_gp = m_old_next;
+    g_sel_page.page_grp = m_old_page;
+    g_sel_page.next_grp = m_old_next;
     NewsgroupPageDisplayState::TearDown();
 }
 
@@ -211,9 +212,9 @@ void NewGroupPageDisplayState::prepare_scope(bool rereading, char mode)
 
 void NewGroupPageDisplayState::expect_row(int row, AddGroupIndex identity, int selected) const
 {
-    EXPECT_EQ(identity, g_sel_items[row].u.gp);
-    EXPECT_EQ(row + 2, g_sel_items[row].line);
-    EXPECT_EQ(selected, g_sel_items[row].sel);
+    EXPECT_EQ(identity, g_sel_page.items[row].u.gp);
+    EXPECT_EQ(row + 2, g_sel_page.items[row].line);
+    EXPECT_EQ(selected, g_sel_page.items[row].sel);
 }
 
 class NewGroupRowTest : public NewGroupPageDisplayState,
@@ -279,16 +280,16 @@ TEST_P(SourceRowTest, labelsOnlyConfiguredSourcesAndPreservesTheirSelections)
     EXPECT_THAT(output, testing::HasSubstr("Newsrcs"));
     EXPECT_THAT(output, testing::HasSubstr(row_label(0, GetParam()) + "+   10 alpha\n"));
     EXPECT_THAT(output, testing::HasSubstr(row_label(1, GetParam()) + "    30 beta, gamma\n"));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, 10, 1);
     expect_row(1, 30);
     EXPECT_EQ(MF_SEL | MF_INCLUDED, g_multircs[0].m_flags);
     EXPECT_EQ(MF_NONE, g_multircs[1].m_flags);
     EXPECT_EQ(MF_INCLUDED, g_multircs[2].m_flags);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
-    EXPECT_EQ(2, g_sel_page_obj_cnt);
-    EXPECT_EQ(nullptr, g_sel_next_mp);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_page.next_mrc);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(SourceRowTest, displaysAnEmptyCatalogWithoutSelectableRows)
@@ -300,10 +301,10 @@ TEST_P(SourceRowTest, displaysAnEmptyCatalogWithoutSelectableRows)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr("Newsrcs"));
-    EXPECT_EQ(0, g_sel_page_item_cnt);
-    EXPECT_EQ(0, g_sel_page_obj_cnt);
-    EXPECT_EQ(0, g_sel_total_obj_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.total_obj_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -323,13 +324,13 @@ TEST_P(SourceRowTest, recoversEarlierRowsWhenTheFinalSourceDisappears)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("removed")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, 10);
     expect_row(1, 20);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    ASSERT_EQ(multirc_ptr(30), g_sel_next_mp);
-    EXPECT_FALSE(g_sel_next_mp->m_flags & MF_INCLUDED);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    ASSERT_EQ(multirc_ptr(30), g_sel_page.next_mrc);
+    EXPECT_FALSE(g_sel_page.next_mrc->m_flags & MF_INCLUDED);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelStyle, SourceRowTest, testing::Bool());
@@ -340,7 +341,7 @@ TEST_P(SourceListTest, abbreviatesOnlyTheUndisplayedTailOfTheSourceList)
 
     EXPECT_THAT(output, testing::HasSubstr("a    17 " + GetParam().expected + "\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("hidden")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 17);
     const Newsrc *newsrc = g_multircs[0].m_first;
     for (const std::string &name : GetParam().sources)
@@ -363,12 +364,12 @@ TEST_P(SourcePageEndingTest, retainsTheContinuationAfterAFullPage)
     EXPECT_THAT(output, testing::HasSubstr("first\n"));
     EXPECT_THAT(output, testing::HasSubstr("second\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("third")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, 10);
     expect_row(1, 30);
-    EXPECT_EQ(multirc_ptr(40), g_sel_next_mp);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(multirc_ptr(40), g_sel_page.next_mrc);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(SourcePageEndingTest, restartsLabelsOnTheFinalPageAndStopsAtItsEnd)
@@ -381,17 +382,17 @@ TEST_P(SourcePageEndingTest, restartsLabelsOnTheFinalPageAndStopsAtItsEnd)
 
     EXPECT_THAT(output, testing::HasSubstr(row_label(0, numeric) + "+   40 third\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("first\n")));
-    ASSERT_EQ(final_rows, g_sel_page_item_cnt);
+    ASSERT_EQ(final_rows, g_sel_page.page_item_cnt);
     expect_row(0, 40, 1);
     if (final_rows == 2)
     {
         expect_row(1, 50);
         EXPECT_THAT(output, testing::HasSubstr(row_label(1, numeric) + "    50 fourth\n"));
     }
-    EXPECT_EQ(2, g_sel_prior_obj_cnt);
-    EXPECT_EQ(final_rows, g_sel_page_obj_cnt);
-    EXPECT_EQ(nullptr, g_sel_next_mp);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(nullptr, g_sel_page.next_mrc);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -424,7 +425,7 @@ TEST_P(NewGroupRowTest, displaysEligibleGroupCountsDescriptionsAndPendingMarkers
 
     EXPECT_THAT(output, testing::HasSubstr("ADD newsgroups"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.hidden")));
-    ASSERT_EQ(4, g_sel_page_item_cnt);
+    ASSERT_EQ(4, g_sel_page.page_item_cnt);
     for (int row = 0; row < 4; ++row)
     {
         const int          marker = row == 1 ? (rereading ? 2 : 0) : row == 0 ? 1 : row;
@@ -452,11 +453,11 @@ TEST_P(NewGroupRowTest, displaysEligibleGroupCountsDescriptionsAndPendingMarkers
         EXPECT_EQ(&m_source, group.m_data_src);
         EXPECT_EQ(before[identities[row]].m_num, group.m_num);
     }
-    EXPECT_EQ(4, g_sel_total_obj_cnt);
-    EXPECT_EQ(4, g_sel_page_obj_cnt);
+    EXPECT_EQ(4, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(4, g_sel_page.page_obj_cnt);
     EXPECT_EQ(ArticleNum{4}, g_obj_count);
-    EXPECT_EQ(AddGroupIndex::None, g_sel_next_gp);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(ScopePresentationAndLabel, NewGroupRowTest,
@@ -473,7 +474,7 @@ TEST_P(NewGroupFallbackTest, displaysTheNameWhenNoUsableDescriptionIsCached)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr("a     3 comp.reading\n"));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, identity);
     EXPECT_EQ(ArticleNum{3}, g_add_groups[identity].m_to_read);
 }
@@ -491,12 +492,12 @@ TEST_P(NewGroupPageEndingTest, retainsTheNextGroupIdentityAfterAFullPage)
     EXPECT_THAT(output, testing::HasSubstr("comp.second\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.hidden")));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.third")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, m_ids[0], rereading ? 2 : 0);
     expect_row(1, m_ids[1], rereading ? 2 : 0);
-    EXPECT_EQ(m_ids[2], g_sel_next_gp);
-    EXPECT_EQ(2 + final_rows, g_sel_total_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(m_ids[2], g_sel_page.next_grp);
+    EXPECT_EQ(2 + final_rows, g_sel_page.total_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(NewGroupPageEndingTest, displaysTheFinalPageWithItsSelectionAndStops)
@@ -509,16 +510,16 @@ TEST_P(NewGroupPageEndingTest, displaysTheFinalPageWithItsSelectionAndStops)
 
     EXPECT_THAT(output, testing::HasSubstr(row_label(0, numeric) + "+    3 comp.third\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.first")));
-    ASSERT_EQ(final_rows, g_sel_page_item_cnt);
+    ASSERT_EQ(final_rows, g_sel_page.page_item_cnt);
     expect_row(0, m_ids[2], 1);
     if (final_rows == 2)
     {
         expect_row(1, m_ids[3], rereading ? 2 : 0);
     }
-    EXPECT_EQ(2, g_sel_prior_obj_cnt);
-    EXPECT_EQ(final_rows, g_sel_page_obj_cnt);
-    EXPECT_EQ(AddGroupIndex::None, g_sel_next_gp);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -542,10 +543,10 @@ TEST_P(NewGroupAlignedPageTest, alignsDescriptionsUsingOnlyTheVisiblePageNames)
     EXPECT_THAT(output, testing::HasSubstr(row_label(1, GetParam()) + "     2 comp.bb  Beta\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Hidden")));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Later")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, first);
     expect_row(1, second);
-    EXPECT_EQ(later, g_sel_next_gp);
+    EXPECT_EQ(later, g_sel_page.next_grp);
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelStyle, NewGroupAlignedPageTest, testing::Bool());
@@ -562,10 +563,10 @@ TEST_P(NewGroupLongNameTest, retainsTheFullGroupNameWhenItExceedsTheTerminalWidt
 
     const std::string visible = mode == 'm' ? "Description" : name + (mode == 'l' ? "  " : "");
     EXPECT_THAT(output, testing::HasSubstr("a    42 " + visible + "\n"));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, identity);
     EXPECT_EQ(name, g_add_groups[identity].m_name);
-    EXPECT_EQ(4, g_sel_last_line);
+    EXPECT_EQ(4, g_sel_page.last_line);
 }
 
 INSTANTIATE_TEST_SUITE_P(Presentation, NewGroupLongNameTest, testing::Values('s', 'm', 'l'));
@@ -584,11 +585,11 @@ TEST_P(NewGroupScopeTest, displaysOnlySelectedGroupsOnAnExclusivePage)
 
     EXPECT_THAT(output, testing::HasSubstr("a+    9 comp.selected\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.unselected")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, identity, 1);
-    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.total_obj_cnt);
     EXPECT_EQ(ArticleNum{2}, g_obj_count);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 TEST_P(NewGroupScopeTest, rendersAnEmptyScopeWithoutStaleCounts)
@@ -601,10 +602,10 @@ TEST_P(NewGroupScopeTest, rendersAnEmptyScopeWithoutStaleCounts)
 
     EXPECT_THAT(output, testing::HasSubstr("ADD newsgroups"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.opposite")));
-    EXPECT_EQ(0, g_sel_page_item_cnt);
-    EXPECT_EQ(0, g_sel_page_obj_cnt);
-    EXPECT_EQ(0, g_sel_total_obj_cnt);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.total_obj_cnt);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -626,13 +627,13 @@ TEST_P(NewGroupScopeTest, recoversEarlierGroupsAfterTheFinalPageLeavesTheScope)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("comp.removed")));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, first, rereading ? 2 : 0);
     expect_row(1, second, rereading ? 2 : 0);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    ASSERT_EQ(removed, g_sel_next_gp);
-    EXPECT_FALSE(g_add_groups[g_sel_next_gp].m_flags & AGF_INCLUDED);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    ASSERT_EQ(removed, g_sel_page.next_grp);
+    EXPECT_FALSE(g_add_groups[g_sel_page.next_grp].m_flags & AGF_INCLUDED);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, NewGroupScopeTest, testing::Bool());

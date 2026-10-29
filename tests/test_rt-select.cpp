@@ -157,17 +157,17 @@ private:
     AddGroupFlags            m_old_mask{g_sel.mask};
     ArticleUnread            m_old_selected_count{g_selected_count};
     int                      m_old_selected_subj_cnt{g_selected_subj_cnt};
-    Article                **m_old_page_app{g_sel_page_app};
-    Article                **m_old_next_app{g_sel_next_app};
-    Article                 *m_old_last_ap{g_sel_last_ap};
-    Subject                 *m_old_page_sp{g_sel_page_sp};
-    Subject                 *m_old_next_sp{g_sel_next_sp};
-    Subject                 *m_old_last_sp{g_sel_last_sp};
-    int                      m_old_total{g_sel_total_obj_cnt};
-    int                      m_old_prior{g_sel_prior_obj_cnt};
-    int                      m_old_page_objects{g_sel_page_obj_cnt};
-    int                      m_old_page_items{g_sel_page_item_cnt};
-    std::string              m_old_sel_chars{g_sel_chars};
+    Article                **m_old_page_app{g_sel_page.page_art};
+    Article                **m_old_next_app{g_sel_page.next_art};
+    Article                 *m_old_last_ap{g_sel_page.last_art};
+    Subject                 *m_old_page_sp{g_sel_page.page_subj};
+    Subject                 *m_old_next_sp{g_sel_page.next_subj};
+    Subject                 *m_old_last_sp{g_sel_page.last_subj};
+    int                      m_old_total{g_sel_page.total_obj_cnt};
+    int                      m_old_prior{g_sel_page.prior_obj_cnt};
+    int                      m_old_page_objects{g_sel_page.page_obj_cnt};
+    int                      m_old_page_items{g_sel_page.page_item_cnt};
+    std::string              m_old_sel_chars{g_sel_page.chars};
     int                      m_old_lines{g_tc_LINES};
     int                      m_old_columns{g_tc_COLS};
     int                      m_old_mouse_width{g_mouse_bar_width};
@@ -201,12 +201,12 @@ void ArticleSelectorCommandTest::SetUp()
     g_sel.group_listing = false;
     g_sel.sort = SS_NATURAL;
     g_sel.direction = 1;
-    g_sel_page_app = nullptr;
-    g_sel_next_app = nullptr;
-    g_sel_page_sp = nullptr;
-    g_sel_next_sp = nullptr;
-    g_sel_last_ap = nullptr;
-    g_sel_last_sp = nullptr;
+    g_sel_page.page_art = nullptr;
+    g_sel_page.next_art = nullptr;
+    g_sel_page.page_subj = nullptr;
+    g_sel_page.next_subj = nullptr;
+    g_sel_page.last_art = nullptr;
+    g_sel_page.last_subj = nullptr;
     g_int_count = 0;
     g_tc_LINES = 24;
     g_tc_COLS = 80;
@@ -263,17 +263,17 @@ void ArticleSelectorCommandTest::TearDown()
     g_sel.mask = m_old_mask;
     g_selected_count = m_old_selected_count;
     g_selected_subj_cnt = m_old_selected_subj_cnt;
-    g_sel_page_app = m_old_page_app;
-    g_sel_next_app = m_old_next_app;
-    g_sel_last_ap = m_old_last_ap;
-    g_sel_page_sp = m_old_page_sp;
-    g_sel_next_sp = m_old_next_sp;
-    g_sel_last_sp = m_old_last_sp;
-    g_sel_total_obj_cnt = m_old_total;
-    g_sel_prior_obj_cnt = m_old_prior;
-    g_sel_page_obj_cnt = m_old_page_objects;
-    g_sel_page_item_cnt = m_old_page_items;
-    g_sel_chars = m_old_sel_chars;
+    g_sel_page.page_art = m_old_page_app;
+    g_sel_page.next_art = m_old_next_app;
+    g_sel_page.last_art = m_old_last_ap;
+    g_sel_page.page_subj = m_old_page_sp;
+    g_sel_page.next_subj = m_old_next_sp;
+    g_sel_page.last_subj = m_old_last_sp;
+    g_sel_page.total_obj_cnt = m_old_total;
+    g_sel_page.prior_obj_cnt = m_old_prior;
+    g_sel_page.page_obj_cnt = m_old_page_objects;
+    g_sel_page.page_item_cnt = m_old_page_items;
+    g_sel_page.chars = m_old_sel_chars;
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
     g_mouse_bar_width = m_old_mouse_width;
@@ -291,8 +291,8 @@ void ArticleSelectorCommandTest::prepare_page(SelectionMode mode, bool rereading
     g_sel.rereading = rereading;
     rebuild_page();
     // Both cursor forms can survive a prior selector mode change.
-    g_sel_page_app = article_ptr_list_begin();
-    g_sel_page_sp = &m_subject;
+    g_sel_page.page_art = article_ptr_list_begin();
+    g_sel_page.page_subj = &m_subject;
 }
 
 void ArticleSelectorCommandTest::rebuild_page()
@@ -325,11 +325,11 @@ private:
     std::string_view                   m_old_tc_cr{g_tc_CR};
     std::string_view                   m_old_tc_ce{g_tc_CE};
     int                                m_old_errno{errno};
-    int                                m_old_index{g_sel_item_index};
-    int                                m_old_last_line{g_sel_last_line};
+    int                                m_old_index{g_sel_page.item_index};
+    int                                m_old_last_line{g_sel_page.last_line};
     int                                m_old_term_col{g_term_col};
     int                                m_old_mouse_count{g_mouse_bar_cnt};
-    bool                               m_old_at_end{g_sel_at_end};
+    bool                               m_old_at_end{g_sel_page.at_end};
     bool                               m_old_numeric{g_use_sel_num};
     bool                               m_old_can_home{g_can_home};
     bool                               m_old_default{g_s_default_cmd};
@@ -350,10 +350,10 @@ void SelectorInputTest::SetUp()
     g_tc_SE = "";
     g_tc_CR = "\r";
     g_tc_CE = "";
-    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    std::copy(std::begin(g_sel_page.items), std::end(g_sel_page.items), m_old_items.begin());
     drain_input();
     errno = 0;
-    g_sel_chars = "abc";
+    g_sel_page.chars = "abc";
     g_use_sel_num = false;
     g_can_home = false;
     g_mouse_bar_cnt = 0;
@@ -390,23 +390,23 @@ void SelectorInputTest::prepare_input(SelectionMode mode, bool rereading)
         m_newsgroup.m_to_read = 0;
     }
     prepare_page(mode, rereading);
-    g_sel_chars = "abc";
-    g_sel_page_item_cnt = 2;
-    g_sel_item_index = 0;
-    g_sel_last_line = 10;
-    g_sel_at_end = true;
+    g_sel_page.chars = "abc";
+    g_sel_page.page_item_cnt = 2;
+    g_sel_page.item_index = 0;
+    g_sel_page.last_line = 10;
+    g_sel_page.at_end = true;
     g_term_line = 0;
     for (int index = 0; index < 2; ++index)
     {
-        g_sel_items[index] = {};
-        g_sel_items[index].line = index + 1;
+        g_sel_page.items[index] = {};
+        g_sel_page.items[index].line = index + 1;
         if (mode == SM_ARTICLE)
         {
-            g_sel_items[index].u.ap = index ? second : first;
+            g_sel_page.items[index].u.ap = index ? second : first;
         }
         else
         {
-            g_sel_items[index].u.sp = index ? &m_second : &m_subject;
+            g_sel_page.items[index].u.sp = index ? &m_second : &m_subject;
         }
     }
 }
@@ -423,13 +423,13 @@ void SelectorInputTest::TearDown()
     g_tc_SE = m_old_tc_se;
     g_tc_CR = m_old_tc_cr;
     g_tc_CE = m_old_tc_ce;
-    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_page.items));
     errno = m_old_errno;
-    g_sel_item_index = m_old_index;
-    g_sel_last_line = m_old_last_line;
+    g_sel_page.item_index = m_old_index;
+    g_sel_page.last_line = m_old_last_line;
     g_term_col = m_old_term_col;
     g_mouse_bar_cnt = m_old_mouse_count;
-    g_sel_at_end = m_old_at_end;
+    g_sel_page.at_end = m_old_at_end;
     g_use_sel_num = m_old_numeric;
     g_can_home = m_old_can_home;
     g_s_default_cmd = m_old_default;
@@ -577,7 +577,7 @@ void SelectorCallbackTest::SetUp()
     g_in_ng = false;
     g_dm_count = 0;
     g_verbose = true;
-    g_term_line = g_sel_last_line + 1;
+    g_term_line = g_sel_page.last_line + 1;
     g_terminal_input_reader = [this](char *buffer, int)
     {
         if (m_input_index == m_input.size())
@@ -635,13 +635,13 @@ void SelectorCallbackTest::expect_next_command(char command)
 
 TEST_F(SelectorCallbackTest, cancelledModePromptOnlyRequestsAnotherPrompt)
 {
-    Article **const page = g_sel_page_app;
+    Article **const page = g_sel_page.page_art;
 
     const DisplayState result = dispatch('S', "q");
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_EQ(SM_ARTICLE, g_sel.mode);
-    EXPECT_EQ(page, g_sel_page_app);
+    EXPECT_EQ(page, g_sel_page.page_art);
     EXPECT_EQ(0, g_selected_count);
     EXPECT_NE(std::string::npos, m_output.find("Selector mode:"));
     expect_next_command('q');
@@ -689,8 +689,8 @@ TEST_F(SelectorCallbackTest, changingReadScopeRequestsASelectorRestart)
 
     EXPECT_EQ(DS_RESTART, result);
     EXPECT_TRUE(g_sel.rereading);
-    EXPECT_EQ(nullptr, g_sel_page_app);
-    EXPECT_EQ(nullptr, g_sel_page_sp);
+    EXPECT_EQ(nullptr, g_sel_page.page_art);
+    EXPECT_EQ(nullptr, g_sel_page.page_subj);
     expect_next_command('q');
 }
 
@@ -900,11 +900,11 @@ void SelectorEscapedArticleTest::SetUp()
     SelectorCallbackTest::SetUp();
     article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
     article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
-    g_sel_items[0].sel = 1;
-    g_sel_items[1].sel = 2;
-    g_sel_item_index = 1;
+    g_sel_page.items[0].sel = 1;
+    g_sel_page.items[1].sel = 2;
+    g_sel_page.item_index = 1;
     m_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
-    m_page = g_sel_page_app;
+    m_page = g_sel_page.page_art;
 }
 
 void SelectorEscapedArticleTest::expect_article_page()
@@ -915,11 +915,11 @@ void SelectorEscapedArticleTest::expect_article_page()
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(m_flags[0], article_ptr(ArticleNum{3})->m_flags);
     EXPECT_EQ(m_flags[1], article_ptr(ArticleNum{4})->m_flags);
-    EXPECT_EQ(m_page, g_sel_page_app);
-    EXPECT_EQ(1, g_sel_item_index);
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(article_ptr(ArticleNum{3}), g_sel_items[0].u.ap);
-    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[1].u.ap);
+    EXPECT_EQ(m_page, g_sel_page.page_art);
+    EXPECT_EQ(1, g_sel_page.item_index);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_sel_page.items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_page.items[1].u.ap);
 }
 
 char SelectorEscapedArticleTest::run_escaped_input(std::string_view commands)
@@ -975,8 +975,8 @@ INSTANTIATE_TEST_SUITE_P(BackspaceAndDelete, SelectorEscapedExitTest, testing::V
 TEST_F(SelectorEscapedArticleTest, escapeOverridesASelectionLetterAndRunsTheCommandOnce)
 {
     article_ptr(ArticleNum{4})->m_flags &= ~AF_DEL;
-    g_sel_items[1].sel = 0;
-    g_sel_chars = "Rab";
+    g_sel_page.items[1].sel = 0;
+    g_sel_page.chars = "Rab";
 
     const char result = run_escaped_input("\\Rq");
 
@@ -1345,13 +1345,13 @@ void SelectorShellTest::SetUp()
     m_env.expect_env_repeatedly("SHELL", TRN_TEST_PROCESS_TOOL);
     article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
     article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
-    g_sel_items[0].sel = 1;
-    g_sel_items[1].sel = 2;
-    g_sel_item_index = 1;
+    g_sel_page.items[0].sel = 1;
+    g_sel_page.items[1].sel = 2;
+    g_sel_page.item_index = 1;
     m_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
-    m_page = g_sel_page_app;
+    m_page = g_sel_page.page_art;
     m_article_location = g_nav.target;
-    g_term_line = g_sel_last_line;
+    g_term_line = g_sel_page.last_line;
     g_term_col = 0;
     g_tc_BC = "\b";
 }
@@ -1415,14 +1415,14 @@ void SelectorShellTest::expect_selector_preserved()
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(m_flags[0], article_ptr(ArticleNum{3})->m_flags);
     EXPECT_EQ(m_flags[1], article_ptr(ArticleNum{4})->m_flags);
-    EXPECT_EQ(m_page, g_sel_page_app);
-    EXPECT_EQ(1, g_sel_item_index);
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
-    EXPECT_EQ(article_ptr(ArticleNum{3}), g_sel_items[0].u.ap);
-    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[1].u.ap);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(2, g_sel_items[1].sel);
+    EXPECT_EQ(m_page, g_sel_page.page_art);
+    EXPECT_EQ(1, g_sel_page.item_index);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{3}), g_sel_page.items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_page.items[1].u.ap);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(2, g_sel_page.items[1].sel);
     EXPECT_FALSE(g_one_command);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
@@ -1483,8 +1483,8 @@ INSTANTIATE_TEST_SUITE_P(PrivateAndSpool, SelectorShellDirectoryTest, testing::B
 
 TEST_F(SelectorShellTest, scrolledEscapeDisplaysItsOutputAndRequestsAFullPage)
 {
-    g_sel_last_line = g_tc_LINES - 1;
-    g_term_line = g_sel_last_line;
+    g_sel_page.last_line = g_tc_LINES - 1;
+    g_term_line = g_sel_page.last_line;
 
     const DisplayState result = dispatch('!', shell_command(true) + "\n\n");
 
@@ -1499,7 +1499,7 @@ TEST_F(SelectorShellTest, scrolledEscapeDisplaysItsOutputAndRequestsAFullPage)
 
 TEST_F(SelectorShellTest, failedEscapeRestoresTheDirectoryAndSelectorBeforeAcceptingMoreInput)
 {
-    g_term_line = g_sel_last_line + 1;
+    g_term_line = g_sel_page.last_line + 1;
 
     const DisplayState result = dispatch('!', shell_command(true, true) + "\n\n");
 
@@ -1513,7 +1513,7 @@ TEST_F(SelectorShellTest, failedEscapeRestoresTheDirectoryAndSelectorBeforeAccep
 
 TEST_F(SelectorShellTest, followupCommandUsesTheRestoredArticleCallbackWithoutRepeatingTheShell)
 {
-    g_term_line = g_sel_last_line + 1;
+    g_term_line = g_sel_page.last_line + 1;
 
     const DisplayState result = dispatch('!', shell_command() + "\nY");
 
@@ -1528,7 +1528,7 @@ TEST_F(SelectorShellTest, followupCommandUsesTheRestoredArticleCallbackWithoutRe
 TEST_F(SelectorShellTest, selectorLoopRedrawsItsRowsAfterTheShellAndRetainsTheFollowingCommand)
 {
     g_in_ng = true;
-    g_term_line = g_sel_last_line + 1;
+    g_term_line = g_sel_page.last_line + 1;
 
     const char result = run_input('!' + shell_command(true) + "\n\nq");
 
@@ -1662,7 +1662,7 @@ TEST_F(SelectorKillEditorTest, createsTheMissingLocalKillDirectoryBeforeEditing)
 
 TEST_F(SelectorKillEditorTest, selectorLoopRedisplaysTheArticleRowsAfterEditing)
 {
-    g_term_line = g_sel_last_line + 1;
+    g_term_line = g_sel_page.last_line + 1;
 
     const char result = run_input(std::string(1, Ctl('k')) + 'q');
 
@@ -1724,7 +1724,7 @@ private:
     OptionValueList             m_old_saved{std::move(g_option_saved_vals)};
     OptionDraft                *m_old_draft{g_option_draft};
     OptionFlags                *m_old_flags{g_option_flags};
-    int                         m_old_page{g_sel_page_op};
+    int                         m_old_page{g_sel_page.page_op};
     bool                        m_old_one_command{g_one_command};
     bool                        m_old_mouse_down{g_mouse_is_down};
     bool                        m_old_novice_delays{g_novice_delays};
@@ -1754,13 +1754,13 @@ void SelectorOptionTest::SetUp()
     g_perform_count = 0;
     g_tc_BC = "\b";
     g_tc_CD = "";
-    g_term_line = g_sel_last_line;
+    g_term_line = g_sel_page.last_line;
     g_term_col = 0;
     article_ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
     article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
-    g_sel_items[0].sel = 1;
-    g_sel_items[1].sel = 2;
-    g_sel_item_index = 1;
+    g_sel_page.items[0].sel = 1;
+    g_sel_page.items[1].sel = 2;
+    g_sel_page.item_index = 1;
     m_article_flags = {article_ptr(ArticleNum{3})->m_flags, article_ptr(ArticleNum{4})->m_flags};
     m_article_location = g_nav.target;
 }
@@ -1771,7 +1771,7 @@ void SelectorOptionTest::TearDown()
     g_option_saved_vals = std::move(m_old_saved);
     g_option_draft = m_old_draft;
     g_option_flags = m_old_flags;
-    g_sel_page_op = m_old_page;
+    g_sel_page.page_op = m_old_page;
     g_one_command = m_old_one_command;
     g_mouse_is_down = m_old_mouse_down;
     g_novice_delays = m_old_novice_delays;
@@ -1817,16 +1817,16 @@ class SelectorInlineOptionTest : public SelectorOptionTest, public testing::With
 
 TEST_P(SelectorInlineOptionTest, appliesTheOptionAndReturnsToTheArticlePrompt)
 {
-    Article **const page = g_sel_page_app;
+    Article **const page = g_sel_page.page_art;
 
     const DisplayState result = dispatch('&', std::string(GetParam()) + '\n');
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_FALSE(g_verbose);
     EXPECT_EQ(1, g_perform_count);
-    EXPECT_EQ(page, g_sel_page_app);
-    EXPECT_EQ(1, g_sel_item_index);
-    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(page, g_sel_page.page_art);
+    EXPECT_EQ(1, g_sel_page.item_index);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
     expect_article_context();
     expect_next_command('q');
 }
@@ -1870,7 +1870,7 @@ INSTANTIATE_TEST_SUITE_P(SwitchAndAssignment, SelectorModeOptionTest,
 
 TEST_F(SelectorOptionTest, scrolledOptionInputDispatchesTheFollowupThroughTheArticleCallback)
 {
-    g_term_line = g_sel_last_line + 1;
+    g_term_line = g_sel_page.last_line + 1;
 
     const DisplayState result = dispatch('&', "Terse Output=yes\nY");
 
@@ -2058,7 +2058,7 @@ TEST_F(SelectorDefaultInputTest, spaceUsesTheConfiguredEndCommandOnTheLastPage)
     const char result = run_selector(" ");
 
     EXPECT_EQ('N', result);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_TRUE(g_s_default_cmd);
     EXPECT_TRUE(g_univ_default_cmd);
     expect_next_command('q');
@@ -2071,7 +2071,7 @@ TEST_F(SelectorDefaultInputTest, readModeUsesItsOwnEndCommand)
     const char result = run_selector(" ", true);
 
     EXPECT_EQ('Z', result);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_TRUE(g_s_default_cmd);
     EXPECT_TRUE(g_univ_default_cmd);
     expect_next_command('q');
@@ -2085,7 +2085,7 @@ TEST_F(SelectorDefaultInputTest, spaceUsesTheConfiguredPageCommandBeforeTheLastP
     const char result = run_selector(" ");
 
     EXPECT_EQ('Z', result);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_FALSE(g_sel_page.at_end);
     EXPECT_TRUE(g_s_default_cmd);
     EXPECT_TRUE(g_univ_default_cmd);
     expect_next_command('q');
@@ -2101,7 +2101,7 @@ TEST_F(SelectorDefaultInputTest, spaceAdvancesThePageBeforeTheNextSelectionComma
     EXPECT_EQ(1, g_selected_count);
     EXPECT_FALSE(article_ptr(ArticleNum{3})->m_flags & AF_SEL);
     EXPECT_TRUE(article_ptr(ArticleNum{4})->m_flags & AF_SEL);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_sel_page.at_end);
     expect_next_command('q');
 }
 
@@ -2112,10 +2112,10 @@ TEST_F(SelectorDefaultInputTest, repeatedSpacesAdvanceThenAcceptAtTheEnd)
     const char result = run_selector("  ");
 
     EXPECT_EQ('Z', result);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_TRUE(g_s_default_cmd);
     EXPECT_TRUE(g_univ_default_cmd);
-    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_items[0].u.ap);
+    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_page.items[0].u.ap);
     expect_next_command('q');
 }
 
@@ -2127,8 +2127,8 @@ TEST_F(SelectorDefaultInputTest, readModeUsesItsOwnPageCommand)
     const char result = run_selector(" q", true);
 
     EXPECT_EQ('q', result);
-    EXPECT_TRUE(g_sel_at_end);
-    EXPECT_EQ(article_ptr(ArticleNum{2}), g_sel_items[0].u.ap);
+    EXPECT_TRUE(g_sel_page.at_end);
+    EXPECT_EQ(article_ptr(ArticleNum{2}), g_sel_page.items[0].u.ap);
     expect_next_command('q');
 }
 
@@ -2147,8 +2147,8 @@ TEST_P(SelectorRestartInputTest, restartRebuildsTheScopeBeforeReadingTheExitComm
     const char result = run_selector(std::string(restarts, 'U') + "q", rereading);
 
     EXPECT_EQ('q', result);
-    EXPECT_EQ(article_ptr(ArticleNum{final_read_scope ? 1 : 3}), g_sel_items[0].u.ap);
-    EXPECT_EQ(2, g_sel_page_item_cnt);
+    EXPECT_EQ(article_ptr(ArticleNum{final_read_scope ? 1 : 3}), g_sel_page.items[0].u.ap);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
     EXPECT_EQ(0, g_selected_count);
     EXPECT_EQ(2, m_newsgroup.m_to_read);
     EXPECT_FALSE(g_sel.rereading);
@@ -2176,16 +2176,16 @@ void SelectorLetterInputTest::SetUp()
 
 TEST_P(SelectorLetterInputTest, letterSelectsItsRowAndAdvancesToTheNextItem)
 {
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     ASSERT_EQ('Q', run_input("a"));
 
     EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(0, g_sel_items[1].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(0, g_sel_page.items[1].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 TEST_P(SelectorLetterInputTest, lastLetterSelectsItsRowAndWrapsToTheFirstItem)
@@ -2195,9 +2195,9 @@ TEST_P(SelectorLetterInputTest, lastLetterSelectsItsRowAndWrapsToTheFirstItem)
     EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(0, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
+    EXPECT_EQ(0, g_sel_page.item_index);
 }
 
 TEST_P(SelectorLetterInputTest, repeatingALetterDeselectsTheRow)
@@ -2207,9 +2207,9 @@ TEST_P(SelectorLetterInputTest, repeatingALetterDeselectsTheRow)
     EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(0, g_selected_count);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    EXPECT_EQ(0, g_sel_items[1].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    EXPECT_EQ(0, g_sel_page.items[1].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 TEST_P(SelectorLetterInputTest, selectingAnotherLetterRetainsThePreviousSelection)
@@ -2219,9 +2219,9 @@ TEST_P(SelectorLetterInputTest, selectingAnotherLetterRetainsThePreviousSelectio
     EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(2, g_selected_count);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
+    EXPECT_EQ(0, g_sel_page.item_index);
 }
 
 TEST_P(SelectorLetterInputTest, deselectingALetterRetainsTheOtherSelection)
@@ -2231,9 +2231,9 @@ TEST_P(SelectorLetterInputTest, deselectingALetterRetainsTheOtherSelection)
     EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 TEST_P(SelectorLetterInputTest, letterBeyondThePageRetainsSelectionAndPosition)
@@ -2243,9 +2243,9 @@ TEST_P(SelectorLetterInputTest, letterBeyondThePageRetainsSelectionAndPosition)
     EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(0, g_sel_items[1].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(0, g_sel_page.items[1].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_NE(std::string::npos, m_output.find("No item 'c' on this page."));
 }
 
@@ -2256,8 +2256,8 @@ TEST_P(SelectorLetterInputTest, letterCanReselectADeselectedRow)
     EXPECT_NE(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & AF_DEL);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, SelectorLetterInputTest,
@@ -2274,7 +2274,7 @@ void SelectorCurrentInputTest::SetUp()
 {
     SelectorInputTest::SetUp();
     prepare_input(std::get<0>(GetParam()), std::get<1>(GetParam()));
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 }
 
 TEST_P(SelectorCurrentInputTest, toggleSelectsTheCurrentRow)
@@ -2286,15 +2286,15 @@ TEST_P(SelectorCurrentInputTest, toggleSelectsTheCurrentRow)
     EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_NE(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(0, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
-    EXPECT_EQ(command == Ctl('t') ? 1 : 0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
+    EXPECT_EQ(command == Ctl('t') ? 1 : 0, g_sel_page.item_index);
 }
 
 TEST_P(SelectorCurrentInputTest, toggleDeselectsTheCurrentSelectedRow)
 {
     article_ptr(ArticleNum{4})->select_article(AUTO_KILL_NONE);
-    g_sel_items[1].sel = 1;
+    g_sel_page.items[1].sel = 1;
     const char command = std::get<2>(GetParam());
 
     ASSERT_EQ('Q', run_input(std::string(1, command)));
@@ -2302,9 +2302,9 @@ TEST_P(SelectorCurrentInputTest, toggleDeselectsTheCurrentSelectedRow)
     EXPECT_EQ(0, article_ptr(ArticleNum{3})->m_flags & g_sel.mask);
     EXPECT_EQ(0, article_ptr(ArticleNum{4})->m_flags & g_sel.mask);
     EXPECT_EQ(0, g_selected_count);
-    EXPECT_EQ(0, g_sel_items[0].sel);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[1].sel);
-    EXPECT_EQ(command == Ctl('t') ? 1 : 0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.items[0].sel);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[1].sel);
+    EXPECT_EQ(command == Ctl('t') ? 1 : 0, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorCurrentInputTest,
@@ -2398,25 +2398,25 @@ void SelectorGroupedInputState::prepare_grouped(SelectionMode mode, bool rereadi
     opposite_scope->m_flags |= rereading ? AF_SEL : AF_DEL_SEL;
     prepare_page(mode, rereading);
     m_opposite_flags = opposite_scope->m_flags;
-    g_sel_chars = "abcde";
-    g_sel_page_item_cnt = mode == SM_ARTICLE ? 4 : mode == SM_SUBJECT ? 3 : 2;
+    g_sel_page.chars = "abcde";
+    g_sel_page.page_item_cnt = mode == SM_ARTICLE ? 4 : mode == SM_SUBJECT ? 3 : 2;
     const std::array<Subject *, 3> subjects{&m_subject, &m_reply, &m_unrelated};
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
-        g_sel_items[index] = {};
-        g_sel_items[index].line = index + 1;
+        g_sel_page.items[index] = {};
+        g_sel_page.items[index].line = index + 1;
         if (mode == SM_ARTICLE)
         {
-            g_sel_items[index].u.ap = article_ptr(ArticleNum{index + 1});
+            g_sel_page.items[index].u.ap = article_ptr(ArticleNum{index + 1});
         }
         else
         {
-            g_sel_items[index].u.sp = mode == SM_THREAD && index ? &m_unrelated : subjects[index];
+            g_sel_page.items[index].u.sp = mode == SM_THREAD && index ? &m_unrelated : subjects[index];
         }
     }
-    g_sel_page_obj_cnt = 4;
-    g_sel_last_line = 10;
-    g_sel_at_end = true;
+    g_sel_page.page_obj_cnt = 4;
+    g_sel_page.last_line = 10;
+    g_sel_page.at_end = true;
     sync_page();
 }
 
@@ -2434,7 +2434,7 @@ void SelectorGroupedInputState::sync_page()
     testing::internal::CaptureStdout();
     update_page();
     (void) testing::internal::GetCapturedStdout();
-    g_sel_item_index = g_sel.mode == SM_ARTICLE ? 1 : 0;
+    g_sel_page.item_index = g_sel.mode == SM_ARTICLE ? 1 : 0;
     g_term_line = 0;
     g_term_col = 0;
 }
@@ -2516,7 +2516,7 @@ void SelectorMarkInputState::expect_current_deselected() const
         expect_selected({4}, 1);
         break;
     }
-    EXPECT_EQ((target_index() + 1) % g_sel_page_item_cnt, g_sel_item_index);
+    EXPECT_EQ((target_index() + 1) % g_sel_page.page_item_cnt, g_sel_page.item_index);
     EXPECT_EQ(g_sel.rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
 }
 
@@ -2532,7 +2532,7 @@ void SelectorMarkInputState::expect_current_mark(bool killed, bool delayed) cons
     expect_current_deselected();
     expect_pending(killed && g_sel.mode == SM_ARTICLE ? affected : std::vector<long>{},
                    killed ? subjects : std::vector<long>{}, delayed ? affected : std::vector<long>{});
-    EXPECT_EQ(killed ? 2 : 0, g_sel_items[target_index()].sel);
+    EXPECT_EQ(killed ? 2 : 0, g_sel_page.items[target_index()].sel);
 }
 
 void SelectorMarkInputState::expect_pending(const std::vector<long> &articles, const std::vector<long> &subjects,
@@ -2587,7 +2587,7 @@ void SelectorInvertInputTest::expect_scope() const
     EXPECT_EQ(std::get<0>(GetParam()), g_sel.mode);
     EXPECT_EQ(std::get<1>(GetParam()), g_sel.rereading);
     EXPECT_EQ(std::get<1>(GetParam()) ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
 }
 
 void SelectorInvertInputTest::expect_full_selection() const
@@ -2595,9 +2595,9 @@ void SelectorInvertInputTest::expect_full_selection() const
     expect_selected({1, 2, 3, 4}, 3);
     expect_pending({}, {});
     expect_scope();
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
-        EXPECT_EQ(1, g_sel_items[index].sel) << index;
+        EXPECT_EQ(1, g_sel_page.items[index].sel) << index;
     }
 }
 
@@ -2617,10 +2617,10 @@ void SelectorInvertInputTest::prepare_mixed_page()
     }
     if (g_sel.mode != SM_THREAD)
     {
-        --g_sel_page_item_cnt;
-        g_sel_at_end = false;
+        --g_sel_page.page_item_cnt;
+        g_sel_page.at_end = false;
     }
-    g_sel_item_index = g_sel_page_item_cnt - 1;
+    g_sel_page.item_index = g_sel_page.page_item_cnt - 1;
 }
 
 TEST_P(SelectorInvertInputTest, inversionSelectsAnExplicitlyUnmarkedRow)
@@ -2647,10 +2647,10 @@ TEST_P(SelectorInvertInputTest, inversionExchangesVisibleSelectionsAndRetainsHid
                    : g_sel.mode == SM_SUBJECT                   ? std::vector<long>{1}
                                                                 : std::vector<long>{1, 3});
     expect_scope();
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    for (int index = 1; index < g_sel_page_item_cnt; ++index)
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    for (int index = 1; index < g_sel_page.page_item_cnt; ++index)
     {
-        EXPECT_EQ(1, g_sel_items[index].sel) << index;
+        EXPECT_EQ(1, g_sel_page.items[index].sel) << index;
     }
 }
 
@@ -2675,9 +2675,9 @@ TEST_P(SelectorInvertInputTest, inversionPreservesUnreadKillsAndSelectsReadKills
                        : g_sel.mode == SM_THREAD ? std::vector<long>{1, 3}
                                                  : std::vector<long>{});
         expect_scope();
-        for (int index = 0; index < g_sel_page_item_cnt; ++index)
+        for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
         {
-            EXPECT_EQ(index == target_index() ? 2 : 1, g_sel_items[index].sel) << index;
+            EXPECT_EQ(index == target_index() ? 2 : 1, g_sel_page.items[index].sel) << index;
         }
     }
 }
@@ -2697,10 +2697,10 @@ TEST_P(SelectorInvertInputTest, repeatingInversionRestoresVisibleSelectionsAndRe
                    : g_sel.mode == SM_SUBJECT                   ? std::vector<long>{3}
                                                                 : std::vector<long>{4});
     expect_scope();
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    for (int index = 1; index < g_sel_page_item_cnt; ++index)
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    for (int index = 1; index < g_sel_page.page_item_cnt; ++index)
     {
-        EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[index].sel) << index;
+        EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[index].sel) << index;
     }
 }
 
@@ -2712,8 +2712,8 @@ TEST_P(SelectorInvertInputTest, invertingAnEmptyPagePreservesSelectionsAndPendin
     {
         flags[index] = article_ptr(ArticleNum{index + 1})->m_flags;
     }
-    g_sel_page_item_cnt = 0;
-    g_sel_item_index = 0;
+    g_sel_page.page_item_cnt = 0;
+    g_sel_page.item_index = 0;
 
     ASSERT_EQ('Q', run_input("@"));
 
@@ -2736,7 +2736,7 @@ class SelectorPartialInvertInputTest : public SelectorInvertInputTest
 TEST_P(SelectorPartialInvertInputTest, inversionCompletesAPartiallySelectedRow)
 {
     select_articles({1});
-    ASSERT_EQ(3, g_sel_items[0].sel);
+    ASSERT_EQ(3, g_sel_page.items[0].sel);
 
     ASSERT_EQ('Q', run_input("@"));
 
@@ -2761,13 +2761,14 @@ void SelectorUnmarkInputTest::SetUp()
 
 TEST_P(SelectorUnmarkInputTest, unmarkCancelsTheCurrentPendingKill)
 {
-    const std::string commands = std::string("k") + Ctl('g') + g_sel_chars[target_index()] + std::get<2>(GetParam());
+    const std::string commands =
+        std::string("k") + Ctl('g') + g_sel_page.chars[target_index()] + std::get<2>(GetParam());
 
     ASSERT_EQ('Q', run_input(commands));
 
     expect_current_deselected();
     expect_pending({}, {});
-    EXPECT_EQ(0, g_sel_items[target_index()].sel);
+    EXPECT_EQ(0, g_sel_page.items[target_index()].sel);
 }
 
 INSTANTIATE_TEST_SUITE_P(ModeReadStateAndCommand, SelectorUnmarkInputTest,
@@ -2801,7 +2802,7 @@ TEST_P(SelectorMarkInputTest, commandMarksOnlyTheCurrentRow)
 TEST_P(SelectorMarkInputTest, repeatingTheCommandPreservesCountsAndPendingMarks)
 {
     const auto [command, killed, delayed] = std::get<2>(GetParam());
-    const std::string commands = std::string(1, command) + Ctl('g') + g_sel_chars[target_index()] + command;
+    const std::string commands = std::string(1, command) + Ctl('g') + g_sel_page.chars[target_index()] + command;
 
     ASSERT_EQ('Q', run_input(commands));
 
@@ -2833,18 +2834,18 @@ void SelectorMarkRangeInputTest::SetUp()
     g_use_sel_num = numeric;
     if (mode != SM_THREAD)
     {
-        --g_sel_page_item_cnt;
-        g_sel_at_end = false;
+        --g_sel_page.page_item_cnt;
+        g_sel_page.at_end = false;
     }
-    g_sel_item_index = reverse ? g_sel_page_item_cnt - 1 : 0;
+    g_sel_page.item_index = reverse ? g_sel_page.page_item_cnt - 1 : 0;
 }
 
 TEST_P(SelectorMarkRangeInputTest, rangeRepeatsTheMarkingActionAndRetainsSelectionsOutsideIt)
 {
     const auto [mode, numeric, reverse] = std::get<0>(GetParam());
     const auto [command, killed, delayed] = std::get<2>(GetParam());
-    const int         endpoint = reverse ? 0 : g_sel_page_item_cnt - 1;
-    const std::string destination = numeric ? std::to_string(endpoint + 1) : std::string(1, g_sel_chars[endpoint]);
+    const int         endpoint = reverse ? 0 : g_sel_page.page_item_cnt - 1;
+    const std::string destination = numeric ? std::to_string(endpoint + 1) : std::string(1, g_sel_page.chars[endpoint]);
     const std::string commands = std::string(1, command) + '-' + destination;
     const std::vector<long> affected = mode == SM_THREAD ? std::vector<long>{1, 2, 3, 4} : std::vector<long>{1, 2, 3};
     const std::vector<long> subjects = mode == SM_THREAD ? std::vector<long>{1, 3, 4} : std::vector<long>{1, 3};
@@ -2857,10 +2858,10 @@ TEST_P(SelectorMarkRangeInputTest, rangeRepeatsTheMarkingActionAndRetainsSelecti
     expect_pending(killed && mode == SM_ARTICLE ? affected : std::vector<long>{},
                    killed && mode != SM_ARTICLE ? subjects : std::vector<long>{},
                    delayed ? affected : std::vector<long>{});
-    EXPECT_EQ(0, g_sel_item_index);
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    EXPECT_EQ(0, g_sel_page.item_index);
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
-        EXPECT_EQ(killed ? 2 : 0, g_sel_items[index].sel) << index;
+        EXPECT_EQ(killed ? 2 : 0, g_sel_page.items[index].sel) << index;
     }
 }
 
@@ -2886,8 +2887,8 @@ void SelectorEmptyMarkInputTest::SetUp()
 {
     SelectorMarkInputState::SetUp();
     prepare_marks(SM_ARTICLE, std::get<0>(GetParam()));
-    g_sel_page_item_cnt = 0;
-    g_sel_item_index = 0;
+    g_sel_page.page_item_cnt = 0;
+    g_sel_page.item_index = 0;
 }
 
 TEST_P(SelectorEmptyMarkInputTest, markingAnEmptyPagePreservesSelectionsAndPendingCounts)
@@ -2898,7 +2899,7 @@ TEST_P(SelectorEmptyMarkInputTest, markingAnEmptyPagePreservesSelectionsAndPendi
 
     expect_selected({1, 2, 3, 4}, 3);
     expect_pending({}, {});
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadStateAndCommand, SelectorEmptyMarkInputTest,
@@ -2926,36 +2927,36 @@ TEST_P(SelectorGroupedInputTest, selectingARowCountsEveryEligibleArticle)
 
     expect_selected(g_sel.mode == SM_SUBJECT ? std::vector<long>{1, 2, 4} : std::vector<long>{1, 2, 3, 4},
                     g_sel.mode == SM_SUBJECT ? 2 : 3);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 TEST_P(SelectorGroupedInputTest, togglingAFullySelectedRowRetainsSelectionsOutsideItsScope)
 {
     select_articles({1, 2, 3, 4});
     const char command = std::get<2>(GetParam());
-    ASSERT_EQ(1, g_sel_items[0].sel);
+    ASSERT_EQ(1, g_sel_page.items[0].sel);
 
     ASSERT_EQ('Q', run_input(std::string(1, command)));
 
     expect_selected(g_sel.mode == SM_SUBJECT ? std::vector<long>{3, 4} : std::vector<long>{4},
                     g_sel.mode == SM_SUBJECT ? 2 : 1);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 TEST_P(SelectorGroupedInputTest, togglingAPartiallySelectedRowCompletesItsSelection)
 {
     select_articles({1, 4});
     const char command = std::get<2>(GetParam());
-    ASSERT_EQ(3, g_sel_items[0].sel);
+    ASSERT_EQ(3, g_sel_page.items[0].sel);
 
     ASSERT_EQ('Q', run_input(std::string(1, command)));
 
     expect_selected(g_sel.mode == SM_SUBJECT ? std::vector<long>{1, 2, 4} : std::vector<long>{1, 2, 3, 4},
                     g_sel.mode == SM_SUBJECT ? 2 : 3);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ModeReadStateAndToggle, SelectorGroupedInputTest,
@@ -2977,13 +2978,13 @@ void SelectorPartialThreadInputTest::SetUp()
 TEST_P(SelectorPartialThreadInputTest, selectingAThreadWithOnlyASelectedReplyAlsoSelectsItsOriginalSubject)
 {
     select_articles({3, 4});
-    ASSERT_EQ(3, g_sel_items[0].sel);
+    ASSERT_EQ(3, g_sel_page.items[0].sel);
 
     ASSERT_EQ('Q', run_input("a"));
 
     expect_selected({1, 2, 3, 4}, 3);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorPartialThreadInputTest, testing::Bool());
@@ -3007,11 +3008,11 @@ TEST_P(SelectorArticleStarInputTest, starSelectsTheCurrentSubjectWithoutSelectin
     ASSERT_EQ('Q', run_input("*"));
 
     expect_selected({1, 2, 4}, 2);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
     EXPECT_EQ(0, article_ptr(ArticleNum{1})->m_flags & AF_DEL);
     EXPECT_EQ(0, article_ptr(ArticleNum{2})->m_flags & AF_DEL);
-    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(2, g_sel_page.item_index);
 }
 
 TEST_P(SelectorArticleStarInputTest, starOnASelectedArticleDeselectsTheWholeSubject)
@@ -3021,9 +3022,9 @@ TEST_P(SelectorArticleStarInputTest, starOnASelectedArticleDeselectsTheWholeSubj
     ASSERT_EQ('Q', run_input("*"));
 
     expect_selected({3, 4}, 2);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[1].sel);
-    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[1].sel);
+    EXPECT_EQ(2, g_sel_page.item_index);
 }
 
 TEST_P(SelectorArticleStarInputTest, starOnAnUnselectedArticleCompletesAPartialSubjectSelection)
@@ -3033,9 +3034,9 @@ TEST_P(SelectorArticleStarInputTest, starOnAnUnselectedArticleCompletesAPartialS
     ASSERT_EQ('Q', run_input("*"));
 
     expect_selected({1, 2, 4}, 2);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
-    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
+    EXPECT_EQ(2, g_sel_page.item_index);
 }
 
 TEST_P(SelectorArticleStarInputTest, starOnASelectedArticleClearsAPartialSubjectSelection)
@@ -3045,27 +3046,27 @@ TEST_P(SelectorArticleStarInputTest, starOnASelectedArticleClearsAPartialSubject
     ASSERT_EQ('Q', run_input("*"));
 
     expect_selected({4}, 1);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[1].sel);
-    EXPECT_EQ(2, g_sel_item_index);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[1].sel);
+    EXPECT_EQ(2, g_sel_page.item_index);
 }
 
 TEST_P(SelectorArticleStarInputTest, starAlsoSelectsMatchingArticlesOutsideTheDisplayedPage)
 {
     select_articles({3, 4});
-    std::move(std::begin(g_sel_items) + 1, std::begin(g_sel_items) + 4, std::begin(g_sel_items));
-    g_sel_page_item_cnt = 3;
-    g_sel_page_obj_cnt = 3;
-    g_sel_prior_obj_cnt = 1;
-    g_sel_item_index = 0;
+    std::move(std::begin(g_sel_page.items) + 1, std::begin(g_sel_page.items) + 4, std::begin(g_sel_page.items));
+    g_sel_page.page_item_cnt = 3;
+    g_sel_page.page_obj_cnt = 3;
+    g_sel_page.prior_obj_cnt = 1;
+    g_sel_page.item_index = 0;
 
     ASSERT_EQ('Q', run_input("*"));
 
     expect_selected({1, 2, 3, 4}, 3);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
-    EXPECT_EQ(1, g_sel_items[2].sel);
-    EXPECT_EQ(1, g_sel_item_index);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
+    EXPECT_EQ(1, g_sel_page.items[2].sel);
+    EXPECT_EQ(1, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadAndUnread, SelectorArticleStarInputTest, testing::Bool());
@@ -3114,13 +3115,13 @@ void SelectorObjectInputState::prepare_objects(SelectionMode mode, bool rereadin
     g_sel.mode_string = mode == SM_NEWSGROUP ? "newsgroups" : "items";
     g_in_ng = false;
     g_selected_count = 0;
-    g_sel_total_obj_cnt = 3;
-    g_sel_prior_obj_cnt = 0;
-    g_sel_page_obj_cnt = 2;
-    g_sel_page_item_cnt = 2;
-    g_sel_at_end = false;
-    g_sel_last_line = 10;
-    g_sel_item_index = 0;
+    g_sel_page.total_obj_cnt = 3;
+    g_sel_page.prior_obj_cnt = 0;
+    g_sel_page.page_obj_cnt = 2;
+    g_sel_page.page_item_cnt = 2;
+    g_sel_page.at_end = false;
+    g_sel_page.last_line = 10;
+    g_sel_page.item_index = 0;
     g_term_line = 0;
     m_delete_mask = mode == SM_NEWSGROUP ? static_cast<int>(NF_DEL) : static_cast<int>(UF_DEL);
     m_preserved_flags =
@@ -3134,18 +3135,18 @@ void SelectorObjectInputState::prepare_objects(SelectionMode mode, bool rereadin
         m_items[index].m_desc = m_names[index];
         m_items[index].m_data = UniversalNewsgroup{std::string(m_names[index])};
         set_object_flags(index, m_preserved_flags | (rereading ? m_delete_mask : 0));
-        if (index < g_sel_page_item_cnt)
+        if (index < g_sel_page.page_item_cnt)
         {
-            g_sel_items[index] = {};
-            g_sel_items[index].line = index + 1;
-            g_sel_items[index].sel = rereading ? 2 : 0;
+            g_sel_page.items[index] = {};
+            g_sel_page.items[index].line = index + 1;
+            g_sel_page.items[index].sel = rereading ? 2 : 0;
             if (mode == SM_NEWSGROUP)
             {
-                g_sel_items[index].u.np = &m_groups[index];
+                g_sel_page.items[index].u.np = &m_groups[index];
             }
             else
             {
-                g_sel_items[index].u.un = &m_items[index];
+                g_sel_page.items[index].u.un = &m_items[index];
             }
         }
     }
@@ -3175,9 +3176,9 @@ void SelectorObjectInputState::select_objects(std::initializer_list<int> indices
     {
         set_object_flags(index, (object_flags(index) & ~m_delete_mask) | g_sel.mask);
         ++g_selected_count;
-        if (index < g_sel_page_item_cnt)
+        if (index < g_sel_page.page_item_cnt)
         {
-            g_sel_items[index].sel = 1;
+            g_sel_page.items[index].sel = 1;
         }
     }
 }
@@ -3193,9 +3194,9 @@ void SelectorObjectInputState::expect_objects(std::initializer_list<int> selecte
         const int  expected =
             m_preserved_flags | (is_selected ? static_cast<int>(g_sel.mask) : 0) | (is_deleted ? m_delete_mask : 0);
         EXPECT_EQ(expected, object_flags(index)) << index;
-        if (index < g_sel_page_item_cnt)
+        if (index < g_sel_page.page_item_cnt)
         {
-            EXPECT_EQ(is_selected ? 1 : is_deleted ? 2 : 0, g_sel_items[index].sel) << index;
+            EXPECT_EQ(is_selected ? 1 : is_deleted ? 2 : 0, g_sel_page.items[index].sel) << index;
         }
         if (m_selector_mode == SM_NEWSGROUP)
         {
@@ -3211,7 +3212,7 @@ void SelectorObjectInputState::expect_objects(std::initializer_list<int> selecte
         }
     }
     EXPECT_EQ(selected.size(), g_selected_count);
-    EXPECT_EQ(current, g_sel_item_index);
+    EXPECT_EQ(current, g_sel_page.item_index);
     EXPECT_EQ(m_selector_mode, g_sel.mode);
     EXPECT_EQ(m_rereading, g_sel.rereading);
     EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
@@ -3252,7 +3253,7 @@ TEST_P(SelectorObjectInvertInputTest, inversionSelectsAnExplicitlyUnmarkedObject
 TEST_P(SelectorObjectInvertInputTest, inversionExchangesVisibleSelectionsAndRetainsHiddenSelections)
 {
     select_objects({0});
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     ASSERT_EQ('Q', run_input("@"));
 
@@ -3276,7 +3277,7 @@ TEST_P(SelectorObjectInvertInputTest, inversionPreservesUnreadKillsAndSelectsRea
 TEST_P(SelectorObjectInvertInputTest, repeatingInversionRestoresVisibleSelectionsAndRetainsHiddenSelections)
 {
     select_objects({0});
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     ASSERT_EQ('Q', run_input("@@"));
 
@@ -3381,7 +3382,7 @@ void SelectorObjectLetterInputTest::SetUp()
 
 TEST_P(SelectorObjectLetterInputTest, letterSelectsItsObjectRatherThanTheCurrentRow)
 {
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     ASSERT_EQ('Q', run_input("a"));
 
@@ -3428,7 +3429,7 @@ TEST_P(SelectorObjectLetterInputTest, aDeselectedObjectCanBeReselected)
 TEST_P(SelectorObjectLetterInputTest, aLetterBeyondThePageRetainsSelectionsAndTheCurrentRow)
 {
     select_objects({0, 2});
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 
     ASSERT_EQ('Q', run_input("c"));
 
@@ -3450,7 +3451,7 @@ void SelectorObjectCurrentInputTest::SetUp()
 {
     SelectorInputTest::SetUp();
     prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
-    g_sel_item_index = 1;
+    g_sel_page.item_index = 1;
 }
 
 TEST_P(SelectorObjectCurrentInputTest, toggleSelectsTheCurrentObject)
@@ -3539,10 +3540,10 @@ void SelectorNumericInputState::prepare_numeric(bool rereading, int page_size)
         if (index < page_size)
         {
             article->m_flags |= AF_INCLUDED;
-            g_sel_items[index] = {};
-            g_sel_items[index].u.ap = article;
-            g_sel_items[index].line = index + 1;
-            g_sel_items[index].sel = rereading ? 2 : 0;
+            g_sel_page.items[index] = {};
+            g_sel_page.items[index].u.ap = article;
+            g_sel_page.items[index].line = index + 1;
+            g_sel_page.items[index].sel = rereading ? 2 : 0;
         }
     }
     m_subject.m_articles = row_article(0);
@@ -3552,13 +3553,13 @@ void SelectorNumericInputState::prepare_numeric(bool rereading, int page_size)
     g_subject_count = 1;
     g_selected_count = 0;
     g_selected_subj_cnt = 0;
-    g_sel_item_index = 0;
-    g_sel_total_obj_cnt = MAX_SEL + 1;
-    g_sel_prior_obj_cnt = 0;
-    g_sel_page_obj_cnt = page_size;
-    g_sel_page_item_cnt = page_size;
-    g_sel_at_end = false;
-    g_sel_last_line = page_size + 2;
+    g_sel_page.item_index = 0;
+    g_sel_page.total_obj_cnt = MAX_SEL + 1;
+    g_sel_page.prior_obj_cnt = 0;
+    g_sel_page.page_obj_cnt = page_size;
+    g_sel_page.page_item_cnt = page_size;
+    g_sel_page.at_end = false;
+    g_sel_page.last_line = page_size + 2;
     g_tc_LINES = page_size + 7;
     g_term_line = 0;
 }
@@ -3573,9 +3574,9 @@ void SelectorNumericInputState::select_rows(std::initializer_list<int> indices)
     for (int index : indices)
     {
         row_article(index)->select_article(AUTO_KILL_NONE);
-        if (index < g_sel_page_item_cnt)
+        if (index < g_sel_page.page_item_cnt)
         {
-            g_sel_items[index].sel = 1;
+            g_sel_page.items[index].sel = 1;
         }
     }
 }
@@ -3596,10 +3597,10 @@ void SelectorNumericInputState::expect_numeric(const std::vector<int> &selected,
         {
             expected |= AF_DEL;
         }
-        if (index < g_sel_page_item_cnt)
+        if (index < g_sel_page.page_item_cnt)
         {
             expected |= AF_INCLUDED;
-            EXPECT_EQ(is_selected ? 1 : m_rereading ? 2 : 0, g_sel_items[index].sel) << index;
+            EXPECT_EQ(is_selected ? 1 : m_rereading ? 2 : 0, g_sel_page.items[index].sel) << index;
         }
         const Article *article = row_article(index);
         EXPECT_EQ(expected, article->m_flags) << index;
@@ -3610,7 +3611,7 @@ void SelectorNumericInputState::expect_numeric(const std::vector<int> &selected,
     }
     EXPECT_EQ(selected, actual);
     EXPECT_EQ(selected.size(), g_selected_count);
-    EXPECT_EQ(current, g_sel_item_index);
+    EXPECT_EQ(current, g_sel_page.item_index);
     EXPECT_EQ(m_rereading, g_sel.rereading);
     EXPECT_EQ(m_rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
     EXPECT_EQ(m_rereading ? 0 : MAX_SEL + 1, m_newsgroup.m_to_read);
@@ -3632,7 +3633,7 @@ TEST_P(SelectorNumericInvertInputTest, inversionIncludesBothEndsOfTheLargestPage
 {
     select_rows({0, MAX_SEL - 1, MAX_SEL});
     g_sel_num_goto = true;
-    g_sel_item_index = MAX_SEL - 1;
+    g_sel_page.item_index = MAX_SEL - 1;
     std::vector<int> selected;
     for (int index = 1; index < MAX_SEL - 1; ++index)
     {
@@ -3676,8 +3677,8 @@ void SelectorCursorInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_numeric(std::get<0>(GetParam()), std::get<2>(GetParam()).page_size);
     g_use_sel_num = std::get<1>(GetParam());
-    g_sel_chars = "abcdefghijkl";
-    g_sel_item_index = std::get<2>(GetParam()).cursor;
+    g_sel_page.chars = "abcdefghijkl";
+    g_sel_page.item_index = std::get<2>(GetParam()).cursor;
     select_rows({0, MAX_SEL});
 }
 
@@ -3721,8 +3722,8 @@ void SelectorCursorGotoInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
     g_use_sel_num = std::get<1>(GetParam());
-    g_sel_chars = "abcdefghijklm";
-    g_sel_item_index = 3;
+    g_sel_page.chars = "abcdefghijklm";
+    g_sel_page.item_index = 3;
     select_rows({0, 4, MAX_SEL});
 }
 
@@ -3758,20 +3759,20 @@ void SelectorGroupedCursorInputTest::SetUp()
 TEST_P(SelectorGroupedCursorInputTest, movementPreservesPartialGroupsAndOppositeScopeSelections)
 {
     const char       command = std::get<2>(GetParam());
-    const int        destination = command == 'p' || command == '[' ? g_sel_page_item_cnt - 1 : 1;
+    const int        destination = command == 'p' || command == '[' ? g_sel_page.page_item_cnt - 1 : 1;
     std::vector<int> markers;
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
-        markers.push_back(g_sel_items[index].sel);
+        markers.push_back(g_sel_page.items[index].sel);
     }
 
     ASSERT_EQ('Q', run_input(std::string(1, command)));
 
     expect_selected({1, 4}, 2);
-    EXPECT_EQ(destination, g_sel_item_index);
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    EXPECT_EQ(destination, g_sel_page.item_index);
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
-        EXPECT_EQ(markers[index], g_sel_items[index].sel) << index;
+        EXPECT_EQ(markers[index], g_sel_page.items[index].sel) << index;
     }
 }
 
@@ -3808,7 +3809,7 @@ void SelectorObjectCursorInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_objects(std::get<0>(GetParam()), std::get<1>(GetParam()));
     select_objects({0, 2});
-    g_sel_item_index = std::get<2>(GetParam()).cursor;
+    g_sel_page.item_index = std::get<2>(GetParam()).cursor;
 }
 
 TEST_P(SelectorObjectCursorInputTest, movementPreservesObjectsAndHiddenSelections)
@@ -3859,8 +3860,8 @@ void SelectorCursorRangeInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
     g_use_sel_num = std::get<1>(GetParam());
-    g_sel_chars = "abcdefghijkl";
-    g_sel_item_index = std::get<2>(GetParam()).cursor;
+    g_sel_page.chars = "abcdefghijkl";
+    g_sel_page.item_index = std::get<2>(GetParam()).cursor;
     select_rows({MAX_SEL});
 }
 
@@ -3868,7 +3869,7 @@ TEST_P(SelectorCursorRangeInputTest, rangeIncludesTheUnmarkedCursorAndItsDestina
 {
     const CursorRange &range = std::get<2>(GetParam());
     const std::string  destination =
-        g_use_sel_num ? std::to_string(range.endpoint + 1) : std::string(1, g_sel_chars[range.endpoint]);
+        g_use_sel_num ? std::to_string(range.endpoint + 1) : std::string(1, g_sel_page.chars[range.endpoint]);
     const std::string commands = std::string(range.movement) + '-' + destination;
     std::vector<int>  selected = range.selected;
     selected.push_back(MAX_SEL);
@@ -3894,7 +3895,7 @@ void SelectorCursorRangeResetInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
     g_use_sel_num = std::get<1>(GetParam());
-    g_sel_chars = "abcdefghijkl";
+    g_sel_page.chars = "abcdefghijkl";
     if (std::get<2>(GetParam()))
     {
         select_rows({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL});
@@ -3938,11 +3939,11 @@ TEST_P(SelectorNumericPositionInputTest, numberSelectsThePagePositionAndAdvances
 {
     const auto &[input, index] = std::get<1>(GetParam());
     select_rows({MAX_SEL});
-    g_sel_item_index = 4;
+    g_sel_page.item_index = 4;
 
     ASSERT_EQ('Q', run_input(input));
 
-    expect_numeric({index, MAX_SEL}, (index + 1) % g_sel_page_item_cnt);
+    expect_numeric({index, MAX_SEL}, (index + 1) % g_sel_page.page_item_cnt);
 }
 
 TEST_P(SelectorNumericPositionInputTest, numberDeselectsItsSelectedRowAndRetainsHiddenSelections)
@@ -3952,7 +3953,7 @@ TEST_P(SelectorNumericPositionInputTest, numberDeselectsItsSelectedRowAndRetains
 
     ASSERT_EQ('Q', run_input(input));
 
-    expect_numeric({MAX_SEL}, (index + 1) % g_sel_page_item_cnt);
+    expect_numeric({MAX_SEL}, (index + 1) % g_sel_page.page_item_cnt);
 }
 
 TEST_P(SelectorNumericPositionInputTest, numericGotoMovesWithoutChangingSelections)
@@ -3991,7 +3992,7 @@ TEST_P(SelectorNumericInvalidInputTest, invalidNumberReportsItsPositionAndRetain
 {
     const auto &[input, message] = std::get<1>(GetParam());
     select_rows({0, MAX_SEL});
-    g_sel_item_index = 4;
+    g_sel_page.item_index = 4;
 
     ASSERT_EQ('Q', run_input(input));
 
@@ -4232,14 +4233,14 @@ char SelectorNumericPromptState::answer_after_prompt(std::string_view commands, 
 
 std::string SelectorNumericPromptState::prompt_output(std::string_view prompt, int cursor) const
 {
-    return tgoto_string(g_tc_CM, 0, g_sel_last_line + 1) + std::string(prompt) +
-           tgoto_string(g_tc_CM, 0, g_sel_items[cursor].line);
+    return tgoto_string(g_tc_CM, 0, g_sel_page.last_line + 1) + std::string(prompt) +
+           tgoto_string(g_tc_CM, 0, g_sel_page.items[cursor].line);
 }
 
 void SelectorNumericPromptState::expect_prompt_cleared(std::string_view prompt, int cursor) const
 {
-    const std::string trace = std::string(prompt) + tgoto_string(g_tc_CM, 0, g_sel_items[cursor].line) +
-                              tgoto_string(g_tc_CM, 0, g_sel_last_line + 1) + "\r<erase>\r";
+    const std::string trace = std::string(prompt) + tgoto_string(g_tc_CM, 0, g_sel_page.items[cursor].line) +
+                              tgoto_string(g_tc_CM, 0, g_sel_page.last_line + 1) + "\r<erase>\r";
     EXPECT_NE(std::string::npos, m_output.find(trace)) << m_output;
 }
 
@@ -4275,7 +4276,7 @@ void SelectorCursorRangePromptInputTest::SetUp()
 {
     SelectorNumericPromptState::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
-    g_sel_item_index = std::get<1>(GetParam()).cursor;
+    g_sel_page.item_index = std::get<1>(GetParam()).cursor;
     select_rows({MAX_SEL});
 }
 
@@ -4294,9 +4295,9 @@ void SelectorCursorRangePromptInputTest::expect_completed_range() const
 void SelectorCursorRangePromptInputTest::expect_range_prompt(std::string_view suffix) const
 {
     const int         origin = std::get<1>(GetParam()).origin;
-    const std::string label = g_use_sel_num ? std::to_string(origin) : std::string(1, g_sel_chars[origin - 1]);
+    const std::string label = g_use_sel_num ? std::to_string(origin) : std::string(1, g_sel_page.chars[origin - 1]);
     const std::string prompt = "Range: " + label + std::string(suffix);
-    const std::string trace = prompt + tgoto_string(g_tc_CM, 0, g_sel_items[origin - 1].line);
+    const std::string trace = prompt + tgoto_string(g_tc_CM, 0, g_sel_page.items[origin - 1].line);
     EXPECT_NE(std::string::npos, m_output.find(trace)) << m_output;
 }
 
@@ -4314,7 +4315,7 @@ TEST_P(SelectorCursorRangePromptInputTest, rangePromptNamesTheCurrentCursorBefor
 TEST_P(SelectorCursorRangePromptInputTest, letterRangePromptNamesTheCurrentCursorBeforeDestinationInput)
 {
     g_use_sel_num = false;
-    g_sel_chars = "abcdefghijkl";
+    g_sel_page.chars = "abcdefghijkl";
     const std::string commands = std::string(std::get<1>(GetParam()).movement) + '-';
 
     ASSERT_EQ('Q', answer_after_prompt(commands, {{"Range: ", "lq"}}));
@@ -4381,7 +4382,7 @@ void SelectorNumericPromptInputTest::SetUp()
 {
     SelectorNumericPromptState::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
-    g_sel_item_index = std::get<1>(GetParam()).cursor;
+    g_sel_page.item_index = std::get<1>(GetParam()).cursor;
 }
 
 TEST_P(SelectorNumericPromptInputTest, completingTheNumberClearsTheDisplayedFirstDigit)
@@ -4412,7 +4413,7 @@ void SelectorNumericPromptCancelInputTest::SetUp()
 {
     SelectorNumericPromptState::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
-    g_sel_item_index = std::get<1>(GetParam()).cursor;
+    g_sel_page.item_index = std::get<1>(GetParam()).cursor;
 }
 
 TEST_P(SelectorNumericPromptCancelInputTest, cancellingTheNumberClearsItsDigitAndPreservesSelections)
@@ -4483,7 +4484,7 @@ void SelectorRangeInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
     g_use_sel_num = std::get<1>(GetParam());
-    g_sel_chars = "abcdefghijkl";
+    g_sel_page.chars = "abcdefghijkl";
 }
 
 std::string_view SelectorRangeInputTest::commands() const
@@ -4520,7 +4521,7 @@ TEST_P(SelectorRangeInputTest, rangeRepeatsDeselectionAndPreservesSelectionsOuts
     select_rows({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MAX_SEL});
     const SelectionRange &range = std::get<2>(GetParam());
     std::vector<int>      selected;
-    for (int index = 0; index < g_sel_page_item_cnt; ++index)
+    for (int index = 0; index < g_sel_page.page_item_cnt; ++index)
     {
         if (std::find(range.rows.begin(), range.rows.end(), index) == range.rows.end())
         {
@@ -4619,13 +4620,13 @@ TEST_P(SelectorGroupedRangeInputTest, rangeSelectsAllEligibleArticlesInItsSubjec
 
     expect_selected(g_sel.mode == SM_SUBJECT ? std::vector<long>{1, 2, 3} : std::vector<long>{1, 2, 3, 4},
                     g_sel.mode == SM_SUBJECT ? 2 : 3);
-    EXPECT_EQ(1, g_sel_items[0].sel);
-    EXPECT_EQ(1, g_sel_items[1].sel);
+    EXPECT_EQ(1, g_sel_page.items[0].sel);
+    EXPECT_EQ(1, g_sel_page.items[1].sel);
     if (g_sel.mode == SM_SUBJECT)
     {
-        EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[2].sel);
+        EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[2].sel);
     }
-    EXPECT_EQ(g_sel.mode == SM_SUBJECT ? 2 : 0, g_sel_item_index);
+    EXPECT_EQ(g_sel.mode == SM_SUBJECT ? 2 : 0, g_sel_page.item_index);
 }
 
 TEST_P(SelectorGroupedRangeInputTest, rangeDeselectsWholeRowsAndPreservesOtherSubjectsAndReadScopes)
@@ -4636,13 +4637,13 @@ TEST_P(SelectorGroupedRangeInputTest, rangeDeselectsWholeRowsAndPreservesOtherSu
 
     expect_selected(g_sel.mode == SM_SUBJECT ? std::vector<long>{4} : std::vector<long>{},
                     g_sel.mode == SM_SUBJECT ? 1 : 0);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[0].sel);
-    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_items[1].sel);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[0].sel);
+    EXPECT_EQ(g_sel.rereading ? 2 : 0, g_sel_page.items[1].sel);
     if (g_sel.mode == SM_SUBJECT)
     {
-        EXPECT_EQ(1, g_sel_items[2].sel);
+        EXPECT_EQ(1, g_sel_page.items[2].sel);
     }
-    EXPECT_EQ(g_sel.mode == SM_SUBJECT ? 2 : 0, g_sel_item_index);
+    EXPECT_EQ(g_sel.mode == SM_SUBJECT ? 2 : 0, g_sel_page.item_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ModeReadStateAndDirection, SelectorGroupedRangeInputTest,
@@ -4710,7 +4711,7 @@ void SelectorPrefixCancelInputTest::SetUp()
     SelectorNumericPromptState::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
     g_use_sel_num = std::get<1>(GetParam());
-    g_sel_chars = "abcdefghijkl";
+    g_sel_page.chars = "abcdefghijkl";
     const auto [key, kill] = std::get<2>(GetParam());
     if (kill)
     {
@@ -4721,7 +4722,7 @@ void SelectorPrefixCancelInputTest::SetUp()
         g_erase_char = key;
     }
     select_rows({0, 3, MAX_SEL});
-    g_sel_item_index = 4;
+    g_sel_page.item_index = 4;
 }
 
 std::string SelectorPrefixCancelInputTest::prefix() const
@@ -4829,7 +4830,7 @@ void SelectorNumericEditInputTest::SetUp()
     SelectorInputTest::SetUp();
     prepare_numeric(std::get<0>(GetParam()));
     select_rows({0, MAX_SEL});
-    g_sel_item_index = 4;
+    g_sel_page.item_index = 4;
 }
 
 TEST_P(SelectorNumericEditInputTest, erasingTheFirstDigitAllowsTheRangeOrGotoDestinationToBeReplaced)
@@ -5097,12 +5098,12 @@ protected:
     void              expect_first_page(int total) const;
 
 private:
-    int m_old_item_index{g_sel_item_index};
+    int m_old_item_index{g_sel_page.item_index};
 };
 
 void ArticleSelectorExclusiveStateTest::TearDown()
 {
-    g_sel_item_index = m_old_item_index;
+    g_sel_page.item_index = m_old_item_index;
     ArticleSelectorSortTest::TearDown();
 }
 
@@ -5113,13 +5114,13 @@ void ArticleSelectorExclusiveStateTest::prepare_exclusive(SelectionMode mode, bo
     rebuild_page();
     if (mode == SM_ARTICLE)
     {
-        g_sel_page_app = article_ptr_list_end() - 1;
+        g_sel_page.page_art = article_ptr_list_end() - 1;
     }
     else if (!exclusive)
     {
-        g_sel_page_sp = &m_charlie;
+        g_sel_page.page_subj = &m_charlie;
     }
-    g_sel_item_index = exclusive && mode != SM_ARTICLE ? 0 : 1;
+    g_sel_page.item_index = exclusive && mode != SM_ARTICLE ? 0 : 1;
 }
 
 void ArticleSelectorExclusiveStateTest::clear_selections()
@@ -5162,18 +5163,18 @@ std::vector<long> ArticleSelectorExclusiveStateTest::included_items() const
 
 void ArticleSelectorExclusiveStateTest::expect_first_page(int total) const
 {
-    EXPECT_EQ(total, g_sel_total_obj_cnt);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(total, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(SS_DATE, g_sel.sort);
     EXPECT_EQ(1, g_sel.direction);
     if (g_sel.mode == SM_ARTICLE)
     {
-        EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+        EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
     }
     else
     {
-        EXPECT_EQ(g_first_subject, g_sel_page_sp);
+        EXPECT_EQ(g_first_subject, g_sel_page.page_subj);
     }
 }
 
@@ -5239,8 +5240,8 @@ void ArticleSelectorBulkStateTest::prepare_bulk(SelectionMode mode, bool rereadi
     {
         clear_selections();
     }
-    g_sel_page_app = nullptr;
-    g_sel_page_sp = nullptr;
+    g_sel_page.page_art = nullptr;
+    g_sel_page.page_subj = nullptr;
     rebuild_page();
     calculate_page();
 }
@@ -5250,7 +5251,7 @@ void ArticleSelectorBulkStateTest::calculate_page()
     Selection no_search{};
     no_search.op = OI_NONE;
     (void) calc_page(no_search);
-    g_sel_item_index = 0;
+    g_sel_page.item_index = 0;
 }
 
 void ArticleSelectorBulkStateTest::select_all()
@@ -5273,14 +5274,15 @@ void ArticleSelectorBulkStateTest::join_reply_thread()
     m_subject.m_thread_link = &m_charlie;
     m_charlie.m_thread_link = &m_subject;
     g_sel.exclusive = true;
-    g_sel_page_sp = nullptr;
+    g_sel_page.page_subj = nullptr;
     rebuild_page();
     calculate_page();
 }
 
 ArticleNum ArticleSelectorBulkStateTest::page_article() const
 {
-    return g_sel.mode == SM_ARTICLE ? (*g_sel_page_app)->article_num() : g_sel_page_sp->m_articles->article_num();
+    return g_sel.mode == SM_ARTICLE ? (*g_sel_page.page_art)->article_num()
+                                    : g_sel_page.page_subj->m_articles->article_num();
 }
 
 void ArticleSelectorBulkStateTest::expect_articles(std::initializer_list<long> unread,
@@ -5336,7 +5338,7 @@ protected:
 
 private:
     ArticleLocation            m_old_location{g_nav.target};
-    SelectionItem              m_old_item{g_sel_items[0]};
+    SelectionItem              m_old_item{g_sel_page.items[0]};
     int                        m_old_page_line{g_page_line};
     int                        m_old_perform_count{g_perform_count};
     bool                       m_old_performed_loop{g_performed_article_loop};
@@ -5372,7 +5374,7 @@ void ArticleSelectorInlineStateTest::SetUp()
 void ArticleSelectorInlineStateTest::TearDown()
 {
     g_nav.target = m_old_location;
-    g_sel_items[0] = m_old_item;
+    g_sel_page.items[0] = m_old_item;
     g_page_line = m_old_page_line;
     g_perform_count = m_old_perform_count;
     g_performed_article_loop = m_old_performed_loop;
@@ -5398,11 +5400,11 @@ void ArticleSelectorInlineStateTest::set_current_item()
 {
     if (g_sel.mode == SM_ARTICLE)
     {
-        g_sel_items[0].u.ap = *g_sel_page_app;
+        g_sel_page.items[0].u.ap = *g_sel_page.page_art;
     }
     else
     {
-        g_sel_items[0].u.sp = g_sel_page_sp;
+        g_sel_page.items[0].u.sp = g_sel_page.page_subj;
     }
 }
 
@@ -5414,7 +5416,7 @@ void ArticleSelectorInlineStateTest::join_inline_thread()
     Article *reply = article_ptr(ArticleNum{3});
     reply->m_parent = m_subject.m_articles;
     article_ptr(ArticleNum{4})->m_sibling = reply;
-    g_sel_page_sp = nullptr;
+    g_sel_page.page_subj = nullptr;
     rebuild_page();
     calculate_page();
     set_current_item();
@@ -5675,8 +5677,8 @@ TEST_P(ArticleSelectorToggleTest, togglesThePopulationAndRequestsARebuild)
 
     EXPECT_EQ(DS_RESTART, result);
     EXPECT_EQ(!rereading, g_sel.rereading);
-    EXPECT_EQ(nullptr, g_sel_page_app);
-    EXPECT_EQ(nullptr, g_sel_page_sp);
+    EXPECT_EQ(nullptr, g_sel_page.page_art);
+    EXPECT_EQ(nullptr, g_sel_page.page_subj);
     EXPECT_EQ(mode, g_sel.mode);
     EXPECT_EQ(2, m_newsgroup.m_to_read);
 }
@@ -5689,8 +5691,8 @@ TEST_P(ArticleSelectorToggleTest, rebuildsThePageWithTheOtherPopulation)
     ASSERT_EQ(DS_RESTART, article_commands('U'));
     rebuild_page();
 
-    EXPECT_EQ(2, g_sel_total_obj_cnt);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(2, m_subject.m_misc);
     EXPECT_EQ(!rereading, g_sel.rereading);
     EXPECT_EQ(ArticleNum{rereading ? 3 : 1}, g_first_art);
@@ -5699,11 +5701,11 @@ TEST_P(ArticleSelectorToggleTest, rebuildsThePageWithTheOtherPopulation)
         ASSERT_EQ(2U, g_art_ptr_list.size());
         EXPECT_EQ(ArticleNum{rereading ? 3 : 1}, g_art_ptr_list[0]->article_num());
         EXPECT_EQ(ArticleNum{rereading ? 4 : 2}, g_art_ptr_list[1]->article_num());
-        EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+        EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
     }
     else
     {
-        EXPECT_EQ(&m_subject, g_sel_page_sp);
+        EXPECT_EQ(&m_subject, g_sel_page.page_subj);
         EXPECT_TRUE(m_subject.m_flags & SF_INCLUDED);
     }
 }
@@ -5739,8 +5741,8 @@ TEST_P(ArticleSelectorModeTest, restoresMarkedReadArticlesBeforeShowingUnreadArt
     prepare_page(GetParam(), true);
     article_ptr(ArticleNum{1})->m_flags |= AF_DEL_SEL;
     m_subject.m_flags |= SF_DEL_SEL;
-    g_sel_last_ap = article_ptr(ArticleNum{1});
-    g_sel_last_sp = &m_subject;
+    g_sel_page.last_art = article_ptr(ArticleNum{1});
+    g_sel_page.last_subj = &m_subject;
 
     const DisplayState result = article_commands('U');
 
@@ -5752,8 +5754,8 @@ TEST_P(ArticleSelectorModeTest, restoresMarkedReadArticlesBeforeShowingUnreadArt
     EXPECT_FALSE(article_ptr(ArticleNum{2})->m_flags & (AF_UNREAD | AF_DEL | AF_DEL_SEL));
     EXPECT_EQ(3, m_newsgroup.m_to_read);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(nullptr, g_sel_last_ap);
-    EXPECT_EQ(nullptr, g_sel_last_sp);
+    EXPECT_EQ(nullptr, g_sel_page.last_art);
+    EXPECT_EQ(nullptr, g_sel_page.last_subj);
 }
 
 TEST_P(ArticleSelectorModeTest, retainsUnreadModeWhenReadArticleCachingIsInterrupted)
@@ -5770,8 +5772,8 @@ TEST_P(ArticleSelectorModeTest, retainsUnreadModeWhenReadArticleCachingIsInterru
     EXPECT_EQ(DS_RESTART, result);
     EXPECT_FALSE(g_sel.rereading);
     EXPECT_EQ(AGF_SEL, g_sel.mask);
-    EXPECT_EQ(nullptr, g_sel_page_app);
-    EXPECT_EQ(nullptr, g_sel_page_sp);
+    EXPECT_EQ(nullptr, g_sel_page.page_art);
+    EXPECT_EQ(nullptr, g_sel_page.page_subj);
     EXPECT_FALSE(g_cached_all_in_range);
     EXPECT_LT(g_last_cached, g_last_art);
     EXPECT_EQ(0, g_int_count);
@@ -5803,15 +5805,15 @@ TEST_P(ArticleSelectorSortCommandTest, ordersThePopulationWithoutChangingSelecti
     EXPECT_EQ(sort, g_sel.sort);
     EXPECT_EQ(reverse ? -1 : 1, g_sel.direction);
     EXPECT_EQ(expected, displayed_order());
-    EXPECT_EQ(4, g_sel_total_obj_cnt);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(4, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     if (mode == SM_ARTICLE)
     {
-        EXPECT_EQ(article_ptr_list_begin(), g_sel_page_app);
+        EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
     }
     else
     {
-        EXPECT_EQ(g_first_subject, g_sel_page_sp);
+        EXPECT_EQ(g_first_subject, g_sel_page.page_subj);
     }
     expect_selection_preserved(false);
 }
@@ -5830,8 +5832,8 @@ TEST_P(ArticleSelectorReverseSortTest, reversesTheCurrentOrderWithoutChangingSel
     EXPECT_EQ(SS_DATE, g_sel.sort);
     EXPECT_EQ(-direction, g_sel.direction);
     EXPECT_EQ(expected, displayed_order());
-    EXPECT_EQ(4, g_sel_total_obj_cnt);
-    EXPECT_EQ(0, g_sel_prior_obj_cnt);
+    EXPECT_EQ(4, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     expect_selection_preserved(rereading);
 }
 
@@ -5873,8 +5875,8 @@ TEST_P(ArticleSelectorCancelSortTest, cancellationRetainsTheOrderAndPageAnchor)
     prepare_sort(mode);
     g_can_home = can_home;
     const std::vector<long> before = displayed_order();
-    Article **const         page_app = g_sel_page_app;
-    Subject *const          page_sp = g_sel_page_sp;
+    Article **const         page_app = g_sel_page.page_art;
+    Subject *const          page_sp = g_sel_page.page_subj;
 
     const DisplayState result = run_command('O', "q");
 
@@ -5882,8 +5884,8 @@ TEST_P(ArticleSelectorCancelSortTest, cancellationRetainsTheOrderAndPageAnchor)
     EXPECT_EQ(SS_DATE, g_sel.sort);
     EXPECT_EQ(1, g_sel.direction);
     EXPECT_EQ(before, displayed_order());
-    EXPECT_EQ(page_app, g_sel_page_app);
-    EXPECT_EQ(page_sp, g_sel_page_sp);
+    EXPECT_EQ(page_app, g_sel_page.page_art);
+    EXPECT_EQ(page_sp, g_sel_page.page_subj);
     expect_selection_preserved(false);
 }
 
@@ -5934,7 +5936,7 @@ TEST_F(ArticleSelectorSortTest, sortingThreadsKeepsRelatedSubjectsTogether)
     EXPECT_EQ(&m_charlie, m_subject.m_thread_link);
     EXPECT_EQ(&m_subject, m_charlie.m_thread_link);
     EXPECT_EQ(&m_bravo, m_bravo.m_thread_link);
-    EXPECT_EQ(4, g_sel_total_obj_cnt);
+    EXPECT_EQ(4, g_sel_page.total_obj_cnt);
     expect_selection_preserved(false);
 }
 
@@ -6103,7 +6105,7 @@ TEST_P(ArticleSelectorBulkModeTest, junkCommandMarksSelectedItemsReadAndRedispla
     expect_articles({2, 3}, {});
     EXPECT_EQ(ArticleNum{2}, g_obj_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(ArticleNum{3}, page_article());
 }
 
@@ -6113,7 +6115,7 @@ TEST_P(ArticleSelectorBulkModeTest, pageCommandPreservesUnselectedItemsOnOtherPa
     ASSERT_TRUE(next_page());
     calculate_page();
     ASSERT_EQ(ArticleNum{3}, page_article());
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
 
     const DisplayState result = run_command('D');
 
@@ -6136,7 +6138,7 @@ TEST_P(ArticleSelectorBulkModeTest, pageCommandWithoutSelectionsContinuesAtTheNe
     expect_articles({1, 2, 4}, {});
     EXPECT_EQ(ArticleNum{3}, g_obj_count);
     EXPECT_EQ(ArticleNum{2}, page_article());
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
 }
 
 TEST_P(ArticleSelectorBulkModeTest, deletingTheLastPageRepairsThePageAnchor)
@@ -6160,7 +6162,7 @@ TEST_P(ArticleSelectorBulkModeTest, deletingTheLastPageRepairsThePageAnchor)
         EXPECT_EQ(ArticleNum{3}, page_article());
     }
     EXPECT_EQ(ArticleNum{3}, g_obj_count);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
 }
 
 TEST_P(ArticleSelectorBulkModeTest, junkCommandWithNoSelectionsLeavesUnreadArticlesAlone)
@@ -6257,8 +6259,8 @@ TEST_P(ArticleSelectorBulkThreadTest, exclusiveCommandsIncludeUnselectedRepliesI
 {
     prepare_bulk(SM_THREAD);
     join_reply_thread();
-    ASSERT_EQ(3, g_sel_page_obj_cnt);
-    ASSERT_EQ(&m_bravo, g_sel_next_sp);
+    ASSERT_EQ(3, g_sel_page.page_obj_cnt);
+    ASSERT_EQ(&m_bravo, g_sel_page.next_subj);
 
     const DisplayState result = run_command(GetParam());
 
@@ -6311,7 +6313,7 @@ TEST_P(ArticleSelectorInlineModeTest, junkCommandAppliesToSelectedArticlesAcross
     expect_articles({2, 3}, {});
     EXPECT_EQ(2, g_perform_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(GetParam(), g_sel.mode);
 }
 
@@ -6465,7 +6467,7 @@ TEST_F(ArticleSelectorInlineStateTest, threadCommandFindsTheFirstSubjectWithUnre
     m_newsgroup.m_to_read = 2;
     join_inline_thread();
     ASSERT_EQ(0, m_subject.m_misc);
-    ASSERT_EQ(&m_subject, g_sel_items[0].u.sp);
+    ASSERT_EQ(&m_subject, g_sel_page.items[0].u.sp);
 
     const DisplayState result = run_inline(".j");
 
@@ -6481,7 +6483,7 @@ TEST_F(ArticleSelectorInlineStateTest, currentSubjectSelectionDoesNotSelectItsTh
     ASSERT_TRUE(next_page());
     calculate_page();
     set_current_item();
-    ASSERT_EQ(&m_charlie, g_sel_items[0].u.sp);
+    ASSERT_EQ(&m_charlie, g_sel_page.items[0].u.sp);
 
     const DisplayState result = run_inline(":.++");
 
@@ -6544,7 +6546,7 @@ TEST_P(ArticleSelectorSearchReadTest, matchingSearchAddsSelectionsStartingAtTheB
     EXPECT_EQ(2, g_selected_subj_cnt);
     EXPECT_EQ(1, g_perform_count);
     EXPECT_EQ("Bravo", g_last_pat);
-    EXPECT_EQ(0, g_sel_item_index);
+    EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(mode, g_sel.mode);
 }
 
@@ -6657,7 +6659,7 @@ TEST_P(ArticleSelectorSearchModeTest, matchingSearchIncludesNewSelectionsInTheEx
     expect_search_selection({1, 2, 4});
     EXPECT_TRUE(g_sel.exclusive);
     EXPECT_EQ((mode == SM_ARTICLE ? std::vector<long>{1, 2, 4} : std::vector<long>{1, 2}), included_items());
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
 }
 
 TEST_P(ArticleSelectorSearchModeTest, followupCommandReturnsToSelectorCommandDispatch)

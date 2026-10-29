@@ -24,8 +24,8 @@ void NewsgroupPageStateTest::SetUp()
     g_newsgroup_order.clear();
     g_first_newsgroup = nullptr;
     g_last_newsgroup = nullptr;
-    g_sel_page_np = nullptr;
-    g_sel_next_np = nullptr;
+    g_sel_page.page_ngd = nullptr;
+    g_sel_page.next_ngd = nullptr;
     g_newsgroup_count = NewsgroupNum{};
     g_newsgroup_min_to_read = TR_ONE;
     g_sel.mode = SM_NEWSGROUP;
@@ -49,8 +49,8 @@ void NewsgroupPageStateTest::TearDown()
     g_newsgroup_order = std::move(m_old_order);
     g_first_newsgroup = m_old_first;
     g_last_newsgroup = m_old_last;
-    g_sel_page_np = m_old_page;
-    g_sel_next_np = m_old_next;
+    g_sel_page.page_ngd = m_old_page;
+    g_sel_page.next_ngd = m_old_next;
     g_newsgroup_count = m_old_count;
     g_newsgroup_min_to_read = m_old_minimum;
     g_selected_count = m_old_selected;
@@ -63,17 +63,17 @@ void NewsgroupPageStateTest::TearDown()
     g_sel.exclusive = m_old_exclusive;
     g_paranoid = m_old_paranoid;
     g_verbose = m_old_verbose;
-    g_sel_total_obj_cnt = m_old_total;
-    g_sel_prior_obj_cnt = m_old_prior;
-    g_sel_page_obj_cnt = m_old_page_objects;
-    g_sel_page_item_cnt = m_old_page_items;
-    g_sel_item_index = m_old_item_index;
+    g_sel_page.total_obj_cnt = m_old_total;
+    g_sel_page.prior_obj_cnt = m_old_prior;
+    g_sel_page.page_obj_cnt = m_old_page_objects;
+    g_sel_page.page_item_cnt = m_old_page_items;
+    g_sel_page.item_index = m_old_item_index;
     g_term_line = m_old_term_line;
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
     g_mouse_bar_width = m_old_mouse_width;
     g_use_sel_num = m_old_use_sel_num;
-    g_sel_chars = m_old_sel_chars;
+    g_sel_page.chars = m_old_sel_chars;
     g_msg = m_old_message;
 }
 
@@ -123,7 +123,7 @@ std::vector<std::string> NewsgroupPageStateTest::groups_with_flag(NewsgroupFlags
 void NewsgroupPageDisplayState::SetUp()
 {
     NewsgroupPageStateTest::SetUp();
-    std::copy(std::begin(g_sel_items), std::end(g_sel_items), m_old_items.begin());
+    std::copy(std::begin(g_sel_page.items), std::end(g_sel_page.items), m_old_items.begin());
     m_env.expect_env_repeatedly("SELECTCHARS", "abcdef");
     m_source.m_name = "default";
     m_source.m_group_desc = "cached-newsgroups";
@@ -141,14 +141,14 @@ void NewsgroupPageDisplayState::SetUp()
     g_tc_SO = "";
     g_tc_SE = "";
     g_tc_LINES = 9;
-    g_sel_last_ap = nullptr;
-    g_sel_last_sp = nullptr;
+    g_sel_page.last_art = nullptr;
+    g_sel_page.last_subj = nullptr;
 }
 
 void NewsgroupPageDisplayState::TearDown()
 {
     m_source.m_desc_sf.close();
-    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_items));
+    std::copy(m_old_items.begin(), m_old_items.end(), std::begin(g_sel_page.items));
     g_multirc = m_old_multirc;
     g_newsgroup_ptr = m_old_group;
     g_in_ng = m_old_in_group;
@@ -157,10 +157,10 @@ void NewsgroupPageDisplayState::TearDown()
     g_erase_each_line = m_old_erase_each_line;
     g_sel_grp_display_mode = m_old_display_mode;
     g_sel_grp_display_mode_index = m_old_display_index;
-    g_sel_last_line = m_old_last_line;
-    g_sel_at_end = m_old_at_end;
-    g_sel_last_ap = m_old_last_article;
-    g_sel_last_sp = m_old_last_subject;
+    g_sel_page.last_line = m_old_last_line;
+    g_sel_page.at_end = m_old_at_end;
+    g_sel_page.last_art = m_old_last_article;
+    g_sel_page.last_subj = m_old_last_subject;
     g_term_col = m_old_term_column;
     g_term_scrolled = m_old_scrolled;
     g_fire_is_out = m_old_fire;
@@ -197,7 +197,7 @@ void NewsgroupPageDisplayState::prepare_display(bool rereading, char mode, bool 
     m_entries[4]->m_flags |= NF_DEL;
     m_entries[6]->m_flags |= NF_DEL;
     g_newsgroup_ptr = m_entries[exclusive ? 6 : 4];
-    g_sel_item_index = -1;
+    g_sel_page.item_index = -1;
     cache_descriptions("Alpha discussion\n");
     for (std::size_t index = 0; index < m_entries.size(); ++index)
     {

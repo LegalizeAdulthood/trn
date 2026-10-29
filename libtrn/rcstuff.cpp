@@ -56,8 +56,6 @@
 namespace fs = std::filesystem;
 
 HashTable           *g_newsrc_hash{};
-Multirc             *g_sel_page_mp{};
-Multirc             *g_sel_next_mp{};
 std::vector<Multirc> g_multircs;                       // all Multircs
 Multirc             *g_multirc{};                      // the current Multirc
 bool                 g_paranoid{};                     // did we detect some inconsistency in .newsrc?
@@ -120,8 +118,8 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     const std::ptrdiff_t        current_index = newsgroup_pointer_index(old_base, old_count, g_current_newsgroup);
     const std::ptrdiff_t        recent_index = newsgroup_pointer_index(old_base, old_count, g_recent_newsgroup);
     const std::ptrdiff_t        start_index = newsgroup_pointer_index(old_base, old_count, g_start_here);
-    const std::ptrdiff_t        sel_page_index = newsgroup_pointer_index(old_base, old_count, g_sel_page_np);
-    const std::ptrdiff_t        sel_next_index = newsgroup_pointer_index(old_base, old_count, g_sel_next_np);
+    const std::ptrdiff_t        sel_page_index = newsgroup_pointer_index(old_base, old_count, g_sel_page.page_ngd);
+    const std::ptrdiff_t        sel_next_index = newsgroup_pointer_index(old_base, old_count, g_sel_page.next_ngd);
     const std::ptrdiff_t        go_index = newsgroup_pointer_index(old_base, old_count, g_ng_go_newsgroup_ptr);
     std::vector<std::ptrdiff_t> order_indexes;
     order_indexes.reserve(g_newsgroup_order.size());
@@ -132,9 +130,9 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     std::vector<std::ptrdiff_t> selection_indexes;
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        for (int i = 0; i != g_sel_page_item_cnt; ++i)
+        for (int i = 0; i != g_sel_page.page_item_cnt; ++i)
         {
-            selection_indexes.push_back(newsgroup_pointer_index(old_base, old_count, g_sel_items[i].u.np));
+            selection_indexes.push_back(newsgroup_pointer_index(old_base, old_count, g_sel_page.items[i].u.np));
         }
     }
 
@@ -151,14 +149,14 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     g_current_newsgroup = newsgroup_pointer_from_index(new_base, current_index);
     g_recent_newsgroup = newsgroup_pointer_from_index(new_base, recent_index);
     g_start_here = newsgroup_pointer_from_index(new_base, start_index);
-    g_sel_page_np = newsgroup_pointer_from_index(new_base, sel_page_index);
-    g_sel_next_np = newsgroup_pointer_from_index(new_base, sel_next_index);
+    g_sel_page.page_ngd = newsgroup_pointer_from_index(new_base, sel_page_index);
+    g_sel_page.next_ngd = newsgroup_pointer_from_index(new_base, sel_next_index);
     g_ng_go_newsgroup_ptr = newsgroup_pointer_from_index(new_base, go_index);
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        for (int i = 0; i != g_sel_page_item_cnt; ++i)
+        for (int i = 0; i != g_sel_page.page_item_cnt; ++i)
         {
-            g_sel_items[i].u.np = newsgroup_pointer_from_index(new_base, selection_indexes[i]);
+            g_sel_page.items[i].u.np = newsgroup_pointer_from_index(new_base, selection_indexes[i]);
         }
     }
     rebuild_newsgroup_hash();
@@ -484,8 +482,8 @@ void unuse_multirc(Multirc *mptr)
         g_current_newsgroup = nullptr;
         g_recent_newsgroup = nullptr;
         g_start_here = nullptr;
-        g_sel_page_np = nullptr;
-        g_sel_next_np = nullptr;
+        g_sel_page.page_ngd = nullptr;
+        g_sel_page.next_ngd = nullptr;
         g_ng_go_newsgroup_ptr = nullptr;
     }
     g_newsgroup_count = NewsgroupNum{};
@@ -1745,13 +1743,13 @@ reask_bogus:
             {
                 g_newsgroup_ptr = newsgroup_first();
             }
-            if (g_sel_page_np && g_sel_page_np->m_rc_line.empty())
+            if (g_sel_page.page_ngd && g_sel_page.page_ngd->m_rc_line.empty())
             {
-                g_sel_page_np = nullptr;
+                g_sel_page.page_ngd = nullptr;
             }
-            if (g_sel_next_np && g_sel_next_np->m_rc_line.empty())
+            if (g_sel_page.next_ngd && g_sel_page.next_ngd->m_rc_line.empty())
             {
-                g_sel_next_np = nullptr;
+                g_sel_page.next_ngd = nullptr;
             }
         }
         else

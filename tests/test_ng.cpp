@@ -1354,10 +1354,10 @@ protected:
 
 private:
     ArticleUnread m_old_newsgroup_min_to_read{g_newsgroup_min_to_read};
-    Subject      *m_old_sel_page_sp{g_sel_page_sp};
-    Article     **m_old_sel_page_app{g_sel_page_app};
-    Article      *m_old_sel_last_ap{g_sel_last_ap};
-    Subject      *m_old_sel_last_sp{g_sel_last_sp};
+    Subject      *m_old_sel_page_sp{g_sel_page.page_subj};
+    Article     **m_old_sel_page_app{g_sel_page.page_art};
+    Article      *m_old_sel_last_ap{g_sel_page.last_art};
+    Subject      *m_old_sel_last_sp{g_sel_page.last_subj};
 };
 
 void UnsubscribeArticleTest::SetUp()
@@ -1369,10 +1369,10 @@ void UnsubscribeArticleTest::SetUp()
 void UnsubscribeArticleTest::TearDown()
 {
     g_newsgroup_min_to_read = m_old_newsgroup_min_to_read;
-    g_sel_page_sp = m_old_sel_page_sp;
-    g_sel_page_app = m_old_sel_page_app;
-    g_sel_last_ap = m_old_sel_last_ap;
-    g_sel_last_sp = m_old_sel_last_sp;
+    g_sel_page.page_subj = m_old_sel_page_sp;
+    g_sel_page.page_art = m_old_sel_page_app;
+    g_sel_page.last_art = m_old_sel_last_ap;
+    g_sel_page.last_subj = m_old_sel_last_sp;
     CatchupArticleTest::TearDown();
 }
 

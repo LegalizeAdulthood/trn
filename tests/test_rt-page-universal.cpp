@@ -5,6 +5,7 @@
 
 #include <trn/hash.h>
 #include <trn/help.h>
+#include <trn/rt-page.h>
 #include <trn/univ.h>
 
 #include <iomanip>
@@ -27,8 +28,8 @@ protected:
 private:
     UniversalItemList  m_old_items{std::move(g_univ_items)};
     HashTable         *m_old_hash{g_newsrc_hash};
-    UniversalItemIndex m_old_page{g_sel_page_univ_index};
-    UniversalItemIndex m_old_next{g_sel_next_univ_index};
+    UniversalItemIndex m_old_page{g_sel_page.page_univ_index};
+    UniversalItemIndex m_old_next{g_sel_page.next_univ_index};
     std::string        m_old_title{g_univ_title};
     int                m_old_level{g_univ_level};
 };
@@ -39,8 +40,8 @@ void UniversalPageDisplayState::SetUp()
     g_univ_items.clear();
     g_univ_items.reserve(16);
     g_sel.mode = SM_UNIVERSAL;
-    g_sel_page_univ_index = {};
-    g_sel_next_univ_index = {};
+    g_sel_page.page_univ_index = {};
+    g_sel_page.next_univ_index = {};
     g_univ_title = "Reading menu";
     g_univ_level = 2;
     g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
@@ -52,8 +53,8 @@ void UniversalPageDisplayState::TearDown()
     hash_destroy(g_newsrc_hash);
     g_newsrc_hash = m_old_hash;
     g_univ_items = std::move(m_old_items);
-    g_sel_page_univ_index = m_old_page;
-    g_sel_next_univ_index = m_old_next;
+    g_sel_page.page_univ_index = m_old_page;
+    g_sel_page.next_univ_index = m_old_next;
     g_univ_title = m_old_title;
     g_univ_level = m_old_level;
     NewsgroupPageDisplayState::TearDown();
@@ -89,9 +90,9 @@ void UniversalPageDisplayState::add_article(std::string description, int score, 
 
 void UniversalPageDisplayState::expect_row(int row, int identity, int selected) const
 {
-    EXPECT_EQ(univ_item(identity), g_sel_items[row].u.un);
-    EXPECT_EQ(row + 2, g_sel_items[row].line);
-    EXPECT_EQ(selected, g_sel_items[row].sel);
+    EXPECT_EQ(univ_item(identity), g_sel_page.items[row].u.un);
+    EXPECT_EQ(row + 2, g_sel_page.items[row].line);
+    EXPECT_EQ(selected, g_sel_page.items[row].sel);
 }
 
 class UniversalMenuRowTest : public UniversalPageDisplayState, public testing::WithParamInterface<std::tuple<int, bool>>
@@ -171,7 +172,7 @@ TEST_P(UniversalMenuRowTest, displaysTheDescriptionWithoutChangingTheNavigationP
 
     EXPECT_THAT(output, testing::HasSubstr("a        " + (described ? description : "[No Description]") + "\n"));
     EXPECT_THAT(output, testing::HasSubstr("[2] Reading menu"));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11);
     EXPECT_EQ(description, g_univ_items[0].m_desc);
     EXPECT_EQ(0, g_univ_items[0].m_score);
@@ -190,8 +191,8 @@ TEST_P(UniversalMenuRowTest, displaysTheDescriptionWithoutChangingTheNavigationP
     {
         EXPECT_EQ("reading.txt", g_univ_items[0].text_file().fname);
     }
-    EXPECT_EQ(0, g_sel_next_univ_index);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(PayloadAndDescription, UniversalMenuRowTest,
@@ -208,7 +209,7 @@ TEST_P(UniversalArticleRowTest, displaysCustomOrGeneratedDescriptionsWithoutChan
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr("a        " + (custom ? "Featured article" : generated.str()) + "\n"));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11);
     const UniversalItem &item = g_univ_items[0];
     EXPECT_EQ(score, item.m_score);
@@ -258,12 +259,12 @@ TEST_P(UniversalGroupRowTest, displaysTheGroupReadStatusWithoutChangingItsNewsrc
 
     EXPECT_THAT(output, testing::HasSubstr(expected.str() + "comp.reading\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Ignored group description")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11, count <= 0 ? 2 : 0);
     EXPECT_EQ(count, group.m_to_read);
     EXPECT_EQ(" 1-5", group.rc_numbers());
     EXPECT_EQ("comp.reading", g_univ_items[0].group().ng);
-    EXPECT_EQ(0, g_sel_next_univ_index);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadStatus, UniversalGroupRowTest,
@@ -280,7 +281,7 @@ TEST_P(UniversalHelpRowTest, displaysTheHelpDestinationInsteadOfItsDescription)
 
     EXPECT_THAT(output, testing::HasSubstr("a        Help on the " + std::string{name} + "\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Ignored help description")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11);
     EXPECT_EQ(location, g_univ_items[0].help_location());
 }
@@ -318,7 +319,7 @@ TEST_P(UniversalMarkerTest, rendersTheActiveScopeSelectionAndDeletionMarker)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr(std::string{numeric ? "01" : "a"} + " +-*"[marker] + "       Reading\n"));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11, marker);
     EXPECT_EQ(flags | UF_INCLUDED | (rereading && !(state & 1) ? UF_DEL : UF_NONE), g_univ_items[0].m_flags);
 }
@@ -342,7 +343,7 @@ TEST_P(UniversalOrderTest, keepsLabelsAndPayloadsTogetherAfterSorting)
 
     const std::string output = render_page();
 
-    ASSERT_EQ(3, g_sel_page_item_cnt);
+    ASSERT_EQ(3, g_sel_page.page_item_cnt);
     for (int row = 0; row < 3; ++row)
     {
         const int            identity = identities[row];
@@ -356,8 +357,8 @@ TEST_P(UniversalOrderTest, keepsLabelsAndPayloadsTogetherAfterSorting)
         EXPECT_THAT(output, testing::HasSubstr(std::string(1, "abc"[row]) + (identity == 22 ? "+       " : "        ") +
                                                description + "\n"));
     }
-    EXPECT_EQ(0, g_sel_next_univ_index);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(SortAndDirection, UniversalOrderTest,
@@ -393,11 +394,11 @@ TEST_P(UniversalEligibilityTest, omitsAnIneligibleEntryWithoutConsumingItsRowLab
 
     EXPECT_THAT(output, testing::HasSubstr("a        Visible text\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Hidden")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 22);
-    EXPECT_EQ(1, g_sel_total_obj_cnt);
-    EXPECT_EQ(0, g_sel_next_univ_index);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(1, g_sel_page.total_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
+    EXPECT_TRUE(g_sel_page.at_end);
 }
 
 INSTANTIATE_TEST_SUITE_P(IneligibleEntry, UniversalEligibilityTest, testing::Values(0, 1, 2, 3));
@@ -415,9 +416,9 @@ TEST_F(UniversalPageDisplayState, displaysOnlySelectedEntriesInExclusiveMode)
     EXPECT_THAT(output, testing::HasSubstr("a+       Selected\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Unselected")));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Help on")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 22, 1);
-    EXPECT_EQ(1, g_sel_total_obj_cnt);
+    EXPECT_EQ(1, g_sel_page.total_obj_cnt);
     EXPECT_EQ(ArticleNum{3}, g_obj_count);
 }
 
@@ -434,13 +435,13 @@ TEST_P(UniversalPagingTest, resumesFromTheNextIdentityAcrossHiddenEntries)
     EXPECT_THAT(output, testing::HasSubstr(std::string{GetParam() ? "01" : "a"} + "        First\n"));
     EXPECT_THAT(output,
                 testing::HasSubstr(std::string{GetParam() ? "02" : "b"} + "        Help on the Universal Selector\n"));
-    ASSERT_EQ(2, g_sel_page_item_cnt);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
     expect_row(0, 11);
     expect_row(1, 33);
-    EXPECT_EQ(44, g_sel_next_univ_index);
-    EXPECT_EQ(2, g_sel_page_obj_cnt);
-    EXPECT_EQ(3, g_sel_total_obj_cnt);
-    EXPECT_FALSE(g_sel_at_end);
+    EXPECT_EQ(44, g_sel_page.next_univ_index);
+    EXPECT_EQ(2, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(3, g_sel_page.total_obj_cnt);
+    EXPECT_FALSE(g_sel_page.at_end);
 }
 
 TEST_P(UniversalPagingTest, rendersTheFinalPartialPageAndStops)
@@ -458,12 +459,12 @@ TEST_P(UniversalPagingTest, rendersTheFinalPartialPageAndStops)
     EXPECT_THAT(output, testing::HasSubstr(std::string{GetParam() ? "01" : "a"} + "        Last\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("First")));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Hidden")));
-    ASSERT_EQ(1, g_sel_page_item_cnt);
+    ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 33);
-    EXPECT_EQ("last", g_sel_items[0].u.un->config_file().label);
-    EXPECT_EQ(2, g_sel_prior_obj_cnt);
-    EXPECT_EQ(0, g_sel_next_univ_index);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ("last", g_sel_page.items[0].u.un->config_file().label);
+    EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -475,10 +476,10 @@ TEST_P(UniversalPagingTest, endsAnExactlyFullFinalPage)
 
     (void) render_page();
 
-    EXPECT_EQ(2, g_sel_page_item_cnt);
-    EXPECT_EQ(2, g_sel_page_obj_cnt);
-    EXPECT_EQ(0, g_sel_next_univ_index);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(2, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
+    EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(next_page());
 }
 
@@ -491,8 +492,8 @@ TEST_F(UniversalPageDisplayState, rendersAnEmptyMenuWithoutStalePageCounts)
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr("[2] Reading menu"));
-    EXPECT_EQ(0, g_sel_page_item_cnt);
-    EXPECT_EQ(0, g_sel_page_obj_cnt);
-    EXPECT_EQ(0, g_sel_next_univ_index);
-    EXPECT_TRUE(g_sel_at_end);
+    EXPECT_EQ(0, g_sel_page.page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.page_obj_cnt);
+    EXPECT_EQ(0, g_sel_page.next_univ_index);
+    EXPECT_TRUE(g_sel_page.at_end);
 }

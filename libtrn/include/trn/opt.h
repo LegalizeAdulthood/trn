@@ -149,7 +149,6 @@ extern OptionValueList g_option_def_vals;
 extern OptionValueList g_option_saved_vals;
 extern OptionFlags  *g_option_flags;
 extern OptionDraft  *g_option_draft;
-extern int           g_sel_page_op;
 
 void        opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf);
 void        opt_final();

@@ -8,6 +8,7 @@
 #include <trn/intrp.h>
 #include <trn/ng.h>
 #include <trn/ngdata.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -26,8 +27,8 @@ protected:
     {
         m_old_groups = std::move(g_add_groups);
         g_add_groups = {};
-        m_old_sel_page_gp = g_sel_page_gp;
-        m_old_sel_next_gp = g_sel_next_gp;
+        m_old_sel_page_gp = g_sel_page.page_grp;
+        m_old_sel_next_gp = g_sel_page.next_grp;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_newsgroup_to_read = g_newsgroup_to_read;
         m_old_general_mode = g_general_mode;
@@ -39,8 +40,8 @@ protected:
         m_old_int_count = g_int_count;
 
         m_group = g_add_groups.add("comp/lang", 0, 0, nullptr);
-        g_sel_page_gp = AddGroupIndex::None;
-        g_sel_next_gp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::None;
+        g_sel_page.next_grp = AddGroupIndex::None;
         g_newsgroup_ptr = nullptr;
         g_newsgroup_to_read = NewsgroupNum{1};
         g_general_mode = GM_READ;
@@ -57,8 +58,8 @@ protected:
     void TearDown() override
     {
         g_add_groups = std::move(m_old_groups);
-        g_sel_page_gp = m_old_sel_page_gp;
-        g_sel_next_gp = m_old_sel_next_gp;
+        g_sel_page.page_grp = m_old_sel_page_gp;
+        g_sel_page.next_grp = m_old_sel_next_gp;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_newsgroup_to_read = m_old_newsgroup_to_read;
         g_general_mode = m_old_general_mode;

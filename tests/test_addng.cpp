@@ -80,8 +80,8 @@ protected:
     {
         m_old_groups = std::move(g_add_groups);
         g_add_groups = {};
-        m_old_page = std::exchange(g_sel_page_gp, AddGroupIndex::None);
-        m_old_next = std::exchange(g_sel_next_gp, AddGroupIndex::None);
+        m_old_page = std::exchange(g_sel_page.page_grp, AddGroupIndex::None);
+        m_old_next = std::exchange(g_sel_page.next_grp, AddGroupIndex::None);
         m_old_data_source = g_data_source;
         m_old_sel_sort = g_sel.sort;
         m_old_sel_direction = g_sel.direction;
@@ -93,8 +93,8 @@ protected:
     void TearDown() override
     {
         g_add_groups = std::move(m_old_groups);
-        g_sel_page_gp = m_old_page;
-        g_sel_next_gp = m_old_next;
+        g_sel_page.page_grp = m_old_page;
+        g_sel_page.next_grp = m_old_next;
         g_data_source = m_old_data_source;
         g_sel.sort = m_old_sel_sort;
         g_sel.direction = m_old_sel_direction;
@@ -191,8 +191,8 @@ void GrownAddGroupIdentityTest::SetUp()
     m_alpha = add_to_list("comp.lang.alpha", 3, '!');
     ASSERT_NE(AddGroupIndex::None, m_beta);
     ASSERT_NE(AddGroupIndex::None, m_alpha);
-    g_sel_page_gp = m_beta;
-    g_sel_next_gp = m_alpha;
+    g_sel_page.page_grp = m_beta;
+    g_sel_page.next_grp = m_alpha;
     m_item.gp = m_beta;
     for (int i = 0; i != 256; ++i)
     {
@@ -274,8 +274,8 @@ protected:
         m_old_use_add_selector = g_use_add_selector;
         m_old_groups = std::move(g_add_groups);
         g_add_groups = {};
-        m_old_page = std::exchange(g_sel_page_gp, AddGroupIndex::None);
-        m_old_next = std::exchange(g_sel_next_gp, AddGroupIndex::None);
+        m_old_page = std::exchange(g_sel_page.page_grp, AddGroupIndex::None);
+        m_old_next = std::exchange(g_sel_page.next_grp, AddGroupIndex::None);
         m_old_int_count = g_int_count;
         m_old_erase_screen = g_erase_screen;
         m_old_tc_am = g_tc_AM;
@@ -350,8 +350,8 @@ protected:
         g_data_source = m_old_data_source;
         g_multirc = m_old_multirc;
         g_add_groups = std::move(m_old_groups);
-        g_sel_page_gp = m_old_page;
-        g_sel_next_gp = m_old_next;
+        g_sel_page.page_grp = m_old_page;
+        g_sel_page.next_grp = m_old_next;
         g_quick_start = m_old_quick_start;
         g_use_add_selector = m_old_use_add_selector;
         g_int_count = m_old_int_count;
@@ -533,8 +533,8 @@ protected:
         EXPECT_FALSE(changed);
         EXPECT_EQ(old_count, g_newsgroup_count);
         EXPECT_TRUE(g_add_groups.empty());
-        EXPECT_EQ(AddGroupIndex::None, g_sel_page_gp);
-        EXPECT_EQ(AddGroupIndex::None, g_sel_next_gp);
+        EXPECT_EQ(AddGroupIndex::None, g_sel_page.page_grp);
+        EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
         return output;
     }
 
@@ -716,8 +716,8 @@ TEST_F(GrownAddGroupIdentityTest, preservesPageSelectionAndDuplicateIdentityAcro
     sort_add_groups();
 
     EXPECT_EQ(m_alpha, g_add_groups.first());
-    EXPECT_EQ("comp.lang.beta", g_add_groups[g_sel_page_gp].m_name);
-    EXPECT_EQ("comp.lang.alpha", g_add_groups[g_sel_next_gp].m_name);
+    EXPECT_EQ("comp.lang.beta", g_add_groups[g_sel_page.page_grp].m_name);
+    EXPECT_EQ("comp.lang.alpha", g_add_groups[g_sel_page.next_grp].m_name);
     EXPECT_EQ(AGF_SEL, g_add_groups[m_item.gp].m_flags);
     EXPECT_EQ(m_beta, add_to_list("comp.lang.beta", 99, '!'));
 }

@@ -19,6 +19,7 @@
 #include <trn/ng.h>
 #include <trn/ngdata.h>
 #include <trn/rcstuff.h>
+#include <trn/rt-page.h>
 #include <trn/rt-select.h>
 #include <trn/rt-util.h>
 #include <trn/score.h>
@@ -67,8 +68,6 @@ bool g_univ_follow_temp{};
 UniversalItemList  g_univ_items;
 UniversalNameSet   g_univ_ng_names;
 UniversalNameSet   g_univ_vg_names;
-UniversalItemIndex g_sel_page_univ_index{};
-UniversalItemIndex g_sel_next_univ_index{};
 std::string        g_univ_fname;    // current filename (may be empty)
 std::string        g_univ_label;    // current label (may be null)
 std::string        g_univ_title;    // title of current level
@@ -285,8 +284,8 @@ static void univ_open()
     g_univ_items.clear();
     g_univ_ng_names.clear();
     g_univ_vg_names.clear();
-    g_sel_page_univ_index = {};
-    g_sel_next_univ_index = {};
+    g_sel_page.page_univ_index = {};
+    g_sel_page.next_univ_index = {};
     g_univ_fname.clear();
     g_univ_title.clear();
     g_univ_label.clear();
@@ -310,8 +309,8 @@ void univ_close()
     g_univ_label.clear();
     g_univ_ng_names.clear();
     g_univ_vg_names.clear();
-    g_sel_page_univ_index = {};
-    g_sel_next_univ_index = {};
+    g_sel_page.page_univ_index = {};
+    g_sel_page.next_univ_index = {};
     s_current_vg_ui_index = {};
     g_univ_level--;
 }

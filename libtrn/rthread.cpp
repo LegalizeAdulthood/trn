@@ -174,8 +174,8 @@ void thread_open()
     thread_grow();          // thread any new articles not yet in the database
     g_data_source->m_ov_opened = save_ov_opened;
     g_added_articles = 0;
-    g_sel_page_sp = nullptr;
-    g_sel_page_app = nullptr;
+    g_sel_page.page_subj = nullptr;
+    g_sel_page.page_art = nullptr;
 }
 
 // Update the group's thread info.
@@ -209,10 +209,10 @@ void thread_close()
     {
         hash_walk(g_msg_id_hash, cleanup_msg_id_hash, 0);
     }
-    g_sel_page_sp = nullptr;
-    g_sel_page_app = nullptr;
-    g_sel_last_ap = nullptr;
-    g_sel_last_sp = nullptr;
+    g_sel_page.page_subj = nullptr;
+    g_sel_page.page_art = nullptr;
+    g_sel_page.last_art = nullptr;
+    g_sel_page.last_subj = nullptr;
     g_sel.selected_only = false;
     g_sel.exclusive = false;
     ov_close();
@@ -701,10 +701,10 @@ void deselect_all()
     }
     g_selected_count = 0;
     g_selected_subj_cnt = 0;
-    g_sel_page_sp = nullptr;
-    g_sel_page_app = nullptr;
-    g_sel_last_ap = nullptr;
-    g_sel_last_sp = nullptr;
+    g_sel_page.page_subj = nullptr;
+    g_sel_page.page_art = nullptr;
+    g_sel_page.last_art = nullptr;
+    g_sel_page.last_subj = nullptr;
     g_sel.selected_only = false;
 }
 
@@ -1559,7 +1559,7 @@ void sort_articles(Article *anchor)
         sort_procedure = article_order_score;
         break;
     }
-    g_sel_page_app = nullptr;
+    g_sel_page.page_art = nullptr;
     std::qsort(g_art_ptr_list.data(), g_art_ptr_list.size(), sizeof(Article *),
                reinterpret_cast<int (*)(const void *, const void *)>(sort_procedure));
 }
@@ -1570,8 +1570,8 @@ static void build_article_ptrs()
     int        desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
 
     g_art_ptr = nullptr;
-    g_sel_page_app = nullptr;
-    g_sel_next_app = nullptr;
+    g_sel_page.page_art = nullptr;
+    g_sel_page.next_art = nullptr;
     g_art_ptr_list.clear();
     g_art_ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
     for (ArticleNum an = article_first(g_abs_first); count; an = article_next(an))

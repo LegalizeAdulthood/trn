@@ -83,8 +83,6 @@ private:
 };
 
 extern AddGroupTable g_add_groups;
-extern AddGroupIndex g_sel_page_gp;
-extern AddGroupIndex g_sel_next_gp;
 extern bool      g_quick_start;      // -q
 extern bool      g_use_add_selector; //
 

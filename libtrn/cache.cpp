@@ -242,8 +242,8 @@ void close_cache()
 
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
-    g_sel_page_app = nullptr;
-    g_sel_next_app = nullptr;
+    g_sel_page.page_art = nullptr;
+    g_sel_page.next_art = nullptr;
     thread_close();
 
     article_walk(
