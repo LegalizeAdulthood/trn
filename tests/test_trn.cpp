@@ -3240,7 +3240,7 @@ void LocalArticleTraversalTest::SetUp()
     const SelectionMode mode = GetParam() == LocalReadingOrder::Thread    ? SM_THREAD
                                : GetParam() == LocalReadingOrder::Subject ? SM_SUBJECT
                                                                           : SM_ARTICLE;
-    set_selector(mode, GetParam() == LocalReadingOrder::Numeric ? SS_NATURAL : SS_DATE);
+    g_sel.set_selector(mode, GetParam() == LocalReadingOrder::Numeric ? SS_NATURAL : SS_DATE);
     fs::current_path(m_output_dir);
     ASSERT_EQ(1, access_newsgroup());
     if (GetParam() == LocalReadingOrder::Date)
@@ -5017,7 +5017,7 @@ void NewsgroupSelectorReadingStateTest::configure_selector(SelectionMode mode, b
     g_erase_screen = erase_screen;
     g_tc_LINES = 40;
     g_init_lines = ArticleLine{g_tc_LINES};
-    set_selector(mode, mode == SM_ARTICLE ? SS_NATURAL : SS_DATE);
+    g_sel.set_selector(mode, mode == SM_ARTICLE ? SS_NATURAL : SS_DATE);
     std::ofstream{m_output_dir / "comp/lang/cpp/3", std::ios::binary}
         << "From: Branch <branch@example.test>\nSubject: Branch\n"
            "Date: 21 Oct 2026 12:00:00 GMT\nMessage-ID: <branch@example.test>\n\nBranch body\n";
@@ -5930,7 +5930,7 @@ void NewsgroupSelectorShortcutReadingTest::SetUp()
     configure_selector(entry.expected_mode, erase_screen);
     g_sel.default_mode = entry.default_mode;
     g_use_threads = g_threaded_group = entry.threaded;
-    set_selector(entry.default_mode, SS_MAGIC_NUMBER);
+    g_sel.set_selector(entry.default_mode, SS_MAGIC_NUMBER);
     set_read_range("");
 }
 
@@ -6347,7 +6347,7 @@ void NewsgroupSelectorDelegationStateTest::prepare_selector(bool rereading)
             group.m_rc_line += " 1-3";
         }
     }
-    set_selector(SM_NEWSGROUP, SS_STRING);
+    g_sel.set_selector(SM_NEWSGROUP, SS_STRING);
     g_sel_page_np = &g_newsgroup_data[1];
     init_pages(PRESERVE_PAGE);
     Selection no_search{};
@@ -13809,7 +13809,7 @@ TEST_P(NewsgroupSelectorCancelReadingTest, revivedItemsRemainReachableThroughFir
 TEST_F(NewsgroupSelectorReadingStateTest, returningFromTheReadSelectorPreservesReverseArticleReadingOrder)
 {
     configure_selector(SM_ARTICLE, false);
-    set_selector(SM_ARTICLE, static_cast<SelectionSortMode>(-SS_NATURAL));
+    g_sel.set_selector(SM_ARTICLE, static_cast<SelectionSortMode>(-SS_NATURAL));
     set_read_range("");
 
     const DoNewsgroupResult result = run_reading({"+", "Z", "U+", "+", "n", "Q"});

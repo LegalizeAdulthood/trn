@@ -98,11 +98,11 @@ void thread_open()
 
     if (g_sel.mode == SM_ARTICLE)
     {
-        set_selector(g_sel.mode, g_sel.art_sort);
+        g_sel.set_selector(g_sel.mode, g_sel.art_sort);
     }
     else
     {
-        set_selector(g_sel.thread_mode, g_sel.thread_sort);
+        g_sel.set_selector(g_sel.thread_mode, g_sel.thread_sort);
     }
 
     if ((g_data_source->m_flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range)

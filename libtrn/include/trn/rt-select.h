@@ -60,6 +60,8 @@ struct SelectorPolicy
     bool              selected_only{};
     SelectionSortMode add_group_sort{SS_NATURAL};
     SelectionSortMode universal_sort{SS_NATURAL};
+
+    void set_selector(SelectionMode smode, SelectionSortMode ssort);
 };
 
 extern SelectorPolicy    g_sel;

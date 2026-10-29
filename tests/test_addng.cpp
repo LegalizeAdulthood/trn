@@ -486,7 +486,7 @@ protected:
         g_use_sel_num = true;
         g_in_ng = false;
         g_tc_LINES = 8;
-        set_selector(SM_ADD_GROUP, SS_NATURAL);
+        g_sel.set_selector(SM_ADD_GROUP, SS_NATURAL);
     }
 
     void TearDown() override
@@ -494,7 +494,7 @@ protected:
         pop_only();
         drain_input();
         errno = m_old_errno;
-        set_selector(SM_ADD_GROUP, SS_NATURAL);
+        g_sel.set_selector(SM_ADD_GROUP, SS_NATURAL);
         g_sel.mode = m_old_sel_mode;
         g_sel.sort = m_old_sel_sort;
         g_sel.direction = m_old_sel_direction;

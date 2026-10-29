@@ -432,7 +432,7 @@ void NewsgroupSelectorSortStateTest::prepare_sort(bool rereading, SelectionSortM
         group.m_rc_line += " 1-" + std::to_string(10 - count);
         m_objects[index] = &group;
     }
-    set_selector(SM_NEWSGROUP, initial);
+    g_sel.set_selector(SM_NEWSGROUP, initial);
     g_sel_page_np = m_objects[2];
     initialize_page();
     for (int index = 0; index < 5; ++index)
@@ -1930,7 +1930,7 @@ TEST_P(NewsgroupSelectorEmptySortTest, sortingAnEmptyCatalogRetainsAnEmptyPageAn
 {
     const auto [rereading, command] = GetParam();
     set_read_scope(rereading);
-    set_selector(SM_NEWSGROUP, static_cast<SelectionSortMode>(-SS_STRING));
+    g_sel.set_selector(SM_NEWSGROUP, static_cast<SelectionSortMode>(-SS_STRING));
     initialize_page();
 
     const DisplayState result = run_command(command, command == 'O' ? "c" : "");

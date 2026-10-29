@@ -1417,7 +1417,7 @@ bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
             newline();
             if (command_char(command) == 'y')
             {
-                set_selector(SM_NEWSGROUP, SS_NATURAL);
+                g_sel.set_selector(SM_NEWSGROUP, SS_NATURAL);
             }
             else
             {

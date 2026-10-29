@@ -211,7 +211,7 @@ private:
         if (g_sel.mode != save_sel_mode)                    \
         {                                                   \
             g_sel.mode = save_sel_mode;                     \
-            set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER); \
+            g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER); \
             save_sel_mode = SM_MAGIC_NUMBER;                \
         }                                                   \
     } while (false)
@@ -537,7 +537,7 @@ char multirc_selector()
     g_sel.exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
+    g_sel.set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
 
 sel_restart:
     s_end_char = selector_end_command(g_newsrc_sel_cmds);
@@ -614,7 +614,7 @@ char newsgroup_selector()
     g_sel.exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
+    g_sel.set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
 
 sel_restart:
     if (current_group_display_mode() != 's')
@@ -716,7 +716,7 @@ char add_group_selector(GetNewsgroupFlags flags)
     g_sel.exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_ADD_GROUP, SS_MAGIC_NUMBER);
+    g_sel.set_selector(SM_ADD_GROUP, SS_MAGIC_NUMBER);
 
 sel_restart:
     if (current_group_display_mode() != 's')
@@ -810,7 +810,7 @@ char option_selector()
     g_sel.exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
+    g_sel.set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
 
 sel_restart:
     s_end_char = selector_end_command(g_option_sel_cmds);
@@ -1094,7 +1094,7 @@ char universal_selector()
     g_sel.exclusive = false;
     g_selected_count = 0;
 
-    set_selector(SM_UNIVERSAL, SS_MAGIC_NUMBER);
+    g_sel.set_selector(SM_UNIVERSAL, SS_MAGIC_NUMBER);
 
     g_selected_count = 0;
 
@@ -2803,12 +2803,12 @@ DisplayState article_commands(char_int ch)
         }
         if (g_sel.mode == SM_ARTICLE)
         {
-            set_selector(g_sel.thread_mode, SS_MAGIC_NUMBER);
+            g_sel.set_selector(g_sel.thread_mode, SS_MAGIC_NUMBER);
             g_sel_page_sp = g_sel_page_app? g_sel_page_app[0]->m_subj : nullptr;
         }
         else
         {
-            set_selector(SM_ARTICLE, SS_MAGIC_NUMBER);
+            g_sel.set_selector(SM_ARTICLE, SS_MAGIC_NUMBER);
             g_sel_page_app = nullptr;
         }
         count_subjects(CS_NORM);
@@ -2956,7 +2956,7 @@ reask_sort:
         {
             sel_cleanup();
         }
-        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
+        g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
@@ -3479,7 +3479,7 @@ reask_sort:
         {
             sel_cleanup();
         }
-        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
+        g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3859,7 +3859,7 @@ reask_sort:
         {
             sel_cleanup();
         }
-        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
+        g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -4093,7 +4093,7 @@ static DisplayState multirc_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
+        g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_mp = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -4155,7 +4155,7 @@ static DisplayState option_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
+        g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_op = 1;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -4271,7 +4271,7 @@ static DisplayState universal_commands(char_int ch)
     switch (ch)
     {
     case 'R':
-        set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
+        g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
         g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;

@@ -101,11 +101,11 @@ bool set_sel_mode(char_int ch)
     switch (ch)
     {
     case 'a':
-        set_selector(g_sel.default_mode = SM_ARTICLE, SS_MAGIC_NUMBER);
+        g_sel.set_selector(g_sel.default_mode = SM_ARTICLE, SS_MAGIC_NUMBER);
         break;
 
     case 's':
-        set_selector(g_sel.default_mode = SM_SUBJECT, SS_MAGIC_NUMBER);
+        g_sel.set_selector(g_sel.default_mode = SM_SUBJECT, SS_MAGIC_NUMBER);
         break;
 
     case 't':
@@ -131,11 +131,11 @@ bool set_sel_mode(char_int ch)
         // FALL THROUGH
 
     case 'T':
-        set_selector(g_sel.default_mode = SM_THREAD, SS_MAGIC_NUMBER);
+        g_sel.set_selector(g_sel.default_mode = SM_THREAD, SS_MAGIC_NUMBER);
         break;
 
     default:
-        set_selector(g_sel.default_mode, SS_MAGIC_NUMBER);
+        g_sel.set_selector(g_sel.default_mode, SS_MAGIC_NUMBER);
         return false;
     }
     return true;
@@ -156,11 +156,11 @@ bool set_sel_mode(char_int ch)
 std::string get_sel_order(SelectionMode smode)
 {
     SelectionMode save_sel_mode = g_sel.mode;
-    set_selector(smode, SS_MAGIC_NUMBER);
+    g_sel.set_selector(smode, SS_MAGIC_NUMBER);
     std::string order = g_sel.direction < 0 ? "reverse " : "";
     order += g_sel.sort_string;
     g_sel.mode = save_sel_mode;
-    set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
+    g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
     return order;
 }
 
@@ -261,71 +261,61 @@ bool set_sel_sort(SelectionMode smode, char_int ch)
     g_sel.mode = smode;
     if (std::isupper(ch))
     {
-        set_selector(SM_MAGIC_NUMBER, static_cast<SelectionSortMode>(-ssort));
+        g_sel.set_selector(SM_MAGIC_NUMBER, static_cast<SelectionSortMode>(-ssort));
     }
     else
     {
-        set_selector(SM_MAGIC_NUMBER, ssort);
+        g_sel.set_selector(SM_MAGIC_NUMBER, ssort);
     }
 
     if (g_sel.mode != save_sel_mode)
     {
         g_sel.mode = save_sel_mode;
-        set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
+        g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
     }
     return true;
 }
 
 /// @brief Sets the current selection mode and sort order for the selector.
 /// 
-/// Updates the global selection mode and sort order based on the provided mode and sort parameters.
+/// Updates this policy's selection mode and sort order from the provided parameters.
 /// If the sort mode is not specified, it uses the default for the current selection mode.
-/// Also updates the sort direction, mode string, and related global state for the selector.
+/// Also updates the sort direction, labels, and remembered mode-specific orders.
 /// 
 /// @param smode The selection mode to set.
 /// @param ssort The sort mode to set. If zero, the default for the mode is used.
 /// 
 /// @globals
-/// - g_sel.mode: Set to the current selection mode.
-/// - g_sel.direction: Set to 1 for forward, -1 for reverse sort.
-/// - g_sel.sort: Set to the current sort mode.
-/// - g_sel.mode_string: Set to a string describing the current mode.
-/// - g_sel.add_group_sort: Updated when mode is SM_ADD_GROUP.
-/// - g_sel.newsgroup_sort: Updated when mode is SM_NEWSGROUP.
-/// - g_sel.universal_sort: Updated when mode is SM_UNIVERSAL.
-/// - g_sel.thread_mode: Updated when mode is SM_THREAD or SM_SUBJECT.
-/// - g_sel.thread_sort: Updated when mode is SM_THREAD or SM_SUBJECT.
-/// - g_sel.art_sort: Updated when mode is SM_ARTICLE.
-/// - g_sel.sort_string: Set to a string describing the current sort order.
+/// - g_threaded_group: Read to reject unavailable thread mode.
 ///
-void set_selector(SelectionMode smode, SelectionSortMode ssort)
+void SelectorPolicy::set_selector(SelectionMode smode, SelectionSortMode ssort)
 {
     if (smode == SM_MAGIC_NUMBER)
     {
-        if (g_sel.mode == SM_SUBJECT)
+        if (mode == SM_SUBJECT)
         {
-            g_sel.mode = g_sel.thread_mode;
+            mode = thread_mode;
         }
-        smode = g_sel.mode;
+        smode = mode;
     }
     else
     {
-        g_sel.mode = smode;
+        mode = smode;
     }
     if (!ssort)
     {
-        switch (g_sel.mode)
+        switch (mode)
         {
         case SM_MULTIRC:
             ssort = SS_NATURAL;
             break;
 
         case SM_ADD_GROUP:
-            ssort = g_sel.add_group_sort;
+            ssort = add_group_sort;
             break;
 
         case SM_NEWSGROUP:
-            ssort = g_sel.newsgroup_sort;
+            ssort = newsgroup_sort;
             break;
 
         case SM_OPTIONS:
@@ -334,125 +324,125 @@ void set_selector(SelectionMode smode, SelectionSortMode ssort)
 
         case SM_THREAD:
         case SM_SUBJECT:
-            ssort = g_sel.thread_sort;
+            ssort = thread_sort;
             break;
 
         case SM_ARTICLE:
-            ssort = g_sel.art_sort;
+            ssort = art_sort;
             break;
 
         case SM_UNIVERSAL:
-            ssort = g_sel.universal_sort;
+            ssort = universal_sort;
             break;
         }
     }
     if (ssort > SS_MAGIC_NUMBER)
     {
-        g_sel.direction = 1;
-        g_sel.sort = ssort;
+        direction = 1;
+        sort = ssort;
     }
     else
     {
-        g_sel.direction = -1;
-        g_sel.sort = static_cast<SelectionSortMode>(-ssort);
+        direction = -1;
+        sort = static_cast<SelectionSortMode>(-ssort);
     }
 
-    if (g_sel.mode == SM_THREAD && !g_threaded_group)
+    if (mode == SM_THREAD && !g_threaded_group)
     {
-        g_sel.mode = SM_SUBJECT;
+        mode = SM_SUBJECT;
     }
 
-    switch (g_sel.mode)
+    switch (mode)
     {
     case SM_MULTIRC:
-        g_sel.mode_string = "a newsrc group";
+        mode_string = "a newsrc group";
         break;
 
     case SM_ADD_GROUP:
-        g_sel.mode_string = g_sel.group_listing ? "unsubscribed newsgroups" : "a newsgroup to add";
-        g_sel.add_group_sort = ssort;
+        mode_string = group_listing ? "unsubscribed newsgroups" : "a newsgroup to add";
+        add_group_sort = ssort;
         break;
 
     case SM_NEWSGROUP:
-        g_sel.mode_string = "a newsgroup";
-        g_sel.newsgroup_sort = ssort;
+        mode_string = "a newsgroup";
+        newsgroup_sort = ssort;
         break;
 
     case SM_OPTIONS:
-        g_sel.mode_string = "an option to change";
+        mode_string = "an option to change";
         break;
 
     case SM_UNIVERSAL:
-        g_sel.mode_string = "an item";
-        g_sel.universal_sort = ssort;
+        mode_string = "an item";
+        universal_sort = ssort;
         break;
 
     case SM_THREAD:
-        g_sel.mode_string = "threads";
-        g_sel.thread_mode = smode;
-        g_sel.thread_sort = ssort;
+        mode_string = "threads";
+        thread_mode = smode;
+        thread_sort = ssort;
         goto thread_subj_sort;
 
     case SM_SUBJECT:
-        g_sel.mode_string = "subjects";
-        g_sel.thread_mode = smode;
-        g_sel.thread_sort = ssort;
+        mode_string = "subjects";
+        thread_mode = smode;
+        thread_sort = ssort;
 thread_subj_sort:
-        if (g_sel.sort == SS_AUTHOR || g_sel.sort == SS_GROUPS || g_sel.sort == SS_NATURAL)
+        if (sort == SS_AUTHOR || sort == SS_GROUPS || sort == SS_NATURAL)
           {
-            g_sel.sort = SS_DATE;
+            sort = SS_DATE;
           }
         break;
 
     case SM_ARTICLE:
-        g_sel.mode_string = "articles";
-        g_sel.art_sort = ssort;
-        if (g_sel.sort == SS_COUNT)
+        mode_string = "articles";
+        art_sort = ssort;
+        if (sort == SS_COUNT)
         {
-            g_sel.sort = SS_DATE;
+            sort = SS_DATE;
         }
         break;
     }
 
-    switch (g_sel.sort)
+    switch (sort)
     {
     case SS_DATE:
-        g_sel.sort_string = "date";
+        sort_string = "date";
         break;
 
     case SS_STRING:
-        g_sel.sort_string = g_sel.mode == SM_ADD_GROUP || g_sel.mode == SM_NEWSGROUP ? "group name" : "subject";
+        sort_string = mode == SM_ADD_GROUP || mode == SM_NEWSGROUP ? "group name" : "subject";
         break;
 
     case SS_AUTHOR:
-        g_sel.sort_string = "author";
+        sort_string = "author";
         break;
 
     case SS_COUNT:
-        g_sel.sort_string = "count";
+        sort_string = "count";
         break;
 
     case SS_LINES:
-        g_sel.sort_string = "lines";
+        sort_string = "lines";
         break;
 
     case SS_NATURAL:
-        g_sel.sort_string = "natural";
+        sort_string = "natural";
         break;
 
     case SS_GROUPS:
-        if (g_sel.mode == SM_NEWSGROUP)
+        if (mode == SM_NEWSGROUP)
         {
-            g_sel.sort_string = "group name";
+            sort_string = "group name";
         }
         else
         {
-            g_sel.sort_string = "SubjDate";
+            sort_string = "SubjDate";
         }
         break;
 
     case SS_SCORE:
-        g_sel.sort_string = "points";
+        sort_string = "points";
         break;
     }
 }

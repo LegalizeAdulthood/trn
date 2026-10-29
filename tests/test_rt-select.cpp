@@ -5007,7 +5007,7 @@ void ArticleSelectorSortTest::prepare_sort(SelectionMode mode, bool rereading, i
     }
     m_subject.m_flags = static_cast<SubjectFlags>(selected);
     m_newsgroup.m_to_read = rereading ? 0 : 4;
-    set_selector(mode, static_cast<SelectionSortMode>(SS_DATE * direction));
+    g_sel.set_selector(mode, static_cast<SelectionSortMode>(SS_DATE * direction));
     prepare_page(mode, rereading);
 }
 
@@ -5853,7 +5853,7 @@ TEST_P(ArticleSelectorReadSortTest, reordersReadArticlesWithoutRestoringPendingS
 TEST_F(ArticleSelectorSortTest, blankSortChoiceUsesForwardDateOrder)
 {
     prepare_sort(SM_ARTICLE);
-    set_selector(SM_ARTICLE, static_cast<SelectionSortMode>(-SS_STRING));
+    g_sel.set_selector(SM_ARTICLE, static_cast<SelectionSortMode>(-SS_STRING));
     rebuild_page();
 
     const DisplayState result = run_command('O', " ");
