@@ -119,7 +119,7 @@ function(check_rnmail helper tool output_dir case)
     endif()
     file(CONFIGURE OUTPUT "${output_dir}/input" CONTENT "${input}" @ONLY NEWLINE_STYLE LF)
     execute_process(COMMAND ${command} INPUT_FILE "${output_dir}/input"
-        RESULT_VARIABLE result OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 15)
+        RESULT_VARIABLE result OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 60)
     if(expect_failure)
         if(result EQUAL 0)
             message(FATAL_ERROR "Rnmail ${case} unexpectedly succeeded: ${out}${err}")

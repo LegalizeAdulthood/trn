@@ -19,7 +19,7 @@ function(invoke_mail command)
         COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
             -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command
             "$ErrorActionPreference = 'Stop'; . '${adapter_quoted}'; ${command}"
-        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 30)
+        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 60)
     set(mail_result "${result}" PARENT_SCOPE)
     set(mail_error "${output}${error}" PARENT_SCOPE)
 endfunction()

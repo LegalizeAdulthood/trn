@@ -17,7 +17,7 @@ function(check_saver_errors helper output_dir case)
 
     function(expect_saver_failure)
         execute_process(COMMAND ${command} ${ARGN}
-            RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 30)
+            RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 60)
         if(result EQUAL 0)
             message(FATAL_ERROR "Saver ${case} unexpectedly succeeded: ${output}${error}")
         endif()

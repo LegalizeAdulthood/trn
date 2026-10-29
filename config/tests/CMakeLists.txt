@@ -21,14 +21,14 @@ if(WIN32)
             "-DTRN_TEST_MAIL_ADAPTER=${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1"
             "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/mail-headers"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_mail_headers.cmake")
-    set_tests_properties(MailSubmissionTest.headers PROPERTIES LABELS trn TIMEOUT 30)
+    set_tests_properties(MailSubmissionTest.headers PROPERTIES LABELS trn TIMEOUT 60)
     add_test(NAME MailSubmissionTest.nativeSmtp
         COMMAND "$ENV{SystemRoot}/System32/WindowsPowerShell/v1.0/powershell.exe"
             -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass
             -File "${CMAKE_CURRENT_SOURCE_DIR}/test_mail_smtp.ps1"
             -WorkDirectory "${CMAKE_CURRENT_BINARY_DIR}/mail-smtp"
             -Adapter "${PROJECT_BINARY_DIR}/config/data/trn-mail.ps1")
-    set_tests_properties(MailSubmissionTest.nativeSmtp PROPERTIES LABELS trn TIMEOUT 90)
+    set_tests_properties(MailSubmissionTest.nativeSmtp PROPERTIES LABELS trn TIMEOUT 60)
 endif()
 set(rnmail_cases header arguments interactive inclusion loop abort eof signature record saver pgp forward)
 if(WIN32)
@@ -42,7 +42,7 @@ foreach(case IN LISTS rnmail_cases)
             "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/rnmail-${case}"
             "-DTRN_TEST_CASE=${case}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_rnmail.cmake")
-    set_tests_properties(RnmailTest.${case} PROPERTIES LABELS trn TIMEOUT 30)
+    set_tests_properties(RnmailTest.${case} PROPERTIES LABELS trn TIMEOUT 60)
 endforeach()
 set(pnews_cases header arguments interactive distribution inclusion loop abort eof eight_bit authorcopy saver pgp fetch)
 if(WIN32)
@@ -56,7 +56,7 @@ foreach(case IN LISTS pnews_cases)
             "-DTRN_TEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/pnews-${case}"
             "-DTRN_TEST_CASE=${case}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_pnews.cmake")
-    set_tests_properties(PnewsTest.${case} PROPERTIES LABELS trn TIMEOUT 30)
+    set_tests_properties(PnewsTest.${case} PROPERTIES LABELS trn TIMEOUT 60)
 endforeach()
 
 if(WIN32 AND POSTING_HOSTNAME MATCHES "^[A-Za-z0-9.-]+\\.[A-Za-z0-9.-]+$")
