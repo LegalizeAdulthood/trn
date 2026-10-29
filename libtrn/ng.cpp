@@ -1209,7 +1209,7 @@ no_previous_article:
         else if (g_scan_on && !g_threaded_group && g_search_ahead)
         {
             command = std::string{static_cast<char>(Ctl('n'))};
-            if (!next_article_with_subj())
+            if (!g_nav.target.next_with_subject())
             {
                 goto normal_search;
             }
@@ -1392,7 +1392,7 @@ no_previous_article:
         {
             g_s_follow_temp = true;     // keep going until change req.
         }
-        if (command_ch == Ctl('n') ? next_article_with_subj() : prev_article_with_subj())
+        if (command_ch == Ctl('n') ? g_nav.target.next_with_subject() : prev_article_with_subj())
         {
             return AS_NORM;
         }

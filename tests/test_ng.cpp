@@ -8972,6 +8972,39 @@ TEST_P(NextArticleTest, firstFallsBackToTheUncachedTail)
     EXPECT_EQ((ArticleLocation{ArticleNum{3}, nullptr}), location);
 }
 
+TEST_F(ArticleStateTest, nextWithSubjectMovesAnIndependentLocation)
+{
+    set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 2);
+    g_selected_only = true;
+    const ArticleLocation target = g_nav.target;
+    const ArticleLocation current = g_nav.current;
+    const ArticleLocation recent = g_nav.recent;
+    ArticleLocation       location{ArticleNum{1}, article_ptr(ArticleNum{1})};
+    g_search_ahead = ArticleNum{6};
+
+    const bool found = location.next_with_subject();
+
+    EXPECT_TRUE(found);
+    EXPECT_EQ((ArticleLocation{ArticleNum{3}, article_ptr(ArticleNum{3})}), location);
+    EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
+    EXPECT_EQ(target, g_nav.target);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(recent, g_nav.recent);
+}
+
+TEST_F(ArticleStateTest, nextWithSubjectExhaustionNormalizesTheNumberlessReceiver)
+{
+    set_articles({AF_EXISTS | AF_UNREAD}, 1);
+    ArticleLocation location{ArticleNum{}, article_ptr(ArticleNum{1})};
+    g_search_ahead = ArticleNum{6};
+
+    const bool found = location.next_with_subject();
+
+    EXPECT_FALSE(found);
+    EXPECT_EQ((ArticleLocation{g_first_art, article_ptr(ArticleNum{1})}), location);
+    EXPECT_EQ(ArticleNum{6}, g_search_ahead);
+}
+
 TEST_P(NextArticleTest, includesReadArticles)
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);

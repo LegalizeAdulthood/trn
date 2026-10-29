@@ -516,12 +516,12 @@ num_dec:
     art = ap;
 }
 
-// Find the next m_target.m_number/m_target.m_article with the same subject as this one.  Returns
+// Find the next article location with the same subject as this one. Returns
 // false if no such article exists.
 //
-bool next_article_with_subj()
+bool ArticleLocation::next_with_subject()
 {
-    Article *ap = g_nav.target.art;
+    Article *ap = art;
 
     if (!ap)
     {
@@ -533,15 +533,16 @@ bool next_article_with_subj()
         ap = ap->m_subj_next;
         if (!ap)
         {
-            if (!g_nav.target.num)
+            if (!num)
             {
-                g_nav.target.num = g_first_art;
+                num = g_first_art;
             }
             return false;
         }
     } while (!all_bits(ap->m_flags, AF_EXISTS | AF_UNREAD)
           || (g_selected_only && !(ap->m_flags & AF_SEL)));
-    g_nav.target = {ap->article_num(), ap};
+    num = ap->article_num();
+    art = ap;
     g_search_ahead = ArticleNum{-1};
     return true;
 }

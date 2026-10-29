@@ -32,7 +32,6 @@ void     thread_init();
 void     thread_open();
 void     thread_grow();
 void     thread_close();
-bool     next_article_with_subj();
 bool     prev_article_with_subj();
 Subject *next_subject(Subject *sp, int subj_mask);
 void     select_sub_thread(Article *ap, AutoKillFlags auto_flags);
