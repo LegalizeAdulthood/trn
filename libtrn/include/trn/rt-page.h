@@ -68,7 +68,6 @@ std::string get_sel_order(SelectionMode smode);
 bool        set_sel_order(SelectionMode smode, std::string_view str);
 char  current_group_display_mode();
 char  current_article_display_mode();
-bool set_sel_sort(SelectionMode smode, char_int ch);
 void init_pages(bool fill_last_page);
 bool first_page();
 bool last_page();

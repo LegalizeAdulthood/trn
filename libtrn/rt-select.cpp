@@ -2943,7 +2943,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel.mode, command_char);
+        g_sel.set_sort(g_sel.mode, command_char);
         count_subjects(CS_NORM);
         g_sel_page_sp = nullptr;
         g_sel_page_app = nullptr;
@@ -3468,7 +3468,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel.mode, command_char);
+        g_sel.set_sort(g_sel.mode, command_char);
         g_sel_page_np = nullptr;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
@@ -3841,7 +3841,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel.mode, command_char);
+        g_sel.set_sort(g_sel.mode, command_char);
         g_sel_page_gp = AddGroupIndex::None;
         g_sel_next_gp = AddGroupIndex::None;
         init_pages(FILL_LAST_PAGE);
@@ -4358,7 +4358,7 @@ reask_sort:
             }
             return DS_ASK;
         }
-        set_sel_sort(g_sel.mode, command_char);
+        g_sel.set_sort(g_sel.mode, command_char);
         g_sel_page_univ_index = {};
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;

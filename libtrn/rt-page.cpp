@@ -168,7 +168,7 @@ std::string get_sel_order(SelectionMode smode)
 /// 
 /// If the string begins with 'r' or 'R', the sort order is set to reverse. The function
 /// then determines the sort key character and adjusts its case to indicate direction.
-/// The sort order is applied by calling set_sel_sort with the appropriate parameters.
+/// The sort order is applied by calling SelectorPolicy::set_sort with the appropriate parameters.
 ///
 /// @param smode The selection mode to set the sort order for.
 /// @param str   The string specifying the sort order and direction.
@@ -199,7 +199,7 @@ bool set_sel_order(SelectionMode smode, std::string_view str)
         ch = std::isupper(ch) ? std::tolower(ch) : ch;
     }
 
-    return set_sel_sort(smode, ch);
+    return g_sel.set_sort(smode, ch);
 }
 
 /// @brief Sets the selection sort mode for a given selection mode and sort key character.
@@ -213,11 +213,11 @@ bool set_sel_order(SelectionMode smode, std::string_view str)
 /// @return      True if the sort order was set successfully, false otherwise.
 /// 
 /// @globals
-/// - g_sel.mode: Temporarily set to the provided selection mode and restored if changed.
+/// - g_threaded_group: Read by set_selector to normalize thread-mode availability.
 ///
-bool set_sel_sort(SelectionMode smode, char_int ch)
+bool SelectorPolicy::set_sort(SelectionMode smode, char_int ch)
 {
-    SelectionMode     save_sel_mode = g_sel.mode;
+    SelectionMode     save_sel_mode = mode;
     SelectionSortMode ssort;
 
     switch (ch)
@@ -258,20 +258,20 @@ bool set_sel_sort(SelectionMode smode, char_int ch)
         return false;
     }
 
-    g_sel.mode = smode;
+    mode = smode;
     if (std::isupper(ch))
     {
-        g_sel.set_selector(SM_MAGIC_NUMBER, static_cast<SelectionSortMode>(-ssort));
+        set_selector(SM_MAGIC_NUMBER, static_cast<SelectionSortMode>(-ssort));
     }
     else
     {
-        g_sel.set_selector(SM_MAGIC_NUMBER, ssort);
+        set_selector(SM_MAGIC_NUMBER, ssort);
     }
 
-    if (g_sel.mode != save_sel_mode)
+    if (mode != save_sel_mode)
     {
-        g_sel.mode = save_sel_mode;
-        g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
+        mode = save_sel_mode;
+        set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
     }
     return true;
 }

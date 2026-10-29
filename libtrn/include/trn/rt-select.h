@@ -62,6 +62,7 @@ struct SelectorPolicy
     SelectionSortMode universal_sort{SS_NATURAL};
 
     void set_selector(SelectionMode smode, SelectionSortMode ssort);
+    bool set_sort(SelectionMode smode, char_int ch);
 };
 
 extern SelectorPolicy    g_sel;
