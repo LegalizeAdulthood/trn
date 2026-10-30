@@ -483,7 +483,7 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, movesBackToTheEarlierPageAfterDe
 {
     const auto [rereading, capacity] = GetParam();
     (void) render_page();
-    ASSERT_TRUE(prev_page());
+    ASSERT_TRUE(g_sel_page.prev_page());
 
     const std::string output = render_page();
 
@@ -504,7 +504,7 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, advancesFromTheEarlierPageToTheF
 {
     const auto [rereading, capacity] = GetParam();
     (void) render_page();
-    ASSERT_TRUE(prev_page());
+    ASSERT_TRUE(g_sel_page.prev_page());
     (void) render_page();
 
     ASSERT_TRUE(next_page());

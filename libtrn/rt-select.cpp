@@ -2317,7 +2317,7 @@ do_command:
 
     case '<':
         g_sel_page.item_index = 0;
-        if (prev_page())
+        if (g_sel_page.prev_page())
         {
             return DS_DISPLAY;
         }
