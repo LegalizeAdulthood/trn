@@ -5286,7 +5286,7 @@ void CachedDisplayArticleTest::cache_article(std::string_view expected)
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
     ASSERT_EQ(expected, line);
-    ASSERT_FALSE(art_buf_empty());
+    ASSERT_FALSE(g_art_buf.empty());
     ASSERT_EQ(expected, art_buf_view(ArticlePosition{}));
 }
 
@@ -5303,7 +5303,7 @@ void CachedDisplayArticleTest::expect_redraw(ArticleLine line)
 
 void CachedDisplayArticleTest::expect_cleared_cache()
 {
-    EXPECT_TRUE(art_buf_empty());
+    EXPECT_TRUE(g_art_buf.empty());
     EXPECT_EQ(ArticlePosition{}, art_buf_len());
     EXPECT_EQ(ArticlePosition{}, art_buf_pos());
     EXPECT_EQ(ArticlePosition{}, art_buf_seek());

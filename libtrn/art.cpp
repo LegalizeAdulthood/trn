@@ -206,7 +206,7 @@ DoArticleResult do_article(std::string &article_command)
         if (g_do_fseek)
         {
             parse_header(g_nav.target.num); // make sure header is ours
-            if (art_buf_empty())
+            if (g_art_buf.empty())
             {
                 mime_set_article();
                 set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);

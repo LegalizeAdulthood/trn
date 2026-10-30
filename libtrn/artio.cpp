@@ -225,9 +225,9 @@ void PresentationBuffer::clear_art_buf()
     position = ArticlePosition{};
 }
 
-bool art_buf_empty()
+bool PresentationBuffer::empty()
 {
-    return g_art_buf.bytes.empty() || g_art_buf.bytes.front() == '\0';
+    return bytes.empty() || bytes.front() == '\0';
 }
 
 bool art_buf_at_end()

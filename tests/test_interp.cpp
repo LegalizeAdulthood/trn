@@ -2108,7 +2108,7 @@ void ArticleCacheLifecycleTest::SetUp()
     {
         ASSERT_FALSE(read_art_buf(line, false));
     }
-    ASSERT_FALSE(art_buf_empty());
+    ASSERT_FALSE(g_art_buf.empty());
 }
 
 PageSwitchResult ArticleCacheLifecycleTest::pager_command(std::string_view command)
@@ -2161,7 +2161,7 @@ TEST_P(ArticleCacheLifecycleTest, conversionRebuildsTheCachedArticleFromItsFirst
 {
     const PageSwitchResult command = pager_command("_C");
     ASSERT_EQ(PS_NORM, command);
-    ASSERT_TRUE(art_buf_empty());
+    ASSERT_TRUE(g_art_buf.empty());
     ASSERT_EQ(ArticleLine{-1}, g_top_line);
 
     render_article();
@@ -2211,7 +2211,7 @@ TEST_P(ArticleCacheLifecycleTest, ordinaryRefreshReusesTheCachedPresentationAndM
 TEST_P(ArticleCacheLifecycleTest, switchingArticlesDiscardsCachedMimeAndCharsetState)
 {
     ASSERT_NO_FATAL_FAILURE(open_number(m_other));
-    ASSERT_TRUE(art_buf_empty());
+    ASSERT_TRUE(g_art_buf.empty());
     const std::vector<std::string> expected{"Next caf\xC3\xA9\n", "Literal \"a\n"};
 
     render_article();
@@ -7220,7 +7220,7 @@ TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
     EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line}, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, art_buf_article_pos());
     EXPECT_EQ(g_art_input.pos, virtual_read(g_art_input.line_num));
-    EXPECT_FALSE(art_buf_empty());
+    EXPECT_FALSE(g_art_buf.empty());
     EXPECT_EQ(m_raw_positions[static_cast<std::size_t>(scenario.next_line + 1)], tell_art());
     EXPECT_EQ(scenario.quoted_printable ? TEXT_MIME : NOT_MIME, g_mime_state);
     EXPECT_EQ(scenario.quoted_printable ? MENCODE_QPRINT : MENCODE_NONE, g_mime_section->m_encoding);

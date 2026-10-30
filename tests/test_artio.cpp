@@ -2268,7 +2268,7 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
     open_article_text("\xC4\n");
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
-    ASSERT_FALSE(art_buf_empty());
+    ASSERT_FALSE(g_art_buf.empty());
     const ArticleLine      old_top = g_top_line;
     const ArticleLine      old_line_num = g_art_input.line_num;
     const bool             old_seek = g_do_fseek;
@@ -2282,7 +2282,7 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
 
     EXPECT_EQ(PS_NORM, result);
     EXPECT_EQ('a', current_char_subst_mode());
-    EXPECT_TRUE(art_buf_empty());
+    EXPECT_TRUE(g_art_buf.empty());
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
     g_top_line = old_top;
     g_art_input.line_num = old_line_num;

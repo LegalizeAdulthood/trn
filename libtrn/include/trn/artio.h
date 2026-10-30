@@ -40,6 +40,7 @@ struct PresentationBuffer
     void init();
     void final();
     void clear_art_buf();
+    bool empty();
 
     std::string     bytes;
     ArticlePosition position{};
@@ -73,7 +74,6 @@ bool            read_art(std::string &line);
 int             seek_art_buf(ArticlePosition pos);
 bool            read_art_buf(std::string &line, bool view_inline);
 char            *read_art_buf_raw(bool view_inline);
-bool            art_buf_empty();
 bool            art_buf_at_end();
 ArticlePosition art_buf_pos();
 ArticlePosition art_buf_len();
