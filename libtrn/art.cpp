@@ -266,7 +266,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
                 line_num += tree_puts(title_line, line_num + g_top_line, 0);
             }
-            restart_header(g_nav.target.num);
+            g_parsed_header.restart_header(g_nav.target.num);
             g_force_last = false;        // we will have our day in court
             s_restart = ArticlePosition{};
             g_art_line_num = ArticleLine{};              // start counting lines

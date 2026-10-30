@@ -90,6 +90,9 @@ struct ParsedHeaderContext
     bool                                  first_one{};   // is this the 1st occurrence of this header line?
     bool                                  reading_nntp_header{};
     std::array<HeaderPosition, HEAD_LAST> positions{};
+
+    // Restart a parsed header's presentation without discarding its offsets.
+    void restart_header(ArticleNum artnum);
 };
 
 extern ParsedHeaderContext g_parsed_header;
@@ -118,8 +121,6 @@ void head_final();
 HeaderLineType set_line_type(std::string_view header_name);
 HeaderLineType get_header_num(std::string_view header_name);
 void           start_header(ArticleNum artnum);
-// Restart a parsed header's presentation without discarding its offsets.
-void           restart_header(ArticleNum artnum);
 bool           parse_line(std::string_view art_buf, int new_hide, int old_hide);
 void           end_header();
 bool           parse_header(ArticleNum art_num);

@@ -265,15 +265,16 @@ void start_header(ArticleNum artnum)
         i.min_pos = ArticlePosition{-1};
         i.max_pos = ArticlePosition{};
     }
-    restart_header(artnum);
+    g_parsed_header.restart_header(artnum);
 }
 
-void restart_header(ArticleNum artnum)
+// article_ptr looks up or creates an entry in the active g_article_list.
+void ParsedHeaderContext::restart_header(ArticleNum artnum)
 {
-    g_parsed_header.in_header = SOME_LINE;
-    g_parsed_header.first_one = false;
-    g_parsed_header.parsed_art = artnum;
-    g_parsed_header.parsed_artp = article_ptr(artnum);
+    in_header = SOME_LINE;
+    first_one = false;
+    parsed_art = artnum;
+    parsed_artp = article_ptr(artnum);
 }
 
 static void end_header_line()
