@@ -94,7 +94,7 @@ protected:
 
         search_init();
         head_init();
-        art_io_init();
+        g_art_buf.init();
         g_art_search.init();
     }
 

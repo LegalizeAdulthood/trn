@@ -5213,7 +5213,7 @@ void CachedDisplayArticleTest::SetUp()
 {
     RereadArticleTest::SetUp();
     g_art_input.fp = nullptr;
-    art_io_init();
+    g_art_buf.init();
     g_data_source = &m_data_source;
     m_section.mime_parse_type("text/plain; charset=Latin1");
     g_mime_section = &m_section;

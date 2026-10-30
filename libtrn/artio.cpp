@@ -61,10 +61,10 @@ PreserveArticleBuffer::~PreserveArticleBuffer()
 static char *art_buf_data();
 static std::size_t art_buf_offset(const char *ptr);
 
-void art_io_init()
+void PresentationBuffer::init()
 {
-    g_art_buf.bytes.assign(INITIAL_ART_BUF_SIZE, '\0');
-    g_art_buf.clear_art_buf();
+    bytes.assign(INITIAL_ART_BUF_SIZE, '\0');
+    clear_art_buf();
 }
 
 void art_io_final()

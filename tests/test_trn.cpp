@@ -375,7 +375,7 @@ protected:
         g_tc_AM = false;
 
         head_init();
-        art_io_init();
+        g_art_buf.init();
         back_page_init();
         cache_init();
         (void) nntp_art_name(ArticleNum{}, false);

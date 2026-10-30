@@ -81,7 +81,7 @@ protected:
 
         head_init();
         g_art_input.fp = nullptr;
-        art_io_init();
+        g_art_buf.init();
         g_article_list.clear();
         g_data_source = &m_data_source;
         g_last_art = TEST_ARTICLE;

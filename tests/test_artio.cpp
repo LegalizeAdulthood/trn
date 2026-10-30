@@ -77,7 +77,7 @@ protected:
 
         g_art_input.fp = nullptr;
         head_init();
-        art_io_init();
+        g_art_buf.init();
         g_data_source = &m_data_source;
         g_do_hiding = true;
         g_is_mime = false;
