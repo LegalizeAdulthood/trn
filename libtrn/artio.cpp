@@ -67,13 +67,13 @@ void PresentationBuffer::init()
     clear_art_buf();
 }
 
-void art_io_final()
+void PresentationBuffer::final()
 {
-    g_art_buf.bytes.clear();
-    g_art_buf.bytes.shrink_to_fit();
-    g_art_buf.position = ArticlePosition{};
-    g_art_buf.seek_pos = ArticlePosition{};
-    g_art_buf.length = ArticlePosition{};
+    bytes.clear();
+    bytes.shrink_to_fit();
+    position = ArticlePosition{};
+    seek_pos = ArticlePosition{};
+    length = ArticlePosition{};
 }
 
 // open an article, unless it's already open

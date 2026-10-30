@@ -99,7 +99,7 @@ protected:
             std::fclose(g_art_input.fp);
             g_art_input.fp = nullptr;
         }
-        art_io_final();
+        g_art_buf.final();
         head_final();
 
         g_article_list.clear();

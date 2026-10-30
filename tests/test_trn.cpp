@@ -398,7 +398,7 @@ protected:
             g_art_input.fp = nullptr;
         }
         (void) nntp_art_name(ArticleNum{}, false);
-        art_io_final();
+        g_art_buf.final();
         back_page_final();
         head_final();
         std::error_code error;

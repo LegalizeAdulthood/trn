@@ -95,7 +95,7 @@ protected:
             std::fclose(g_art_input.fp);
             g_art_input.fp = nullptr;
         }
-        art_io_final();
+        g_art_buf.final();
         reset_mime_section();
         head_final();
 

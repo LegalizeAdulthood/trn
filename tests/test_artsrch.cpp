@@ -107,7 +107,7 @@ protected:
         g_local_kfp = m_old_local_kfp;
 
         art_close();
-        art_io_final();
+        g_art_buf.final();
         head_final();
 
         g_article_list.clear();

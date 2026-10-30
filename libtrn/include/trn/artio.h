@@ -38,6 +38,7 @@ extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 struct PresentationBuffer
 {
     void init();
+    void final();
     void clear_art_buf();
 
     std::string     bytes;
@@ -63,7 +64,6 @@ private:
     ArticlePosition m_length;
 };
 
-void art_io_final();
 std::FILE *art_open(ArticleNum art_num, ArticlePosition pos);
 void art_close();
 int seek_art(ArticlePosition pos);

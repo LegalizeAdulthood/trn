@@ -5260,7 +5260,7 @@ void CachedDisplayArticleTest::TearDown()
     {
         std::fclose(g_art_input.fp);
     }
-    art_io_final();
+    g_art_buf.final();
     g_art_input.fp = m_old_art_fp;
     g_data_source = m_old_data_source;
     g_mime_section = m_old_mime_section;
