@@ -235,9 +235,9 @@ bool PresentationBuffer::at_end()
     return position == length;
 }
 
-ArticlePosition art_buf_pos()
+ArticlePosition PresentationBuffer::pos()
 {
-    return g_art_buf.position;
+    return position;
 }
 
 ArticlePosition art_buf_len()

@@ -1783,7 +1783,7 @@ TEST_F(ArticleIoTest, wordWrapCompactsIndentedContinuation)
     std::string expected_first{"alpha beta gamma delta"};
     expected_first += WRAPPED_NL;
     EXPECT_EQ(expected_first, first);
-    EXPECT_EQ(23, art_buf_pos().value_of());
+    EXPECT_EQ(23, g_art_buf.pos().value_of());
 
     std::string second;
     ASSERT_TRUE(read_art_buf(second, false));
@@ -1799,7 +1799,7 @@ TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
     ASSERT_TRUE(read_art_buf(first, false));
 
     EXPECT_EQ("alpha\n", first);
-    EXPECT_EQ(6, art_buf_pos().value_of());
+    EXPECT_EQ(6, g_art_buf.pos().value_of());
     EXPECT_EQ(6, art_buf_len().value_of());
 
     EXPECT_FALSE(read_art_buf(first, false));
