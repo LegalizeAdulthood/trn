@@ -23,6 +23,8 @@ inline bool at_nl(char c)
 
 struct ArticleInput
 {
+    ArticlePosition ftell_art();
+
     ArticlePosition pos{};      // byte position in article file
     ArticleLine     line_num{}; // current line number in article file
     std::FILE      *fp{};       // current article file pointer

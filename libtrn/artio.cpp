@@ -156,9 +156,14 @@ int seek_art(ArticlePosition pos)
     return std::fseek(g_art_input.fp, pos.value_of(), 0);
 }
 
+ArticlePosition ArticleInput::ftell_art()
+{
+    return ArticlePosition{std::ftell(fp)};
+}
+
 ArticlePosition ftell_art()
 {
-    return ArticlePosition{std::ftell(g_art_input.fp)};
+    return g_art_input.ftell_art();
 }
 
 ArticlePosition tell_art()
