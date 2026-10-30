@@ -252,7 +252,8 @@ HeaderLineType get_header_num(std::string_view header_name)
     return i;
 }
 
-void start_header(ArticleNum artnum)
+// restart_header may insert into the active g_article_list.
+void ParsedHeaderContext::start_header(ArticleNum artnum)
 {
 #ifdef DEBUG
     if (g_debug & DEB_HEADER)
@@ -260,12 +261,12 @@ void start_header(ArticleNum artnum)
         dump_header("start_header\n");
     }
 #endif
-    for (HeaderPosition &i : g_parsed_header.positions)
+    for (HeaderPosition &i : positions)
     {
         i.min_pos = ArticlePosition{-1};
         i.max_pos = ArticlePosition{};
     }
-    g_parsed_header.restart_header(artnum);
+    restart_header(artnum);
 }
 
 // article_ptr looks up or creates an entry in the active g_article_list.
@@ -451,7 +452,7 @@ bool parse_header(ArticleNum art_num)
         return false;
     }
 
-    start_header(art_num);
+    g_parsed_header.start_header(art_num);
     g_art_pos = ArticlePosition{};
     g_parsed_header.head_buf.clear();
     g_parsed_header.head_buf.reserve(LINE_BUF_LEN * 8);
