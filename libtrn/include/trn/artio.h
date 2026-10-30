@@ -55,6 +55,12 @@ struct PresentationBuffer
     std::size_t offset(const char *ptr);
     void        store_text(char *&buffer, std::size_t buff_offset, std::string_view text);
 
+private:
+    friend class PreserveArticleBuffer;
+    friend int              seek_art_buf(ArticlePosition pos);
+    friend char            *read_art_buf_raw(bool view_inline);
+    friend std::string_view art_buf_view(ArticlePosition pos);
+
     std::string     bytes;
     ArticlePosition position{};
     ArticlePosition seek_pos{};
