@@ -255,9 +255,9 @@ void PresentationBuffer::set_seek(ArticlePosition pos)
     seek_pos = pos;
 }
 
-ArticlePosition art_buf_article_pos()
+ArticlePosition PresentationBuffer::article_pos()
 {
-    return g_art_buf.position + g_parsed_header.positions[PAST_HEADER].min_pos;
+    return position + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
 ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)

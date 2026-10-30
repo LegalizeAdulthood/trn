@@ -782,7 +782,7 @@ DoArticleResult do_article(std::string &article_command)
             }
             else
             {
-                g_art_input.pos = art_buf_article_pos();
+                g_art_input.pos = g_art_buf.article_pos();
             }
             virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         } // end of line loop
@@ -818,7 +818,7 @@ recheck_pager:
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.
-            ArticlePosition seek_pos = art_buf_article_pos();
+            ArticlePosition seek_pos = g_art_buf.article_pos();
             std::string     remaining_line;
             bool            hidden_continuation = false;
             while (read_art_buf(remaining_line, false))
@@ -832,7 +832,7 @@ recheck_pager:
             }
             if (can_hide_tail && remaining_line.empty())
             {
-                seek_pos = g_art_input.pos = art_buf_article_pos();
+                seek_pos = g_art_input.pos = g_art_buf.article_pos();
                 virtual_write(g_art_input.line_num, g_art_input.pos);
             }
             seek_art_buf(seek_pos);
@@ -1134,7 +1134,7 @@ caseG:
             if (match != std::string_view::npos)
             {
                 const ArticlePosition line_start =
-                    art_buf_article_pos() - ArticlePosition{static_cast<long>(pager_line_storage.size())};
+                    g_art_buf.article_pos() - ArticlePosition{static_cast<long>(pager_line_storage.size())};
                 // The first byte after the match start identifies its display row.
                 g_inner_search = line_start + ArticlePosition{static_cast<long>(match) + 1};
                 break;

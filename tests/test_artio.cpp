@@ -487,7 +487,7 @@ void LongArticleBufferTest::SetUp()
     std::string prefix;
     ASSERT_TRUE(read_art_buf(prefix, false));
     ASSERT_EQ("Hello\n", prefix);
-    m_long_position = art_buf_article_pos();
+    m_long_position = g_art_buf.article_pos();
     m_following_position = m_long_position + ArticlePosition{static_cast<long>(m_expected.size())};
     m_raw_after_long = body_start + ArticlePosition{static_cast<long>(value.prefix.size() + wire.size())};
 }
@@ -507,7 +507,7 @@ TEST_P(LongArticleBufferTest, theRawReaderRetainsTheCompleteTextAcrossBufferGrow
 
     ASSERT_NE(nullptr, text);
     EXPECT_EQ(m_expected + (GetParam().following_cached ? std::string(FOLLOWING) : ""), text);
-    EXPECT_EQ(m_following_position, art_buf_article_pos());
+    EXPECT_EQ(m_following_position, g_art_buf.article_pos());
     EXPECT_EQ(m_raw_after_long, g_art_buf.seek());
 }
 
@@ -519,7 +519,7 @@ TEST_P(LongArticleBufferTest, theLineReaderReturnsOneCompleteLogicalLineAcrossBu
 
     EXPECT_TRUE(read);
     EXPECT_EQ(m_expected, line);
-    EXPECT_EQ(m_following_position, art_buf_article_pos());
+    EXPECT_EQ(m_following_position, g_art_buf.article_pos());
     EXPECT_EQ(m_raw_after_long, g_art_buf.seek());
     EXPECT_EQ(m_following_position + ArticlePosition{static_cast<long>(FOLLOWING.size())}, g_art_size);
 }
@@ -534,7 +534,7 @@ TEST_P(LongArticleBufferTest, readingAfterTheLongLineReturnsTheFollowingLine)
 
     EXPECT_TRUE(read);
     EXPECT_EQ(FOLLOWING, line);
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
     EXPECT_TRUE(g_art_buf.at_end());
 }
 
@@ -548,7 +548,7 @@ TEST_P(LongArticleBufferTest, aForwardSeekAcrossTheUncachedLongLineFindsTheFollo
     EXPECT_EQ(0, result);
     EXPECT_TRUE(read);
     EXPECT_EQ(FOLLOWING, line);
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
 }
 
 TEST_P(LongArticleBufferTest, aSavedLongLinePositionRemainsValidAfterTheBufferGrows)
@@ -563,7 +563,7 @@ TEST_P(LongArticleBufferTest, aSavedLongLinePositionRemainsValidAfterTheBufferGr
     EXPECT_EQ(0, result);
     EXPECT_TRUE(read);
     EXPECT_EQ(m_expected, line);
-    EXPECT_EQ(m_following_position, art_buf_article_pos());
+    EXPECT_EQ(m_following_position, g_art_buf.article_pos());
     EXPECT_EQ(source_position, tell_art());
 }
 
@@ -579,7 +579,7 @@ TEST_P(LongArticleBufferTest, aPositionSavedBeforeBufferGrowthStillReadsTheCache
     EXPECT_EQ(0, result);
     EXPECT_TRUE(read);
     EXPECT_EQ("Hello\n", line);
-    EXPECT_EQ(m_long_position, art_buf_article_pos());
+    EXPECT_EQ(m_long_position, g_art_buf.article_pos());
     EXPECT_EQ(source_position, tell_art());
 }
 
@@ -707,7 +707,7 @@ TEST_P(WrappedArticleTest, preservesTheExpectedTextAndRowBoundaries)
 
     EXPECT_EQ(GetParam().rows, rows);
     EXPECT_EQ(presentation(), art_buf_view(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
     EXPECT_EQ(static_cast<long>(presentation().size()), g_art_buf.len().value_of());
 }
 
@@ -759,7 +759,7 @@ TEST_P(WrappedArticleCacheTest, preservesTheFollowingParagraphWhenWrappingConver
 
     EXPECT_EQ(GetParam().rows, rows);
     EXPECT_EQ(presentation(), art_buf_view(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
 }
 
 TEST_P(WrappedArticleCacheTest, aForwardSeekFindsTheWrappedContinuationInUncachedText)
@@ -772,7 +772,7 @@ TEST_P(WrappedArticleCacheTest, aForwardSeekFindsTheWrappedContinuationInUncache
 
     EXPECT_EQ(0, result);
     EXPECT_EQ(expected, rows);
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
 }
 
 TEST_P(WrappedArticleCacheTest, aCachedContinuationRereadsWithoutRepeatingDecodingOrSubstitution)
@@ -929,12 +929,12 @@ MimePresentation MultipartArticleIoTest::read_presentation(bool view_inline)
 {
     MimePresentation result;
     std::string      line;
-    ArticlePosition  position = art_buf_article_pos();
+    ArticlePosition  position = g_art_buf.article_pos();
     while (read_art_buf(line, view_inline))
     {
         result.lines.push_back(line);
         result.positions.push_back(position);
-        position = art_buf_article_pos();
+        position = g_art_buf.article_pos();
     }
     return result;
 }
@@ -956,7 +956,7 @@ TEST_P(MultipartArticleTest, presentsTextDescriptionsAndSeparatorsWithoutExposin
     const MimePresentation result = read_presentation();
 
     EXPECT_EQ(GetParam().lines, result.lines);
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
     EXPECT_EQ(&m_mime_section, g_mime_section);
 }
 
@@ -994,7 +994,7 @@ TEST_P(MultipartArticleTest, aSavedPositionResumesAtTheReadablePartAfterSkippedC
     EXPECT_EQ(0, seek);
     EXPECT_EQ(expected, resumed.lines);
     EXPECT_EQ(source_position, tell_art());
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
 }
 
 INSTANTIATE_TEST_SUITE_P(MixedAlternativeAndAttachments, MultipartArticleTest,
@@ -1147,7 +1147,7 @@ TEST_P(RemoteMultipartArticleTest, completesThePresentationAndReleasesTheConnect
 
     EXPECT_EQ(GetParam().lines, result.lines);
     EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
-    EXPECT_EQ(art_buf_article_pos(), art_buf_size_from_raw(nntp_art_size()));
+    EXPECT_EQ(g_art_buf.article_pos(), art_buf_size_from_raw(nntp_art_size()));
     EXPECT_EQ(nntp_art_size(), tell_art());
     expect_next_command();
 }
@@ -1266,13 +1266,13 @@ TEST_P(MultipartEndingArticleTest, finishesWithTheExpectedTextSeparatorsAndPrese
 
     EXPECT_EQ(GetParam().lines, result.lines);
     EXPECT_EQ(expected_size, g_art_size);
-    EXPECT_EQ(expected_size, art_buf_article_pos());
+    EXPECT_EQ(expected_size, g_art_buf.article_pos());
 }
 
 TEST_P(MultipartEndingArticleTest, repeatedEofDoesNotChangeTheCompletedPresentation)
 {
     read_presentation();
-    const ArticlePosition position = art_buf_article_pos();
+    const ArticlePosition position = g_art_buf.article_pos();
     const ArticlePosition size = g_art_size;
     const ArticlePosition source_position = tell_art();
     const MimeState       state = g_mime_state;
@@ -1287,7 +1287,7 @@ TEST_P(MultipartEndingArticleTest, repeatedEofDoesNotChangeTheCompletedPresentat
     EXPECT_FALSE(second_read);
     EXPECT_TRUE(first.empty());
     EXPECT_TRUE(second.empty());
-    EXPECT_EQ(position, art_buf_article_pos());
+    EXPECT_EQ(position, g_art_buf.article_pos());
     EXPECT_EQ(size, g_art_size);
     EXPECT_EQ(source_position, tell_art());
     EXPECT_EQ(state, g_mime_state);
@@ -1426,7 +1426,7 @@ TEST_P(PipelineMultipartArticleTest, presentsConvertedAndSubstitutedTextAcrossPa
     EXPECT_EQ(GetParam().lines, result.lines);
     EXPECT_EQ(m_positions, result.positions);
     EXPECT_EQ(m_expected_size, g_art_size);
-    EXPECT_EQ(m_expected_size, art_buf_article_pos());
+    EXPECT_EQ(m_expected_size, g_art_buf.article_pos());
     EXPECT_EQ(&m_mime_section, g_mime_section);
     EXPECT_EQ(CHARSET_NAME_WINDOWS_1252, input_charset_name());
     EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
@@ -1440,7 +1440,7 @@ TEST_P(PipelineMultipartArticleTest, seeksForwardIntoUncachedTransformedText)
     EXPECT_EQ(0, seek);
     EXPECT_EQ(m_tail, result.lines);
     EXPECT_EQ(m_tail_positions, result.positions);
-    EXPECT_EQ(m_expected_size, art_buf_article_pos());
+    EXPECT_EQ(m_expected_size, g_art_buf.article_pos());
 }
 
 TEST_P(PipelineMultipartArticleTest, rereadsASavedPositionWithoutRepeatingThePipeline)
@@ -1693,7 +1693,7 @@ TEST_P(InlineMultipartArticleTest, decodesInlineContentAndContinuesToTheNextText
         EXPECT_EQ(GetParam().handler == InlineHandler::Fallback ? "fallback inline.bin" : "viewer inline.bin",
                   m_commands.front());
     }
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
 }
 
 TEST_P(InlineMultipartArticleTest, restoresReadingStateAndRemovesTheViewedFile)
@@ -1766,7 +1766,7 @@ TEST_P(MultipleInlinePartsArticleTest, viewsEachInlinePartOnceAsReadingAdvances)
     EXPECT_EQ((std::vector<std::string>{"Hello", "World"}), m_decoded);
     EXPECT_EQ((std::vector<std::string>{"viewer inline.bin", "viewer inline.bin"}), m_commands);
     EXPECT_EQ(m_news_directory, fs::current_path());
-    EXPECT_EQ(g_art_size, art_buf_article_pos());
+    EXPECT_EQ(g_art_size, g_art_buf.article_pos());
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadingProgress, MultipleInlinePartsArticleTest, testing::Values(INLINE_MIME_CASES[0]));

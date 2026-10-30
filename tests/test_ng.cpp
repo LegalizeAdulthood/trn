@@ -5457,7 +5457,7 @@ void JumpToEndArticleTest::read_prefix(std::string_view expected)
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
     ASSERT_EQ(expected, line);
-    g_art_input.pos = art_buf_article_pos();
+    g_art_input.pos = g_art_buf.article_pos();
 }
 
 void JumpToEndArticleTest::expect_end(ArticlePosition end, ArticleLine line, ArticleLine light, int column)

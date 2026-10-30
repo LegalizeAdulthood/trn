@@ -5842,7 +5842,7 @@ TEST_P(PagerWrappingArticleTest, readsWrappedTextAcrossPagesWithoutLosingItsPosi
     EXPECT_EQ(ArticleLine{static_cast<long>(scenario.rows.size())}, g_art_input.line_num);
     EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(scenario.body.size())}, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, virtual_read(g_art_input.line_num));
-    EXPECT_EQ(g_art_input.pos, art_buf_article_pos());
+    EXPECT_EQ(g_art_input.pos, g_art_buf.article_pos());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -5934,7 +5934,7 @@ TEST_P(PagerTerminalArticleTest, preservesColumnsStopsAndAttributesAcrossThePage
     EXPECT_EQ(ArticleLine{static_cast<long>(scenario.offsets.size() + 1)}, g_art_input.line_num);
     EXPECT_EQ(m_body_start + ArticlePosition{8 + scenario.offsets.back()}, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, virtual_read(g_art_input.line_num));
-    EXPECT_GE(art_buf_article_pos(), g_art_input.pos);
+    EXPECT_GE(g_art_buf.article_pos(), g_art_input.pos);
     EXPECT_FALSE(g_do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
@@ -6100,7 +6100,7 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
         }
     }
     EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line + form_feeds + prefix_bytes}, g_art_input.pos);
-    EXPECT_EQ(g_art_input.pos, art_buf_article_pos());
+    EXPECT_EQ(g_art_input.pos, g_art_buf.article_pos());
     const ArticlePosition saved_position = virtual_read(g_art_input.line_num);
     EXPECT_EQ(g_art_input.pos, saved_position < 0 ? -saved_position : saved_position);
     EXPECT_EQ(ArticleNum{TRN_TEST_ARTICLE_NUM}, g_nav.target.num);
@@ -7218,7 +7218,7 @@ TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
     EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(ArticleLine{scenario.next_line}, g_art_input.line_num);
     EXPECT_EQ(m_body_start + ArticlePosition{9 * scenario.next_line}, g_art_input.pos);
-    EXPECT_EQ(g_art_input.pos, art_buf_article_pos());
+    EXPECT_EQ(g_art_input.pos, g_art_buf.article_pos());
     EXPECT_EQ(g_art_input.pos, virtual_read(g_art_input.line_num));
     EXPECT_FALSE(g_art_buf.empty());
     EXPECT_EQ(m_raw_positions[static_cast<std::size_t>(scenario.next_line + 1)], tell_art());
