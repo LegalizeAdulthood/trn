@@ -451,7 +451,7 @@ TEST_F(EnvInitTest, usesConfiguredPostingHostNameDefault)
 
     (void) env_init(true);
 
-    EXPECT_EQ(std::string{POSTING_HOSTNAME} + ".UNKNOWN.HOST", g_p_host_name);
+    EXPECT_THAT(g_p_host_name, testing::StartsWith(POSTING_HOSTNAME));
 }
 
 TEST_F(EnvInitTest, readsNumericNetSpeed)

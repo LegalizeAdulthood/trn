@@ -27,6 +27,50 @@ function ConvertTo-TrnArgument([string] $Argument) {
     return '"' + [regex]::Replace($quoted, '(\\+)$', '$1$1') + '"'
 }
 
+function Start-TrnProcess([Diagnostics.Process] $Process, [bool] $RedirectInput = $false) {
+    if (!$RedirectInput) { [void] $Process.Start(); return }
+    if (!('TrnRawInput' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO.Pipes;
+using System.Runtime.InteropServices;
+
+public static class TrnRawInput {
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetStdHandle(int device);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetStdHandle(int device, IntPtr handle);
+
+    public static void Start(Process process, AnonymousPipeServerStream input) {
+        lock (typeof(TrnRawInput)) {
+            IntPtr previous = GetStdHandle(-10);
+            if (!SetStdHandle(-10, input.ClientSafePipeHandle.DangerousGetHandle()))
+                throw new Win32Exception();
+            try {
+                if (!process.Start()) throw new InvalidOperationException("Tool did not start.");
+            }
+            finally {
+                if (!SetStdHandle(-10, previous)) throw new Win32Exception();
+            }
+        }
+        input.DisposeLocalCopyOfClientHandle();
+    }
+}
+'@
+    }
+    # Inherit a byte pipe instead of .NET Framework's preamble-emitting writer.
+    $inputPipe = [IO.Pipes.AnonymousPipeServerStream]::new(
+        [IO.Pipes.PipeDirection]::Out, [IO.HandleInheritability]::Inheritable)
+    try {
+        [TrnRawInput]::Start($Process, $inputPipe)
+        return $inputPipe
+    }
+    catch { $inputPipe.Dispose(); throw }
+}
+
 # Console tools inherit the terminal. Streamed tools receive bytes directly,
 # without PowerShell's text pipeline or its implicit encoding conversions.
 function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
@@ -52,13 +96,13 @@ function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
     $process = [Diagnostics.Process]::new()
     $source = $null
     $destination = $null
+    $inputPipe = $null
     try {
         $process.StartInfo.FileName = $program
         $process.StartInfo.Arguments = (@($toolArguments | ForEach-Object { ConvertTo-TrnArgument $_ }) -join ' ')
         $process.StartInfo.UseShellExecute = $false
-        $process.StartInfo.RedirectStandardInput = [bool] $InputPath
         $process.StartInfo.RedirectStandardOutput = [bool] $OutputPath
-        [void] $process.Start()
+        $inputPipe = Start-TrnProcess $process ([bool] $InputPath)
         $copy = $null
         if ($OutputPath) {
             $destination = [IO.File]::Create($OutputPath)
@@ -66,8 +110,8 @@ function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
         }
         if ($InputPath) {
             $source = [IO.File]::OpenRead($InputPath)
-            $source.CopyTo($process.StandardInput.BaseStream)
-            $process.StandardInput.Close()
+            $source.CopyTo($inputPipe)
+            $inputPipe.Dispose()
         }
         $process.WaitForExit()
         if ($null -ne $copy) { $null = $copy.GetAwaiter().GetResult() }
@@ -76,6 +120,7 @@ function Invoke-TrnTool([string] $Command, [string[]] $Arguments,
     finally {
         if ($source) { $source.Dispose() }
         if ($destination) { $destination.Dispose() }
+        if ($inputPipe) { $inputPipe.Dispose() }
         $process.Dispose()
     }
 }

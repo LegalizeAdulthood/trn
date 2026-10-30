@@ -2506,6 +2506,7 @@ protected:
 
 private:
     ValueSaver<TerminalInputReader> m_reader{g_terminal_input_reader, g_terminal_input_reader};
+    ValueSaver<bool>                m_typeahead{g_allow_typeahead, g_allow_typeahead};
     ValueSaver<bool>                m_in_group{g_in_ng, g_in_ng};
     ValueSaver<char>                m_interrupts{g_int_count, g_int_count};
     ValueSaver<int>                 m_error{errno, errno};
@@ -2539,6 +2540,7 @@ void InterruptedPagerInputTest::SetUp()
     const PagerInputInterruptCase &scenario = GetParam();
     g_tc_LINES = scenario.height;
     g_init_lines = ArticleLine{scenario.height};
+    g_allow_typeahead = true;
     g_in_ng = false;
     m_flags = g_nav.target.art->m_flags;
     m_unread = g_newsgroup_ptr->m_to_read;
@@ -2897,7 +2899,6 @@ std::vector<std::string> PagerTextArticleTest::displayed_rows(std::size_t page) 
             text.erase(position, marker.size());
         }
     }
-    text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
     text.erase(std::remove(text.begin(), text.end(), '\b'), text.end());
     const std::size_t start = text.find_first_not_of(' ');
     text.erase(0, start == std::string::npos ? text.size() : start);
@@ -2905,6 +2906,15 @@ std::vector<std::string> PagerTextArticleTest::displayed_rows(std::size_t page) 
     std::vector<std::string> rows;
     for (std::string row; std::getline(input, row);)
     {
+        while (!row.empty() && row.back() == '\r')
+        {
+            row.pop_back();
+        }
+        const std::size_t carriage_return = row.rfind('\r');
+        if (carriage_return != std::string::npos)
+        {
+            row.erase(0, carriage_return + 1);
+        }
         if (row.find_first_not_of(' ') != std::string::npos)
         {
             rows.push_back(std::move(row));
@@ -5454,6 +5464,15 @@ INSTANTIATE_TEST_SUITE_P(
                               {{"Body 000", "Body 001", "Body 002", "Body 003"}, {"Body 004", "Body 005", "Body 006"}},
                               "Body 007"}),
     [](const TestParamInfo<PagerFilteredBodyCase> &info) { return info.param.name; });
+
+TEST_F(PagerTextArticleTest, retainsTheBodyRowThatOverwritesTheSearchPrompt)
+{
+    m_rendered = "--MORE--(0%)</mark>\r<eol>gBody 002\r<eol>Body 001\r\r\nBody 002\r\n--MORE--(50%)";
+
+    const std::vector<std::string> rows = displayed_rows(1);
+
+    EXPECT_EQ((std::vector<std::string>{"Body 001", "Body 002"}), rows);
+}
 
 TEST_P(PagerSearchArticleTest, displaysTheMatchingRowAndClearsItsHighlightBeforeContinuing)
 {

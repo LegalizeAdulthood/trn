@@ -159,6 +159,7 @@ function Send-TrnMail([string] $Path, [string] $To = '') {
     $payload = Join-Path ([IO.Path]::GetTempPath()) ('trn-mail-' + [Guid]::NewGuid() + '.eml')
     $process = [Diagnostics.Process]::new()
     $started = $false
+    $inputPipe = $null
     try {
         [IO.File]::WriteAllBytes($payload, $submission.Bytes)
         $options += 'upload-file = ' + (ConvertTo-TrnCurlValue $payload)
@@ -170,16 +171,15 @@ function Send-TrnMail([string] $Path, [string] $To = '') {
         $arguments = @('--disable') + @($parts | Select-Object -Skip 1) + @('--config', '-')
         $process.StartInfo.Arguments = (@($arguments | ForEach-Object { ConvertTo-TrnArgument $_ }) -join ' ')
         $process.StartInfo.UseShellExecute = $false
-        $process.StartInfo.RedirectStandardInput = $true
         $process.StartInfo.RedirectStandardOutput = $true
         $process.StartInfo.RedirectStandardError = $true
-        [void] $process.Start()
+        $inputPipe = Start-TrnProcess $process $true
         $started = $true
         $output = $process.StandardOutput.ReadToEndAsync()
         $errors = $process.StandardError.ReadToEndAsync()
         $config = [Text.UTF8Encoding]::new($false).GetBytes(($options -join "`n") + "`n")
-        $process.StandardInput.BaseStream.Write($config, 0, $config.Length)
-        $process.StandardInput.Close()
+        $inputPipe.Write($config, 0, $config.Length)
+        $inputPipe.Dispose()
         if (!$process.WaitForExit(($timeout + 5) * 1000)) { throw 'Mail submission timed out; acceptance is unconfirmed.' }
         $response = $output.GetAwaiter().GetResult().Trim()
         $null = $errors.GetAwaiter().GetResult()
@@ -189,6 +189,7 @@ function Send-TrnMail([string] $Path, [string] $To = '') {
         Write-Host 'Mail accepted by the submission server.'
     }
     finally {
+        if ($inputPipe) { $inputPipe.Dispose() }
         if ($started -and !$process.HasExited) { $process.Kill(); $process.WaitForExit() }
         $process.Dispose()
         if ([IO.File]::Exists($payload)) { [IO.File]::Delete($payload) }

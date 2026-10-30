@@ -14305,6 +14305,7 @@ TEST_P(NewsgroupPagerReadingTest, localGrowthRetainsAnAvailableNewArticle)
     {
         EXPECT_TRUE(fs::copy_file(m_output_dir / "comp/lang/cpp/3", m_output_dir / "comp/lang/cpp/4"));
         grow_newsgroup(ArticleNum{4});
+        errno = 0;
         return reader(buffer, size);
     };
 

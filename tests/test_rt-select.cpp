@@ -2018,6 +2018,12 @@ INSTANTIATE_TEST_SUITE_P(UseAndAbandon, SelectorOptionSessionTest,
 
 using SelectorExitCommand = std::pair<char, char>;
 
+#ifdef I_SGTTY
+constexpr char SELECTOR_CARRIAGE_RETURN = '\n';
+#else
+constexpr char SELECTOR_CARRIAGE_RETURN = '\r';
+#endif
+
 class SelectorExitInputTest : public SelectorSessionInputState,
                               public testing::WithParamInterface<std::tuple<SelectorExitCommand, bool>>
 {
@@ -2042,9 +2048,10 @@ INSTANTIATE_TEST_SUITE_P(
                                      SelectorExitCommand{'+', '+'}, SelectorExitCommand{'`', 'Q'},
                                      SelectorExitCommand{'\033', '+'}, SelectorExitCommand{Ctl('q'), '+'},
                                      SelectorExitCommand{'Z', 'Z'}, SelectorExitCommand{'\t', '\t'},
-                                     SelectorExitCommand{'\r', '\r'}, SelectorExitCommand{'\n', '\n'},
-                                     SelectorExitCommand{'\b', '\b'}, SelectorExitCommand{'\177', '\177'},
-                                     SelectorExitCommand{'N', 'N'}, SelectorExitCommand{'P', 'P'}),
+                                     SelectorExitCommand{'\r', SELECTOR_CARRIAGE_RETURN},
+                                     SelectorExitCommand{'\n', '\n'}, SelectorExitCommand{'\b', '\b'},
+                                     SelectorExitCommand{'\177', '\177'}, SelectorExitCommand{'N', 'N'},
+                                     SelectorExitCommand{'P', 'P'}),
                      testing::Bool()));
 
 class SelectorDefaultInputTest : public SelectorSessionInputState

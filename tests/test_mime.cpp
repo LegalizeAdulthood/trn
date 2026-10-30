@@ -11,6 +11,8 @@
 #include <trn/util.h>
 #include <util/util2.h>
 
+#include "mock_env.h"
+
 #include <test_config.h>
 #include <test_mime.h>
 
@@ -37,19 +39,22 @@ struct MimeTest : Test
     ~MimeTest() override = default;
 
 protected:
-    void SetUp() override
-    {
-        mime_init();
-        mime_set_executor(m_exec.AsStdFunction());
-        mime_read_mimecap(TRN_TEST_MIMECAP_FILE);
-    }
+    void SetUp() override;
     void TearDown() override
     {
         mime_final();
     }
 
+    trn::testing::MockEnvironment                                               m_env;
     StrictMock<MockFunction<int(std::string_view shell, std::string_view cmd)>> m_exec;
 };
+
+void MimeTest::SetUp()
+{
+    m_env.expect_env("MIMECAPS", TRN_TEST_MIMECAP_FILE);
+    mime_init();
+    mime_set_executor(m_exec.AsStdFunction());
+}
 
 } // namespace
 
