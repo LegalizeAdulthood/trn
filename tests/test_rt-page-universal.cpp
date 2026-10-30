@@ -452,7 +452,7 @@ TEST_P(UniversalPagingTest, rendersTheFinalPartialPageAndStops)
     add_item(UniversalTextFile{"hidden.txt"}, "Hidden").m_state = UIS_DESELECTED;
     initialize_page();
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -465,7 +465,7 @@ TEST_P(UniversalPagingTest, rendersTheFinalPartialPageAndStops)
     EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(0, g_sel_page.next_univ_index);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(UniversalPagingTest, endsAnExactlyFullFinalPage)
@@ -480,7 +480,7 @@ TEST_P(UniversalPagingTest, endsAnExactlyFullFinalPage)
     EXPECT_EQ(2, g_sel_page.page_obj_cnt);
     EXPECT_EQ(0, g_sel_page.next_univ_index);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelStyle, UniversalPagingTest, testing::Bool());

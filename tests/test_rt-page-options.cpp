@@ -388,7 +388,7 @@ TEST_P(OptionPageEndingTest, skipsCollapsedOptionsWhenAdvancingToTheNextPage)
     const int capacity = std::get<1>(GetParam());
     (void) render_page();
     ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -409,7 +409,7 @@ TEST_P(OptionPageEndingTest, displaysThePartialOrFullFinalPageAndRejectsFurtherA
     (void) render_page();
     for (int page = 0; page < 10 && !g_sel_page.at_end; ++page)
     {
-        ASSERT_TRUE(next_page());
+        ASSERT_TRUE(g_sel_page.next_page());
         (void) render_page();
     }
     ASSERT_TRUE(g_sel_page.at_end);
@@ -428,7 +428,7 @@ TEST_P(OptionPageEndingTest, displaysThePartialOrFullFinalPageAndRejectsFurtherA
     EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
     EXPECT_EQ(final_rows + 3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelAndPageCapacity, OptionPageEndingTest,

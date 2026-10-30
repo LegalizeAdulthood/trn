@@ -2309,7 +2309,7 @@ do_command:
     {
     case '>':
         g_sel_page.item_index = 0;
-        if (next_page())
+        if (g_sel_page.next_page())
         {
             return DS_DISPLAY;
         }

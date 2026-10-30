@@ -283,7 +283,7 @@ void SelectorPagingStateTest::position_page(int page)
     m_rendered = render_page();
     for (int index = 0; index < page; ++index)
     {
-        ASSERT_TRUE(next_page());
+        ASSERT_TRUE(g_sel_page.next_page());
         m_rendered = render_page();
     }
 }

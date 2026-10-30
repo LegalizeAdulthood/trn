@@ -1317,18 +1317,13 @@ bool SelectorPage::last_page()
 /// selection was advanced, otherwise false.
 ///
 /// @globals
-/// - g_sel_page.page_mp: Set to g_sel_page.next_mp if in SM_MULTIRC mode.
-/// - g_sel_page.page_np: Set to g_sel_page.next_np if in SM_NEWSGROUP mode.
-/// - g_sel_page.page_gp: Set to g_sel_page.next_gp if in SM_ADD_GROUP mode.
-/// - g_sel_page.page_univ_index: Set to g_sel_page.next_univ_index if in SM_UNIVERSAL mode.
-/// - g_sel_page.page_op: Set to g_sel_page.next_op if in SM_OPTIONS mode.
-/// - g_sel_page.page_app: Set to g_sel_page.next_app if in SM_ARTICLE mode.
-/// - g_sel_page.page_sp: Set to g_sel_page.next_sp if in default/subject/thread mode.
-/// - g_sel_page.prior_obj_cnt: Incremented by g_sel_page.page_obj_cnt when advancing page.
+/// - g_sel.mode: Selects the population whose next anchor is used.
+/// - g_obj_count: Bounds the next option page.
+/// - g_art_ptr_list: Bounds the next article page via article_ptr_list_end().
 ///
-bool next_page()
+bool SelectorPage::next_page()
 {
-    if (!g_sel_page.total_obj_cnt || g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt >= g_sel_page.total_obj_cnt)
+    if (!total_obj_cnt || prior_obj_cnt + page_obj_cnt >= total_obj_cnt)
     {
         return false;
     }
@@ -1336,10 +1331,10 @@ bool next_page()
     {
     case SM_MULTIRC:
     {
-        if (g_sel_page.next_mrc)
+        if (next_mrc)
         {
-            g_sel_page.page_mrc = g_sel_page.next_mrc;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_mrc = next_mrc;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1347,10 +1342,10 @@ bool next_page()
 
     case SM_NEWSGROUP:
     {
-        if (g_sel_page.next_ngd)
+        if (next_ngd)
         {
-            g_sel_page.page_ngd = g_sel_page.next_ngd;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_ngd = next_ngd;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1358,10 +1353,10 @@ bool next_page()
 
     case SM_ADD_GROUP:
     {
-        if (g_sel_page.next_grp != AddGroupIndex::None)
+        if (next_grp != AddGroupIndex::None)
         {
-            g_sel_page.page_grp = g_sel_page.next_grp;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_grp = next_grp;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1369,10 +1364,10 @@ bool next_page()
 
     case SM_UNIVERSAL:
     {
-        if (g_sel_page.next_univ_index)
+        if (next_univ_index)
         {
-            g_sel_page.page_univ_index = g_sel_page.next_univ_index;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_univ_index = next_univ_index;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1380,10 +1375,10 @@ bool next_page()
 
     case SM_OPTIONS:
     {
-        if (g_sel_page.next_op <= g_obj_count.value_of())
+        if (next_op <= g_obj_count.value_of())
         {
-            g_sel_page.page_op = g_sel_page.next_op;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_op = next_op;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1391,10 +1386,10 @@ bool next_page()
 
     case SM_ARTICLE:
     {
-        if (g_sel_page.next_art < article_ptr_list_end())
+        if (next_art < article_ptr_list_end())
         {
-            g_sel_page.page_art = g_sel_page.next_art;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_art = next_art;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1402,10 +1397,10 @@ bool next_page()
 
     default:
     {
-        if (g_sel_page.next_subj)
+        if (next_subj)
         {
-            g_sel_page.page_subj = g_sel_page.next_subj;
-            g_sel_page.prior_obj_cnt += g_sel_page.page_obj_cnt;
+            page_subj = next_subj;
+            prior_obj_cnt += page_obj_cnt;
             return true;
         }
         break;
@@ -1897,7 +1892,7 @@ try_again:
                 goto try_again;
             }
         }
-        if (next_page())
+        if (g_sel_page.next_page())
         {
             ret = true;
             goto try_again;

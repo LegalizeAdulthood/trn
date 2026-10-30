@@ -15762,7 +15762,7 @@ TEST_P(NewsgroupSelectorDelegatedEndTest, goingPastTheLastGroupReturnsToTheFirst
 {
     if (GetParam())
     {
-        ASSERT_TRUE(next_page());
+        ASSERT_TRUE(g_sel_page.next_page());
         g_newsgroup_ptr = g_sel_page.page_ngd;
     }
 

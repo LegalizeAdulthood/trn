@@ -144,7 +144,7 @@ void NewsgroupPageBoundaryState::leave_read_scope()
 std::string NewsgroupPageBoundaryState::page_to_end()
 {
     std::string output = render_page();
-    while (next_page())
+    while (g_sel_page.next_page())
     {
         output = render_page();
     }
@@ -164,7 +164,7 @@ void NewsgroupPageBoundaryState::expect_empty(const std::string &output, bool re
     EXPECT_EQ(3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_EQ(rereading, g_sel.rereading);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 class EmptyNewsgroupPageDisplayTest : public NewsgroupPageBoundaryState,
@@ -4456,7 +4456,7 @@ TEST_P(FinalNewsgroupPageDisplayTest, endsAtTheLastGroupWithoutInventingAnotherP
     EXPECT_EQ(nullptr, g_sel_page.next_ngd);
     EXPECT_EQ(count + 3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
     expect_group_state();
 }
 
@@ -4491,7 +4491,7 @@ TEST_P(RemovedNewsgroupPageDisplayTest, recoversAnEarlierPageAfterTheLastVisible
     EXPECT_EQ(nullptr, g_sel_page.next_ngd);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(RemovedNewsgroupPageDisplayTest, displaysAnEmptyPageAfterAllVisibleGroupsLeaveTheReadScope)

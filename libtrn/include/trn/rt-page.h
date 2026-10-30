@@ -82,6 +82,7 @@ struct SelectorPage
     bool first_page();
     bool prev_page();
     bool last_page();
+    bool next_page();
 };
 
 extern SelectorPage g_sel_page;
@@ -95,7 +96,6 @@ bool set_sel_mode(char_int ch);
 char  current_group_display_mode();
 char  current_article_display_mode();
 void init_pages(bool fill_last_page);
-bool next_page();
 bool calc_page(Selection u);
 void display_page();
 void update_page();

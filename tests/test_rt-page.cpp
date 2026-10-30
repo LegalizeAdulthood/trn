@@ -418,7 +418,7 @@ void ArticlePageBoundaryState::leave_read_scope()
 std::string ArticlePageBoundaryState::page_to_end()
 {
     std::string output = render_page();
-    while (next_page())
+    while (g_sel_page.next_page())
     {
         output = render_page();
     }
@@ -439,7 +439,7 @@ void ArticlePageBoundaryState::expect_empty(const std::string &output, bool rere
     EXPECT_EQ(3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_EQ(rereading, g_sel.rereading);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 class EmptyArticlePageDisplayTest : public ArticlePageBoundaryState,
@@ -1472,7 +1472,7 @@ TEST_P(FinalArticlePageDisplayTest, endsAtTheLastArticleWithoutInventingAnotherP
     EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
     EXPECT_EQ(count + 3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
     expect_article_state();
 }
 
@@ -1506,7 +1506,7 @@ TEST_P(RemovedArticlePageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleAr
     EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(RemovedArticlePageDisplayTest, displaysAnEmptyPageAfterAllVisibleArticlesLeaveTheReadScope)
@@ -1645,7 +1645,7 @@ TEST_P(SubjectPageBoundaryTest, displaysTheFinalSubjectAfterAdvancingPastAnEarli
 {
     prepare_subjects(GetParam(), 'l', {{3, 1}, {2, 2}});
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -1659,7 +1659,7 @@ TEST_P(SubjectPageBoundaryTest, displaysTheFinalSubjectAfterAdvancingPastAnEarli
     EXPECT_EQ(5, g_sel_page.last_line);
     EXPECT_EQ(nullptr, g_sel_page.next_subj);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(SubjectPageBoundaryTest, truncatesAnOversizedSubjectWithoutLosingItsArticleCount)
@@ -1693,7 +1693,7 @@ TEST_P(SubjectPageBoundaryTest, endsWithoutAnotherPageWhenTheFinalSubjectExactly
     EXPECT_EQ(7, g_sel_page.last_line);
     EXPECT_EQ(nullptr, g_sel_page.next_subj);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(SubjectPageBoundaryTest, exclusiveDisplayKeepsAllArticlesOfAPartiallySelectedSubject)
@@ -1729,14 +1729,14 @@ TEST_P(SubjectPageBoundaryTest, displaysNoRowsForAnEmptySubjectCatalog)
     EXPECT_EQ(0, g_sel_page.total_obj_cnt);
     EXPECT_EQ(3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(SubjectPageBoundaryTest, recoversAnEarlierPageAfterTheFinalSubjectLeavesTheReadScope)
 {
     prepare_subjects(GetParam(), 'l', {{3, 1}, {2, 2}});
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     (void) render_page();
     remove_subject(m_bravo);
     rebuild_page();
@@ -1751,7 +1751,7 @@ TEST_P(SubjectPageBoundaryTest, recoversAnEarlierPageAfterTheFinalSubjectLeavesT
     EXPECT_EQ(3, g_sel_page.total_obj_cnt);
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(SubjectPageBoundaryTest, displaysNoRowsAfterTheLastSubjectLeavesTheReadScope)
@@ -1771,7 +1771,7 @@ TEST_P(SubjectPageBoundaryTest, displaysNoRowsAfterTheLastSubjectLeavesTheReadSc
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScope, SubjectPageBoundaryTest, testing::Bool());
@@ -1916,7 +1916,7 @@ TEST_P(ThreadPageBoundaryTest, displaysTheFinalThreadWithoutRepeatingSubjectsFro
 {
     prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}, {1, 1}}, false);
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -1931,14 +1931,14 @@ TEST_P(ThreadPageBoundaryTest, displaysTheFinalThreadWithoutRepeatingSubjectsFro
     EXPECT_EQ(6, g_sel_page.last_line);
     EXPECT_EQ(nullptr, g_sel_page.next_subj);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, advancesPastEverySubjectOfATruncatedThread)
 {
     prepare_threads(GetParam(), 'l', {{3, 1}, {3, 1}, {1, 1}});
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -1950,7 +1950,7 @@ TEST_P(ThreadPageBoundaryTest, advancesPastEverySubjectOfATruncatedThread)
     EXPECT_EQ(1, g_sel_page.page_obj_cnt);
     EXPECT_EQ(6, g_sel_page.prior_obj_cnt);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, endsWhenTheFinalThreadExactlyFillsTheScreen)
@@ -1966,7 +1966,7 @@ TEST_P(ThreadPageBoundaryTest, endsWhenTheFinalThreadExactlyFillsTheScreen)
     EXPECT_EQ(7, g_sel_page.last_line);
     EXPECT_EQ(nullptr, g_sel_page.next_subj);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, displaysNoRowsForAnEmptyThreadCatalog)
@@ -1981,7 +1981,7 @@ TEST_P(ThreadPageBoundaryTest, displaysNoRowsForAnEmptyThreadCatalog)
     EXPECT_EQ(0, g_sel_page.total_obj_cnt);
     EXPECT_EQ(3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, displaysNoRowsWhenAllThreadArticlesAreOutsideTheReadScope)
@@ -1995,14 +1995,14 @@ TEST_P(ThreadPageBoundaryTest, displaysNoRowsWhenAllThreadArticlesAreOutsideTheR
     EXPECT_EQ(0, g_sel_page.page_obj_cnt);
     EXPECT_EQ(0, g_sel_page.total_obj_cnt);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, recoversAnEarlierPageAfterTheFinalThreadLeavesTheReadScope)
 {
     prepare_threads(GetParam(), 'l', {{2, 1}, {2, 1}, {1, 1}}, false);
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     (void) render_page();
     remove_subject(m_bravo);
     remove_subject(m_charlie);
@@ -2019,7 +2019,7 @@ TEST_P(ThreadPageBoundaryTest, recoversAnEarlierPageAfterTheFinalThreadLeavesThe
     EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, displaysNoRowsAfterTheLastThreadLeavesTheReadScope)
@@ -2041,7 +2041,7 @@ TEST_P(ThreadPageBoundaryTest, displaysNoRowsAfterTheLastThreadLeavesTheReadScop
     EXPECT_EQ(0, g_selected_count);
     EXPECT_EQ(3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(ThreadPageBoundaryTest, exclusiveDisplayOmitsEverySubjectOfAnUnselectedThread)

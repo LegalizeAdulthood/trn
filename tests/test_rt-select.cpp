@@ -6082,7 +6082,7 @@ INSTANTIATE_TEST_SUITE_P(ReadAndUnread, ArticleSelectorExclusiveThreadTest, test
 TEST_P(ArticleSelectorBulkModeTest, groupCommandMarksUnselectedItemsReadAcrossPages)
 {
     prepare_bulk(GetParam());
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     calculate_page();
     ASSERT_EQ(ArticleNum{3}, page_article());
 
@@ -6112,7 +6112,7 @@ TEST_P(ArticleSelectorBulkModeTest, junkCommandMarksSelectedItemsReadAndRedispla
 TEST_P(ArticleSelectorBulkModeTest, pageCommandPreservesUnselectedItemsOnOtherPages)
 {
     prepare_bulk(GetParam());
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     calculate_page();
     ASSERT_EQ(ArticleNum{3}, page_article());
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
@@ -6128,7 +6128,7 @@ TEST_P(ArticleSelectorBulkModeTest, pageCommandPreservesUnselectedItemsOnOtherPa
 TEST_P(ArticleSelectorBulkModeTest, pageCommandWithoutSelectionsContinuesAtTheNextPage)
 {
     prepare_bulk(GetParam(), false, false);
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     calculate_page();
     ASSERT_EQ(ArticleNum{3}, page_article());
 
@@ -6303,7 +6303,7 @@ INSTANTIATE_TEST_SUITE_P(GroupAndPage, ArticleSelectorBulkThreadTest, testing::V
 TEST_P(ArticleSelectorInlineModeTest, junkCommandAppliesToSelectedArticlesAcrossPages)
 {
     prepare_inline(GetParam());
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     calculate_page();
     set_current_item();
 
@@ -6480,7 +6480,7 @@ TEST_F(ArticleSelectorInlineStateTest, currentSubjectSelectionDoesNotSelectItsTh
 {
     prepare_inline(SM_SUBJECT);
     join_inline_thread();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     calculate_page();
     set_current_item();
     ASSERT_EQ(&m_charlie, g_sel_page.items[0].u.sp);

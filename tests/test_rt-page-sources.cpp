@@ -305,7 +305,7 @@ TEST_P(SourceRowTest, displaysAnEmptyCatalogWithoutSelectableRows)
     EXPECT_EQ(0, g_sel_page.page_obj_cnt);
     EXPECT_EQ(0, g_sel_page.total_obj_cnt);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(SourceRowTest, recoversEarlierRowsWhenTheFinalSourceDisappears)
@@ -317,7 +317,7 @@ TEST_P(SourceRowTest, recoversEarlierRowsWhenTheFinalSourceDisappears)
     (void) add_sources(30, {"removed"});
     initialize_page();
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     g_multircs[2].m_first = nullptr;
     initialize_page();
 
@@ -376,7 +376,7 @@ TEST_P(SourcePageEndingTest, restartsLabelsOnTheFinalPageAndStopsAtItsEnd)
 {
     const auto [numeric, final_rows] = GetParam();
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -393,7 +393,7 @@ TEST_P(SourcePageEndingTest, restartsLabelsOnTheFinalPageAndStopsAtItsEnd)
     EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
     EXPECT_EQ(nullptr, g_sel_page.next_mrc);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelAndFinalPageSize, SourcePageEndingTest,
@@ -504,7 +504,7 @@ TEST_P(NewGroupPageEndingTest, displaysTheFinalPageWithItsSelectionAndStops)
 {
     const auto [rereading, numeric, final_rows] = GetParam();
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -520,7 +520,7 @@ TEST_P(NewGroupPageEndingTest, displaysTheFinalPageWithItsSelectionAndStops)
     EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
     EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(ScopeLabelAndFinalPageSize, NewGroupPageEndingTest,
@@ -606,7 +606,7 @@ TEST_P(NewGroupScopeTest, rendersAnEmptyScopeWithoutStaleCounts)
     EXPECT_EQ(0, g_sel_page.page_obj_cnt);
     EXPECT_EQ(0, g_sel_page.total_obj_cnt);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 TEST_P(NewGroupScopeTest, recoversEarlierGroupsAfterTheFinalPageLeavesTheScope)
@@ -620,7 +620,7 @@ TEST_P(NewGroupScopeTest, recoversEarlierGroupsAfterTheFinalPageLeavesTheScope)
     const AddGroupIndex removed = add_new("comp.removed", 3, scope);
     initialize_page();
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     g_add_groups[removed].m_flags ^= AGF_EXCLUDED;
     initialize_page();
 

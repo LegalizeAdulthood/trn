@@ -401,7 +401,7 @@ TEST_P(DeferredNewsgroupDisplayTest, finishesLoadingOnTheFinalPageWithoutRepeati
     g_tc_LINES = 7;
     prepare_page(rereading, mode);
     (void) render_page();
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
 
     const std::string output = render_page();
 
@@ -418,7 +418,7 @@ TEST_P(DeferredNewsgroupDisplayTest, finishesLoadingOnTheFinalPageWithoutRepeati
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 4}, g_newsgroup_to_read);
     EXPECT_EQ(nullptr, g_sel_page.next_ngd);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndPresentation, DeferredNewsgroupDisplayTest,
@@ -447,7 +447,7 @@ TEST_P(DeferredNewsgroupRecoveryTest, replacesAnEmptyDeferredPageWithEarlierIncl
     EXPECT_EQ(capacity - 1, g_sel_page.item_index);
     EXPECT_EQ(capacity + 3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
     const std::size_t heading = output.rfind("Newsgroups");
     ASSERT_NE(std::string::npos, heading);
     EXPECT_THAT(output.substr(heading), testing::HasSubstr(std::to_string(m_retained.size()) + " groups"));
@@ -507,7 +507,7 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, advancesFromTheEarlierPageToTheF
     ASSERT_TRUE(g_sel_page.prev_page());
     (void) render_page();
 
-    ASSERT_TRUE(next_page());
+    ASSERT_TRUE(g_sel_page.next_page());
     const std::string output = render_page();
 
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
@@ -518,7 +518,7 @@ TEST_P(DeferredNewsgroupRecoveryNavigationTest, advancesFromTheEarlierPageToTheF
     EXPECT_EQ(capacity, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(nullptr, g_sel_page.next_ngd);
     EXPECT_TRUE(g_sel_page.at_end);
-    EXPECT_FALSE(next_page());
+    EXPECT_FALSE(g_sel_page.next_page());
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndCapacity, DeferredNewsgroupRecoveryNavigationTest,
