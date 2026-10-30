@@ -338,7 +338,7 @@ DoArticleResult do_article(std::string &article_command)
             restart_color = false;
             if (g_parsed_header.in_header)
             {
-                hide_this_line = parse_line(line_tail(), g_do_hiding, hide_this_line);
+                hide_this_line = g_parsed_header.parse_line(line_tail(), g_do_hiding, hide_this_line);
                 if (!g_parsed_header.in_header)
                 {
                     line_num += finish_tree(line_num+g_top_line);
