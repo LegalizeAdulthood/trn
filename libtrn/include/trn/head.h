@@ -94,8 +94,10 @@ struct ParsedHeaderContext
     void start_header(ArticleNum artnum);
     // Restart a parsed header's presentation without discarding its offsets.
     void restart_header(ArticleNum artnum);
-    void end_line();
     bool parse_line(std::string_view art_buf, int new_hide, int old_hide);
+
+    // TODO: private
+    void end_line();
     bool line_span(HeaderLineType which_line, char *&line, int &size);
 };
 

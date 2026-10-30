@@ -78,11 +78,13 @@ struct SelectorPage
     UniversalItemIndex page_univ_index{};
     UniversalItemIndex next_univ_index{};
 
-    void init();
     bool first_page();
     bool prev_page();
     bool last_page();
     bool next_page();
+
+    // TODO: private
+    void init();
     int  find_line(int y);
 };
 
