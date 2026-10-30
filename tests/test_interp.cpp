@@ -2190,12 +2190,12 @@ TEST_P(ArticleCacheLifecycleTest, cyclingConversionBackRebuildsTheOriginalPresen
 
 TEST_P(ArticleCacheLifecycleTest, ordinaryRefreshReusesTheCachedPresentationAndMimeState)
 {
-    const ArticlePosition length = art_buf_len();
+    const ArticlePosition length = g_art_buf.len();
     const ArticlePosition source = tell_art();
     MimeSection *const    section = g_mime_section;
     const MimeState       state = g_mime_state;
     ASSERT_EQ(PS_NORM, pager_command("\f"));
-    ASSERT_EQ(length, art_buf_len());
+    ASSERT_EQ(length, g_art_buf.len());
     ASSERT_EQ(source, tell_art());
     ASSERT_EQ(section, g_mime_section);
     ASSERT_EQ(state, g_mime_state);

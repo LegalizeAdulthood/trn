@@ -240,9 +240,9 @@ ArticlePosition PresentationBuffer::pos()
     return position;
 }
 
-ArticlePosition art_buf_len()
+ArticlePosition PresentationBuffer::len()
 {
-    return g_art_buf.length;
+    return length;
 }
 
 ArticlePosition art_buf_seek()

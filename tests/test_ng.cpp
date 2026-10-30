@@ -5304,7 +5304,7 @@ void CachedDisplayArticleTest::expect_redraw(ArticleLine line)
 void CachedDisplayArticleTest::expect_cleared_cache()
 {
     EXPECT_TRUE(g_art_buf.empty());
-    EXPECT_EQ(ArticlePosition{}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{}, g_art_buf.len());
     EXPECT_EQ(ArticlePosition{}, g_art_buf.pos());
     EXPECT_EQ(ArticlePosition{}, art_buf_seek());
 }
@@ -12122,7 +12122,7 @@ TEST_P(RefreshArticleTest, refreshRedrawsTheCurrentScreenWithoutChangingDisplayO
     EXPECT_EQ('p', current_char_subst_mode());
     EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
     EXPECT_EQ(ArticlePosition{3}, g_art_buf.pos());
-    EXPECT_EQ(ArticlePosition{3}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{3}, g_art_buf.len());
     EXPECT_EQ(ArticlePosition{2}, art_buf_seek());
 }
 
@@ -12413,7 +12413,7 @@ TEST_P(BackwardCommandArticleTest, groupEndDoesNotSeekRedrawOrChangeHighlighting
     load_article();
     g_marking = STANDOUT;
     const ArticlePosition cached_position = g_art_buf.pos();
-    const ArticlePosition cached_length = art_buf_len();
+    const ArticlePosition cached_length = g_art_buf.len();
 
     const std::string output = display(GetParam());
 
@@ -12424,7 +12424,7 @@ TEST_P(BackwardCommandArticleTest, groupEndDoesNotSeekRedrawOrChangeHighlighting
     EXPECT_EQ(ArticleLine{7}, g_highlight);
     EXPECT_EQ(STANDOUT, g_marking);
     EXPECT_EQ(cached_position, g_art_buf.pos());
-    EXPECT_EQ(cached_length, art_buf_len());
+    EXPECT_EQ(cached_length, g_art_buf.len());
     expect_unmoved_view();
 }
 
@@ -12480,7 +12480,7 @@ TEST_P(KnownSizeEndArticleTest, jumpsToTheKnownEndWithoutChangingArticleReadOrSe
     EXPECT_EQ(ArticlePosition{11}, g_art_size);
     EXPECT_EQ(ArticlePosition{6}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{6}, g_art_buf.pos());
-    EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 0}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 0}, g_art_buf.len());
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 6}, tell_art());
     EXPECT_EQ(GetParam().second, g_do_hiding);
     std::string next_line;
@@ -12512,7 +12512,7 @@ TEST_F(JumpToEndArticleTest, decodesTheRemainingMimeTextAndRestoresTheHeaderRela
     EXPECT_EQ(header_end + ArticlePosition{11}, g_art_size);
     EXPECT_EQ(header_end + ArticlePosition{6}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{6}, g_art_buf.pos());
-    EXPECT_EQ(ArticlePosition{11}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{11}, g_art_buf.len());
     EXPECT_EQ(g_raw_art_size, art_buf_seek());
     EXPECT_EQ("First\nLast\n", art_buf_view(header_end));
     std::string next_line;
@@ -12564,7 +12564,7 @@ TEST_F(JumpToEndArticleTest, jumpingWhenAlreadyAtArticleEndRetainsTheEndPosition
     expect_end(ArticlePosition{5}, ArticleLine{1}, ArticleLine{});
     EXPECT_EQ(ArticlePosition{5}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{5}, g_art_buf.pos());
-    EXPECT_EQ(ArticlePosition{5}, art_buf_len());
+    EXPECT_EQ(ArticlePosition{5}, g_art_buf.len());
     EXPECT_EQ("Last\n", art_buf_view(ArticlePosition{}));
 }
 

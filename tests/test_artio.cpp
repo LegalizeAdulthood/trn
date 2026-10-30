@@ -708,7 +708,7 @@ TEST_P(WrappedArticleTest, preservesTheExpectedTextAndRowBoundaries)
     EXPECT_EQ(GetParam().rows, rows);
     EXPECT_EQ(presentation(), art_buf_view(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
     EXPECT_EQ(g_art_size, art_buf_article_pos());
-    EXPECT_EQ(static_cast<long>(presentation().size()), art_buf_len().value_of());
+    EXPECT_EQ(static_cast<long>(presentation().size()), g_art_buf.len().value_of());
 }
 
 INSTANTIATE_TEST_SUITE_P(WordBoundariesAndIndentation, WrappedArticleTest, testing::ValuesIn(WRAPPED_ARTICLE_CASES));
@@ -1800,7 +1800,7 @@ TEST_F(ArticleIoTest, readArtBufAddsNewlineToFinalLine)
 
     EXPECT_EQ("alpha\n", first);
     EXPECT_EQ(6, g_art_buf.pos().value_of());
-    EXPECT_EQ(6, art_buf_len().value_of());
+    EXPECT_EQ(6, g_art_buf.len().value_of());
 
     EXPECT_FALSE(read_art_buf(first, false));
     EXPECT_TRUE(first.empty());
