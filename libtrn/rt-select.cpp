@@ -2333,7 +2333,7 @@ do_command:
 
     case '$':
         g_sel_page.item_index = 0;
-        if (last_page())
+        if (g_sel_page.last_page())
         {
             return DS_DISPLAY;
         }

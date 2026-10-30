@@ -632,14 +632,14 @@ try_again:
         }
         else if (g_sel_page.page_ngd == newsgroup_last())
         {
-            (void) last_page();
+            (void) g_sel_page.last_page();
         }
         else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
             if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
-                (void) last_page();
+                (void) g_sel_page.last_page();
             }
         }
         break;
@@ -684,14 +684,14 @@ try_again:
         }
         else if (g_sel_page.page_grp == g_add_groups.last())
         {
-            (void) last_page();
+            (void) g_sel_page.last_page();
         }
         else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
             if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
-                (void) last_page();
+                (void) g_sel_page.last_page();
             }
         }
         break;
@@ -794,14 +794,14 @@ try_again:
         }
         else if (g_sel_page.page_univ_index == univ_index(univ_last_item()))
         {
-            (void) last_page();
+            (void) g_sel_page.last_page();
         }
         else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
             if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
-                (void) last_page();
+                (void) g_sel_page.last_page();
             }
         }
         break;
@@ -841,14 +841,14 @@ try_again:
         }
         else if (g_sel_page.page_op >= g_obj_count.value_of())
         {
-            (void) last_page();
+            (void) g_sel_page.last_page();
         }
         else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
             if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
-                (void) last_page();
+                (void) g_sel_page.last_page();
             }
         }
         break;
@@ -938,14 +938,14 @@ try_again:
         }
         else if (g_sel_page.page_art >= limit)
         {
-            (void) last_page();
+            (void) g_sel_page.last_page();
         }
         else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
             if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
-                (void) last_page();
+                (void) g_sel_page.last_page();
             }
         }
         break;
@@ -1031,14 +1031,14 @@ try_again:
         }
         else if (g_sel_page.page_subj == g_last_subject)
         {
-            (void) last_page();
+            (void) g_sel_page.last_page();
         }
         else if (g_sel_page.prior_obj_cnt && fill_last_page)
         {
             calc_page(no_search);
             if (g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt == g_sel_page.total_obj_cnt)
             {
-                (void) last_page();
+                (void) g_sel_page.last_page();
             }
         }
     }
@@ -1190,37 +1190,25 @@ bool SelectorPage::first_page()
 /// changed, otherwise false.
 ///
 /// @globals
-/// - g_sel_page.prior_obj_cnt: Set to g_sel_page.total_obj_cnt at the start of the function.
-/// - g_sel_page.page_mp: Temporarily set to nullptr and possibly updated to the last
-///   included Multirc if in SM_MULTIRC mode.
-/// - g_sel_page.page_np: Temporarily set to nullptr and possibly updated to the last
-///   included NewsgroupData if in SM_NEWSGROUP mode.
-/// - g_sel_page.page_gp: Temporarily reset and possibly updated to the last
-///   included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page.page_univ_index: Temporarily set to 0 and possibly updated to the last
-///   included UniversalItem if in SM_UNIVERSAL mode.
-/// - g_sel_page.page_op: Temporarily set to g_obj_count.value_of() + 1 and possibly
-///   updated to the last included option index if in SM_OPTIONS mode.
-/// - g_sel_page.page_app: Temporarily set to the end of the article pointer list and
-///   possibly updated to the last included Article** if in SM_ARTICLE mode.
-/// - g_sel_page.page_sp: Temporarily set to nullptr and possibly updated to the last
-///   included Subject if in default/subject/thread mode.
+/// - g_sel, g_obj_count: Read for selector mode, policy, and option count.
+/// - g_art_ptr_list: Read to locate the end of article order.
+/// @note prev_page retains its catalog, inclusion, and display-policy dependencies.
 ///
-bool last_page()
+bool SelectorPage::last_page()
 {
-    g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
+    prior_obj_cnt = total_obj_cnt;
 
     switch (g_sel.mode)
     {
     case SM_MULTIRC:
     {
-        Multirc *mp = g_sel_page.page_mrc;
-        g_sel_page.page_mrc = nullptr;
-        if (!g_sel_page.prev_page())
+        Multirc *mp = page_mrc;
+        page_mrc = nullptr;
+        if (!prev_page())
         {
-            g_sel_page.page_mrc = mp;
+            page_mrc = mp;
         }
-        else if (mp != g_sel_page.page_mrc)
+        else if (mp != page_mrc)
         {
             return true;
         }
@@ -1229,13 +1217,13 @@ bool last_page()
 
     case SM_NEWSGROUP:
     {
-        NewsgroupData *np = g_sel_page.page_ngd;
-        g_sel_page.page_ngd = nullptr;
-        if (!g_sel_page.prev_page())
+        NewsgroupData *np = page_ngd;
+        page_ngd = nullptr;
+        if (!prev_page())
         {
-            g_sel_page.page_ngd = np;
+            page_ngd = np;
         }
-        else if (np != g_sel_page.page_ngd)
+        else if (np != page_ngd)
         {
             return true;
         }
@@ -1244,13 +1232,13 @@ bool last_page()
 
     case SM_ADD_GROUP:
     {
-        const AddGroupIndex gp = g_sel_page.page_grp;
-        g_sel_page.page_grp = AddGroupIndex::None;
-        if (!g_sel_page.prev_page())
+        const AddGroupIndex gp = page_grp;
+        page_grp = AddGroupIndex::None;
+        if (!prev_page())
         {
-            g_sel_page.page_grp = gp;
+            page_grp = gp;
         }
-        else if (gp != g_sel_page.page_grp)
+        else if (gp != page_grp)
         {
             return true;
         }
@@ -1259,13 +1247,13 @@ bool last_page()
 
     case SM_UNIVERSAL:
     {
-        const UniversalItemIndex ui = g_sel_page.page_univ_index;
-        g_sel_page.page_univ_index = {};
-        if (!g_sel_page.prev_page())
+        const UniversalItemIndex ui = page_univ_index;
+        page_univ_index = {};
+        if (!prev_page())
         {
-            g_sel_page.page_univ_index = ui;
+            page_univ_index = ui;
         }
-        else if (ui != g_sel_page.page_univ_index)
+        else if (ui != page_univ_index)
         {
             return true;
         }
@@ -1274,13 +1262,13 @@ bool last_page()
 
     case SM_OPTIONS:
     {
-        int op = g_sel_page.page_op;
-        g_sel_page.page_op = g_obj_count.value_of() + 1;
-        if (!g_sel_page.prev_page())
+        int op = page_op;
+        page_op = g_obj_count.value_of() + 1;
+        if (!prev_page())
         {
-            g_sel_page.page_op = op;
+            page_op = op;
         }
-        else if (op != g_sel_page.page_op)
+        else if (op != page_op)
         {
             return true;
         }
@@ -1289,13 +1277,13 @@ bool last_page()
 
     case SM_ARTICLE:
     {
-        Article **app = g_sel_page.page_art;
-        g_sel_page.page_art = article_ptr_list_end();
-        if (!g_sel_page.prev_page())
+        Article **app = page_art;
+        page_art = article_ptr_list_end();
+        if (!prev_page())
         {
-            g_sel_page.page_art = app;
+            page_art = app;
         }
-        else if (app != g_sel_page.page_art)
+        else if (app != page_art)
         {
             return true;
         }
@@ -1304,13 +1292,13 @@ bool last_page()
 
     default:
     {
-        Subject *sp = g_sel_page.page_subj;
-        g_sel_page.page_subj = nullptr;
-        if (!g_sel_page.prev_page())
+        Subject *sp = page_subj;
+        page_subj = nullptr;
+        if (!prev_page())
         {
-            g_sel_page.page_subj = sp;
+            page_subj = sp;
         }
-        else if (sp != g_sel_page.page_subj)
+        else if (sp != page_subj)
         {
             return true;
         }
@@ -2119,7 +2107,7 @@ try_again:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }
@@ -2200,7 +2188,7 @@ start_of_loop:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }
@@ -2266,7 +2254,7 @@ start_of_loop:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }
@@ -2304,7 +2292,7 @@ start_of_loop:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }
@@ -2344,7 +2332,7 @@ start_of_loop:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }
@@ -2377,7 +2365,7 @@ start_of_loop:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }
@@ -2466,7 +2454,7 @@ start_of_loop:
         }
         if (!g_sel_page.page_obj_cnt)
         {
-            if (last_page())
+            if (g_sel_page.last_page())
             {
                 goto try_again;
             }

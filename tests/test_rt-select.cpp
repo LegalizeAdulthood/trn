@@ -6144,7 +6144,7 @@ TEST_P(ArticleSelectorBulkModeTest, pageCommandWithoutSelectionsContinuesAtTheNe
 TEST_P(ArticleSelectorBulkModeTest, deletingTheLastPageRepairsThePageAnchor)
 {
     prepare_bulk(GetParam(), false, false);
-    ASSERT_TRUE(last_page());
+    ASSERT_TRUE(g_sel_page.last_page());
     calculate_page();
     ASSERT_EQ(ArticleNum{GetParam() == SM_ARTICLE ? 4 : 2}, page_article());
 
@@ -6534,7 +6534,7 @@ TEST_P(ArticleSelectorSearchReadTest, matchingSearchAddsSelectionsStartingAtTheB
 {
     const auto &[mode, rereading] = GetParam();
     prepare_inline(mode, rereading);
-    ASSERT_TRUE(last_page());
+    ASSERT_TRUE(g_sel_page.last_page());
     calculate_page();
     g_nav.target.num = ArticleNum{4};
     g_nav.target.art = article_ptr(g_nav.target.num);

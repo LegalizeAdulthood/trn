@@ -121,7 +121,7 @@ void DeferredNewsgroupRecoveryState::prepare_recovery(bool rereading, char mode,
     ASSERT_EQ(capacity, g_sel_page.page_item_cnt);
     ASSERT_EQ(ArticleNum{}, m_removed[0]->m_abs_first);
     ASSERT_EQ(ArticleNum{}, m_removed[1]->m_abs_first);
-    ASSERT_TRUE(last_page());
+    ASSERT_TRUE(g_sel_page.last_page());
     ASSERT_EQ(m_removed[capacity == 1 ? 1 : 0], g_sel_page.page_ngd);
     g_newsgroup_ptr = m_retained.back();
 }
