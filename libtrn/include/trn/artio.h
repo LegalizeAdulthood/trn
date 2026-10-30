@@ -35,6 +35,16 @@ extern ArticleInput    g_art_input;
 extern char            g_wrapped_nl;
 extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 
+struct PresentationBuffer
+{
+    std::string     bytes;
+    ArticlePosition position{};
+    ArticlePosition seek_pos{};
+    ArticlePosition length{};
+};
+
+extern PresentationBuffer g_art_buf;
+
 class PreserveArticleBuffer
 {
 public:

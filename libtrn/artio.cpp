@@ -39,26 +39,23 @@ int             g_word_wrap_offset{8};    // right-hand column size (0 is off)
 static constexpr std::size_t INITIAL_ART_BUF_SIZE{8 * 1024};
 static constexpr std::size_t ART_BUF_GROWTH{LINE_BUF_LEN * 4};
 
-static std::string     s_art_buf;
-static ArticlePosition s_art_buf_pos{};
-static ArticlePosition s_art_buf_seek{};
-static ArticlePosition s_art_buf_len{};
+PresentationBuffer g_art_buf;
 
 PreserveArticleBuffer::PreserveArticleBuffer() :
-    m_buffer{std::move(s_art_buf)},
-    m_position{s_art_buf_pos},
-    m_seek{s_art_buf_seek},
-    m_length{s_art_buf_len}
+    m_buffer{std::move(g_art_buf.bytes)},
+    m_position{g_art_buf.position},
+    m_seek{g_art_buf.seek_pos},
+    m_length{g_art_buf.length}
 {
     clear_art_buf();
 }
 
 PreserveArticleBuffer::~PreserveArticleBuffer()
 {
-    s_art_buf = std::move(m_buffer);
-    s_art_buf_pos = m_position;
-    s_art_buf_seek = m_seek;
-    s_art_buf_len = m_length;
+    g_art_buf.bytes = std::move(m_buffer);
+    g_art_buf.position = m_position;
+    g_art_buf.seek_pos = m_seek;
+    g_art_buf.length = m_length;
 }
 
 static char *art_buf_data();
@@ -66,17 +63,17 @@ static std::size_t art_buf_offset(const char *ptr);
 
 void art_io_init()
 {
-    s_art_buf.assign(INITIAL_ART_BUF_SIZE, '\0');
+    g_art_buf.bytes.assign(INITIAL_ART_BUF_SIZE, '\0');
     clear_art_buf();
 }
 
 void art_io_final()
 {
-    s_art_buf.clear();
-    s_art_buf.shrink_to_fit();
-    s_art_buf_pos = ArticlePosition{};
-    s_art_buf_seek = ArticlePosition{};
-    s_art_buf_len = ArticlePosition{};
+    g_art_buf.bytes.clear();
+    g_art_buf.bytes.shrink_to_fit();
+    g_art_buf.position = ArticlePosition{};
+    g_art_buf.seek_pos = ArticlePosition{};
+    g_art_buf.length = ArticlePosition{};
 }
 
 // open an article, unless it's already open
@@ -219,48 +216,48 @@ bool read_art(std::string &line)
 
 void clear_art_buf()
 {
-    if (!s_art_buf.empty())
+    if (!g_art_buf.bytes.empty())
     {
-        s_art_buf.front() = '\0';
+        g_art_buf.bytes.front() = '\0';
     }
-    s_art_buf_len = ArticlePosition{};
-    s_art_buf_seek = ArticlePosition{};
-    s_art_buf_pos = ArticlePosition{};
+    g_art_buf.length = ArticlePosition{};
+    g_art_buf.seek_pos = ArticlePosition{};
+    g_art_buf.position = ArticlePosition{};
 }
 
 bool art_buf_empty()
 {
-    return s_art_buf.empty() || s_art_buf.front() == '\0';
+    return g_art_buf.bytes.empty() || g_art_buf.bytes.front() == '\0';
 }
 
 bool art_buf_at_end()
 {
-    return s_art_buf_pos == s_art_buf_len;
+    return g_art_buf.position == g_art_buf.length;
 }
 
 ArticlePosition art_buf_pos()
 {
-    return s_art_buf_pos;
+    return g_art_buf.position;
 }
 
 ArticlePosition art_buf_len()
 {
-    return s_art_buf_len;
+    return g_art_buf.length;
 }
 
 ArticlePosition art_buf_seek()
 {
-    return s_art_buf_seek;
+    return g_art_buf.seek_pos;
 }
 
 void set_art_buf_seek(ArticlePosition pos)
 {
-    s_art_buf_seek = pos;
+    g_art_buf.seek_pos = pos;
 }
 
 ArticlePosition art_buf_article_pos()
 {
-    return s_art_buf_pos + g_parsed_header.positions[PAST_HEADER].min_pos;
+    return g_art_buf.position + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
 ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
@@ -269,7 +266,7 @@ ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
     {
         return raw_art_size;
     }
-    return raw_art_size - s_art_buf_seek + s_art_buf_len + g_parsed_header.positions[PAST_HEADER].min_pos;
+    return raw_art_size - g_art_buf.seek_pos + g_art_buf.length + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
 std::string_view art_buf_view(ArticlePosition pos)
@@ -285,17 +282,17 @@ std::string_view art_buf_view(ArticlePosition pos)
                                                         : std::string_view{};
     }
     const ArticlePosition offset = pos - g_parsed_header.positions[PAST_HEADER].min_pos;
-    if (offset >= s_art_buf_len)
+    if (offset >= g_art_buf.length)
     {
         return {};
     }
-    return std::string_view{s_art_buf}.substr(static_cast<std::size_t>(offset.value_of()),
-                                              static_cast<std::size_t>((s_art_buf_len - offset).value_of()));
+    return std::string_view{g_art_buf.bytes}.substr(static_cast<std::size_t>(offset.value_of()),
+                                                    static_cast<std::size_t>((g_art_buf.length - offset).value_of()));
 }
 
 static char *art_buf_data()
 {
-    return s_art_buf.data();
+    return g_art_buf.bytes.data();
 }
 
 static std::size_t art_buf_offset(const char *ptr)
@@ -311,9 +308,9 @@ int seek_art_buf(ArticlePosition pos)
     }
 
     pos -= g_parsed_header.positions[PAST_HEADER].min_pos;
-    s_art_buf_pos = s_art_buf_len;
+    g_art_buf.position = g_art_buf.length;
 
-    while (s_art_buf_pos < pos)
+    while (g_art_buf.position < pos)
     {
         if (!read_art_buf_raw(false))
         {
@@ -321,7 +318,7 @@ int seek_art_buf(ArticlePosition pos)
         }
     }
 
-    s_art_buf_pos = pos;
+    g_art_buf.position = pos;
 
     return 0;
 }
@@ -330,9 +327,9 @@ static void store_art_text(char *&buffer, std::size_t offset, std::string_view t
 {
     const std::size_t base = art_buf_offset(buffer);
     const std::size_t required = base + offset + text.size() + 2;
-    if (s_art_buf.size() < required)
+    if (g_art_buf.bytes.size() < required)
     {
-        s_art_buf.resize(required + ART_BUF_GROWTH);
+        g_art_buf.bytes.resize(required + ART_BUF_GROWTH);
         buffer = art_buf_data() + base;
     }
     text.copy(buffer + offset, text.size());
@@ -380,8 +377,8 @@ char *read_art_buf_raw(bool view_inline)
     std::string description;
     const auto  write_newline = [](std::size_t offset)
     {
-        s_art_buf[offset] = '\n';
-        s_art_buf[offset + 1] = '\0';
+        g_art_buf.bytes[offset] = '\n';
+        g_art_buf.bytes[offset + 1] = '\0';
     };
 
     if (!g_do_hiding)
@@ -392,20 +389,20 @@ char *read_art_buf_raw(bool view_inline)
         }
         bp = g_art_line.data();
         const ArticlePosition art_pos = tell_art() - g_parsed_header.positions[PAST_HEADER].min_pos;
-        s_art_buf_seek = art_pos;
-        s_art_buf_pos = art_pos;
+        g_art_buf.seek_pos = art_pos;
+        g_art_buf.position = art_pos;
         return bp;
     }
-    if (s_art_buf_pos == g_art_size - g_parsed_header.positions[PAST_HEADER].min_pos &&
+    if (g_art_buf.position == g_art_size - g_parsed_header.positions[PAST_HEADER].min_pos &&
         g_mime_section->m_decoder_pending.empty())
     {
         return nullptr;
     }
-    bp = art_buf_data() + s_art_buf_pos.value_of();
+    bp = art_buf_data() + g_art_buf.position.value_of();
     if (*bp == '\001' || *bp == '\002')
     {
         bp++;
-        ++s_art_buf_pos;
+        ++g_art_buf.position;
     }
     if (*bp)
     {
@@ -432,10 +429,10 @@ char *read_art_buf_raw(bool view_inline)
 read_more:
     extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
     o = read_offset + extra_offset;
-    if (s_art_buf.size() < static_cast<std::size_t>(s_art_buf_pos.value_of() + o + LINE_BUF_LEN))
+    if (g_art_buf.bytes.size() < static_cast<std::size_t>(g_art_buf.position.value_of() + o + LINE_BUF_LEN))
     {
-        s_art_buf.resize(s_art_buf.size() + ART_BUF_GROWTH);
-        bp = art_buf_data() + s_art_buf_pos.value_of();
+        g_art_buf.bytes.resize(g_art_buf.bytes.size() + ART_BUF_GROWTH);
+        bp = art_buf_data() + g_art_buf.position.value_of();
     }
     switch (g_mime_state)
     {
@@ -446,7 +443,7 @@ read_more:
     default:
         read_something = 1;
         // The -1 leaves room for appending a newline, if needed
-        const int         read_limit = static_cast<int>(s_art_buf.size() - s_art_buf_pos.value_of() - o - 1);
+        const int         read_limit = static_cast<int>(g_art_buf.bytes.size() - g_art_buf.position.value_of() - o - 1);
         const std::string chunk = read_art_chunk(read_limit);
         if (chunk.empty())
         {
@@ -490,7 +487,7 @@ read_more:
                 {bp + source, static_cast<std::size_t>(line_offset - converted_offset)}, true);
             std::string tail = g_mime_state == HTML_TEXT_MIME
                                    ? filter_html(decoded, {bp, static_cast<std::size_t>(filter_offset)},
-                                                 static_cast<int>(s_art_buf_pos.value_of()))
+                                                 static_cast<int>(g_art_buf.position.value_of()))
                                    : std::string{bp, static_cast<std::size_t>(converted_offset)} + decoded;
             tail += '\n';
             tail = substitute_art_text(tail);
@@ -593,7 +590,7 @@ mime_switch:
         o = filter_offset + extra_offset;
         {
             std::string filtered = filter_html(bp + o, std::string_view{bp, static_cast<std::size_t>(filter_offset)},
-                                               static_cast<int>(s_art_buf_pos.value_of()));
+                                               static_cast<int>(g_art_buf.position.value_of()));
             filtered.copy(bp, filtered.size());
             bp[filtered.size()] = '\0';
             len = static_cast<int>(filtered.size());
@@ -631,10 +628,10 @@ mime_switch:
             // A failed decoder can already have consumed the next boundary.
             if (decode_piece(mcp, bp) || mime_end_of_section(g_art_line))
             {
-                const std::size_t destination = static_cast<std::size_t>(s_art_buf_pos.value_of());
-                if (s_art_buf.size() <= destination + g_art_line.size())
+                const std::size_t destination = static_cast<std::size_t>(g_art_buf.position.value_of());
+                if (g_art_buf.bytes.size() <= destination + g_art_line.size())
                 {
-                    s_art_buf.resize(destination + g_art_line.size() + 1);
+                    g_art_buf.bytes.resize(destination + g_art_line.size() + 1);
                 }
                 bp = art_buf_data() + destination;
                 g_art_line.copy(bp, g_art_line.size());
@@ -671,8 +668,8 @@ mime_switch:
         }
         if (!mp)
         {
-            s_art_buf_len = s_art_buf_pos;
-            g_art_size = s_art_buf_len + g_parsed_header.positions[PAST_HEADER].min_pos;
+            g_art_buf.length = g_art_buf.position;
+            g_art_size = g_art_buf.length + g_parsed_header.positions[PAST_HEADER].min_pos;
             read_something = 0;
             bp = nullptr;
         }
@@ -711,18 +708,18 @@ mime_switch:
             extra_chars = len + 1;
             len = read_offset + 1;
             o = read_offset + 1;
-            s_art_buf[art_buf_offset(bp + o - 1)] = '\n';
+            g_art_buf.bytes[art_buf_offset(bp + o - 1)] = '\n';
         }
         else
         {
             o = -1;
-            ++s_art_buf_pos;
+            ++g_art_buf.position;
             bp++;
         }
         {
             const std::size_t separator_offset = art_buf_offset(bp + o);
-            s_art_buf[separator_offset] = '\002';
-            g_multipart_separator.copy(&s_art_buf[separator_offset + 1], g_multipart_separator.size());
+            g_art_buf.bytes[separator_offset] = '\002';
+            g_multipart_separator.copy(&g_art_buf.bytes[separator_offset + 1], g_multipart_separator.size());
             write_newline(separator_offset + g_multipart_separator.size() + 1);
         }
         break;
@@ -730,14 +727,14 @@ mime_switch:
     case UNHANDLED_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
-        ++s_art_buf_pos;
+        ++g_art_buf.position;
         description = g_mime_section->mime_description();
         break;
 
     case ALTERNATE_MIME:
         g_mime_state = SKIP_MIME;
         *bp++ = '\001';
-        ++s_art_buf_pos;
+        ++g_art_buf.position;
         {
             const std::string alternative = fmt::format("[Alternative: {}]\n", *g_mime_section->m_type_name);
             alternative.copy(bp, alternative.size());
@@ -765,7 +762,7 @@ mime_switch:
             g_mime_state = SKIP_MIME;
         }
         *bp++ = '\001';
-        ++s_art_buf_pos;
+        ++g_art_buf.position;
         description = g_mime_section->mime_description();
         break;
     }
@@ -796,8 +793,8 @@ done:
         for (char *cp = bp; *cp; cp = s + 1)
         {
             const std::size_t cp_offset = art_buf_offset(cp);
-            const std::size_t newline_pos = s_art_buf.find('\n', cp_offset);
-            const std::size_t nul_pos = s_art_buf.find('\0', cp_offset);
+            const std::size_t newline_pos = g_art_buf.bytes.find('\n', cp_offset);
+            const std::size_t nul_pos = g_art_buf.bytes.find('\0', cp_offset);
             if (newline_pos == std::string::npos || (nul_pos != std::string::npos && nul_pos < newline_pos))
             {
                 break;
@@ -840,11 +837,12 @@ done:
                         const std::size_t dest_offset = art_buf_offset(t - spaces);
                         const std::size_t copy_limit = extra_chars > 0 ? static_cast<std::size_t>(extra_chars - 1) : 0;
                         const std::size_t source_end = source_offset + copy_limit;
-                        const std::size_t nul_offset = s_art_buf.find('\0', source_offset);
+                        const std::size_t nul_offset = g_art_buf.bytes.find('\0', source_offset);
                         const std::size_t copy_count =
                             nul_offset < source_end ? nul_offset - source_offset : copy_limit;
-                        std::char_traits<char>::move(&s_art_buf[dest_offset], &s_art_buf[source_offset], copy_count);
-                        s_art_buf[dest_offset + copy_count] = '\0';
+                        std::char_traits<char>::move(&g_art_buf.bytes[dest_offset], &g_art_buf.bytes[source_offset],
+                                                     copy_count);
+                        g_art_buf.bytes[dest_offset + copy_count] = '\0';
                         extra_chars -= spaces;
                         s -= spaces;
                         t -= spaces + 1;
@@ -853,11 +851,11 @@ done:
             }
         }
     }
-    s_art_buf_pos += ArticlePosition{len};
+    g_art_buf.position += ArticlePosition{len};
     if (read_something)
     {
-        s_art_buf_seek = tell_art();
-        s_art_buf_len = s_art_buf_pos + ArticlePosition{extra_chars};
+        g_art_buf.seek_pos = tell_art();
+        g_art_buf.length = g_art_buf.position + ArticlePosition{extra_chars};
         if (g_art_size >= 0)
         {
             g_art_size = art_buf_size_from_raw(g_raw_art_size);
