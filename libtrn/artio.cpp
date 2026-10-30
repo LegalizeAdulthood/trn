@@ -58,7 +58,6 @@ PreserveArticleBuffer::~PreserveArticleBuffer()
     g_art_buf.length = m_length;
 }
 
-static char *art_buf_data();
 static std::size_t art_buf_offset(const char *ptr);
 
 void PresentationBuffer::init()
@@ -290,14 +289,14 @@ std::string_view art_buf_view(ArticlePosition pos)
                                                     static_cast<std::size_t>((g_art_buf.length - offset).value_of()));
 }
 
-static char *art_buf_data()
+char *PresentationBuffer::data()
 {
-    return g_art_buf.bytes.data();
+    return bytes.data();
 }
 
 static std::size_t art_buf_offset(const char *ptr)
 {
-    return static_cast<std::size_t>(ptr - art_buf_data());
+    return static_cast<std::size_t>(ptr - g_art_buf.data());
 }
 
 int seek_art_buf(ArticlePosition pos)
@@ -330,7 +329,7 @@ static void store_art_text(char *&buffer, std::size_t offset, std::string_view t
     if (g_art_buf.bytes.size() < required)
     {
         g_art_buf.bytes.resize(required + ART_BUF_GROWTH);
-        buffer = art_buf_data() + base;
+        buffer = g_art_buf.data() + base;
     }
     text.copy(buffer + offset, text.size());
     buffer[offset + text.size()] = '\0';
@@ -398,7 +397,7 @@ char *read_art_buf_raw(bool view_inline)
     {
         return nullptr;
     }
-    bp = art_buf_data() + g_art_buf.position.value_of();
+    bp = g_art_buf.data() + g_art_buf.position.value_of();
     if (*bp == '\001' || *bp == '\002')
     {
         bp++;
@@ -432,7 +431,7 @@ read_more:
     if (g_art_buf.bytes.size() < static_cast<std::size_t>(g_art_buf.position.value_of() + o + LINE_BUF_LEN))
     {
         g_art_buf.bytes.resize(g_art_buf.bytes.size() + ART_BUF_GROWTH);
-        bp = art_buf_data() + g_art_buf.position.value_of();
+        bp = g_art_buf.data() + g_art_buf.position.value_of();
     }
     switch (g_mime_state)
     {
@@ -633,7 +632,7 @@ mime_switch:
                 {
                     g_art_buf.bytes.resize(destination + g_art_line.size() + 1);
                 }
-                bp = art_buf_data() + destination;
+                bp = g_art_buf.data() + destination;
                 g_art_line.copy(bp, g_art_line.size());
                 bp[g_art_line.size()] = '\0';
                 (void) mime_set_state(std::string_view{bp});
@@ -799,7 +798,7 @@ done:
             {
                 break;
             }
-            s = art_buf_data() + newline_pos;
+            s = g_art_buf.data() + newline_pos;
             if (s - cp > g_tc_COLS)
             {
                 char* t;

@@ -49,6 +49,9 @@ struct PresentationBuffer
     ArticlePosition article_pos();
     ArticlePosition size_from_raw(ArticlePosition raw_art_size);
 
+    // TODO: private
+    char *data();
+
     std::string     bytes;
     ArticlePosition position{};
     ArticlePosition seek_pos{};
