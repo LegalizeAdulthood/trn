@@ -3571,30 +3571,30 @@ protected:
     void expect_text_count(std::string_view text, int expected) const;
 
 private:
-    std::string    m_old_last_pattern{g_last_pat};
-    ArtScope       m_old_scope{g_art_how_much};
-    HeaderLineType m_old_search_header{g_art_srch_hdr};
-    bool           m_old_search_read{g_art_do_read};
+    std::string    m_old_last_pattern{g_art_search.last_pat};
+    ArtScope       m_old_scope{g_art_search.how_much};
+    HeaderLineType m_old_search_header{g_art_search.srch_hdr};
+    bool           m_old_search_read{g_art_search.do_read};
 };
 
 void NewsgroupPromptRecoveryStateTest::SetUp()
 {
     NewsgroupEndReadingStateTest::SetUp();
     g_thread_always = true;
-    g_last_pat.clear();
-    g_art_how_much = ARTSCOPE_SUBJECT;
-    g_art_srch_hdr = SOME_LINE;
-    g_art_do_read = false;
+    g_art_search.last_pat.clear();
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
+    g_art_search.srch_hdr = SOME_LINE;
+    g_art_search.do_read = false;
     search_init();
     art_search_init();
 }
 
 void NewsgroupPromptRecoveryStateTest::TearDown()
 {
-    g_last_pat = m_old_last_pattern;
-    g_art_how_much = m_old_scope;
-    g_art_srch_hdr = m_old_search_header;
-    g_art_do_read = m_old_search_read;
+    g_art_search.last_pat = m_old_last_pattern;
+    g_art_search.how_much = m_old_scope;
+    g_art_search.srch_hdr = m_old_search_header;
+    g_art_search.do_read = m_old_search_read;
     NewsgroupEndReadingStateTest::TearDown();
 }
 
@@ -3671,7 +3671,7 @@ TEST_P(NewsgroupPromptRecoveryTest, aCorrectedSearchContinuesAfterAnInvalidPatte
     ASSERT_EQ(3U, m_states.size());
     expect_retained_prompt(0, 1);
     EXPECT_THAT(m_output, testing::HasSubstr("Missing ]"));
-    EXPECT_EQ("Branch", g_last_pat);
+    EXPECT_EQ("Branch", g_art_search.last_pat);
     expect_text_count("End of article 2", 1);
     expect_completed_reading();
 }
@@ -3745,7 +3745,7 @@ TEST_P(NewsgroupCancelledCommandReadingTest, cancellingReturnsToSingleCharacterI
     EXPECT_EQ(NG_ASK, result);
     ASSERT_EQ(3U, m_states.size());
     expect_retained_prompt(0, 1);
-    EXPECT_TRUE(g_last_pat.empty());
+    EXPECT_TRUE(g_art_search.last_pat.empty());
     expect_text_count("End of article 2", 1);
     expect_completed_reading();
 }
@@ -3842,7 +3842,7 @@ TEST_P(NewsgroupSearchInputRecoveryTest, rewritingAnIncompleteSearchRetainsItsTe
     EXPECT_EQ(NG_ASK, result);
     EXPECT_EQ(2, continuation_requests);
     ASSERT_EQ(2U, m_states.size());
-    EXPECT_EQ("Branch", g_last_pat);
+    EXPECT_EQ("Branch", g_art_search.last_pat);
     expect_completed_reading();
 }
 

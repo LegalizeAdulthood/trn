@@ -776,11 +776,11 @@ protected:
     void TearDown() override;
 
 private:
-    std::string    m_old_pattern{g_last_pat};
-    CompiledRegex  m_old_regex{*g_bra_compex};
-    ArtScope       m_old_scope{g_art_how_much};
-    HeaderLineType m_old_header{g_art_srch_hdr};
-    bool           m_old_do_read{g_art_do_read};
+    std::string    m_old_pattern{g_art_search.last_pat};
+    CompiledRegex  m_old_regex{*g_art_search.bra_compex};
+    ArtScope       m_old_scope{g_art_search.how_much};
+    HeaderLineType m_old_header{g_art_search.srch_hdr};
+    bool           m_old_do_read{g_art_search.do_read};
     bool           m_old_novice_delays{g_novice_delays};
     bool           m_old_error{g_error_occurred};
     bool           m_old_mouse_down{g_mouse_is_down};
@@ -791,10 +791,10 @@ private:
 void SelectorCallbackSearchTest::SetUp()
 {
     SelectorCallbackTest::SetUp();
-    g_last_pat.clear();
-    g_art_how_much = ARTSCOPE_SUBJECT;
-    g_art_srch_hdr = SOME_LINE;
-    g_art_do_read = false;
+    g_art_search.last_pat.clear();
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
+    g_art_search.srch_hdr = SOME_LINE;
+    g_art_search.do_read = false;
     g_novice_delays = false;
     g_error_occurred = false;
     g_perform_count = 0;
@@ -804,11 +804,11 @@ void SelectorCallbackSearchTest::SetUp()
 
 void SelectorCallbackSearchTest::TearDown()
 {
-    g_last_pat = m_old_pattern;
-    *g_bra_compex = m_old_regex;
-    g_art_how_much = m_old_scope;
-    g_art_srch_hdr = m_old_header;
-    g_art_do_read = m_old_do_read;
+    g_art_search.last_pat = m_old_pattern;
+    *g_art_search.bra_compex = m_old_regex;
+    g_art_search.how_much = m_old_scope;
+    g_art_search.srch_hdr = m_old_header;
+    g_art_search.do_read = m_old_do_read;
     g_novice_delays = m_old_novice_delays;
     g_error_occurred = m_old_error;
     g_mouse_is_down = m_old_mouse_down;
@@ -5461,11 +5461,11 @@ private:
     HeaderPosition m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
     HeaderType     m_old_from_header{g_header_type[FROM_LINE]};
     HeaderPosition m_old_from_header_pos{g_parsed_header.positions[FROM_LINE]};
-    std::string    m_old_pattern{g_last_pat};
-    CompiledRegex  m_old_regex{*g_bra_compex};
-    ArtScope       m_old_scope{g_art_how_much};
-    HeaderLineType m_old_header{g_art_srch_hdr};
-    bool           m_old_do_read{g_art_do_read};
+    std::string    m_old_pattern{g_art_search.last_pat};
+    CompiledRegex  m_old_regex{*g_art_search.bra_compex};
+    ArtScope       m_old_scope{g_art_search.how_much};
+    HeaderLineType m_old_header{g_art_search.srch_hdr};
+    bool           m_old_do_read{g_art_search.do_read};
     bool           m_old_novice_delays{g_novice_delays};
     bool           m_old_mouse_down{g_mouse_is_down};
     ArticleNum     m_old_search_ahead{g_search_ahead};
@@ -5477,10 +5477,10 @@ void ArticleSelectorSearchStateTest::SetUp()
     g_header_type[SUBJ_LINE].flags |= HT_CACHED;
     g_header_type[FROM_LINE].flags |= HT_CACHED;
     g_parsed_header.parsed_art = ArticleNum{};
-    g_last_pat.clear();
-    g_art_how_much = ARTSCOPE_SUBJECT;
-    g_art_srch_hdr = SOME_LINE;
-    g_art_do_read = false;
+    g_art_search.last_pat.clear();
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
+    g_art_search.srch_hdr = SOME_LINE;
+    g_art_search.do_read = false;
     g_novice_delays = false;
     g_search_ahead = ArticleNum{};
     search_init();
@@ -5493,11 +5493,11 @@ void ArticleSelectorSearchStateTest::TearDown()
     g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
     g_header_type[FROM_LINE] = m_old_from_header;
     g_parsed_header.positions[FROM_LINE] = m_old_from_header_pos;
-    g_last_pat = m_old_pattern;
-    *g_bra_compex = m_old_regex;
-    g_art_how_much = m_old_scope;
-    g_art_srch_hdr = m_old_header;
-    g_art_do_read = m_old_do_read;
+    g_art_search.last_pat = m_old_pattern;
+    *g_art_search.bra_compex = m_old_regex;
+    g_art_search.how_much = m_old_scope;
+    g_art_search.srch_hdr = m_old_header;
+    g_art_search.do_read = m_old_do_read;
     g_novice_delays = m_old_novice_delays;
     g_mouse_is_down = m_old_mouse_down;
     g_search_ahead = m_old_search_ahead;
@@ -6549,7 +6549,7 @@ TEST_P(ArticleSelectorSearchReadTest, matchingSearchAddsSelectionsStartingAtTheB
     expect_search_selection({1, 2, 4}, rereading);
     EXPECT_EQ(2, g_selected_subj_cnt);
     EXPECT_EQ(1, g_perform_count);
-    EXPECT_EQ("Bravo", g_last_pat);
+    EXPECT_EQ("Bravo", g_art_search.last_pat);
     EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(mode, g_sel.mode);
 }
@@ -6593,7 +6593,7 @@ TEST_P(ArticleSelectorSearchReadTest, blankSearchReusesThePreviousPattern)
     EXPECT_EQ(DS_DISPLAY, result);
     expect_search_selection({1, 2, 4}, rereading);
     EXPECT_EQ(1, g_perform_count);
-    EXPECT_EQ("Bravo", g_last_pat);
+    EXPECT_EQ("Bravo", g_art_search.last_pat);
 }
 
 TEST_P(ArticleSelectorSearchModeTest, authorMatchesSelectTheScopeChosenByTheSelectorMode)
@@ -6621,7 +6621,7 @@ TEST_P(ArticleSelectorSearchModeTest, authorMatchesSelectTheScopeChosenByTheSele
         expect_search_selection({1, 2, 3, 4});
     }
     EXPECT_EQ(1, g_perform_count);
-    EXPECT_EQ(ARTSCOPE_FROM, g_art_how_much);
+    EXPECT_EQ(ARTSCOPE_FROM, g_art_search.how_much);
 }
 
 TEST_P(ArticleSelectorSearchModeTest, explicitJunkCommandVisitsEveryMatchAcrossTheGroup)
@@ -6701,7 +6701,7 @@ TEST_P(ArticleSelectorSearchCancelTest, cancellingSearchRetainsThePreviousPatter
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(rereading);
-    EXPECT_EQ("Bravo", g_last_pat);
+    EXPECT_EQ("Bravo", g_art_search.last_pat);
     EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
     EXPECT_EQ(article_ptr(ArticleNum{4}), g_nav.target.art);
     EXPECT_EQ(0, g_perform_count);

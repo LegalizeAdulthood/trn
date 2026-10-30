@@ -34,12 +34,19 @@ enum ArtScope
     ARTSCOPE_ARTICLE = 6
 };
 
-extern std::string    g_last_pat;         // last search pattern
-extern CompiledRegex *g_bra_compex;       // current compex with brackets
+struct ArticleSearchContext
+{
+    std::string    last_pat;                // last search pattern
+    CompiledRegex  sub_compex{};            // last compiled subject search
+    CompiledRegex  art_compex{};            // last compiled normal search
+    CompiledRegex *bra_compex{&art_compex}; // current compex with brackets
+    ArtScope       how_much{};              // search scope
+    HeaderLineType srch_hdr{};              // specific header number to search
+    bool           do_read{};               // search read articles?
+};
+
+extern ArticleSearchContext   g_art_search;
 extern const std::string_view g_scope_str; //
-extern ArtScope       g_art_how_much;     // search scope
-extern HeaderLineType g_art_srch_hdr;     // specific header number to search
-extern bool           g_art_do_read;      // search read articles?
 extern bool           g_kill_thru_kludge; // -k
 
 void            art_search_init();

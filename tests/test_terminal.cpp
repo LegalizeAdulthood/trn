@@ -187,9 +187,9 @@ protected:
         MacroDisplayTest::SetUp();
         drain_macro_buffer();
 
-        m_old_last_pat = g_last_pat;
-        m_old_art_do_read = g_art_do_read;
-        m_old_art_how_much = g_art_how_much;
+        m_old_last_pat = g_art_search.last_pat;
+        m_old_art_do_read = g_art_search.do_read;
+        m_old_art_how_much = g_art_search.how_much;
         m_old_tc_cr = g_tc_CR;
         m_old_tc_ce = g_tc_CE;
         g_tc_CR = m_carriage_return;
@@ -199,9 +199,9 @@ protected:
     void TearDown() override
     {
         drain_macro_buffer();
-        g_last_pat = m_old_last_pat;
-        g_art_do_read = m_old_art_do_read;
-        g_art_how_much = m_old_art_how_much;
+        g_art_search.last_pat = m_old_last_pat;
+        g_art_search.do_read = m_old_art_do_read;
+        g_art_search.how_much = m_old_art_how_much;
         g_tc_CR = m_old_tc_cr;
         g_tc_CE = m_old_tc_ce;
         MacroDisplayTest::TearDown();
@@ -712,9 +712,9 @@ TEST_F(ChoiceInputTest, inChoiceDoesNotSplitSlashInsideFreeFormValue)
 
 TEST_F(ChoiceInputTest, inChoiceEscapeEscapeInterpolatesWholeBuffer)
 {
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
     push_char('\n');
     push_char('\033');
     push_char('\033');
@@ -729,9 +729,9 @@ TEST_F(ChoiceInputTest, inChoiceEscapeEscapeInterpolatesWholeBuffer)
 
 TEST_F(ChoiceInputTest, inChoiceEscapeSlashInsertsSearchPattern)
 {
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
     push_char('\n');
     push_char('/');
     push_char('\033');

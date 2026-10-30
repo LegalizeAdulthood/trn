@@ -350,9 +350,9 @@ TEST_F(InterpolatorTest, referenceCursorDoInterpStopsBeforeStopper)
 
 TEST_F(InterpolatorTest, referenceCursorDoInterpUsesSearchCommand)
 {
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
     std::string_view pattern{"%/"};
 
     EXPECT_EQ("needle?", do_interp(pattern, "", "?"));
@@ -361,18 +361,18 @@ TEST_F(InterpolatorTest, referenceCursorDoInterpUsesSearchCommand)
 
 TEST_F(InterpolatorTest, stringInterpSearchUsesSearchCommand)
 {
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
 
     EXPECT_EQ("needle?", interp_search("%/", "?"));
 }
 
 TEST_F(InterpolatorTest, articleSearchPattern)
 {
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
     interpolate("%/");
 
     EXPECT_EQ("/needle/", buffer());
@@ -380,10 +380,10 @@ TEST_F(InterpolatorTest, articleSearchPattern)
 
 TEST_F(InterpolatorTest, articleSearchPatternForOneHeader)
 {
-    g_last_pat = "needle";
-    g_art_do_read = true;
-    g_art_how_much = ARTSCOPE_ONE_HDR;
-    g_art_srch_hdr = SUBJ_LINE;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = true;
+    g_art_search.how_much = ARTSCOPE_ONE_HDR;
+    g_art_search.srch_hdr = SUBJ_LINE;
     interpolate("%/");
 
     EXPECT_EQ("/needle/rHsubject", buffer());
@@ -7437,9 +7437,9 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
     ValueSaver<std::string> mail_call(g_mail_call, std::string{"<%/> "});
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{2};
     g_tc_LINES = 4;
@@ -7466,9 +7466,9 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
     ValueSaver<std::string> mail_call(g_mail_call, std::string{"<%/> "});
-    g_last_pat = "needle";
-    g_art_do_read = false;
-    g_art_how_much = ARTSCOPE_SUBJECT;
+    g_art_search.last_pat = "needle";
+    g_art_search.do_read = false;
+    g_art_search.how_much = ARTSCOPE_SUBJECT;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{2};
     g_tc_LINES = 4;

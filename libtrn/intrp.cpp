@@ -432,7 +432,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     {
                         search_command += '/';
                     }
-                    search_command += g_last_pat;
+                    search_command += g_art_search.last_pat;
                     if (cmd.empty() || cmd.front() != 'g')
                     {
                         if (!cmd.empty() && search_cmd_tail_chars.find(cmd.front()) != std::string_view::npos)
@@ -443,16 +443,16 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         {
                             search_command += '/';
                         }
-                        if (g_art_do_read)
+                        if (g_art_search.do_read)
                         {
                             search_command += 'r';
                         }
-                        if (g_art_how_much != ARTSCOPE_SUBJECT)
+                        if (g_art_search.how_much != ARTSCOPE_SUBJECT)
                         {
-                            search_command += g_scope_str[g_art_how_much];
-                            if (g_art_how_much == ARTSCOPE_ONE_HDR)
+                            search_command += g_scope_str[g_art_search.how_much];
+                            if (g_art_search.how_much == ARTSCOPE_ONE_HDR)
                             {
-                                const std::string_view header_name{g_header_type[g_art_srch_hdr].name};
+                                const std::string_view header_name{g_header_type[g_art_search.srch_hdr].name};
                                 const std::size_t      colon = header_name.find(':');
                                 search_command +=
                                     header_name.substr(0, colon == std::string_view::npos ? colon : colon + 1);
@@ -525,7 +525,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
 
                 case '(':
                 {
-                    CompiledRegex *oldbra_compex = g_bra_compex;
+                    CompiledRegex *oldbra_compex = g_art_search.bra_compex;
                     char           rch;
                     bool           matched;
 
@@ -589,7 +589,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     matched = s_cond_compex.execute(condition_text);
                     if (s_cond_compex.has_brackets()) // were there brackets?
                     {
-                        g_bra_compex = &s_cond_compex;
+                        g_art_search.bra_compex = &s_cond_compex;
                     }
                     condition_cursor.remove_prefix(1);
                     std::string branch_text;
@@ -613,7 +613,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     pattern = condition_cursor;
                     set_owned_value(std::move(branch_text));
-                    g_bra_compex = oldbra_compex;
+                    g_art_search.bra_compex = oldbra_compex;
                     s_cond_compex.free_compex();
                     break;
                 }
@@ -720,7 +720,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case '8':
                 case '9':
                 {
-                    const std::string_view bracket = g_bra_compex->get_bracket(pattern.front() - '0');
+                    const std::string_view bracket = g_art_search.bra_compex->get_bracket(pattern.front() - '0');
                     set_value(bracket);
                     break;
                 }

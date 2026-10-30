@@ -31,26 +31,20 @@
 #include <string>
 #include <string_view>
 
-static CompiledRegex s_sub_compex{}; // last compiled subject search
-static CompiledRegex s_art_compex{}; // last compiled normal search
 
 static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
                                        const std::function<void(ArticleNum)> &progress);
 static void            truncate_notes_pattern(std::string &pattern_text, std::size_t text_start);
 static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
-std::string    g_last_pat;                  // last search pattern
-CompiledRegex *g_bra_compex{&s_art_compex}; // current compex with brackets
+ArticleSearchContext   g_art_search;
 const std::string_view g_scope_str{"sfHhbBa"}; //
-ArtScope       g_art_how_much{};            // search scope
-HeaderLineType g_art_srch_hdr{};            // specific header number to search
-bool           g_art_do_read{};             // search read articles?
 bool           g_kill_thru_kludge{true};    // -k
 
 void art_search_init()
 {
-    s_sub_compex.init_compex();
-    s_art_compex.init_compex();
+    g_art_search.sub_compex.init_compex();
+    g_art_search.art_compex.init_compex();
 }
 
 // search for an article containing some pattern
@@ -96,7 +90,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             }
             command = completed_command;
         }
-        compex = &s_art_compex;
+        compex = &g_art_search.art_compex;
         const std::string_view search_text = command.substr(1);
         if (!search_text.empty())
         {
@@ -106,9 +100,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         }
         else
         {
-            how_much = g_art_how_much;
-            search_header = g_art_srch_hdr;
-            do_read = g_art_do_read;
+            how_much = g_art_search.how_much;
+            search_header = g_art_search.srch_hdr;
+            do_read = g_art_search.do_read;
         }
         pattern_text.reserve(search_text.size());
         std::size_t tail_start{};
@@ -128,7 +122,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         }
         if (!pattern_text.empty())
         {
-            g_last_pat = pattern_text;
+            g_art_search.last_pat = pattern_text;
         }
         std::string_view modifier_tail = search_text.substr(tail_start);
         if (!modifier_tail.empty()) // modifiers or commands?
@@ -243,9 +237,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             }
             ret = SRCH_DONE;
         }
-        g_art_how_much = how_much;
-        g_art_srch_hdr = search_header;
-        g_art_do_read = do_read;
+        g_art_search.how_much = how_much;
+        g_art_search.srch_hdr = search_header;
+        g_art_search.do_read = do_read;
         if (g_search_ahead)
         {
             g_search_ahead = ArticleNum{-1};
@@ -264,7 +258,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         {
             ret = SRCH_SUBJ_DONE;
         }
-        compex = &s_sub_compex;
+        compex = &g_art_search.sub_compex;
         std::size_t finding_start{};
         if (how_much == ARTSCOPE_SUBJECT)
         {
@@ -593,9 +587,9 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
     case ARTSCOPE_ONE_HDR:
     {
         g_untrim_cache = true;
-        const std::string header = prefetch_lines_copy(art_num, g_art_srch_hdr);
+        const std::string header = prefetch_lines_copy(art_num, g_art_search.srch_hdr);
         g_untrim_cache = false;
-        search_text = g_header_type[g_art_srch_hdr].name + ": " + header;
+        search_text = g_header_type[g_art_search.srch_hdr].name + ": " + header;
         break;
     }
 
