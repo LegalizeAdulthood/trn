@@ -15,6 +15,7 @@
 struct SearchPattern
 {
     void compile_from_env_var(std::string_view var);
+    bool matches(std::string_view line);
 
     std::string   text;
     CompiledRegex compex{};

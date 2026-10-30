@@ -85,6 +85,11 @@ void SearchPattern::compile_from_env_var(std::string_view var)
     }
 }
 
+bool SearchPattern::matches(std::string_view line)
+{
+    return !text.empty() && compex.execute(line);
+}
+
 inline std::string_view line_view(ArticlePosition pos)
 {
     return art_buf_view(pos);
@@ -376,7 +381,7 @@ DoArticleResult do_article(std::string &article_command)
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
-            if (!g_hide_line.text.empty() && !s_continuation && g_hide_line.compex.execute(line_tail()))
+            if (!s_continuation && g_hide_line.matches(line_tail()))
             {
                 hide_this_line = true;
             }
@@ -519,7 +524,7 @@ DoArticleResult do_article(std::string &article_command)
                     }
                 }
                 output_ok = !g_hide_everything;
-                if (!g_page_stop.text.empty() && !s_continuation && g_page_stop.compex.execute(line_tail()))
+                if (!s_continuation && g_page_stop.matches(line_tail()))
                 {
                     line_num = ArticleLine{32700};
                 }
@@ -819,7 +824,7 @@ recheck_pager:
             while (read_art_buf(remaining_line, false))
             {
                 if (!can_hide_tail || g_hide_line.text.empty() ||
-                    (!hidden_continuation && !g_hide_line.compex.execute(remaining_line)))
+                    (!hidden_continuation && !g_hide_line.matches(remaining_line)))
                 {
                     break;
                 }
@@ -1452,8 +1457,7 @@ leave_pager:
         }
 go_forward:
         pager_line = line_view(s_a_line_begin);
-        if ((pager_line.empty() || pager_line.front() != '\f') &&
-            (g_page_stop.text.empty() || s_continuation || !g_page_stop.compex.execute(pager_line)))
+        if ((pager_line.empty() || pager_line.front() != '\f') && (s_continuation || !g_page_stop.matches(pager_line)))
         {
             if (!s_special //
                 || (g_marking &&
