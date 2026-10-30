@@ -5251,7 +5251,7 @@ void CachedDisplayArticleTest::set_article_text(std::string_view text)
     g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
     g_art_size = g_raw_art_size;
     g_art_input.pos = ArticlePosition{};
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
 }
 
 void CachedDisplayArticleTest::TearDown()

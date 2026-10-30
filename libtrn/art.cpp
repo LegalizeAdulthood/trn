@@ -190,7 +190,7 @@ DoArticleResult do_article(std::string &article_command)
     {
         parse_header(g_nav.target.num);
         mime_set_article();
-        clear_art_buf();
+        g_art_buf.clear_art_buf();
         set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
         seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
     }
@@ -375,7 +375,7 @@ DoArticleResult do_article(std::string &article_command)
                     (void) read_art_buf(ignored_line, g_auto_view_inline);
                 }
                 mime_set_article();
-                clear_art_buf();         // exclude notes files droppings
+                g_art_buf.clear_art_buf(); // exclude notes files droppings
                 g_parsed_header.positions[PAST_HEADER].min_pos = tell_art();
                 set_art_buf_seek(tell_art());
                 hide_this_line = true;  // and do not print either
@@ -1347,7 +1347,7 @@ refresh_screen:
         {
         case 'C':
             next_char_subst_mode();
-            clear_art_buf();
+            g_art_buf.clear_art_buf();
             g_top_line = ArticleLine{-1};
             goto refresh_screen;
 

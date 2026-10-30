@@ -134,7 +134,7 @@ protected:
         ASSERT_NE(nullptr, g_art_input.fp);
         g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
         g_art_size = g_raw_art_size;
-        clear_art_buf();
+        g_art_buf.clear_art_buf();
     }
 
     void reset_mime_section()
@@ -1822,7 +1822,7 @@ TEST_F(ArticleIoTest, viewExcludesClearedBodyText)
     open_article_text("alpha\n");
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
 
     EXPECT_TRUE(art_buf_view(ArticlePosition{1}).empty());
 }

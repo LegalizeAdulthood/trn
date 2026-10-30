@@ -47,7 +47,7 @@ PreserveArticleBuffer::PreserveArticleBuffer() :
     m_seek{g_art_buf.seek_pos},
     m_length{g_art_buf.length}
 {
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
 }
 
 PreserveArticleBuffer::~PreserveArticleBuffer()
@@ -64,7 +64,7 @@ static std::size_t art_buf_offset(const char *ptr);
 void art_io_init()
 {
     g_art_buf.bytes.assign(INITIAL_ART_BUF_SIZE, '\0');
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
 }
 
 void art_io_final()
@@ -140,7 +140,7 @@ void art_close()
         std::fclose(g_art_input.fp); // close it
         g_art_input.fp = nullptr;    // and tell the world
         g_art_input.open_art = ArticleNum{};
-        clear_art_buf();
+        g_art_buf.clear_art_buf();
     }
 }
 
@@ -214,15 +214,15 @@ bool read_art(std::string &line)
     }
 }
 
-void clear_art_buf()
+void PresentationBuffer::clear_art_buf()
 {
-    if (!g_art_buf.bytes.empty())
+    if (!bytes.empty())
     {
-        g_art_buf.bytes.front() = '\0';
+        bytes.front() = '\0';
     }
-    g_art_buf.length = ArticlePosition{};
-    g_art_buf.seek_pos = ArticlePosition{};
-    g_art_buf.position = ArticlePosition{};
+    length = ArticlePosition{};
+    seek_pos = ArticlePosition{};
+    position = ArticlePosition{};
 }
 
 bool art_buf_empty()

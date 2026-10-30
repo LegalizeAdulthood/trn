@@ -1923,7 +1923,7 @@ void PagerArticleTest::load_article(std::string_view headers, std::string_view b
     g_parsed_header.parsed_art = ArticleNum{};
     ASSERT_TRUE(parse_header(g_nav.target.num));
     mime_set_article();
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
     set_art_buf_seek(m_body_start);
     ASSERT_EQ(0, seek_art(m_body_start));
     g_art_input.pos = m_body_start;
@@ -2400,7 +2400,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     (void) nntp_art_name(ArticleNum{}, false);
     ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     mime_set_article();
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
     set_art_buf_seek(m_body_start);
     g_art_input.pos = m_body_start;
     virtual_write(ArticleLine{}, m_body_start);
@@ -3811,7 +3811,7 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, lon
     ASSERT_TRUE(article_ptr(g_last_art)->m_flags & AF_UNREAD);
     ASSERT_EQ(ArticleUnread{2}, g_newsgroup_ptr->m_to_read);
     mime_set_article();
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
     set_art_buf_seek(m_body_start);
     ASSERT_EQ(0, seek_art(m_body_start));
     g_art_input.pos = m_body_start;

@@ -222,7 +222,7 @@ SaveResult save_article(std::string_view command)
     const ArticlePosition reading_position = g_art_input.pos;
     parse_header(g_nav.target.num);
     mime_set_article();
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
     g_save_from = (cmd == 'w' || cmd == 'e') ? g_parsed_header.positions[PAST_HEADER].min_pos : ArticlePosition{};
     if (art_open(g_nav.target.num, g_save_from) == nullptr)
     {
@@ -728,7 +728,7 @@ SaveResult view_article()
     const ArticlePosition reading_position = g_art_input.pos;
     parse_header(g_nav.target.num);
     mime_set_article();
-    clear_art_buf();
+    g_art_buf.clear_art_buf();
     g_save_from = g_parsed_header.positions[PAST_HEADER].min_pos;
     if (art_open(g_nav.target.num, g_save_from) == nullptr)
     {
@@ -1171,7 +1171,7 @@ void reply(std::string_view command)
         fmt::print(header, "{}\n", introduction);
         parse_header(g_nav.target.num);
         mime_set_article();
-        clear_art_buf();
+        g_art_buf.clear_art_buf();
         seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
         while (read_art_buf(article_line, false))
@@ -1395,7 +1395,7 @@ void followup(std::string_view command)
         fmt::print(header, "{}\n", attribution);
         parse_header(g_nav.target.num);
         mime_set_article();
-        clear_art_buf();
+        g_art_buf.clear_art_buf();
         seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
         g_wrapped_nl = '\n';
         while (read_art_buf(article_line, false))

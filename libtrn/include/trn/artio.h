@@ -37,6 +37,8 @@ extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 
 struct PresentationBuffer
 {
+    void clear_art_buf();
+
     std::string     bytes;
     ArticlePosition position{};
     ArticlePosition seek_pos{};
@@ -68,7 +70,6 @@ int seek_art(ArticlePosition pos);
 ArticlePosition tell_art();
 ArticlePosition ftell_art();
 bool            read_art(std::string &line);
-void            clear_art_buf();
 int             seek_art_buf(ArticlePosition pos);
 bool            read_art_buf(std::string &line, bool view_inline);
 char            *read_art_buf_raw(bool view_inline);

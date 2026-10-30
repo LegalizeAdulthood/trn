@@ -163,7 +163,7 @@ protected:
         g_art_input.open_art = ArticleNum{1};
         g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
         g_art_size = g_raw_art_size;
-        clear_art_buf();
+        g_art_buf.clear_art_buf();
 
         Article *article = article_ptr(ArticleNum{1});
         m_subject.m_str = "Body search";
