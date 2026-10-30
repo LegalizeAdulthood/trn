@@ -531,7 +531,7 @@ try_again:
         }
         if (g_sel_page.page_mrc == nullptr)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         break;
     }
@@ -628,7 +628,7 @@ try_again:
         }
         if (!g_sel_page.page_ngd)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         else if (g_sel_page.page_ngd == newsgroup_last())
         {
@@ -680,7 +680,7 @@ try_again:
         }
         if (g_sel_page.page_grp == AddGroupIndex::None)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         else if (g_sel_page.page_grp == g_add_groups.last())
         {
@@ -790,7 +790,7 @@ try_again:
         }
         if (!g_sel_page.page_univ_index)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         else if (g_sel_page.page_univ_index == univ_index(univ_last_item()))
         {
@@ -837,7 +837,7 @@ try_again:
         }
         if (g_sel_page.page_op < 1)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         else if (g_sel_page.page_op >= g_obj_count.value_of())
         {
@@ -934,7 +934,7 @@ try_again:
         }
         if (!g_sel_page.page_art)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         else if (g_sel_page.page_art >= limit)
         {
@@ -1027,7 +1027,7 @@ try_again:
         }
         if (!g_sel_page.page_subj)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         else if (g_sel_page.page_subj == g_last_subject)
         {
@@ -1054,18 +1054,13 @@ try_again:
 /// was changed, otherwise false.
 ///
 /// @globals
-/// - g_sel_page.prior_obj_cnt: Reset to 0 at the start of the function.
-/// - g_sel_page.page_mp: Set to the first included Multirc if in SM_MULTIRC mode.
-/// - g_sel_page.page_np: Set to the first included NewsgroupData if in SM_NEWSGROUP mode.
-/// - g_sel_page.page_gp: Set to the first included AddGroup if in SM_ADD_GROUP mode.
-/// - g_sel_page.page_univ_index: Set to the first included UniversalItem if in SM_UNIVERSAL mode.
-/// - g_sel_page.page_op: Set to 1 if not already 1 in SM_OPTIONS mode.
-/// - g_sel_page.page_app: Set to the first included Article** if in SM_ARTICLE mode.
-/// - g_sel_page.page_sp: Set to the first included Subject if in default/subject/thread mode.
+/// - g_sel.mode: Read to select the active population.
+/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ_items: Read through catalog helpers.
+/// - g_art_ptr_list, g_first_subject: Read for article and subject traversal.
 ///
-bool first_page()
+bool SelectorPage::first_page()
 {
-    g_sel_page.prior_obj_cnt = 0;
+    prior_obj_cnt = 0;
 
     switch (g_sel.mode)
     {
@@ -1075,9 +1070,9 @@ bool first_page()
         {
             if (mp->m_flags & MF_INCLUDED)
             {
-                if (g_sel_page.page_mrc != mp)
+                if (page_mrc != mp)
                 {
-                    g_sel_page.page_mrc = mp;
+                    page_mrc = mp;
                     return true;
                 }
                 break;
@@ -1092,9 +1087,9 @@ bool first_page()
         {
             if (np->m_flags & NF_INCLUDED)
             {
-                if (g_sel_page.page_ngd != np)
+                if (page_ngd != np)
                 {
-                    g_sel_page.page_ngd = np;
+                    page_ngd = np;
                     return true;
                 }
                 break;
@@ -1109,9 +1104,9 @@ bool first_page()
         {
             if (g_add_groups[index].m_flags & AGF_INCLUDED)
             {
-                if (g_sel_page.page_grp != index)
+                if (page_grp != index)
                 {
-                    g_sel_page.page_grp = index;
+                    page_grp = index;
                     return true;
                 }
                 break;
@@ -1126,9 +1121,9 @@ bool first_page()
         {
             if (item.m_flags & UF_INCLUDED)
             {
-                if (g_sel_page.page_univ_index != univ_index(&item))
+                if (page_univ_index != univ_index(&item))
                 {
-                    g_sel_page.page_univ_index = univ_index(&item);
+                    page_univ_index = univ_index(&item);
                     return true;
                 }
                 break;
@@ -1139,9 +1134,9 @@ bool first_page()
 
     case SM_OPTIONS:
     {
-        if (g_sel_page.page_op != 1)
+        if (page_op != 1)
         {
-            g_sel_page.page_op = 1;
+            page_op = 1;
             return true;
         }
         break;
@@ -1154,9 +1149,9 @@ bool first_page()
         {
             if ((*app)->m_flags & AF_INCLUDED)
             {
-                if (g_sel_page.page_art != app)
+                if (page_art != app)
                 {
-                    g_sel_page.page_art = app;
+                    page_art = app;
                     return true;
                 }
                 break;
@@ -1171,9 +1166,9 @@ bool first_page()
         {
             if (sp->m_flags & SF_INCLUDED)
             {
-                if (g_sel_page.page_subj != sp)
+                if (page_subj != sp)
                 {
-                    g_sel_page.page_subj = sp;
+                    page_subj = sp;
                     return true;
                 }
                 break;
@@ -1912,7 +1907,7 @@ try_again:
     {
         if (!ret)
         {
-            if (first_page())
+            if (g_sel_page.first_page())
             {
                 ret = true;
                 goto try_again;
@@ -1923,7 +1918,7 @@ try_again:
             ret = true;
             goto try_again;
         }
-        first_page();
+        g_sel_page.first_page();
         g_sel_page.item_index = 0;
     }
     return ret;

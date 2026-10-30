@@ -79,6 +79,7 @@ struct SelectorPage
     UniversalItemIndex next_univ_index{};
 
     void init();
+    bool first_page();
 };
 
 extern SelectorPage g_sel_page;
@@ -92,7 +93,6 @@ bool set_sel_mode(char_int ch);
 char  current_group_display_mode();
 char  current_article_display_mode();
 void init_pages(bool fill_last_page);
-bool first_page();
 bool last_page();
 bool next_page();
 bool prev_page();

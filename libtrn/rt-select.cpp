@@ -487,7 +487,7 @@ do_group:
                     goto do_group;
                 }
             }
-            (void) first_page();
+            (void) g_sel_page.first_page();
             goto loop_break;
 
         case NG_MINUS:
@@ -496,7 +496,7 @@ do_group:
 
         case NG_NO_SERVER:
             np->m_rc->data_source->nntp_server_died();
-            (void) first_page();
+            (void) g_sel_page.first_page();
             break;
 
         // extensions
@@ -2325,7 +2325,7 @@ do_command:
 
     case '^':  case Ctl('r'):
         g_sel_page.item_index = 0;
-        if (first_page())
+        if (g_sel_page.first_page())
         {
             return DS_DISPLAY;
         }
@@ -3682,7 +3682,7 @@ reask_sort:
             {
                 if (!was_at_top)
                 {
-                    (void) first_page();
+                    (void) g_sel_page.first_page();
                 }
                 return DS_RESTART;
             }
@@ -3742,7 +3742,7 @@ reask_sort:
         }
         if (was_at_top)
         {
-            (void) first_page();
+            (void) g_sel_page.first_page();
         }
         if (s_clean_screen)
         {
