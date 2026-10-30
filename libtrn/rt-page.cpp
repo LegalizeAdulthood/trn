@@ -58,7 +58,6 @@ char current_article_display_mode()
     return g_sel_art_display_mode.empty() ? '\0' : g_sel_art_display_mode[g_sel_art_display_mode_index];
 }
 
-static void sel_page_init();
 static int  count_subject_lines(const Subject *subj, int *selptr);
 static int  count_thread_lines(const Subject *subj, int *selptr);
 static void display_page_title(bool home_only);
@@ -439,46 +438,44 @@ thread_subj_sort:
 
 /// @brief Initializes selection page parameters.
 /// 
-/// This function calculates and sets the maximum number of lines (`g_sel_page.max_line_cnt`) and the maximum
-/// number of selectable items per page (`g_sel_page.max_per_page`) based on terminal dimensions and selection
+/// This function calculates and sets the maximum number of lines (`max_line_cnt`) and the maximum
+/// number of selectable items per page (`max_per_page`) based on terminal dimensions and selection
 /// mode. It also initializes the selection character set and resets the current page object and item counts.
 /// 
 /// @globals
-/// - g_sel_page.max_line_cnt
-/// - g_sel_page.chars
-/// - g_sel_page.max_per_page
-/// - g_sel_page.page_obj_cnt
-/// - g_sel_page.page_item_cnt
+/// - g_tc_LINES, g_tc_COLS, g_mouse_bar_width: Read for terminal dimensions.
+/// - g_sel.group_listing: Read to exclude the group-listing command character.
+/// - g_use_sel_num: Read to choose numeric or character-based capacity.
+/// @note Reads SELECTCHARS for the selection character set.
 ///
-static void sel_page_init()
+void SelectorPage::init()
 {
-    g_sel_page.max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50 ? 6 : 5);
-    g_sel_page.chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
+    max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50 ? 6 : 5);
+    chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
     if (g_sel.group_listing)
     {
-        g_sel_page.chars.erase(std::remove(g_sel_page.chars.begin(), g_sel_page.chars.end(), 'l'),
-                               g_sel_page.chars.end());
-        if (g_sel_page.chars.empty())
+        chars.erase(std::remove(chars.begin(), chars.end(), 'l'), chars.end());
+        if (chars.empty())
         {
-            g_sel_page.chars = "1234567890";
+            chars = "1234567890";
         }
     }
     // The numeric option of up to 99 lines will require many adaptations
     // to be able to switch from a large numeric page (more than
-    // g_sel_page.chars.size() lines) to an alphanumeric page. XXX
+    // chars.size() lines) to an alphanumeric page. XXX
     //
     if (g_use_sel_num)
     {
-        g_sel_page.max_per_page = 99;
+        max_per_page = 99;
     }
     else
     {
-        g_sel_page.max_per_page = static_cast<int>(g_sel_page.chars.size());
+        max_per_page = static_cast<int>(chars.size());
     }
-    g_sel_page.max_per_page = std::min(g_sel_page.max_per_page, static_cast<int>(MAX_SEL));
-    g_sel_page.max_per_page = std::min(g_sel_page.max_per_page, g_sel_page.max_line_cnt);
-    g_sel_page.page_obj_cnt = 0;
-    g_sel_page.page_item_cnt = 0;
+    max_per_page = std::min(max_per_page, static_cast<int>(MAX_SEL));
+    max_per_page = std::min(max_per_page, max_line_cnt);
+    page_obj_cnt = 0;
+    page_item_cnt = 0;
 }
 
 /// @brief Initializes and populates the selection pages for the current
@@ -511,7 +508,7 @@ void init_pages(bool fill_last_page)
 {
     Selection no_search;
     no_search.op = OI_NONE;
-    sel_page_init();
+    g_sel_page.init();
 try_again:
     g_sel_page.prior_obj_cnt = 0;
     g_sel_page.total_obj_cnt = 0;
@@ -2086,7 +2083,7 @@ void display_page()
     display_page_title(false);
 
 try_again:
-    sel_page_init();
+    g_sel_page.init();
 
     if (!g_sel_page.total_obj_cnt)
     {
@@ -2207,7 +2204,7 @@ start_of_loop:
         if (!outputting)
         {
             outputting = 1;
-            sel_page_init();
+            g_sel_page.init();
             goto start_of_loop;
         }
         if (!g_sel_page.page_obj_cnt)

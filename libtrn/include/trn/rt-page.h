@@ -77,6 +77,8 @@ struct SelectorPage
     int                page_op{};
     UniversalItemIndex page_univ_index{};
     UniversalItemIndex next_univ_index{};
+
+    void init();
 };
 
 extern SelectorPage g_sel_page;
