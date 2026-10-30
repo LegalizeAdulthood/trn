@@ -53,6 +53,7 @@ struct PresentationBuffer
     // TODO: private
     char *data();
     std::size_t offset(const char *ptr);
+    void        store_text(char *&buffer, std::size_t buff_offset, std::string_view text);
 
     std::string     bytes;
     ArticlePosition position{};

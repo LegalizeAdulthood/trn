@@ -320,17 +320,17 @@ int seek_art_buf(ArticlePosition pos)
     return 0;
 }
 
-static void store_art_text(char *&buffer, std::size_t offset, std::string_view text)
+void PresentationBuffer::store_text(char *&buffer, std::size_t buff_offset, std::string_view text)
 {
-    const std::size_t base = g_art_buf.offset(buffer);
-    const std::size_t required = base + offset + text.size() + 2;
-    if (g_art_buf.bytes.size() < required)
+    const std::size_t base = offset(buffer);
+    const std::size_t required = base + buff_offset + text.size() + 2;
+    if (bytes.size() < required)
     {
-        g_art_buf.bytes.resize(required + ART_BUF_GROWTH);
-        buffer = g_art_buf.data() + base;
+        bytes.resize(required + ART_BUF_GROWTH);
+        buffer = data() + base;
     }
-    text.copy(buffer + offset, text.size());
-    buffer[offset + text.size()] = '\0';
+    text.copy(buffer + buff_offset, text.size());
+    buffer[buff_offset + text.size()] = '\0';
 }
 
 static std::string substitute_art_text(std::string_view text)
@@ -490,7 +490,7 @@ read_more:
             tail = substitute_art_text(tail);
             const std::string separator = std::string(1, '\002') + g_multipart_separator + '\n';
             (void) mime_set_state(boundary);
-            store_art_text(bp, 0, tail + separator);
+            g_art_buf.store_text(bp, 0, tail + separator);
             const std::size_t newline = tail.find('\n');
             len = static_cast<int>(newline == std::string::npos ? tail.size() : newline + 1);
             extra_chars = static_cast<int>(tail.size() + separator.size()) - len;
@@ -572,13 +572,13 @@ mime_switch:
         {
             const std::size_t source = static_cast<std::size_t>(converted_offset + extra_offset);
             const std::string decoded = g_mime_section->decode_text_chunk(bp + source);
-            store_art_text(bp, source, decoded);
+            g_art_buf.store_text(bp, source, decoded);
             len = converted_offset + static_cast<int>(decoded.size());
         }
         if (g_mime_state != HTML_TEXT_MIME)
         {
             const std::string presented = substitute_art_text(std::string_view{bp, static_cast<std::size_t>(len)});
-            store_art_text(bp, 0, presented);
+            g_art_buf.store_text(bp, 0, presented);
             const std::size_t newline = presented.find('\n');
             len = static_cast<int>(newline == std::string::npos ? presented.size() : newline + 1);
             extra_chars = static_cast<int>(presented.size()) - len;
@@ -605,7 +605,7 @@ mime_switch:
                 filtered += '\n';
             }
             const std::string presented = substitute_art_text(filtered);
-            store_art_text(bp, 0, presented);
+            g_art_buf.store_text(bp, 0, presented);
             const std::size_t newline = presented.find('\n');
             len = static_cast<int>(newline == std::string::npos ? presented.size() : newline + 1);
             extra_chars = static_cast<int>(presented.size()) - len;
