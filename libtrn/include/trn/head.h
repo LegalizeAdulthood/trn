@@ -97,8 +97,9 @@ struct ParsedHeaderContext
     bool parse_line(std::string_view art_buf, int new_hide, int old_hide);
 
     // TODO: private
-    void end_line();
-    bool line_span(HeaderLineType which_line, char *&line, int &size);
+    void        end_line();
+    bool        line_span(HeaderLineType which_line, char *&line, int &size);
+    std::string current_line_text(HeaderLineType which_line);
 };
 
 extern ParsedHeaderContext g_parsed_header;

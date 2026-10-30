@@ -95,7 +95,6 @@ int                         g_user_header_type_max{};
 ParsedHeaderContext         g_parsed_header;
 static HeaderLineType s_htypeix[26]{};
 
-static std::string current_header_line_text(HeaderLineType which_line);
 static std::string lower_header_name(std::string_view header_name);
 
 void head_init()
@@ -549,12 +548,12 @@ bool ParsedHeaderContext::line_span(HeaderLineType which_line, char *&line, int 
     return true;
 }
 
-static std::string current_header_line_text(HeaderLineType which_line)
+std::string ParsedHeaderContext::current_line_text(HeaderLineType which_line)
 {
     char *line;
     int   size;
 
-    if (!g_parsed_header.line_span(which_line, line, size))
+    if (!line_span(which_line, line, size))
     {
         return {};
     }
@@ -708,7 +707,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
         }
         if (owned_result != nullptr)
         {
-            *owned_result = current_header_line_text(which_line);
+            *owned_result = g_parsed_header.current_line_text(which_line);
         }
     }
     if (has_header_values && !(g_data_source->m_flags & DF_XHDR_BROKEN))
