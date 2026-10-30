@@ -535,7 +535,7 @@ TEST_P(LongArticleBufferTest, readingAfterTheLongLineReturnsTheFollowingLine)
     EXPECT_TRUE(read);
     EXPECT_EQ(FOLLOWING, line);
     EXPECT_EQ(g_art_size, art_buf_article_pos());
-    EXPECT_TRUE(art_buf_at_end());
+    EXPECT_TRUE(g_art_buf.at_end());
 }
 
 TEST_P(LongArticleBufferTest, aForwardSeekAcrossTheUncachedLongLineFindsTheFollowingLine)

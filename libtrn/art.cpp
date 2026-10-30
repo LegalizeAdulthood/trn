@@ -814,7 +814,7 @@ recheck_pager:
         if (const bool can_hide_tail =
                 !g_parsed_header.in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
             g_do_hiding && !g_parsed_header.in_header &&
-            (art_buf_at_end() || (can_hide_tail && !g_hide_line.text.empty())))
+            (g_art_buf.at_end() || (can_hide_tail && !g_hide_line.text.empty())))
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.

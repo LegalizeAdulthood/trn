@@ -230,9 +230,9 @@ bool PresentationBuffer::empty()
     return bytes.empty() || bytes.front() == '\0';
 }
 
-bool art_buf_at_end()
+bool PresentationBuffer::at_end()
 {
-    return g_art_buf.position == g_art_buf.length;
+    return position == length;
 }
 
 ArticlePosition art_buf_pos()
