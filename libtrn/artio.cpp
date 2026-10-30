@@ -250,9 +250,9 @@ ArticlePosition PresentationBuffer::seek()
     return seek_pos;
 }
 
-void set_art_buf_seek(ArticlePosition pos)
+void PresentationBuffer::set_seek(ArticlePosition pos)
 {
-    g_art_buf.seek_pos = pos;
+    seek_pos = pos;
 }
 
 ArticlePosition art_buf_article_pos()

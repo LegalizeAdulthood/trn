@@ -5563,7 +5563,7 @@ void DownloadEndArticleTest::start_download()
     ASSERT_NE(nullptr, g_art_input.fp);
     m_download_file = output_dir() / nntp_art_name(g_nav.target.num, false);
     ASSERT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
-    set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
+    g_art_buf.set_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
     g_raw_art_size = g_art_size = ArticlePosition{-1};
     read_prefix(g_do_hiding ? "\xC3\x84\n" : "\xC4\n");
     ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
@@ -12501,7 +12501,7 @@ TEST_F(JumpToEndArticleTest, decodesTheRemainingMimeTextAndRestoresTheHeaderRela
     g_mime_section->m_encoding = MENCODE_QPRINT;
     g_parsed_header.positions[PAST_HEADER].min_pos = header_end;
     ASSERT_EQ(0, seek_art(header_end));
-    set_art_buf_seek(header_end);
+    g_art_buf.set_seek(header_end);
     ASSERT_NO_FATAL_FAILURE(read_prefix("First\n"));
 
     const std::string output = display(Ctl('e'));

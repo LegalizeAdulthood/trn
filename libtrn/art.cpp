@@ -191,7 +191,7 @@ DoArticleResult do_article(std::string &article_command)
         parse_header(g_nav.target.num);
         mime_set_article();
         g_art_buf.clear_art_buf();
-        set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
+        g_art_buf.set_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
         seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
     }
     g_term_scrolled = 0;
@@ -209,7 +209,7 @@ DoArticleResult do_article(std::string &article_command)
             if (g_art_buf.empty())
             {
                 mime_set_article();
-                set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
+                g_art_buf.set_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
             }
             g_art_input.pos = virtual_read(g_art_input.line_num);
             if (g_art_input.pos < 0)
@@ -377,7 +377,7 @@ DoArticleResult do_article(std::string &article_command)
                 mime_set_article();
                 g_art_buf.clear_art_buf(); // exclude notes files droppings
                 g_parsed_header.positions[PAST_HEADER].min_pos = tell_art();
-                set_art_buf_seek(tell_art());
+                g_art_buf.set_seek(tell_art());
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }

@@ -220,7 +220,7 @@ void ArticleBufferViewTest::SetUp()
     {
         ASSERT_NO_FATAL_FAILURE(open_article_text(g_parsed_header.head_buf + "alpha\nbeta\n"));
         ASSERT_EQ(0, seek_art(body_start));
-        set_art_buf_seek(body_start);
+        g_art_buf.set_seek(body_start);
         std::string line;
         ASSERT_TRUE(read_art_buf(line, false));
         ASSERT_TRUE(read_art_buf(line, false));
@@ -483,7 +483,7 @@ void LongArticleBufferTest::SetUp()
     ASSERT_NO_FATAL_FAILURE(open_article_text(
         std::string(ARTICLE_VIEW_HEADER) + std::string(value.prefix) + wire + std::string(value.following_wire), "rb"));
     ASSERT_EQ(0, seek_art(body_start));
-    set_art_buf_seek(body_start);
+    g_art_buf.set_seek(body_start);
     std::string prefix;
     ASSERT_TRUE(read_art_buf(prefix, false));
     ASSERT_EQ("Hello\n", prefix);
@@ -635,7 +635,7 @@ void WrappedArticleTest::SetUp()
     g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{ARTICLE_VIEW_HEADER_SIZE};
     ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + std::string(value.body), "rb"));
     ASSERT_EQ(0, seek_art(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
-    set_art_buf_seek(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
+    g_art_buf.set_seek(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
 }
 
 void WrappedArticleTest::TearDown()
@@ -916,7 +916,7 @@ void MultipartArticleIoTest::open_multipart(const MultipartArticleCase &article)
     g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + article.body, "rb"));
     ASSERT_EQ(0, seek_art(body_start));
-    set_art_buf_seek(body_start);
+    g_art_buf.set_seek(body_start);
 }
 
 void MultipartArticleIoTest::TearDown()
@@ -1100,7 +1100,7 @@ void RemoteMultipartArticleTest::SetUp()
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
     g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_EQ(0, seek_art(body_start));
-    set_art_buf_seek(body_start);
+    g_art_buf.set_seek(body_start);
     ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
 }
 
