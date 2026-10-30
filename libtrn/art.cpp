@@ -228,7 +228,7 @@ DoArticleResult do_article(std::string &article_command)
             }
             else
             {
-                seek_art(art_buf_seek());
+                seek_art(g_art_buf.seek());
                 seek_art_buf(g_art_input.pos);
             }
             g_do_fseek = false;
@@ -355,7 +355,7 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     line_num += finish_tree(line_num+g_top_line);
                     end_header();
-                    seek_art(art_buf_seek());
+                    seek_art(g_art_buf.seek());
                 }
             }
             else if (notes_files && g_do_hiding && !s_continuation                                    //

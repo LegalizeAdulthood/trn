@@ -508,7 +508,7 @@ TEST_P(LongArticleBufferTest, theRawReaderRetainsTheCompleteTextAcrossBufferGrow
     ASSERT_NE(nullptr, text);
     EXPECT_EQ(m_expected + (GetParam().following_cached ? std::string(FOLLOWING) : ""), text);
     EXPECT_EQ(m_following_position, art_buf_article_pos());
-    EXPECT_EQ(m_raw_after_long, art_buf_seek());
+    EXPECT_EQ(m_raw_after_long, g_art_buf.seek());
 }
 
 TEST_P(LongArticleBufferTest, theLineReaderReturnsOneCompleteLogicalLineAcrossBufferGrowth)
@@ -520,7 +520,7 @@ TEST_P(LongArticleBufferTest, theLineReaderReturnsOneCompleteLogicalLineAcrossBu
     EXPECT_TRUE(read);
     EXPECT_EQ(m_expected, line);
     EXPECT_EQ(m_following_position, art_buf_article_pos());
-    EXPECT_EQ(m_raw_after_long, art_buf_seek());
+    EXPECT_EQ(m_raw_after_long, g_art_buf.seek());
     EXPECT_EQ(m_following_position + ArticlePosition{static_cast<long>(FOLLOWING.size())}, g_art_size);
 }
 

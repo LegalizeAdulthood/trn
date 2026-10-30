@@ -245,9 +245,9 @@ ArticlePosition PresentationBuffer::len()
     return length;
 }
 
-ArticlePosition art_buf_seek()
+ArticlePosition PresentationBuffer::seek()
 {
-    return g_art_buf.seek_pos;
+    return seek_pos;
 }
 
 void set_art_buf_seek(ArticlePosition pos)
