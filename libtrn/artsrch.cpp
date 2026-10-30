@@ -41,10 +41,10 @@ ArticleSearchContext   g_art_search;
 const std::string_view g_scope_str{"sfHhbBa"}; //
 bool           g_kill_thru_kludge{true};    // -k
 
-void art_search_init()
+void ArticleSearchContext::init()
 {
-    g_art_search.sub_compex.init_compex();
-    g_art_search.art_compex.init_compex();
+    sub_compex.init_compex();
+    art_compex.init_compex();
 }
 
 // search for an article containing some pattern

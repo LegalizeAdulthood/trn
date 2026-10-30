@@ -3586,7 +3586,7 @@ void NewsgroupPromptRecoveryStateTest::SetUp()
     g_art_search.srch_hdr = SOME_LINE;
     g_art_search.do_read = false;
     search_init();
-    art_search_init();
+    g_art_search.init();
 }
 
 void NewsgroupPromptRecoveryStateTest::TearDown()

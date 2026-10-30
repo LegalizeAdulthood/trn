@@ -36,6 +36,8 @@ enum ArtScope
 
 struct ArticleSearchContext
 {
+    void init();
+
     std::string    last_pat;                // last search pattern
     CompiledRegex  sub_compex{};            // last compiled subject search
     CompiledRegex  art_compex{};            // last compiled normal search
@@ -49,7 +51,6 @@ extern ArticleSearchContext   g_art_search;
 extern const std::string_view g_scope_str; //
 extern bool           g_kill_thru_kludge; // -k
 
-void            art_search_init();
 ArtSearchResult art_search(std::string_view command, bool get_cmd,
                            const std::function<void(ArticleNum)> &progress = {});
 

@@ -95,7 +95,7 @@ protected:
         search_init();
         head_init();
         art_io_init();
-        art_search_init();
+        g_art_search.init();
     }
 
     void TearDown() override

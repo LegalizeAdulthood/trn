@@ -231,7 +231,7 @@ void InterpolatorTest::SetUp()
     add_ng_init();
     art_init();
     art_io_init();
-    art_search_init();
+    g_art_search.init();
     back_page_init();
     bits_init();
     cache_init();

@@ -2074,7 +2074,7 @@ void SearchCommandArticleTest::SetUp()
     g_kill_char = Ctl('U');
     g_tc_BC = "\b";
     search_init();
-    art_search_init();
+    g_art_search.init();
 }
 
 void SearchCommandArticleTest::TearDown()

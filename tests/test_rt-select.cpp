@@ -799,7 +799,7 @@ void SelectorCallbackSearchTest::SetUp()
     g_error_occurred = false;
     g_perform_count = 0;
     search_init();
-    art_search_init();
+    g_art_search.init();
 }
 
 void SelectorCallbackSearchTest::TearDown()
@@ -5484,7 +5484,7 @@ void ArticleSelectorSearchStateTest::SetUp()
     g_novice_delays = false;
     g_search_ahead = ArticleNum{};
     search_init();
-    art_search_init();
+    g_art_search.init();
 }
 
 void ArticleSelectorSearchStateTest::TearDown()
