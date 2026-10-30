@@ -1849,7 +1849,7 @@ private:
     ValueSaver<ArticlePosition>  m_inner_search{g_inner_search, g_inner_search};
     ValueSaver<ArticleLine>      m_inner_light{g_inner_light, g_inner_light};
     ValueSaver<char>             m_hide_everything{g_hide_everything, g_hide_everything};
-    ValueSaver<std::string>      m_page_stop{g_page_stop, g_page_stop};
+    ValueSaver<std::string>      m_page_stop{g_page_stop.text, g_page_stop.text};
     ValueSaver<int>              m_check_count{g_check_count, g_check_count};
     ValueSaver<int>              m_search_context{g_g_line, g_g_line};
     ValueSaver<char>             m_erase_char{g_erase_char, g_erase_char};
@@ -1882,7 +1882,7 @@ void PagerArticleTest::SetUp()
     g_inner_search = ArticlePosition{};
     g_inner_light = ArticleLine{};
     g_hide_everything = 0;
-    g_page_stop.clear();
+    g_page_stop.text.clear();
     g_check_count = 0;
     g_erase_char = '\b';
     g_nav.current.num = g_nav.target.num;
@@ -2304,8 +2304,8 @@ private:
     ValueSaver<std::string>   m_response{g_ser_line, g_ser_line};
     ValueSaver<std::string>   m_command{g_last_command, g_last_command};
     ValueSaver<bool>          m_hiding{g_do_hiding, g_do_hiding};
-    ValueSaver<std::string>   m_hidden{g_hide_line, g_hide_line};
-    ValueSaver<CompiledRegex> m_hide_regex{g_hide_compex, g_hide_compex};
+    ValueSaver<std::string>   m_hidden{g_hide_line.text, g_hide_line.text};
+    ValueSaver<CompiledRegex> m_hide_regex{g_hide_line.compex, g_hide_line.compex};
     std::string               m_raw_article;
     bool                      m_started{};
 };
@@ -2327,10 +2327,10 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     ASSERT_FALSE(HasFatalFailure());
     art_close();
     g_do_hiding = scenario.hiding;
-    g_hide_line = scenario.hidden_tail ? "^Hidden" : "";
+    g_hide_line.text = scenario.hidden_tail ? "^Hidden" : "";
     if (scenario.hidden_tail)
     {
-        ASSERT_TRUE(g_hide_compex.compile(g_hide_line, true, true).empty());
+        ASSERT_TRUE(g_hide_line.compex.compile(g_hide_line.text, true, true).empty());
     }
     std::vector<std::string> wire_lines;
     m_raw_article = g_parsed_header.head_buf;
@@ -2927,10 +2927,10 @@ protected:
 private:
     std::string                 m_raw_article;
     ValueSaver<bool>            m_hiding{g_do_hiding, g_do_hiding};
-    ValueSaver<std::string>     m_hidden{g_hide_line, g_hide_line};
+    ValueSaver<std::string>     m_hidden{g_hide_line.text, g_hide_line.text};
     ValueSaver<std::string>     m_first_line{g_first_line, g_first_line};
-    ValueSaver<CompiledRegex>   m_hide_regex{g_hide_compex, g_hide_compex};
-    ValueSaver<CompiledRegex>   m_stop_regex{g_page_compex, g_page_compex};
+    ValueSaver<CompiledRegex>   m_hide_regex{g_hide_line.compex, g_hide_line.compex};
+    ValueSaver<CompiledRegex>   m_stop_regex{g_page_stop.compex, g_page_stop.compex};
     ValueSaver<HeaderTypeFlags> m_subject_flags{g_header_type[SUBJ_LINE].flags, g_header_type[SUBJ_LINE].flags};
 };
 
@@ -2939,7 +2939,7 @@ void PagerFilteringArticleTest::SetUp()
     PagerTextArticleTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     g_do_hiding = true;
-    g_hide_line.clear();
+    g_hide_line.text.clear();
     g_first_line = "Pager title";
     g_header_type[SUBJ_LINE].flags &= ~HT_MAGIC;
     g_tc_LINES = 5;
@@ -2949,15 +2949,15 @@ void PagerFilteringArticleTest::SetUp()
 
 void PagerFilteringArticleTest::set_filters(std::string_view hidden, std::string_view stop)
 {
-    g_hide_line = hidden;
-    g_page_stop = stop;
+    g_hide_line.text = hidden;
+    g_page_stop.text = stop;
     if (!hidden.empty())
     {
-        ASSERT_TRUE(g_hide_compex.compile(hidden, true, true).empty());
+        ASSERT_TRUE(g_hide_line.compex.compile(hidden, true, true).empty());
     }
     if (!stop.empty())
     {
-        ASSERT_TRUE(g_page_compex.compile(stop, true, true).empty());
+        ASSERT_TRUE(g_page_stop.compex.compile(stop, true, true).empty());
     }
 }
 

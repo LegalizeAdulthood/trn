@@ -72,10 +72,8 @@ bool            g_multimedia_mime{};      // images/audio to see/hear?
 bool            g_rotate{};               // has rotation been requested?
 std::string     g_prompt;                 // current prompt
 std::string     g_first_line;             // s_special first line?
-std::string     g_hide_line;              // custom line hiding?
-std::string     g_page_stop;              // custom page terminator?
-CompiledRegex   g_hide_compex{};          //
-CompiledRegex   g_page_compex{};          //
+SearchPattern   g_hide_line;              // custom line hiding?
+SearchPattern   g_page_stop;              // custom page terminator?
 bool            g_dont_filter_control{};  // -j
 
 inline std::string_view line_view(ArticlePosition pos)
@@ -369,7 +367,7 @@ DoArticleResult do_article(std::string &article_command)
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
-            if (!g_hide_line.empty() && !s_continuation && g_hide_compex.execute(line_tail()))
+            if (!g_hide_line.text.empty() && !s_continuation && g_hide_line.compex.execute(line_tail()))
             {
                 hide_this_line = true;
             }
@@ -512,7 +510,7 @@ DoArticleResult do_article(std::string &article_command)
                     }
                 }
                 output_ok = !g_hide_everything;
-                if (!g_page_stop.empty() && !s_continuation && g_page_compex.execute(line_tail()))
+                if (!g_page_stop.text.empty() && !s_continuation && g_page_stop.compex.execute(line_tail()))
                 {
                     line_num = ArticleLine{32700};
                 }
@@ -801,7 +799,8 @@ DoArticleResult do_article(std::string &article_command)
 recheck_pager:
         if (const bool can_hide_tail =
                 !g_parsed_header.in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
-            g_do_hiding && !g_parsed_header.in_header && (art_buf_at_end() || (can_hide_tail && !g_hide_line.empty())))
+            g_do_hiding && !g_parsed_header.in_header &&
+            (art_buf_at_end() || (can_hide_tail && !g_hide_line.text.empty())))
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.
@@ -810,8 +809,8 @@ recheck_pager:
             bool            hidden_continuation = false;
             while (read_art_buf(remaining_line, false))
             {
-                if (!can_hide_tail || g_hide_line.empty() ||
-                    (!hidden_continuation && !g_hide_compex.execute(remaining_line)))
+                if (!can_hide_tail || g_hide_line.text.empty() ||
+                    (!hidden_continuation && !g_hide_line.compex.execute(remaining_line)))
                 {
                     break;
                 }
@@ -1445,7 +1444,7 @@ leave_pager:
 go_forward:
         pager_line = line_view(s_a_line_begin);
         if ((pager_line.empty() || pager_line.front() != '\f') &&
-            (g_page_stop.empty() || s_continuation || !g_page_compex.execute(pager_line)))
+            (g_page_stop.text.empty() || s_continuation || !g_page_stop.compex.execute(pager_line)))
         {
             if (!s_special //
                 || (g_marking &&

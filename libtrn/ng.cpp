@@ -141,8 +141,8 @@ void ng_init()
     set_default_cmd();
 
     open_kill_file(KF_GLOBAL);
-    g_hide_compex.init_compex();
-    g_page_compex.init_compex();
+    g_hide_line.compex.init_compex();
+    g_page_stop.compex.init_compex();
 }
 
 static char article_command_char(std::string_view command)
@@ -356,15 +356,15 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     // custom line suppression, custom page ending
 
-    g_hide_line = get_env_var("HIDELINE");
-    if (!g_hide_line.empty())
+    g_hide_line.text = get_env_var("HIDELINE");
+    if (!g_hide_line.text.empty())
     {
-        g_hide_compex.compile(g_hide_line, true, true);
+        g_hide_line.compex.compile(g_hide_line.text, true, true);
     }
-    g_page_stop = get_env_var("PAGESTOP");
-    if (!g_page_stop.empty())
+    g_page_stop.text = get_env_var("PAGESTOP");
+    if (!g_page_stop.text.empty())
     {
-        g_page_compex.compile(g_page_stop, true, true);
+        g_page_stop.compex.compile(g_page_stop.text, true, true);
     }
 
     // now read each unread article

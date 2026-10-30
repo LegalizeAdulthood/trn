@@ -1,6 +1,7 @@
 /* trn/artstate.h
  */
 // This software is copyrighted as detailed in the LICENSE file.
+// Copyright (c) 2026, Richard Thomson
 #ifndef TRN_ARTSTATE_H
 #define TRN_ARTSTATE_H
 
@@ -9,6 +10,12 @@
 #include "trn/search.h"
 
 #include <string>
+
+struct SearchPattern
+{
+    std::string   text;
+    CompiledRegex compex{};
+};
 
 extern bool          g_reread;          // consider current art temporarily unread?
 extern bool          g_do_fseek;        // should we back up in article file?
@@ -20,9 +27,7 @@ extern bool          g_multimedia_mime; // images/audio to see/hear?
 extern bool          g_rotate;          // has rotation been requested?
 extern std::string   g_prompt;          // pointer to current prompt
 extern std::string   g_first_line;      // special first line?
-extern std::string   g_hide_line;       // custom line hiding?
-extern std::string   g_page_stop;       // custom page terminator?
-extern CompiledRegex g_hide_compex;
-extern CompiledRegex g_page_compex;
+extern SearchPattern g_hide_line;       // custom line hiding?
+extern SearchPattern g_page_stop;       // custom page terminator?
 
 #endif
