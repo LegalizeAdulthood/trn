@@ -260,13 +260,13 @@ ArticlePosition PresentationBuffer::article_pos()
     return position + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
-ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
+ArticlePosition PresentationBuffer::size_from_raw(ArticlePosition raw_art_size)
 {
     if (!g_do_hiding)
     {
         return raw_art_size;
     }
-    return raw_art_size - g_art_buf.seek_pos + g_art_buf.length + g_parsed_header.positions[PAST_HEADER].min_pos;
+    return raw_art_size - seek_pos + length + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
 std::string_view art_buf_view(ArticlePosition pos)
@@ -858,7 +858,7 @@ done:
         g_art_buf.length = g_art_buf.position + ArticlePosition{extra_chars};
         if (g_art_size >= 0)
         {
-            g_art_size = art_buf_size_from_raw(g_raw_art_size);
+            g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
         }
     }
 

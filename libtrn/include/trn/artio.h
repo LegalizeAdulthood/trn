@@ -47,6 +47,7 @@ struct PresentationBuffer
     ArticlePosition seek();
     void            set_seek(ArticlePosition pos);
     ArticlePosition article_pos();
+    ArticlePosition size_from_raw(ArticlePosition raw_art_size);
 
     std::string     bytes;
     ArticlePosition position{};
@@ -80,7 +81,6 @@ bool            read_art(std::string &line);
 int             seek_art_buf(ArticlePosition pos);
 bool            read_art_buf(std::string &line, bool view_inline);
 char            *read_art_buf_raw(bool view_inline);
-ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size);
 std::string_view art_buf_view(ArticlePosition pos);
 
 #endif

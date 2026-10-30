@@ -808,7 +808,7 @@ DoArticleResult do_article(std::string &article_command)
 
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
-            g_art_size = art_buf_size_from_raw(g_raw_art_size);
+            g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
         }
 recheck_pager:
         if (const bool can_hide_tail =
@@ -888,7 +888,7 @@ reask_pager:
         cache_until_key();
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
-            g_art_size = art_buf_size_from_raw(g_raw_art_size);
+            g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
             goto_xy(s_more_prompt_col,g_term_line);
             goto recheck_pager;
         }
@@ -1215,7 +1215,7 @@ refresh_screen:
         {
             nntp_finish_body(FB_OUTPUT);
             g_raw_art_size = nntp_art_size();
-            g_art_size = art_buf_size_from_raw(g_raw_art_size);
+            g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
         }
         if (g_do_hiding)
         {

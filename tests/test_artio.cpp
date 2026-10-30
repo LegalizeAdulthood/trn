@@ -1147,7 +1147,7 @@ TEST_P(RemoteMultipartArticleTest, completesThePresentationAndReleasesTheConnect
 
     EXPECT_EQ(GetParam().lines, result.lines);
     EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
-    EXPECT_EQ(g_art_buf.article_pos(), art_buf_size_from_raw(nntp_art_size()));
+    EXPECT_EQ(g_art_buf.article_pos(), g_art_buf.size_from_raw(nntp_art_size()));
     EXPECT_EQ(nntp_art_size(), tell_art());
     expect_next_command();
 }
