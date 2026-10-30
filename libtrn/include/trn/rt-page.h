@@ -83,6 +83,7 @@ struct SelectorPage
     bool prev_page();
     bool last_page();
     bool next_page();
+    int  find_line(int y);
 };
 
 extern SelectorPage g_sel_page;

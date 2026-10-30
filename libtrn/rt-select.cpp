@@ -258,7 +258,6 @@ static DisplayState        multirc_commands(char_int ch);
 static DisplayState        option_commands(char_int ch);
 static DisplayState        universal_commands(char_int ch);
 static void                switch_dmode(std::string &dmode, std::size_t &dmode_index);
-static int                 find_line(int y);
 
 // Display a menu of threads/subjects/articles for the user to choose from.
 // If "cmd" is '+' we display all the unread items and allow the user to mark
@@ -4427,15 +4426,17 @@ static void switch_dmode(std::string &dmode, std::size_t &dmode_index)
 /// the index of the item whose display line is just above or equal to the
 /// specified y-coordinate. If no item is above y, returns 0.
 ///
+/// Reads only this page's item lines and item count; no external state.
+///
 /// @param y The screen line number to locate.
 /// @return The index of the selector item corresponding to the given line.
 ///
-static int find_line(int y)
+int SelectorPage::find_line(int y)
 {
     int i;
-    for (i = 0; i < g_sel_page.page_item_cnt; i++)
+    for (i = 0; i < page_item_cnt; i++)
     {
-        if (g_sel_page.items[i].line > y)
+        if (items[i].line > y)
         {
             break;
         }
@@ -4478,7 +4479,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 }
                 else
                 {
-                    s_force_sel_pos = find_line(y);
+                    s_force_sel_pos = g_sel_page.find_line(y);
                     if (g_use_sel_num)
                     {
                         push_char(('0' + (s_force_sel_pos+1) % 10) | 0200);
@@ -4516,7 +4517,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             }
             else
             {
-                int i = find_line(y);
+                int i = g_sel_page.find_line(y);
                 if (g_sel_page.items[i].line != g_term_line)
                 {
                     if (g_use_sel_num)
