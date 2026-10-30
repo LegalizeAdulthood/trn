@@ -356,16 +356,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     // custom line suppression, custom page ending
 
-    g_hide_line.text = get_env_var("HIDELINE");
-    if (!g_hide_line.text.empty())
-    {
-        g_hide_line.compex.compile(g_hide_line.text, true, true);
-    }
-    g_page_stop.text = get_env_var("PAGESTOP");
-    if (!g_page_stop.text.empty())
-    {
-        g_page_stop.compex.compile(g_page_stop.text, true, true);
-    }
+    g_hide_line.compile_from_env_var("HIDELINE");
+    g_page_stop.compile_from_env_var("PAGESTOP");
 
     // now read each unread article
 

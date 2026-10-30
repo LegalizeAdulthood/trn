@@ -76,6 +76,15 @@ SearchPattern   g_hide_line;              // custom line hiding?
 SearchPattern   g_page_stop;              // custom page terminator?
 bool            g_dont_filter_control{};  // -j
 
+void SearchPattern::compile_from_env_var(std::string_view var)
+{
+    text = get_env_var(var);
+    if (!text.empty())
+    {
+        compex.compile(text, true, true);
+    }
+}
+
 inline std::string_view line_view(ArticlePosition pos)
 {
     return art_buf_view(pos);

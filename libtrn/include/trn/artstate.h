@@ -10,9 +10,12 @@
 #include "trn/search.h"
 
 #include <string>
+#include <string_view>
 
 struct SearchPattern
 {
+    void compile_from_env_var(std::string_view var);
+
     std::string   text;
     CompiledRegex compex{};
 };
