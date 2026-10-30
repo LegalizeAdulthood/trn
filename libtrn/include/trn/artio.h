@@ -7,6 +7,7 @@
 
 #include <config/typedef.h>
 
+#include <cstddef>
 #include <cstdio>
 #include <string>
 #include <string_view>
@@ -51,6 +52,7 @@ struct PresentationBuffer
 
     // TODO: private
     char *data();
+    std::size_t offset(const char *ptr);
 
     std::string     bytes;
     ArticlePosition position{};

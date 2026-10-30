@@ -58,8 +58,6 @@ PreserveArticleBuffer::~PreserveArticleBuffer()
     g_art_buf.length = m_length;
 }
 
-static std::size_t art_buf_offset(const char *ptr);
-
 void PresentationBuffer::init()
 {
     bytes.assign(INITIAL_ART_BUF_SIZE, '\0');
@@ -294,9 +292,9 @@ char *PresentationBuffer::data()
     return bytes.data();
 }
 
-static std::size_t art_buf_offset(const char *ptr)
+std::size_t PresentationBuffer::offset(const char *ptr)
 {
-    return static_cast<std::size_t>(ptr - g_art_buf.data());
+    return static_cast<std::size_t>(ptr - data());
 }
 
 int seek_art_buf(ArticlePosition pos)
@@ -324,7 +322,7 @@ int seek_art_buf(ArticlePosition pos)
 
 static void store_art_text(char *&buffer, std::size_t offset, std::string_view text)
 {
-    const std::size_t base = art_buf_offset(buffer);
+    const std::size_t base = g_art_buf.offset(buffer);
     const std::size_t required = base + offset + text.size() + 2;
     if (g_art_buf.bytes.size() < required)
     {
@@ -453,7 +451,7 @@ read_more:
                 bp = nullptr;
                 goto done;
             }
-            write_newline(art_buf_offset(bp + o));
+            write_newline(g_art_buf.offset(bp + o));
             read_something = -1;
             len = read_offset + 1;
         }
@@ -470,7 +468,7 @@ read_more:
                 read_offset = len;
                 goto read_more;
             }
-            write_newline(art_buf_offset(bp + len++ + extra_offset));
+            write_newline(g_art_buf.offset(bp + len++ + extra_offset));
         }
         if (!g_is_mime)
         {
@@ -513,7 +511,7 @@ read_more:
                 *bp = '\0';
                 goto read_more;
             }
-            write_newline(art_buf_offset(bp + o));
+            write_newline(g_art_buf.offset(bp + o));
             len = line_offset + 1;
         }
         break;
@@ -543,7 +541,7 @@ mime_switch:
                     line_offset = len;
                     goto read_more;
                 }
-                write_newline(art_buf_offset(bp + len++ + extra_offset));
+                write_newline(g_art_buf.offset(bp + len++ + extra_offset));
             }
         }
         else if (g_mime_section->m_encoding == MENCODE_BASE64)
@@ -562,7 +560,7 @@ mime_switch:
                     line_offset = len;
                     goto read_more;
                 }
-                write_newline(art_buf_offset(bp + len++ + extra_offset));
+                write_newline(g_art_buf.offset(bp + len++ + extra_offset));
             }
             else
             {
@@ -707,7 +705,7 @@ mime_switch:
             extra_chars = len + 1;
             len = read_offset + 1;
             o = read_offset + 1;
-            g_art_buf.bytes[art_buf_offset(bp + o - 1)] = '\n';
+            g_art_buf.bytes[g_art_buf.offset(bp + o - 1)] = '\n';
         }
         else
         {
@@ -716,7 +714,7 @@ mime_switch:
             bp++;
         }
         {
-            const std::size_t separator_offset = art_buf_offset(bp + o);
+            const std::size_t separator_offset = g_art_buf.offset(bp + o);
             g_art_buf.bytes[separator_offset] = '\002';
             g_multipart_separator.copy(&g_art_buf.bytes[separator_offset + 1], g_multipart_separator.size());
             write_newline(separator_offset + g_multipart_separator.size() + 1);
@@ -791,7 +789,7 @@ done:
     {
         for (char *cp = bp; *cp; cp = s + 1)
         {
-            const std::size_t cp_offset = art_buf_offset(cp);
+            const std::size_t cp_offset = g_art_buf.offset(cp);
             const std::size_t newline_pos = g_art_buf.bytes.find('\n', cp_offset);
             const std::size_t nul_pos = g_art_buf.bytes.find('\0', cp_offset);
             if (newline_pos == std::string::npos || (nul_pos != std::string::npos && nul_pos < newline_pos))
@@ -832,8 +830,8 @@ done:
                         for (t++; *++t == ' ' || *t == '\t'; spaces++)
                         {
                         }
-                        const std::size_t source_offset = art_buf_offset(t);
-                        const std::size_t dest_offset = art_buf_offset(t - spaces);
+                        const std::size_t source_offset = g_art_buf.offset(t);
+                        const std::size_t dest_offset = g_art_buf.offset(t - spaces);
                         const std::size_t copy_limit = extra_chars > 0 ? static_cast<std::size_t>(extra_chars - 1) : 0;
                         const std::size_t source_end = source_offset + copy_limit;
                         const std::size_t nul_offset = g_art_buf.bytes.find('\0', source_offset);
