@@ -238,7 +238,7 @@ void close_cache()
     g_first_subject = nullptr;
     g_last_subject = nullptr;
     g_subject_count = 0; // just to be sure
-    g_parsed_art = ArticleNum{};
+    g_parsed_header.parsed_art = ArticleNum{};
 
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;

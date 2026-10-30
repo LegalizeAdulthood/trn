@@ -313,7 +313,7 @@ static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
     parse_header(art); // fast if already parsed
 
     const std::string     &head = s_sf_extra_headers[hnum];
-    const std::string_view header_text{g_head_buf};
+    const std::string_view header_text{g_parsed_header.head_buf};
 
     for (std::size_t line_start{}; line_start < header_text.size();)
     {

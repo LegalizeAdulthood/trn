@@ -60,6 +60,7 @@ protected:
         m_old_multipart_separator = g_multipart_separator;
         m_old_data_source = g_data_source;
         m_old_past_header = g_header_type[PAST_HEADER];
+        m_old_past_header_pos = g_parsed_header.positions[PAST_HEADER];
         m_old_tc_cols = g_tc_COLS;
         m_old_word_wrap_offset = g_word_wrap_offset;
         m_old_input = input_charset_name();
@@ -82,7 +83,7 @@ protected:
         g_is_mime = false;
         g_mime_state = NOT_MIME;
         g_mime_section = m_old_mime_section;
-        g_header_type[PAST_HEADER].min_pos = ArticlePosition{};
+        g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{};
         g_tc_COLS = 30;
         g_word_wrap_offset = 8;
     }
@@ -108,6 +109,7 @@ protected:
         g_multipart_separator = m_old_multipart_separator;
         g_data_source = m_old_data_source;
         g_header_type[PAST_HEADER] = m_old_past_header;
+        g_parsed_header.positions[PAST_HEADER] = m_old_past_header_pos;
         g_tc_COLS = m_old_tc_cols;
         g_word_wrap_offset = m_old_word_wrap_offset;
         utf_init(m_old_input, m_old_output);
@@ -162,6 +164,7 @@ protected:
     std::string     m_old_multipart_separator;
     DataSource     *m_old_data_source{};
     HeaderType      m_old_past_header{};
+    HeaderPosition             m_old_past_header_pos{};
     int             m_old_tc_cols{};
     int             m_old_word_wrap_offset{};
     std::string_view m_old_input;
@@ -204,18 +207,18 @@ protected:
     void TearDown() override;
 
 private:
-    std::string m_old_head_buf{g_head_buf};
+    std::string m_old_head_buf{g_parsed_header.head_buf};
 };
 
 void ArticleBufferViewTest::SetUp()
 {
     ArticleIoTest::SetUp();
-    g_head_buf = std::string{ARTICLE_VIEW_HEADER};
+    g_parsed_header.head_buf = std::string{ARTICLE_VIEW_HEADER};
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
-    g_header_type[PAST_HEADER].min_pos = body_start;
+    g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     if (GetParam().buffered_body)
     {
-        ASSERT_NO_FATAL_FAILURE(open_article_text(g_head_buf + "alpha\nbeta\n"));
+        ASSERT_NO_FATAL_FAILURE(open_article_text(g_parsed_header.head_buf + "alpha\nbeta\n"));
         ASSERT_EQ(0, seek_art(body_start));
         set_art_buf_seek(body_start);
         std::string line;
@@ -227,7 +230,7 @@ void ArticleBufferViewTest::SetUp()
 void ArticleBufferViewTest::TearDown()
 {
     ArticleIoTest::TearDown();
-    g_head_buf = m_old_head_buf;
+    g_parsed_header.head_buf = m_old_head_buf;
 }
 
 class CachedLatinArticleTest : public ArticleIoTest
@@ -476,7 +479,7 @@ void LongArticleBufferTest::SetUp()
         repeat_article_text(value.wire_fragment, value.repetitions) + std::string(value.terminator);
     m_expected = repeat_article_text(value.text_fragment, value.repetitions) + '\n';
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
-    g_header_type[PAST_HEADER].min_pos = body_start;
+    g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_NO_FATAL_FAILURE(open_article_text(
         std::string(ARTICLE_VIEW_HEADER) + std::string(value.prefix) + wire + std::string(value.following_wire), "rb"));
     ASSERT_EQ(0, seek_art(body_start));
@@ -629,7 +632,7 @@ void WrappedArticleTest::SetUp()
     m_mime_section.m_encoding = value.encoding;
     g_mime_state = TEXT_MIME;
     g_is_mime = true;
-    g_header_type[PAST_HEADER].min_pos = ArticlePosition{ARTICLE_VIEW_HEADER_SIZE};
+    g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{ARTICLE_VIEW_HEADER_SIZE};
     ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + std::string(value.body), "rb"));
     ASSERT_EQ(0, seek_art(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
     set_art_buf_seek(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
@@ -910,7 +913,7 @@ void MultipartArticleIoTest::open_multipart(const MultipartArticleCase &article)
     g_mime_state = MULTIPART_MIME;
     g_is_mime = true;
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
-    g_header_type[PAST_HEADER].min_pos = body_start;
+    g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + article.body, "rb"));
     ASSERT_EQ(0, seek_art(body_start));
     set_art_buf_seek(body_start);
@@ -1043,9 +1046,9 @@ private:
     MockNntpServer m_server;
     fs::path       m_old_directory{fs::current_path()};
     NNTPLink       m_old_link{g_nntp_link};
-    ArticleNum     m_old_parsed_art{g_parsed_art};
+    ArticleNum     m_old_parsed_art{g_parsed_header.parsed_art};
     ArticleNum     m_old_open_art{g_open_art};
-    std::string    m_old_header{g_head_buf};
+    std::string    m_old_header{g_parsed_header.head_buf};
     std::string    m_old_response{g_ser_line};
     std::string    m_old_command{g_last_command};
     bool           m_started{};
@@ -1056,9 +1059,9 @@ void RemoteMultipartArticleTest::SetUp()
     MultipartArticleIoTest::SetUp();
     fs::current_path(m_output_dir);
     (void) nntp_art_name(ArticleNum{}, false);
-    g_head_buf = ARTICLE_VIEW_HEADER;
-    g_parsed_art = ArticleNum{7};
-    m_raw_article = g_head_buf + GetParam().body;
+    g_parsed_header.head_buf = ARTICLE_VIEW_HEADER;
+    g_parsed_header.parsed_art = ArticleNum{7};
+    m_raw_article = g_parsed_header.head_buf + GetParam().body;
     std::vector<std::string> wire_lines;
     for (std::size_t start = 0; start < GetParam().body.size();)
     {
@@ -1095,7 +1098,7 @@ void RemoteMultipartArticleTest::SetUp()
     g_mime_state = MULTIPART_MIME;
     g_is_mime = true;
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
-    g_header_type[PAST_HEADER].min_pos = body_start;
+    g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_EQ(0, seek_art(body_start));
     set_art_buf_seek(body_start);
     ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
@@ -1112,9 +1115,9 @@ void RemoteMultipartArticleTest::TearDown()
     (void) nntp_art_name(ArticleNum{}, false);
     nntp_gets_clear_buffer();
     g_nntp_link = m_old_link;
-    g_parsed_art = m_old_parsed_art;
+    g_parsed_header.parsed_art = m_old_parsed_art;
     g_open_art = m_old_open_art;
-    g_head_buf = m_old_header;
+    g_parsed_header.head_buf = m_old_header;
     g_ser_line = m_old_response;
     g_last_command = m_old_command;
     fs::current_path(m_old_directory);

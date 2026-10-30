@@ -831,7 +831,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     if (g_in_ng)
                     {
                         parse_header(g_nav.target.num);
-                        if (g_header_type[REPLY_LINE].min_pos >= 0 && !comment_parse)
+                        if (g_parsed_header.positions[REPLY_LINE].min_pos >= 0 && !comment_parse)
                         {
                             // was there a reply line?
                             if (!reply_buf)
@@ -859,7 +859,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     if (g_in_ng)
                     {
                         parse_header(g_nav.target.num);
-                        if (g_header_type[FOLLOW_LINE].min_pos >= 0)
+                        if (g_parsed_header.positions[FOLLOW_LINE].min_pos >= 0)
                         // is there a Followup-To line?
                         {
                             follow_buf = fetch_lines(g_nav.target.num, FOLLOW_LINE);
@@ -1017,7 +1017,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     {
                         parse_header(g_nav.target.num);
                         refs_buf.reset();
-                        if (g_header_type[REFS_LINE].min_pos >= 0)
+                        if (g_parsed_header.positions[REFS_LINE].min_pos >= 0)
                         {
                             refs_buf = normalize_refs(fetch_lines(g_nav.target.num, REFS_LINE));
                             const std::string_view refs_text{*refs_buf};
@@ -1041,7 +1041,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     parse_header(g_nav.target.num);
                     refs_buf.reset();
-                    if (g_header_type[REFS_LINE].min_pos >= 0)
+                    if (g_parsed_header.positions[REFS_LINE].min_pos >= 0)
                     {
                         refs_buf = normalize_refs(fetch_lines(g_nav.target.num, REFS_LINE));
                         // no more than 3 prior references PLUS the
@@ -1123,7 +1123,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     parse_header(g_nav.target.num);
                     std::string_view author;
-                    if (g_header_type[REPLY_LINE].min_pos >= 0)
+                    if (g_parsed_header.positions[REPLY_LINE].min_pos >= 0)
                     {
                         // was there a reply line?
                         if (!reply_buf)
@@ -1143,7 +1143,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     if (pattern.front() == 'T')
                     {
-                        if (g_header_type[PATH_LINE].min_pos >= 0)
+                        if (g_parsed_header.positions[PATH_LINE].min_pos >= 0)
                         {
                             // should we substitute path?
                             path_buf = fetch_lines(g_nav.target.num, PATH_LINE);

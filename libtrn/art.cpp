@@ -179,8 +179,8 @@ DoArticleResult do_article(std::string &article_command)
         parse_header(g_nav.target.num);
         mime_set_article();
         clear_art_buf();
-        set_art_buf_seek(g_header_type[PAST_HEADER].min_pos);
-        seek_art(g_header_type[PAST_HEADER].min_pos);
+        set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
+        seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
     }
     g_term_scrolled = 0;
 
@@ -197,7 +197,7 @@ DoArticleResult do_article(std::string &article_command)
             if (art_buf_empty())
             {
                 mime_set_article();
-                set_art_buf_seek(g_header_type[PAST_HEADER].min_pos);
+                set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
             }
             g_art_pos = virtual_read(g_art_line_num);
             if (g_art_pos < 0)
@@ -208,11 +208,11 @@ DoArticleResult do_article(std::string &article_command)
             {
                 g_art_pos = ArticlePosition{};
             }
-            if (g_art_pos < g_header_type[PAST_HEADER].min_pos)
+            if (g_art_pos < g_parsed_header.positions[PAST_HEADER].min_pos)
             {
-                g_in_header = SOME_LINE;
-                seek_art(g_header_type[PAST_HEADER].min_pos);
-                seek_art_buf(g_header_type[PAST_HEADER].min_pos);
+                g_parsed_header.in_header = SOME_LINE;
+                seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
+                seek_art_buf(g_parsed_header.positions[PAST_HEADER].min_pos);
             }
             else
             {
@@ -274,9 +274,9 @@ DoArticleResult do_article(std::string &article_command)
             virtual_write(g_art_line_num,g_art_pos); // remember pos in file
         }
         for (bool restart_color = true; // line_num already set
-             g_inner_search                   ? (g_in_header || inner_more())
+             g_inner_search                                 ? (g_parsed_header.in_header || inner_more())
              : s_special                      ? (line_num.value_of() < s_special_lines)
-             : (s_first_page && !g_in_header) ? (line_num < g_init_lines)
+             : (s_first_page && !g_parsed_header.in_header) ? (line_num < g_init_lines)
                                               : (line_num.value_of() < g_tc_LINES);
              ++line_num)
         {                               // for each line on page
@@ -293,15 +293,16 @@ DoArticleResult do_article(std::string &article_command)
                 set_line(body_line, static_cast<std::size_t>((s_restart - body_line_begin).value_of()));
                 s_restart = ArticlePosition{}; // and reset the flag
                 s_continuation = true;
-                if (restart_color && g_do_hiding && !g_in_header)
+                if (restart_color && g_do_hiding && !g_parsed_header.in_header)
                 {
                     maybe_set_color(line_text, line_pos, true);
                 }
             }
             else if (const std::size_t head_pos = static_cast<std::size_t>(g_art_pos.value_of());
-                     g_in_header && head_pos < g_head_buf.size() && g_head_buf[head_pos] != '\0')
+                     g_parsed_header.in_header && head_pos < g_parsed_header.head_buf.size() &&
+                     g_parsed_header.head_buf[head_pos] != '\0')
             {
-                set_line(std::string_view{g_head_buf}.substr(head_pos));
+                set_line(std::string_view{g_parsed_header.head_buf}.substr(head_pos));
                 s_continuation = is_hor_space(current_char());
             }
             else
@@ -317,9 +318,9 @@ DoArticleResult do_article(std::string &article_command)
                     break;
                 }
                 set_line(body_line);
-                if (g_do_hiding && !g_in_header)
+                if (g_do_hiding && !g_parsed_header.in_header)
                 {
-                    const ArticlePosition body_start = g_header_type[PAST_HEADER].min_pos;
+                    const ArticlePosition body_start = g_parsed_header.positions[PAST_HEADER].min_pos;
                     s_continuation =
                         maybe_set_color(art_buf_view(body_start),
                                         static_cast<std::size_t>((g_art_pos - body_start).value_of()), restart_color);
@@ -329,16 +330,16 @@ DoArticleResult do_article(std::string &article_command)
                     s_continuation = false;
                 }
             }
-            if (!g_in_header && !s_continuation)
+            if (!g_parsed_header.in_header && !s_continuation)
             {
                 hide_this_line = false;
             }
             s_a_line_begin = g_art_pos;      // remember where we began
             restart_color = false;
-            if (g_in_header)
+            if (g_parsed_header.in_header)
             {
                 hide_this_line = parse_line(line_tail(), g_do_hiding, hide_this_line);
-                if (!g_in_header)
+                if (!g_parsed_header.in_header)
                 {
                     line_num += finish_tree(line_num+g_top_line);
                     end_header();
@@ -363,7 +364,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
                 mime_set_article();
                 clear_art_buf();         // exclude notes files droppings
-                g_header_type[PAST_HEADER].min_pos = tell_art();
+                g_parsed_header.positions[PAST_HEADER].min_pos = tell_art();
                 set_art_buf_seek(tell_art());
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
@@ -372,9 +373,9 @@ DoArticleResult do_article(std::string &article_command)
             {
                 hide_this_line = true;
             }
-            if (g_in_header && g_do_hiding && (g_header_type[g_in_header].flags & HT_MAGIC))
+            if (g_parsed_header.in_header && g_do_hiding && (g_header_type[g_parsed_header.in_header].flags & HT_MAGIC))
             {
-                switch (g_in_header)
+                switch (g_parsed_header.in_header)
                 {
                 case NEWSGROUPS_LINE:
                 {
@@ -440,7 +441,7 @@ DoArticleResult do_article(std::string &article_command)
                     break;
                 }
             }
-            if (g_in_header == SUBJ_LINE && g_do_hiding   //
+            if (g_parsed_header.in_header == SUBJ_LINE && g_do_hiding //
                 && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
                 const std::string_view cached_subj = g_nav.target.art->get_cached_line_view(SUBJ_LINE, false);
@@ -471,7 +472,7 @@ DoArticleResult do_article(std::string &article_command)
             {
                 --line_num;                        // compensate for line_num++
             }
-            else if (g_in_header)
+            else if (g_parsed_header.in_header)
             {
                 ++g_art_line_num;
                 line_num += line_before(tree_puts(line_tail(), line_num + g_top_line, 0));
@@ -558,7 +559,8 @@ DoArticleResult do_article(std::string &article_command)
                             }
                         }
                         // handle rot-13 if wanted
-                        if (g_rotate && !g_in_header && std::isalpha(static_cast<unsigned char>(current_char())))
+                        if (g_rotate && !g_parsed_header.in_header &&
+                            std::isalpha(static_cast<unsigned char>(current_char())))
                         {
                             if (output_ok)
                             {
@@ -760,9 +762,9 @@ DoArticleResult do_article(std::string &article_command)
             {
                 g_art_pos += s_restart - s_a_line_begin;
             }
-            else if (g_in_header)
+            else if (g_parsed_header.in_header)
             {
-                const std::string_view::size_type line_end = std::string_view{g_head_buf}.find(
+                const std::string_view::size_type line_end = std::string_view{g_parsed_header.head_buf}.find(
                     '\n', static_cast<std::string_view::size_type>(g_art_pos.value_of()));
                 g_art_pos = ArticlePosition{static_cast<long>(line_end + 1)};
             }
@@ -798,8 +800,8 @@ DoArticleResult do_article(std::string &article_command)
         }
 recheck_pager:
         if (const bool can_hide_tail =
-                !g_in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
-            g_do_hiding && !g_in_header && (art_buf_at_end() || (can_hide_tail && !g_hide_line.empty())))
+                !g_parsed_header.in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
+            g_do_hiding && !g_parsed_header.in_header && (art_buf_at_end() || (can_hide_tail && !g_hide_line.empty())))
         {
             // If we're filtering we need to figure out if any
             // remaining text is going to vanish or not.
@@ -1022,7 +1024,7 @@ PageSwitchResult page_switch(std::string_view command)
             {
                 pos = -pos;
             }
-            if (pos < g_header_type[PAST_HEADER].min_pos)
+            if (pos < g_parsed_header.positions[PAST_HEADER].min_pos)
             {
                 break;
             }
@@ -1099,7 +1101,7 @@ caseG:
                 start_where = -start_where;
             }
         }
-        start_where = std::max(start_where, g_header_type[PAST_HEADER].min_pos);
+        start_where = std::max(start_where, g_parsed_header.positions[PAST_HEADER].min_pos);
         seek_art_buf(start_where);
         g_inner_light = ArticleLine{};
         g_inner_search = ArticlePosition{}; // assume not found
@@ -1228,7 +1230,7 @@ refresh_screen:
             {
                 pos = -pos;
             }
-            if (pos >= g_header_type[PAST_HEADER].min_pos)
+            if (pos >= g_parsed_header.positions[PAST_HEADER].min_pos)
             {
                 seek_art_buf(pos);
                 if (read_art_buf(pager_line_storage, false))

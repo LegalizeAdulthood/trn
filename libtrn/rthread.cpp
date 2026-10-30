@@ -92,7 +92,7 @@ void thread_open()
         {
             g_first_cached = g_first_art;
             g_last_cached = article_before(g_first_art);
-            g_parsed_art = ArticleNum{};
+            g_parsed_header.parsed_art = ArticleNum{};
         }
     }
 

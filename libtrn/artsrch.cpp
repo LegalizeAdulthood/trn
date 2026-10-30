@@ -611,7 +611,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 return false;
             }
             // see if it's in the header
-            if (compex->execute(g_head_buf)) // does it match?
+            if (compex->execute(g_parsed_header.head_buf)) // does it match?
             {
                 return true; // say, "Eureka!"
             }
@@ -620,9 +620,9 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
                 return false;
             }
         }
-        if (g_parsed_art == art_num)
+        if (g_parsed_header.parsed_art == art_num)
         {
-            if (!art_open(art_num, g_header_type[PAST_HEADER].min_pos))
+            if (!art_open(art_num, g_parsed_header.positions[PAST_HEADER].min_pos))
             {
                 return false;
             }
@@ -639,7 +639,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
             }
         }
         // loop through each line of the article
-        seek_art_buf(g_header_type[PAST_HEADER].min_pos);
+        seek_art_buf(g_parsed_header.positions[PAST_HEADER].min_pos);
         article_line.reserve(LINE_BUF_LEN);
         while (read_art_buf(article_line, false))
         {

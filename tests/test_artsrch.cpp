@@ -60,8 +60,9 @@ protected:
         m_old_art_size = g_art_size;
         m_old_do_hiding = g_do_hiding;
         m_old_data_source = g_data_source;
-        m_old_parsed_art = g_parsed_art;
+        m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_past_header = g_header_type[PAST_HEADER];
+        m_old_past_header_pos = g_parsed_header.positions[PAST_HEADER];
         m_old_threaded_group = g_threaded_group;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
@@ -127,8 +128,9 @@ protected:
         g_art_size = m_old_art_size;
         g_do_hiding = m_old_do_hiding;
         g_data_source = m_old_data_source;
-        g_parsed_art = m_old_parsed_art;
+        g_parsed_header.parsed_art = m_old_parsed_art;
         g_header_type[PAST_HEADER] = m_old_past_header;
+        g_parsed_header.positions[PAST_HEADER] = m_old_past_header_pos;
         g_threaded_group = m_old_threaded_group;
 
         std::error_code error;
@@ -196,6 +198,7 @@ protected:
     DataSource                   *m_old_data_source{};
     ArticleNum                    m_old_parsed_art{};
     HeaderType                    m_old_past_header{};
+    HeaderPosition                m_old_past_header_pos{};
     bool                          m_old_threaded_group{};
 };
 

@@ -45,7 +45,7 @@ protected:
 void HeaderLineTypeLookupTest::SetUp()
 {
     head_init();
-    g_head_buf.clear();
+    g_parsed_header.head_buf.clear();
     g_header_type[CUSTOM_LINE].name.clear();
     g_header_type[CUSTOM_LINE].length = 0;
 }
@@ -60,10 +60,11 @@ protected:
     void SetUp() override
     {
         std::copy(std::begin(g_header_type), std::end(g_header_type), m_old_header_type.begin());
+        m_old_header_positions = g_parsed_header.positions;
         m_old_article_list = std::move(g_article_list);
         m_old_data_source = g_data_source;
         m_old_last_art = g_last_art;
-        m_old_parsed_art = g_parsed_art;
+        m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_threaded_group = g_threaded_group;
         m_old_art_fp = g_art_fp;
         m_old_open_art = g_open_art;
@@ -84,7 +85,7 @@ protected:
         g_article_list.clear();
         g_data_source = &m_data_source;
         g_last_art = TEST_ARTICLE;
-        g_parsed_art = ArticleNum{};
+        g_parsed_header.parsed_art = ArticleNum{};
         g_threaded_group = false;
 
         Article *article = article_ptr(TEST_ARTICLE);
@@ -104,9 +105,10 @@ protected:
         g_article_list.clear();
         g_article_list = std::move(m_old_article_list);
         std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_type));
+        g_parsed_header.positions = m_old_header_positions;
         g_data_source = m_old_data_source;
         g_last_art = m_old_last_art;
-        g_parsed_art = m_old_parsed_art;
+        g_parsed_header.parsed_art = m_old_parsed_art;
         g_threaded_group = m_old_threaded_group;
         g_art_fp = m_old_art_fp;
         g_open_art = m_old_open_art;
@@ -133,6 +135,7 @@ protected:
     Subject                           m_subject{};
     std::map<ArticleNum, Article>     m_old_article_list;
     std::array<HeaderType, HEAD_LAST> m_old_header_type;
+    std::array<HeaderPosition, HEAD_LAST> m_old_header_positions;
     DataSource                       *m_old_data_source{};
     ArticleNum                        m_old_last_art{};
     ArticleNum                        m_old_parsed_art{};
@@ -190,21 +193,21 @@ TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderNameInLowerCase)
 
 TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderOffsetsIncludingContinuation)
 {
-    g_head_buf = "From: writer@example.test\n"
+    g_parsed_header.head_buf = "From: writer@example.test\n"
                  "X-Strange-Thing: first\n"
                  " continuation\n"
                  "Subject: later\n";
-    const std::string            original_header = g_head_buf;
-    const std::string::size_type custom_start = g_head_buf.find("X-Strange-Thing:");
-    const std::string::size_type custom_end = g_head_buf.find("Subject:");
+    const std::string            original_header = g_parsed_header.head_buf;
+    const std::string::size_type custom_start = g_parsed_header.head_buf.find("X-Strange-Thing:");
+    const std::string::size_type custom_end = g_parsed_header.head_buf.find("Subject:");
     ASSERT_NE(std::string::npos, custom_start);
     ASSERT_NE(std::string::npos, custom_end);
 
     EXPECT_EQ(CUSTOM_LINE, get_header_num("X-Strange-Thing"));
 
-    EXPECT_EQ(ArticlePosition{static_cast<long>(custom_start)}, g_header_type[CUSTOM_LINE].min_pos);
-    EXPECT_EQ(ArticlePosition{static_cast<long>(custom_end)}, g_header_type[CUSTOM_LINE].max_pos);
-    EXPECT_EQ(original_header, g_head_buf);
+    EXPECT_EQ(ArticlePosition{static_cast<long>(custom_start)}, g_parsed_header.positions[CUSTOM_LINE].min_pos);
+    EXPECT_EQ(ArticlePosition{static_cast<long>(custom_end)}, g_parsed_header.positions[CUSTOM_LINE].max_pos);
+    EXPECT_EQ(original_header, g_parsed_header.head_buf);
 }
 
 TEST_F(HeaderParseTest, preservesHeaderOffsetsAcrossBufferGrowth)
@@ -218,8 +221,8 @@ TEST_F(HeaderParseTest, preservesHeaderOffsetsAcrossBufferGrowth)
 
     ASSERT_TRUE(parse_header(TEST_ARTICLE));
 
-    EXPECT_EQ(TEST_ARTICLE, g_parsed_art);
-    EXPECT_EQ('F', g_head_buf.front());
+    EXPECT_EQ(TEST_ARTICLE, g_parsed_header.parsed_art);
+    EXPECT_EQ('F', g_parsed_header.head_buf.front());
     EXPECT_EQ("writer@example.test", fetch_lines(TEST_ARTICLE, FROM_LINE));
     EXPECT_EQ(subject, fetch_lines(TEST_ARTICLE, SUBJ_LINE));
 }

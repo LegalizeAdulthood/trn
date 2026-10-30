@@ -71,11 +71,28 @@ DECLARE_FLAGS_ENUM(HeaderTypeFlags, std::uint8_t);
 struct HeaderType
 {
     std::string     name;    // header line identifier
-    ArticlePosition min_pos; // pointer to beginning of line in article
-    ArticlePosition max_pos; // pointer to end of line in article
     char            length;  // the header's string length
     HeaderTypeFlags flags;   // the header's flags
 };
+
+struct HeaderPosition
+{
+    ArticlePosition min_pos{}; // pointer to beginning of line in article
+    ArticlePosition max_pos{}; // pointer to end of line in article
+};
+
+struct ParsedHeaderContext
+{
+    ArticleNum                            parsed_art{}; // the article number we've parsed
+    HeaderLineType                        in_header{};  // are we decoding the header?
+    std::string                           head_buf;
+    Article                              *parsed_artp{}; // the article ptr we've parsed
+    bool                                  first_one{};   // is this the 1st occurrence of this header line?
+    bool                                  reading_nntp_header{};
+    std::array<HeaderPosition, HEAD_LAST> positions{};
+};
+
+extern ParsedHeaderContext g_parsed_header;
 
 struct UserHeaderType
 {
@@ -89,9 +106,6 @@ extern std::vector<UserHeaderType> g_user_header_type;
 extern std::array<int, 26>         g_user_header_type_index;
 extern int                         g_user_header_type_count;
 extern int                         g_user_header_type_max;
-extern ArticleNum                  g_parsed_art; // the article number we've parsed
-extern HeaderLineType              g_in_header;  // are we decoding the header?
-extern std::string                 g_head_buf;
 
 enum
 {

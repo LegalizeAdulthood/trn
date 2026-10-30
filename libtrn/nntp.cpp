@@ -298,7 +298,8 @@ void nntp_body(ArticleNum art_num)
 #ifdef SET_ARTICLE_TEMP_FILE_PERMISSIONS
     chmod(artname.c_str(), 0600);
 #endif
-    if (nntp_command(fmt::format("{} {}", g_parsed_art == art_num ? "BODY" : "ARTICLE", art_num.value_of())) <= 0)
+    if (nntp_command(
+            fmt::format("{} {}", g_parsed_header.parsed_art == art_num ? "BODY" : "ARTICLE", art_num.value_of())) <= 0)
     {
         finalize(1);
     }
@@ -315,11 +316,11 @@ void nntp_body(ArticleNum art_num)
         return;
     }
     s_body_pos = ArticlePosition{};
-    if (g_parsed_art == art_num)
+    if (g_parsed_header.parsed_art == art_num)
     {
-        std::fwrite(g_head_buf.data(), 1, g_head_buf.size(), g_art_fp);
+        std::fwrite(g_parsed_header.head_buf.data(), 1, g_parsed_header.head_buf.size(), g_art_fp);
         s_body_end = ftell_art();
-        g_header_type[PAST_HEADER].min_pos = s_body_end;
+        g_parsed_header.positions[PAST_HEADER].min_pos = s_body_end;
     }
     else
     {

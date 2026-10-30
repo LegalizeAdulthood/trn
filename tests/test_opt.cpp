@@ -251,6 +251,7 @@ protected:
         for (int i = 0; i < HEAD_LAST; ++i)
         {
             m_old_header_type[static_cast<std::size_t>(i)] = g_header_type[i];
+            m_old_header_positions[static_cast<std::size_t>(i)] = g_parsed_header.positions[i];
         }
         m_old_user_header_type = g_user_header_type;
         m_old_user_header_type_index = g_user_header_type_index;
@@ -267,6 +268,7 @@ protected:
         for (int i = 0; i < HEAD_LAST; ++i)
         {
             g_header_type[i] = m_old_header_type[static_cast<std::size_t>(i)];
+            g_parsed_header.positions[i] = m_old_header_positions[static_cast<std::size_t>(i)];
         }
         g_user_header_type = m_old_user_header_type;
         g_user_header_type_index = m_old_user_header_type_index;
@@ -290,6 +292,7 @@ private:
     }
 
     std::array<HeaderType, HEAD_LAST> m_old_header_type;
+    std::array<HeaderPosition, HEAD_LAST> m_old_header_positions;
     std::array<int, 26>               m_old_user_header_type_index;
     std::vector<UserHeaderType>       m_old_user_header_type;
     int                               m_old_user_header_type_count{};

@@ -1946,7 +1946,7 @@ protected:
 
         m_old_art_fp = g_art_fp;
         m_old_current_path = fs::current_path();
-        m_old_parsed_art = g_parsed_art;
+        m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_nntp_flags = g_nntp_link.flags;
         m_old_pid = g_our_pid;
 
@@ -1963,7 +1963,7 @@ protected:
 
         (void) nntp_art_name(ArticleNum{}, false);
         g_art_fp = nullptr;
-        g_parsed_art = ArticleNum{};
+        g_parsed_header.parsed_art = ArticleNum{};
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
         g_our_pid = 24680;
     }
@@ -1978,7 +1978,7 @@ protected:
         (void) nntp_art_name(ArticleNum{}, false);
 
         g_art_fp = m_old_art_fp;
-        g_parsed_art = m_old_parsed_art;
+        g_parsed_header.parsed_art = m_old_parsed_art;
         g_nntp_link.flags = m_old_nntp_flags;
         g_our_pid = m_old_pid;
         head_final();
@@ -2071,8 +2071,8 @@ TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
 TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)
 {
     const std::string header{"Subject: cached\n\n"};
-    g_head_buf = header;
-    g_parsed_art = ArticleNum{7};
+    g_parsed_header.head_buf = header;
+    g_parsed_header.parsed_art = ArticleNum{7};
 
     EXPECT_CALL(*m_connection, write_line(StrEq("BODY 7"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("222 7 <message@example.test> body follows"));
@@ -2089,7 +2089,7 @@ protected:
 
         m_old_data_source = g_data_source;
         m_old_article_list = std::move(g_article_list);
-        m_old_parsed_art = g_parsed_art;
+        m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_last_art = g_last_art;
         m_old_nntp_flags = g_nntp_link.flags;
 
@@ -2097,7 +2097,7 @@ protected:
         m_data_source.m_flags = DF_REMOTE;
         g_article_list.clear();
         article_ptr(ArticleNum{1})->m_flags = AF_EXISTS;
-        g_parsed_art = ArticleNum{};
+        g_parsed_header.parsed_art = ArticleNum{};
         g_last_art = ArticleNum{1};
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
     }
@@ -2106,7 +2106,7 @@ protected:
     {
         g_nntp_link.flags = m_old_nntp_flags;
         g_last_art = m_old_last_art;
-        g_parsed_art = m_old_parsed_art;
+        g_parsed_header.parsed_art = m_old_parsed_art;
         g_article_list.clear();
         g_article_list = std::move(m_old_article_list);
         g_data_source = m_old_data_source;

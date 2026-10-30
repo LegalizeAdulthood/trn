@@ -63,7 +63,7 @@ protected:
         m_old_art = g_nav.target.num;
         m_old_last_art = g_last_art;
         m_old_in_ng = g_in_ng;
-        m_old_parsed_art = g_parsed_art;
+        m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_term_line = g_term_line;
         m_old_term_col = g_term_col;
         m_old_term_scrolled = g_term_scrolled;
@@ -83,7 +83,7 @@ protected:
         g_nav.target.num = TEST_ARTICLE_NUM;
         g_last_art = TEST_ARTICLE_NUM;
         g_in_ng = true;
-        g_parsed_art = ArticleNum{};
+        g_parsed_header.parsed_art = ArticleNum{};
     }
 
     void TearDown() override
@@ -102,7 +102,7 @@ protected:
         g_nav.target.num = m_old_art;
         g_last_art = m_old_last_art;
         g_in_ng = m_old_in_ng;
-        g_parsed_art = m_old_parsed_art;
+        g_parsed_header.parsed_art = m_old_parsed_art;
         g_term_line = m_old_term_line;
         g_term_col = m_old_term_col;
         g_term_scrolled = m_old_term_scrolled;
@@ -152,8 +152,8 @@ TEST_F(ScoreFileTest, extraHeaderScoringReadsParsedHeaderBuffer)
 {
     sf_append("!header X-Custom-Score:");
     sf_append("!10 X-Custom-Score: magic value");
-    g_parsed_art = TEST_ARTICLE_NUM;
-    g_head_buf = "From: writer@example.test\n"
+    g_parsed_header.parsed_art = TEST_ARTICLE_NUM;
+    g_parsed_header.head_buf = "From: writer@example.test\n"
                  "X-Custom-Score:  Magic Value\n"
                  "Subject: Compact Subject\n"
                  "\n";

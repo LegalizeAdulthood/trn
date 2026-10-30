@@ -258,7 +258,7 @@ void set_art_buf_seek(ArticlePosition pos)
 
 ArticlePosition art_buf_article_pos()
 {
-    return s_art_buf_pos + g_header_type[PAST_HEADER].min_pos;
+    return s_art_buf_pos + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
 ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
@@ -267,7 +267,7 @@ ArticlePosition art_buf_size_from_raw(ArticlePosition raw_art_size)
     {
         return raw_art_size;
     }
-    return raw_art_size - s_art_buf_seek + s_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+    return raw_art_size - s_art_buf_seek + s_art_buf_len + g_parsed_header.positions[PAST_HEADER].min_pos;
 }
 
 std::string_view art_buf_view(ArticlePosition pos)
@@ -276,12 +276,13 @@ std::string_view art_buf_view(ArticlePosition pos)
     {
         return {};
     }
-    if (pos < g_header_type[PAST_HEADER].min_pos)
+    if (pos < g_parsed_header.positions[PAST_HEADER].min_pos)
     {
         const std::size_t offset = static_cast<std::size_t>(pos.value_of());
-        return offset < g_head_buf.size() ? std::string_view{g_head_buf}.substr(offset) : std::string_view{};
+        return offset < g_parsed_header.head_buf.size() ? std::string_view{g_parsed_header.head_buf}.substr(offset)
+                                                        : std::string_view{};
     }
-    const ArticlePosition offset = pos - g_header_type[PAST_HEADER].min_pos;
+    const ArticlePosition offset = pos - g_parsed_header.positions[PAST_HEADER].min_pos;
     if (offset >= s_art_buf_len)
     {
         return {};
@@ -307,7 +308,7 @@ int seek_art_buf(ArticlePosition pos)
         return seek_art(pos);
     }
 
-    pos -= g_header_type[PAST_HEADER].min_pos;
+    pos -= g_parsed_header.positions[PAST_HEADER].min_pos;
     s_art_buf_pos = s_art_buf_len;
 
     while (s_art_buf_pos < pos)
@@ -388,12 +389,13 @@ char *read_art_buf_raw(bool view_inline)
             return nullptr;
         }
         bp = g_art_line.data();
-        const ArticlePosition art_pos = tell_art() - g_header_type[PAST_HEADER].min_pos;
+        const ArticlePosition art_pos = tell_art() - g_parsed_header.positions[PAST_HEADER].min_pos;
         s_art_buf_seek = art_pos;
         s_art_buf_pos = art_pos;
         return bp;
     }
-    if (s_art_buf_pos == g_art_size - g_header_type[PAST_HEADER].min_pos && g_mime_section->m_decoder_pending.empty())
+    if (s_art_buf_pos == g_art_size - g_parsed_header.positions[PAST_HEADER].min_pos &&
+        g_mime_section->m_decoder_pending.empty())
     {
         return nullptr;
     }
@@ -668,7 +670,7 @@ mime_switch:
         if (!mp)
         {
             s_art_buf_len = s_art_buf_pos;
-            g_art_size = s_art_buf_len + g_header_type[PAST_HEADER].min_pos;
+            g_art_size = s_art_buf_len + g_parsed_header.positions[PAST_HEADER].min_pos;
             read_something = 0;
             bp = nullptr;
         }

@@ -78,7 +78,7 @@ private:
     ArticleLocation          m_old_target{g_nav.target};
     ArticleLocation          m_old_current{g_nav.current};
     ArticleLocation          m_old_recent{g_nav.recent};
-    ArticleNum               m_old_parsed_art{g_parsed_art};
+    ArticleNum               m_old_parsed_art{g_parsed_header.parsed_art};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
@@ -128,7 +128,7 @@ void ArticleStateTest::SetUp()
     g_sel.selected_only = false;
     g_selected_count = ArticleUnread{};
     g_sel.mask = AGF_SEL;
-    g_parsed_art = ArticleNum{};
+    g_parsed_header.parsed_art = ArticleNum{};
     g_nav.recent.num = ArticleNum{-1};
     g_nav.recent.art = nullptr;
     g_reread = false;
@@ -153,7 +153,7 @@ void ArticleStateTest::TearDown()
     g_nav.target = m_old_target;
     g_nav.current = m_old_current;
     g_nav.recent = m_old_recent;
-    g_parsed_art = m_old_parsed_art;
+    g_parsed_header.parsed_art = m_old_parsed_art;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
@@ -404,7 +404,7 @@ void ScopeSelectionArticleTest::set_selection_scope(std::initializer_list<Articl
     g_sel.selected_only = g_selected_count != 0;
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_search_ahead = ArticleNum{4};
     g_reread = true;
     g_force_last = true;
@@ -431,7 +431,7 @@ std::string ScopeSelectionArticleTest::change_scope(char action, long target, Ar
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
@@ -523,7 +523,7 @@ void GroupUnreadCancelArticleTest::SetUp()
     g_first_art = ArticleNum{2};
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_reread = true;
     g_force_last = true;
     m_subjects[0].m_flags |= SF_SEL;
@@ -580,7 +580,7 @@ void ThreadKillArticleTest::set_thread(long current)
     g_dm_count = 1;
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_search_ahead = ArticleNum{4};
     g_reread = true;
     g_force_last = true;
@@ -602,7 +602,7 @@ std::string ThreadKillArticleTest::kill_articles(std::string command, ArticleSwi
     EXPECT_EQ(article, g_nav.target);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
@@ -693,7 +693,7 @@ std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult 
     EXPECT_EQ(follow, g_sa_follow);
     EXPECT_EQ(temporary_follow, g_s_follow_temp);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_EQ(10, g_check_count);
     EXPECT_EQ(3, g_selected_subj_cnt);
@@ -750,7 +750,7 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
-    const ArticleNum    parsed = g_parsed_art;
+    const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const ArticleNum    search_ahead = g_search_ahead;
     const bool                             selected_only = g_sel.selected_only;
     const bool          threaded = g_threaded_group;
@@ -774,7 +774,7 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
     EXPECT_EQ(selected_only, g_sel.selected_only);
     EXPECT_EQ(threaded, g_threaded_group);
@@ -895,7 +895,7 @@ void CatchupArticleTest::set_catchup_articles(long current)
     g_sel.mode = SM_THREAD;
     g_nav.recent.num = ArticleNum{2};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_search_ahead = ArticleNum{4};
     g_reread = true;
     g_force_last = true;
@@ -932,7 +932,7 @@ std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchRe
     EXPECT_EQ(breadth_first, g_breadth_first);
     EXPECT_EQ(scan, g_sa_in);
     EXPECT_EQ(SM_THREAD, g_sel.mode);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_EQ(10, g_check_count);
@@ -1055,7 +1055,7 @@ void NumericJumpArticleTest::SetUp()
     g_selected_subj_cnt = 1;
     g_nav.recent.num = ArticleNum{7};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{4};
+    g_parsed_header.parsed_art = ArticleNum{4};
     g_search_ahead = ArticleNum{3};
 }
 
@@ -1083,7 +1083,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     const std::vector<Article *>                     order = g_art_ptr_list;
     Article **const                                  cursor = g_art_ptr;
     const ArticleNum                                 first = g_first_art;
-    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
     const SubjectFlags                               subject_flags = g_first_subject->m_flags;
@@ -1111,7 +1111,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(subject_flags, g_first_subject->m_flags);
@@ -1206,7 +1206,7 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
-    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const bool reread = g_reread;
     m_before_flags.clear();
     for (const auto &[number, entry] : g_article_list)
@@ -1231,7 +1231,7 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
     EXPECT_TRUE(g_force_last);
@@ -1429,7 +1429,7 @@ std::string UnsubscribeArticleTest::unsubscribe()
     EXPECT_EQ(scan, g_sa_in);
     EXPECT_EQ(follow, g_sa_follow);
     EXPECT_EQ(temporary_follow, g_s_follow_temp);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_EQ(SM_THREAD, g_sel.mode);
     EXPECT_TRUE(g_reread);
@@ -1636,7 +1636,7 @@ void QuitCommandArticleTest::SetUp()
     g_first_subject->m_flags |= SF_SEL;
     g_nav.recent.num = ArticleNum{1};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{2};
+    g_parsed_header.parsed_art = ArticleNum{2};
     g_search_ahead = ArticleNum{2};
     g_reread = true;
     g_force_last = true;
@@ -1672,7 +1672,7 @@ void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupRe
     EXPECT_TRUE(g_sel.selected_only);
     EXPECT_EQ(SF_SEL | SF_VISIT, g_first_subject->m_flags);
     EXPECT_EQ(ArticleNum{1}, g_first_art);
-    EXPECT_EQ(ArticleNum{2}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{2}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{2}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
@@ -1839,7 +1839,7 @@ void ScanContinuationArticleTest::set_scan_articles(std::initializer_list<Articl
     g_sel.mode = mode;
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_find(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     for (const auto &[number, article] : g_article_list)
     {
         if (article.m_flags & AF_SEL)
@@ -1859,7 +1859,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     const ArticleLocation                            current = g_nav.current;
     const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
-    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
     const int                                        selected_subjects = g_selected_subj_cnt;
@@ -1896,7 +1896,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -2037,6 +2037,7 @@ private:
     DataSource            m_data_source{};
     DataSource           *m_old_data_source{g_data_source};
     HeaderType            m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderPosition        m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
     std::string           m_old_last_pat{g_last_pat};
     ArtScope              m_old_art_how_much{g_art_how_much};
     HeaderLineType        m_old_art_srch_hdr{g_art_srch_hdr};
@@ -2084,6 +2085,7 @@ void SearchCommandArticleTest::TearDown()
     }
     g_data_source = m_old_data_source;
     g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
     g_last_pat = m_old_last_pat;
     g_art_how_much = m_old_art_how_much;
     g_art_srch_hdr = m_old_art_srch_hdr;
@@ -2147,7 +2149,7 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     const ArticleLocation                            current = g_nav.current;
     const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
-    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
     const int                                        selected_subjects = g_selected_subj_cnt;
@@ -2173,7 +2175,7 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -2347,7 +2349,7 @@ void SearchActionArticleTest::set_action_articles(long current)
     m_subjects[2].m_flags |= SF_SEL;
     g_selected_subj_cnt = 3;
     g_sel.selected_only = true;
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
 }
 
 std::string SearchActionArticleTest::perform_search(std::string_view command, ArticleSwitchResult expected,
@@ -2355,7 +2357,7 @@ std::string SearchActionArticleTest::perform_search(std::string_view command, Ar
 {
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       parsed = g_parsed_header.parsed_art;
     push_char('q');
     push_char('\n');
     const std::string_view input = command.substr(1);
@@ -2372,7 +2374,7 @@ std::string SearchActionArticleTest::perform_search(std::string_view command, Ar
     EXPECT_EQ(expected, result);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
@@ -2477,7 +2479,7 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     const ArticleLocation                            current = g_nav.current;
     const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
-    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
     const int                                        selected_subjects = g_selected_subj_cnt;
@@ -2506,7 +2508,7 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -2744,7 +2746,7 @@ void BulkSelectionArticleTest::SetUp()
     g_sel.mode = SM_THREAD;
     g_nav.recent.num = ArticleNum{2};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_search_ahead = ArticleNum{4};
     g_reread = true;
     g_force_last = true;
@@ -2783,7 +2785,7 @@ std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, Article
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(cursor, g_art_ptr);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
@@ -2920,8 +2922,10 @@ private:
     int                m_old_change_thread_count{g_kf_change_thread_cnt};
     bool               m_old_kill_thru_kludge{g_kill_thru_kludge};
     HeaderType         m_old_from_header{g_header_type[FROM_LINE]};
+    HeaderPosition     m_old_from_header_pos{g_parsed_header.positions[FROM_LINE]};
     HeaderType         m_old_reply_header{g_header_type[REPLY_LINE]};
-    std::string        m_old_head_buf{g_head_buf};
+    HeaderPosition     m_old_reply_header_pos{g_parsed_header.positions[REPLY_LINE]};
+    std::string        m_old_head_buf{g_parsed_header.head_buf};
     std::string_view   m_old_tc_ce{g_tc_CE};
     std::string_view   m_old_tc_cr{g_tc_CR};
 };
@@ -2954,8 +2958,10 @@ void MemorizeArticleTest::TearDown()
     g_kf_change_thread_cnt = m_old_change_thread_count;
     g_kill_thru_kludge = m_old_kill_thru_kludge;
     g_header_type[FROM_LINE] = m_old_from_header;
+    g_parsed_header.positions[FROM_LINE] = m_old_from_header_pos;
     g_header_type[REPLY_LINE] = m_old_reply_header;
-    g_head_buf = m_old_head_buf;
+    g_parsed_header.positions[REPLY_LINE] = m_old_reply_header_pos;
+    g_parsed_header.head_buf = m_old_head_buf;
     g_tc_CE = m_old_tc_ce;
     g_tc_CR = m_old_tc_cr;
     std::error_code error;
@@ -3057,7 +3063,7 @@ void InterruptedSearchArticleTest::SetUp()
     g_selected_subj_cnt = 2;
     m_subjects[0].m_flags |= SF_SEL;
     m_subjects[2].m_flags |= SF_SEL;
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_verbose = std::get<1>(GetParam());
     g_search_ahead = ArticleNum{4};
     const char direction = std::get<0>(GetParam());
@@ -3101,7 +3107,7 @@ void SortedArticleNavigationTest::set_order(std::initializer_list<long> order)
     g_art_ptr = nullptr;
     g_nav.recent.num = g_last_art;
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
     g_reread = true;
     g_force_last = true;
 }
@@ -3134,7 +3140,7 @@ std::string SortedArticleNavigationTest::expect_previous(char command, long numb
     g_force_last = false;
     if (command == 'p' && result == AS_NORM)
     {
-        g_parsed_art = ArticleNum{number};
+        g_parsed_header.parsed_art = ArticleNum{number};
     }
     return expect_navigation(command, number, index, result);
 }
@@ -3148,7 +3154,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     const ArticleUnread                    unread = m_newsgroup.m_to_read;
     const ArticleUnread                    selected = g_selected_count;
     const ArticleNum                       first = g_first_art;
-    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const ArticleNum                       search_ahead = g_search_ahead;
     const SubjectFlags                     subject_flags = g_first_subject->m_flags;
     const bool                             selected_only = g_sel.selected_only;
@@ -3175,7 +3181,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(subject_flags, g_first_subject->m_flags);
     EXPECT_EQ(selected_only, g_sel.selected_only);
     const bool explicit_reread =
@@ -3241,7 +3247,7 @@ void SortedPreviousBoundaryArticleNavigationTest::SetUp()
     set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 2);
     set_order({2, 4, 1, 3});
     g_sel.selected_only = true;
-    g_parsed_art = ArticleNum{2};
+    g_parsed_header.parsed_art = ArticleNum{2};
     g_search_ahead = ArticleNum{2};
     m_line = g_term_line;
 }
@@ -3364,7 +3370,7 @@ void BranchingArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, l
     g_mode = MM_ARTICLE;
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
     g_first_subject = &m_subjects[0];
     g_last_subject = &m_subjects[1];
     struct ArticleLinks
@@ -3421,7 +3427,7 @@ std::string ArticleTraversalTest::expect_previous(char command, long number, std
 {
     if (command == 'p' && result == AS_NORM)
     {
-        g_parsed_art = ArticleNum{number};
+        g_parsed_header.parsed_art = ArticleNum{number};
     }
     return expect_navigation(command, number, missing, result);
 }
@@ -3432,7 +3438,7 @@ std::string ArticleTraversalTest::expect_navigation(char command, long number, s
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
     const ArticleNum                       first = g_first_art;
-    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const ArticleNum                       search_ahead = g_search_ahead;
     const SelectionMode                    selection_mode = g_sel.mode;
     const int     selected_subjects = g_selected_subj_cnt;
@@ -3489,7 +3495,7 @@ std::string ArticleTraversalTest::expect_navigation(char command, long number, s
         EXPECT_EQ(subject_flags[index], m_subjects[index].m_flags);
     }
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ((command == 'N' || command == 'P') && number <= 12 && result == AS_NORM, g_reread);
     EXPECT_EQ(command == 'N' && number > 12, g_force_last);
     EXPECT_EQ(result == AS_CLEAN || (command == 'P' && result == AS_ASK) ? search_ahead : ArticleNum{}, g_search_ahead);
@@ -3921,7 +3927,7 @@ void DirectNavigationArticleTest::SetUp()
     g_sel.selected_only = true;
     g_nav.recent.num = ArticleNum{7};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{4};
+    g_parsed_header.parsed_art = ArticleNum{4};
     g_search_ahead = ArticleNum{3};
     g_erase_char = '\b';
     g_kill_char = Ctl('U');
@@ -3973,7 +3979,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     const std::vector<Article *>                     order = g_art_ptr_list;
     Article **const                                  cursor = g_art_ptr;
     const ArticleNum                                 first = g_first_art;
-    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
     const int                                        selected_subjects = g_selected_subj_cnt;
@@ -4012,7 +4018,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     EXPECT_EQ(order, g_art_ptr_list);
     EXPECT_EQ(order_index < 0 ? cursor : article_ptr_list_begin() + order_index, g_art_ptr);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
@@ -4141,7 +4147,7 @@ void SubjectOrderPreviousArticleTest::set_subjects(std::initializer_list<Article
     g_mode = MM_ARTICLE;
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
     g_first_subject = &m_subjects[0];
     g_last_subject = &m_subjects[2];
     g_selected_count = ArticleUnread{};
@@ -4405,7 +4411,7 @@ void EarliestUnreadArticleTest::SetUp()
     g_first_art = ArticleNum{earlier_unread ? 2L : 4L};
     g_nav.recent.num = ArticleNum{1};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{4};
+    g_parsed_header.parsed_art = ArticleNum{4};
     g_search_ahead = ArticleNum{3};
 }
 
@@ -4619,7 +4625,7 @@ void SelectedPreviousSubjectThreadArticleStateTest::set_selected_subjects(std::i
     g_selected_subj_cnt = 0;
     g_nav.recent.num = ArticleNum{1};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{2};
+    g_parsed_header.parsed_art = ArticleNum{2};
     g_search_ahead = ArticleNum{3};
     for (long index = 0; index < static_cast<long>(flags.size() / 2); ++index)
     {
@@ -4660,7 +4666,7 @@ void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char comma
     const ArticleLocation                   current = g_nav.current;
     const ArticleLocation                   recent = g_nav.recent;
     const ArticleNum                        first = g_first_art;
-    const ArticleNum                        parsed = g_parsed_art;
+    const ArticleNum                        parsed = g_parsed_header.parsed_art;
     const ArticleNum                        search_ahead = g_search_ahead;
     const int                               selected_subjects = g_selected_subj_cnt;
     const std::pair<GeneralMode, MinorMode> mode = std::make_pair(g_general_mode, g_mode);
@@ -4710,7 +4716,7 @@ void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char comma
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
     EXPECT_EQ(mode, std::make_pair(g_general_mode, g_mode));
     EXPECT_EQ(terminal, std::make_pair(g_term_line, g_term_col));
@@ -5039,7 +5045,7 @@ void RereadArticleTest::set_reading_position(long current)
     g_sel.selected_only = true;
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
     g_search_ahead = ArticleNum{6};
     g_general_mode = GM_READ;
     g_mode = current <= g_last_art.value_of() ? MM_ARTICLE : MM_ARTICLE_END;
@@ -5056,7 +5062,7 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
     const ArticleNum                       first = g_first_art;
-    const ArticleNum                       parsed = g_parsed_art;
+    const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const ArticleNum                       search_ahead = g_search_ahead;
     const MinorMode                        mode = g_mode;
     std::vector<SubjectFlags>              subject_flags;
@@ -5079,7 +5085,7 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(mode, g_mode);
@@ -5196,6 +5202,7 @@ private:
     ArticlePosition       m_old_raw_art_size{g_raw_art_size};
     ArticlePosition       m_old_art_size{g_art_size};
     HeaderType            m_old_past_header{g_header_type[PAST_HEADER]};
+    HeaderPosition        m_old_past_header_pos{g_parsed_header.positions[PAST_HEADER]};
     int                   m_old_tc_cols{g_tc_COLS};
     int                   m_old_word_wrap_offset{g_word_wrap_offset};
     char                  m_old_subst{current_char_subst_mode()};
@@ -5212,7 +5219,7 @@ void CachedDisplayArticleTest::SetUp()
     g_mime_section = &m_section;
     g_mime_state = TEXT_MIME;
     g_is_mime = true;
-    g_header_type[PAST_HEADER].min_pos = ArticlePosition{};
+    g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{};
     g_tc_COLS = 80;
     g_word_wrap_offset = 8;
     g_charsets = "pa";
@@ -5263,6 +5270,7 @@ void CachedDisplayArticleTest::TearDown()
     g_raw_art_size = m_old_raw_art_size;
     g_art_size = m_old_art_size;
     g_header_type[PAST_HEADER] = m_old_past_header;
+    g_parsed_header.positions[PAST_HEADER] = m_old_past_header_pos;
     g_tc_COLS = m_old_tc_cols;
     g_word_wrap_offset = m_old_word_wrap_offset;
     g_charsets = m_old_charsets;
@@ -5489,7 +5497,7 @@ private:
     DataSource                                               m_remote_source{};
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
     NNTPLink                                                 m_old_nntp_link{g_nntp_link};
-    std::string                                              m_old_head_buf{g_head_buf};
+    std::string                                              m_old_head_buf{g_parsed_header.head_buf};
     std::string                                              m_old_ser_line{g_ser_line};
     std::string                                              m_old_last_command{g_last_command};
     std::filesystem::path                                    m_old_current_path{std::filesystem::current_path()};
@@ -5513,7 +5521,7 @@ void DownloadEndArticleTest::SetUp()
     std::filesystem::current_path(output_dir(), error);
     ASSERT_FALSE(error) << error.message();
     ASSERT_NO_FATAL_FAILURE(start_download());
-    m_header_end = g_header_type[PAST_HEADER].min_pos;
+    m_header_end = g_parsed_header.positions[PAST_HEADER].min_pos;
     m_position = m_header_end + ArticlePosition{g_do_hiding ? 3 : 2};
     m_end = m_header_end + ArticlePosition{g_do_hiding ? 8 : 7};
 }
@@ -5529,7 +5537,7 @@ void DownloadEndArticleTest::TearDown()
     (void) nntp_art_name(ArticleNum{}, false);
     nntp_gets_clear_buffer();
     g_nntp_link = std::move(m_old_nntp_link);
-    g_head_buf = m_old_head_buf;
+    g_parsed_header.head_buf = m_old_head_buf;
     g_ser_line = m_old_ser_line;
     g_last_command = m_old_last_command;
     g_tc_CE = m_old_tc_ce;
@@ -5545,8 +5553,8 @@ void DownloadEndArticleTest::start_download()
     g_do_hiding = GetParam();
     std::fclose(g_art_fp);
     g_art_fp = nullptr;
-    g_parsed_art = g_nav.target.num;
-    g_head_buf = "Subject: end\n\n";
+    g_parsed_header.parsed_art = g_nav.target.num;
+    g_parsed_header.head_buf = "Subject: end\n\n";
     EXPECT_CALL(*m_connection, write_line(testing::StrEq("BODY 4"), testing::_));
     EXPECT_CALL(*m_connection, read_line(testing::_))
         .WillOnce(testing::Return("222 4 <end@example.test> body follows"))
@@ -5554,8 +5562,8 @@ void DownloadEndArticleTest::start_download()
     nntp_body(g_nav.target.num);
     ASSERT_NE(nullptr, g_art_fp);
     m_download_file = output_dir() / nntp_art_name(g_nav.target.num, false);
-    ASSERT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
-    set_art_buf_seek(g_header_type[PAST_HEADER].min_pos);
+    ASSERT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
+    set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
     g_raw_art_size = g_art_size = ArticlePosition{-1};
     read_prefix(g_do_hiding ? "\xC3\x84\n" : "\xC4\n");
     ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
@@ -5591,6 +5599,7 @@ private:
     DataSource                 m_data_source{};
     DataSource                *m_old_data_source{g_data_source};
     HeaderType                 m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderPosition             m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
     std::optional<std::string> m_old_subj_line{g_subj_line};
     char                       m_old_int_count{g_int_count};
     int                        m_old_page_line{g_page_line};
@@ -5625,6 +5634,7 @@ void SubjectListingArticleTest::TearDown()
 {
     g_data_source = m_old_data_source;
     g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
     g_subj_line = m_old_subj_line;
     g_int_count = m_old_int_count;
     g_page_line = m_old_page_line;
@@ -5641,7 +5651,7 @@ void SubjectListingArticleTest::TearDown()
 void SubjectListingArticleTest::set_listing_articles(long current)
 {
     set_reading_position(current);
-    g_parsed_art = ArticleNum{};
+    g_parsed_header.parsed_art = ArticleNum{};
     m_subjects[0].m_str = "Re: First topic";
     m_subjects[1].m_str = "Re: Middle topic";
     m_subjects[2].m_str = "Re: Last topic";
@@ -5653,7 +5663,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     const ArticleLocation                            current = g_nav.current;
     const ArticleLocation                            recent = g_nav.recent;
     const ArticleNum                                 first = g_first_art;
-    const ArticleNum                                 parsed = g_parsed_art;
+    const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleNum                                 search_ahead = g_search_ahead;
     const ArticlePosition                            position = g_art_pos;
     const MinorMode                                  mode = g_mode;
@@ -5688,7 +5698,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
-    EXPECT_EQ(parsed, g_parsed_art);
+    EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
     EXPECT_EQ(position, g_art_pos);
     EXPECT_EQ(GM_READ, g_general_mode);
@@ -5929,7 +5939,7 @@ TEST_P(SelectorGroupExitArticleTest, leavesForTheRequestedGroupDestinationWithou
     g_first_subject->m_flags |= SF_SEL;
     g_nav.recent.num = ArticleNum{2};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{2};
+    g_parsed_header.parsed_art = ArticleNum{2};
     g_search_ahead = ArticleNum{2};
     g_reread = true;
     g_force_last = true;
@@ -5946,7 +5956,7 @@ TEST_P(SelectorGroupExitArticleTest, leavesForTheRequestedGroupDestinationWithou
     EXPECT_EQ(SF_SEL | SF_VISIT, g_first_subject->m_flags);
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleNum{1}, g_first_art);
-    EXPECT_EQ(ArticleNum{2}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{2}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{2}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
@@ -6087,7 +6097,7 @@ TEST_F(AlternateSelectorArticleTest, completedShortcutCancellationPreservesReadi
     g_first_subject->m_flags |= SF_SEL;
     g_nav.recent.num = ArticleNum{1};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{2};
+    g_parsed_header.parsed_art = ArticleNum{2};
     g_search_ahead = ArticleNum{3};
     g_reread = true;
     g_force_last = true;
@@ -6098,7 +6108,7 @@ TEST_F(AlternateSelectorArticleTest, completedShortcutCancellationPreservesReadi
     EXPECT_EQ(ArticleNum{2}, g_nav.target.num);
     EXPECT_EQ(article_ptr(ArticleNum{2}), g_nav.target.art);
     EXPECT_EQ(ArticleNum{2}, g_first_art);
-    EXPECT_EQ(ArticleNum{2}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{2}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{3}, g_search_ahead);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
@@ -6945,11 +6955,11 @@ TEST_F(MemorizeArticleTest, articleCommaAlsoKillsUnreadRepliesWhenTheCurrentArti
 
 TEST_F(MemorizeArticleTest, authorAndGlobalTogglesSaveAnAuthorRuleAndApplyItAcrossSubjects)
 {
-    g_parsed_art = g_nav.target.num;
-    g_head_buf = "From: reader@example.org\n";
-    g_header_type[FROM_LINE].min_pos = ArticlePosition{0};
-    g_header_type[FROM_LINE].max_pos = ArticlePosition{static_cast<long>(g_head_buf.size())};
-    g_header_type[REPLY_LINE].min_pos = ArticlePosition{-1};
+    g_parsed_header.parsed_art = g_nav.target.num;
+    g_parsed_header.head_buf = "From: reader@example.org\n";
+    g_parsed_header.positions[FROM_LINE].min_pos = ArticlePosition{0};
+    g_parsed_header.positions[FROM_LINE].max_pos = ArticlePosition{static_cast<long>(g_parsed_header.head_buf.size())};
+    g_parsed_header.positions[REPLY_LINE].min_pos = ArticlePosition{-1};
 
     const std::string output = memorize('A', "fgJ", AS_NORM);
     SCOPED_TRACE(output);
@@ -9269,7 +9279,7 @@ TEST_F(SortedArticleNavigationTest, previousUnreadFromAnAllReadGroupPreservesThe
 TEST_P(PreviousUnreadArticleTest, skipsReadAndMissingArticles)
 {
     set_articles({AF_EXISTS | AF_UNREAD, AF_UNREAD, AF_EXISTS, AF_EXISTS}, 4);
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
 
     EXPECT_EQ(AS_NORM, art_switch("p"));
 
@@ -9287,7 +9297,7 @@ TEST_P(PreviousUnreadArticleTest, skipsUnselectedUnreadArticlesInSelectedOnlyMod
 {
     set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS}, 3);
     g_sel.selected_only = true;
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
 
     EXPECT_EQ(AS_NORM, art_switch("p"));
 
@@ -9304,7 +9314,7 @@ TEST_P(PreviousUnreadArticleTest, skipsUnselectedUnreadArticlesInSelectedOnlyMod
 TEST_P(PreviousUnreadArticleTest, findsLastUnreadArticleFromEndOfGroup)
 {
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS}, 4);
-    g_parsed_art = ArticleNum{2};
+    g_parsed_header.parsed_art = ArticleNum{2};
 
     EXPECT_EQ(AS_NORM, art_switch("p"));
 
@@ -10302,7 +10312,7 @@ TEST_P(EarliestUnreadArticleTest, markingUnreadPreservesSelectionsAndKeepsTheEar
         EXPECT_EQ(g_nav.target.art, g_nav.current.art);
         EXPECT_EQ(ArticleNum{1}, g_nav.recent.num);
         EXPECT_EQ(article_ptr(ArticleNum{1}), g_nav.recent.art);
-        EXPECT_EQ(ArticleNum{4}, g_parsed_art);
+        EXPECT_EQ(ArticleNum{4}, g_parsed_header.parsed_art);
         EXPECT_EQ(ArticleNum{3}, g_search_ahead);
         EXPECT_EQ(AF_EXISTS, article_ptr(ArticleNum{1})->m_flags);
         EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_ptr(ArticleNum{2})->m_flags);
@@ -10366,7 +10376,7 @@ TEST_P(ReadStateArticleTest, delaysAnAlreadyReadArticleWithoutChangingUnreadOrSe
     g_first_art = ArticleNum{3};
     g_nav.recent.num = ArticleNum{4};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
-    g_parsed_art = ArticleNum{3};
+    g_parsed_header.parsed_art = ArticleNum{3};
     g_search_ahead = ArticleNum{4};
     g_dm_count = 1;
     for (int attempt = 1; attempt <= 2; ++attempt)
@@ -10387,7 +10397,7 @@ TEST_P(ReadStateArticleTest, delaysAnAlreadyReadArticleWithoutChangingUnreadOrSe
         EXPECT_EQ(g_nav.target.art, g_nav.current.art);
         EXPECT_EQ(ArticleNum{4}, g_nav.recent.num);
         EXPECT_EQ(article_ptr(ArticleNum{4}), g_nav.recent.art);
-        EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+        EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
         EXPECT_EQ(ArticleNum{4}, g_search_ahead);
         EXPECT_EQ(AF_EXISTS | AF_YANK_BACK, article_ptr(ArticleNum{1})->m_flags);
         EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, article_ptr(ArticleNum{3})->m_flags);
@@ -10769,7 +10779,7 @@ TEST_P(GroupUnreadCancelArticleTest, cancellationPreservesArticleStateAndCounts)
     EXPECT_EQ(article_ptr(g_nav.current.num), g_nav.current.art);
     EXPECT_EQ(ArticleNum{6}, g_nav.recent.num);
     EXPECT_EQ(article_ptr(g_nav.recent.num), g_nav.recent.art);
-    EXPECT_EQ(ArticleNum{3}, g_parsed_art);
+    EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_force_last);
     EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[0].m_flags);
@@ -12489,7 +12499,7 @@ TEST_F(JumpToEndArticleTest, decodesTheRemainingMimeTextAndRestoresTheHeaderRela
     const ArticlePosition header_end{static_cast<long>(header.size())};
     set_article_text(header + "First\n=4C=61=73=74\n");
     g_mime_section->m_encoding = MENCODE_QPRINT;
-    g_header_type[PAST_HEADER].min_pos = header_end;
+    g_parsed_header.positions[PAST_HEADER].min_pos = header_end;
     ASSERT_EQ(0, seek_art(header_end));
     set_art_buf_seek(header_end);
     ASSERT_NO_FATAL_FAILURE(read_prefix("First\n"));
@@ -12685,8 +12695,8 @@ TEST_F(SubjectListingArticleTest, aMissingUnreadArticleDoesNotProduceAStaleCache
 TEST_F(SubjectListingArticleTest, anArticleWithoutASubjectIsSkippedWhileLaterSubjectsAreListed)
 {
     set_listing_articles();
-    g_parsed_art = ArticleNum{4};
-    g_header_type[SUBJ_LINE].min_pos = ArticlePosition{-1};
+    g_parsed_header.parsed_art = ArticleNum{4};
+    g_parsed_header.positions[SUBJ_LINE].min_pos = ArticlePosition{-1};
 
     const std::string output = list_subjects();
 

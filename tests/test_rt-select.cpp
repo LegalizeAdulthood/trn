@@ -138,7 +138,7 @@ private:
     ArticleNum               m_old_last_art{g_last_art};
     ArticleNum               m_old_first_cached{g_first_cached};
     ArticleNum               m_old_last_cached{g_last_cached};
-    ArticleNum               m_old_parsed_art{g_parsed_art};
+    ArticleNum               m_old_parsed_art{g_parsed_header.parsed_art};
     ArticleNum               m_old_obj_count{g_obj_count};
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
@@ -244,7 +244,7 @@ void ArticleSelectorCommandTest::TearDown()
     g_last_art = m_old_last_art;
     g_first_cached = m_old_first_cached;
     g_last_cached = m_old_last_cached;
-    g_parsed_art = m_old_parsed_art;
+    g_parsed_header.parsed_art = m_old_parsed_art;
     g_obj_count = m_old_obj_count;
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
@@ -5458,7 +5458,9 @@ protected:
 
 private:
     HeaderType     m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderPosition m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
     HeaderType     m_old_from_header{g_header_type[FROM_LINE]};
+    HeaderPosition m_old_from_header_pos{g_parsed_header.positions[FROM_LINE]};
     std::string    m_old_pattern{g_last_pat};
     CompiledRegex  m_old_regex{*g_bra_compex};
     ArtScope       m_old_scope{g_art_how_much};
@@ -5474,7 +5476,7 @@ void ArticleSelectorSearchStateTest::SetUp()
     ArticleSelectorInlineStateTest::SetUp();
     g_header_type[SUBJ_LINE].flags |= HT_CACHED;
     g_header_type[FROM_LINE].flags |= HT_CACHED;
-    g_parsed_art = ArticleNum{};
+    g_parsed_header.parsed_art = ArticleNum{};
     g_last_pat.clear();
     g_art_how_much = ARTSCOPE_SUBJECT;
     g_art_srch_hdr = SOME_LINE;
@@ -5488,7 +5490,9 @@ void ArticleSelectorSearchStateTest::SetUp()
 void ArticleSelectorSearchStateTest::TearDown()
 {
     g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
     g_header_type[FROM_LINE] = m_old_from_header;
+    g_parsed_header.positions[FROM_LINE] = m_old_from_header_pos;
     g_last_pat = m_old_pattern;
     *g_bra_compex = m_old_regex;
     g_art_how_much = m_old_scope;
@@ -5763,7 +5767,7 @@ TEST_P(ArticleSelectorModeTest, retainsUnreadModeWhenReadArticleCachingIsInterru
     prepare_page(GetParam(), false);
     g_cached_all_in_range = false;
     // The current header is already parsed; interrupt the remaining cache work.
-    g_parsed_art = ArticleNum{1};
+    g_parsed_header.parsed_art = ArticleNum{1};
     article_ptr(ArticleNum{1})->m_flags &= ~(AF_CACHED | AF_THREADED);
     g_int_count = 1;
 

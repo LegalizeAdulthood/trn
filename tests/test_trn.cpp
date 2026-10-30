@@ -230,9 +230,9 @@ protected:
         m_old_univ_follow = g_univ_follow;
         m_old_univ_follow_temp = g_univ_follow_temp;
         m_old_s_follow_temp = g_s_follow_temp;
-        m_old_parsed_art = g_parsed_art;
-        m_old_head_buf = g_head_buf;
-        m_old_in_header = g_in_header;
+        m_old_parsed_art = g_parsed_header.parsed_art;
+        m_old_head_buf = g_parsed_header.head_buf;
+        m_old_in_header = g_parsed_header.in_header;
         m_old_art_pos = g_art_pos;
         m_old_art_line_num = g_art_line_num;
         m_old_art_fp = g_art_fp;
@@ -243,6 +243,7 @@ protected:
         m_old_tmp_dir = g_tmp_dir;
         m_old_current_path = fs::current_path();
         std::copy(std::begin(g_header_type), std::end(g_header_type), m_old_header_type.begin());
+        m_old_header_positions = g_parsed_header.positions;
         m_old_errno = errno;
         m_old_erase_char = g_erase_char;
         m_old_kill_char = g_kill_char;
@@ -339,9 +340,9 @@ protected:
         g_univ_follow = false;
         g_univ_follow_temp = false;
         g_s_follow_temp = false;
-        g_parsed_art = ArticleNum{};
-        g_head_buf.clear();
-        g_in_header = HEAD_FIRST;
+        g_parsed_header.parsed_art = ArticleNum{};
+        g_parsed_header.head_buf.clear();
+        g_parsed_header.in_header = HEAD_FIRST;
         g_art_pos = ArticlePosition{};
         g_art_line_num = ArticleLine{};
         g_art_fp = nullptr;
@@ -467,9 +468,9 @@ protected:
         g_univ_follow = m_old_univ_follow;
         g_univ_follow_temp = m_old_univ_follow_temp;
         g_s_follow_temp = m_old_s_follow_temp;
-        g_parsed_art = m_old_parsed_art;
-        g_head_buf = std::move(m_old_head_buf);
-        g_in_header = m_old_in_header;
+        g_parsed_header.parsed_art = m_old_parsed_art;
+        g_parsed_header.head_buf = std::move(m_old_head_buf);
+        g_parsed_header.in_header = m_old_in_header;
         g_art_pos = m_old_art_pos;
         g_art_line_num = m_old_art_line_num;
         g_art_fp = m_old_art_fp;
@@ -479,6 +480,7 @@ protected:
         g_our_pid = m_old_our_pid;
         g_tmp_dir = m_old_tmp_dir;
         std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_type));
+        g_parsed_header.positions = m_old_header_positions;
         errno = m_old_errno;
         g_erase_char = m_old_erase_char;
         g_kill_char = m_old_kill_char;
@@ -654,6 +656,7 @@ protected:
     long                              m_old_our_pid{};
     fs::path                          m_old_current_path;
     std::array<HeaderType, HEAD_LAST> m_old_header_type;
+    std::array<HeaderPosition, HEAD_LAST> m_old_header_positions;
     int                               m_old_errno{};
     char                              m_old_erase_char{};
     char                              m_old_kill_char{};
@@ -2289,7 +2292,7 @@ void LocalSpoolArticleTest::open_group(bool cache_all)
     g_nav.recent.num = ArticleNum{2};
     g_nav.recent.art = article_ptr(g_nav.recent.num);
     ASSERT_TRUE(parse_header(g_nav.current.num));
-    ASSERT_NE(nullptr, art_open(g_nav.current.num, g_header_type[PAST_HEADER].min_pos));
+    ASSERT_NE(nullptr, art_open(g_nav.current.num, g_parsed_header.positions[PAST_HEADER].min_pos));
     std::string line;
     ASSERT_TRUE(read_art(line));
     ASSERT_EQ("Root first line\n", line);
@@ -3444,7 +3447,7 @@ void NewsgroupEndReadingStateTest::SetUp()
         else if (g_mode == MM_PAGER)
         {
             EXPECT_EQ(GM_READ, g_general_mode);
-            EXPECT_EQ(g_nav.target.num, g_parsed_art);
+            EXPECT_EQ(g_nav.target.num, g_parsed_header.parsed_art);
             EXPECT_EQ(g_nav.target.num, g_open_art);
         }
         else
@@ -6126,7 +6129,7 @@ void NewsgroupPagerReadingTest::SetUp()
         m_states.push_back({g_mode, g_nav.target.num, was_read(g_nav.target.num), g_newsgroup_ptr->m_to_read});
         if (g_mode == MM_PAGER)
         {
-            EXPECT_EQ(g_nav.target.num, g_parsed_art);
+            EXPECT_EQ(g_nav.target.num, g_parsed_header.parsed_art);
             EXPECT_EQ(g_nav.target.num, g_open_art);
         }
         if (m_input_pos == m_commands.size())
@@ -8149,8 +8152,8 @@ std::string OnDemandThreadArticleTest::display_tree()
     const ArticleLocation                  recent = g_nav.recent;
     const ArticlePosition                  position = g_art_pos;
     const ArticlePosition                  file_position = tell_art();
-    const ArticlePosition                  header_end = g_header_type[PAST_HEADER].min_pos;
-    const std::string                      header = g_head_buf;
+    const ArticlePosition                  header_end = g_parsed_header.positions[PAST_HEADER].min_pos;
+    const std::string                      header = g_parsed_header.head_buf;
     const ArticleUnread                    unread = g_newsgroup_ptr->m_to_read;
     const ArticleUnread                    selected = g_selected_count;
     const bool                             selected_only = g_sel.selected_only;
@@ -8171,9 +8174,9 @@ std::string OnDemandThreadArticleTest::display_tree()
     EXPECT_EQ(position, g_art_pos);
     EXPECT_EQ(g_nav.current.num, g_open_art);
     EXPECT_EQ(file_position, tell_art());
-    EXPECT_EQ(g_nav.current.num, g_parsed_art);
-    EXPECT_EQ(header_end, g_header_type[PAST_HEADER].min_pos);
-    EXPECT_EQ(header, g_head_buf);
+    EXPECT_EQ(g_nav.current.num, g_parsed_header.parsed_art);
+    EXPECT_EQ(header_end, g_parsed_header.positions[PAST_HEADER].min_pos);
+    EXPECT_EQ(header, g_parsed_header.head_buf);
     EXPECT_EQ(ArticleLine{6}, g_art_line_num);
     EXPECT_EQ(ArticleLine{}, g_top_line);
     EXPECT_FALSE(g_reread);
@@ -8312,7 +8315,7 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     EXPECT_EQ(position, g_art_pos);
     EXPECT_EQ(line, g_art_line_num);
     EXPECT_EQ(top, g_top_line);
-    EXPECT_EQ(g_nav.current.num, g_parsed_art);
+    EXPECT_EQ(g_nav.current.num, g_parsed_header.parsed_art);
     EXPECT_EQ(g_nav.current.num, g_open_art);
     EXPECT_EQ(subject_flags, g_nav.current.art->m_subj->m_flags);
     EXPECT_EQ(unread, g_newsgroup_ptr->m_to_read);
@@ -8921,7 +8924,7 @@ void ExtractSaveArticleTest::article(std::string_view body, std::string_view hea
     ASSERT_EQ(0, std::fclose(g_art_fp));
     g_art_fp = nullptr;
     g_open_art = {};
-    g_parsed_art = {};
+    g_parsed_header.parsed_art = {};
     m_article_text = HEADER;
     m_article_text.pop_back();
     m_article_text += headers;
@@ -9125,7 +9128,7 @@ void ViewArticleTest::mailcap(std::string_view entries)
 
 std::string ViewArticleTest::view()
 {
-    EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    EXPECT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
     g_art_pos = tell_art();
     g_int_count = 1;
     const std::string output = save('a', {});
@@ -9279,7 +9282,7 @@ void ResponseArticleTest::answers(std::string_view input)
 
 std::string ResponseArticleTest::respond_with(char command)
 {
-    EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    EXPECT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
     g_art_pos = tell_art();
     const std::string output = save(command, {});
     EXPECT_FALSE(g_waiting);
@@ -9614,7 +9617,7 @@ void ResponseArticleTest::prompt_answers(std::string_view input)
 
 std::string FollowupArticleTest::follow_with(char command, std::string_view input)
 {
-    EXPECT_EQ(0, seek_art(g_header_type[PAST_HEADER].min_pos));
+    EXPECT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
     g_art_pos = tell_art();
     const std::string output = save(command, input);
     EXPECT_TRUE(g_force_grow);

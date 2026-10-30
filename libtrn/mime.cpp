@@ -525,8 +525,7 @@ void mime_set_article()
     mime_init_sections();
     // TODO: Check mime version #?
     g_multimedia_mime = false;
-    g_is_mime = g_header_type[MIME_VER_LINE].flags & HT_MAGIC
-            && g_header_type[MIME_VER_LINE].min_pos >= 0;
+    g_is_mime = g_header_type[MIME_VER_LINE].flags & HT_MAGIC && g_parsed_header.positions[MIME_VER_LINE].min_pos >= 0;
 
     {
         std::string s = fetch_lines(g_nav.target.num, CONT_TYPE_LINE);
