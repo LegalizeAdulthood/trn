@@ -96,6 +96,7 @@ struct ParsedHeaderContext
     void restart_header(ArticleNum artnum);
     void end_line();
     bool parse_line(std::string_view art_buf, int new_hide, int old_hide);
+    bool line_span(HeaderLineType which_line, char *&line, int &size);
 };
 
 extern ParsedHeaderContext g_parsed_header;

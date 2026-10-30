@@ -95,7 +95,6 @@ int                         g_user_header_type_max{};
 ParsedHeaderContext         g_parsed_header;
 static HeaderLineType s_htypeix[26]{};
 
-static bool        header_line_span(HeaderLineType which_line, char *&line, int &size);
 static std::string current_header_line_text(HeaderLineType which_line);
 static std::string lower_header_name(std::string_view header_name);
 
@@ -521,9 +520,9 @@ static std::string header_line_text(std::string_view line)
     return std::string{line.substr(0, line_end)};
 }
 
-static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
+bool ParsedHeaderContext::line_span(HeaderLineType which_line, char *&line, int &size)
 {
-    ArticlePosition firstpos = g_parsed_header.positions[which_line].min_pos;
+    ArticlePosition firstpos = positions[which_line].min_pos;
     if (firstpos < 0)
     {
         line = nullptr;
@@ -532,9 +531,9 @@ static bool header_line_span(HeaderLineType which_line, char *&line, int &size)
     }
 
     firstpos += ArticlePosition{g_header_type[which_line].length + 1};
-    ArticlePosition lastpos = g_parsed_header.positions[which_line].max_pos;
+    ArticlePosition lastpos = positions[which_line].max_pos;
     size = (lastpos - firstpos).value_of();
-    line = g_parsed_header.head_buf.data() + firstpos.value_of();
+    line = head_buf.data() + firstpos.value_of();
     while (is_hor_space(*line))
     {
         line++;
@@ -555,7 +554,7 @@ static std::string current_header_line_text(HeaderLineType which_line)
     char *line;
     int   size;
 
-    if (!header_line_span(which_line, line, size))
+    if (!g_parsed_header.line_span(which_line, line, size))
     {
         return {};
     }
@@ -599,7 +598,7 @@ std::string fetch_lines(ArticleNum art_num, HeaderLineType which_line)
 
     char *line;
     int   size;
-    if (!header_line_span(which_line, line, size))
+    if (!g_parsed_header.line_span(which_line, line, size))
     {
         return {};
     }
