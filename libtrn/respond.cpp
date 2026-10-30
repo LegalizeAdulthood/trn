@@ -219,7 +219,7 @@ SaveResult save_article(std::string_view command)
     {
         cmd = static_cast<char>(std::tolower(static_cast<unsigned char>(cmd)));
     }
-    const ArticlePosition reading_position = g_art_pos;
+    const ArticlePosition reading_position = g_art_input.pos;
     parse_header(g_nav.target.num);
     mime_set_article();
     clear_art_buf();
@@ -238,7 +238,7 @@ SaveResult save_article(std::string_view command)
         return SAVE_DONE;
     }
 #ifdef _WIN32
-    ExtractArticleInput binary_input{cmd == 'e' && !(g_data_source->m_flags & DF_REMOTE) ? g_art_fp : nullptr};
+    ExtractArticleInput binary_input{cmd == 'e' && !(g_data_source->m_flags & DF_REMOTE) ? g_art_input.fp : nullptr};
     if (!binary_input.valid())
     {
         g_msg = "Cannot read extraction input as binary.";
@@ -248,7 +248,7 @@ SaveResult save_article(std::string_view command)
     {
         // Text-mode ftell can misreport offsets when a buffered yEnc byte is Ctrl-Z.
         // Recompute the body position with byte-preserving input before prescan.
-        std::rewind(g_art_fp);
+        std::rewind(g_art_input.fp);
         std::string header_line;
         g_save_from = ArticlePosition{};
         while (read_art(header_line))
@@ -376,7 +376,7 @@ SaveResult save_article(std::string_view command)
             }
             std::string article_line;
             article_line.reserve(LINE_BUF_LEN);
-            for (g_art_pos = g_save_from; read_art(article_line); g_art_pos = tell_art())
+            for (g_art_input.pos = g_save_from; read_art(article_line); g_art_input.pos = tell_art())
             {
                 const std::string_view line_text{article_line};
                 if (line_text.empty() || line_text.front() <= ' ')
@@ -388,7 +388,7 @@ SaveResult save_article(std::string_view command)
                         || line_text.substr(1, 8) == "!/bin/sh"                             //
                         || (line_text.size() > 1 && line_text.substr(2, 8) == "This is "))) //
                 {
-                    g_save_from = g_art_pos;
+                    g_save_from = g_art_input.pos;
                     decode_type = 1;
                     break;
                 }
@@ -397,14 +397,14 @@ SaveResult save_article(std::string_view command)
                     filename = header->filename;
                     part = header->part;
                     total = header->total;
-                    g_save_from = g_art_pos;
+                    g_save_from = g_art_input.pos;
                     seek_art(g_save_from);
                     decode_type = 3;
                     break;
                 }
                 if (uue_prescan(line_text, filename, &part, &total))
                 {
-                    g_save_from = g_art_pos;
+                    g_save_from = g_art_input.pos;
                     seek_art(g_save_from);
                     decode_type = 2;
                     break;
@@ -718,14 +718,14 @@ reask_save:
         }
     }
 s_bomb:
-    g_art_pos = reading_position;
+    g_art_input.pos = reading_position;
     chdir_news_dir();
     return SAVE_DONE;
 }
 
 SaveResult view_article()
 {
-    const ArticlePosition reading_position = g_art_pos;
+    const ArticlePosition reading_position = g_art_input.pos;
     parse_header(g_nav.target.num);
     mime_set_article();
     clear_art_buf();
@@ -757,7 +757,7 @@ SaveResult view_article()
 
         // Scan subject for filename and part number information
         std::string filename = decode_subject(g_nav.target.num, &part, &total);
-        for (g_art_pos = g_save_from; read_art(g_art_line); g_art_pos = tell_art())
+        for (g_art_input.pos = g_save_from; read_art(g_art_line); g_art_input.pos = tell_art())
         {
             if (g_art_line.empty() || g_art_line.front() <= ' ')
             {
@@ -766,7 +766,7 @@ SaveResult view_article()
             if (uue_prescan(g_art_line, filename, &part, &total))
             {
                 MimeCapEntry *mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
-                g_save_from = g_art_pos;
+                g_save_from = g_art_input.pos;
                 seek_art(g_save_from);
                 g_mime_section->m_type = UNHANDLED_MIME;
                 if (!filename.empty())
@@ -799,7 +799,7 @@ SaveResult view_article()
             term_down(1);
         }
     }
-    g_art_pos = reading_position;
+    g_art_input.pos = reading_position;
     chdir_news_dir();
     return SAVE_DONE;
 }
@@ -928,7 +928,7 @@ int supersede_article(std::string_view command) // Supersedes:
             goto done;
         }
         fmt::print(header, "{}", do_interp(get_env_var("SUPERSEDEHEADER", SUPERSEDE_HEADER)));
-        if (incl_body && g_art_fp != nullptr)
+        if (incl_body && g_art_input.fp != nullptr)
         {
             parse_header(g_nav.target.num);
             seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
@@ -1163,7 +1163,7 @@ void reply(std::string_view command)
         }
         term_down(3);
     }
-    if (incl_body && g_art_fp != nullptr)
+    if (incl_body && g_art_input.fp != nullptr)
     {
         std::string article_line;
         article_line.reserve(LINE_BUF_LEN);
@@ -1298,7 +1298,7 @@ void forward()
         }
         term_down(3);
     }
-    if (g_art_fp != nullptr)
+    if (g_art_input.fp != nullptr)
     {
         std::string forward_message = do_interp(get_env_var("FORWARDMSG", FORWARD_MSG));
         if (mime_boundary)
@@ -1381,7 +1381,7 @@ void followup(std::string_view command)
         return;
     }
     fmt::print(header, "{}", do_interp(get_env_var("NEWSHEADER", NEWS_HEADER)));
-    if (incl_body && g_art_fp != nullptr)
+    if (incl_body && g_art_input.fp != nullptr)
     {
         std::string article_line;
         article_line.reserve(LINE_BUF_LEN);

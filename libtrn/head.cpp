@@ -281,7 +281,7 @@ void ParsedHeaderContext::end_line()
     {
         first_one = false;
         // remember where line left off
-        positions[in_header].max_pos = g_art_pos;
+        positions[in_header].max_pos = g_art_input.pos;
         if (g_header_type[in_header].flags & HT_CACHED)
         {
             if (parsed_artp->get_cached_line_view(in_header, true).empty())
@@ -291,7 +291,7 @@ void ParsedHeaderContext::end_line()
                 {
                     start++;
                 }
-                MemorySize size = g_art_pos.value_of() - start + 1 - 1;   // pre-strip newline
+                MemorySize size = g_art_input.pos.value_of() - start + 1 - 1; // pre-strip newline
                 if (in_header == SUBJ_LINE)
                 {
                     const std::size_t subj_size =
@@ -333,7 +333,7 @@ bool ParsedHeaderContext::parse_line(std::string_view art_buf, int new_hide, int
         first_one = (positions[in_header].min_pos < ArticlePosition{});
         if (first_one)
         {
-            positions[in_header].min_pos = g_art_pos;
+            positions[in_header].min_pos = g_art_input.pos;
             if (in_header == DATE_LINE)
             {
                 if (!parsed_artp->m_date)
@@ -374,7 +374,8 @@ void end_header()
     if (g_parsed_header.reading_nntp_header)
     {
         g_parsed_header.reading_nntp_header = false;
-        g_parsed_header.positions[PAST_HEADER].min_pos = g_art_pos + ArticlePosition{1}; // nntp_body will fix this
+        g_parsed_header.positions[PAST_HEADER].min_pos =
+            g_art_input.pos + ArticlePosition{1}; // nntp_body will fix this
     }
     else
     {
@@ -446,7 +447,7 @@ bool parse_header(ArticleNum art_num)
     }
 
     g_parsed_header.start_header(art_num);
-    g_art_pos = ArticlePosition{};
+    g_art_input.pos = ArticlePosition{};
     g_parsed_header.head_buf.clear();
     g_parsed_header.head_buf.reserve(LINE_BUF_LEN * 8);
     std::string nntp_header_line;
@@ -501,7 +502,7 @@ bool parse_header(ArticleNum art_num)
                                        false, false);
         }
         had_nl = found_nl;
-        g_art_pos += ArticlePosition{len};
+        g_art_input.pos += ArticlePosition{len};
     }
     end_header();
     return true;

@@ -567,8 +567,8 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             output_text = line.substr(0, split);
             next_offset = split;
             // keep rn's backpager happy
-            virtual_write(g_art_line_num, virtual_read(line_before(g_art_line_num)));
-            ++g_art_line_num;
+            virtual_write(g_art_input.line_num, virtual_read(line_before(g_art_input.line_num)));
+            ++g_art_input.line_num;
         }
         if (is_subject)
         {
@@ -623,9 +623,9 @@ ArticleLine finish_tree(ArticleLine last_line)
 
     while (last_line <= s_max_line)
     {
-        ++g_art_line_num;
+        ++g_art_input.line_num;
         last_line += tree_puts("+", last_line, 0);
-        virtual_write(g_art_line_num, g_art_pos); // keep rn's backpager happy
+        virtual_write(g_art_input.line_num, g_art_input.pos); // keep rn's backpager happy
     }
     return last_line - start_line;
 }
@@ -651,15 +651,16 @@ void entire_tree(Article* ap)
     }
 
     const PreserveArticleBuffer saved_buffer;
-    const auto restore_position = [position = g_art_pos, number = g_art_fp ? g_open_art : ArticleNum{},
-                                   offset = g_art_fp ? tell_art() : ArticlePosition{}]
+    const auto                  restore_position = [position = g_art_input.pos,
+                                                    number = g_art_input.fp ? g_art_input.open_art : ArticleNum{},
+                                                    offset = g_art_input.fp ? tell_art() : ArticlePosition{}]
     {
         if (number != 0)
         {
             parse_header(number);
             art_open(number, offset);
         }
-        g_art_pos = position;
+        g_art_input.pos = position;
     };
 
     if (!g_threaded_group)

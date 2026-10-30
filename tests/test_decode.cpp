@@ -90,7 +90,7 @@ protected:
         m_old_tmp_dir = g_tmp_dir;
         m_old_login_name = g_login_name;
         m_old_data_source = g_data_source;
-        m_old_art_fp = g_art_fp;
+        m_old_art_fp = g_art_input.fp;
         m_old_mime_section = g_mime_section;
         m_old_mime_getc_line = g_mime_getc_line;
         m_old_is_mime = g_is_mime;
@@ -111,7 +111,7 @@ protected:
         g_tmp_dir = m_output_dir.generic_string();
         g_login_name = "decode-user";
         g_data_source = &m_data_source;
-        g_art_fp = m_input;
+        g_art_input.fp = m_input;
         g_mime_section = &m_section;
         g_mime_getc_line = {};
         g_is_mime = false;
@@ -140,7 +140,7 @@ protected:
         {
             std::fclose(m_input);
         }
-        g_art_fp = m_old_art_fp;
+        g_art_input.fp = m_old_art_fp;
         g_mime_section = m_old_mime_section;
         g_mime_getc_line = m_old_mime_getc_line;
         g_is_mime = m_old_is_mime;
@@ -179,7 +179,7 @@ protected:
             std::fclose(m_input);
         }
         m_input = input;
-        g_art_fp = m_input;
+        g_art_input.fp = m_input;
     }
 
     DataSource  m_data_source{};

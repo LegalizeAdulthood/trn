@@ -750,8 +750,8 @@ void set_spin(SpinMode mode)
     case SPIN_BAR_GRAPH:
         if (!s_spin_level++)
         {
-            s_spin_art = g_open_art;
-            if (s_spin_art != 0 && g_art_fp)
+            s_spin_art = g_art_input.open_art;
+            if (s_spin_art != 0 && g_art_input.fp)
             {
                 s_spin_tell = tell_art();
             }

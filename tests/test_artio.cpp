@@ -50,7 +50,7 @@ class ArticleIoTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_art_fp = g_art_fp;
+        m_old_art_fp = g_art_input.fp;
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_do_hiding = g_do_hiding;
@@ -75,7 +75,7 @@ protected:
         fs::remove_all(m_output_dir, error);
         fs::create_directories(m_output_dir, error);
 
-        g_art_fp = nullptr;
+        g_art_input.fp = nullptr;
         head_init();
         art_io_init();
         g_data_source = &m_data_source;
@@ -90,16 +90,16 @@ protected:
 
     void TearDown() override
     {
-        if (g_art_fp != nullptr)
+        if (g_art_input.fp != nullptr)
         {
-            std::fclose(g_art_fp);
-            g_art_fp = nullptr;
+            std::fclose(g_art_input.fp);
+            g_art_input.fp = nullptr;
         }
         art_io_final();
         reset_mime_section();
         head_final();
 
-        g_art_fp = m_old_art_fp;
+        g_art_input.fp = m_old_art_fp;
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
         g_do_hiding = m_old_do_hiding;
@@ -130,8 +130,8 @@ protected:
         }
 
         const std::string article_file_name = article_file.generic_string();
-        g_art_fp = std::fopen(article_file_name.c_str(), mode);
-        ASSERT_NE(nullptr, g_art_fp);
+        g_art_input.fp = std::fopen(article_file_name.c_str(), mode);
+        ASSERT_NE(nullptr, g_art_input.fp);
         g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
         g_art_size = g_raw_art_size;
         clear_art_buf();
@@ -271,8 +271,8 @@ void CharsetIsolationArticleTest::SetUp()
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
     ASSERT_EQ("\xC3\xA9\n", line);
-    std::fclose(g_art_fp);
-    g_art_fp = nullptr;
+    std::fclose(g_art_input.fp);
+    g_art_input.fp = nullptr;
     m_mime_section.mime_parse_type(GetParam());
     ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
 }
@@ -1047,7 +1047,7 @@ private:
     fs::path       m_old_directory{fs::current_path()};
     NNTPLink       m_old_link{g_nntp_link};
     ArticleNum     m_old_parsed_art{g_parsed_header.parsed_art};
-    ArticleNum     m_old_open_art{g_open_art};
+    ArticleNum     m_old_open_art{g_art_input.open_art};
     std::string    m_old_header{g_parsed_header.head_buf};
     std::string    m_old_response{g_ser_line};
     std::string    m_old_command{g_last_command};
@@ -1088,8 +1088,8 @@ void RemoteMultipartArticleTest::SetUp()
     nntp_gets_clear_buffer();
     m_data_source.m_flags = DF_REMOTE;
     nntp_body(ArticleNum{7});
-    ASSERT_NE(nullptr, g_art_fp);
-    g_open_art = ArticleNum{7};
+    ASSERT_NE(nullptr, g_art_input.fp);
+    g_art_input.open_art = ArticleNum{7};
     g_raw_art_size = ArticlePosition{-1};
     g_art_size = ArticlePosition{-1};
     g_tc_COLS = GetParam().columns;
@@ -1116,7 +1116,7 @@ void RemoteMultipartArticleTest::TearDown()
     nntp_gets_clear_buffer();
     g_nntp_link = m_old_link;
     g_parsed_header.parsed_art = m_old_parsed_art;
-    g_open_art = m_old_open_art;
+    g_art_input.open_art = m_old_open_art;
     g_parsed_header.head_buf = m_old_header;
     g_ser_line = m_old_response;
     g_last_command = m_old_command;
@@ -1134,7 +1134,7 @@ void RemoteMultipartArticleTest::expect_next_command()
 
 void RemoteMultipartArticleTest::expect_raw_cache()
 {
-    ASSERT_EQ(0, std::fflush(g_art_fp));
+    ASSERT_EQ(0, std::fflush(g_art_input.fp));
     std::ifstream cache{nntp_art_name(ArticleNum{7}, false), std::ios::binary};
     ASSERT_TRUE(cache.is_open());
     const std::string stored{std::istreambuf_iterator<char>{cache}, std::istreambuf_iterator<char>{}};
@@ -1185,8 +1185,8 @@ TEST_P(RemoteMultipartArticleTest, leavingBeforeTheFirstPartDrainsTheBodyBeforeT
 
     art_close();
 
-    EXPECT_EQ(nullptr, g_art_fp);
-    EXPECT_EQ(ArticleNum{}, g_open_art);
+    EXPECT_EQ(nullptr, g_art_input.fp);
+    EXPECT_EQ(ArticleNum{}, g_art_input.open_art);
     EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
     expect_next_command();
 }
@@ -1556,7 +1556,7 @@ private:
     std::string      m_old_art_line{g_art_line};
     std::string_view m_old_getc_line{g_mime_getc_line};
     ArticleLine      m_old_first_view{g_first_view};
-    ArticleLine      m_old_art_line_num{g_art_line_num};
+    ArticleLine      m_old_art_line_num{g_art_input.line_num};
     int              m_old_term_line{g_term_line};
     int              m_old_term_col{g_term_col};
     int              m_old_fire_is_out{g_fire_is_out};
@@ -1579,7 +1579,7 @@ void InlineMultipartArticleTest::SetUp()
     fs::create_directories(m_news_directory);
     fs::current_path(m_news_directory);
     g_first_view = GetParam().already_viewed ? ArticleLine{7} : ArticleLine{};
-    g_art_line_num = ArticleLine{7};
+    g_art_input.line_num = ArticleLine{7};
     g_term_line = 12;
     g_term_col = 0;
     g_no_wait_fork = false;
@@ -1640,7 +1640,7 @@ void InlineMultipartArticleTest::TearDown()
     g_art_line = m_old_art_line;
     g_mime_getc_line = m_old_getc_line;
     g_first_view = m_old_first_view;
-    g_art_line_num = m_old_art_line_num;
+    g_art_input.line_num = m_old_art_line_num;
     g_term_line = m_old_term_line;
     g_term_col = m_old_term_col;
     g_fire_is_out = m_old_fire_is_out;
@@ -1742,8 +1742,8 @@ class MultipleInlinePartsArticleTest : public InlineMultipartArticleTest
 
 TEST_P(MultipleInlinePartsArticleTest, viewsEachInlinePartOnceAsReadingAdvances)
 {
-    std::fclose(g_art_fp);
-    g_art_fp = nullptr;
+    std::fclose(g_art_input.fp);
+    g_art_input.fp = nullptr;
     const std::string              headers = "Content-Type: image/x-trn-inline; name=inline.bin\n"
                                              "Content-Disposition: inline\nContent-Transfer-Encoding: base64\n";
     const std::string              body = mime_part("Content-Type: text/plain\n", "First text\n") +
@@ -1759,7 +1759,7 @@ TEST_P(MultipleInlinePartsArticleTest, viewsEachInlinePartOnceAsReadingAdvances)
     while (read_art_buf(line, true))
     {
         lines.push_back(line);
-        ++g_art_line_num;
+        ++g_art_input.line_num;
     }
 
     EXPECT_EQ(expected, lines);
@@ -1934,7 +1934,7 @@ TEST_F(CachedLatinArticleTest, rereadsTheCachedPresentationAfterChangingGlobalCh
 TEST_F(CachedLatinArticleTest, readsTheOriginalRawBytesAfterCachingThePresentation)
 {
     std::string line;
-    std::rewind(g_art_fp);
+    std::rewind(g_art_input.fp);
 
     const bool read = read_art(line);
 
@@ -2210,7 +2210,7 @@ TEST_P(UnicodeProfileArticleTest, rereadsTheCachedPresentationWithoutChangingIt)
 TEST_P(UnicodeProfileArticleTest, readsTheOriginalRawArticleBytes)
 {
     std::string line;
-    std::rewind(g_art_fp);
+    std::rewind(g_art_input.fp);
 
     const bool read = read_art(line);
 
@@ -2270,7 +2270,7 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
     ASSERT_TRUE(read_art_buf(line, false));
     ASSERT_FALSE(art_buf_empty());
     const ArticleLine      old_top = g_top_line;
-    const ArticleLine      old_line_num = g_art_line_num;
+    const ArticleLine      old_line_num = g_art_input.line_num;
     const bool             old_seek = g_do_fseek;
     const std::string_view old_cr = g_tc_CR;
     g_tc_CR = "\r";
@@ -2285,7 +2285,7 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
     EXPECT_TRUE(art_buf_empty());
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
     g_top_line = old_top;
-    g_art_line_num = old_line_num;
+    g_art_input.line_num = old_line_num;
     g_do_fseek = old_seek;
     g_tc_CR = old_cr;
 }

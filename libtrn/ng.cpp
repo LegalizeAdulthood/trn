@@ -541,7 +541,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             if (!g_do_fseek)            // starting at top of article?
             {
-                g_art_line_num = ArticleLine{}; // start at the beginning
+                g_art_input.line_num = ArticleLine{}; // start at the beginning
                 g_top_line = ArticleLine{-1};   // and remember top line of screen
                                         // (line # within article file)
             }
@@ -579,7 +579,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                     }
                 }
                 ArticleLine linenum = tree_puts(message, ArticleLine{}, 0);
-                virtual_write(g_art_line_num, ArticlePosition{});
+                virtual_write(g_art_input.line_num, ArticlePosition{});
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_search_ahead = ArticleNum{};
@@ -1708,8 +1708,8 @@ normal_search:
                 g_reread = true;
                 clear();
                 g_do_fseek = true;
-                g_art_line_num = g_top_line;
-                g_art_line_num = std::max(g_art_line_num, ArticleLine{});
+                g_art_input.line_num = g_top_line;
+                g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
             }
             return AS_NORM;
 
@@ -1732,12 +1732,12 @@ normal_search:
                 if (g_do_hiding)
                 {
                     seek_art_buf(g_art_size);
-                    seek_art_buf(g_art_pos);
+                    seek_art_buf(g_art_input.pos);
                 }
                 g_reread = true;
                 g_do_fseek = true;
-                g_top_line = g_art_line_num;
-                g_inner_light = line_before(g_art_line_num);
+                g_top_line = g_art_input.line_num;
+                g_inner_light = line_before(g_art_input.line_num);
                 g_inner_search = g_art_size;
                 g_g_line = 0;
                 g_hide_everything = 'b';
@@ -1766,17 +1766,17 @@ normal_search:
                         g_highlight = g_top_line;
                     }
                 }
-                g_art_line_num = g_top_line;
-                if (g_art_line_num >= 0)
+                g_art_input.line_num = g_top_line;
+                if (g_art_input.line_num >= 0)
                 {
                     do
                     {
-                        g_art_line_num--;
-                    } while (g_art_line_num >= 0 && g_art_line_num > target &&
-                             virtual_read(line_before(g_art_line_num)) >= 0);
+                        g_art_input.line_num--;
+                    } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
+                             virtual_read(line_before(g_art_input.line_num)) >= 0);
                 }
-                g_top_line = g_art_line_num;
-                g_art_line_num = std::max(g_art_line_num, ArticleLine{});
+                g_top_line = g_art_input.line_num;
+                g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
             }
             return AS_NORM;
 

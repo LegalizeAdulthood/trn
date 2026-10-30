@@ -334,7 +334,7 @@ struct MimeSetStateTest : Test
 protected:
     void SetUp() override
     {
-        m_old_art_fp = g_art_fp;
+        m_old_art_fp = g_art_input.fp;
         m_old_data_source = g_data_source;
         m_old_mime_section = g_mime_section;
         m_old_mime_state = g_mime_state;
@@ -344,7 +344,7 @@ protected:
         ASSERT_NE(nullptr, m_input);
 
         m_current.m_prev = &m_parent;
-        g_art_fp = m_input;
+        g_art_input.fp = m_input;
         g_data_source = &m_data_source;
         g_mime_section = &m_current;
     }
@@ -357,7 +357,7 @@ protected:
         }
         m_current.mime_clear_struct();
         m_parent.mime_clear_struct();
-        g_art_fp = m_old_art_fp;
+        g_art_input.fp = m_old_art_fp;
         g_data_source = m_old_data_source;
         g_mime_section = m_old_mime_section;
         g_mime_state = m_old_mime_state;
@@ -617,7 +617,7 @@ protected:
     {
         MimeTest::SetUp();
         m_old_current_path = fs::current_path();
-        m_old_art_fp = g_art_fp;
+        m_old_art_fp = g_art_input.fp;
         m_old_mime_section = g_mime_section;
         m_old_data_source = g_data_source;
         m_old_no_wait_fork = g_no_wait_fork;
@@ -638,16 +638,16 @@ protected:
 
         g_mime_section = &m_mime_section;
         g_data_source = &m_data_source;
-        g_art_fp = nullptr;
+        g_art_input.fp = nullptr;
         g_no_wait_fork = true;
         m_mime_section.m_filename = "cat-output.txt";
     }
 
     void TearDown() override
     {
-        if (g_art_fp == m_input)
+        if (g_art_input.fp == m_input)
         {
-            g_art_fp = nullptr;
+            g_art_input.fp = nullptr;
         }
         if (m_input != nullptr)
         {
@@ -655,7 +655,7 @@ protected:
         }
         std::error_code error;
         fs::current_path(m_old_current_path, error);
-        g_art_fp = m_old_art_fp;
+        g_art_input.fp = m_old_art_fp;
         g_mime_section = m_old_mime_section;
         g_data_source = m_old_data_source;
         g_no_wait_fork = m_old_no_wait_fork;
@@ -699,7 +699,7 @@ TEST_F(CatDecodeTest, copiesFileInputToDecodedFile)
 TEST_F(CatDecodeTest, copiesArticleInputToDecodedFileUntilBoundary)
 {
     write_input("first line\n--part\nsecond line\n");
-    g_art_fp = m_input;
+    g_art_input.fp = m_input;
 
     MimeSection parent{};
     parent.m_boundary = "part";

@@ -21,10 +21,15 @@ inline bool at_nl(char c)
     return c == '\n' || c == WRAPPED_NL;
 }
 
-extern ArticlePosition g_art_pos;      // byte position in article file
-extern ArticleLine     g_art_line_num; // current line number in article file
-extern std::FILE      *g_art_fp;       // current article file pointer
-extern ArticleNum      g_open_art;     // the article number we have open
+struct ArticleInput
+{
+    ArticlePosition pos{};      // byte position in article file
+    ArticleLine     line_num{}; // current line number in article file
+    std::FILE      *fp{};       // current article file pointer
+    ArticleNum      open_art{}; // the article number we have open
+};
+
+extern ArticleInput    g_art_input;
 extern char            g_wrapped_nl;
 extern int             g_word_wrap_offset; // right-hand column size (0 is off)
 

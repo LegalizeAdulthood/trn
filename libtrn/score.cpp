@@ -316,7 +316,7 @@ void sc_fill_score_list(ArticleNum first, ArticleNum last)
 //
 void sc_look_ahead(bool flag, bool nowait)
 {
-    ArticleNum oldart = g_open_art;
+    ArticleNum      oldart = g_art_input.open_art;
     ArticlePosition oldartpos;
 
     if (!g_sc_initialized)

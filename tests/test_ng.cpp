@@ -4991,7 +4991,7 @@ private:
     bool             m_old_do_hiding{g_do_hiding};
     bool             m_old_rotate{g_rotate};
     bool             m_old_do_fseek{g_do_fseek};
-    ArticleLine      m_old_art_line_num{g_art_line_num};
+    ArticleLine      m_old_art_line_num{g_art_input.line_num};
     ArticleLine      m_old_top_line{g_top_line};
     int              m_old_fire_is_out{g_fire_is_out};
     int              m_old_tc_lines{g_tc_LINES};
@@ -5006,7 +5006,7 @@ void RereadArticleTest::SetUp()
     g_do_hiding = true;
     g_rotate = false;
     g_do_fseek = false;
-    g_art_line_num = ArticleLine{41};
+    g_art_input.line_num = ArticleLine{41};
     g_top_line = ArticleLine{15};
     g_term_line = 12;
     g_term_col = 9;
@@ -5022,7 +5022,7 @@ void RereadArticleTest::TearDown()
     g_do_hiding = m_old_do_hiding;
     g_rotate = m_old_rotate;
     g_do_fseek = m_old_do_fseek;
-    g_art_line_num = m_old_art_line_num;
+    g_art_input.line_num = m_old_art_line_num;
     g_top_line = m_old_top_line;
     g_fire_is_out = m_old_fire_is_out;
     g_tc_LINES = m_old_tc_lines;
@@ -5109,7 +5109,7 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
 void RereadArticleTest::expect_unmoved_view()
 {
     EXPECT_FALSE(g_do_fseek);
-    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
     EXPECT_EQ(ArticleLine{15}, g_top_line);
     EXPECT_EQ(12, g_term_line);
     EXPECT_EQ(9, g_term_col);
@@ -5126,14 +5126,14 @@ protected:
 private:
     bool            m_old_auto_view_inline{g_auto_view_inline};
     ArticleLine     m_old_first_view{g_first_view};
-    ArticlePosition m_old_art_pos{g_art_pos};
+    ArticlePosition m_old_art_pos{g_art_input.pos};
 };
 
 void InlineViewingArticleTest::SetUp()
 {
     RereadArticleTest::SetUp();
     set_reading_position(GetParam());
-    g_art_pos = ArticlePosition{123};
+    g_art_input.pos = ArticlePosition{123};
     g_first_view = ArticleLine{37};
 }
 
@@ -5141,7 +5141,7 @@ void InlineViewingArticleTest::TearDown()
 {
     g_auto_view_inline = m_old_auto_view_inline;
     g_first_view = m_old_first_view;
-    g_art_pos = m_old_art_pos;
+    g_art_input.pos = m_old_art_pos;
     RereadArticleTest::TearDown();
 }
 
@@ -5149,8 +5149,8 @@ std::string InlineViewingArticleTest::toggle_viewing()
 {
     const std::string output = display("i", {}, AS_ASK);
 
-    EXPECT_EQ(ArticlePosition{123}, g_art_pos);
-    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticlePosition{123}, g_art_input.pos);
+    EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
     EXPECT_EQ(ArticleLine{15}, g_top_line);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
@@ -5193,12 +5193,12 @@ private:
     DataSource            m_data_source{};
     MimeSection           m_section{};
     std::filesystem::path m_output_dir;
-    std::FILE            *m_old_art_fp{g_art_fp};
+    std::FILE            *m_old_art_fp{g_art_input.fp};
     DataSource           *m_old_data_source{g_data_source};
     MimeSection          *m_old_mime_section{g_mime_section};
     MimeState             m_old_mime_state{g_mime_state};
     bool                  m_old_is_mime{g_is_mime};
-    ArticlePosition       m_old_art_pos{g_art_pos};
+    ArticlePosition       m_old_art_pos{g_art_input.pos};
     ArticlePosition       m_old_raw_art_size{g_raw_art_size};
     ArticlePosition       m_old_art_size{g_art_size};
     HeaderType            m_old_past_header{g_header_type[PAST_HEADER]};
@@ -5212,7 +5212,7 @@ private:
 void CachedDisplayArticleTest::SetUp()
 {
     RereadArticleTest::SetUp();
-    g_art_fp = nullptr;
+    g_art_input.fp = nullptr;
     art_io_init();
     g_data_source = &m_data_source;
     m_section.mime_parse_type("text/plain; charset=Latin1");
@@ -5235,10 +5235,10 @@ void CachedDisplayArticleTest::SetUp()
 
 void CachedDisplayArticleTest::set_article_text(std::string_view text)
 {
-    if (g_art_fp)
+    if (g_art_input.fp)
     {
-        std::fclose(g_art_fp);
-        g_art_fp = nullptr;
+        std::fclose(g_art_input.fp);
+        g_art_input.fp = nullptr;
     }
     const std::filesystem::path article_file = m_output_dir / "article";
     {
@@ -5246,27 +5246,27 @@ void CachedDisplayArticleTest::set_article_text(std::string_view text)
         output << text;
         ASSERT_TRUE(output.good());
     }
-    g_art_fp = std::fopen(article_file.string().c_str(), "rb");
-    ASSERT_NE(nullptr, g_art_fp);
+    g_art_input.fp = std::fopen(article_file.string().c_str(), "rb");
+    ASSERT_NE(nullptr, g_art_input.fp);
     g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
     g_art_size = g_raw_art_size;
-    g_art_pos = ArticlePosition{};
+    g_art_input.pos = ArticlePosition{};
     clear_art_buf();
 }
 
 void CachedDisplayArticleTest::TearDown()
 {
-    if (g_art_fp)
+    if (g_art_input.fp)
     {
-        std::fclose(g_art_fp);
+        std::fclose(g_art_input.fp);
     }
     art_io_final();
-    g_art_fp = m_old_art_fp;
+    g_art_input.fp = m_old_art_fp;
     g_data_source = m_old_data_source;
     g_mime_section = m_old_mime_section;
     g_mime_state = m_old_mime_state;
     g_is_mime = m_old_is_mime;
-    g_art_pos = m_old_art_pos;
+    g_art_input.pos = m_old_art_pos;
     g_raw_art_size = m_old_raw_art_size;
     g_art_size = m_old_art_size;
     g_header_type[PAST_HEADER] = m_old_past_header;
@@ -5295,7 +5295,7 @@ void CachedDisplayArticleTest::expect_redraw(ArticleLine line)
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_do_fseek);
     EXPECT_FALSE(g_force_last);
-    EXPECT_EQ(line, g_art_line_num);
+    EXPECT_EQ(line, g_art_input.line_num);
     EXPECT_EQ(0, g_term_line);
     EXPECT_EQ(0, g_term_col);
     EXPECT_EQ(0, g_fire_is_out);
@@ -5387,8 +5387,8 @@ void BackwardPagingArticleTest::load_article(long line_count, long page_break_af
 
 void BackwardPagingArticleTest::expect_target(long line, std::string_view expected)
 {
-    EXPECT_EQ(ArticleLine{line}, g_art_line_num);
-    const ArticlePosition saved_position = virtual_read(g_art_line_num);
+    EXPECT_EQ(ArticleLine{line}, g_art_input.line_num);
+    const ArticlePosition saved_position = virtual_read(g_art_input.line_num);
     const ArticlePosition position = saved_position < 0 ? -saved_position : saved_position;
     ASSERT_EQ(0, seek_art(art_buf_seek()));
     ASSERT_EQ(0, seek_art_buf(position));
@@ -5457,7 +5457,7 @@ void JumpToEndArticleTest::read_prefix(std::string_view expected)
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
     ASSERT_EQ(expected, line);
-    g_art_pos = art_buf_article_pos();
+    g_art_input.pos = art_buf_article_pos();
 }
 
 void JumpToEndArticleTest::expect_end(ArticlePosition end, ArticleLine line, ArticleLine light, int column)
@@ -5465,7 +5465,7 @@ void JumpToEndArticleTest::expect_end(ArticlePosition end, ArticleLine line, Art
     EXPECT_TRUE(g_reread);
     EXPECT_TRUE(g_do_fseek);
     EXPECT_FALSE(g_force_last);
-    EXPECT_EQ(line, g_art_line_num);
+    EXPECT_EQ(line, g_art_input.line_num);
     EXPECT_EQ(line, g_top_line);
     EXPECT_EQ(light, g_inner_light);
     EXPECT_EQ(end, g_inner_search);
@@ -5529,10 +5529,10 @@ void DownloadEndArticleTest::SetUp()
 void DownloadEndArticleTest::TearDown()
 {
     nntp_finish_body(FB_DISCARD);
-    if (g_art_fp)
+    if (g_art_input.fp)
     {
-        std::fclose(g_art_fp);
-        g_art_fp = nullptr;
+        std::fclose(g_art_input.fp);
+        g_art_input.fp = nullptr;
     }
     (void) nntp_art_name(ArticleNum{}, false);
     nntp_gets_clear_buffer();
@@ -5551,8 +5551,8 @@ void DownloadEndArticleTest::start_download()
 {
     set_reading_position(4);
     g_do_hiding = GetParam();
-    std::fclose(g_art_fp);
-    g_art_fp = nullptr;
+    std::fclose(g_art_input.fp);
+    g_art_input.fp = nullptr;
     g_parsed_header.parsed_art = g_nav.target.num;
     g_parsed_header.head_buf = "Subject: end\n\n";
     EXPECT_CALL(*m_connection, write_line(testing::StrEq("BODY 4"), testing::_));
@@ -5560,7 +5560,7 @@ void DownloadEndArticleTest::start_download()
         .WillOnce(testing::Return("222 4 <end@example.test> body follows"))
         .WillOnce(testing::Return("\xC4"));
     nntp_body(g_nav.target.num);
-    ASSERT_NE(nullptr, g_art_fp);
+    ASSERT_NE(nullptr, g_art_input.fp);
     m_download_file = output_dir() / nntp_art_name(g_nav.target.num, false);
     ASSERT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
     set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
@@ -5665,7 +5665,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleNum                                 search_ahead = g_search_ahead;
-    const ArticlePosition                            position = g_art_pos;
+    const ArticlePosition                            position = g_art_input.pos;
     const MinorMode                                  mode = g_mode;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
@@ -5700,7 +5700,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
-    EXPECT_EQ(position, g_art_pos);
+    EXPECT_EQ(position, g_art_input.pos);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(mode, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
@@ -5710,7 +5710,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     EXPECT_EQ(selected_only, g_sel.selected_only);
     EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(force_last, g_force_last);
-    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
     EXPECT_EQ(ArticleLine{15}, g_top_line);
     EXPECT_FALSE(g_do_fseek);
     EXPECT_TRUE(g_do_hiding);
@@ -12056,7 +12056,7 @@ TEST_P(ToggleRotationArticleTest, uppercaseRotationTogglesTheModeAndRedrawsFromT
     EXPECT_TRUE(g_reread);
     EXPECT_FALSE(g_force_last);
     EXPECT_TRUE(g_do_fseek);
-    EXPECT_EQ(ArticleLine{15}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{15}, g_art_input.line_num);
     EXPECT_EQ(ArticleLine{15}, g_top_line);
     EXPECT_EQ(0, g_term_line);
     EXPECT_EQ(0, g_term_col);
@@ -12095,7 +12095,7 @@ TEST_F(RereadArticleTest, uppercaseRotationClampsAnUnsetTopLineAtTheArticleStart
     EXPECT_TRUE(g_reread);
     EXPECT_FALSE(g_force_last);
     EXPECT_TRUE(g_do_fseek);
-    EXPECT_EQ(ArticleLine{}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{}, g_art_input.line_num);
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
     EXPECT_EQ(0, g_term_line);
     EXPECT_EQ(0, g_term_col);
@@ -12235,7 +12235,7 @@ TEST_F(CachedDisplayArticleTest, substitutionAtGroupEndChangesModeAndDiscardsCac
     EXPECT_EQ('a', current_char_subst_mode());
     expect_cleared_cache();
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
-    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
     EXPECT_FALSE(g_do_fseek);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
@@ -12478,7 +12478,7 @@ TEST_P(KnownSizeEndArticleTest, jumpsToTheKnownEndWithoutChangingArticleReadOrSe
     expect_end(ArticlePosition{11});
     EXPECT_EQ(ArticlePosition{11}, g_raw_art_size);
     EXPECT_EQ(ArticlePosition{11}, g_art_size);
-    EXPECT_EQ(ArticlePosition{6}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{6}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{6}, art_buf_pos());
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 0}, art_buf_len());
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 11 : 6}, tell_art());
@@ -12510,7 +12510,7 @@ TEST_F(JumpToEndArticleTest, decodesTheRemainingMimeTextAndRestoresTheHeaderRela
     expect_end(header_end + ArticlePosition{11});
     EXPECT_EQ(header_end + ArticlePosition{19}, g_raw_art_size);
     EXPECT_EQ(header_end + ArticlePosition{11}, g_art_size);
-    EXPECT_EQ(header_end + ArticlePosition{6}, g_art_pos);
+    EXPECT_EQ(header_end + ArticlePosition{6}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{6}, art_buf_pos());
     EXPECT_EQ(ArticlePosition{11}, art_buf_len());
     EXPECT_EQ(g_raw_art_size, art_buf_seek());
@@ -12524,13 +12524,13 @@ TEST_F(JumpToEndArticleTest, jumpingFromTheFirstLineSetsTheHighlightBeforeTheArt
 {
     set_reading_position(4);
     set_article_text("First\nLast\n");
-    g_art_line_num = ArticleLine{};
+    g_art_input.line_num = ArticleLine{};
 
     const std::string output = display(Ctl('e'));
 
     EXPECT_EQ(std::string::npos, output.find("Receiving"));
     expect_end(ArticlePosition{11}, ArticleLine{}, ArticleLine{-1});
-    EXPECT_EQ(ArticlePosition{}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{}, art_buf_pos());
     EXPECT_EQ("First\nLast\n", art_buf_view(ArticlePosition{}));
 }
@@ -12539,13 +12539,13 @@ TEST_F(JumpToEndArticleTest, anEmptyArticleStillRequestsTheLastPageWithoutReadin
 {
     set_reading_position(4);
     set_article_text("");
-    g_art_line_num = ArticleLine{};
+    g_art_input.line_num = ArticleLine{};
 
     const std::string output = display(Ctl('e'));
 
     EXPECT_EQ(std::string::npos, output.find("Receiving"));
     expect_end(ArticlePosition{}, ArticleLine{}, ArticleLine{-1});
-    EXPECT_EQ(ArticlePosition{}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{}, g_raw_art_size);
     EXPECT_EQ(ArticlePosition{}, g_art_size);
     expect_cleared_cache();
@@ -12556,13 +12556,13 @@ TEST_F(JumpToEndArticleTest, jumpingWhenAlreadyAtArticleEndRetainsTheEndPosition
     set_reading_position(4);
     set_article_text("Last\n");
     ASSERT_NO_FATAL_FAILURE(read_prefix("Last\n"));
-    g_art_line_num = ArticleLine{1};
+    g_art_input.line_num = ArticleLine{1};
 
     const std::string output = display(Ctl('e'));
 
     EXPECT_EQ(std::string::npos, output.find("Receiving"));
     expect_end(ArticlePosition{5}, ArticleLine{1}, ArticleLine{});
-    EXPECT_EQ(ArticlePosition{5}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{5}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{5}, art_buf_pos());
     EXPECT_EQ(ArticlePosition{5}, art_buf_len());
     EXPECT_EQ("Last\n", art_buf_view(ArticlePosition{}));
@@ -12571,10 +12571,10 @@ TEST_F(JumpToEndArticleTest, jumpingWhenAlreadyAtArticleEndRetainsTheEndPosition
 TEST_F(JumpToEndArticleTest, groupEndLeavesPagerStateUntouchedWithoutAnOpenArticleOrKnownSize)
 {
     set_reading_position(8);
-    std::fclose(g_art_fp);
-    g_art_fp = nullptr;
+    std::fclose(g_art_input.fp);
+    g_art_input.fp = nullptr;
     g_raw_art_size = g_art_size = ArticlePosition{-1};
-    g_art_pos = ArticlePosition{17};
+    g_art_input.pos = ArticlePosition{17};
 
     const std::string output = display(Ctl('e'));
 
@@ -12584,7 +12584,7 @@ TEST_F(JumpToEndArticleTest, groupEndLeavesPagerStateUntouchedWithoutAnOpenArtic
     EXPECT_FALSE(g_force_last);
     EXPECT_EQ(ArticlePosition{-1}, g_raw_art_size);
     EXPECT_EQ(ArticlePosition{-1}, g_art_size);
-    EXPECT_EQ(ArticlePosition{17}, g_art_pos);
+    EXPECT_EQ(ArticlePosition{17}, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{29}, g_inner_search);
     EXPECT_EQ(ArticleLine{13}, g_inner_light);
     EXPECT_EQ(6, g_g_line);
@@ -12601,7 +12601,7 @@ TEST_P(DownloadEndArticleTest, finishesThePendingBodyAndTargetsTheEndInTheCurren
     EXPECT_EQ(m_header_end + ArticlePosition{7}, nntp_art_size());
     EXPECT_EQ(nntp_art_size(), g_raw_art_size);
     EXPECT_EQ(m_end, g_art_size);
-    EXPECT_EQ(m_position, g_art_pos);
+    EXPECT_EQ(m_position, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 3 : 2}, art_buf_pos());
     EXPECT_EQ(GetParam(), g_do_hiding);
     EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);

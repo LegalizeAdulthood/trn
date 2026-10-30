@@ -263,8 +263,8 @@ private:
     bool              m_old_force_last{g_force_last};
     bool              m_old_do_fseek{g_do_fseek};
     bool              m_old_rotate{g_rotate};
-    ArticlePosition   m_old_art_pos{g_art_pos};
-    ArticleLine       m_old_art_line_num{g_art_line_num};
+    ArticlePosition   m_old_art_pos{g_art_input.pos};
+    ArticleLine       m_old_art_line_num{g_art_input.line_num};
     ArticleLine       m_old_top_line{g_top_line};
     GeneralMode       m_old_general_mode{g_general_mode};
     MinorMode         m_old_mode{g_mode};
@@ -319,8 +319,8 @@ void ThreadTreeArticleTest::SetUp()
     g_last_art = ArticleNum{3};
     g_threaded_group = true;
     g_reread = g_force_last = g_do_fseek = g_rotate = false;
-    g_art_pos = ArticlePosition{123};
-    g_art_line_num = ArticleLine{41};
+    g_art_input.pos = ArticlePosition{123};
+    g_art_input.line_num = ArticleLine{41};
     g_top_line = ArticleLine{15};
     g_general_mode = GM_READ;
     g_mode = MM_ARTICLE;
@@ -365,8 +365,8 @@ void ThreadTreeArticleTest::TearDown()
     g_force_last = m_old_force_last;
     g_do_fseek = m_old_do_fseek;
     g_rotate = m_old_rotate;
-    g_art_pos = m_old_art_pos;
-    g_art_line_num = m_old_art_line_num;
+    g_art_input.pos = m_old_art_pos;
+    g_art_input.line_num = m_old_art_line_num;
     g_top_line = m_old_top_line;
     g_general_mode = m_old_general_mode;
     g_mode = m_old_mode;
@@ -429,8 +429,8 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(mode, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
-    EXPECT_EQ(ArticlePosition{123}, g_art_pos);
-    EXPECT_EQ(ArticleLine{41}, g_art_line_num);
+    EXPECT_EQ(ArticlePosition{123}, g_art_input.pos);
+    EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
     EXPECT_EQ(ArticleLine{15}, g_top_line);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);

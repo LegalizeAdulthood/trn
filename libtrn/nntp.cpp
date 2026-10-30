@@ -280,9 +280,9 @@ void nntp_body(ArticleNum art_num)
         {
             nntp_finish_body(FB_DISCARD);
         }
-        g_art_fp = std::fopen(artname.c_str(), "rb");
+        g_art_input.fp = std::fopen(artname.c_str(), "rb");
         stat_t art_stat{};
-        if (g_art_fp && fstat(fileno(g_art_fp), &art_stat) == 0)
+        if (g_art_input.fp && fstat(fileno(g_art_input.fp), &art_stat) == 0)
         {
             s_body_end = ArticlePosition{art_stat.st_size};
         }
@@ -290,7 +290,7 @@ void nntp_body(ArticleNum art_num)
     }
 
     artname = nntp_art_name(art_num, true); // Allocate a tmp file
-    if (!(g_art_fp = std::fopen(artname.c_str(), "w+b")))
+    if (!(g_art_input.fp = std::fopen(artname.c_str(), "w+b")))
     {
         fmt::print(stderr, "\nUnable to write temporary file: '{}'.\n", artname);
         finalize(1);
@@ -310,15 +310,15 @@ void nntp_body(ArticleNum art_num)
         finalize(1);
 
     case 0:
-        std::fclose(g_art_fp);
-        g_art_fp = nullptr;
+        std::fclose(g_art_input.fp);
+        g_art_input.fp = nullptr;
         errno = ENOENT; // Simulate file-not-found
         return;
     }
     s_body_pos = ArticlePosition{};
     if (g_parsed_header.parsed_art == art_num)
     {
-        std::fwrite(g_parsed_header.head_buf.data(), 1, g_parsed_header.head_buf.size(), g_art_fp);
+        std::fwrite(g_parsed_header.head_buf.data(), 1, g_parsed_header.head_buf.size(), g_art_input.fp);
         s_body_end = ftell_art();
         g_parsed_header.positions[PAST_HEADER].min_pos = s_body_end;
     }
@@ -337,7 +337,7 @@ void nntp_body(ArticleNum art_num)
             prev_pos = s_body_end;
         }
     }
-    fseek(g_art_fp, 0L, 0);
+    fseek(g_art_input.fp, 0L, 0);
     g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
 }
 
@@ -362,7 +362,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
         {
             if (nntp_at_list_end(line))
             {
-                std::fseek(g_art_fp, (long) s_body_pos.value_of(), 0);
+                std::fseek(g_art_input.fp, (long) s_body_pos.value_of(), 0);
                 s_body_pos = ArticlePosition{-1};
                 return 0;
             }
@@ -375,7 +375,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
         {
             line += '\n';
         }
-        std::fwrite(line.data(), 1, line.size(), g_art_fp);
+        std::fwrite(line.data(), 1, line.size(), g_art_input.fp);
         s_body_end = ftell_art();
         had_nl = result == NGSR_FULL_LINE;
     }
@@ -407,7 +407,7 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (s_body_end != s_body_pos)
     {
-        std::fseek(g_art_fp, s_body_end.value_of(), 0);
+        std::fseek(g_art_input.fp, s_body_end.value_of(), 0);
     }
     if (bmode != FB_BACKGROUND)
     {
@@ -424,7 +424,7 @@ int nntp_finish_body(FinishBodyMode bmode)
         }
         if (s_body_pos >= 0)
         {
-            std::fseek(g_art_fp, s_body_pos.value_of(), 0);
+            std::fseek(g_art_input.fp, s_body_pos.value_of(), 0);
         }
     }
     if (bmode == FB_OUTPUT)
@@ -442,7 +442,7 @@ int nntp_seek_art(ArticlePosition pos)
         {
             std::string line;
             line.reserve(NNTP_STRLEN);
-            std::fseek(g_art_fp, s_body_end.value_of(), 0);
+            std::fseek(g_art_input.fp, s_body_end.value_of(), 0);
             nntp_copy_body(line, NNTP_STRLEN, pos);
             if (s_body_pos >= 0)
             {
@@ -454,7 +454,7 @@ int nntp_seek_art(ArticlePosition pos)
             s_body_pos = pos;
         }
     }
-    return std::fseek(g_art_fp, pos.value_of(), 0);
+    return std::fseek(g_art_input.fp, pos.value_of(), 0);
 }
 
 ArticlePosition nntp_tell_art()
@@ -470,7 +470,7 @@ static std::string read_art_file_chunk(int limit)
     }
 
     std::string line(static_cast<std::size_t>(limit), '\0');
-    if (std::fgets(line.data(), limit, g_art_fp) == nullptr)
+    if (std::fgets(line.data(), limit, g_art_input.fp) == nullptr)
     {
         return {};
     }
@@ -501,7 +501,7 @@ std::string nntp_read_art(int limit)
                 s_body_pos = s_body_end;
                 return line;
             }
-            std::fseek(g_art_fp, s_body_pos.value_of(), 0);
+            std::fseek(g_art_input.fp, s_body_pos.value_of(), 0);
         }
         std::string line = read_art_file_chunk(limit);
         if (line.empty())
@@ -511,7 +511,7 @@ std::string nntp_read_art(int limit)
         s_body_pos = ftell_art();
         if (s_body_pos == s_body_end)
         {
-            std::fseek(g_art_fp, s_body_pos.value_of(), 0); // Prepare for coming write
+            std::fseek(g_art_input.fp, s_body_pos.value_of(), 0); // Prepare for coming write
         }
         return line;
     }

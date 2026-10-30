@@ -66,8 +66,8 @@ protected:
         m_old_last_art = g_last_art;
         m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_threaded_group = g_threaded_group;
-        m_old_art_fp = g_art_fp;
-        m_old_open_art = g_open_art;
+        m_old_art_fp = g_art_input.fp;
+        m_old_open_art = g_art_input.open_art;
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_current_path = fs::current_path();
@@ -80,7 +80,7 @@ protected:
         fs::current_path(m_output_dir, error);
 
         head_init();
-        g_art_fp = nullptr;
+        g_art_input.fp = nullptr;
         art_io_init();
         g_article_list.clear();
         g_data_source = &m_data_source;
@@ -94,10 +94,10 @@ protected:
 
     void TearDown() override
     {
-        if (g_art_fp != nullptr)
+        if (g_art_input.fp != nullptr)
         {
-            std::fclose(g_art_fp);
-            g_art_fp = nullptr;
+            std::fclose(g_art_input.fp);
+            g_art_input.fp = nullptr;
         }
         art_io_final();
         head_final();
@@ -110,8 +110,8 @@ protected:
         g_last_art = m_old_last_art;
         g_parsed_header.parsed_art = m_old_parsed_art;
         g_threaded_group = m_old_threaded_group;
-        g_art_fp = m_old_art_fp;
-        g_open_art = m_old_open_art;
+        g_art_input.fp = m_old_art_fp;
+        g_art_input.open_art = m_old_open_art;
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
 

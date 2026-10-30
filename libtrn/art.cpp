@@ -59,7 +59,7 @@ ArticlePosition g_raw_art_size{};         // size in bytes of raw article
 ArticlePosition g_art_size{};             // size in bytes of article
 std::string     g_art_line;               // place for article lines
 int             g_g_line{};               // TODO: ArticleLine?
-ArticlePosition g_inner_search{};         // g_art_pos of end of line we want to visit
+ArticlePosition g_inner_search{};         // g_art_input.pos of end of line we want to visit
 ArticleLine     g_inner_light{};          // highlight position for g_inner_search or 0
 char            g_hide_everything{};      // if set, do not write page now, ...but execute char when done with page
 bool            g_reread{};               // consider current art temporarily unread?
@@ -163,7 +163,7 @@ DoArticleResult do_article(std::string &article_command)
     else
     {
         stat_t art_stat{};
-        if (fstat(fileno(g_art_fp),&art_stat))   // get article file stats
+        if (fstat(fileno(g_art_input.fp), &art_stat)) // get article file stats
         {
             return DA_CLEAN;
         }
@@ -202,7 +202,7 @@ DoArticleResult do_article(std::string &article_command)
         {
             init_tree(); // init tree display
         }
-        TRN_ASSERT(g_nav.target.num == g_open_art);
+        TRN_ASSERT(g_nav.target.num == g_art_input.open_art);
         if (g_do_fseek)
         {
             parse_header(g_nav.target.num); // make sure header is ours
@@ -211,16 +211,16 @@ DoArticleResult do_article(std::string &article_command)
                 mime_set_article();
                 set_art_buf_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
             }
-            g_art_pos = virtual_read(g_art_line_num);
-            if (g_art_pos < 0)
+            g_art_input.pos = virtual_read(g_art_input.line_num);
+            if (g_art_input.pos < 0)
             {
-                g_art_pos = -g_art_pos; // labs(), anyone?
+                g_art_input.pos = -g_art_input.pos; // labs(), anyone?
             }
             if (s_first_page)
             {
-                g_art_pos = ArticlePosition{};
+                g_art_input.pos = ArticlePosition{};
             }
-            if (g_art_pos < g_parsed_header.positions[PAST_HEADER].min_pos)
+            if (g_art_input.pos < g_parsed_header.positions[PAST_HEADER].min_pos)
             {
                 g_parsed_header.in_header = SOME_LINE;
                 seek_art(g_parsed_header.positions[PAST_HEADER].min_pos);
@@ -229,7 +229,7 @@ DoArticleResult do_article(std::string &article_command)
             else
             {
                 seek_art(art_buf_seek());
-                seek_art_buf(g_art_pos);
+                seek_art_buf(g_art_input.pos);
             }
             g_do_fseek = false;
             s_restart = ArticlePosition{};
@@ -281,9 +281,9 @@ DoArticleResult do_article(std::string &article_command)
             g_parsed_header.restart_header(g_nav.target.num);
             g_force_last = false;        // we will have our day in court
             s_restart = ArticlePosition{};
-            g_art_line_num = ArticleLine{};              // start counting lines
-            g_art_pos = ArticlePosition{};
-            virtual_write(g_art_line_num,g_art_pos); // remember pos in file
+            g_art_input.line_num = ArticleLine{}; // start counting lines
+            g_art_input.pos = ArticlePosition{};
+            virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         }
         for (bool restart_color = true; // line_num already set
              g_inner_search                                 ? (g_parsed_header.in_header || inner_more())
@@ -310,7 +310,7 @@ DoArticleResult do_article(std::string &article_command)
                     maybe_set_color(line_text, line_pos, true);
                 }
             }
-            else if (const std::size_t head_pos = static_cast<std::size_t>(g_art_pos.value_of());
+            else if (const std::size_t head_pos = static_cast<std::size_t>(g_art_input.pos.value_of());
                      g_parsed_header.in_header && head_pos < g_parsed_header.head_buf.size() &&
                      g_parsed_header.head_buf[head_pos] != '\0')
             {
@@ -319,7 +319,7 @@ DoArticleResult do_article(std::string &article_command)
             }
             else
             {
-                body_line_begin = g_art_pos;
+                body_line_begin = g_art_input.pos;
                 if (!read_art_buf(body_line, g_auto_view_inline))
                 {
                     s_special = false;
@@ -333,9 +333,9 @@ DoArticleResult do_article(std::string &article_command)
                 if (g_do_hiding && !g_parsed_header.in_header)
                 {
                     const ArticlePosition body_start = g_parsed_header.positions[PAST_HEADER].min_pos;
-                    s_continuation =
-                        maybe_set_color(art_buf_view(body_start),
-                                        static_cast<std::size_t>((g_art_pos - body_start).value_of()), restart_color);
+                    s_continuation = maybe_set_color(
+                        art_buf_view(body_start), static_cast<std::size_t>((g_art_input.pos - body_start).value_of()),
+                        restart_color);
                 }
                 else
                 {
@@ -346,7 +346,7 @@ DoArticleResult do_article(std::string &article_command)
             {
                 hide_this_line = false;
             }
-            s_a_line_begin = g_art_pos;      // remember where we began
+            s_a_line_begin = g_art_input.pos; // remember where we began
             restart_color = false;
             if (g_parsed_header.in_header)
             {
@@ -467,7 +467,7 @@ DoArticleResult do_article(std::string &article_command)
                     std::string_view subject_text = line_tail();
                     notes_files = subject_text.size() >= 10 &&
                                   in_string(subject_text.substr(subject_text.size() - 10), " - (nf", true);
-                    ++g_art_line_num;
+                    ++g_art_input.line_num;
                     if (cached_subj.empty())
                     {
                         subject_text.remove_prefix(s_continuation ? 0 : 9);
@@ -486,7 +486,7 @@ DoArticleResult do_article(std::string &article_command)
             }
             else if (g_parsed_header.in_header)
             {
-                ++g_art_line_num;
+                ++g_art_input.line_num;
                 line_num += line_before(tree_puts(line_tail(), line_num + g_top_line, 0));
             }
             else                          // just a normal line
@@ -495,7 +495,7 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     erase_line(false);
                 }
-                if (g_highlight == g_art_line_num)   // this line to be highlight?
+                if (g_highlight == g_art_input.line_num) // this line to be highlight?
                 {
                     if (g_marking == STANDOUT)
                     {
@@ -538,7 +538,7 @@ DoArticleResult do_article(std::string &article_command)
                     {
                         if (current_char() == '_' && char_at(1) == '\b')
                         {
-                            if (output_ok && !under_lining && g_highlight != g_art_line_num)
+                            if (output_ok && !under_lining && g_highlight != g_art_input.line_num)
                             {
                                 under_lining = true;
                                 if (g_tc_UG)
@@ -611,7 +611,7 @@ DoArticleResult do_article(std::string &article_command)
                             out_pos += i;
                         }
                         if (has_underchar_capability() &&
-                            ((g_highlight == g_art_line_num && g_marking == STANDOUT) || under_lining))
+                            ((g_highlight == g_art_input.line_num && g_marking == STANDOUT) || under_lining))
                         {
                             backspace();
                             underchar();
@@ -628,7 +628,7 @@ DoArticleResult do_article(std::string &article_command)
                         if (g_debug & DEB_INNERSRCH && out_pos < g_tc_COLS - 6)
                         {
                             standout();
-                            fmt::print("{:4}", g_art_line_num.value_of());
+                            fmt::print("{:4}", g_art_input.line_num.value_of());
                             un_standout();
                         }
 #endif
@@ -669,7 +669,7 @@ DoArticleResult do_article(std::string &article_command)
                         {
                             fmt::print("^L");
                         }
-                        if (line_pos == 0 && g_highlight != g_art_line_num)
+                        if (line_pos == 0 && g_highlight != g_art_input.line_num)
                         {
                             line_num = ArticleLine{32700};
                             // how is that for a magic number?
@@ -696,7 +696,7 @@ DoArticleResult do_article(std::string &article_command)
                             if (output_ok)
                             {
                                 std::putchar('^');
-                                if (g_highlight == g_art_line_num && has_underchar_capability() &&
+                                if (g_highlight == g_art_input.line_num && has_underchar_capability() &&
                                     g_marking == STANDOUT)
                                 {
                                     backspace();
@@ -743,7 +743,7 @@ DoArticleResult do_article(std::string &article_command)
 
                 // handle normal end of output line formalities
 
-                if (g_highlight == g_art_line_num)
+                if (g_highlight == g_art_input.line_num)
                 {
                     if (g_marking == STANDOUT)  // were we highlighting line?
                     {
@@ -762,29 +762,29 @@ DoArticleResult do_article(std::string &article_command)
                         erase_eol();
                     }
                 }
-                ++g_art_line_num;    // count the line just printed
-                            // did we just scroll top line off?
-                            // then recompute top line #
-                g_top_line = std::max(line_after(g_art_line_num) - ArticleLine{g_tc_LINES}, g_top_line);
+                ++g_art_input.line_num; // count the line just printed
+                                        // did we just scroll top line off?
+                                        // then recompute top line #
+                g_top_line = std::max(line_after(g_art_input.line_num) - ArticleLine{g_tc_LINES}, g_top_line);
             }
 
             // determine actual position in file
 
             if (s_restart)      // stranded somewhere in the buffer?
             {
-                g_art_pos += s_restart - s_a_line_begin;
+                g_art_input.pos += s_restart - s_a_line_begin;
             }
             else if (g_parsed_header.in_header)
             {
                 const std::string_view::size_type line_end = std::string_view{g_parsed_header.head_buf}.find(
-                    '\n', static_cast<std::string_view::size_type>(g_art_pos.value_of()));
-                g_art_pos = ArticlePosition{static_cast<long>(line_end + 1)};
+                    '\n', static_cast<std::string_view::size_type>(g_art_input.pos.value_of()));
+                g_art_input.pos = ArticlePosition{static_cast<long>(line_end + 1)};
             }
             else
             {
-                g_art_pos = art_buf_article_pos();
+                g_art_input.pos = art_buf_article_pos();
             }
-            virtual_write(g_art_line_num,g_art_pos); // remember pos in file
+            virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         } // end of line loop
 
         g_inner_search = ArticlePosition{};
@@ -797,7 +797,7 @@ DoArticleResult do_article(std::string &article_command)
         if (line_num >= 32700)   // did last line have form feed?
         {
             // remember by negating pos in file
-            virtual_write(line_before(g_art_line_num), -virtual_read(line_before(g_art_line_num)));
+            virtual_write(line_before(g_art_input.line_num), -virtual_read(line_before(g_art_input.line_num)));
         }
 
         s_special = false;      // end of page, so reset page length
@@ -832,12 +832,12 @@ recheck_pager:
             }
             if (can_hide_tail && remaining_line.empty())
             {
-                seek_pos = g_art_pos = art_buf_article_pos();
-                virtual_write(g_art_line_num, g_art_pos);
+                seek_pos = g_art_input.pos = art_buf_article_pos();
+                virtual_write(g_art_input.line_num, g_art_input.pos);
             }
             seek_art_buf(seek_pos);
         }
-        if (g_art_pos == g_art_size)  // did we just now reach EOF?
+        if (g_art_input.pos == g_art_size) // did we just now reach EOF?
         {
             color_default();
             set_mode(g_general_mode,old_mode);
@@ -859,7 +859,7 @@ reask_pager:
         color_default();
         {
             const std::string percent =
-                g_art_size < 0 ? "?" : std::to_string(g_art_pos.value_of() * 100 / g_art_size.value_of());
+                g_art_size < 0 ? "?" : std::to_string(g_art_input.pos.value_of() * 100 / g_art_size.value_of());
             const std::string more_prompt = fmt::format("{}--MORE--({}%)", current_char_subst(), percent);
             out_pos = g_term_col + static_cast<int>(more_prompt.size());
             draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? out_pos + 5 : 0), true);
@@ -871,12 +871,12 @@ reask_pager:
 #ifdef DEBUG
         if (g_debug & DEB_CHECKPOINTING)
         {
-            fmt::print("({} {} {})", g_check_count, line_num.value_of(), g_art_line_num.value_of());
+            fmt::print("({} {} {})", g_check_count, line_num.value_of(), g_art_input.line_num.value_of());
             std::fflush(stdout);
         }
 #endif
         if (g_check_count >= g_do_check_when && line_num.value_of() == g_tc_LINES &&
-            (g_art_line_num > 40 || g_check_count >= g_do_check_when + 10))
+            (g_art_input.line_num > 40 || g_check_count >= g_do_check_when + 10))
         {
                             // while he is reading a whole page
                             // in an article he is interested in
@@ -1027,7 +1027,7 @@ PageSwitchResult page_switch(std::string_view command)
 
     case Ctl('i'):
     {
-        ArticleLine i = g_art_line_num;
+        ArticleLine i = g_art_input.line_num;
         g_g_line = 3;
         pager_line = line_view(s_a_line_begin);
         while (!pager_line.empty() && at_nl(pager_line.front()) && i >= g_top_line)
@@ -1097,14 +1097,15 @@ caseG:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("Start here? {}  >=? {}\n", g_top_line.value_of() + g_g_line + 1, g_art_line_num.value_of());
+            fmt::print("Start here? {}  >=? {}\n", g_top_line.value_of() + g_g_line + 1,
+                       g_art_input.line_num.value_of());
             term_down(1);
         }
 #endif
-        if (command_char == Ctl('i') || g_top_line + ArticleLine{g_g_line + 1} >= g_art_line_num)
+        if (command_char == Ctl('i') || g_top_line + ArticleLine{g_g_line + 1} >= g_art_input.line_num)
         {
-            start_where = g_art_pos;
-                        // in case we had a line wrap
+            start_where = g_art_input.pos;
+            // in case we had a line wrap
         }
         else
         {
@@ -1141,7 +1142,7 @@ caseG:
         }
         if (!g_inner_search)
         {
-            seek_art_buf(g_art_pos);
+            seek_art_buf(g_art_input.pos);
             fmt::print("(Not found)");
             g_term_col = 11;
             return PS_ASK;
@@ -1149,21 +1150,21 @@ caseG:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("On page? {} <=? {}\n", g_inner_search.value_of(), g_art_pos.value_of());
+            fmt::print("On page? {} <=? {}\n", g_inner_search.value_of(), g_art_input.pos.value_of());
             term_down(1);
         }
 #endif
-        if (g_inner_search <= g_art_pos)          // already on page?
+        if (g_inner_search <= g_art_input.pos) // already on page?
         {
-            if (g_inner_search < g_art_pos)
+            if (g_inner_search < g_art_input.pos)
             {
-                g_art_line_num = line_after(g_top_line);
-                while (virtual_read(g_art_line_num) < g_inner_search)
+                g_art_input.line_num = line_after(g_top_line);
+                while (virtual_read(g_art_input.line_num) < g_inner_search)
                 {
-                    ++g_art_line_num;
+                    ++g_art_input.line_num;
                 }
             }
-            g_highlight = line_before(g_art_line_num);
+            g_highlight = line_before(g_art_input.line_num);
 #ifdef DEBUG
             if (g_debug & DEB_INNERSRCH)
             {
@@ -1204,8 +1205,8 @@ refresh_screen:
 #endif
         clear();
         g_do_fseek = true;
-        g_art_line_num = g_top_line;
-        g_art_line_num = std::max(g_art_line_num, ArticleLine{});
+        g_art_input.line_num = g_top_line;
+        g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
         s_first_page = g_top_line < 0;
         return PS_NORM;
 
@@ -1219,10 +1220,10 @@ refresh_screen:
         if (g_do_hiding)
         {
             seek_art_buf(g_art_size);
-            seek_art_buf(g_art_pos);
+            seek_art_buf(g_art_input.pos);
         }
-        g_top_line = g_art_line_num;
-        g_inner_light = line_before(g_art_line_num);
+        g_top_line = g_art_input.line_num;
+        g_inner_light = line_before(g_art_input.line_num);
         g_inner_search = g_art_size;
         g_g_line = 0;
         g_hide_everything = 'b';
@@ -1248,32 +1249,32 @@ refresh_screen:
                 seek_art_buf(pos);
                 if (read_art_buf(pager_line_storage, false))
                 {
-                    g_art_pos = virtual_read(g_top_line);
-                    if (g_art_pos < 0)
+                    g_art_input.pos = virtual_read(g_top_line);
+                    if (g_art_input.pos < 0)
                     {
-                        g_art_pos = -g_art_pos;
+                        g_art_input.pos = -g_art_input.pos;
                     }
                     maybe_set_color(pager_line_storage, 0, true);
                     const char *line = pager_line_storage.c_str();
-                    for (pos = g_art_pos - pos; pos-- && !at_nl(*line); line++)
+                    for (pos = g_art_input.pos - pos; pos-- && !at_nl(*line); line++)
                     {
                         std::putchar(*line);
                     }
                     color_default();
                     std::putchar('\n');
                     --g_top_line;
-                    g_art_pos = virtual_read(--g_art_line_num);
-                    if (g_art_pos < 0)
+                    g_art_input.pos = virtual_read(--g_art_input.line_num);
+                    if (g_art_input.pos < 0)
                     {
-                        g_art_pos = -g_art_pos;
+                        g_art_input.pos = -g_art_input.pos;
                     }
-                    seek_art_buf(g_art_pos);
-                    s_a_line_begin = virtual_read(line_before(g_art_line_num));
+                    seek_art_buf(g_art_input.pos);
+                    s_a_line_begin = virtual_read(line_before(g_art_input.line_num));
                     if (s_a_line_begin < 0)
                     {
                         s_a_line_begin = -s_a_line_begin;
                     }
-                    goto_xy(0, (g_art_line_num - g_top_line).value_of());
+                    goto_xy(0, (g_art_input.line_num - g_top_line).value_of());
                     erase_line(false);
                     return PS_ASK;
                 }
@@ -1308,18 +1309,18 @@ refresh_screen:
                 g_highlight = g_top_line;
             }
         }
-        g_art_line_num = g_top_line;
-        if (g_art_line_num >= 0)
+        g_art_input.line_num = g_top_line;
+        if (g_art_input.line_num >= 0)
         {
             do
             {
-                --g_art_line_num;
-            } while (g_art_line_num >= 0 && g_art_line_num > target &&
-                     virtual_read(line_before(g_art_line_num)) >= 0);
+                --g_art_input.line_num;
+            } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
+                     virtual_read(line_before(g_art_input.line_num)) >= 0);
         }
-        g_top_line = g_art_line_num;  // remember top line of screen
-                                // (line # within article file)
-        g_art_line_num = std::max(g_art_line_num, ArticleLine{});
+        g_top_line = g_art_input.line_num; // remember top line of screen
+                                           // (line # within article file)
+        g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
         s_first_page = g_top_line < 0;
         return PS_NORM;
       }
@@ -1430,7 +1431,7 @@ leave_pager:
         s_special_lines = g_tc_LINES / 2 + 1;
         // no divide-by-zero, thank you
         if (g_tc_LINES > 2 && (g_tc_LINES & 1) &&
-            g_art_line_num % ArticleLine{g_tc_LINES - 2} >= ArticleLine{g_tc_LINES / 2 - 1})
+            g_art_input.line_num % ArticleLine{g_tc_LINES - 2} >= ArticleLine{g_tc_LINES / 2 - 1})
         {
                 s_special_lines++;
         }
@@ -1464,19 +1465,19 @@ go_forward:
                     ((command_char != 'd' && command_char != Ctl('d')) || (g_marking_areas & HALF_PAGE_MARKING))))
             {
                 s_restart = s_a_line_begin;
-                --g_art_line_num;     // restart this line
-                g_art_pos = s_a_line_begin;
+                --g_art_input.line_num; // restart this line
+                g_art_input.pos = s_a_line_begin;
                 if (s_special)
                 {
                     up_line();
                 }
                 else
                 {
-                    g_top_line = g_art_line_num;
+                    g_top_line = g_art_input.line_num;
                 }
                 if (g_marking)
                 {
-                    g_highlight = g_art_line_num;
+                    g_highlight = g_art_input.line_num;
                 }
               }
               else
@@ -1510,49 +1511,50 @@ go_forward:
 
 static bool inner_more()
 {
-    if (g_art_pos < g_inner_search)               // not even on page yet?
+    if (g_art_input.pos < g_inner_search) // not even on page yet?
     {
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("Not on page {} < {}\n", g_art_pos.value_of(), g_inner_search.value_of());
+            fmt::print("Not on page {} < {}\n", g_art_input.pos.value_of(), g_inner_search.value_of());
         }
 #endif
         return true;
     }
-    if (g_art_pos == g_inner_search || g_hide_everything) // just got onto page?
+    if (g_art_input.pos == g_inner_search || g_hide_everything) // just got onto page?
     {
-        s_i_search_line = g_art_line_num;        // remember first line after
+        s_i_search_line = g_art_input.line_num; // remember first line after
         if (g_inner_light)
         {
             g_highlight = g_inner_light;
         }
         else
         {
-            g_highlight = line_before(g_art_line_num);
+            g_highlight = line_before(g_art_input.line_num);
         }
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("There it is {} = {}, {} @ {}\n", g_art_pos.value_of(), g_inner_search.value_of(),
+            fmt::print("There it is {} = {}, {} @ {}\n", g_art_input.pos.value_of(), g_inner_search.value_of(),
                        g_hide_everything, g_highlight.value_of());
             term_down(1);
         }
 #endif
         if (g_hide_everything)          // forced refresh?
         {
-            g_top_line = std::max(g_art_line_num - ArticleLine{g_g_line + 1}, ArticleLine{-1});
+            g_top_line = std::max(g_art_input.line_num - ArticleLine{g_g_line + 1}, ArticleLine{-1});
             return false;               // let refresh do it all
         }
     }
 #ifdef DEBUG
     if (g_debug & DEB_INNERSRCH)
     {
-        fmt::print("Not far enough? {} <? {} + {}\n", g_art_line_num.value_of(), s_i_search_line.value_of(), g_g_line);
+        fmt::print("Not far enough? {} <? {} + {}\n", g_art_input.line_num.value_of(), s_i_search_line.value_of(),
+                   g_g_line);
         term_down(1);
     }
 #endif
-    if (g_art_line_num < s_i_search_line + ArticleLine{g_g_line})
+    if (g_art_input.line_num < s_i_search_line + ArticleLine{g_g_line})
     {
         return true;
     }

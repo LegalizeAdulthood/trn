@@ -32,10 +32,7 @@
 #include <string_view>
 #include <utility>
 
-ArticlePosition g_art_pos{};              // byte position in article file
-ArticleLine     g_art_line_num{};         // current line number in article file
-std::FILE      *g_art_fp{};               // current article file pointer
-ArticleNum      g_open_art{};             // the article number we have open
+ArticleInput    g_art_input;
 char            g_wrapped_nl{WRAPPED_NL}; //
 int             g_word_wrap_offset{8};    // right-hand column size (0 is off)
 
@@ -93,10 +90,10 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
         errno = ENOENT;
         return nullptr;
     }
-    if (g_open_art == art_num)            // this article is already open?
+    if (g_art_input.open_art == art_num) // this article is already open?
     {
         seek_art(pos);                   // yes: just seek the file
-        return g_art_fp;                 // and say we succeeded
+        return g_art_input.fp;           // and say we succeeded
     }
     art_close();
 
@@ -109,9 +106,9 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
         else
         {
             const std::string art_name{std::to_string(art_num.value_of())};
-            g_art_fp = std::fopen(art_name.c_str(), "r");
+            g_art_input.fp = std::fopen(art_name.c_str(), "r");
         }
-        if (!g_art_fp)
+        if (!g_art_input.fp)
         {
 #ifdef ETIMEDOUT
             if (errno == ETIMEDOUT)
@@ -127,25 +124,25 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
         }
         else
         {
-            g_open_art = art_num; // remember what we did here
+            g_art_input.open_art = art_num; // remember what we did here
             seek_art(pos);
         }
         break;
     }
-    return g_art_fp;                     // and return either fp or nullptr
+    return g_art_input.fp; // and return either fp or nullptr
 }
 
 void art_close()
 {
-    if (g_art_fp != nullptr)             // article still open?
+    if (g_art_input.fp != nullptr) // article still open?
     {
         if (g_data_source->m_flags & DF_REMOTE)
         {
             nntp_finish_body(FB_DISCARD);
         }
-        std::fclose(g_art_fp);                        // close it
-        g_art_fp = nullptr;                      // and tell the world
-        g_open_art = ArticleNum{};
+        std::fclose(g_art_input.fp); // close it
+        g_art_input.fp = nullptr;    // and tell the world
+        g_art_input.open_art = ArticleNum{};
         clear_art_buf();
     }
 }
@@ -156,12 +153,12 @@ int seek_art(ArticlePosition pos)
     {
         return nntp_seek_art(pos);
     }
-    return std::fseek(g_art_fp, pos.value_of(), 0);
+    return std::fseek(g_art_input.fp, pos.value_of(), 0);
 }
 
 ArticlePosition ftell_art()
 {
-    return ArticlePosition{std::ftell(g_art_fp)};
+    return ArticlePosition{std::ftell(g_art_input.fp)};
 }
 
 ArticlePosition tell_art()
@@ -186,7 +183,7 @@ static std::string read_art_chunk(int limit)
     }
 
     std::string line(static_cast<std::size_t>(limit), '\0');
-    if (std::fgets(line.data(), limit, g_art_fp) == nullptr)
+    if (std::fgets(line.data(), limit, g_art_input.fp) == nullptr)
     {
         return {};
     }
@@ -651,7 +648,7 @@ mime_switch:
             chdir_news_dir();
             erase_line(false);
             g_no_wait_fork = false;
-            g_first_view = g_art_line_num;
+            g_first_view = g_art_input.line_num;
             g_term_line = save_term_line;
             if (g_mime_state != SKIP_MIME)
             {
@@ -753,8 +750,8 @@ mime_switch:
         // FALL THROUGH
 
     default:
-        if (view_inline && g_first_view < g_art_line_num //
-          && (g_mime_section->m_flags & MSF_INLINE))
+        if (view_inline && g_first_view < g_art_input.line_num //
+            && (g_mime_section->m_flags & MSF_INLINE))
         {
             g_mime_state = DECODE_MIME;
         }

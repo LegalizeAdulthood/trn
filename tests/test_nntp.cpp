@@ -1944,7 +1944,7 @@ protected:
         NNTPGetStringTest::SetUp();
         head_init();
 
-        m_old_art_fp = g_art_fp;
+        m_old_art_fp = g_art_input.fp;
         m_old_current_path = fs::current_path();
         m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_nntp_flags = g_nntp_link.flags;
@@ -1962,7 +1962,7 @@ protected:
         ASSERT_FALSE(error) << error.message();
 
         (void) nntp_art_name(ArticleNum{}, false);
-        g_art_fp = nullptr;
+        g_art_input.fp = nullptr;
         g_parsed_header.parsed_art = ArticleNum{};
         g_nntp_link.flags = NNTP_NEW_CMD_OK;
         g_our_pid = 24680;
@@ -1970,14 +1970,14 @@ protected:
 
     void TearDown() override
     {
-        if (g_art_fp != nullptr)
+        if (g_art_input.fp != nullptr)
         {
-            std::fclose(g_art_fp);
-            g_art_fp = nullptr;
+            std::fclose(g_art_input.fp);
+            g_art_input.fp = nullptr;
         }
         (void) nntp_art_name(ArticleNum{}, false);
 
-        g_art_fp = m_old_art_fp;
+        g_art_input.fp = m_old_art_fp;
         g_parsed_header.parsed_art = m_old_parsed_art;
         g_nntp_link.flags = m_old_nntp_flags;
         g_our_pid = m_old_pid;

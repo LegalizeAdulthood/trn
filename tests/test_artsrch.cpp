@@ -54,8 +54,8 @@ protected:
         m_old_verbose = g_verbose;
         m_old_novice_delays = g_novice_delays;
         m_old_local_kfp = g_local_kfp;
-        m_old_art_fp = g_art_fp;
-        m_old_open_art = g_open_art;
+        m_old_art_fp = g_art_input.fp;
+        m_old_open_art = g_art_input.open_art;
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_do_hiding = g_do_hiding;
@@ -84,8 +84,8 @@ protected:
         g_verbose = false;
         g_novice_delays = false;
         g_local_kfp = nullptr;
-        g_art_fp = nullptr;
-        g_open_art = ArticleNum{};
+        g_art_input.fp = nullptr;
+        g_art_input.open_art = ArticleNum{};
         g_data_source = &m_data_source;
         g_do_hiding = false;
         g_threaded_group = false;
@@ -122,8 +122,8 @@ protected:
         g_use_threads = m_old_use_threads;
         g_verbose = m_old_verbose;
         g_novice_delays = m_old_novice_delays;
-        g_art_fp = m_old_art_fp;
-        g_open_art = m_old_open_art;
+        g_art_input.fp = m_old_art_fp;
+        g_art_input.open_art = m_old_open_art;
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
         g_do_hiding = m_old_do_hiding;
@@ -158,9 +158,9 @@ protected:
         }
 
         const std::string article_file_name = article_file.generic_string();
-        g_art_fp = std::fopen(article_file_name.c_str(), "r");
-        ASSERT_NE(nullptr, g_art_fp);
-        g_open_art = ArticleNum{1};
+        g_art_input.fp = std::fopen(article_file_name.c_str(), "r");
+        ASSERT_NE(nullptr, g_art_input.fp);
+        g_art_input.open_art = ArticleNum{1};
         g_raw_art_size = ArticlePosition{static_cast<long>(text.size())};
         g_art_size = g_raw_art_size;
         clear_art_buf();
