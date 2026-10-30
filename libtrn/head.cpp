@@ -95,7 +95,6 @@ int                         g_user_header_type_max{};
 ParsedHeaderContext         g_parsed_header;
 static HeaderLineType s_htypeix[26]{};
 
-static void        end_header_line();
 static bool        header_line_span(HeaderLineType which_line, char *&line, int &size);
 static std::string current_header_line_text(HeaderLineType which_line);
 static std::string lower_header_name(std::string_view header_name);
@@ -278,37 +277,33 @@ void ParsedHeaderContext::restart_header(ArticleNum artnum)
     parsed_artp = article_ptr(artnum);
 }
 
-static void end_header_line()
+void ParsedHeaderContext::end_line()
 {
-    if (g_parsed_header.first_one) // did we just pass 1st occurrence?
+    if (first_one) // did we just pass 1st occurrence?
     {
-        g_parsed_header.first_one = false;
+        first_one = false;
         // remember where line left off
-        g_parsed_header.positions[g_parsed_header.in_header].max_pos = g_art_pos;
-        if (g_header_type[g_parsed_header.in_header].flags & HT_CACHED)
+        positions[in_header].max_pos = g_art_pos;
+        if (g_header_type[in_header].flags & HT_CACHED)
         {
-            if (g_parsed_header.parsed_artp->get_cached_line_view(g_parsed_header.in_header, true).empty())
+            if (parsed_artp->get_cached_line_view(in_header, true).empty())
             {
-                int start = g_parsed_header.positions[g_parsed_header.in_header].min_pos.value_of() +
-                            g_header_type[g_parsed_header.in_header].length + 1;
-                while (is_hor_space(g_parsed_header.head_buf[start]))
+                int start = positions[in_header].min_pos.value_of() + g_header_type[in_header].length + 1;
+                while (is_hor_space(head_buf[start]))
                 {
                     start++;
                 }
                 MemorySize size = g_art_pos.value_of() - start + 1 - 1;   // pre-strip newline
-                if (g_parsed_header.in_header == SUBJ_LINE)
+                if (in_header == SUBJ_LINE)
                 {
                     const std::size_t subj_size =
                             size > 0 ? static_cast<std::size_t>(size - 1) : 0;
-                    g_parsed_header.parsed_artp->set_subj_line(
-                        std::string_view{g_parsed_header.head_buf.data() + start, subj_size});
+                    parsed_artp->set_subj_line(std::string_view{head_buf.data() + start, subj_size});
                 }
                 else
                 {
                     const std::size_t line_size = size > 0 ? static_cast<std::size_t>(size - 1) : 0;
-                    g_parsed_header.parsed_artp->set_cached_line(
-                        g_parsed_header.in_header,
-                        std::string_view{g_parsed_header.head_buf.data() + start, line_size});
+                    parsed_artp->set_cached_line(in_header, std::string_view{head_buf.data() + start, line_size});
                 }
             }
         }
@@ -322,7 +317,7 @@ bool parse_line(std::string_view art_buf, int new_hide, int old_hide)
         return old_hide;
     }
 
-    end_header_line();
+    g_parsed_header.end_line();
     const std::size_t colon = art_buf.find(':');
     if (colon == std::string_view::npos) // is it the end of the header?
     {
@@ -370,7 +365,7 @@ void end_header()
 {
     Article *ap = g_parsed_header.parsed_artp;
 
-    end_header_line();
+    g_parsed_header.end_line();
     g_parsed_header.in_header = PAST_HEADER; // just to be sure
 
     if (!ap->m_subj)

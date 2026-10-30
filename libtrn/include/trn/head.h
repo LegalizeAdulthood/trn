@@ -94,6 +94,7 @@ struct ParsedHeaderContext
     void start_header(ArticleNum artnum);
     // Restart a parsed header's presentation without discarding its offsets.
     void restart_header(ArticleNum artnum);
+    void end_line();
 };
 
 extern ParsedHeaderContext g_parsed_header;
