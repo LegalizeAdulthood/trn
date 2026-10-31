@@ -97,6 +97,9 @@ struct NNTPLink
 
 struct NntpSession
 {
+    // TODO: private
+    std::string_view response_text();
+
     NNTPLink    link{}; // the current server's file handles
     bool        allow_timeout{};
     std::string ser_line;

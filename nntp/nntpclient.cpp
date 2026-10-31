@@ -73,9 +73,9 @@ bool NntpCapabilities::has(std::string_view capability, std::string_view argumen
                        [&key](const std::string &value) { return capability_key(value) == key; });
 }
 
-static std::string_view nntp_response_text()
+std::string_view NntpSession::response_text()
 {
-    return g_nntp.ser_line.size() > 4 ? std::string_view{g_nntp.ser_line}.substr(4) : std::string_view{};
+    return ser_line.size() > 4 ? std::string_view{ser_line}.substr(4) : std::string_view{};
 }
 
 int nntp_response_code(std::string_view response)
@@ -116,11 +116,11 @@ try_to_connect:
         {
             if (verbose)
             {
-                fmt::print("failed: {}\n", nntp_response_text());
+                fmt::print("failed: {}\n", g_nntp.response_text());
             }
             else
             {
-                fmt::print("News server \"{}\" is unavailable: {}\n", machine, nntp_response_text());
+                fmt::print("News server \"{}\" is unavailable: {}\n", machine, g_nntp.response_text());
             }
             response = 0;
             break;
