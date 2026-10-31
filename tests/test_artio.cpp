@@ -54,9 +54,9 @@ protected:
         m_old_raw_art_size = g_raw_art_size;
         m_old_art_size = g_art_size;
         m_old_do_hiding = g_do_hiding;
-        m_old_is_mime = g_is_mime;
-        m_old_mime_state = g_mime_state;
-        m_old_mime_section = g_mime_section;
+        m_old_is_mime = g_mime.is_mime;
+        m_old_mime_state = g_mime.state;
+        m_old_mime_section = g_mime.section;
         m_old_multipart_separator = g_multipart_separator;
         m_old_data_source = g_data_source;
         m_old_past_header = g_header_type[PAST_HEADER];
@@ -80,9 +80,9 @@ protected:
         g_art_buf.init();
         g_data_source = &m_data_source;
         g_do_hiding = true;
-        g_is_mime = false;
-        g_mime_state = NOT_MIME;
-        g_mime_section = m_old_mime_section;
+        g_mime.is_mime = false;
+        g_mime.state = NOT_MIME;
+        g_mime.section = m_old_mime_section;
         g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{};
         g_tc_COLS = 30;
         g_word_wrap_offset = 8;
@@ -103,9 +103,9 @@ protected:
         g_raw_art_size = m_old_raw_art_size;
         g_art_size = m_old_art_size;
         g_do_hiding = m_old_do_hiding;
-        g_is_mime = m_old_is_mime;
-        g_mime_state = m_old_mime_state;
-        g_mime_section = m_old_mime_section;
+        g_mime.is_mime = m_old_is_mime;
+        g_mime.state = m_old_mime_state;
+        g_mime.section = m_old_mime_section;
         g_multipart_separator = m_old_multipart_separator;
         g_data_source = m_old_data_source;
         g_header_type[PAST_HEADER] = m_old_past_header;
@@ -139,12 +139,12 @@ protected:
 
     void reset_mime_section()
     {
-        while (g_mime_section != nullptr && g_mime_section != m_old_mime_section && g_mime_section != &m_mime_section)
+        while (g_mime.section != nullptr && g_mime.section != m_old_mime_section && g_mime.section != &m_mime_section)
         {
-            MimeSection *previous = g_mime_section->m_prev;
-            g_mime_section->mime_clear_struct();
-            delete g_mime_section;
-            g_mime_section = previous;
+            MimeSection *previous = g_mime.section->m_prev;
+            g_mime.section->mime_clear_struct();
+            delete g_mime.section;
+            g_mime.section = previous;
         }
         m_parent_mime_section.mime_clear_struct();
         m_mime_section.mime_clear_struct();
@@ -243,9 +243,9 @@ void CachedLatinArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
     m_mime_section.mime_parse_type("text/plain; charset=ISO-8859-1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
@@ -263,9 +263,9 @@ protected:
 void CharsetIsolationArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
     ASSERT_NO_FATAL_FAILURE(open_article_text("\xE9\n"));
     std::string line;
@@ -311,11 +311,11 @@ void UnicodeProfileArticleTest::SetUp()
     g_charsets = "up";
     reset_char_subst_mode();
     g_word_wrap_offset = -1;
-    g_mime_section = &m_mime_section;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.is_mime = true;
     m_mime_section.mime_parse_type(GetParam().type);
     m_mime_section.m_encoding = MENCODE_QPRINT;
-    g_mime_state = TEXT_MIME;
+    g_mime.state = TEXT_MIME;
     ASSERT_NO_FATAL_FAILURE(open_article_text(GetParam().body));
     ASSERT_TRUE(read_art_buf(m_presentation, false));
     ASSERT_EQ(GetParam().expected, m_presentation);
@@ -384,9 +384,9 @@ void UnicodeReplacementArticleTest::SetUp()
     ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
         "unicode substitutions", {}, "U+2019 = \"left\\t\\nright\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\n"}));
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     g_word_wrap_offset = -1;
     ASSERT_NO_FATAL_FAILURE(open_article_text(GetParam().body));
     const std::vector<std::string> lines = read_presentation();
@@ -472,9 +472,9 @@ void LongArticleBufferTest::SetUp()
     g_word_wrap_offset = -1;
     m_mime_section.mime_parse_type(value.type);
     m_mime_section.m_encoding = value.encoding;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     const std::string wire =
         repeat_article_text(value.wire_fragment, value.repetitions) + std::string(value.terminator);
     m_expected = repeat_article_text(value.text_fragment, value.repetitions) + '\n';
@@ -627,11 +627,11 @@ void WrappedArticleTest::SetUp()
     }
     g_word_wrap_offset = value.margin;
     g_wrapped_nl = WRAPPED_NL;
-    g_mime_section = &m_mime_section;
+    g_mime.section = &m_mime_section;
     m_mime_section.mime_parse_type(value.type);
     m_mime_section.m_encoding = value.encoding;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{ARTICLE_VIEW_HEADER_SIZE};
     ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + std::string(value.body), "rb"));
     ASSERT_EQ(0, seek_art(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE}));
@@ -891,7 +891,7 @@ protected:
     MimePresentation read_presentation(bool view_inline = false);
 
 private:
-    bool m_old_multimedia{g_multimedia_mime};
+    bool m_old_multimedia{g_mime.multimedia_mime};
 };
 
 void MultipartArticleIoTest::SetUp()
@@ -902,16 +902,16 @@ void MultipartArticleIoTest::SetUp()
     utf_init("UTF-8", "UTF-8");
     g_word_wrap_offset = -1;
     g_multipart_separator = "Part";
-    g_multimedia_mime = false;
+    g_mime.multimedia_mime = false;
 }
 
 void MultipartArticleIoTest::open_multipart(const MultipartArticleCase &article)
 {
     g_tc_COLS = article.columns;
     m_mime_section.mime_parse_type(article.type);
-    g_mime_section = &m_mime_section;
-    g_mime_state = MULTIPART_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = MULTIPART_MIME;
+    g_mime.is_mime = true;
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
     g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_NO_FATAL_FAILURE(open_article_text(std::string(ARTICLE_VIEW_HEADER) + article.body, "rb"));
@@ -921,7 +921,7 @@ void MultipartArticleIoTest::open_multipart(const MultipartArticleCase &article)
 
 void MultipartArticleIoTest::TearDown()
 {
-    g_multimedia_mime = m_old_multimedia;
+    g_mime.multimedia_mime = m_old_multimedia;
     ArticleIoTest::TearDown();
 }
 
@@ -957,7 +957,7 @@ TEST_P(MultipartArticleTest, presentsTextDescriptionsAndSeparatorsWithoutExposin
 
     EXPECT_EQ(GetParam().lines, result.lines);
     EXPECT_EQ(g_art_size, g_art_buf.article_pos());
-    EXPECT_EQ(&m_mime_section, g_mime_section);
+    EXPECT_EQ(&m_mime_section, g_mime.section);
 }
 
 TEST_P(MultipartArticleTest, replaysTheCachedPresentationWithoutReparsingMimeParts)
@@ -965,7 +965,7 @@ TEST_P(MultipartArticleTest, replaysTheCachedPresentationWithoutReparsingMimePar
     const MimePresentation cached = read_presentation();
     ASSERT_EQ(GetParam().lines, cached.lines);
     const ArticlePosition source_position = tell_art();
-    const MimeState       state = g_mime_state;
+    const MimeState       state = g_mime.state;
 
     const int              seek = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
     const MimePresentation replayed = read_presentation();
@@ -974,8 +974,8 @@ TEST_P(MultipartArticleTest, replaysTheCachedPresentationWithoutReparsingMimePar
     EXPECT_EQ(cached.lines, replayed.lines);
     EXPECT_EQ(cached.positions, replayed.positions);
     EXPECT_EQ(source_position, tell_art());
-    EXPECT_EQ(state, g_mime_state);
-    EXPECT_EQ(&m_mime_section, g_mime_section);
+    EXPECT_EQ(state, g_mime.state);
+    EXPECT_EQ(&m_mime_section, g_mime.section);
 }
 
 TEST_P(MultipartArticleTest, aSavedPositionResumesAtTheReadablePartAfterSkippedContent)
@@ -1094,9 +1094,9 @@ void RemoteMultipartArticleTest::SetUp()
     g_art_size = ArticlePosition{-1};
     g_tc_COLS = GetParam().columns;
     m_mime_section.mime_parse_type(GetParam().type);
-    g_mime_section = &m_mime_section;
-    g_mime_state = MULTIPART_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = MULTIPART_MIME;
+    g_mime.is_mime = true;
     const ArticlePosition body_start{ARTICLE_VIEW_HEADER_SIZE};
     g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_EQ(0, seek_art(body_start));
@@ -1275,8 +1275,8 @@ TEST_P(MultipartEndingArticleTest, repeatedEofDoesNotChangeTheCompletedPresentat
     const ArticlePosition position = g_art_buf.article_pos();
     const ArticlePosition size = g_art_size;
     const ArticlePosition source_position = tell_art();
-    const MimeState       state = g_mime_state;
-    MimeSection *const    section = g_mime_section;
+    const MimeState       state = g_mime.state;
+    MimeSection *const    section = g_mime.section;
     std::string           first{"stale"};
     std::string           second{"stale"};
 
@@ -1290,8 +1290,8 @@ TEST_P(MultipartEndingArticleTest, repeatedEofDoesNotChangeTheCompletedPresentat
     EXPECT_EQ(position, g_art_buf.article_pos());
     EXPECT_EQ(size, g_art_size);
     EXPECT_EQ(source_position, tell_art());
-    EXPECT_EQ(state, g_mime_state);
-    EXPECT_EQ(section, g_mime_section);
+    EXPECT_EQ(state, g_mime.state);
+    EXPECT_EQ(section, g_mime.section);
 }
 
 TEST_P(MultipartEndingArticleTest, replaysFinalTextAndSeparatorsFromTheCompletedCache)
@@ -1299,8 +1299,8 @@ TEST_P(MultipartEndingArticleTest, replaysFinalTextAndSeparatorsFromTheCompleted
     const MimePresentation cached = read_presentation();
     ASSERT_EQ(GetParam().lines, cached.lines);
     const ArticlePosition source_position = tell_art();
-    const MimeState       state = g_mime_state;
-    MimeSection *const    section = g_mime_section;
+    const MimeState       state = g_mime.state;
+    MimeSection *const    section = g_mime.section;
 
     const int              seek = seek_art_buf(ArticlePosition{ARTICLE_VIEW_HEADER_SIZE});
     const MimePresentation replayed = read_presentation();
@@ -1309,8 +1309,8 @@ TEST_P(MultipartEndingArticleTest, replaysFinalTextAndSeparatorsFromTheCompleted
     EXPECT_EQ(cached.lines, replayed.lines);
     EXPECT_EQ(cached.positions, replayed.positions);
     EXPECT_EQ(source_position, tell_art());
-    EXPECT_EQ(state, g_mime_state);
-    EXPECT_EQ(section, g_mime_section);
+    EXPECT_EQ(state, g_mime.state);
+    EXPECT_EQ(section, g_mime.section);
 }
 
 INSTANTIATE_TEST_SUITE_P(NestingAttachmentsAndEof, MultipartEndingArticleTest,
@@ -1427,7 +1427,7 @@ TEST_P(PipelineMultipartArticleTest, presentsConvertedAndSubstitutedTextAcrossPa
     EXPECT_EQ(m_positions, result.positions);
     EXPECT_EQ(m_expected_size, g_art_size);
     EXPECT_EQ(m_expected_size, g_art_buf.article_pos());
-    EXPECT_EQ(&m_mime_section, g_mime_section);
+    EXPECT_EQ(&m_mime_section, g_mime.section);
     EXPECT_EQ(CHARSET_NAME_WINDOWS_1252, input_charset_name());
     EXPECT_EQ(CHARSET_NAME_ASCII, output_charset_name());
 }
@@ -1448,7 +1448,7 @@ TEST_P(PipelineMultipartArticleTest, rereadsASavedPositionWithoutRepeatingThePip
     const MimePresentation cached = read_presentation();
     ASSERT_EQ(GetParam().lines, cached.lines);
     const ArticlePosition source_position = tell_art();
-    const MimeState       state = g_mime_state;
+    const MimeState       state = g_mime.state;
 
     const int              seek = seek_art_buf(m_resume_position);
     const MimePresentation result = read_presentation();
@@ -1457,7 +1457,7 @@ TEST_P(PipelineMultipartArticleTest, rereadsASavedPositionWithoutRepeatingThePip
     EXPECT_EQ(m_tail, result.lines);
     EXPECT_EQ(m_tail_positions, result.positions);
     EXPECT_EQ(source_position, tell_art());
-    EXPECT_EQ(state, g_mime_state);
+    EXPECT_EQ(state, g_mime.state);
 }
 
 TEST_P(PipelineMultipartArticleTest, retainsTheOriginalEncodedArticleAfterPresentationReads)
@@ -1554,7 +1554,7 @@ private:
     std::string      m_old_newsgroup_dir{g_newsgroup_dir};
     std::string      m_old_decode_filename{g_decode_filename};
     std::string      m_old_art_line{g_art_line};
-    std::string_view m_old_getc_line{g_mime_getc_line};
+    std::string_view m_old_getc_line{g_mime.getc_line};
     ArticleLine      m_old_first_view{g_first_view};
     ArticleLine      m_old_art_line_num{g_art_input.line_num};
     int              m_old_term_line{g_term_line};
@@ -1584,7 +1584,7 @@ void InlineMultipartArticleTest::SetUp()
     g_term_col = 0;
     g_no_wait_fork = false;
     g_auto_view_inline = false;
-    g_mime_getc_line = {};
+    g_mime.getc_line = {};
     g_tc_CR = "<CR>";
     g_tc_CE = "<CE>";
     g_tc_US = "<US>";
@@ -1638,7 +1638,7 @@ void InlineMultipartArticleTest::TearDown()
     g_newsgroup_dir = m_old_newsgroup_dir;
     g_decode_filename = m_old_decode_filename;
     g_art_line = m_old_art_line;
-    g_mime_getc_line = m_old_getc_line;
+    g_mime.getc_line = m_old_getc_line;
     g_first_view = m_old_first_view;
     g_art_input.line_num = m_old_art_line_num;
     g_term_line = m_old_term_line;
@@ -1858,9 +1858,9 @@ TEST_F(ArticleIoTest, readArtBufWithoutHidingReturnsLongArticleLine)
 TEST_F(ArticleIoTest, readArtBufDecodesBase64MimeText)
 {
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("SGVsbG8=\n");
 
     std::string first;
@@ -1874,9 +1874,9 @@ TEST_F(ArticleIoTest, readArtBufDecodesBase64MimeText)
 TEST_F(ArticleIoTest, readArtBufDecodesQuotedPrintableMimeText)
 {
     m_mime_section.m_encoding = MENCODE_QPRINT;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("Hello=20world=21\n");
 
     std::string first;
@@ -1890,17 +1890,17 @@ TEST_F(ArticleIoTest, readArtBufDecodesQuotedPrintableMimeText)
 TEST_F(ArticleIoTest, readArtBufSuppressesMimeSubHeaderBetweenParts)
 {
     m_mime_section.m_prev = &m_parent_mime_section;
-    g_mime_section = &m_mime_section;
-    g_mime_state = BETWEEN_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = BETWEEN_MIME;
+    g_mime.is_mime = true;
     open_article_text("Content-Type: text/html\n\nbody\n");
 
     std::string first;
     ASSERT_TRUE(read_art_buf(first, false));
 
     EXPECT_EQ("body \n", first);
-    EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
-    EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime.section->m_type);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime.state);
 }
 
 TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
@@ -1909,9 +1909,9 @@ TEST_F(ArticleIoTest, multipartBoundaryOutputsSeparatorLine)
     m_mime_section.m_type_name = "multipart/mixed";
     m_mime_section.m_boundary = "part";
     m_mime_section.m_boundary_len = 4;
-    g_mime_section = &m_mime_section;
-    g_mime_state = MULTIPART_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = MULTIPART_MIME;
+    g_mime.is_mime = true;
     g_multipart_separator = "part separator";
     open_article_text("--part\nContent-Type: text/plain\n\nbody\n");
 
@@ -1946,9 +1946,9 @@ TEST_F(ArticleIoTest, transferDecodesSplitUtf8BeforeCharsetConversion)
 {
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_QPRINT;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("=C3=\n=A9\n");
     std::string line;
 
@@ -1960,9 +1960,9 @@ TEST_F(ArticleIoTest, base64LinesCanSplitAUnicodeScalar)
 {
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("ww==\nqQo=\n");
     std::string line;
 
@@ -1974,9 +1974,9 @@ TEST_F(ArticleIoTest, convertsEveryCachedBase64LineOnce)
 {
     m_mime_section.mime_parse_type("text/plain; charset=windows-1252");
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("6QqSCg==\n");
     std::string line;
 
@@ -2006,9 +2006,9 @@ TEST_F(ArticleIoTest, htmlFilteringReceivesUtf8AfterTransferDecoding)
 {
     m_mime_section.mime_parse_type("text/html; charset=Latin1");
     m_mime_section.m_encoding = MENCODE_QPRINT;
-    g_mime_section = &m_mime_section;
-    g_mime_state = HTML_TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = HTML_TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("<b>=E9</b>\n");
     std::string line;
 
@@ -2020,9 +2020,9 @@ TEST_F(ArticleIoTest, bodySubstitutionFollowsCharsetConversion)
 {
     set_char_subst_mode('a');
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("\xC4\n");
     std::string line;
 
@@ -2033,9 +2033,9 @@ TEST_F(ArticleIoTest, bodySubstitutionFollowsCharsetConversion)
 TEST_F(ArticleIoTest, malformedUtf8IsReplacedBeforeCaching)
 {
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("\xC0\xAF"
                       "x\n");
     std::string line;
@@ -2059,9 +2059,9 @@ TEST_F(ArticleIoTest, base64PartialScalarSurvivesCachedNewline)
 {
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("w6kKww==\nqQo=\n");
     std::string line;
 
@@ -2076,9 +2076,9 @@ TEST_F(ArticleIoTest, unfinishedScalarAtEofIsReplaced)
 {
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("b2sKww==\n");
     std::string line;
 
@@ -2096,9 +2096,9 @@ TEST_F(ArticleIoTest, unfinishedTextIsFlushedBeforeNextMimePart)
     m_mime_section.m_prev = &m_parent_mime_section;
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     g_multipart_separator = "part separator";
     open_article_text("b2sKww==\n--part\nContent-Type: text/plain; charset=unknown\n\n\xE9\n--part--\n");
     std::string line;
@@ -2118,9 +2118,9 @@ TEST_F(ArticleIoTest, texSubstitutionDoesNotReprocessCachedPartialLine)
     set_char_subst_mode('t');
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_BASE64;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("b2sKIic=\nYQo=\n");
     std::string line;
 
@@ -2134,9 +2134,9 @@ TEST_F(ArticleIoTest, htmlScanningIgnoresLegacyCharsetState)
 {
     m_mime_section.mime_parse_type("text/html; charset=UTF-8");
     utf_init(CHARSET_NAME_ISO8859_1, CHARSET_NAME_ASCII);
-    g_mime_section = &m_mime_section;
-    g_mime_state = HTML_TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = HTML_TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("<b>\xF0\x9F\x98\x9A</b>\n");
     std::string line;
 
@@ -2147,9 +2147,9 @@ TEST_F(ArticleIoTest, htmlScanningIgnoresLegacyCharsetState)
 TEST_F(ArticleIoTest, unencodedTextUsesDeclaredCharsetWithoutMimeVersion)
 {
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = NOT_MIME;
-    g_is_mime = false;
+    g_mime.section = &m_mime_section;
+    g_mime.state = NOT_MIME;
+    g_mime.is_mime = false;
     open_article_text("\xE9\n");
     std::string line;
 
@@ -2160,9 +2160,9 @@ TEST_F(ArticleIoTest, unencodedTextUsesDeclaredCharsetWithoutMimeVersion)
 TEST_F(ArticleIoTest, unicodeExpansionGrowsPresentationCache)
 {
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     g_word_wrap_offset = -1;
     open_article_text(std::string(5000, '\xE9') + "\n");
     std::string expected;
@@ -2180,9 +2180,9 @@ TEST_F(ArticleIoTest, htmlFinalLineIsSubstitutedAfterFiltering)
 {
     set_char_subst_mode('a');
     m_mime_section.mime_parse_type("text/html; charset=Latin1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = HTML_TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = HTML_TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("<b>\xC4</b>\n");
     std::string line;
 
@@ -2247,9 +2247,9 @@ TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
     reset_char_subst_mode();
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_QPRINT;
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("=FF=E2=80=99\n");
     std::string line;
 
@@ -2262,9 +2262,9 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
 {
     set_char_subst_mode('p');
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
-    g_mime_section = &m_mime_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_mime_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     open_article_text("\xC4\n");
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));

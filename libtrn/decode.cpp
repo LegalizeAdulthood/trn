@@ -366,7 +366,7 @@ std::string decode_subject(ArticleNum art_num, int *partp, int *totalp)
 bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
 {
     g_msg.clear();
-    if (g_mime_section->m_encoding == MENCODE_YENC)
+    if (g_mime.section->m_encoding == MENCODE_YENC)
     {
         return decode_yenc_piece(mcp, first_line);
     }
@@ -378,16 +378,16 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
         fs::remove(path, error);
     };
 
-    int part = g_mime_section->m_part;
-    int total = g_mime_section->m_total;
-    if (!total && g_is_mime)
+    int part = g_mime.section->m_part;
+    int total = g_mime.section->m_total;
+    if (!total && g_mime.is_mime)
     {
         total = 1;
         part = 1;
     }
 
     fs::path dir;
-    g_decode_filename = decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
+    g_decode_filename = decode_fix_filename(g_mime.section->m_filename ? *g_mime.section->m_filename : "unknown");
     const std::string filename = g_decode_filename;
     if (mcp || total != 1 || part != 1)
     {
@@ -497,14 +497,14 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
         total = 1;
     }
 
-    if (g_mime_section->m_type == MESSAGE_MIME)
+    if (g_mime.section->m_type == MESSAGE_MIME)
     {
         mime_push_section();
         mime_parse_sub_header(fp, first_line);
         first_line = {};
     }
-    g_mime_getc_line = first_line;
-    DecodeFunc decoder = decode_function(g_mime_section->m_encoding);
+    g_mime.getc_line = first_line;
+    DecodeFunc decoder = decode_function(g_mime.section->m_encoding);
     if (!decoder)
     {
         g_msg = "Unhandled encoding type -- aborting.";

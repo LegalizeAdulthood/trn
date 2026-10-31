@@ -37,12 +37,9 @@
 #include <utility>
 #include <vector>
 
-MimeSection  g_mime_article{};
-MimeSection *g_mime_section{&g_mime_article};
-MimeState    g_mime_state{};
+MimeContext  g_mime;
 std::string  g_multipart_separator{"-=-=-=-=-=-"};
 bool         g_auto_view_inline{};
-std::string_view g_mime_getc_line;
 
 #ifdef USE_UTF_HACK
 #define CODE_POINT_MAX  0x7FFFFFFFL
@@ -429,7 +426,7 @@ int mime_exec(std::string_view cmd)
 
             case 't':
                 command += '\'';
-                command += *g_mime_section->m_type_name;
+                command += *g_mime.section->m_type_name;
                 command += '\'';
                 break;
 
@@ -443,7 +440,7 @@ int mime_exec(std::string_view cmd)
                 }
                 command += '\'';
                 command +=
-                    mime_find_param(g_mime_section->m_type_params, cmd.substr(param_begin, param_end - param_begin));
+                    mime_find_param(g_mime.section->m_type_params, cmd.substr(param_begin, param_end - param_begin));
                 pos = param_end;
                 command += '\'';
                 break;
@@ -472,29 +469,29 @@ static void mime_init_sections()
     while (mime_pop_section())
     {
     }
-    g_mime_section->mime_clear_struct();
-    g_mime_state = NOT_MIME;
+    g_mime.section->mime_clear_struct();
+    g_mime.state = NOT_MIME;
 }
 
 void mime_push_section()
 {
     MimeSection* mp = new MimeSection{};
-    mp->m_prev = g_mime_section;
-    g_mime_section = mp;
+    mp->m_prev = g_mime.section;
+    g_mime.section = mp;
 }
 
 static bool mime_pop_section()
 {
-    MimeSection* mp = g_mime_section->m_prev;
+    MimeSection *mp = g_mime.section->m_prev;
     if (mp)
     {
-        g_mime_section->mime_clear_struct();
-        delete g_mime_section;
-        g_mime_section = mp;
-        g_mime_state = g_mime_section->m_type;
+        g_mime.section->mime_clear_struct();
+        delete g_mime.section;
+        g_mime.section = mp;
+        g_mime.state = g_mime.section->m_type;
         return true;
     }
-    g_mime_state = g_mime_article.m_type;
+    g_mime.state = g_mime.article.m_type;
     return false;
 }
 
@@ -519,36 +516,36 @@ void MimeSection::mime_clear_struct()
     m_html_line_start = 0;
 }
 
-// Setup g_mime_article structure based on article's headers
+// Setup g_mime.article structure based on article's headers
 void mime_set_article()
 {
     mime_init_sections();
     // TODO: Check mime version #?
-    g_multimedia_mime = false;
-    g_is_mime = g_header_type[MIME_VER_LINE].flags & HT_MAGIC && g_parsed_header.positions[MIME_VER_LINE].min_pos >= 0;
+    g_mime.multimedia_mime = false;
+    g_mime.is_mime =
+        g_header_type[MIME_VER_LINE].flags & HT_MAGIC && g_parsed_header.positions[MIME_VER_LINE].min_pos >= 0;
 
     {
         std::string s = fetch_lines(g_nav.target.num, CONT_TYPE_LINE);
-        g_mime_section->mime_parse_type(s);
+        g_mime.section->mime_parse_type(s);
     }
 
-    if (g_is_mime)
+    if (g_mime.is_mime)
     {
         std::string s = fetch_lines(g_nav.target.num, CONT_XFER_LINE);
-        g_mime_section->mime_parse_encoding(s);
+        g_mime.section->mime_parse_encoding(s);
 
         s = fetch_lines(g_nav.target.num, CONT_DISP_LINE);
-        g_mime_section->mime_parse_disposition(s);
+        g_mime.section->mime_parse_disposition(s);
 
-        g_mime_state = g_mime_section->m_type;
-        if (g_mime_state == NOT_MIME
-         || (g_mime_state == TEXT_MIME && g_mime_section->m_encoding == MENCODE_NONE))
+        g_mime.state = g_mime.section->m_type;
+        if (g_mime.state == NOT_MIME || (g_mime.state == TEXT_MIME && g_mime.section->m_encoding == MENCODE_NONE))
         {
-            g_is_mime = false;
+            g_mime.is_mime = false;
         }
-        else if (!g_mime_section->m_type_name)
+        else if (!g_mime.section->m_type_name)
         {
-            g_mime_section->m_type_name = "text/plain";
+            g_mime.section->m_type_name = "text/plain";
         }
     }
 }
@@ -783,7 +780,7 @@ void MimeSection::mime_parse_encoding(std::string_view text)
     }
 }
 
-// Parse a multipart mime header and affect the *g_mime_section structure
+// Parse a multipart mime header and affect the *g_mime.section structure
 
 void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
 {
@@ -794,8 +791,8 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
     input_line.reserve(LINE_BUF_LEN);
     std::size_t next_pos = 0;
 
-    g_mime_section->mime_clear_struct();
-    g_mime_section->m_type = TEXT_MIME;
+    g_mime.section->mime_clear_struct();
+    g_mime.section->m_type = TEXT_MIME;
     while (true)
     {
         line.erase(0, next_pos);
@@ -848,30 +845,29 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
         switch (linetype)
         {
         case CONT_TYPE_LINE:
-            g_mime_section->mime_parse_type(header_line.substr(colon + 1));
+            g_mime.section->mime_parse_type(header_line.substr(colon + 1));
             break;
 
         case CONT_XFER_LINE:
-            g_mime_section->mime_parse_encoding(header_line.substr(colon + 1));
+            g_mime.section->mime_parse_encoding(header_line.substr(colon + 1));
             break;
 
         case CONT_DISP_LINE:
-            g_mime_section->mime_parse_disposition(header_line.substr(colon + 1));
+            g_mime.section->mime_parse_disposition(header_line.substr(colon + 1));
             break;
 
         case CONT_NAME_LINE:
         {
             const std::string_view content_name = header_line.substr(colon + 1);
-            g_mime_section->m_filename =
-                std::string{content_name.substr(mime_skip_whitespace(content_name, 0))};
+            g_mime.section->m_filename = std::string{content_name.substr(mime_skip_whitespace(content_name, 0))};
             break;
         }
         }
     }
-    g_mime_state = g_mime_section->m_type;
-    if (!g_mime_section->m_type_name)
+    g_mime.state = g_mime.section->m_type;
+    if (!g_mime.section->m_type_name)
     {
-        g_mime_section->m_type_name = "text/plain";
+        g_mime.section->m_type_name = "text/plain";
     }
 }
 
@@ -880,22 +876,22 @@ bool mime_set_state(std::string_view bp)
     bool             suppress_line = false;
     std::string_view state_line = bp;
 
-    if (g_mime_state == BETWEEN_MIME)
+    if (g_mime.state == BETWEEN_MIME)
     {
         mime_parse_sub_header(nullptr, state_line);
         suppress_line = true;
         state_line = {};
-        if (g_mime_section->m_prev->m_flags & MSF_ALTERNADONE)
+        if (g_mime.section->m_prev->m_flags & MSF_ALTERNADONE)
         {
-            g_mime_state = ALTERNATE_MIME;
+            g_mime.state = ALTERNATE_MIME;
         }
-        else if (g_mime_section->m_prev->m_flags & MSF_ALTERNATIVE)
+        else if (g_mime.section->m_prev->m_flags & MSF_ALTERNATIVE)
         {
-            g_mime_section->m_prev->m_flags |= MSF_ALTERNADONE;
+            g_mime.section->m_prev->m_flags |= MSF_ALTERNADONE;
         }
     }
 
-    while (g_mime_state == MESSAGE_MIME)
+    while (g_mime.state == MESSAGE_MIME)
     {
         mime_push_section();
         mime_parse_sub_header(nullptr, state_line);
@@ -903,17 +899,17 @@ bool mime_set_state(std::string_view bp)
         state_line = {};
     }
 
-    if (g_mime_state == MULTIPART_MIME)
+    if (g_mime.state == MULTIPART_MIME)
     {
         mime_push_section();
-        g_mime_state = SKIP_MIME;               // Skip anything before 1st part
+        g_mime.state = SKIP_MIME; // Skip anything before 1st part
     }
 
     MimeSection *boundary_section{};
     const int    ret = mime_end_of_section(state_line, &boundary_section);
     if (ret)
     {
-        while (g_mime_section->m_prev != boundary_section)
+        while (g_mime.section->m_prev != boundary_section)
         {
             mime_pop_section();
         }
@@ -924,12 +920,12 @@ bool mime_set_state(std::string_view bp)
         break;
 
     case 1:
-        g_mime_state = BETWEEN_MIME;
+        g_mime.state = BETWEEN_MIME;
         break;
 
     case 2:
         mime_pop_section();
-        g_mime_state = END_OF_MIME;
+        g_mime.state = END_OF_MIME;
         break;
     }
     return suppress_line;
@@ -945,7 +941,7 @@ int mime_end_of_section(std::string_view bp, MimeSection **boundary_section)
     {
         bp.remove_suffix(2);
     }
-    for (MimeSection *mp = g_mime_section->m_prev; mp; mp = mp->m_prev)
+    for (MimeSection *mp = g_mime.section->m_prev; mp; mp = mp->m_prev)
     {
         if (!mp->m_boundary_len)
         {
@@ -1051,7 +1047,7 @@ void mime_decode_article(bool view)
 
     while (true)
     {
-        if (g_mime_state != MESSAGE_MIME || !g_mime_section->m_total)
+        if (g_mime.state != MESSAGE_MIME || !g_mime.section->m_total)
         {
             if (!read_art(g_art_line))
             {
@@ -1062,7 +1058,7 @@ void mime_decode_article(bool view)
                 g_art_line.clear();
             }
         }
-        switch (g_mime_state)
+        switch (g_mime.state)
         {
         case BETWEEN_MIME:
         case END_OF_MIME:
@@ -1073,12 +1069,12 @@ void mime_decode_article(bool view)
         case ISO_TEXT_MIME:
         case MESSAGE_MIME:
             // TODO: Check for uuencoded file here?
-            g_mime_state = SKIP_MIME;
+            g_mime.state = SKIP_MIME;
             // FALL THROUGH
 
         case SKIP_MIME:
         {
-            MimeSection* mp = g_mime_section;
+            MimeSection *mp = g_mime.section;
             while ((mp = mp->m_prev) != nullptr && !mp->m_boundary_len)
             {
             }
@@ -1092,15 +1088,15 @@ void mime_decode_article(bool view)
         default:
             if (view)
             {
-                mcp = mime_find_mimecap_entry(*g_mime_section->m_type_name, MCF_NONE);
+                mcp = mime_find_mimecap_entry(*g_mime.section->m_type_name, MCF_NONE);
                 if (!mcp)
                 {
-                    fmt::print("No view method for {} -- skipping.\n", *g_mime_section->m_type_name);
-                    g_mime_state = SKIP_MIME;
+                    fmt::print("No view method for {} -- skipping.\n", *g_mime.section->m_type_name);
+                    g_mime.state = SKIP_MIME;
                     break;
                 }
             }
-            g_mime_state = DECODE_MIME;
+            g_mime.state = DECODE_MIME;
             if (decode_piece(mcp,
                              g_art_line.empty() || g_art_line.front() == '\n'
                                  ? std::string_view{}
@@ -1110,9 +1106,9 @@ void mime_decode_article(bool view)
                 {
                     g_art_line.clear();
                 }
-                if (g_mime_state == DECODE_MIME)
+                if (g_mime.state == DECODE_MIME)
                 {
-                    g_mime_state = SKIP_MIME;
+                    g_mime.state = SKIP_MIME;
                 }
             }
             else
@@ -1122,7 +1118,7 @@ void mime_decode_article(bool view)
                     newline();
                     fmt::print("{}", g_msg);
                 }
-                g_mime_state = SKIP_MIME;
+                g_mime.state = SKIP_MIME;
             }
             newline();
             break;
@@ -1222,7 +1218,7 @@ DecodeState qp_decode(std::FILE *ifp, DecodeState state)
     if (state == DECODE_START)
     {
         const std::string filename =
-            decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
+            decode_fix_filename(g_mime.section->m_filename ? *g_mime.section->m_filename : "unknown");
         g_decode_filename = filename;
         ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
@@ -1365,7 +1361,7 @@ all_done:
     if (state == DECODE_START)
     {
         const std::string filename =
-            decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
+            decode_fix_filename(g_mime.section->m_filename ? *g_mime.section->m_filename : "unknown");
         g_decode_filename = filename;
         ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
@@ -1456,7 +1452,7 @@ static int mime_getc(std::FILE *fp)
         return std::fgetc(fp);
     }
 
-    if (g_mime_getc_line.empty())
+    if (g_mime.getc_line.empty())
     {
         if (!read_art(g_art_line))
         {
@@ -1466,10 +1462,10 @@ static int mime_getc(std::FILE *fp)
         {
             return EOF;
         }
-        g_mime_getc_line = g_art_line;
+        g_mime.getc_line = g_art_line;
     }
-    const char ch = g_mime_getc_line.front();
-    g_mime_getc_line.remove_prefix(1);
+    const char ch = g_mime.getc_line.front();
+    g_mime.getc_line.remove_prefix(1);
     return ch;
 }
 
@@ -1490,7 +1486,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     if (state == DECODE_START)
     {
         const std::string filename =
-            decode_fix_filename(g_mime_section->m_filename ? *g_mime_section->m_filename : "unknown");
+            decode_fix_filename(g_mime.section->m_filename ? *g_mime.section->m_filename : "unknown");
         g_decode_filename = filename;
         ofp = std::fopen(filename.c_str(), "wb");
         if (!ofp)
@@ -1520,8 +1516,8 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
     }
     else
     {
-        fmt::print(ofp, "{}", g_mime_getc_line);
-        g_mime_getc_line = {};
+        fmt::print(ofp, "{}", g_mime.getc_line);
+        g_mime.getc_line = {};
         while (read_art(g_art_line))
         {
             if (mime_end_of_section(g_art_line))
@@ -1610,7 +1606,7 @@ static void filter_html_into(std::string &output, std::string_view input)
     const std::size_t      terminator = input.find('\0');
     const std::string      text{input.substr(0, terminator)};
     const std::string_view text_view{text};
-    std::string           &tag_word = g_mime_section->m_html_tag_word;
+    std::string           &tag_word = g_mime.section->m_html_tag_word;
 
     if (g_word_wrap_offset < 0)
     {
@@ -1631,10 +1627,10 @@ static void filter_html_into(std::string &output, std::string_view input)
     {
         s_word_wrap_in_pre = 0;
     }
-    s_word_wrap = g_mime_section->m_html & HF_IN_PRE ? s_word_wrap_in_pre : s_normal_word_wrap;
-    if (!g_mime_section->m_html_line_start)
+    s_word_wrap = g_mime.section->m_html & HF_IN_PRE ? s_word_wrap_in_pre : s_normal_word_wrap;
+    if (!g_mime.section->m_html_line_start)
     {
-        g_mime_section->m_html_line_start = static_cast<int>(output.size());
+        g_mime.section->m_html_line_start = static_cast<int>(output.size());
     }
 
     for (std::size_t pos = 0; pos < text.size(); pos++)
@@ -1642,33 +1638,33 @@ static void filter_html_into(std::string &output, std::string_view input)
         const std::string_view cursor_text = text_view.substr(pos);
         const char            *cursor = cursor_text.data();
         const char             current = cursor_text.front();
-        if (g_mime_section->m_html & HF_IN_DQUOTE)
+        if (g_mime.section->m_html & HF_IN_DQUOTE)
         {
             if (current == '"')
             {
-                g_mime_section->m_html &= ~HF_IN_DQUOTE;
+                g_mime.section->m_html &= ~HF_IN_DQUOTE;
             }
             else
             {
                 tag_word += current;
             }
         }
-        else if (g_mime_section->m_html & HF_IN_SQUOTE)
+        else if (g_mime.section->m_html & HF_IN_SQUOTE)
         {
             if (current == '\'')
             {
-                g_mime_section->m_html &= ~HF_IN_SQUOTE;
+                g_mime.section->m_html &= ~HF_IN_SQUOTE;
             }
             else
             {
                 tag_word += current;
             }
         }
-        else if (g_mime_section->m_html & HF_IN_TAG)
+        else if (g_mime.section->m_html & HF_IN_TAG)
         {
             if (current == '>')
             {
-                g_mime_section->m_html &= ~(HF_IN_TAG | HF_IN_COMMENT);
+                g_mime.section->m_html &= ~(HF_IN_TAG | HF_IN_COMMENT);
                 if (!tag_word.empty() && tag_word.front() == '/')
                 {
                     tag_action(output, std::string_view{tag_word}.substr(1), CLOSING_TAG);
@@ -1682,36 +1678,36 @@ static void filter_html_into(std::string &output, std::string_view input)
             else if (current == '-' && cursor[1] == '-')
             {
                 pos++;
-                g_mime_section->m_html |= HF_IN_COMMENT;
+                g_mime.section->m_html |= HF_IN_COMMENT;
             }
             else if (current == '"')
             {
-                g_mime_section->m_html |= HF_IN_DQUOTE;
+                g_mime.section->m_html |= HF_IN_DQUOTE;
             }
             else if (current == '\'')
             {
-                g_mime_section->m_html |= HF_IN_SQUOTE;
+                g_mime.section->m_html |= HF_IN_SQUOTE;
             }
             else
             {
                 tag_word += at_utf8_grey_space(cursor_text) ? ' ' : current;
             }
         }
-        else if (g_mime_section->m_html & HF_IN_COMMENT)
+        else if (g_mime.section->m_html & HF_IN_COMMENT)
         {
             if (current == '-' && cursor[1] == '-')
             {
                 pos++;
-                g_mime_section->m_html &= ~HF_IN_COMMENT;
+                g_mime.section->m_html &= ~HF_IN_COMMENT;
             }
         }
         else if (current == '<')
         {
             tag_word.clear();
             tag_word.reserve(32);
-            g_mime_section->m_html |= HF_IN_TAG;
+            g_mime.section->m_html |= HF_IN_TAG;
         }
-        else if (g_mime_section->m_html & HF_IN_HIDING)
+        else if (g_mime.section->m_html & HF_IN_HIDING)
         {
         }
         else if (current == '&' && cursor[1] == '#')
@@ -1792,14 +1788,14 @@ static void filter_html_into(std::string &output, std::string_view input)
             {
                 output.push_back(current);
             }
-            g_mime_section->m_html |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
+            g_mime.section->m_html |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
-        else if (at_utf8_grey_space(cursor_text) && !(g_mime_section->m_html & HF_IN_PRE))
+        else if (at_utf8_grey_space(cursor_text) && !(g_mime.section->m_html & HF_IN_PRE))
         {
             // We don't want to call output_prep() here.
-            if (current == ' ' || (g_mime_section->m_html & HF_SPACE_OK))
+            if (current == ' ' || (g_mime.section->m_html & HF_SPACE_OK))
             {
-                g_mime_section->m_html &= ~HF_SPACE_OK;
+                g_mime.section->m_html &= ~HF_SPACE_OK;
                 output.push_back(' ');
             }
             // In non-PRE mode spaces should be collapsed
@@ -1826,7 +1822,7 @@ static void filter_html_into(std::string &output, std::string_view input)
         else if (current == '\n') // Handle the HF_IN_PRE case
         {
             output_prep(output);
-            g_mime_section->m_html |= HF_NL_OK;
+            g_mime.section->m_html |= HF_NL_OK;
             do_newline(output, HF_NL_OK);
         }
         else
@@ -1835,7 +1831,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             output_prep(output);
             output.append(cursor, static_cast<std::size_t>(w));
             pos += static_cast<std::size_t>(w - 1);
-            g_mime_section->m_html |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
+            g_mime.section->m_html |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
 
         wrap_html_output(output);
@@ -1847,17 +1843,17 @@ std::string filter_html(std::string_view f, std::string_view prefix, int base_of
     std::string output{prefix};
     output.reserve(prefix.size() + f.size() + LINE_BUF_LEN);
 
-    if (g_mime_section->m_html_line_start >= base_offset)
+    if (g_mime.section->m_html_line_start >= base_offset)
     {
-        g_mime_section->m_html_line_start -= base_offset;
+        g_mime.section->m_html_line_start -= base_offset;
     }
     else
     {
-        g_mime_section->m_html_line_start = 0;
+        g_mime.section->m_html_line_start = 0;
     }
 
     filter_html_into(output, f);
-    g_mime_section->m_html_line_start += base_offset;
+    g_mime.section->m_html_line_start += base_offset;
     return output;
 }
 #undef XX
@@ -1900,7 +1896,7 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
     int                     num;
     char                    ch;
     bool                    match = false;
-    std::vector<HtmlBlock> &blks = g_mime_section->m_html_blocks;
+    std::vector<HtmlBlock> &blks = g_mime.section->m_html_blocks;
 
     const std::size_t      tag_end = word.find(' ');
     const std::string_view tag_name = word.substr(0, tag_end);
@@ -1931,14 +1927,14 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         return;
     }
 
-    if (g_mime_section->m_html & HF_IN_HIDING && (opening_tag || blks.empty() || tnum != blks.back().tag_num))
+    if (g_mime.section->m_html & HF_IN_HIDING && (opening_tag || blks.empty() || tnum != blks.back().tag_num))
     {
         return;
     }
 
     if (s_tag_attr[tnum].flags & TF_BR)
     {
-        g_mime_section->m_html |= HF_NL_OK;
+        g_mime.section->m_html |= HF_NL_OK;
     }
 
     if (opening_tag)
@@ -1949,24 +1945,24 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
             do_newline(output, HF_NL_OK);
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
-            || (num == (TF_P | TF_LIST) && !(g_mime_section->m_html & HF_COMPACT)))
+            || (num == (TF_P | TF_LIST) && !(g_mime.section->m_html & HF_COMPACT)))
         {
             output_prep(output);
             do_newline(output, HF_P_OK);
         }
         if (s_tag_attr[tnum].flags & TF_SPACE)
         {
-            if (g_mime_section->m_html & HF_SPACE_OK)
+            if (g_mime.section->m_html & HF_SPACE_OK)
             {
-                g_mime_section->m_html &= ~HF_SPACE_OK;
+                g_mime.section->m_html &= ~HF_SPACE_OK;
                 output.push_back(' ');
             }
         }
         if (s_tag_attr[tnum].flags & TF_TAB)
         {
-            if (g_mime_section->m_html & HF_NL_OK)
+            if (g_mime.section->m_html & HF_NL_OK)
             {
-                g_mime_section->m_html &= ~HF_SPACE_OK;
+                g_mime.section->m_html &= ~HF_SPACE_OK;
                 output.push_back('\t');
             }
         }
@@ -1978,11 +1974,11 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
 
             if (s_tag_attr[tnum].flags & TF_LIST)
             {
-                g_mime_section->m_html |= HF_COMPACT;
+                g_mime.section->m_html |= HF_COMPACT;
             }
             else
             {
-                g_mime_section->m_html &= ~HF_COMPACT;
+                g_mime.section->m_html &= ~HF_COMPACT;
             }
         }
         else
@@ -1992,7 +1988,7 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
 
         if ((s_tag_attr[tnum].flags & (TF_BLOCK | TF_HIDE)) == (TF_BLOCK | TF_HIDE))
         {
-            g_mime_section->m_html |= HF_IN_HIDING;
+            g_mime.section->m_html |= HF_IN_HIDING;
         }
 
         switch (tnum)
@@ -2016,18 +2012,18 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         case TAG_HR:
             output_prep(output);
             output += "--";
-            g_mime_section->m_html |= HF_NL_OK;
+            g_mime.section->m_html |= HF_NL_OK;
             do_newline(output, HF_NL_OK);
             break;
 
         case TAG_IMG:
             output_prep(output);
-            if (g_mime_section->m_html & HF_SPACE_OK)
+            if (g_mime.section->m_html & HF_SPACE_OK)
             {
                 output.push_back(' ');
             }
             output += "[Image] ";
-            g_mime_section->m_html &= ~HF_SPACE_OK;
+            g_mime.section->m_html &= ~HF_SPACE_OK;
             break;
 
         case TAG_OL:
@@ -2146,11 +2142,11 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
                 output += "* ";
                 break;
             }
-            g_mime_section->m_html |= HF_NL_OK | HF_P_OK;
+            g_mime.section->m_html |= HF_NL_OK | HF_P_OK;
             break;
 
         case TAG_PRE:
-            g_mime_section->m_html |= HF_IN_PRE;
+            g_mime.section->m_html |= HF_IN_PRE;
             s_word_wrap = s_word_wrap_in_pre;
             break;
         }
@@ -2171,12 +2167,12 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
                     break;
                 }
             }
-            g_mime_section->m_html &= ~HF_IN_HIDING;
+            g_mime.section->m_html &= ~HF_IN_HIDING;
             while (j-- > 0)
             {
                 if (s_tag_attr[blks[j].tag_num].flags & TF_HIDE)
                 {
-                    g_mime_section->m_html |= HF_IN_HIDING;
+                    g_mime.section->m_html |= HF_IN_HIDING;
                     break;
                 }
             }
@@ -2185,32 +2181,32 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         j = size_cast<int>(blks) - 1;
         if (j >= 0 && s_tag_attr[blks[j].tag_num].flags & TF_LIST)
         {
-            g_mime_section->m_html |= HF_COMPACT;
+            g_mime.section->m_html |= HF_COMPACT;
         }
         else
         {
-            g_mime_section->m_html &= ~HF_COMPACT;
+            g_mime.section->m_html &= ~HF_COMPACT;
         }
 
-        if (s_tag_attr[tnum].flags & TF_NL && g_mime_section->m_html & HF_NL_OK)
+        if (s_tag_attr[tnum].flags & TF_NL && g_mime.section->m_html & HF_NL_OK)
         {
-            g_mime_section->m_html |= HF_QUEUED_NL;
-            g_mime_section->m_html &= ~HF_SPACE_OK;
+            g_mime.section->m_html |= HF_QUEUED_NL;
+            g_mime.section->m_html &= ~HF_SPACE_OK;
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
-            || (num == (TF_P | TF_LIST) && !(g_mime_section->m_html & HF_COMPACT)))
+            || (num == (TF_P | TF_LIST) && !(g_mime.section->m_html & HF_COMPACT)))
         {
-            if (g_mime_section->m_html & HF_P_OK)
+            if (g_mime.section->m_html & HF_P_OK)
             {
-                g_mime_section->m_html |= HF_QUEUED_P;
-                g_mime_section->m_html &= ~HF_SPACE_OK;
+                g_mime.section->m_html |= HF_QUEUED_P;
+                g_mime.section->m_html &= ~HF_SPACE_OK;
             }
         }
 
         switch (tnum)
         {
         case TAG_PRE:
-            g_mime_section->m_html &= ~HF_IN_PRE;
+            g_mime.section->m_html &= ~HF_IN_PRE;
             s_word_wrap = s_normal_word_wrap;
             break;
         }
@@ -2218,33 +2214,33 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
 
 #ifdef DEBUGGING
     fmt::print("{:>{}} % -> ", "", 4 + 25);
-    if (g_mime_section->m_html == 0)
+    if (g_mime.section->m_html == 0)
         fmt::print("0 ");
-    if (g_mime_section->m_html & HF_IN_TAG)
+    if (g_mime.section->m_html & HF_IN_TAG)
         fmt::print("HF_IN_TAG ");
-    if (g_mime_section->m_html & HF_IN_COMMENT)
+    if (g_mime.section->m_html & HF_IN_COMMENT)
         fmt::print("HF_IN_COMMENT ");
-    if (g_mime_section->m_html & HF_IN_HIDING)
+    if (g_mime.section->m_html & HF_IN_HIDING)
         fmt::print("HF_IN_HIDING ");
-    if (g_mime_section->m_html & HF_IN_PRE)
+    if (g_mime.section->m_html & HF_IN_PRE)
         fmt::print("HF_IN_PRE ");
-    if (g_mime_section->m_html & HF_IN_DQUOTE)
+    if (g_mime.section->m_html & HF_IN_DQUOTE)
         fmt::print("HF_IN_DQUOTE ");
-    if (g_mime_section->m_html & HF_IN_SQUOTE)
+    if (g_mime.section->m_html & HF_IN_SQUOTE)
         fmt::print("HF_IN_SQUOTE ");
-    if (g_mime_section->m_html & HF_QUEUED_P)
+    if (g_mime.section->m_html & HF_QUEUED_P)
         fmt::print("HF_QUEUED_P ");
-    if (g_mime_section->m_html & HF_P_OK)
+    if (g_mime.section->m_html & HF_P_OK)
         fmt::print("HF_P_OK ");
-    if (g_mime_section->m_html & HF_QUEUED_NL)
+    if (g_mime.section->m_html & HF_QUEUED_NL)
         fmt::print("HF_QUEUED_NL ");
-    if (g_mime_section->m_html & HF_NL_OK)
+    if (g_mime.section->m_html & HF_NL_OK)
         fmt::print("HF_NL_OK ");
-    if (g_mime_section->m_html & HF_NEED_INDENT)
+    if (g_mime.section->m_html & HF_NEED_INDENT)
         fmt::print("HF_NEED_INDENT ");
-    if (g_mime_section->m_html & HF_SPACE_OK)
+    if (g_mime.section->m_html & HF_SPACE_OK)
         fmt::print("HF_SPACE_OK ");
-    if (g_mime_section->m_html & HF_COMPACT)
+    if (g_mime.section->m_html & HF_COMPACT)
         fmt::print("HF_COMPACT ");
     fmt::print("\n");
 #endif
@@ -2252,14 +2248,14 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
 
 static void output_prep(std::string &output)
 {
-    if (g_mime_section->m_html & HF_QUEUED_P)
+    if (g_mime.section->m_html & HF_QUEUED_P)
     {
-        g_mime_section->m_html &= ~HF_QUEUED_P;
+        g_mime.section->m_html &= ~HF_QUEUED_P;
         do_newline(output, HF_P_OK);
     }
-    if (g_mime_section->m_html & HF_QUEUED_NL)
+    if (g_mime.section->m_html & HF_QUEUED_NL)
     {
-        g_mime_section->m_html &= ~HF_QUEUED_NL;
+        g_mime.section->m_html &= ~HF_QUEUED_NL;
         do_newline(output, HF_NL_OK);
     }
     append_indent(output);
@@ -2267,13 +2263,13 @@ static void output_prep(std::string &output)
 
 static void do_newline(std::string &output, HtmlFlags flag)
 {
-    if (g_mime_section->m_html & flag)
+    if (g_mime.section->m_html & flag)
     {
-        g_mime_section->m_html &= ~(flag | HF_SPACE_OK);
+        g_mime.section->m_html &= ~(flag | HF_SPACE_OK);
         append_indent(output);
         output.push_back('\n');
-        g_mime_section->m_html_line_start = static_cast<int>(output.size());
-        g_mime_section->m_html |= HF_NEED_INDENT;
+        g_mime.section->m_html_line_start = static_cast<int>(output.size());
+        g_mime.section->m_html |= HF_NEED_INDENT;
     }
 }
 
@@ -2284,7 +2280,7 @@ static void wrap_html_output(std::string &output)
         return;
     }
 
-    const std::size_t line_start = static_cast<std::size_t>(g_mime_section->m_html_line_start);
+    const std::size_t line_start = static_cast<std::size_t>(g_mime.section->m_html_line_start);
     const std::size_t cols = static_cast<std::size_t>(g_tc_COLS);
     if (line_start >= output.size() || output.size() - line_start <= cols)
     {
@@ -2305,17 +2301,17 @@ static void wrap_html_output(std::string &output)
         }
         if (wrap_pos - line_start > cols || wrap_pos >= output.size())
         {
-            g_mime_section->m_html_line_start += g_tc_COLS;
+            g_mime.section->m_html_line_start += g_tc_COLS;
             return;
         }
     }
 
-    const HtmlFlags flag_save = g_mime_section->m_html;
-    g_mime_section->m_html &= ~HF_SPACE_OK;
+    const HtmlFlags flag_save = g_mime.section->m_html;
+    g_mime.section->m_html &= ~HF_SPACE_OK;
     output[wrap_pos] = '\n';
     const std::size_t new_line_start = wrap_pos + 1;
-    g_mime_section->m_html_line_start = static_cast<int>(new_line_start);
-    g_mime_section->m_html |= HF_NEED_INDENT;
+    g_mime.section->m_html_line_start = static_cast<int>(new_line_start);
+    g_mime.section->m_html |= HF_NEED_INDENT;
 
     std::string indent;
     append_indent(indent);
@@ -2326,7 +2322,7 @@ static void wrap_html_output(std::string &output)
         content_pos++;
     }
     output.replace(new_line_start, content_pos - new_line_start, indent);
-    g_mime_section->m_html = flag_save;
+    g_mime.section->m_html = flag_save;
 }
 
 static int append_indent(std::string &output)
@@ -2334,14 +2330,14 @@ static int append_indent(std::string &output)
     int spaces;
     int len = 0;
 
-    if (!(g_mime_section->m_html & HF_NEED_INDENT))
+    if (!(g_mime.section->m_html & HF_NEED_INDENT))
     {
         return len;
     }
 
-    g_mime_section->m_html &= ~HF_NEED_INDENT;
+    g_mime.section->m_html &= ~HF_NEED_INDENT;
 
-    const std::vector<HtmlBlock> &blks = g_mime_section->m_html_blocks;
+    const std::vector<HtmlBlock> &blks = g_mime.section->m_html_blocks;
     for (const HtmlBlock &block : blks)
     {
         int ch = block.indent;

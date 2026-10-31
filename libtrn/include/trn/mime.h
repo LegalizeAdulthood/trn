@@ -104,6 +104,16 @@ struct MimeSection
     HtmlFlags        m_html;
 };
 
+struct MimeContext
+{
+    MimeSection      article{};
+    MimeSection     *section{&article};
+    MimeState        state{};
+    std::string_view getc_line;
+    bool             is_mime{};         // process mime in an article?
+    bool             multimedia_mime{}; // images/audio to see/hear?
+};
+
 enum TagFlags : std::uint16_t
 {
     TF_NONE = 0x0000,
@@ -148,12 +158,9 @@ struct HtmlTag
     TagFlags         flags;
 };
 
-extern MimeSection  g_mime_article;
-extern MimeSection *g_mime_section;
-extern MimeState    g_mime_state;
+extern MimeContext  g_mime;
 extern std::string  g_multipart_separator;
 extern bool         g_auto_view_inline;
-extern std::string_view g_mime_getc_line;
 
 enum MimeCapFlags : std::uint8_t
 {

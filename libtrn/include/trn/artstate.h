@@ -26,8 +26,6 @@ extern bool          g_do_fseek;        // should we back up in article file?
 extern bool          g_old_subject;     // not 1st art in subject thread
 extern ArticleLine   g_top_line;        // top line of current screen
 extern bool          g_do_hiding;       // hide header lines with -h?
-extern bool          g_is_mime;         // process mime in an article?
-extern bool          g_multimedia_mime; // images/audio to see/hear?
 extern bool          g_rotate;          // has rotation been requested?
 extern std::string   g_prompt;          // pointer to current prompt
 extern std::string   g_first_line;      // special first line?

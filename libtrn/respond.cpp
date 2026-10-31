@@ -351,7 +351,7 @@ SaveResult save_article(std::string_view command)
                 do_interp(get_env_var("EXSAVER", get_env_var("CUSTOMSAVER", CUSTOM_SAVER)));
             invoke(saver_command.c_str(), nullptr);
         }
-        else if (g_is_mime)
+        else if (g_mime.is_mime)
         {
             fmt::print("Extracting MIME article into {}:\n", fs::current_path().generic_string());
             term_down(1);
@@ -431,18 +431,18 @@ SaveResult save_article(std::string_view command)
                 fmt::print("Extracting {} file into {}:\n", decode_type == 3 ? "yEnc" : "uuencoded",
                            fs::current_path().generic_string());
                 term_down(1);
-                g_mime_section->m_type = IMAGE_MIME;
+                g_mime.section->m_type = IMAGE_MIME;
                 if (!filename.empty())
                 {
-                    g_mime_section->m_filename = filename;
+                    g_mime.section->m_filename = filename;
                 }
                 else
                 {
-                    g_mime_section->m_filename.reset();
+                    g_mime.section->m_filename.reset();
                 }
-                g_mime_section->m_encoding = decode_type == 3 ? MENCODE_YENC : MENCODE_UUE;
-                g_mime_section->m_part = part;
-                g_mime_section->m_total = total;
+                g_mime.section->m_encoding = decode_type == 3 ? MENCODE_YENC : MENCODE_UUE;
+                g_mime.section->m_part = part;
+                g_mime.section->m_total = total;
                 if (!decode_piece(nullptr, {}) && !g_msg.empty())
                 {
                     newline();
@@ -745,7 +745,7 @@ SaveResult view_article()
     }
     fmt::print("Processing attachments...\n");
     term_down(1);
-    if (g_is_mime)
+    if (g_mime.is_mime)
     {
         mime_decode_article(true);
     }
@@ -768,18 +768,18 @@ SaveResult view_article()
                 MimeCapEntry *mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_input.pos;
                 seek_art(g_save_from);
-                g_mime_section->m_type = UNHANDLED_MIME;
+                g_mime.section->m_type = UNHANDLED_MIME;
                 if (!filename.empty())
                 {
-                    g_mime_section->m_filename = filename;
+                    g_mime.section->m_filename = filename;
                 }
                 else
                 {
-                    g_mime_section->m_filename.reset();
+                    g_mime.section->m_filename.reset();
                 }
-                g_mime_section->m_encoding = MENCODE_UUE;
-                g_mime_section->m_part = part;
-                g_mime_section->m_total = total;
+                g_mime.section->m_encoding = MENCODE_UUE;
+                g_mime.section->m_part = part;
+                g_mime.section->m_total = total;
                 if (mc && !decode_piece(mc, {}) && !g_msg.empty())
                 {
                     newline();

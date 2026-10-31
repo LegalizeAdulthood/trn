@@ -240,16 +240,16 @@ struct MimeBoundaryTest : Test
 protected:
     void SetUp() override
     {
-        m_old_mime_section = g_mime_section;
+        m_old_mime_section = g_mime.section;
         m_parent.m_boundary = "part-boundary";
         m_parent.m_boundary_len = static_cast<short>(m_parent.m_boundary->size());
         m_current.m_prev = &m_parent;
-        g_mime_section = &m_current;
+        g_mime.section = &m_current;
     }
 
     void TearDown() override
     {
-        g_mime_section = m_old_mime_section;
+        g_mime.section = m_old_mime_section;
     }
 
     int end_of_section(std::string_view line)
@@ -341,8 +341,8 @@ protected:
     {
         m_old_art_fp = g_art_input.fp;
         m_old_data_source = g_data_source;
-        m_old_mime_section = g_mime_section;
-        m_old_mime_state = g_mime_state;
+        m_old_mime_section = g_mime.section;
+        m_old_mime_state = g_mime.state;
 
         head_init();
         m_input = std::tmpfile();
@@ -351,7 +351,7 @@ protected:
         m_current.m_prev = &m_parent;
         g_art_input.fp = m_input;
         g_data_source = &m_data_source;
-        g_mime_section = &m_current;
+        g_mime.section = &m_current;
     }
 
     void TearDown() override
@@ -364,8 +364,8 @@ protected:
         m_parent.mime_clear_struct();
         g_art_input.fp = m_old_art_fp;
         g_data_source = m_old_data_source;
-        g_mime_section = m_old_mime_section;
-        g_mime_state = m_old_mime_state;
+        g_mime.section = m_old_mime_section;
+        g_mime.state = m_old_mime_state;
         head_final();
     }
 
@@ -390,7 +390,7 @@ protected:
 TEST_F(MimeSetStateTest, suppressesSubHeaderLineBetweenParts)
 {
     write_article_remainder("\n");
-    g_mime_state = BETWEEN_MIME;
+    g_mime.state = BETWEEN_MIME;
 
     std::string line{"Content-Type: text/html\n"};
     if (mime_set_state(std::string_view{line}))
@@ -399,26 +399,26 @@ TEST_F(MimeSetStateTest, suppressesSubHeaderLineBetweenParts)
     }
 
     EXPECT_TRUE(line.empty());
-    EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
-    EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime.section->m_type);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime.state);
 }
 
 TEST_F(MimeSetStateTest, returnsSuppressionForSubHeaderLine)
 {
     write_article_remainder("\n");
-    g_mime_state = BETWEEN_MIME;
+    g_mime.state = BETWEEN_MIME;
 
     EXPECT_TRUE(mime_set_state(std::string_view{"Content-Type: text/html\n"}));
 
-    EXPECT_EQ(HTML_TEXT_MIME, g_mime_section->m_type);
-    EXPECT_EQ(HTML_TEXT_MIME, g_mime_state);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime.section->m_type);
+    EXPECT_EQ(HTML_TEXT_MIME, g_mime.state);
 }
 
 TEST_F(MimeSetStateTest, movesToBetweenMimeOnPartBoundary)
 {
     m_parent.m_boundary = "part-boundary";
     m_parent.m_boundary_len = static_cast<short>(m_parent.m_boundary->size());
-    g_mime_state = SKIP_MIME;
+    g_mime.state = SKIP_MIME;
 
     std::string line{"--part-boundary\n"};
     if (mime_set_state(std::string_view{line}))
@@ -427,18 +427,18 @@ TEST_F(MimeSetStateTest, movesToBetweenMimeOnPartBoundary)
     }
 
     EXPECT_EQ("--part-boundary\n", line);
-    EXPECT_EQ(BETWEEN_MIME, g_mime_state);
+    EXPECT_EQ(BETWEEN_MIME, g_mime.state);
 }
 
 TEST_F(MimeSetStateTest, returnsNoSuppressionForPartBoundary)
 {
     m_parent.m_boundary = "part-boundary";
     m_parent.m_boundary_len = static_cast<short>(m_parent.m_boundary->size());
-    g_mime_state = SKIP_MIME;
+    g_mime.state = SKIP_MIME;
 
     EXPECT_FALSE(mime_set_state(std::string_view{"--part-boundary\n"}));
 
-    EXPECT_EQ(BETWEEN_MIME, g_mime_state);
+    EXPECT_EQ(BETWEEN_MIME, g_mime.state);
 }
 
 namespace
@@ -449,10 +449,10 @@ struct MimeSubHeaderTest : Test
 protected:
     void SetUp() override
     {
-        m_old_mime_section = g_mime_section;
-        m_old_mime_state = g_mime_state;
+        m_old_mime_section = g_mime.section;
+        m_old_mime_state = g_mime.state;
         head_init();
-        g_mime_section = &m_mime_section;
+        g_mime.section = &m_mime_section;
         m_input = std::tmpfile();
         ASSERT_NE(nullptr, m_input);
     }
@@ -464,8 +464,8 @@ protected:
             std::fclose(m_input);
         }
         m_mime_section.mime_clear_struct();
-        g_mime_section = m_old_mime_section;
-        g_mime_state = m_old_mime_state;
+        g_mime.section = m_old_mime_section;
+        g_mime.state = m_old_mime_state;
         head_final();
     }
 
@@ -554,11 +554,11 @@ protected:
         MimeTest::SetUp();
         g_decode_filename = TRN_TEST_MIME_PDF_DECODE_FILE;
         m_mime_section.mime_parse_type(TRN_TEST_MIME_PDF_CONTENT_TYPE "; " TRN_TEST_MIME_PDF_SECTION_PARAMS);
-        g_mime_section = &m_mime_section;
+        g_mime.section = &m_mime_section;
     }
     void TearDown() override
     {
-        g_mime_section = nullptr;
+        g_mime.section = nullptr;
         g_decode_filename.clear();
         MimeTest::TearDown();
     }
@@ -623,7 +623,7 @@ protected:
         MimeTest::SetUp();
         m_old_current_path = fs::current_path();
         m_old_art_fp = g_art_input.fp;
-        m_old_mime_section = g_mime_section;
+        m_old_mime_section = g_mime.section;
         m_old_data_source = g_data_source;
         m_old_no_wait_fork = g_no_wait_fork;
         m_old_decode_filename = g_decode_filename;
@@ -641,7 +641,7 @@ protected:
         m_input = std::tmpfile();
         ASSERT_NE(nullptr, m_input);
 
-        g_mime_section = &m_mime_section;
+        g_mime.section = &m_mime_section;
         g_data_source = &m_data_source;
         g_art_input.fp = nullptr;
         g_no_wait_fork = true;
@@ -661,7 +661,7 @@ protected:
         std::error_code error;
         fs::current_path(m_old_current_path, error);
         g_art_input.fp = m_old_art_fp;
-        g_mime_section = m_old_mime_section;
+        g_mime.section = m_old_mime_section;
         g_data_source = m_old_data_source;
         g_no_wait_fork = m_old_no_wait_fork;
         g_decode_filename = m_old_decode_filename;
@@ -728,11 +728,11 @@ struct HtmlFilterTest : Test
 protected:
     void SetUp() override
     {
-        m_old_mime_section = g_mime_section;
+        m_old_mime_section = g_mime.section;
         m_old_cols = g_tc_COLS;
         m_old_word_wrap_offset = g_word_wrap_offset;
 
-        g_mime_section = &m_mime_section;
+        g_mime.section = &m_mime_section;
         g_tc_COLS = 200;
         g_word_wrap_offset = 0;
     }
@@ -740,7 +740,7 @@ protected:
     void TearDown() override
     {
         m_mime_section.mime_clear_struct();
-        g_mime_section = m_old_mime_section;
+        g_mime.section = m_old_mime_section;
         g_tc_COLS = m_old_cols;
         g_word_wrap_offset = m_old_word_wrap_offset;
     }

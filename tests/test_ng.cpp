@@ -5195,9 +5195,9 @@ private:
     std::filesystem::path m_output_dir;
     std::FILE            *m_old_art_fp{g_art_input.fp};
     DataSource           *m_old_data_source{g_data_source};
-    MimeSection          *m_old_mime_section{g_mime_section};
-    MimeState             m_old_mime_state{g_mime_state};
-    bool                  m_old_is_mime{g_is_mime};
+    MimeSection          *m_old_mime_section{g_mime.section};
+    MimeState             m_old_mime_state{g_mime.state};
+    bool                  m_old_is_mime{g_mime.is_mime};
     ArticlePosition       m_old_art_pos{g_art_input.pos};
     ArticlePosition       m_old_raw_art_size{g_raw_art_size};
     ArticlePosition       m_old_art_size{g_art_size};
@@ -5216,9 +5216,9 @@ void CachedDisplayArticleTest::SetUp()
     g_art_buf.init();
     g_data_source = &m_data_source;
     m_section.mime_parse_type("text/plain; charset=Latin1");
-    g_mime_section = &m_section;
-    g_mime_state = TEXT_MIME;
-    g_is_mime = true;
+    g_mime.section = &m_section;
+    g_mime.state = TEXT_MIME;
+    g_mime.is_mime = true;
     g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{};
     g_tc_COLS = 80;
     g_word_wrap_offset = 8;
@@ -5263,9 +5263,9 @@ void CachedDisplayArticleTest::TearDown()
     g_art_buf.final();
     g_art_input.fp = m_old_art_fp;
     g_data_source = m_old_data_source;
-    g_mime_section = m_old_mime_section;
-    g_mime_state = m_old_mime_state;
-    g_is_mime = m_old_is_mime;
+    g_mime.section = m_old_mime_section;
+    g_mime.state = m_old_mime_state;
+    g_mime.is_mime = m_old_is_mime;
     g_art_input.pos = m_old_art_pos;
     g_raw_art_size = m_old_raw_art_size;
     g_art_size = m_old_art_size;
@@ -12498,7 +12498,7 @@ TEST_F(JumpToEndArticleTest, decodesTheRemainingMimeTextAndRestoresTheHeaderRela
     const std::string     header{"Subject: end\n\n"};
     const ArticlePosition header_end{static_cast<long>(header.size())};
     set_article_text(header + "First\n=4C=61=73=74\n");
-    g_mime_section->m_encoding = MENCODE_QPRINT;
+    g_mime.section->m_encoding = MENCODE_QPRINT;
     g_parsed_header.positions[PAST_HEADER].min_pos = header_end;
     ASSERT_EQ(0, seek_art(header_end));
     g_art_buf.set_seek(header_end);

@@ -8224,11 +8224,11 @@ private:
     ArticlePosition               m_old_save_from{g_save_from};
     bool                          m_old_norm_always{g_norm_always};
     bool                          m_old_mbox_always{g_mbox_always};
-    MimeSection                   m_old_mime_article{std::move(g_mime_article)};
-    MimeSection                  *m_old_mime_section{g_mime_section};
-    MimeState                     m_old_mime_state{g_mime_state};
-    bool                          m_old_is_mime{g_is_mime};
-    bool                          m_old_multimedia_mime{g_multimedia_mime};
+    MimeSection                   m_old_mime_article{std::move(g_mime.article)};
+    MimeSection                  *m_old_mime_section{g_mime.section};
+    MimeState                     m_old_mime_state{g_mime.state};
+    bool                          m_old_is_mime{g_mime.is_mime};
+    bool                          m_old_multimedia_mime{g_mime.multimedia_mime};
     std::string                   m_old_msg{g_msg};
 };
 
@@ -8253,8 +8253,8 @@ void SaveArticleTest::SetUp()
     m_env.expect_no_envars({"NORMSAVER", "MBOXSAVER"});
     g_norm_always = true;
     g_mbox_always = false;
-    g_mime_article = {};
-    g_mime_section = &g_mime_article;
+    g_mime.article = {};
+    g_mime.section = &g_mime.article;
     open_group(false);
     g_nav.current.art->select_article(AUTO_KILL_NONE);
     g_sel.selected_only = true;
@@ -8264,12 +8264,12 @@ void SaveArticleTest::SetUp()
 
 void SaveArticleTest::TearDown()
 {
-    g_mime_article.mime_clear_struct();
-    g_mime_article = std::move(m_old_mime_article);
-    g_mime_section = m_old_mime_section;
-    g_mime_state = m_old_mime_state;
-    g_is_mime = m_old_is_mime;
-    g_multimedia_mime = m_old_multimedia_mime;
+    g_mime.article.mime_clear_struct();
+    g_mime.article = std::move(m_old_mime_article);
+    g_mime.section = m_old_mime_section;
+    g_mime.state = m_old_mime_state;
+    g_mime.is_mime = m_old_is_mime;
+    g_mime.multimedia_mime = m_old_multimedia_mime;
     g_priv_dir = m_old_priv_dir;
     g_save_dest = m_old_save_dest;
     g_save_from = m_old_save_from;
@@ -8894,7 +8894,7 @@ private:
     std::string      m_old_extract_prog{g_extract_prog};
     std::string      m_old_decode_filename{g_decode_filename};
     std::string      m_old_art_line{std::move(g_art_line)};
-    std::string_view m_old_mime_getc_line{g_mime_getc_line};
+    std::string_view m_old_mime_getc_line{g_mime.getc_line};
 };
 
 void ExtractSaveArticleTest::SetUp()
@@ -8906,7 +8906,7 @@ void ExtractSaveArticleTest::SetUp()
     m_receiver = "\"" TRN_TEST_PROCESS_TOOL "\" poster -h";
     g_extract_dest.clear();
     g_extract_prog.clear();
-    g_mime_getc_line = {};
+    g_mime.getc_line = {};
 }
 
 void ExtractSaveArticleTest::TearDown()
@@ -8916,7 +8916,7 @@ void ExtractSaveArticleTest::TearDown()
     g_extract_prog = m_old_extract_prog;
     g_decode_filename = m_old_decode_filename;
     g_art_line = std::move(m_old_art_line);
-    g_mime_getc_line = m_old_mime_getc_line;
+    g_mime.getc_line = m_old_mime_getc_line;
 }
 
 void ExtractSaveArticleTest::article(std::string_view body, std::string_view headers)

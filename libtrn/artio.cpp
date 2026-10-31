@@ -391,7 +391,7 @@ char *read_art_buf_raw(bool view_inline)
         return bp;
     }
     if (g_art_buf.pos() == g_art_size - g_parsed_header.positions[PAST_HEADER].min_pos &&
-        g_mime_section->m_decoder_pending.empty())
+        g_mime.section->m_decoder_pending.empty())
     {
         return nullptr;
     }
@@ -424,14 +424,14 @@ char *read_art_buf_raw(bool view_inline)
     }
 
 read_more:
-    extra_offset = g_mime_state == HTML_TEXT_MIME? 1024 : 0;
+    extra_offset = g_mime.state == HTML_TEXT_MIME ? 1024 : 0;
     o = read_offset + extra_offset;
     if (g_art_buf.bytes.size() < static_cast<std::size_t>(g_art_buf.pos().value_of() + o + LINE_BUF_LEN))
     {
         g_art_buf.bytes.resize(g_art_buf.bytes.size() + ART_BUF_GROWTH);
         bp = g_art_buf.data() + g_art_buf.pos().value_of();
     }
-    switch (g_mime_state)
+    switch (g_mime.state)
     {
     case IMAGE_MIME:
     case AUDIO_MIME:
@@ -444,7 +444,7 @@ read_more:
         const std::string chunk = read_art_chunk(read_limit);
         if (chunk.empty())
         {
-            if (!read_offset && g_mime_section->m_decoder_pending.empty())
+            if (!read_offset && g_mime.section->m_decoder_pending.empty())
             {
                 *bp = '\0';
                 len = 0;
@@ -470,19 +470,19 @@ read_more:
             }
             write_newline(g_art_buf.offset(bp + len++ + extra_offset));
         }
-        if (!g_is_mime)
+        if (!g_mime.is_mime)
         {
             goto mime_switch;
         }
         o = line_offset + extra_offset;
         if (mime_end_of_section(std::string_view{bp + o}) &&
-            (line_offset || !g_mime_section->m_decoder_pending.empty()))
+            (line_offset || !g_mime.section->m_decoder_pending.empty()))
         {
             const std::string boundary{bp + o};
             const std::size_t source = static_cast<std::size_t>(converted_offset + extra_offset);
-            const std::string decoded = g_mime_section->decode_text_chunk(
+            const std::string decoded = g_mime.section->decode_text_chunk(
                 {bp + source, static_cast<std::size_t>(line_offset - converted_offset)}, true);
-            std::string tail = g_mime_state == HTML_TEXT_MIME
+            std::string tail = g_mime.state == HTML_TEXT_MIME
                                    ? filter_html(decoded, {bp, static_cast<std::size_t>(filter_offset)},
                                                  static_cast<int>(g_art_buf.pos().value_of()))
                                    : std::string{bp, static_cast<std::size_t>(converted_offset)} + decoded;
@@ -494,7 +494,7 @@ read_more:
             const std::size_t newline = tail.find('\n');
             len = static_cast<int>(newline == std::string::npos ? tail.size() : newline + 1);
             extra_chars = static_cast<int>(tail.size() + separator.size()) - len;
-            if (g_mime_state == END_OF_MIME && !g_mime_section->m_prev)
+            if (g_mime.state == END_OF_MIME && !g_mime.section->m_prev)
             {
                 finish_mime_article();
             }
@@ -502,7 +502,7 @@ read_more:
         }
         if (mime_set_state(std::string_view{bp + o}))
         {
-            if (g_mime_state == TEXT_MIME || g_mime_state == HTML_TEXT_MIME || g_mime_state == ISO_TEXT_MIME)
+            if (g_mime.state == TEXT_MIME || g_mime.state == HTML_TEXT_MIME || g_mime.state == ISO_TEXT_MIME)
             {
                 read_offset = 0;
                 line_offset = 0;
@@ -517,16 +517,16 @@ read_more:
         break;
     }
 mime_switch:
-    switch (g_mime_state)
+    switch (g_mime.state)
     {
     case ISO_TEXT_MIME:
-        g_mime_state = TEXT_MIME;
+        g_mime.state = TEXT_MIME;
         // FALL THROUGH
 
     case NOT_MIME:
     case TEXT_MIME:
     case HTML_TEXT_MIME:
-        if (g_mime_section->m_encoding == MENCODE_QPRINT)
+        if (g_mime.section->m_encoding == MENCODE_QPRINT)
         {
             o = line_offset + extra_offset;
             std::string decoded = qp_decode_string(bp + o, false);
@@ -544,7 +544,7 @@ mime_switch:
                 write_newline(g_art_buf.offset(bp + len++ + extra_offset));
             }
         }
-        else if (g_mime_section->m_encoding == MENCODE_BASE64)
+        else if (g_mime.section->m_encoding == MENCODE_BASE64)
         {
             o = line_offset + extra_offset;
             std::string decoded = b64_decode_string(bp + o);
@@ -571,11 +571,11 @@ mime_switch:
         }
         {
             const std::size_t source = static_cast<std::size_t>(converted_offset + extra_offset);
-            const std::string decoded = g_mime_section->decode_text_chunk(bp + source);
+            const std::string decoded = g_mime.section->decode_text_chunk(bp + source);
             g_art_buf.store_text(bp, source, decoded);
             len = converted_offset + static_cast<int>(decoded.size());
         }
-        if (g_mime_state != HTML_TEXT_MIME)
+        if (g_mime.state != HTML_TEXT_MIME)
         {
             const std::string presented = substitute_art_text(std::string_view{bp, static_cast<std::size_t>(len)});
             g_art_buf.store_text(bp, 0, presented);
@@ -615,8 +615,7 @@ mime_switch:
     case DECODE_MIME:
     {
         MimeCapEntry* mcp;
-        mcp = mime_find_mimecap_entry(*g_mime_section->m_type_name,
-                                    MCF_NEEDS_TERMINAL |MCF_COPIOUS_OUTPUT);
+        mcp = mime_find_mimecap_entry(*g_mime.section->m_type_name, MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT);
         if (mcp)
         {
             int save_term_line = g_term_line;
@@ -634,14 +633,14 @@ mime_switch:
                 g_art_line.copy(bp, g_art_line.size());
                 bp[g_art_line.size()] = '\0';
                 (void) mime_set_state(std::string_view{bp});
-                if (g_mime_state == DECODE_MIME)
+                if (g_mime.state == DECODE_MIME)
                 {
-                    g_mime_state = SKIP_MIME;
+                    g_mime.state = SKIP_MIME;
                 }
             }
             else
             {
-                g_mime_state = SKIP_MIME;
+                g_mime.state = SKIP_MIME;
             }
             color_pop();
             chdir_news_dir();
@@ -649,7 +648,7 @@ mime_switch:
             g_no_wait_fork = false;
             g_first_view = g_art_input.line_num;
             g_term_line = save_term_line;
-            if (g_mime_state != SKIP_MIME)
+            if (g_mime.state != SKIP_MIME)
             {
                 goto mime_switch;
             }
@@ -659,7 +658,7 @@ mime_switch:
 
     case SKIP_MIME:
     {
-        MimeSection* mp = g_mime_section;
+        MimeSection *mp = g_mime.section;
         while ((mp = mp->m_prev) != nullptr && !mp->m_boundary_len)
         {
         }
@@ -688,9 +687,9 @@ mime_switch:
     }
 
     case END_OF_MIME:
-        if (g_mime_section->m_prev)
+        if (g_mime.section->m_prev)
         {
-            g_mime_state = SKIP_MIME;
+            g_mime.state = SKIP_MIME;
         }
         else
         {
@@ -722,18 +721,18 @@ mime_switch:
         break;
 
     case UNHANDLED_MIME:
-        g_mime_state = SKIP_MIME;
+        g_mime.state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf.position;
-        description = g_mime_section->mime_description();
+        description = g_mime.section->mime_description();
         break;
 
     case ALTERNATE_MIME:
-        g_mime_state = SKIP_MIME;
+        g_mime.state = SKIP_MIME;
         *bp++ = '\001';
         ++g_art_buf.position;
         {
-            const std::string alternative = fmt::format("[Alternative: {}]\n", *g_mime_section->m_type_name);
+            const std::string alternative = fmt::format("[Alternative: {}]\n", *g_mime.section->m_type_name);
             alternative.copy(bp, alternative.size());
             bp[alternative.size()] = '\0';
             len = static_cast<int>(alternative.size());
@@ -742,25 +741,25 @@ mime_switch:
 
     case IMAGE_MIME:
     case AUDIO_MIME:
-        if (!g_mime_article.m_total && !g_multimedia_mime)
+        if (!g_mime.article.m_total && !g_mime.multimedia_mime)
         {
-            g_multimedia_mime = true;
+            g_mime.multimedia_mime = true;
         }
         // FALL THROUGH
 
     default:
         if (view_inline && g_first_view < g_art_input.line_num //
-            && (g_mime_section->m_flags & MSF_INLINE))
+            && (g_mime.section->m_flags & MSF_INLINE))
         {
-            g_mime_state = DECODE_MIME;
+            g_mime.state = DECODE_MIME;
         }
         else
         {
-            g_mime_state = SKIP_MIME;
+            g_mime.state = SKIP_MIME;
         }
         *bp++ = '\001';
         ++g_art_buf.position;
-        description = g_mime_section->mime_description();
+        description = g_mime.section->mime_description();
         break;
     }
 

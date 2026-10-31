@@ -2061,7 +2061,7 @@ private:
     ValueSaver<UnicodeSubstitutionProfile> m_profile{g_unicode_substitutions, g_unicode_substitutions};
     ValueSaver<std::string>                m_separator{g_multipart_separator, g_multipart_separator};
     ValueSaver<bool>                       m_hiding{g_do_hiding, g_do_hiding};
-    ValueSaver<bool>                       m_multimedia{g_multimedia_mime, g_multimedia_mime};
+    ValueSaver<bool>                       m_multimedia{g_mime.multimedia_mime, g_mime.multimedia_mime};
     ValueSaver<int>                        m_wrap{g_word_wrap_offset, g_word_wrap_offset};
 };
 
@@ -2192,13 +2192,13 @@ TEST_P(ArticleCacheLifecycleTest, ordinaryRefreshReusesTheCachedPresentationAndM
 {
     const ArticlePosition length = g_art_buf.len();
     const ArticlePosition source = tell_art();
-    MimeSection *const    section = g_mime_section;
-    const MimeState       state = g_mime_state;
+    MimeSection *const    section = g_mime.section;
+    const MimeState       state = g_mime.state;
     ASSERT_EQ(PS_NORM, pager_command("\f"));
     ASSERT_EQ(length, g_art_buf.len());
     ASSERT_EQ(source, tell_art());
-    ASSERT_EQ(section, g_mime_section);
-    ASSERT_EQ(state, g_mime_state);
+    ASSERT_EQ(section, g_mime.section);
+    ASSERT_EQ(state, g_mime.state);
 
     render_article();
 
@@ -2219,11 +2219,11 @@ TEST_P(ArticleCacheLifecycleTest, switchingArticlesDiscardsCachedMimeAndCharsetS
     EXPECT_EQ(DA_NORM, m_result);
     EXPECT_EQ(expected, cached_rows());
     expect_displayed(expected);
-    EXPECT_EQ(&g_mime_article, g_mime_section);
-    EXPECT_TRUE(g_mime_section->m_decoder_pending.empty());
-    EXPECT_EQ(MENCODE_NONE, g_mime_section->m_encoding);
-    EXPECT_FALSE(g_is_mime);
-    EXPECT_FALSE(g_multimedia_mime);
+    EXPECT_EQ(&g_mime.article, g_mime.section);
+    EXPECT_TRUE(g_mime.section->m_decoder_pending.empty());
+    EXPECT_EQ(MENCODE_NONE, g_mime.section->m_encoding);
+    EXPECT_FALSE(g_mime.is_mime);
+    EXPECT_FALSE(g_mime.multimedia_mime);
     EXPECT_EQ(m_other, g_parsed_header.parsed_art);
     EXPECT_EQ(g_nav.target.art, g_nav.current.art);
 }
@@ -2240,8 +2240,8 @@ TEST_P(ArticleCacheLifecycleTest, selectedConversionModePersistsWhenSwitchingArt
     EXPECT_EQ('u', current_char_subst_mode());
     EXPECT_EQ(expected, cached_rows());
     expect_displayed(expected);
-    EXPECT_TRUE(g_mime_section->m_decoder_pending.empty());
-    EXPECT_FALSE(g_multimedia_mime);
+    EXPECT_TRUE(g_mime.section->m_decoder_pending.empty());
+    EXPECT_FALSE(g_mime.multimedia_mime);
 }
 
 TEST_P(ArticleCacheLifecycleTest, returningToThePreviousArticleRebuildsItsOwnPresentation)
@@ -7241,10 +7241,10 @@ TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
     EXPECT_EQ(g_art_input.pos, virtual_read(g_art_input.line_num));
     EXPECT_FALSE(g_art_buf.empty());
     EXPECT_EQ(m_raw_positions[static_cast<std::size_t>(scenario.next_line + 1)], tell_art());
-    EXPECT_EQ(scenario.quoted_printable ? TEXT_MIME : NOT_MIME, g_mime_state);
-    EXPECT_EQ(scenario.quoted_printable ? MENCODE_QPRINT : MENCODE_NONE, g_mime_section->m_encoding);
-    EXPECT_EQ(scenario.quoted_printable, g_is_mime);
-    EXPECT_TRUE(g_mime_section->m_decoder_pending.empty());
+    EXPECT_EQ(scenario.quoted_printable ? TEXT_MIME : NOT_MIME, g_mime.state);
+    EXPECT_EQ(scenario.quoted_printable ? MENCODE_QPRINT : MENCODE_NONE, g_mime.section->m_encoding);
+    EXPECT_EQ(scenario.quoted_printable, g_mime.is_mime);
+    EXPECT_TRUE(g_mime.section->m_decoder_pending.empty());
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_FALSE(g_do_fseek);

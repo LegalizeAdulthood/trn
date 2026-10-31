@@ -67,8 +67,6 @@ bool            g_do_fseek{};             // should we back up in article file?
 bool            g_old_subject{};          // not 1st art in subject thread
 ArticleLine     g_top_line{-1};           // top line of current screen
 bool            g_do_hiding{true};        // hide header lines with -h?
-bool            g_is_mime{};              // process mime in an article?
-bool            g_multimedia_mime{};      // images/audio to see/hear?
 bool            g_rotate{};               // has rotation been requested?
 std::string     g_prompt;                 // current prompt
 std::string     g_first_line;             // s_special first line?

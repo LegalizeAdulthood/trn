@@ -91,9 +91,9 @@ protected:
         m_old_login_name = g_login_name;
         m_old_data_source = g_data_source;
         m_old_art_fp = g_art_input.fp;
-        m_old_mime_section = g_mime_section;
-        m_old_mime_getc_line = g_mime_getc_line;
-        m_old_is_mime = g_is_mime;
+        m_old_mime_section = g_mime.section;
+        m_old_mime_getc_line = g_mime.getc_line;
+        m_old_is_mime = g_mime.is_mime;
         m_old_no_wait_fork = g_no_wait_fork;
         m_old_decode_filename = g_decode_filename;
 
@@ -112,9 +112,9 @@ protected:
         g_login_name = "decode-user";
         g_data_source = &m_data_source;
         g_art_input.fp = m_input;
-        g_mime_section = &m_section;
-        g_mime_getc_line = {};
-        g_is_mime = false;
+        g_mime.section = &m_section;
+        g_mime.getc_line = {};
+        g_mime.is_mime = false;
         g_no_wait_fork = true;
 
         m_section.m_filename = "payload_bin";
@@ -141,9 +141,9 @@ protected:
             std::fclose(m_input);
         }
         g_art_input.fp = m_old_art_fp;
-        g_mime_section = m_old_mime_section;
-        g_mime_getc_line = m_old_mime_getc_line;
-        g_is_mime = m_old_is_mime;
+        g_mime.section = m_old_mime_section;
+        g_mime.getc_line = m_old_mime_getc_line;
+        g_mime.is_mime = m_old_is_mime;
         g_no_wait_fork = m_old_no_wait_fork;
         g_decode_filename = m_old_decode_filename;
         g_tmp_dir = m_old_tmp_dir;
