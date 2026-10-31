@@ -612,39 +612,39 @@ void NewsgroupData::check_expired(ArticleNum first)
         fmt::print("1-{}->\n{}{}{}\n", first.value_of() - 1, rc_line(), m_subscribe_char, rc_numbers());
     }
 #endif
-    std::string_view       rc_line = m_rc_line;
+    std::string_view       line = m_rc_line;
     const std::size_t      numbers_offset = static_cast<std::size_t>(m_num_offset);
-    const std::string_view numbers = rc_line.substr(numbers_offset);
+    const std::string_view numbers = line.substr(numbers_offset);
     const auto first_non_space = std::find_if_not(numbers.begin(), numbers.end(),
                                                   [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
-    const auto digits_end = [rc_line](std::size_t offset)
+    const auto digits_end = [line](std::size_t offset)
     {
-        const std::size_t end = rc_line.find_first_not_of("0123456789", offset);
-        return end == std::string_view::npos ? rc_line.size() : end;
+        const std::size_t end = line.find_first_not_of("0123456789", offset);
+        return end == std::string_view::npos ? line.size() : end;
     };
-    const auto next_digit = [rc_line](std::size_t offset)
+    const auto next_digit = [line](std::size_t offset)
     {
-        const std::size_t next = rc_line.find_first_of("0123456789", offset);
-        return next == std::string_view::npos ? rc_line.size() : next;
+        const std::size_t next = line.find_first_of("0123456789", offset);
+        return next == std::string_view::npos ? line.size() : next;
     };
-    const auto parse_article_num = [rc_line](std::size_t offset)
+    const auto parse_article_num = [line](std::size_t offset)
     {
         long                   value{};
-        const std::string_view text = rc_line.substr(offset);
+        const std::string_view text = line.substr(offset);
         std::from_chars(text.data(), text.data() + text.size(), value);
         return ArticleNum{value};
     };
 
     std::size_t s_offset = numbers_offset + static_cast<std::size_t>(first_non_space - numbers.begin());
-    while (s_offset < rc_line.size() && (num = parse_article_num(s_offset)) <= first)
+    while (s_offset < line.size() && (num = parse_article_num(s_offset)) <= first)
     {
         s_offset = next_digit(digits_end(s_offset));
         lastnum = num;
     }
 
-    const std::string_view prefix{rc_line.data(), numbers_offset};
-    const std::string_view remainder = rc_line.substr(s_offset);
-    if (!remainder.empty() && s_offset > 0 && rc_line[s_offset - 1] == '-') // landed in a range?
+    const std::string_view prefix{line.data(), numbers_offset};
+    const std::string_view remainder = line.substr(s_offset);
+    if (!remainder.empty() && s_offset > 0 && line[s_offset - 1] == '-') // landed in a range?
     {
         if (lastnum != 1)
         {
@@ -664,7 +664,7 @@ void NewsgroupData::check_expired(ArticleNum first)
 #ifdef DEBUG
     if (g_debug & DEB_XREF_MARKER)
     {
-        fmt::print("{}{}{}\n", this->rc_line(), m_subscribe_char, rc_numbers());
+        fmt::print("{}{}{}\n", rc_line(), m_subscribe_char, rc_numbers());
     }
 #endif
 }
