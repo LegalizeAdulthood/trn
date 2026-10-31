@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
                     {
                         while (nntp_gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
-                            if (nntp_at_list_end(line))
+                            if (g_nntp.link.at_list_end(line))
                             {
                                 break;
                             }
@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
                     {
                         while (nntp_gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
-                            if (nntp_at_list_end(line))
+                            if (g_nntp.link.at_list_end(line))
                             {
                                 break;
                             }

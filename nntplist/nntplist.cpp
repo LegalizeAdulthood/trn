@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
         line.reserve(NNTP_STRLEN);
         while (nntp_gets(line, NNTP_STRLEN) == NGSR_FULL_LINE)
         {
-            if (nntp_at_list_end(line))
+            if (g_nntp.link.at_list_end(line))
             {
                 break;
             }

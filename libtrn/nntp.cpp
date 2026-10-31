@@ -94,7 +94,7 @@ int nntp_list(std::string_view type, std::string_view arg, std::string &first_li
         fmt::print("<{}\n", first_line);
     }
 #endif
-    if (nntp_at_list_end(first_line))
+    if (g_nntp.link.at_list_end(first_line))
     {
         return 0;
     }
@@ -120,7 +120,7 @@ void nntp_finish_list()
                 return;
             }
         }
-    } while (ret > 0 && !nntp_at_list_end(line));
+    } while (ret > 0 && !g_nntp.link.at_list_end(line));
 }
 
 // try to access the specified group
@@ -360,7 +360,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
         }
         if (had_nl)
         {
-            if (nntp_at_list_end(line))
+            if (g_nntp.link.at_list_end(line))
             {
                 std::fseek(g_art_input.fp, (long) s_body_pos.value_of(), 0);
                 s_body_pos = ArticlePosition{-1};

@@ -266,7 +266,7 @@ void new_nntp_groups(DataSource *dp)
             fmt::print("<{}\n", new_group_line);
         }
 #endif
-        if (nntp_at_list_end(new_group_line))
+        if (g_nntp.link.at_list_end(new_group_line))
         {
             break;
         }
@@ -442,7 +442,7 @@ static void collect_active_groups()
             active_line.reserve(NNTP_STRLEN);
             if (nntp_list("active", active_list_pattern(), active_line) == 1)
             {
-                while (!nntp_at_list_end(active_line))
+                while (!g_nntp.link.at_list_end(active_line))
                 {
                     scan_active_line(active_line);
                     if (nntp_gets(active_line, NNTP_STRLEN) == NGSR_ERROR)

@@ -105,7 +105,7 @@ bool ov_init()
                 {
                     break;
                 }
-                if (nntp_at_list_end(overview_line))
+                if (g_nntp.link.at_list_end(overview_line))
                 {
                     break;
                 }
@@ -299,7 +299,7 @@ beginning:
         if (remote)
         {
             line = nntp_get_a_line();
-            if (nntp_at_list_end(line))
+            if (g_nntp.link.at_list_end(line))
             {
                 break;
             }

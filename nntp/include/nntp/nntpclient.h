@@ -75,6 +75,8 @@ enum class NntpAuthState
 
 struct NNTPLink
 {
+    bool at_list_end(std::string_view s);
+
     ConnectionPtr connection;
     std::time_t   last_command;
     int           port_number;
@@ -172,7 +174,6 @@ int         nntp_require_tls();
 // Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.
 int         nntp_refresh_capabilities();
 int         nntp_response_code(std::string_view response);
-bool        nntp_at_list_end(std::string_view s);
 enum NNTPGetsResult
 {
     // NGSR: nntp get string result
