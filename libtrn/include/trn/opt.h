@@ -148,6 +148,7 @@ struct OptionEditSession
     std::optional<std::string_view> value(OptionIndex num);
     void                            toggle_group(int row);
     int record_edit(OptionIndex option, bool had_draft, std::string_view oldval, std::string_view parsed_value);
+    OptionDraft *attach(OptionDraft *new_draft);
 
     OptionDraft *draft{};
     OptionFlags *flags{};

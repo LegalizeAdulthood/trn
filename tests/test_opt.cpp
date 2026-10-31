@@ -294,6 +294,15 @@ void OptionRecordEditTest::SetUp()
     }
 }
 
+using OptionAttachment = std::pair<bool, bool>;
+
+class OptionAttachTest : public testing::TestWithParam<OptionAttachment>
+{
+protected:
+    OptionDraft m_previous{1};
+    OptionDraft m_next{1};
+};
+
 class HeaderListOptionTest : public testing::Test
 {
 protected:
@@ -582,6 +591,24 @@ INSTANTIATE_TEST_SUITE_P(
                     OptionEditCase{"RestoreEmpty", "pending", "", "", std::nullopt, -1},
                     OptionEditCase{"QuotedCurrent", "pending", "\"current value\"", "current value", "current value",
                                    0}));
+
+TEST_P(OptionAttachTest, exchangesTheDraftAndReturnsThePreviousAttachment)
+{
+    OptionDraft      *old_draft = GetParam().first ? &m_previous : nullptr;
+    OptionDraft      *new_draft = GetParam().second ? &m_next : nullptr;
+    OptionFlags       flags[]{OF_INCLUDED};
+    OptionEditSession session{old_draft, flags};
+
+    OptionDraft *previous = session.attach(new_draft);
+
+    EXPECT_EQ(old_draft, previous);
+    EXPECT_EQ(new_draft, session.draft);
+    EXPECT_EQ(flags, session.flags);
+}
+
+INSTANTIATE_TEST_SUITE_P(PreviousAndNewAttachment, OptionAttachTest,
+                         testing::Values(OptionAttachment{false, true}, OptionAttachment{true, true},
+                                         OptionAttachment{true, false}, OptionAttachment{false, false}));
 
 TEST_F(HeaderListOptionTest, hidingOptionParsesCommaSeparatedOverrides)
 {

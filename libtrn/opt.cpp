@@ -289,6 +289,11 @@ int OptionEditSession::record_edit(OptionIndex option, bool had_draft, std::stri
     return delta;
 }
 
+OptionDraft *OptionEditSession::attach(OptionDraft *new_draft)
+{
+    return std::exchange(draft, new_draft);
+}
+
 void set_option(OptionIndex num, std::string_view s)
 {
     OptionApplier{}.apply(num, s);

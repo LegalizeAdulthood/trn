@@ -797,10 +797,9 @@ char option_selector()
 {
     const OptionCatalog catalog;
     OptionDraft         draft{static_cast<std::size_t>(catalog.row_count() + 1)};
-    OptionDraft        *saved_draft = g_opt_edit.draft;
     PushSelectorModes   saver(MM_OPTION_SELECTOR);
 
-    g_opt_edit.draft = &draft;
+    OptionDraft *saved_draft = g_opt_edit.attach(&draft);
     g_sel.rereading = false;
     g_sel.exclusive = false;
     g_selected_count = 0;
@@ -845,7 +844,7 @@ sel_restart:
             save_options(g_ini_file);
         }
     }
-    g_opt_edit.draft = saved_draft;
+    g_opt_edit.attach(saved_draft);
     return s_sel_ret;
 }
 
