@@ -79,7 +79,6 @@ static std::string mime_parse_entry_arg(std::string_view &text);
 static std::string mime_parse_entry_value(std::string_view text);
 static int         mime_getc(std::FILE *fp);
 static void        mime_init_sections();
-static bool        mime_pop_section();
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static void        tag_action(std::string &output, std::string_view word, bool opening_tag);
 static void        output_prep(std::string &output);
@@ -466,7 +465,7 @@ int mime_exec(std::string_view cmd)
 
 static void mime_init_sections()
 {
-    while (mime_pop_section())
+    while (g_mime.pop_section())
     {
     }
     g_mime.section->mime_clear_struct();
@@ -480,18 +479,18 @@ void MimeContext::push_section()
     section = mp;
 }
 
-static bool mime_pop_section()
+bool MimeContext::pop_section()
 {
-    MimeSection *mp = g_mime.section->m_prev;
+    MimeSection *mp = section->m_prev;
     if (mp)
     {
-        g_mime.section->mime_clear_struct();
-        delete g_mime.section;
-        g_mime.section = mp;
-        g_mime.state = g_mime.section->m_type;
+        section->mime_clear_struct();
+        delete section;
+        section = mp;
+        state = section->m_type;
         return true;
     }
-    g_mime.state = g_mime.article.m_type;
+    state = article.m_type;
     return false;
 }
 
@@ -911,7 +910,7 @@ bool mime_set_state(std::string_view bp)
     {
         while (g_mime.section->m_prev != boundary_section)
         {
-            mime_pop_section();
+            g_mime.pop_section();
         }
     }
     switch (ret)
@@ -924,7 +923,7 @@ bool mime_set_state(std::string_view bp)
         break;
 
     case 2:
-        mime_pop_section();
+        g_mime.pop_section();
         g_mime.state = END_OF_MIME;
         break;
     }

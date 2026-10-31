@@ -108,6 +108,9 @@ struct MimeContext
 {
     void push_section();
 
+    // TODO: private
+    bool pop_section();
+
     MimeSection      article{};
     MimeSection     *section{&article};
     MimeState        state{};
