@@ -1085,7 +1085,7 @@ void RemoteMultipartArticleTest::SetUp()
     g_nntp.link = {};
     g_nntp.link.port_number = m_server.port();
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     m_data_source.m_flags = DF_REMOTE;
     nntp_body(ArticleNum{7});
     ASSERT_NE(nullptr, g_art_input.fp);
@@ -1113,7 +1113,7 @@ void RemoteMultipartArticleTest::TearDown()
         m_server.verify();
     }
     (void) nntp_art_name(ArticleNum{}, false);
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     g_nntp.link = m_old_link;
     g_parsed_header.parsed_art = m_old_parsed_art;
     g_art_input.open_art = m_old_open_art;

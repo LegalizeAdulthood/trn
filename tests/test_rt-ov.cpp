@@ -105,7 +105,7 @@ protected:
         g_sentinel_art_ptr = nullptr;
         g_nntp.link = {};
         g_nntp.link.flags = NNTP_NEW_CMD_OK;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
 
         head_init();
 
@@ -145,7 +145,7 @@ protected:
         g_nav.current.art = m_old_curr_artp;
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
         g_nntp.link = std::move(m_old_nntp_link);
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
 
         fs::remove_all(m_output_dir, error);
 

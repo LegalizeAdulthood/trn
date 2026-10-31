@@ -406,7 +406,7 @@ int nntp_start_tls()
     g_nntp.link.selected_group.clear();
     g_nntp.link.selected_article = 0;
     g_nntp.link.trailing_cr = false;
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     if (nntp_refresh_capabilities() < 0)
     {
         nntp_close(false);
@@ -656,9 +656,9 @@ NNTPGetsResult NntpSession::gets(std::string &line, int len)
     return NGSR_PARTIAL_LINE;
 }
 
-void nntp_gets_clear_buffer()
+void NntpSession::gets_clear_buffer()
 {
-    g_nntp.gets_line.clear();
+    gets_line.clear();
 }
 
 void nntp_close(bool send_quit)

@@ -85,7 +85,7 @@ void ModeratorSourceTest::SetUp()
     m_old_link = g_nntp.link;
     g_data_source = nullptr;
     g_nntp.link = {};
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     m_source.m_nntp_link.connection = m_connection;
     m_source.m_nntp_link.flags = NNTP_NEW_CMD_OK;
@@ -95,7 +95,7 @@ void ModeratorSourceTest::TearDown()
 {
     g_data_source = m_old_source;
     g_nntp.link = m_old_link;
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     std::error_code error;
     std::filesystem::remove_all(m_directory, error);
 }

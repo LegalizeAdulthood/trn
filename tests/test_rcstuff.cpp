@@ -156,7 +156,7 @@ protected:
         g_trn_access_text.clear();
         g_use_newsrc_selector = false;
         g_data_source = nullptr;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         g_newsrc_hash = nullptr;
         g_check_flag = false;
         g_add_new_by_default = ADDNEW_ASK;
@@ -221,7 +221,7 @@ protected:
         g_use_newsrc_selector = m_old_use_newsrc_selector;
         g_data_source = m_old_data_source;
         g_nntp.link = m_old_nntp_link;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         g_newsrc_hash = m_old_newsrc_hash;
         g_sel.sort = m_old_sel_sort;
         g_sel.newsgroup_sort = m_old_sel_newsgroup_sort;

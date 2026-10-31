@@ -91,7 +91,7 @@ protected:
         m_old_data_source = g_data_source;
         m_old_nntp_link = g_nntp.link;
         g_data_source = nullptr;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         m_source_path = m_output_dir / "active";
         std::ofstream{m_source_path} << "comp.lang.apl 0000000001 0000000001 y\n";
         ASSERT_EQ(1, m_data_source.m_act_sf.open(m_source_path, "", ""));
@@ -102,7 +102,7 @@ protected:
         m_data_source.m_act_sf.close();
         g_data_source = m_old_data_source;
         g_nntp.link = m_old_nntp_link;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         SourceFileTest::TearDown();
     }
 
@@ -121,7 +121,7 @@ protected:
         SourceFileTest::SetUp();
         m_old_nntp_link = g_nntp.link;
         m_old_net_speed = g_net_speed;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
 
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
         g_nntp.link.connection = m_connection;
@@ -134,7 +134,7 @@ protected:
         g_nntp.link.connection.reset();
         g_nntp.link = m_old_nntp_link;
         g_net_speed = m_old_net_speed;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         SourceFileTest::TearDown();
     }
 
@@ -153,7 +153,7 @@ protected:
         m_old_nntp_link = g_nntp.link;
         m_old_net_speed = g_net_speed;
         g_data_source = nullptr;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
 
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
         m_data_source.m_flags = DF_REMOTE | DF_TMP_GROUP_DESC;
@@ -170,7 +170,7 @@ protected:
         g_data_source = m_old_data_source;
         g_nntp.link = m_old_nntp_link;
         g_net_speed = m_old_net_speed;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         SourceFileTest::TearDown();
     }
 
@@ -192,7 +192,7 @@ protected:
         m_old_net_speed = g_net_speed;
         m_old_nntp_allow_timeout = g_nntp.allow_timeout;
         g_data_source = nullptr;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
 
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
         g_net_speed = 1;
@@ -214,7 +214,7 @@ protected:
         g_nntp.link = m_old_nntp_link;
         g_net_speed = m_old_net_speed;
         g_nntp.allow_timeout = m_old_nntp_allow_timeout;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         SourceFileTest::TearDown();
     }
 

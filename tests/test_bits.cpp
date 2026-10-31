@@ -146,7 +146,7 @@ protected:
         m_old_cached_all_in_range = g_cached_all_in_range;
         m_old_nntp_link = g_nntp.link;
         m_old_last_command = g_nntp.last_command;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
 
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
         std::error_code error;
@@ -197,7 +197,7 @@ protected:
         g_last_cached = m_old_last_cached;
         g_first_subject = m_old_first_subject;
         g_cached_all_in_range = m_old_cached_all_in_range;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         g_nntp.link = m_old_nntp_link;
         g_nntp.last_command = m_old_last_command;
     }

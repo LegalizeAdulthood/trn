@@ -5515,7 +5515,7 @@ void DownloadEndArticleTest::SetUp()
     g_nntp.link.connection = m_connection;
     g_nntp.link.flags = NNTP_NEW_CMD_OK;
     g_tc_CE = "\033[K";
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     (void) nntp_art_name(ArticleNum{}, false);
     std::error_code error;
     std::filesystem::current_path(output_dir(), error);
@@ -5535,7 +5535,7 @@ void DownloadEndArticleTest::TearDown()
         g_art_input.fp = nullptr;
     }
     (void) nntp_art_name(ArticleNum{}, false);
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     g_nntp.link = std::move(m_old_nntp_link);
     g_parsed_header.head_buf = m_old_head_buf;
     g_nntp.ser_line = m_old_ser_line;

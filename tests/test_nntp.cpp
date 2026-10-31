@@ -209,7 +209,7 @@ protected:
     {
         g_nntp.link.connection.reset();
         g_nntp.link = std::move(m_saved_nntp_link);
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         init_nntp();
     }
 
@@ -704,7 +704,7 @@ protected:
     void SetUp() override
     {
         Test::SetUp();
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
         m_old_abs_first = g_abs_first;
         m_old_last_cached = g_last_cached;

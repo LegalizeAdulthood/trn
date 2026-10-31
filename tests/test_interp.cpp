@@ -2396,7 +2396,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     g_nntp.link.connection = connection;
     m_remote_source.m_flags = DF_REMOTE;
     g_data_source = &m_remote_source;
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     (void) nntp_art_name(ArticleNum{}, false);
     ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     mime_set_article();
@@ -2455,7 +2455,7 @@ void RemotePagerArticleTest::TearDown()
     {
         art_close();
         (void) nntp_art_name(ArticleNum{}, false);
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         nntp_close(true);
         m_server.verify();
     }

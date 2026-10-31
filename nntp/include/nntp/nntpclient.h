@@ -108,6 +108,7 @@ enum NNTPGetsResult
 struct NntpSession
 {
     NNTPGetsResult gets(std::string &line, int len);
+    void           gets_clear_buffer();
 
     // TODO: private
     std::string_view response_text();
@@ -184,7 +185,6 @@ int         nntp_require_tls();
 // Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.
 int         nntp_refresh_capabilities();
 int         nntp_response_code(std::string_view response);
-void           nntp_gets_clear_buffer();
 void           nntp_close(bool send_quit);
 
 #endif

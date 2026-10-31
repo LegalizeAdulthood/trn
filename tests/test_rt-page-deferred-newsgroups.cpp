@@ -273,7 +273,7 @@ void DeferredNewsgroupDescriptionTest::SetUp()
 {
     DeferredNewsgroupDisplayState::SetUp();
     g_data_source = nullptr;
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     m_source.m_flags = DF_REMOTE;
     m_source.m_group_desc = "cached-newsgroups";
@@ -288,7 +288,7 @@ void DeferredNewsgroupDescriptionTest::TearDown()
 {
     g_data_source = m_old_source;
     g_nntp.link = m_old_link;
-    nntp_gets_clear_buffer();
+    g_nntp.gets_clear_buffer();
     DeferredNewsgroupDisplayState::TearDown();
 }
 

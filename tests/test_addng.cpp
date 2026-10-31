@@ -305,7 +305,7 @@ protected:
         g_data_sources.reserve(4);
         g_data_source = nullptr;
         g_newsrc_hash = hash_create(17, nullptr);
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
         g_quick_start = false;
         g_use_add_selector = false;
@@ -345,7 +345,7 @@ protected:
             hash_destroy(g_newsrc_hash);
         }
         g_newsrc_hash = m_old_newsrc_hash;
-        nntp_gets_clear_buffer();
+        g_nntp.gets_clear_buffer();
         g_nntp.link = m_old_nntp_link;
         g_data_source = m_old_data_source;
         g_multirc = m_old_multirc;
