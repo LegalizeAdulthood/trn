@@ -1543,7 +1543,7 @@ bool SelectorPage::prev_page()
         }
         else
         {
-            ui = univ_prev_item(ui);
+            ui = g_univ.prev_item(ui);
         }
         while (ui)
         {
@@ -1556,7 +1556,7 @@ bool SelectorPage::prev_page()
                     break;
                 }
             }
-            ui = univ_prev_item(ui);
+            ui = g_univ.prev_item(ui);
         }
         if (page_univ_index != page_ui)
         {

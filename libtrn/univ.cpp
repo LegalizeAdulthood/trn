@@ -187,10 +187,10 @@ UniversalItem *UniversalMenuContext::next_item(const UniversalItem *item)
     return position + 1 < items.size() ? &items[position + 1] : nullptr;
 }
 
-UniversalItem *univ_prev_item(const UniversalItem *item)
+UniversalItem *UniversalMenuContext::prev_item(const UniversalItem *item)
 {
-    const std::size_t position = g_univ.position(item);
-    return position > 0 && position < g_univ.items.size() ? &g_univ.items[position - 1] : nullptr;
+    const std::size_t position = this->position(item);
+    return position > 0 && position < items.size() ? &items[position - 1] : nullptr;
 }
 
 UniversalItem *univ_item(UniversalItemIndex item_index)
