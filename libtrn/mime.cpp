@@ -78,7 +78,6 @@ constexpr bool OPENING_TAG = true;
 static std::string mime_parse_entry_arg(std::string_view &text);
 static std::string mime_parse_entry_value(std::string_view text);
 static int         mime_getc(std::FILE *fp);
-static void        mime_init_sections();
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static void        tag_action(std::string &output, std::string_view word, bool opening_tag);
 static void        output_prep(std::string &output);
@@ -463,13 +462,13 @@ int mime_exec(std::string_view cmd)
     return s_executor(SH, command);
 }
 
-static void mime_init_sections()
+void MimeContext::init_sections()
 {
-    while (g_mime.pop_section())
+    while (pop_section())
     {
     }
-    g_mime.section->mime_clear_struct();
-    g_mime.state = NOT_MIME;
+    section->mime_clear_struct();
+    state = NOT_MIME;
 }
 
 void MimeContext::push_section()
@@ -518,7 +517,7 @@ void MimeSection::mime_clear_struct()
 // Setup g_mime.article structure based on article's headers
 void mime_set_article()
 {
-    mime_init_sections();
+    g_mime.init_sections();
     // TODO: Check mime version #?
     g_mime.multimedia_mime = false;
     g_mime.is_mime =

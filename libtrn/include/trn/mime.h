@@ -110,6 +110,7 @@ struct MimeContext
 
     // TODO: private
     bool pop_section();
+    void init_sections();
 
     MimeSection      article{};
     MimeSection     *section{&article};
