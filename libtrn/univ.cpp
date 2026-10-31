@@ -94,7 +94,6 @@ static bool           univ_do_line(std::string_view line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
-static std::size_t univ_position(UniversalItemIndex item_index);
 
 void univ_init()
 {
@@ -163,7 +162,7 @@ UniversalItems univ_items()
 
 UniversalItems univ_items(UniversalItemIndex first)
 {
-    const std::size_t position = univ_position(first);
+    const std::size_t position = g_univ.position(first);
     return UniversalItems{position < g_univ.items.size() ? &g_univ.items[position] : nullptr};
 }
 
@@ -196,7 +195,7 @@ UniversalItem *univ_prev_item(const UniversalItem *item)
 
 UniversalItem *univ_item(UniversalItemIndex item_index)
 {
-    const std::size_t position = univ_position(item_index);
+    const std::size_t position = g_univ.position(item_index);
     return position < g_univ.items.size() ? &g_univ.items[position] : nullptr;
 }
 
@@ -221,20 +220,20 @@ std::size_t UniversalMenuContext::position(const UniversalItem *item)
     return items.size();
 }
 
-static std::size_t univ_position(UniversalItemIndex item_index)
+std::size_t UniversalMenuContext::position(UniversalItemIndex item_index)
 {
     if (!item_index)
     {
-        return g_univ.items.size();
+        return items.size();
     }
-    for (std::size_t position = 0; position < g_univ.items.size(); ++position)
+    for (std::size_t position = 0; position < items.size(); ++position)
     {
-        if (g_univ.items[position].m_num == item_index)
+        if (items[position].m_num == item_index)
         {
             return position;
         }
     }
-    return g_univ.items.size();
+    return items.size();
 }
 
 void univ_startup()
@@ -1273,7 +1272,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
             s_univ_use_min_score = false;
             s_current_vg_ui_index = {};
             // later do something with return value
-            const std::size_t expanded_position = univ_position(current_index);
+            const std::size_t expanded_position = g_univ.position(current_index);
             if (expanded_position < g_univ.items.size())
             {
                 g_univ.items.erase(g_univ.items.begin() +
