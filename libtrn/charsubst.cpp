@@ -57,18 +57,19 @@ bool valid_utf8(std::string_view text)
     return true;
 }
 
-void normalize_char_subst_mode()
+} // namespace
+
+void SubstitutionSettings::normalize_mode()
 {
-    if (g_subst.charsets.empty())
+    if (charsets.empty())
     {
-        g_subst.index = NO_CHAR_SUBST;
+        index = NO_CHAR_SUBST;
     }
-    else if (g_subst.index != NO_CHAR_SUBST && g_subst.index >= g_subst.charsets.size())
+    else if (index != NO_CHAR_SUBST && index >= charsets.size())
     {
-        g_subst.index = 0;
+        index = 0;
     }
 }
-} // namespace
 
 // TeX encoding table - gives a Unicode scalar for "x (x=32..127).
 static constexpr CodePoint s_tex_tbl[96] =
@@ -84,7 +85,7 @@ static constexpr CodePoint s_tex_tbl[96] =
 // clang-format on
 char current_char_subst_mode()
 {
-    normalize_char_subst_mode();
+    g_subst.normalize_mode();
     return g_subst.index == NO_CHAR_SUBST ? '\0' : g_subst.charsets[g_subst.index];
 }
 
@@ -113,7 +114,7 @@ void reset_char_subst_mode()
 
 void next_char_subst_mode()
 {
-    normalize_char_subst_mode();
+    g_subst.normalize_mode();
     if (g_subst.index == NO_CHAR_SUBST)
     {
         reset_char_subst_mode();

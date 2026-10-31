@@ -48,6 +48,9 @@ private:
 
 struct SubstitutionSettings
 {
+    // TODO: private
+    void normalize_mode();
+
     // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
     std::string                charsets{"patm"};
     std::string::size_type     index{std::string::npos};
