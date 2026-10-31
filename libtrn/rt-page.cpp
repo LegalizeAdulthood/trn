@@ -792,7 +792,7 @@ try_again:
         {
             (void) g_sel_page.first_page();
         }
-        else if (g_sel_page.page_univ_index == univ_index(univ_last_item()))
+        else if (g_sel_page.page_univ_index == univ_index(g_univ.last_item()))
         {
             (void) g_sel_page.last_page();
         }
@@ -1539,7 +1539,7 @@ bool SelectorPage::prev_page()
 
         if (!ui)
         {
-            ui = univ_last_item();
+            ui = g_univ.last_item();
         }
         else
         {

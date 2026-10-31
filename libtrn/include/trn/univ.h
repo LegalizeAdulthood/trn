@@ -180,6 +180,7 @@ extern bool g_univ_follow_temp;
 struct UniversalMenuContext
 {
     UniversalItem *first_item();
+    UniversalItem *last_item();
 
     // TODO: private
     std::size_t position(const UniversalItem *item);
@@ -214,7 +215,6 @@ void           sort_univ();
 UniversalItems univ_items();
 UniversalItems     univ_items(UniversalItemIndex first);
 UniversalItems     univ_items(UniversalItem *first);
-UniversalItem     *univ_last_item();
 UniversalItem     *univ_next_item(const UniversalItem *item);
 UniversalItem     *univ_prev_item(const UniversalItem *item);
 UniversalItem     *univ_item(UniversalItemIndex item_index);

@@ -176,9 +176,9 @@ UniversalItem *UniversalMenuContext::first_item()
     return items.empty() ? nullptr : &items.front();
 }
 
-UniversalItem *univ_last_item()
+UniversalItem *UniversalMenuContext::last_item()
 {
-    return g_univ.items.empty() ? nullptr : &g_univ.items.back();
+    return items.empty() ? nullptr : &items.back();
 }
 
 UniversalItem *univ_next_item(const UniversalItem *item)
