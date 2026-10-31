@@ -100,6 +100,7 @@ struct NntpSession
     // TODO: private
     std::string_view response_text();
     void             remember_selection();
+    int              unsupported_command(std::string_view command);
 
     NNTPLink    link{}; // the current server's file handles
     bool        allow_timeout{};

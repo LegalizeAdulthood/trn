@@ -265,9 +265,9 @@ int nntp_command(std::string_view bp)
     return 1;
 }
 
-static int unsupported_command(std::string_view command)
+int NntpSession::unsupported_command(std::string_view command)
 {
-    g_nntp.ser_line = fmt::format("500 {} is unavailable.", command);
+    ser_line = fmt::format("500 {} is unavailable.", command);
     return -1;
 }
 
@@ -277,7 +277,7 @@ static int cached_command(std::string_view command, std::string_view arguments, 
     const std::vector<std::string> &unsupported = g_nntp.link.unsupported_commands;
     if (std::binary_search(unsupported.begin(), unsupported.end(), name))
     {
-        return unsupported_command(command);
+        return g_nntp.unsupported_command(command);
     }
     if (nntp_command(arguments.empty() ? name : fmt::format("{} {}", command, arguments)) <= 0)
     {
@@ -315,7 +315,7 @@ static int preferred_command(std::string_view modern, std::string_view legacy, s
     {
         return cached_command(legacy, arguments);
     }
-    return unsupported_command(modern);
+    return g_nntp.unsupported_command(modern);
 }
 
 int nntp_overview(std::string_view range)
@@ -328,7 +328,7 @@ int nntp_overview_format()
     const NntpCapabilities &capabilities = g_nntp.link.capabilities;
     if (capabilities.available && !capabilities.has("OVER") && !capabilities.has("LIST", "OVERVIEW.FMT"))
     {
-        return unsupported_command("LIST OVERVIEW.FMT");
+        return g_nntp.unsupported_command("LIST OVERVIEW.FMT");
     }
     return cached_command("LIST OVERVIEW.FMT", {}, true);
 }
@@ -348,7 +348,7 @@ int nntp_group_descriptions(std::string_view pattern)
 {
     if (g_nntp.link.capabilities.available && !g_nntp.link.capabilities.has("LIST", "NEWSGROUPS"))
     {
-        return unsupported_command("LIST NEWSGROUPS");
+        return g_nntp.unsupported_command("LIST NEWSGROUPS");
     }
     return cached_command("LIST NEWSGROUPS", pattern, true);
 }
