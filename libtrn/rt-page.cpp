@@ -1783,7 +1783,7 @@ try_again:
             {
                 g_sel_page.page_item_cnt++;
             }
-            next_univ = univ_index(univ_next_item(&item));
+            next_univ = univ_index(g_univ.next_item(&item));
         }
         g_sel_page.page_obj_cnt = g_sel_page.page_item_cnt;
         g_sel_page.next_univ_index = next_univ;
@@ -2268,7 +2268,7 @@ start_of_loop:
             }
             if (!(item.m_flags & UF_INCLUDED))
             {
-                next_univ = univ_index(univ_next_item(&item));
+                next_univ = univ_index(g_univ.next_item(&item));
                 continue;
             }
 
@@ -2283,7 +2283,7 @@ start_of_loop:
             std::putchar(' ');
             display_universal(&item);
             g_sel_page.page_item_cnt++;
-            next_univ = univ_index(univ_next_item(&item));
+            next_univ = univ_index(g_univ.next_item(&item));
         }
         if (!g_sel_page.page_obj_cnt)
         {

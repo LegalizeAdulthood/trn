@@ -256,7 +256,7 @@ TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(item->m_data));
     EXPECT_EQ(UIS_DESELECTED, item->m_state);
     EXPECT_EQ("alt.test", item->group().ng);
-    EXPECT_EQ(nullptr, univ_next_item(item));
+    EXPECT_EQ(nullptr, g_univ.next_item(item));
 }
 
 TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
@@ -270,7 +270,7 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(item->m_data));
     EXPECT_EQ(UIS_NORMAL, item->m_state);
     EXPECT_EQ("alt.test", item->group().ng);
-    EXPECT_EQ(nullptr, univ_next_item(item));
+    EXPECT_EQ(nullptr, g_univ.next_item(item));
 }
 
 TEST_F(UnivTest, groupMaskWildcardSelectsMatchingGroups)
@@ -288,12 +288,12 @@ TEST_F(UnivTest, groupMaskWildcardSelectsMatchingGroups)
     EXPECT_EQ(UIS_NORMAL, first->m_state);
     EXPECT_EQ("alt.test", first->group().ng);
 
-    UniversalItem *second = univ_next_item(first);
+    UniversalItem *second = g_univ.next_item(first);
     ASSERT_NE(nullptr, second);
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(second->m_data));
     EXPECT_EQ(UIS_NORMAL, second->m_state);
     EXPECT_EQ("alt.noise", second->group().ng);
-    EXPECT_EQ(nullptr, univ_next_item(second));
+    EXPECT_EQ(nullptr, g_univ.next_item(second));
 }
 
 TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
@@ -379,7 +379,7 @@ TEST_F(UnivTest, fileLoadCreatesNumberedVirtualArticle)
     EXPECT_EQ("Article", item->m_desc);
     EXPECT_EQ("news.admin", item->article().ng);
     EXPECT_EQ(ArticleNum{1500}, item->article().num);
-    EXPECT_EQ(nullptr, univ_next_item(item));
+    EXPECT_EQ(nullptr, g_univ.next_item(item));
     fs::remove_all(temp_dir, error);
 }
 
