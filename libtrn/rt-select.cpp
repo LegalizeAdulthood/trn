@@ -2052,7 +2052,7 @@ static bool select_option(OptionIndex i)
 
     if (catalog.is_group(row))
     {
-        g_opt_edit.flags[row] ^= OF_SEL;
+        g_opt_edit.toggle_group(row);
         init_pages(FILL_LAST_PAGE);
         g_term_line = g_sel_page.last_line;
         return false;

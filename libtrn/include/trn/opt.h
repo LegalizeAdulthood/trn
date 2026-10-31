@@ -146,6 +146,7 @@ struct OptionEditSession
 {
     bool contains(OptionIndex num);
     std::optional<std::string_view> value(OptionIndex num);
+    void                            toggle_group(int row);
 
     OptionDraft *draft{};
     OptionFlags *flags{};

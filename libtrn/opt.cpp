@@ -267,6 +267,11 @@ std::optional<std::string_view> OptionEditSession::value(OptionIndex num)
     return draft != nullptr ? draft->value(num) : std::nullopt;
 }
 
+void OptionEditSession::toggle_group(int row)
+{
+    flags[row] ^= OF_SEL;
+}
+
 void set_option(OptionIndex num, std::string_view s)
 {
     OptionApplier{}.apply(num, s);

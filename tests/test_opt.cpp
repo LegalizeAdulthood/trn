@@ -21,6 +21,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -240,6 +241,21 @@ void SelectorCommandOptionTest::TearDown()
 using QuotedOptionValue = std::pair<std::string_view, std::string_view>;
 
 class QuotedOptionValueTest : public testing::TestWithParam<QuotedOptionValue>
+{
+};
+
+struct OptionGroupToggle
+{
+    OptionFlags initial;
+    OptionFlags expected;
+};
+
+void PrintTo(const OptionGroupToggle &value, std::ostream *output)
+{
+    *output << (value.initial & OF_INCLUDED ? "Included" : "") << (value.initial & OF_SEL ? "Expanded" : "Collapsed");
+}
+
+class OptionGroupToggleTest : public testing::TestWithParam<OptionGroupToggle>
 {
 };
 
@@ -491,6 +507,23 @@ TEST_P(SelectorCommandOptionTest, oneCharacterCommandOptionPreservesPageCommand)
 INSTANTIATE_TEST_SUITE_P(Selectors, SelectorCommandOptionTest,
                          testing::Values(OI_UNIV_SEL_CMDS, OI_NEWSRC_SEL_CMDS, OI_ADD_SEL_CMDS, OI_NEWSGROUP_SEL_CMDS,
                                          OI_NEWS_SEL_CMDS, OI_OPTION_SEL_CMDS));
+
+TEST_P(OptionGroupToggleTest, togglesOnlyTheRequestedGroupsSelectionBit)
+{
+    OptionFlags       flags[]{OF_INCLUDED, GetParam().initial, OF_SEL};
+    OptionEditSession session{nullptr, flags};
+
+    session.toggle_group(1);
+
+    EXPECT_EQ(GetParam().expected, flags[1]);
+    EXPECT_EQ(OF_INCLUDED, flags[0]);
+    EXPECT_EQ(OF_SEL, flags[2]);
+}
+
+INSTANTIATE_TEST_SUITE_P(SelectionAndInclusion, OptionGroupToggleTest,
+                         testing::Values(OptionGroupToggle{OF_NONE, OF_SEL}, OptionGroupToggle{OF_SEL, OF_NONE},
+                                         OptionGroupToggle{OF_INCLUDED, OF_INCLUDED | OF_SEL},
+                                         OptionGroupToggle{OF_INCLUDED | OF_SEL, OF_INCLUDED}));
 
 TEST_F(HeaderListOptionTest, hidingOptionParsesCommaSeparatedOverrides)
 {
