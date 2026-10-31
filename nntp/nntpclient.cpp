@@ -423,11 +423,11 @@ int nntp_start_tls()
     return 1;
 }
 
-static void remember_selection()
+void NntpSession::remember_selection()
 {
-    const std::string_view command{g_nntp.last_command};
-    const int              code = nntp_response_code(g_nntp.ser_line);
-    std::istringstream     response{g_nntp.ser_line};
+    const std::string_view command{last_command};
+    const int              code = nntp_response_code(ser_line);
+    std::istringstream     response{ser_line};
     int                    status{};
     if (code == 211 && string_case_equal(command.substr(0, command.find(' ')), "GROUP"))
     {
@@ -435,8 +435,8 @@ static void remember_selection()
         std::string group;
         if (response >> status >> count >> first >> last >> group)
         {
-            g_nntp.link.selected_group = std::move(group);
-            g_nntp.link.selected_article = count > 0 ? first : 0;
+            link.selected_group = std::move(group);
+            link.selected_article = count > 0 ? first : 0;
         }
     }
     else if (code >= 220 && code <= 223 && command.find('<') == std::string_view::npos)
@@ -444,7 +444,7 @@ static void remember_selection()
         long article{};
         if (response >> status >> article)
         {
-            g_nntp.link.selected_article = article;
+            link.selected_article = article;
         }
     }
 }
@@ -547,7 +547,7 @@ read_it:
     }
     if (ret > 0)
     {
-        remember_selection();
+        g_nntp.remember_selection();
     }
     return ret;
 }

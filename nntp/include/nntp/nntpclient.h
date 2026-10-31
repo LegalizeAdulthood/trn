@@ -99,6 +99,7 @@ struct NntpSession
 {
     // TODO: private
     std::string_view response_text();
+    void             remember_selection();
 
     NNTPLink    link{}; // the current server's file handles
     bool        allow_timeout{};
