@@ -1722,8 +1722,8 @@ private:
     const OptionCatalog         m_catalog;
     OptionValueList             m_old_defaults{std::move(g_option_def_vals)};
     OptionValueList             m_old_saved{std::move(g_option_saved_vals)};
-    OptionDraft                *m_old_draft{g_option_draft};
-    OptionFlags                *m_old_flags{g_option_flags};
+    OptionDraft                *m_old_draft{g_opt_edit.draft};
+    OptionFlags                *m_old_flags{g_opt_edit.flags};
     int                         m_old_page{g_sel_page.page_op};
     bool                        m_old_one_command{g_one_command};
     bool                        m_old_mouse_down{g_mouse_is_down};
@@ -1744,10 +1744,10 @@ void SelectorOptionTest::SetUp()
     SelectorCallbackTest::SetUp();
     m_flags.assign(static_cast<std::size_t>(m_catalog.row_count() + 1), OF_NONE);
     m_flags[m_catalog.previous_group_row(m_catalog.row_for(OI_TERSE_OUTPUT))] = OF_SEL;
-    g_option_flags = m_flags.data();
+    g_opt_edit.flags = m_flags.data();
     g_option_def_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
     g_option_saved_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
-    g_option_draft = nullptr;
+    g_opt_edit.draft = nullptr;
     g_option_sel_cmds = "Z>";
     g_one_command = false;
     g_novice_delays = false;
@@ -1769,8 +1769,8 @@ void SelectorOptionTest::TearDown()
 {
     g_option_def_vals = std::move(m_old_defaults);
     g_option_saved_vals = std::move(m_old_saved);
-    g_option_draft = m_old_draft;
-    g_option_flags = m_old_flags;
+    g_opt_edit.draft = m_old_draft;
+    g_opt_edit.flags = m_old_flags;
     g_sel_page.page_op = m_old_page;
     g_one_command = m_old_one_command;
     g_mouse_is_down = m_old_mouse_down;
@@ -1796,7 +1796,7 @@ void SelectorOptionTest::expect_article_context()
     EXPECT_EQ(m_article_location, g_nav.target);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
-    EXPECT_EQ(nullptr, g_option_draft);
+    EXPECT_EQ(nullptr, g_opt_edit.draft);
     EXPECT_FALSE(g_one_command);
 }
 
@@ -1936,7 +1936,7 @@ TEST_F(SelectorOptionTest, abandoningNestedOptionsPreservesTheReadScopeAndItsSel
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_EQ(selected, article_ptr(ArticleNum{3})->m_flags);
     EXPECT_EQ(other, article_ptr(ArticleNum{4})->m_flags);
-    EXPECT_EQ(nullptr, g_option_draft);
+    EXPECT_EQ(nullptr, g_opt_edit.draft);
     EXPECT_TRUE(g_verbose);
     expect_next_command('q');
 }
@@ -2005,7 +2005,7 @@ TEST_P(SelectorOptionSessionTest, nestedOptionsReturnToArticleRowsAndRestoreTheA
     EXPECT_NE(std::string::npos, m_output.find("Second topic", options));
     EXPECT_NE(std::string::npos, m_output.find("No marked articles to yank back.", options));
     EXPECT_EQ(SM_ARTICLE, g_sel.mode);
-    EXPECT_EQ(nullptr, g_option_draft);
+    EXPECT_EQ(nullptr, g_opt_edit.draft);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
     EXPECT_FALSE(g_one_command);

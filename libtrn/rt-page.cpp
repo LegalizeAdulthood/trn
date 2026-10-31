@@ -820,18 +820,18 @@ try_again:
             }
             if (catalog.is_group(op))
             {
-                included = (g_option_flags[op] & OF_SEL);
+                included = (g_opt_edit.flags[op] & OF_SEL);
                 g_sel_page.total_obj_cnt++;
-                g_option_flags[op] |= OF_INCLUDED;
+                g_opt_edit.flags[op] |= OF_INCLUDED;
             }
             else if (included)
             {
                 g_sel_page.total_obj_cnt++;
-                g_option_flags[op] |= OF_INCLUDED;
+                g_opt_edit.flags[op] |= OF_INCLUDED;
             }
             else
             {
-                g_option_flags[op] &= ~OF_INCLUDED;
+                g_opt_edit.flags[op] &= ~OF_INCLUDED;
             }
             ++g_obj_count;
         }
@@ -1420,7 +1420,7 @@ bool SelectorPage::next_page()
 /// @globals
 /// - g_sel: Read for the active mode and selection policy.
 /// - g_multircs, g_newsgroup_order, g_add_groups, g_univ.items: Read through catalog helpers.
-/// - g_option_flags, g_art_ptr_list, g_first_subject, g_last_subject: Read for included entries and traversal.
+/// - g_opt_edit.flags, g_art_ptr_list, g_first_subject, g_last_subject: Read for included entries and traversal.
 /// - g_tc_COLS, g_sel_art_display_mode, g_sel_art_display_mode_index: Read by line-count helpers.
 ///
 bool SelectorPage::prev_page()
@@ -1573,7 +1573,7 @@ bool SelectorPage::prev_page()
 
         while (--op > 0)
         {
-            if (g_option_flags[op] & OF_INCLUDED)
+            if (g_opt_edit.flags[op] & OF_INCLUDED)
             {
                 pg_op = op;
                 prior_obj_cnt--;
@@ -1799,7 +1799,7 @@ try_again:
             {
                 g_sel_page.item_index = g_sel_page.page_item_cnt;
             }
-            if (g_option_flags[op] & OF_INCLUDED)
+            if (g_opt_edit.flags[op] & OF_INCLUDED)
             {
                 g_sel_page.page_item_cnt++;
             }
@@ -2300,14 +2300,14 @@ start_of_loop:
         const OptionCatalog catalog;
         for (; op <= g_obj_count.value_of() && g_sel_page.page_item_cnt < g_sel_page.max_per_page; op++)
         {
-            if (!(g_option_flags[op] & OF_INCLUDED))
+            if (!(g_opt_edit.flags[op] & OF_INCLUDED))
             {
                 continue;
             }
 
             if (catalog.is_group(op))
             {
-                sel = !!(g_option_flags[op] & OF_SEL);
+                sel = !!(g_opt_edit.flags[op] & OF_SEL);
             }
             else
             {
@@ -2506,7 +2506,7 @@ void update_page()
             const int row = static_cast<int>(u.op);
             if (catalog.is_group(row))
             {
-                sel = !!(g_option_flags[u.op] & OF_SEL);
+                sel = !!(g_opt_edit.flags[u.op] & OF_SEL);
             }
             else
             {

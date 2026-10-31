@@ -6281,7 +6281,7 @@ private:
     std::size_t                   m_old_display_index{g_sel_grp_display_mode_index};
     std::string                   m_old_group_commands{g_newsgroup_sel_cmds};
     std::string                   m_old_option_commands{g_option_sel_cmds};
-    OptionFlags                  *m_old_options{g_option_flags};
+    OptionFlags                  *m_old_options{g_opt_edit.flags};
     int                           m_old_option_page{g_sel_page.page_op};
     bool                          m_old_can_home{g_can_home};
     bool                          m_old_numbered{g_use_sel_num};
@@ -6305,7 +6305,7 @@ void NewsgroupSelectorDelegationStateTest::SetUp()
     g_mouse_bar_cnt = g_mouse_bar_width = 0;
     const OptionCatalog catalog;
     m_options.assign(catalog.row_count() + 1, OF_NONE);
-    g_option_flags = m_options.data();
+    g_opt_edit.flags = m_options.data();
     search_init();
     push_only();
 }
@@ -6321,7 +6321,7 @@ void NewsgroupSelectorDelegationStateTest::TearDown()
     g_sel_grp_display_mode_index = m_old_display_index;
     g_newsgroup_sel_cmds = m_old_group_commands;
     g_option_sel_cmds = m_old_option_commands;
-    g_option_flags = m_old_options;
+    g_opt_edit.flags = m_old_options;
     g_sel_page.page_op = m_old_option_page;
     g_can_home = m_old_can_home;
     g_use_sel_num = m_old_numbered;

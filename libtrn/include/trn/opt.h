@@ -141,14 +141,21 @@ enum OptionFlags : char
 DECLARE_FLAGS_ENUM(OptionFlags, char);
 
 class OptionDraft;
+
+struct OptionEditSession
+{
+    OptionDraft *draft{};
+    OptionFlags *flags{};
+};
+
+extern OptionEditSession g_opt_edit;
+
 using OptionValueList = std::vector<std::optional<std::string>>;
 
 extern CompiledRegex g_opt_compex;
 extern std::string   g_ini_file;
 extern OptionValueList g_option_def_vals;
 extern OptionValueList g_option_saved_vals;
-extern OptionFlags  *g_option_flags;
-extern OptionDraft  *g_option_draft;
 
 void        opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf);
 void        opt_final();

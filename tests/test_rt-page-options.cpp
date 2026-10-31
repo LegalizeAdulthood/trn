@@ -38,8 +38,8 @@ private:
     std::string              label(int row) const;
     OptionValueList          m_old_defaults{std::move(g_option_def_vals)};
     OptionValueList          m_old_saved{std::move(g_option_saved_vals)};
-    OptionDraft             *m_old_draft{g_option_draft};
-    OptionFlags             *m_old_flags{g_option_flags};
+    OptionDraft             *m_old_draft{g_opt_edit.draft};
+    OptionFlags             *m_old_flags{g_opt_edit.flags};
     int                      m_old_page{g_sel_page.page_op};
     std::string              m_old_indent{g_indent_string};
     std::string              m_old_group_name{g_newsgroup_name};
@@ -50,10 +50,10 @@ void OptionPageDisplayState::SetUp()
 {
     NewsgroupPageDisplayState::SetUp();
     m_flags.assign(static_cast<std::size_t>(m_catalog.row_count() + 1), OF_NONE);
-    g_option_flags = m_flags.data();
+    g_opt_edit.flags = m_flags.data();
     g_option_def_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
     g_option_saved_vals = OptionValueList(static_cast<std::size_t>(m_catalog.option_limit()));
-    g_option_draft = &m_draft;
+    g_opt_edit.draft = &m_draft;
     g_sel_page.page_op = -1;
     g_sel.mode = SM_OPTIONS;
     g_indent_string = ">";
@@ -63,8 +63,8 @@ void OptionPageDisplayState::TearDown()
 {
     g_option_def_vals = std::move(m_old_defaults);
     g_option_saved_vals = std::move(m_old_saved);
-    g_option_draft = m_old_draft;
-    g_option_flags = m_old_flags;
+    g_opt_edit.draft = m_old_draft;
+    g_opt_edit.flags = m_old_flags;
     g_sel_page.page_op = m_old_page;
     g_indent_string = m_old_indent;
     g_newsgroup_name = m_old_group_name;
@@ -78,7 +78,7 @@ int OptionPageDisplayState::group_for(OptionIndex option) const
 
 void OptionPageDisplayState::start_at_option(OptionIndex option)
 {
-    g_option_flags[group_for(option)] |= OF_SEL;
+    g_opt_edit.flags[group_for(option)] |= OF_SEL;
     g_sel_page.page_op = m_catalog.row_for(option);
     g_tc_LINES = 6;
     initialize_page();
@@ -227,17 +227,17 @@ TEST_P(OptionHeadingRowTest, marksTheGroupHeadingWithoutChangingItsExpansion)
     g_tc_LINES = 6;
     if (expanded)
     {
-        g_option_flags[m_catalog.first_row()] |= OF_SEL;
+        g_opt_edit.flags[m_catalog.first_row()] |= OF_SEL;
     }
     initialize_page();
-    const OptionFlags before = g_option_flags[m_catalog.first_row()];
+    const OptionFlags before = g_opt_edit.flags[m_catalog.first_row()];
 
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr(expected_heading(0, "Display Options", expanded)));
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, m_catalog.first_row(), expanded ? 1 : 0);
-    EXPECT_EQ(before, g_option_flags[m_catalog.first_row()]);
+    EXPECT_EQ(before, g_opt_edit.flags[m_catalog.first_row()]);
     EXPECT_EQ(expanded ? 18 : 10, g_sel_page.total_obj_cnt);
     EXPECT_EQ(1, g_sel_page.page_obj_cnt);
     EXPECT_FALSE(g_sel_page.at_end);
@@ -318,7 +318,7 @@ INSTANTIATE_TEST_SUITE_P(DraftAndText, OptionTextRowTest,
 
 TEST_P(OptionExpansionRowTest, insertsAnExpandedGroupsOptionsBeforeTheNextHeading)
 {
-    g_option_flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
+    g_opt_edit.flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
     initialize_page();
 
     const std::string output = render_page();
@@ -339,11 +339,11 @@ TEST_P(OptionExpansionRowTest, insertsAnExpandedGroupsOptionsBeforeTheNextHeadin
 
 TEST_P(OptionExpansionRowTest, collapsingAGroupHidesItsPendingEditWithoutDiscardingIt)
 {
-    g_option_flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
+    g_opt_edit.flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
     m_draft.set(OI_CITED_TEXT_STRING, "Pending citation");
     initialize_page();
     (void) render_page();
-    g_option_flags[group_for(OI_CITED_TEXT_STRING)] &= ~OF_SEL;
+    g_opt_edit.flags[group_for(OI_CITED_TEXT_STRING)] &= ~OF_SEL;
     initialize_page();
 
     const std::string output = render_page();
@@ -361,14 +361,14 @@ TEST_P(OptionExpansionRowTest, collapsingAGroupHidesItsPendingEditWithoutDiscard
 
 TEST_P(OptionExpansionRowTest, reopeningAGroupRestoresItsPendingEditAndMarker)
 {
-    g_option_flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
+    g_opt_edit.flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
     m_draft.set(OI_CITED_TEXT_STRING, "Pending citation");
     initialize_page();
     (void) render_page();
-    g_option_flags[group_for(OI_CITED_TEXT_STRING)] &= ~OF_SEL;
+    g_opt_edit.flags[group_for(OI_CITED_TEXT_STRING)] &= ~OF_SEL;
     initialize_page();
     (void) render_page();
-    g_option_flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
+    g_opt_edit.flags[group_for(OI_CITED_TEXT_STRING)] |= OF_SEL;
     initialize_page();
 
     const std::string output = render_page();
@@ -438,12 +438,12 @@ TEST_P(OptionRecoveryRowTest, returnsToVisibleHeadingsAfterTheFinalOptionsGroupC
 {
     g_use_sel_num = GetParam();
     g_tc_LINES = 7;
-    g_option_flags[group_for(OI_SC_VERBOSE)] |= OF_SEL;
+    g_opt_edit.flags[group_for(OI_SC_VERBOSE)] |= OF_SEL;
     g_sel_page.page_op = m_catalog.row_for(OI_SC_VERBOSE);
     m_draft.set(OI_SC_VERBOSE, "yes");
     initialize_page();
     (void) render_page();
-    g_option_flags[group_for(OI_SC_VERBOSE)] &= ~OF_SEL;
+    g_opt_edit.flags[group_for(OI_SC_VERBOSE)] &= ~OF_SEL;
     init_pages(FILL_LAST_PAGE);
 
     const std::string output = render_page();

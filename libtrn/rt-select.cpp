@@ -797,10 +797,10 @@ char option_selector()
 {
     const OptionCatalog catalog;
     OptionDraft         draft{static_cast<std::size_t>(catalog.row_count() + 1)};
-    OptionDraft        *saved_draft = g_option_draft;
+    OptionDraft        *saved_draft = g_opt_edit.draft;
     PushSelectorModes   saver(MM_OPTION_SELECTOR);
 
-    g_option_draft = &draft;
+    g_opt_edit.draft = &draft;
     g_sel.rereading = false;
     g_sel.exclusive = false;
     g_selected_count = 0;
@@ -845,7 +845,7 @@ sel_restart:
             save_options(g_ini_file);
         }
     }
-    g_option_draft = saved_draft;
+    g_opt_edit.draft = saved_draft;
     return s_sel_ret;
 }
 
@@ -2035,7 +2035,7 @@ static bool deselect_item(Selection u)
 ///
 /// @globals
 /// - OptionCatalog: Used to retrieve the available options and their properties.
-/// - g_option_flags: Updated to reflect the selection state of the option.
+/// - g_opt_edit.flags: Updated to reflect the selection state of the option.
 /// - g_selected_count: Incremented or decremented based on the selection state of the option.
 /// - g_sel_page.last_line: Used to position the cursor for displaying prompts.
 /// - s_clean_screen: Updated to indicate whether the screen should be cleared after input.
@@ -2045,14 +2045,14 @@ static bool select_option(OptionIndex i)
     bool                changed = false;
     const int           row = static_cast<int>(i);
     const OptionCatalog catalog;
-    if (g_option_draft == nullptr)
+    if (g_opt_edit.draft == nullptr)
     {
         return false;
     }
 
     if (catalog.is_group(row))
     {
-        g_option_flags[row] ^= OF_SEL;
+        g_opt_edit.flags[row] ^= OF_SEL;
         init_pages(FILL_LAST_PAGE);
         g_term_line = g_sel_page.last_line;
         return false;
@@ -2072,11 +2072,11 @@ static bool select_option(OptionIndex i)
     color_pop();        // of COLOR_CMD
     newline();
     const std::string oldval = quote_string(option_value(option));
-    const bool had_draft = g_option_draft->contains(option);
+    const bool        had_draft = g_opt_edit.draft->contains(option);
     std::string val{oldval};
     if (had_draft)
     {
-        const std::optional<std::string_view> draft_value = g_option_draft->value(option);
+        const std::optional<std::string_view> draft_value = g_opt_edit.draft->value(option);
         TRN_ASSERT(draft_value.has_value());
         val = *draft_value;
     }
@@ -2090,7 +2090,7 @@ static bool select_option(OptionIndex i)
         changed = true;
         if (had_draft)
         {
-            g_option_draft->erase(option);
+            g_opt_edit.draft->erase(option);
             g_selected_count--;
         }
         if (had_draft && oldval == parsed_value)
@@ -2098,7 +2098,7 @@ static bool select_option(OptionIndex i)
         }
         else
         {
-            g_option_draft->set(option, parsed_value);
+            g_opt_edit.draft->set(option, parsed_value);
             g_selected_count++;
         }
     }
@@ -4210,10 +4210,10 @@ static DisplayState option_commands(char_int ch)
             }
         } while (i != j);
         u.op = static_cast<OptionIndex>(i);
-        if (!(g_option_flags[i] & OF_INCLUDED))
+        if (!(g_opt_edit.flags[i] & OF_INCLUDED))
         {
             const int group_row = catalog.previous_group_row(i);
-            g_option_flags[group_row] |= OF_SEL;
+            g_opt_edit.flags[group_row] |= OF_SEL;
             init_pages(FILL_LAST_PAGE);
             calc_page(u);
             return DS_DISPLAY;

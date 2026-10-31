@@ -69,8 +69,7 @@ CompiledRegex g_opt_compex;
 std::string   g_ini_file;
 OptionValueList g_option_def_vals;
 OptionValueList g_option_saved_vals;
-OptionFlags *g_option_flags{};
-OptionDraft *g_option_draft{};
+OptionEditSession g_opt_edit;
 
 static std::string s_univ_sel_cmds{"Z>"};
 
@@ -147,8 +146,8 @@ void opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf)
         }
     }
     g_option_saved_vals = OptionValueList(static_cast<std::size_t>(len));
-    g_option_flags = new OptionFlags[len];
-    std::fill_n(g_option_flags, len, OF_NONE);
+    g_opt_edit.flags = new OptionFlags[len];
+    std::fill_n(g_opt_edit.flags, len, OF_NONE);
 
     if (argc > 1)
     {
@@ -165,8 +164,8 @@ void opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf)
 void opt_final()
 {
     g_priv_dir.clear();
-    delete[] g_option_flags;
-    g_option_flags = nullptr;
+    delete[] g_opt_edit.flags;
+    g_opt_edit.flags = nullptr;
     g_option_saved_vals.clear();
     g_ini_file.clear();
     g_option_def_vals.clear();
@@ -260,12 +259,12 @@ void set_options(const OptionDraft &draft)
 
 bool option_draft_contains(OptionIndex num)
 {
-    return g_option_draft != nullptr && g_option_draft->contains(num);
+    return g_opt_edit.draft != nullptr && g_opt_edit.draft->contains(num);
 }
 
 std::optional<std::string_view> option_draft_value(OptionIndex num)
 {
-    return g_option_draft != nullptr ? g_option_draft->value(num) : std::nullopt;
+    return g_opt_edit.draft != nullptr ? g_opt_edit.draft->value(num) : std::nullopt;
 }
 
 void set_option(OptionIndex num, std::string_view s)
