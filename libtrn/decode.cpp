@@ -499,7 +499,7 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
 
     if (g_mime.section->m_type == MESSAGE_MIME)
     {
-        mime_push_section();
+        g_mime.push_section();
         mime_parse_sub_header(fp, first_line);
         first_line = {};
     }

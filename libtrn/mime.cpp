@@ -473,11 +473,11 @@ static void mime_init_sections()
     g_mime.state = NOT_MIME;
 }
 
-void mime_push_section()
+void MimeContext::push_section()
 {
     MimeSection* mp = new MimeSection{};
-    mp->m_prev = g_mime.section;
-    g_mime.section = mp;
+    mp->m_prev = section;
+    section = mp;
 }
 
 static bool mime_pop_section()
@@ -893,7 +893,7 @@ bool mime_set_state(std::string_view bp)
 
     while (g_mime.state == MESSAGE_MIME)
     {
-        mime_push_section();
+        g_mime.push_section();
         mime_parse_sub_header(nullptr, state_line);
         suppress_line = true;
         state_line = {};
@@ -901,7 +901,7 @@ bool mime_set_state(std::string_view bp)
 
     if (g_mime.state == MULTIPART_MIME)
     {
-        mime_push_section();
+        g_mime.push_section();
         g_mime.state = SKIP_MIME; // Skip anything before 1st part
     }
 
