@@ -183,6 +183,7 @@ struct UniversalMenuContext
     UniversalItem *last_item();
     UniversalItem *next_item(const UniversalItem *item);
     UniversalItem *prev_item(const UniversalItem *item);
+    UniversalItem *item(UniversalItemIndex item_index);
 
     // TODO: private
     std::size_t position(const UniversalItem *item);
@@ -217,7 +218,6 @@ void           sort_univ();
 UniversalItems univ_items();
 UniversalItems     univ_items(UniversalItemIndex first);
 UniversalItems     univ_items(UniversalItem *first);
-UniversalItem     *univ_item(UniversalItemIndex item_index);
 UniversalItemIndex univ_index(const UniversalItem *item);
 void           univ_help_main(HelpLocation where);
 void           univ_help(HelpLocation where);

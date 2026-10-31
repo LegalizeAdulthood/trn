@@ -183,20 +183,20 @@ UniversalItem *UniversalMenuContext::last_item()
 
 UniversalItem *UniversalMenuContext::next_item(const UniversalItem *item)
 {
-    const std::size_t position = this->position(item);
-    return position + 1 < items.size() ? &items[position + 1] : nullptr;
+    const std::size_t pos = position(item);
+    return pos + 1 < items.size() ? &items[pos + 1] : nullptr;
 }
 
 UniversalItem *UniversalMenuContext::prev_item(const UniversalItem *item)
 {
-    const std::size_t position = this->position(item);
-    return position > 0 && position < items.size() ? &items[position - 1] : nullptr;
+    const std::size_t pos = position(item);
+    return pos > 0 && pos < items.size() ? &items[pos - 1] : nullptr;
 }
 
-UniversalItem *univ_item(UniversalItemIndex item_index)
+UniversalItem *UniversalMenuContext::item(UniversalItemIndex item_index)
 {
-    const std::size_t position = g_univ.position(item_index);
-    return position < g_univ.items.size() ? &g_univ.items[position] : nullptr;
+    const std::size_t pos = position(item_index);
+    return pos < items.size() ? &items[pos] : nullptr;
 }
 
 UniversalItemIndex univ_index(const UniversalItem *item)
@@ -1123,7 +1123,7 @@ void univ_page_file(const fs::path &fname)
 // called from within newsgroup
 void univ_newsgroup_virtual()
 {
-    UniversalItem *current_vg_ui = univ_item(s_current_vg_ui_index);
+    UniversalItem *current_vg_ui = g_univ.item(s_current_vg_ui_index);
     if (current_vg_ui == nullptr)
     {
         return;

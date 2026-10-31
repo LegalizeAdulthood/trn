@@ -1534,7 +1534,7 @@ bool SelectorPage::prev_page()
 
     case SM_UNIVERSAL:
     {
-        UniversalItem     *ui = univ_item(page_univ_index);
+        UniversalItem     *ui = g_univ.item(page_univ_index);
         UniversalItemIndex page_ui = page_univ_index;
 
         if (!ui)
@@ -1568,14 +1568,14 @@ bool SelectorPage::prev_page()
 
     case SM_OPTIONS:
     {
-        int op = this->page_op;
-        int page_op = this->page_op;
+        int op = page_op;
+        int pg_op = page_op;
 
         while (--op > 0)
         {
             if (g_option_flags[op] & OF_INCLUDED)
             {
-                page_op = op;
+                pg_op = op;
                 prior_obj_cnt--;
                 if (++item_cnt >= max_per_page)
                 {
@@ -1583,9 +1583,9 @@ bool SelectorPage::prev_page()
                 }
             }
         }
-        if (this->page_op != page_op)
+        if (page_op != pg_op)
         {
-            this->page_op = page_op;
+            page_op = pg_op;
             return true;
         }
         break;

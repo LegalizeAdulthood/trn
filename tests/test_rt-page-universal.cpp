@@ -90,7 +90,7 @@ void UniversalPageDisplayState::add_article(std::string description, int score, 
 
 void UniversalPageDisplayState::expect_row(int row, int identity, int selected) const
 {
-    EXPECT_EQ(univ_item(identity), g_sel_page.items[row].u.un);
+    EXPECT_EQ(g_univ.item(identity), g_sel_page.items[row].u.un);
     EXPECT_EQ(row + 2, g_sel_page.items[row].line);
     EXPECT_EQ(selected, g_sel_page.items[row].sel);
 }
@@ -347,7 +347,7 @@ TEST_P(UniversalOrderTest, keepsLabelsAndPayloadsTogetherAfterSorting)
     for (int row = 0; row < 3; ++row)
     {
         const int            identity = identities[row];
-        const UniversalItem *item = univ_item(identity);
+        const UniversalItem *item = g_univ.item(identity);
         ASSERT_NE(nullptr, item);
         expect_row(row, identity, identity == 22 ? 1 : 0);
         EXPECT_EQ(identity == 11 ? -5 : 20, item->m_score);

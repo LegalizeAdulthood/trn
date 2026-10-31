@@ -410,7 +410,7 @@ TEST_F(UnivTest, debugItemStoresStringPayload)
 
 TEST_P(UniversalItemIndexTest, returnsTheStoredIndexOrZeroForNull)
 {
-    UniversalItem *item = GetParam() ? univ_item(41) : nullptr;
+    UniversalItem *item = GetParam() ? g_univ.item(41) : nullptr;
 
     const UniversalItemIndex index = univ_index(item);
 
@@ -421,7 +421,7 @@ INSTANTIATE_TEST_SUITE_P(NullAndStored, UniversalItemIndexTest, testing::Bool())
 
 TEST_F(UniversalListPositionTest, missingItemHasNoPointer)
 {
-    UniversalItem *item = univ_item(99);
+    UniversalItem *item = g_univ.item(99);
 
     EXPECT_EQ(nullptr, item);
 }
@@ -450,13 +450,13 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
 
     univ_virt_pass(fake_visit_group, no_input_pending);
 
-    kept_group = univ_item(kept_group_index);
-    kept_article = univ_item(kept_article_index);
+    kept_group = g_univ.item(kept_group_index);
+    kept_article = g_univ.item(kept_article_index);
     ASSERT_NE(nullptr, kept_group);
     ASSERT_NE(nullptr, kept_article);
     EXPECT_EQ(1, g_visit_count);
     EXPECT_EQ("alt.test", g_visited_group);
-    EXPECT_EQ(nullptr, univ_item(expanded_group_index));
+    EXPECT_EQ(nullptr, g_univ.item(expanded_group_index));
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(kept_group->m_data));
     EXPECT_EQ(UIS_NORMAL, kept_group->m_state);
     EXPECT_EQ("alt.keep", kept_group->group().ng);
