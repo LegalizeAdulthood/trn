@@ -2312,9 +2312,9 @@ start_of_loop:
             else
             {
                 const OptionIndex option = catalog.option(op);
-                sel = option_draft_contains(option)? 1 :
-                          (g_option_saved_vals[option]? 3 :
-                               (g_option_def_vals[option]? 0 : 2));
+                sel = g_opt_edit.contains(option)
+                          ? 1
+                          : (g_option_saved_vals[option] ? 3 : (g_option_def_vals[option] ? 0 : 2));
             }
             g_sel_page.items[g_sel_page.page_item_cnt].u.op = static_cast<OptionIndex>(op);
             g_sel_page.items[g_sel_page.page_item_cnt].line = g_term_line;
@@ -2511,9 +2511,9 @@ void update_page()
             else
             {
                 const OptionIndex option = catalog.option(row);
-                sel = option_draft_contains(option)? 1 :
-                          (g_option_saved_vals[option]? 3 :
-                               (g_option_def_vals[option]? 0 : 2));
+                sel = g_opt_edit.contains(option)
+                          ? 1
+                          : (g_option_saved_vals[option] ? 3 : (g_option_def_vals[option] ? 0 : 2));
             }
             break;
         }

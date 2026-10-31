@@ -144,6 +144,8 @@ class OptionDraft;
 
 struct OptionEditSession
 {
+    bool contains(OptionIndex num);
+
     OptionDraft *draft{};
     OptionFlags *flags{};
 };
@@ -164,7 +166,6 @@ void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, std::string_view s);
 void        save_options(const std::filesystem::path &filename);
 std::string option_value(OptionIndex num);
-bool        option_draft_contains(OptionIndex num);
 std::optional<std::string_view> option_draft_value(OptionIndex num);
 void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
 std::string quote_string(std::string_view val);

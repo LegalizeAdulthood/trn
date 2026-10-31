@@ -1838,7 +1838,7 @@ static bool select_item(Selection u)
 
     case SM_OPTIONS:
         if (!select_option(u.op) //
-            || !option_draft_contains(OptionCatalog().option(static_cast<int>(u.op))))
+            || !g_opt_edit.contains(OptionCatalog().option(static_cast<int>(u.op))))
         {
             return false;
         }
@@ -1983,7 +1983,7 @@ static bool deselect_item(Selection u)
 
     case SM_OPTIONS:
         if (!select_option(u.op) //
-            || option_draft_contains(OptionCatalog().option(static_cast<int>(u.op))))
+            || g_opt_edit.contains(OptionCatalog().option(static_cast<int>(u.op))))
         {
             return false;
         }

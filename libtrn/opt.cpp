@@ -257,9 +257,9 @@ void set_options(const OptionDraft &draft)
     OptionApplier{}.apply(draft);
 }
 
-bool option_draft_contains(OptionIndex num)
+bool OptionEditSession::contains(OptionIndex num)
 {
-    return g_opt_edit.draft != nullptr && g_opt_edit.draft->contains(num);
+    return draft != nullptr && draft->contains(num);
 }
 
 std::optional<std::string_view> option_draft_value(OptionIndex num)
