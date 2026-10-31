@@ -157,7 +157,7 @@ UniversalItemIterator UniversalItems::end() const
 
 UniversalItems univ_items()
 {
-    return UniversalItems{univ_first_item()};
+    return UniversalItems{g_univ.first_item()};
 }
 
 UniversalItems univ_items(UniversalItemIndex first)
@@ -171,9 +171,9 @@ UniversalItems univ_items(UniversalItem *first)
     return UniversalItems{first};
 }
 
-UniversalItem *univ_first_item()
+UniversalItem *UniversalMenuContext::first_item()
 {
-    return g_univ.items.empty() ? nullptr : &g_univ.items.front();
+    return items.empty() ? nullptr : &items.front();
 }
 
 UniversalItem *univ_last_item()

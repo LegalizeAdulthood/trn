@@ -207,7 +207,7 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
 {
     univ_mask_load("", "Empty");
 
-    EXPECT_EQ(nullptr, univ_first_item());
+    EXPECT_EQ(nullptr, g_univ.first_item());
     EXPECT_EQ("Empty", g_univ.title);
 }
 
@@ -251,7 +251,7 @@ TEST_F(UnivTest, groupMaskExclusionMarksExistingGroup)
 
     univ_mask_load("alt.test !alt.test", "Groups");
 
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(item->m_data));
     EXPECT_EQ(UIS_DESELECTED, item->m_state);
@@ -265,7 +265,7 @@ TEST_F(UnivTest, groupMaskRestoresDeselectedGroup)
 
     univ_mask_load("alt.test !alt.test alt.test", "Groups");
 
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(item->m_data));
     EXPECT_EQ(UIS_NORMAL, item->m_state);
@@ -282,7 +282,7 @@ TEST_F(UnivTest, groupMaskWildcardSelectsMatchingGroups)
 
     univ_mask_load("alt.*", "Groups");
 
-    UniversalItem *first = univ_first_item();
+    UniversalItem *first = g_univ.first_item();
     ASSERT_NE(nullptr, first);
     EXPECT_TRUE(std::holds_alternative<UniversalNewsgroup>(first->m_data));
     EXPECT_EQ(UIS_NORMAL, first->m_state);
@@ -301,7 +301,7 @@ TEST_F(UnivTest, fileLoadCreatesGroupMaskItem)
     const std::string file_name = fs::path{TRN_TEST_UNIV_GROUP_MASK_FILE}.generic_string();
 
     ASSERT_TRUE(univ_file_load(file_name, "Top", {}));
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(item->m_data));
     EXPECT_EQ("Filter", item->m_desc);
@@ -339,7 +339,7 @@ TEST_F(UnivTest, fileLoadAllowsEscapedQuoteInDescription)
     std::ofstream{selector_file} << "\"Filter \\\"Name\\\"\" alt.test !alt.noise\n";
 
     ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", {}));
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(item->m_data));
     EXPECT_EQ("Filter \"Name\"", item->m_desc);
@@ -355,7 +355,7 @@ TEST_F(UnivTest, fileLoadCreatesTextFileItem)
     const std::string help_name = (selector_path.parent_path() / "help.txt").generic_string();
 
     ASSERT_TRUE(univ_file_load(file_name, "Top", {}));
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalTextFile>(item->m_data));
     EXPECT_EQ("Help", item->m_desc);
@@ -373,7 +373,7 @@ TEST_F(UnivTest, fileLoadCreatesNumberedVirtualArticle)
     std::ofstream{selector_file} << "\"Article\" $v1 1500 news.admin\n";
 
     ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", {}));
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalVirtualArticle>(item->m_data));
     EXPECT_EQ("Article", item->m_desc);
@@ -395,7 +395,7 @@ TEST_F(UnivTest, fileLoadParsesVirtualGroupExtensionWithoutMatches)
     std::ofstream{selector_file} << "\"Virtual\" $vg +5 no.match\n";
 
     ASSERT_TRUE(univ_file_load(selector_file.generic_string(), "Top", {}));
-    EXPECT_EQ(nullptr, univ_first_item());
+    EXPECT_EQ(nullptr, g_univ.first_item());
     fs::remove_all(temp_dir, error);
 }
 
@@ -500,7 +500,7 @@ TEST_F(UnivTest, colonPathIsRelativeToCurrentUniversalFile)
     const std::string child_name = fs::path{TRN_TEST_UNIV_CHILD_FILE}.generic_string();
 
     ASSERT_TRUE(univ_file_load(top_name, "Top", {}));
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalConfigFileData>(item->m_data));
     EXPECT_EQ("Child", item->m_desc);
@@ -514,7 +514,7 @@ TEST_F(UnivTest, colonPathLabelIsRelativeToCurrentUniversalFile)
     const std::string child_name = fs::path{TRN_TEST_UNIV_CHILD_FILE}.generic_string();
 
     ASSERT_TRUE(univ_file_load(top_name, "Top", {}));
-    UniversalItem *item = univ_first_item();
+    UniversalItem *item = g_univ.first_item();
     ASSERT_NE(nullptr, item);
     EXPECT_TRUE(std::holds_alternative<UniversalConfigFileData>(item->m_data));
     EXPECT_EQ("Child", item->m_desc);
