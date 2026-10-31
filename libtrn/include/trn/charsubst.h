@@ -25,9 +25,6 @@
 #include <utility>
 #include <vector>
 
-// Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
-extern std::string g_charsets;
-
 char        current_char_subst_mode();
 void        set_char_subst_mode(char mode);
 void        reset_char_subst_mode();
@@ -49,7 +46,15 @@ private:
     std::vector<ReplacementMapping> m_mappings;
 };
 
-extern UnicodeSubstitutionProfile g_unicode_substitutions;
+struct SubstitutionSettings
+{
+    // Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
+    std::string                charsets{"patm"};
+    std::string::size_type     index{std::string::npos};
+    UnicodeSubstitutionProfile unicode_substitutions;
+};
+
+extern SubstitutionSettings g_subst;
 
 // Inputs are complete UTF-8 views. Invalid bytes become U+FFFD, one byte at a time.
 // TeX prefixes may span calls on this instance; finish flushes a trailing prefix.

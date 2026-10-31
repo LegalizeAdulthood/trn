@@ -5206,7 +5206,7 @@ private:
     int                   m_old_tc_cols{g_tc_COLS};
     int                   m_old_word_wrap_offset{g_word_wrap_offset};
     char                  m_old_subst{current_char_subst_mode()};
-    std::string           m_old_charsets{g_charsets};
+    std::string           m_old_charsets{g_subst.charsets};
 };
 
 void CachedDisplayArticleTest::SetUp()
@@ -5222,7 +5222,7 @@ void CachedDisplayArticleTest::SetUp()
     g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{};
     g_tc_COLS = 80;
     g_word_wrap_offset = 8;
-    g_charsets = "pa";
+    g_subst.charsets = "pa";
     set_char_subst_mode('p');
     const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
     m_output_dir =
@@ -5273,7 +5273,7 @@ void CachedDisplayArticleTest::TearDown()
     g_parsed_header.positions[PAST_HEADER] = m_old_past_header_pos;
     g_tc_COLS = m_old_tc_cols;
     g_word_wrap_offset = m_old_word_wrap_offset;
-    g_charsets = m_old_charsets;
+    g_subst.charsets = m_old_charsets;
     set_char_subst_mode(m_old_subst);
     std::error_code error;
     std::filesystem::remove(m_output_dir / "article", error);

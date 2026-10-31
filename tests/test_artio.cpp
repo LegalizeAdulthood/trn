@@ -66,8 +66,8 @@ protected:
         m_old_input = input_charset_name();
         m_old_output = output_charset_name();
         m_old_subst = current_char_subst_mode();
-        m_old_charsets = g_charsets;
-        m_old_profile = g_unicode_substitutions;
+        m_old_charsets = g_subst.charsets;
+        m_old_profile = g_subst.unicode_substitutions;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -113,8 +113,8 @@ protected:
         g_tc_COLS = m_old_tc_cols;
         g_word_wrap_offset = m_old_word_wrap_offset;
         utf_init(m_old_input, m_old_output);
-        g_charsets = m_old_charsets;
-        g_unicode_substitutions = m_old_profile;
+        g_subst.charsets = m_old_charsets;
+        g_subst.unicode_substitutions = m_old_profile;
         set_char_subst_mode(m_old_subst);
 
         std::error_code error;
@@ -308,7 +308,7 @@ protected:
 void UnicodeProfileArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
-    g_charsets = "up";
+    g_subst.charsets = "up";
     reset_char_subst_mode();
     g_word_wrap_offset = -1;
     g_mime.section = &m_mime_section;
@@ -379,9 +379,9 @@ protected:
 void UnicodeReplacementArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
-    g_charsets = "up";
+    g_subst.charsets = "up";
     reset_char_subst_mode();
-    ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
+    ASSERT_TRUE(g_subst.unicode_substitutions.configure(IniSection{
         "unicode substitutions", {}, "U+2019 = \"left\\t\\nright\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\n"}));
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     g_mime.section = &m_mime_section;
@@ -466,7 +466,7 @@ void LongArticleBufferTest::SetUp()
 {
     ArticleIoTest::SetUp();
     const LongArticleCase &value = GetParam();
-    g_charsets = "p";
+    g_subst.charsets = "p";
     reset_char_subst_mode();
     utf_init("UTF-8", "UTF-8");
     g_word_wrap_offset = -1;
@@ -617,12 +617,12 @@ void WrappedArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
     const WrappedArticleCase &value = GetParam();
-    g_charsets = value.substitute ? "up" : "p";
+    g_subst.charsets = value.substitute ? "up" : "p";
     reset_char_subst_mode();
     utf_init("UTF-8", "UTF-8");
     if (value.substitute)
     {
-        ASSERT_TRUE(g_unicode_substitutions.configure(
+        ASSERT_TRUE(g_subst.unicode_substitutions.configure(
             IniSection{"unicode substitutions", {}, "U+2019 = \xE2\x80\x94\nU+2014 = --\n"}));
     }
     g_word_wrap_offset = value.margin;
@@ -897,7 +897,7 @@ private:
 void MultipartArticleIoTest::SetUp()
 {
     ArticleIoTest::SetUp();
-    g_charsets = "p";
+    g_subst.charsets = "p";
     reset_char_subst_mode();
     utf_init("UTF-8", "UTF-8");
     g_word_wrap_offset = -1;
@@ -1393,9 +1393,9 @@ protected:
 void PipelineMultipartArticleTest::SetUp()
 {
     MultipartArticleIoTest::SetUp();
-    g_charsets = "up";
+    g_subst.charsets = "up";
     reset_char_subst_mode();
-    ASSERT_TRUE(g_unicode_substitutions.configure(IniSection{
+    ASSERT_TRUE(g_subst.unicode_substitutions.configure(IniSection{
         "unicode substitutions",
         {},
         "U+00E9 = \xC3\xA9\nU+2019 = \"left\\nright\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\nU+FFFD = ?\n"}));
@@ -2243,7 +2243,7 @@ INSTANTIATE_TEST_SUITE_P(ReplacementBehavior, UnicodeReplacementArticleTest,
 
 TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
 {
-    g_charsets = "up";
+    g_subst.charsets = "up";
     reset_char_subst_mode();
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_QPRINT;

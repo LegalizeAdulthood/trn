@@ -432,14 +432,14 @@ class CurrentCharSubstTest : public Test
 protected:
     void SetUp() override
     {
-        m_previous_charsets = g_charsets;
+        m_previous_charsets = g_subst.charsets;
         m_previous_char_subst = current_char_subst_mode();
         m_previous_verbose = g_verbose;
     }
 
     void TearDown() override
     {
-        g_charsets = m_previous_charsets;
+        g_subst.charsets = m_previous_charsets;
         set_char_subst_mode(m_previous_char_subst);
         g_verbose = m_previous_verbose;
     }
@@ -486,7 +486,7 @@ void UnicodeProfileTransformTest::SetUp()
     UnicodeProfileTest::SetUp();
     if (std::get<0>(GetParam()))
     {
-        g_charsets = "up";
+        g_subst.charsets = "up";
     }
     reset_char_subst_mode();
 }
@@ -500,7 +500,7 @@ protected:
 void EnabledUnicodeProfileTest::SetUp()
 {
     UnicodeProfileTest::SetUp();
-    g_charsets = "up";
+    g_subst.charsets = "up";
     reset_char_subst_mode();
 }
 
@@ -510,7 +510,7 @@ class UnicodeProfileLabelTest : public EnabledUnicodeProfileTest, public WithPar
 
 TEST_F(CurrentCharSubstTest, unicodeProfileIsAbsentFromDefaultModes)
 {
-    EXPECT_EQ(std::string::npos, g_charsets.find('u'));
+    EXPECT_EQ(std::string::npos, g_subst.charsets.find('u'));
 }
 
 TEST_P(UnicodeProfileTransformTest, substitutesOnlyWhenUnicodeModeIsEnabled)
@@ -553,11 +553,11 @@ TEST_F(CurrentCharSubstTest, returnsCurrentMode)
 
 TEST_F(CurrentCharSubstTest, resetsToFirstConfiguredMode)
 {
-    set_char_subst_mode(g_charsets[2]);
+    set_char_subst_mode(g_subst.charsets[2]);
 
     reset_char_subst_mode();
 
-    EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
+    EXPECT_EQ(g_subst.charsets.front(), current_char_subst_mode());
 }
 
 TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
@@ -566,21 +566,21 @@ TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
 
     next_char_subst_mode();
 
-    EXPECT_EQ(g_charsets[1], current_char_subst_mode());
+    EXPECT_EQ(g_subst.charsets[1], current_char_subst_mode());
 }
 
 TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
 {
-    set_char_subst_mode(g_charsets.back());
+    set_char_subst_mode(g_subst.charsets.back());
 
     next_char_subst_mode();
 
-    EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
+    EXPECT_EQ(g_subst.charsets.front(), current_char_subst_mode());
 }
 
 TEST_F(CurrentCharSubstTest, emptyCharsetsHaveNoCurrentMode)
 {
-    g_charsets = "";
+    g_subst.charsets = "";
     reset_char_subst_mode();
 
     EXPECT_EQ('\0', current_char_subst_mode());
@@ -592,11 +592,11 @@ TEST_F(CurrentCharSubstTest, emptyCharsetsHaveNoCurrentMode)
 
 TEST_F(CurrentCharSubstTest, reassigningCharsetsNormalizesOutOfRangeMode)
 {
-    set_char_subst_mode(g_charsets.back());
+    set_char_subst_mode(g_subst.charsets.back());
 
-    g_charsets = "pa";
+    g_subst.charsets = "pa";
 
-    EXPECT_EQ(g_charsets.front(), current_char_subst_mode());
+    EXPECT_EQ(g_subst.charsets.front(), current_char_subst_mode());
 }
 
 TEST(CharSubstTest, copiesThroughFirstNewline)

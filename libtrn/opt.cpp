@@ -216,7 +216,7 @@ void load_options(const fs::path &filename, bool bleat)
             }
             else if (section_name == "unicode substitutions")
             {
-                if (!g_unicode_substitutions.configure(section))
+                if (!g_subst.unicode_substitutions.configure(section))
                 {
                     fmt::print("Invalid Unicode substitution section in {}\n", filename.string());
                 }
@@ -664,7 +664,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_CHARSET:
-        g_charsets = value;
+        g_subst.charsets = value;
         break;
 
     case OI_INITIAL_GROUP_LIST:
@@ -1212,7 +1212,7 @@ std::string option_value(OptionIndex num)
         return yes_or_no(g_empty_only_char == 'o');
 
     case OI_CHARSET:
-        return g_charsets.c_str();
+        return g_subst.charsets.c_str();
 
     case OI_INITIAL_GROUP_LIST:
         if (g_suppress_cn)

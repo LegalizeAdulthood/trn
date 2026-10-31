@@ -518,8 +518,8 @@ TEST_F(TreeRenderingTest, hiddenHeaderSubstitutesDecodedLatinScalars)
 
 TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
 {
-    const std::string previous_charsets = g_charsets;
-    g_charsets = "up";
+    const std::string previous_charsets = g_subst.charsets;
+    g_subst.charsets = "up";
     reset_char_subst_mode();
     g_nav.current.art = nullptr;
     g_do_hiding = true;
@@ -528,7 +528,7 @@ TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
     testing::internal::CaptureStdout();
     tree_puts("From: =?UTF-8?Q?=E2=80=99?=", ArticleLine{1}, 0);
     const std::string output = testing::internal::GetCapturedStdout();
-    g_charsets = previous_charsets;
+    g_subst.charsets = previous_charsets;
     EXPECT_EQ("From: '\n", output);
 }
 

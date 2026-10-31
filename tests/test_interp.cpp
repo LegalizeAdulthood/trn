@@ -1673,7 +1673,7 @@ private:
     int                                      m_old_columns{g_tc_COLS};
     std::string_view                         m_old_input{input_charset_name()};
     std::string_view                         m_old_output{output_charset_name()};
-    std::string                              m_old_charsets{g_charsets};
+    std::string                              m_old_charsets{g_subst.charsets};
     char                                     m_old_subst{current_char_subst_mode()};
     std::string                              m_old_prompt{g_prompt};
     Article                                 *m_old_current_article{g_nav.current.art};
@@ -1713,7 +1713,7 @@ void ArticleHeaderPresentationTest::TearDown()
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
     utf_init(m_old_input, m_old_output);
-    g_charsets = m_old_charsets;
+    g_subst.charsets = m_old_charsets;
     set_char_subst_mode(m_old_subst);
     g_prompt = m_old_prompt;
     g_nav.current.art = m_old_current_article;
@@ -1868,7 +1868,7 @@ void PagerArticleTest::SetUp()
 {
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
-    g_charsets = "pt";
+    g_subst.charsets = "pt";
     set_char_subst_mode('p');
     g_rotate = false;
     m_previous_directory = fs::current_path();
@@ -2058,7 +2058,7 @@ protected:
     ArticleNum m_other{};
 
 private:
-    ValueSaver<UnicodeSubstitutionProfile> m_profile{g_unicode_substitutions, g_unicode_substitutions};
+    ValueSaver<UnicodeSubstitutionProfile> m_profile{g_subst.unicode_substitutions, g_subst.unicode_substitutions};
     ValueSaver<std::string>                m_separator{g_multipart_separator, g_multipart_separator};
     ValueSaver<bool>                       m_hiding{g_do_hiding, g_do_hiding};
     ValueSaver<bool>                       m_multimedia{g_mime.multimedia_mime, g_mime.multimedia_mime};
@@ -2079,10 +2079,10 @@ void ArticleCacheLifecycleTest::SetUp()
     g_do_hiding = true;
     g_word_wrap_offset = -1;
     g_multipart_separator = "Part";
-    g_charsets = "pu";
+    g_subst.charsets = "pu";
     set_char_subst_mode('p');
-    g_unicode_substitutions = UnicodeSubstitutionProfile{};
-    ASSERT_TRUE(g_unicode_substitutions.configure(
+    g_subst.unicode_substitutions = UnicodeSubstitutionProfile{};
+    ASSERT_TRUE(g_subst.unicode_substitutions.configure(
         IniSection{"unicode substitutions", {}, "U+00E9 = \"ECHO\\nNEXT\"\nU+00C4 = AE\nU+FFFD = ?\n"}));
     m_original = g_nav.target.num;
     m_other = m_original + ArticleNum{1};

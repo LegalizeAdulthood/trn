@@ -28,14 +28,11 @@
 #include <string_view>
 #include <system_error>
 
-// Conversions are: plain, ISO->USascii, TeX->ISO, ISO->USascii monospaced
-std::string g_charsets{"patm"};
-UnicodeSubstitutionProfile g_unicode_substitutions;
+SubstitutionSettings g_subst;
 
 namespace
 {
 constexpr std::string::size_type NO_CHAR_SUBST = std::string::npos;
-std::string::size_type           s_char_subst_index{NO_CHAR_SUBST};
 
 using ReplacementText = std::pair<CodePoint, std::string_view>;
 
@@ -62,13 +59,13 @@ bool valid_utf8(std::string_view text)
 
 void normalize_char_subst_mode()
 {
-    if (g_charsets.empty())
+    if (g_subst.charsets.empty())
     {
-        s_char_subst_index = NO_CHAR_SUBST;
+        g_subst.index = NO_CHAR_SUBST;
     }
-    else if (s_char_subst_index != NO_CHAR_SUBST && s_char_subst_index >= g_charsets.size())
+    else if (g_subst.index != NO_CHAR_SUBST && g_subst.index >= g_subst.charsets.size())
     {
-        s_char_subst_index = 0;
+        g_subst.index = 0;
     }
 }
 } // namespace
@@ -88,42 +85,42 @@ static constexpr CodePoint s_tex_tbl[96] =
 char current_char_subst_mode()
 {
     normalize_char_subst_mode();
-    return s_char_subst_index == NO_CHAR_SUBST ? '\0' : g_charsets[s_char_subst_index];
+    return g_subst.index == NO_CHAR_SUBST ? '\0' : g_subst.charsets[g_subst.index];
 }
 
 void set_char_subst_mode(char mode)
 {
-    if (mode == '\0' || g_charsets.empty())
+    if (mode == '\0' || g_subst.charsets.empty())
     {
-        s_char_subst_index = NO_CHAR_SUBST;
+        g_subst.index = NO_CHAR_SUBST;
         return;
     }
 
-    const std::string::size_type mode_pos = g_charsets.find(mode);
+    const std::string::size_type mode_pos = g_subst.charsets.find(mode);
     if (mode_pos == std::string::npos)
     {
         reset_char_subst_mode();
         return;
     }
 
-    s_char_subst_index = mode_pos;
+    g_subst.index = mode_pos;
 }
 
 void reset_char_subst_mode()
 {
-    s_char_subst_index = g_charsets.empty() ? NO_CHAR_SUBST : 0;
+    g_subst.index = g_subst.charsets.empty() ? NO_CHAR_SUBST : 0;
 }
 
 void next_char_subst_mode()
 {
     normalize_char_subst_mode();
-    if (s_char_subst_index == NO_CHAR_SUBST)
+    if (g_subst.index == NO_CHAR_SUBST)
     {
         reset_char_subst_mode();
         return;
     }
-    ++s_char_subst_index;
-    if (s_char_subst_index >= g_charsets.size())
+    ++g_subst.index;
+    if (g_subst.index >= g_subst.charsets.size())
     {
         reset_char_subst_mode();
     }
@@ -250,7 +247,7 @@ std::optional<std::string_view> UnicodeSubstitutionProfile::replacement(CodePoin
 }
 
 CharSubstitution::CharSubstitution(char_int mode) :
-    CharSubstitution{mode, g_unicode_substitutions}
+    CharSubstitution{mode, g_subst.unicode_substitutions}
 {
 }
 

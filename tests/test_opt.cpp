@@ -127,18 +127,18 @@ protected:
     void SetUp() override
     {
         SaveOptionsTest::SetUp();
-        m_old_profile = g_unicode_substitutions;
-        m_old_charsets = g_charsets;
+        m_old_profile = g_subst.unicode_substitutions;
+        m_old_charsets = g_subst.charsets;
         m_old_mode = current_char_subst_mode();
-        g_unicode_substitutions = {};
-        g_charsets = "patm";
+        g_subst.unicode_substitutions = {};
+        g_subst.charsets = "patm";
         reset_char_subst_mode();
     }
 
     void TearDown() override
     {
-        g_unicode_substitutions = m_old_profile;
-        g_charsets = m_old_charsets;
+        g_subst.unicode_substitutions = m_old_profile;
+        g_subst.charsets = m_old_charsets;
         set_char_subst_mode(m_old_mode);
         SaveOptionsTest::TearDown();
     }
@@ -379,8 +379,8 @@ TEST_F(UnicodeConfigurationTest, savesAndReloadsOptInAndEscapedMappings)
     save_options(path);
     EXPECT_NE(std::string::npos, file_contents(path).find(section));
 
-    g_unicode_substitutions = {};
-    g_charsets = "patm";
+    g_subst.unicode_substitutions = {};
+    g_subst.charsets = "patm";
     load_options(path);
     reset_char_subst_mode();
     EXPECT_EQ('u', current_char_subst_mode());
