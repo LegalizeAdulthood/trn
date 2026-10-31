@@ -2845,7 +2845,7 @@ void display_option(int op, int item_index)
         len = item.size();
         post = "..................................";
         const OptionIndex option = catalog.option(op);
-        std::optional<std::string_view> option_val = option_draft_value(option);
+        std::optional<std::string_view> option_val = g_opt_edit.value(option);
         if (!option_val.has_value())
         {
             quoted_val = quote_string(option_value(option));

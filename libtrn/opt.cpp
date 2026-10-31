@@ -262,9 +262,9 @@ bool OptionEditSession::contains(OptionIndex num)
     return draft != nullptr && draft->contains(num);
 }
 
-std::optional<std::string_view> option_draft_value(OptionIndex num)
+std::optional<std::string_view> OptionEditSession::value(OptionIndex num)
 {
-    return g_opt_edit.draft != nullptr ? g_opt_edit.draft->value(num) : std::nullopt;
+    return draft != nullptr ? draft->value(num) : std::nullopt;
 }
 
 void set_option(OptionIndex num, std::string_view s)
