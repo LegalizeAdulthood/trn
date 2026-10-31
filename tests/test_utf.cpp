@@ -488,7 +488,7 @@ void UnicodeProfileTransformTest::SetUp()
     {
         g_subst.charsets = "up";
     }
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 }
 
 class EnabledUnicodeProfileTest : public UnicodeProfileTest
@@ -501,7 +501,7 @@ void EnabledUnicodeProfileTest::SetUp()
 {
     UnicodeProfileTest::SetUp();
     g_subst.charsets = "up";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 }
 
 class UnicodeProfileLabelTest : public EnabledUnicodeProfileTest, public WithParamInterface<UnicodeProfileCase>
@@ -555,14 +555,14 @@ TEST_F(CurrentCharSubstTest, resetsToFirstConfiguredMode)
 {
     set_char_subst_mode(g_subst.charsets[2]);
 
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 
     EXPECT_EQ(g_subst.charsets.front(), g_subst.current_mode());
 }
 
 TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
 {
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 
     next_char_subst_mode();
 
@@ -581,7 +581,7 @@ TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
 TEST_F(CurrentCharSubstTest, emptyCharsetsHaveNoCurrentMode)
 {
     g_subst.charsets = "";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 
     EXPECT_EQ('\0', g_subst.current_mode());
 

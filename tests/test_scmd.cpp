@@ -31,7 +31,7 @@ protected:
     void SetUp() override
     {
         g_article_list.clear();
-        reset_char_subst_mode();
+        g_subst.reset_mode();
         g_last_art = ArticleNum{1};
         g_s_cur_type = S_ART;
         g_s_status_cols = 3;

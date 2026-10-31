@@ -520,7 +520,7 @@ TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
 {
     const std::string previous_charsets = g_subst.charsets;
     g_subst.charsets = "up";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     g_nav.current.art = nullptr;
     g_do_hiding = true;
     init_tree();

@@ -231,7 +231,7 @@ protected:
     void SetUp() override
     {
         m_previous_char_subst = g_subst.current_mode();
-        reset_char_subst_mode();
+        g_subst.reset_mode();
     }
 
     void TearDown() override
@@ -316,7 +316,7 @@ protected:
         m_previous_sel_rereading = g_sel.rereading;
         m_previous_unbroken_subjects = g_unbroken_subjects;
 
-        reset_char_subst_mode();
+        g_subst.reset_mode();
         g_threaded_group = false;
         g_sel.rereading = false;
         g_unbroken_subjects = false;

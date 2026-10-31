@@ -132,7 +132,7 @@ protected:
         m_old_mode = g_subst.current_mode();
         g_subst.unicode_substitutions = {};
         g_subst.charsets = "patm";
-        reset_char_subst_mode();
+        g_subst.reset_mode();
     }
 
     void TearDown() override
@@ -174,7 +174,7 @@ void EnabledUnicodeMappingsTest::SetUp()
 {
     LoadedUnicodeMappingsTest::SetUp();
     set_option(OI_CHARSET, "up");
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 }
 
 class AutoSaveNameOptionTest : public testing::Test
@@ -382,7 +382,7 @@ TEST_F(UnicodeConfigurationTest, savesAndReloadsOptInAndEscapedMappings)
     g_subst.unicode_substitutions = {};
     g_subst.charsets = "patm";
     load_options(path);
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     EXPECT_EQ('u', g_subst.current_mode());
     EXPECT_EQ("\t\n\\", str_char_subst("\xE2\x80\x99\xE2\x80\x94", g_subst.current_mode()));
 }
@@ -398,7 +398,7 @@ TEST_F(UnicodeConfigurationTest, invalidSectionReportsErrorAndKeepsPreviousProfi
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_NE(std::string::npos, output.find("Invalid Unicode substitution section"));
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     EXPECT_EQ("old", str_char_subst("\xE2\x80\x99", g_subst.current_mode()));
 }
 

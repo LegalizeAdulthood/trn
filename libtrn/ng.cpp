@@ -322,7 +322,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     g_force_last = true;                 // if 0 unread, do not bomb out
     g_nav.current = g_nav.recent = {article_after(g_last_art), nullptr};
     g_prompt = whatnext;
-    reset_char_subst_mode();
+    g_subst.reset_mode();
 
     // see if there are any special searches to do
 
@@ -456,7 +456,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             if (g_nav.target != g_nav.current)
             {
                 g_nav.commit_current();
-                reset_char_subst_mode();
+                g_subst.reset_mode();
                 g_first_view = ArticleLine{};
             }
             if (g_sa_in)
@@ -534,7 +534,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             if (g_nav.target != g_nav.current)
             {
                 g_nav.commit_current();
-                reset_char_subst_mode();
+                g_subst.reset_mode();
                 g_first_view = ArticleLine{};
                 g_do_hiding = true;
                 g_rotate = false;

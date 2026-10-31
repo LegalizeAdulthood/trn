@@ -309,7 +309,7 @@ void UnicodeProfileArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
     g_subst.charsets = "up";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     g_word_wrap_offset = -1;
     g_mime.section = &m_mime_section;
     g_mime.is_mime = true;
@@ -380,7 +380,7 @@ void UnicodeReplacementArticleTest::SetUp()
 {
     ArticleIoTest::SetUp();
     g_subst.charsets = "up";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     ASSERT_TRUE(g_subst.unicode_substitutions.configure(IniSection{
         "unicode substitutions", {}, "U+2019 = \"left\\t\\nright\\\\\\\"\"\nU+2014 = \"\"\nU+1F60A = \xE2\x80\x94\n"}));
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
@@ -467,7 +467,7 @@ void LongArticleBufferTest::SetUp()
     ArticleIoTest::SetUp();
     const LongArticleCase &value = GetParam();
     g_subst.charsets = "p";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     utf_init("UTF-8", "UTF-8");
     g_word_wrap_offset = -1;
     m_mime_section.mime_parse_type(value.type);
@@ -618,7 +618,7 @@ void WrappedArticleTest::SetUp()
     ArticleIoTest::SetUp();
     const WrappedArticleCase &value = GetParam();
     g_subst.charsets = value.substitute ? "up" : "p";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     utf_init("UTF-8", "UTF-8");
     if (value.substitute)
     {
@@ -898,7 +898,7 @@ void MultipartArticleIoTest::SetUp()
 {
     ArticleIoTest::SetUp();
     g_subst.charsets = "p";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     utf_init("UTF-8", "UTF-8");
     g_word_wrap_offset = -1;
     g_multipart_separator = "Part";
@@ -1394,7 +1394,7 @@ void PipelineMultipartArticleTest::SetUp()
 {
     MultipartArticleIoTest::SetUp();
     g_subst.charsets = "up";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     ASSERT_TRUE(g_subst.unicode_substitutions.configure(IniSection{
         "unicode substitutions",
         {},
@@ -2244,7 +2244,7 @@ INSTANTIATE_TEST_SUITE_P(ReplacementBehavior, UnicodeReplacementArticleTest,
 TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
 {
     g_subst.charsets = "up";
-    reset_char_subst_mode();
+    g_subst.reset_mode();
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_QPRINT;
     g_mime.section = &m_mime_section;

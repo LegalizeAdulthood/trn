@@ -100,16 +100,16 @@ void set_char_subst_mode(char mode)
     const std::string::size_type mode_pos = g_subst.charsets.find(mode);
     if (mode_pos == std::string::npos)
     {
-        reset_char_subst_mode();
+        g_subst.reset_mode();
         return;
     }
 
     g_subst.index = mode_pos;
 }
 
-void reset_char_subst_mode()
+void SubstitutionSettings::reset_mode()
 {
-    g_subst.index = g_subst.charsets.empty() ? NO_CHAR_SUBST : 0;
+    index = charsets.empty() ? NO_CHAR_SUBST : 0;
 }
 
 void next_char_subst_mode()
@@ -117,13 +117,13 @@ void next_char_subst_mode()
     g_subst.normalize_mode();
     if (g_subst.index == NO_CHAR_SUBST)
     {
-        reset_char_subst_mode();
+        g_subst.reset_mode();
         return;
     }
     ++g_subst.index;
     if (g_subst.index >= g_subst.charsets.size())
     {
-        reset_char_subst_mode();
+        g_subst.reset_mode();
     }
 }
 
