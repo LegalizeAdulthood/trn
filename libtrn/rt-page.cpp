@@ -702,7 +702,7 @@ try_again:
         g_obj_count = ArticleNum{};
         bool found_page_univ = !g_sel_page.page_univ_index;
 
-        sort_univ();
+        g_univ.sort();
         for (UniversalItem &item : univ_items())
         {
             if (g_sel_page.page_univ_index == univ_index(&item))

@@ -671,7 +671,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     {
         univ_virt_pass();
     }
-    sort_univ();
+    g_univ.sort();
     return true;
 }
 
@@ -1310,9 +1310,9 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
     g_univ_ng_virt_flag = false;
 }
 
-void sort_univ()
+void UniversalMenuContext::sort()
 {
-    if (g_univ.items.size() <= 1)
+    if (items.size() <= 1)
     {
         return;
     }
@@ -1320,7 +1320,7 @@ void sort_univ()
     switch (g_sel.sort)
     {
     case SS_SCORE:
-        std::sort(g_univ.items.begin(), g_univ.items.end(),
+        std::sort(items.begin(), items.end(),
                   [](const UniversalItem &left, const UniversalItem &right)
                   {
                       if (left.m_score != right.m_score)
@@ -1333,7 +1333,7 @@ void sort_univ()
 
     case SS_NATURAL:
     default:
-        std::sort(g_univ.items.begin(), g_univ.items.end(), [](const UniversalItem &left, const UniversalItem &right)
+        std::sort(items.begin(), items.end(), [](const UniversalItem &left, const UniversalItem &right)
                   { return g_sel.direction > 0 ? left.m_num < right.m_num : left.m_num > right.m_num; });
         break;
     }

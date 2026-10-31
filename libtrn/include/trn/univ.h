@@ -184,6 +184,7 @@ struct UniversalMenuContext
     UniversalItem *next_item(const UniversalItem *item);
     UniversalItem *prev_item(const UniversalItem *item);
     UniversalItem *item(UniversalItemIndex item_index);
+    void           sort();
 
     // TODO: private
     std::size_t position(const UniversalItem *item);
@@ -215,7 +216,6 @@ int            univ_visit_group_main(std::string_view gname);
 void           univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending);
 void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
-void           sort_univ();
 UniversalItems univ_items();
 UniversalItems     univ_items(UniversalItemIndex first);
 UniversalItems     univ_items(UniversalItem *first);
