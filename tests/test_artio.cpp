@@ -65,7 +65,7 @@ protected:
         m_old_word_wrap_offset = g_word_wrap_offset;
         m_old_input = input_charset_name();
         m_old_output = output_charset_name();
-        m_old_subst = current_char_subst_mode();
+        m_old_subst = g_subst.current_mode();
         m_old_charsets = g_subst.charsets;
         m_old_profile = g_subst.unicode_substitutions;
 
@@ -2281,7 +2281,7 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
     testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(PS_NORM, result);
-    EXPECT_EQ('a', current_char_subst_mode());
+    EXPECT_EQ('a', g_subst.current_mode());
     EXPECT_TRUE(g_art_buf.empty());
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
     g_top_line = old_top;

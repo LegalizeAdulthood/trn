@@ -409,7 +409,7 @@ static std::size_t utf8_prefix_size(std::string_view text, int columns)
 
 inline bool header_conv()
 {
-    const char mode = current_char_subst_mode();
+    const char mode = g_subst.current_mode();
     return mode == 'a' || mode == 'm' || mode == 't' || mode == 'u';
 }
 
@@ -457,7 +457,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     std::string_view line = line_buffer;
     if (header_conv())
     {
-        substituted_line = str_char_subst(line, current_char_subst_mode());
+        substituted_line = str_char_subst(line, g_subst.current_mode());
         line = substituted_line;
     }
 

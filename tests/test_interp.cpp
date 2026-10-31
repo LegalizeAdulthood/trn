@@ -1674,7 +1674,7 @@ private:
     std::string_view                         m_old_input{input_charset_name()};
     std::string_view                         m_old_output{output_charset_name()};
     std::string                              m_old_charsets{g_subst.charsets};
-    char                                     m_old_subst{current_char_subst_mode()};
+    char                                     m_old_subst{g_subst.current_mode()};
     std::string                              m_old_prompt{g_prompt};
     Article                                 *m_old_current_article{g_nav.current.art};
     Article                                 *m_old_article{g_nav.target.art};
@@ -2167,7 +2167,7 @@ TEST_P(ArticleCacheLifecycleTest, conversionRebuildsTheCachedArticleFromItsFirst
     render_article();
 
     EXPECT_EQ(DA_NORM, m_result);
-    EXPECT_EQ('u', current_char_subst_mode());
+    EXPECT_EQ('u', g_subst.current_mode());
     EXPECT_EQ(scenario().converted, cached_rows());
     expect_displayed(scenario().converted);
 }
@@ -2183,7 +2183,7 @@ TEST_P(ArticleCacheLifecycleTest, cyclingConversionBackRebuildsTheOriginalPresen
     render_article();
 
     EXPECT_EQ(DA_NORM, m_result);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     EXPECT_EQ(scenario().plain, cached_rows());
     expect_displayed(scenario().plain);
 }
@@ -2203,7 +2203,7 @@ TEST_P(ArticleCacheLifecycleTest, ordinaryRefreshReusesTheCachedPresentationAndM
     render_article();
 
     EXPECT_EQ(DA_NORM, m_result);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     EXPECT_EQ(scenario().plain, cached_rows());
     expect_displayed(scenario().plain);
 }
@@ -2237,7 +2237,7 @@ TEST_P(ArticleCacheLifecycleTest, selectedConversionModePersistsWhenSwitchingArt
     render_article();
 
     EXPECT_EQ(DA_NORM, m_result);
-    EXPECT_EQ('u', current_char_subst_mode());
+    EXPECT_EQ('u', g_subst.current_mode());
     EXPECT_EQ(expected, cached_rows());
     expect_displayed(expected);
     EXPECT_TRUE(g_mime.section->m_decoder_pending.empty());
@@ -6092,7 +6092,7 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
         EXPECT_THAT(page_text(scenario.pages.size()), HasSubstr(scenario.expected_text));
     }
     EXPECT_EQ(scenario.expected_rotate, g_rotate);
-    EXPECT_EQ(scenario.expected_subst, current_char_subst_mode());
+    EXPECT_EQ(scenario.expected_subst, g_subst.current_mode());
     int insertions = 0;
     for (std::size_t position = m_rendered.find("<insert>"); position != std::string::npos;
          position = m_rendered.find("<insert>", position + 8))

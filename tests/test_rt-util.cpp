@@ -230,7 +230,7 @@ class CompressFromTest : public Test
 protected:
     void SetUp() override
     {
-        m_previous_char_subst = current_char_subst_mode();
+        m_previous_char_subst = g_subst.current_mode();
         reset_char_subst_mode();
     }
 
@@ -311,7 +311,7 @@ class CompressSubjectTest : public Test
 protected:
     void SetUp() override
     {
-        m_previous_char_subst = current_char_subst_mode();
+        m_previous_char_subst = g_subst.current_mode();
         m_previous_threaded_group = g_threaded_group;
         m_previous_sel_rereading = g_sel.rereading;
         m_previous_unbroken_subjects = g_unbroken_subjects;

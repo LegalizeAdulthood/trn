@@ -83,10 +83,10 @@ static constexpr CodePoint s_tex_tbl[96] =
     0,  0,  0,223,  0,252,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 // clang-format on
-char current_char_subst_mode()
+char SubstitutionSettings::current_mode()
 {
-    g_subst.normalize_mode();
-    return g_subst.index == NO_CHAR_SUBST ? '\0' : g_subst.charsets[g_subst.index];
+    normalize_mode();
+    return index == NO_CHAR_SUBST ? '\0' : charsets[index];
 }
 
 void set_char_subst_mode(char mode)
@@ -131,7 +131,7 @@ std::string current_char_subst()
 {
     std::string_view show;
 
-    switch (current_char_subst_mode())
+    switch (g_subst.current_mode())
     {
     case 'm':
         show = g_verbose ? "[ISO->USmono] " : "[M] ";

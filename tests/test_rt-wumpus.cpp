@@ -47,7 +47,7 @@ protected:
         m_old_recent_artp = g_nav.recent.art;
         m_old_selected_only = g_sel.selected_only;
         m_old_do_hiding = g_do_hiding;
-        m_old_char_subst = current_char_subst_mode();
+        m_old_char_subst = g_subst.current_mode();
         m_old_max_tree_lines = g_max_tree_lines;
         m_old_threaded_group = g_threaded_group;
         m_old_tc_cols = g_tc_COLS;

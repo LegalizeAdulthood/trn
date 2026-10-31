@@ -5205,7 +5205,7 @@ private:
     HeaderPosition        m_old_past_header_pos{g_parsed_header.positions[PAST_HEADER]};
     int                   m_old_tc_cols{g_tc_COLS};
     int                   m_old_word_wrap_offset{g_word_wrap_offset};
-    char                  m_old_subst{current_char_subst_mode()};
+    char                  m_old_subst{g_subst.current_mode()};
     std::string           m_old_charsets{g_subst.charsets};
 };
 
@@ -5397,7 +5397,7 @@ void BackwardPagingArticleTest::expect_target(long line, std::string_view expect
     EXPECT_EQ(expected, content);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_FALSE(g_rotate);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
 }
 
 class BackwardPageArticleTest : public BackwardPagingArticleTest,
@@ -5475,7 +5475,7 @@ void JumpToEndArticleTest::expect_end(ArticlePosition end, ArticleLine line, Art
     EXPECT_EQ(column, g_term_col);
     EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
     EXPECT_FALSE(g_rotate);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
 }
 
 class KnownSizeEndArticleTest : public JumpToEndArticleTest, public testing::WithParamInterface<std::pair<long, bool>>
@@ -12119,7 +12119,7 @@ TEST_P(RefreshArticleTest, refreshRedrawsTheCurrentScreenWithoutChangingDisplayO
     EXPECT_EQ(ArticleLine{15}, g_top_line);
     EXPECT_EQ(hiding, g_do_hiding);
     EXPECT_TRUE(g_rotate);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
     EXPECT_EQ(ArticlePosition{3}, g_art_buf.pos());
     EXPECT_EQ(ArticlePosition{3}, g_art_buf.len());
@@ -12143,7 +12143,7 @@ TEST_P(RefreshBoundaryArticleTest, refreshClampsAnUnsetTopLineWithoutInvalidatin
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_FALSE(g_rotate);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
     EXPECT_EQ(ArticlePosition{3}, g_art_buf.pos());
 }
@@ -12162,7 +12162,7 @@ TEST_P(RefreshBoundaryArticleTest, refreshAtGroupEndPreservesTheEndPositionAndCa
     EXPECT_FALSE(g_force_last);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_TRUE(g_rotate);
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     EXPECT_EQ("\xC3\x84\n", art_buf_view(ArticlePosition{}));
     EXPECT_EQ(ArticlePosition{3}, g_art_buf.pos());
     expect_unmoved_view();
@@ -12179,7 +12179,7 @@ TEST_P(SubstitutionArticleTest, changingSubstitutionDiscardsCachedTextAndRestart
     const std::string output = display("_C");
 
     EXPECT_FALSE(output.empty());
-    EXPECT_EQ('a', current_char_subst_mode());
+    EXPECT_EQ('a', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
@@ -12200,7 +12200,7 @@ TEST_F(CachedDisplayArticleTest, substitutionWrapsToTheFirstModeAndRegeneratesTh
     const std::string output = display("_C");
 
     EXPECT_FALSE(output.empty());
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
@@ -12217,7 +12217,7 @@ TEST_F(CachedDisplayArticleTest, substitutionEnablesTheFirstConfiguredModeWhenIn
     const std::string output = display("_C");
 
     EXPECT_FALSE(output.empty());
-    EXPECT_EQ('p', current_char_subst_mode());
+    EXPECT_EQ('p', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
@@ -12232,7 +12232,7 @@ TEST_F(CachedDisplayArticleTest, substitutionAtGroupEndChangesModeAndDiscardsCac
     const std::string output = display("_C");
 
     EXPECT_TRUE(output.empty());
-    EXPECT_EQ('a', current_char_subst_mode());
+    EXPECT_EQ('a', g_subst.current_mode());
     expect_cleared_cache();
     EXPECT_EQ(ArticleLine{-1}, g_top_line);
     EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
@@ -12255,7 +12255,7 @@ TEST_F(CachedDisplayArticleTest, completingTheSubstitutionPrefixConsumesOnlyItsS
     const std::string output = display(std::string{'_', FINISH_CMD}, "C");
 
     EXPECT_NE(std::string::npos, output.find('C'));
-    EXPECT_EQ('a', current_char_subst_mode());
+    EXPECT_EQ('a', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
     EXPECT_EQ(ArticleLine{-1}, g_top_line);

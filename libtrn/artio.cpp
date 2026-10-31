@@ -340,7 +340,7 @@ static std::string substitute_art_text(std::string_view text)
     {
         return std::string{text};
     }
-    CharSubstitution substitution{current_char_subst_mode()};
+    CharSubstitution substitution{g_subst.current_mode()};
     std::string      result = substitution.substitute(text.substr(0, last_newline + 1));
     result += substitution.finish();
     result += text.substr(last_newline + 1);
