@@ -9,6 +9,7 @@
 #include <trn/file-contents.h>
 #include <trn/head.h>
 #include <trn/OptionCatalog.h>
+#include <trn/OptionDraft.h>
 #include <trn/rcstuff.h>
 #include <trn/respond.h>
 #include <trn/trn.h>
@@ -21,6 +22,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -258,6 +260,39 @@ void PrintTo(const OptionGroupToggle &value, std::ostream *output)
 class OptionGroupToggleTest : public testing::TestWithParam<OptionGroupToggle>
 {
 };
+
+struct OptionEditCase
+{
+    const char                     *name;
+    std::optional<std::string_view> initial;
+    std::string_view                oldval;
+    std::string_view                parsed;
+    std::optional<std::string_view> expected;
+    int                             delta;
+};
+
+void PrintTo(const OptionEditCase &value, std::ostream *output)
+{
+    *output << value.name;
+}
+
+class OptionRecordEditTest : public testing::TestWithParam<OptionEditCase>
+{
+protected:
+    void SetUp() override;
+
+    OptionDraft       m_draft{OI_SCORE_LAST + 1};
+    OptionEditSession m_session{&m_draft, nullptr};
+};
+
+void OptionRecordEditTest::SetUp()
+{
+    m_draft.set(OI_SAVE_DIR, "unrelated");
+    if (GetParam().initial.has_value())
+    {
+        m_draft.set(OI_TERSE_OUTPUT, *GetParam().initial);
+    }
+}
 
 class HeaderListOptionTest : public testing::Test
 {
@@ -524,6 +559,29 @@ INSTANTIATE_TEST_SUITE_P(SelectionAndInclusion, OptionGroupToggleTest,
                          testing::Values(OptionGroupToggle{OF_NONE, OF_SEL}, OptionGroupToggle{OF_SEL, OF_NONE},
                                          OptionGroupToggle{OF_INCLUDED, OF_INCLUDED | OF_SEL},
                                          OptionGroupToggle{OF_INCLUDED | OF_SEL, OF_INCLUDED}));
+
+TEST_P(OptionRecordEditTest, recordsThePendingEditAndReturnsItsCountAdjustment)
+{
+    const OptionEditCase &edit = GetParam();
+
+    const int delta = m_session.record_edit(OI_TERSE_OUTPUT, edit.initial.has_value(), edit.oldval, edit.parsed);
+
+    EXPECT_EQ(edit.delta, delta);
+    EXPECT_EQ(edit.expected, m_draft.value(OI_TERSE_OUTPUT));
+    EXPECT_EQ(std::optional<std::string_view>{"unrelated"}, m_draft.value(OI_SAVE_DIR));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PendingEdits, OptionRecordEditTest,
+    testing::Values(OptionEditCase{"NewValue", std::nullopt, "current", "new", "new", 1},
+                    OptionEditCase{"NewValueEqualToCurrent", std::nullopt, "current", "current", "current", 1},
+                    OptionEditCase{"ReplaceValue", "pending", "current", "new", "new", 0},
+                    OptionEditCase{"RestoreCurrent", "pending", "current", "current", std::nullopt, -1},
+                    OptionEditCase{"NewEmpty", std::nullopt, "current", "", "", 1},
+                    OptionEditCase{"ReplaceWithEmpty", "pending", "current", "", "", 0},
+                    OptionEditCase{"RestoreEmpty", "pending", "", "", std::nullopt, -1},
+                    OptionEditCase{"QuotedCurrent", "pending", "\"current value\"", "current value", "current value",
+                                   0}));
 
 TEST_F(HeaderListOptionTest, hidingOptionParsesCommaSeparatedOverrides)
 {

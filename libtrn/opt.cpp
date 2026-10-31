@@ -272,6 +272,23 @@ void OptionEditSession::toggle_group(int row)
     flags[row] ^= OF_SEL;
 }
 
+int OptionEditSession::record_edit(OptionIndex option, bool had_draft, std::string_view oldval,
+                                   std::string_view parsed_value)
+{
+    int delta = 0;
+    if (had_draft)
+    {
+        draft->erase(option);
+        --delta;
+    }
+    if (!had_draft || oldval != parsed_value)
+    {
+        draft->set(option, parsed_value);
+        ++delta;
+    }
+    return delta;
+}
+
 void set_option(OptionIndex num, std::string_view s)
 {
     OptionApplier{}.apply(num, s);

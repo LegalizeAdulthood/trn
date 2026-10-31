@@ -2088,19 +2088,7 @@ static bool select_option(OptionIndex i)
         std::string_view edit_text{val};
         parse_string(parsed_value, edit_text);
         changed = true;
-        if (had_draft)
-        {
-            g_opt_edit.draft->erase(option);
-            g_selected_count--;
-        }
-        if (had_draft && oldval == parsed_value)
-        {
-        }
-        else
-        {
-            g_opt_edit.draft->set(option, parsed_value);
-            g_selected_count++;
-        }
+        g_selected_count += g_opt_edit.record_edit(option, had_draft, oldval, parsed_value);
     }
     if (s_clean_screen)
     {
