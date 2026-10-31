@@ -57,22 +57,13 @@ namespace fs = std::filesystem;
 // Lots more to do...
 //
 
-int  g_univ_level{};          // How deep are we in the tree?
 bool g_univ_ng_virt_flag{};   // if true, we are in the "virtual group" second pass
 bool g_univ_read_virt_flag{}; // if true, we are reading an article from a "virtual group"
 bool g_univ_default_cmd{};    // "follow"-related stuff (virtual groups)
 bool g_univ_follow{true};
 bool g_univ_follow_temp{};
 
-// items which must be saved in context
-UniversalItemList  g_univ_items;
-UniversalNameSet   g_univ_ng_names;
-UniversalNameSet   g_univ_vg_names;
-std::string        g_univ_fname;    // current filename (may be empty)
-std::string        g_univ_label;    // current label (may be null)
-std::string        g_univ_title;    // title of current level
-std::string        g_univ_tmp_file; // temp. file (may be null)
-// end of items that must be saved
+UniversalMenuContext g_univ;
 
 static bool           s_univ_virt_pass_needed{}; //
 static int            s_univ_item_counter{1};    //
@@ -108,7 +99,7 @@ static std::size_t univ_position(UniversalItemIndex item_index);
 
 void univ_init()
 {
-    g_univ_level = 0;
+    g_univ.level = 0;
 }
 
 UniversalItemIterator::UniversalItemIterator(UniversalItem *item) :
@@ -118,27 +109,27 @@ UniversalItemIterator::UniversalItemIterator(UniversalItem *item) :
 
 UniversalItem &UniversalItemIterator::operator*() const
 {
-    assert(m_index < g_univ_items.size());
-    return g_univ_items[m_index];
+    assert(m_index < g_univ.items.size());
+    return g_univ.items[m_index];
 }
 
 UniversalItem *UniversalItemIterator::operator->() const
 {
-    assert(m_index < g_univ_items.size());
-    return &g_univ_items[m_index];
+    assert(m_index < g_univ.items.size());
+    return &g_univ.items[m_index];
 }
 
 UniversalItemIterator &UniversalItemIterator::operator++()
 {
-    assert(m_index < g_univ_items.size());
+    assert(m_index < g_univ.items.size());
     ++m_index;
     return *this;
 }
 
 bool UniversalItemIterator::operator==(const UniversalItemIterator &other) const
 {
-    const bool at_end = m_index >= g_univ_items.size();
-    const bool other_at_end = other.m_index >= g_univ_items.size();
+    const bool at_end = m_index >= g_univ.items.size();
+    const bool other_at_end = other.m_index >= g_univ.items.size();
     if (at_end || other_at_end)
     {
         return at_end == other_at_end;
@@ -158,7 +149,7 @@ UniversalItems::UniversalItems(UniversalItem *first) :
 
 UniversalItemIterator UniversalItems::begin() const
 {
-    return UniversalItemIterator{m_first < g_univ_items.size() ? &g_univ_items[m_first] : nullptr};
+    return UniversalItemIterator{m_first < g_univ.items.size() ? &g_univ.items[m_first] : nullptr};
 }
 
 UniversalItemIterator UniversalItems::end() const
@@ -174,7 +165,7 @@ UniversalItems univ_items()
 UniversalItems univ_items(UniversalItemIndex first)
 {
     const std::size_t position = univ_position(first);
-    return UniversalItems{position < g_univ_items.size() ? &g_univ_items[position] : nullptr};
+    return UniversalItems{position < g_univ.items.size() ? &g_univ.items[position] : nullptr};
 }
 
 UniversalItems univ_items(UniversalItem *first)
@@ -184,30 +175,30 @@ UniversalItems univ_items(UniversalItem *first)
 
 UniversalItem *univ_first_item()
 {
-    return g_univ_items.empty() ? nullptr : &g_univ_items.front();
+    return g_univ.items.empty() ? nullptr : &g_univ.items.front();
 }
 
 UniversalItem *univ_last_item()
 {
-    return g_univ_items.empty() ? nullptr : &g_univ_items.back();
+    return g_univ.items.empty() ? nullptr : &g_univ.items.back();
 }
 
 UniversalItem *univ_next_item(const UniversalItem *item)
 {
     const std::size_t position = univ_position(item);
-    return position + 1 < g_univ_items.size() ? &g_univ_items[position + 1] : nullptr;
+    return position + 1 < g_univ.items.size() ? &g_univ.items[position + 1] : nullptr;
 }
 
 UniversalItem *univ_prev_item(const UniversalItem *item)
 {
     const std::size_t position = univ_position(item);
-    return position > 0 && position < g_univ_items.size() ? &g_univ_items[position - 1] : nullptr;
+    return position > 0 && position < g_univ.items.size() ? &g_univ.items[position - 1] : nullptr;
 }
 
 UniversalItem *univ_item(UniversalItemIndex item_index)
 {
     const std::size_t position = univ_position(item_index);
-    return position < g_univ_items.size() ? &g_univ_items[position] : nullptr;
+    return position < g_univ.items.size() ? &g_univ.items[position] : nullptr;
 }
 
 UniversalItemIndex univ_index(const UniversalItem *item)
@@ -219,32 +210,32 @@ static std::size_t univ_position(const UniversalItem *item)
 {
     if (item == nullptr)
     {
-        return g_univ_items.size();
+        return g_univ.items.size();
     }
-    for (std::size_t position = 0; position < g_univ_items.size(); ++position)
+    for (std::size_t position = 0; position < g_univ.items.size(); ++position)
     {
-        if (&g_univ_items[position] == item)
+        if (&g_univ.items[position] == item)
         {
             return position;
         }
     }
-    return g_univ_items.size();
+    return g_univ.items.size();
 }
 
 static std::size_t univ_position(UniversalItemIndex item_index)
 {
     if (!item_index)
     {
-        return g_univ_items.size();
+        return g_univ.items.size();
     }
-    for (std::size_t position = 0; position < g_univ_items.size(); ++position)
+    for (std::size_t position = 0; position < g_univ.items.size(); ++position)
     {
-        if (g_univ_items[position].m_num == item_index)
+        if (g_univ.items[position].m_num == item_index)
         {
             return position;
         }
     }
-    return g_univ_items.size();
+    return g_univ.items.size();
 }
 
 void univ_startup()
@@ -253,8 +244,8 @@ void univ_startup()
     if (!univ_file_load("%+/univ/top", "Top Level", {}))
     {
         univ_open();
-        g_univ_title = "Top Level";
-        g_univ_fname = "%+/univ/usertop";
+        g_univ.title = "Top Level";
+        g_univ.fname = "%+/univ/usertop";
 
         // read in trn default top file
         (void)univ_include_file("%X/sitetop");          // pure local
@@ -281,43 +272,43 @@ void univ_startup()
 
 static void univ_open()
 {
-    g_univ_items.clear();
-    g_univ_ng_names.clear();
-    g_univ_vg_names.clear();
+    g_univ.items.clear();
+    g_univ.ng_names.clear();
+    g_univ.vg_names.clear();
     g_sel_page.page_univ_index = {};
     g_sel_page.next_univ_index = {};
-    g_univ_fname.clear();
-    g_univ_title.clear();
-    g_univ_label.clear();
-    g_univ_tmp_file.clear();
+    g_univ.fname.clear();
+    g_univ.title.clear();
+    g_univ.label.clear();
+    g_univ.tmp_file.clear();
     s_univ_virt_pass_needed = false;
     s_current_vg_ui_index = {};
-    g_univ_level++;
+    g_univ.level++;
 }
 
 void univ_close()
 {
-    g_univ_items.clear();
-    if (!g_univ_tmp_file.empty())
+    g_univ.items.clear();
+    if (!g_univ.tmp_file.empty())
     {
         std::error_code error;
-        fs::remove(g_univ_tmp_file, error);
-        g_univ_tmp_file.clear();
+        fs::remove(g_univ.tmp_file, error);
+        g_univ.tmp_file.clear();
     }
-    g_univ_fname.clear();
-    g_univ_title.clear();
-    g_univ_label.clear();
-    g_univ_ng_names.clear();
-    g_univ_vg_names.clear();
+    g_univ.fname.clear();
+    g_univ.title.clear();
+    g_univ.label.clear();
+    g_univ.ng_names.clear();
+    g_univ.vg_names.clear();
     g_sel_page.page_univ_index = {};
     g_sel_page.next_univ_index = {};
     s_current_vg_ui_index = {};
-    g_univ_level--;
+    g_univ.level--;
 }
 
 static UniversalItem *univ_add(UniversalData data, std::string_view desc)
 {
-    UniversalItem &node = g_univ_items.emplace_back();
+    UniversalItem &node = g_univ.items.emplace_back();
 
     node.m_flags = UF_NONE;
     node.m_desc.assign(desc);
@@ -341,7 +332,7 @@ static void univ_add_group(std::string_view desc, std::string_view grpname)
 
     const std::string group_name{grpname};
 
-    if (g_univ_ng_names.find(group_name) != g_univ_ng_names.end())
+    if (g_univ.ng_names.find(group_name) != g_univ.ng_names.end())
     {
         // group was already added
         // perhaps it is marked as deleted?
@@ -360,7 +351,7 @@ static void univ_add_group(std::string_view desc, std::string_view grpname)
         }
         return;
     }
-    g_univ_ng_names.insert(group_name);
+    g_univ.ng_names.insert(group_name);
     ui = univ_add(UniversalNewsgroup{}, desc);
     ui->group().ng = group_name;
 }
@@ -410,7 +401,7 @@ static void univ_add_text_file(std::string_view desc, std::string_view name)
     default:
     {
         // XXX later have error checking on length
-        const fs::path current_file{g_univ_fname};
+        const fs::path current_file{g_univ.fname};
         file_name = current_file.has_parent_path() ? current_file.parent_path() : fs::path{"/"};
         file_name /= s;
     }
@@ -440,7 +431,7 @@ static void univ_add_virtual_group(std::string_view grpname)
     // perhaps leave if group has no unread, or other factor
     s_univ_virt_pass_needed = true;
     const std::string group_name{grpname};
-    if (g_univ_vg_names.find(group_name) != g_univ_vg_names.end())
+    if (g_univ.vg_names.find(group_name) != g_univ.vg_names.end())
     {
         // group was already added
         // perhaps it is marked as deleted?
@@ -459,7 +450,7 @@ static void univ_add_virtual_group(std::string_view grpname)
         }
         return;
     }
-    g_univ_vg_names.insert(group_name);
+    g_univ.vg_names.insert(group_name);
     ui = univ_add(UniversalVirtualGroup{}, {});
     UniversalVirtualGroup &vgroup = ui->vgroup();
     vgroup.flags = UF_VG_NONE;
@@ -631,7 +622,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     if (string_case_equal(std::string_view{open_name}.substr(0, 4), "URL:"))
     {
         open_name = temp_filename();
-        g_univ_tmp_file = open_name;
+        g_univ.tmp_file = open_name;
 
         if (!url_get(file_name.substr(4), open_name))
         {
@@ -689,10 +680,10 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
 
 static bool univ_include_file(std::string_view fname)
 {
-    const std::string old_univ_fname = g_univ_fname;
-    g_univ_fname = fname;
-    bool retval = univ_use_file(g_univ_fname, {});
-    g_univ_fname = old_univ_fname;
+    const std::string old_univ_fname = g_univ.fname;
+    g_univ.fname = fname;
+    bool retval = univ_use_file(g_univ.fname, {});
+    g_univ.fname = old_univ_fname;
     return retval;
 }
 
@@ -903,10 +894,10 @@ static bool univ_do_line(std::string_view line)
         case '#': // comment
             break;
 
-        case ':': // relative to g_univ_fname
-            if (!g_univ_fname.empty())
+        case ':': // relative to g_univ.fname
+            if (!g_univ.fname.empty())
             {
-                const fs::path current_file{g_univ_fname};
+                const fs::path current_file{g_univ.fname};
                 fs::path relative_path = current_file.has_parent_path() ? current_file.parent_path() : fs::path{"/"};
                 relative_path /= line.substr(1);
                 relative_file = relative_path.generic_string();
@@ -938,7 +929,7 @@ static bool univ_do_line(std::string_view line)
                 break;
             }
             line.remove_prefix(2);
-            univ_add_file(!line_desc.empty() ? line_desc : line, g_univ_fname, line);
+            univ_add_file(!line_desc.empty() ? line_desc : line, g_univ.fname, line);
             break;
 
         case '>':
@@ -990,12 +981,12 @@ bool univ_file_load(std::string_view fname, std::string_view title, std::string_
 
     if (!fname.empty())
     {
-        g_univ_fname = fname;
+        g_univ.fname = fname;
     }
-    g_univ_title = title;
+    g_univ.title = title;
     if (!label.empty())
     {
-        g_univ_label = label;
+        g_univ.label = label;
     }
     bool flag = !fname.empty() && univ_use_file(fname, label);
     if (!flag)
@@ -1019,7 +1010,7 @@ void univ_mask_load(std::string_view mask, std::string_view title)
     univ_open();
 
     univ_use_group_line(mask, 0);
-    g_univ_title = title;
+    g_univ.title = title;
     if (g_int_count)
     {
         g_int_count = 0;
@@ -1028,12 +1019,12 @@ void univ_mask_load(std::string_view mask, std::string_view title)
 
 void univ_redo_file()
 {
-    const std::string tmp_fname = g_univ_fname;
-    const std::string tmp_title = g_univ_title;
-    const std::string tmp_label = g_univ_label;
+    const std::string tmp_fname = g_univ.fname;
+    const std::string tmp_title = g_univ.title;
+    const std::string tmp_label = g_univ.label;
 
     univ_close();
-    if (g_univ_level)
+    if (g_univ.level)
     {
         (void)univ_file_load(tmp_fname, tmp_title, tmp_label);
     }
@@ -1058,7 +1049,7 @@ static std::string univ_edit_new_user_file()
     if (fp)
     {
         std::fclose(fp);
-        return g_univ_fname;    // as if this function was not called
+        return g_univ.fname; // as if this function was not called
     }
 
     std::error_code error;
@@ -1070,7 +1061,7 @@ static std::string univ_edit_new_user_file()
         fmt::print("Could not create new user file.\n");
         fmt::print("Editing current system file\n");
         (void) get_anything();
-        return g_univ_fname;
+        return g_univ.fname;
     }
     fmt::print(fp, "# User Toplevel (Universal Selector)\n");
     std::fclose(fp);
@@ -1088,13 +1079,13 @@ void univ_edit()
 
     if (s_univ_user_top || !(s_univ_done_startup))
     {
-        if (!g_univ_tmp_file.empty())
+        if (!g_univ.tmp_file.empty())
         {
-            filename = g_univ_tmp_file;
+            filename = g_univ.tmp_file;
         }
         else
         {
-            filename = g_univ_fname;
+            filename = g_univ.fname;
         }
     }
     else
@@ -1250,14 +1241,14 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
     g_univ_ng_virt_flag = true;
     s_univ_virt_pass_needed = false;
 
-    for (std::size_t position = 0; position < g_univ_items.size();)
+    for (std::size_t position = 0; position < g_univ.items.size();)
     {
         if (input_is_pending != nullptr && input_is_pending())
         {
             // later consider cleaning up the remains
             break;
         }
-        UniversalItem *ui = &g_univ_items[position];
+        UniversalItem *ui = &g_univ.items[position];
         if (ui->m_state != UIS_NORMAL)
         {
             ++position;
@@ -1284,9 +1275,9 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
             s_current_vg_ui_index = {};
             // later do something with return value
             const std::size_t expanded_position = univ_position(current_index);
-            if (expanded_position < g_univ_items.size())
+            if (expanded_position < g_univ.items.size())
             {
-                g_univ_items.erase(g_univ_items.begin() +
+                g_univ.items.erase(g_univ.items.begin() +
                                    static_cast<UniversalItemList::difference_type>(expanded_position));
                 position = expanded_position;
                 continue;
@@ -1324,7 +1315,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
 
 void sort_univ()
 {
-    if (g_univ_items.size() <= 1)
+    if (g_univ.items.size() <= 1)
     {
         return;
     }
@@ -1332,7 +1323,7 @@ void sort_univ()
     switch (g_sel.sort)
     {
     case SS_SCORE:
-        std::sort(g_univ_items.begin(), g_univ_items.end(),
+        std::sort(g_univ.items.begin(), g_univ.items.end(),
                   [](const UniversalItem &left, const UniversalItem &right)
                   {
                       if (left.m_score != right.m_score)
@@ -1345,7 +1336,7 @@ void sort_univ()
 
     case SS_NATURAL:
     default:
-        std::sort(g_univ_items.begin(), g_univ_items.end(), [](const UniversalItem &left, const UniversalItem &right)
+        std::sort(g_univ.items.begin(), g_univ.items.end(), [](const UniversalItem &left, const UniversalItem &right)
                   { return g_sel.direction > 0 ? left.m_num < right.m_num : left.m_num > right.m_num; });
         break;
     }
@@ -1502,7 +1493,7 @@ HelpLocation UniversalItem::help_location() const
 void univ_help_main(HelpLocation where)
 {
     univ_open();
-    g_univ_title = "Extended Help";
+    g_univ.title = "Extended Help";
 
     // first add help on current mode
     (void)univ_add(where, {});
@@ -1513,8 +1504,8 @@ void univ_help_main(HelpLocation where)
     univ_include_file("%X/sitehelp/top");
 
     // read in main help file
-    g_univ_fname = "%X/HelpFiles/top";
-    bool flag = univ_use_file(g_univ_fname, g_univ_label);
+    g_univ.fname = "%X/HelpFiles/top";
+    bool flag = univ_use_file(g_univ.fname, g_univ.label);
 
     // later: if flag is not true, then add message?
 }

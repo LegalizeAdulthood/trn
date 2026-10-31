@@ -171,22 +171,25 @@ private:
 using UniversalItemList = std::vector<UniversalItem>;
 using UniversalNameSet = std::unordered_set<std::string>;
 
-extern int  g_univ_level;          // How deep are we in the tree?
 extern bool g_univ_ng_virt_flag;   // if true, we are in the "virtual group" second pass
 extern bool g_univ_read_virt_flag; // if true, we are reading an article from a "virtual group"
 extern bool g_univ_default_cmd;    // "follow"-related stuff (virtual groups)
 extern bool g_univ_follow;
 extern bool g_univ_follow_temp;
 
-// items which must be saved in context
-extern UniversalItemList  g_univ_items;
-extern UniversalNameSet   g_univ_ng_names;
-extern UniversalNameSet   g_univ_vg_names;
-extern std::string    g_univ_fname;    // current filename (may be empty)
-extern std::string    g_univ_label;    // current label (may be empty)
-extern std::string    g_univ_title;    // title of current level
-extern std::string    g_univ_tmp_file; // temp. file (may be empty)
-// end of items that must be saved
+struct UniversalMenuContext
+{
+    UniversalItemList items;
+    UniversalNameSet  ng_names;
+    UniversalNameSet  vg_names;
+    std::string       fname;    // current filename (may be empty)
+    std::string       label;    // current label (may be empty)
+    std::string       title;    // title of current level
+    std::string       tmp_file; // temp. file (may be empty)
+    int               level{};  // How deep are we in the tree?
+};
+
+extern UniversalMenuContext g_univ;
 
 void           univ_init();
 void           univ_startup();

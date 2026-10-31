@@ -1055,7 +1055,7 @@ try_again:
 ///
 /// @globals
 /// - g_sel.mode: Read to select the active population.
-/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ_items: Read through catalog helpers.
+/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ.items: Read through catalog helpers.
 /// - g_art_ptr_list, g_first_subject: Read for article and subject traversal.
 ///
 bool SelectorPage::first_page()
@@ -1419,7 +1419,7 @@ bool SelectorPage::next_page()
 ///
 /// @globals
 /// - g_sel: Read for the active mode and selection policy.
-/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ_items: Read through catalog helpers.
+/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ.items: Read through catalog helpers.
 /// - g_option_flags, g_art_ptr_list, g_first_subject, g_last_subject: Read for included entries and traversal.
 /// - g_tc_COLS, g_sel_art_display_mode, g_sel_art_display_mode_index: Read by line-count helpers.
 ///
@@ -1933,7 +1933,7 @@ static void display_page_title(bool home_only)
     else if (g_sel.mode == SM_UNIVERSAL)
     {
         color_object(COLOR_HEADING, true);
-        fmt::print("[{}] {}", g_univ_level, g_univ_title.empty() ? "Universal Selector" : g_univ_title.c_str());
+        fmt::print("[{}] {}", g_univ.level, g_univ.title.empty() ? "Universal Selector" : g_univ.title.c_str());
         color_pop();
     }
     else if (g_sel.group_listing)

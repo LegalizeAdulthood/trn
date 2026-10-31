@@ -7038,8 +7038,8 @@ TEST_P(MultircUniversalStartupTest, leavingUniversalStartupContinuesToTheConfigu
             }
             run_outer("Qq");
             expect_modes({MM_UNIVERSAL, std::get<0>(GetParam()) ? MM_NEWSGROUP_SELECTOR : MM_NEWSGROUP_LIST});
-            EXPECT_EQ(0, g_univ_level);
-            EXPECT_TRUE(g_univ_items.empty());
+            EXPECT_EQ(0, g_univ.level);
+            EXPECT_TRUE(g_univ.items.empty());
             EXPECT_THAT(m_output, testing::HasSubstr("Local groups"));
             EXPECT_THAT(m_output, testing::HasSubstr("Top Level"));
             EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
@@ -7062,7 +7062,7 @@ void MultircUniversalStartupTest::prepare_pending_changes()
     {
         const int result = reader(buffer, size);
         std::ofstream(m_output_dir / "universal-input", std::ios::app)
-            << static_cast<int>(g_mode) << ' ' << g_univ_level << ' ' << g_univ_items.size() << '\n';
+            << static_cast<int>(g_mode) << ' ' << g_univ.level << ' ' << g_univ.items.size() << '\n';
         if (testing::Test::HasFailure())
         {
             std::exit(3);
@@ -7369,7 +7369,7 @@ protected:
 
 private:
     std::string m_old_library{g_rn_lib};
-    int         m_initial_univ_level{g_univ_level};
+    int         m_initial_univ_level{g_univ.level};
 };
 
 void NewsgroupSelectorHelpStateTest::SetUp()
@@ -7382,7 +7382,7 @@ void NewsgroupSelectorHelpStateTest::SetUp()
 
 void NewsgroupSelectorHelpStateTest::TearDown()
 {
-    EXPECT_EQ(m_initial_univ_level, g_univ_level);
+    EXPECT_EQ(m_initial_univ_level, g_univ.level);
     g_rn_lib = m_old_library;
     NewsgroupSelectorDelegatedExitStateTest::TearDown();
 }

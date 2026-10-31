@@ -26,24 +26,24 @@ protected:
     void           expect_row(int row, int identity, int selected = 0) const;
 
 private:
-    UniversalItemList  m_old_items{std::move(g_univ_items)};
+    UniversalItemList  m_old_items{std::move(g_univ.items)};
     HashTable         *m_old_hash{g_newsrc_hash};
     UniversalItemIndex m_old_page{g_sel_page.page_univ_index};
     UniversalItemIndex m_old_next{g_sel_page.next_univ_index};
-    std::string        m_old_title{g_univ_title};
-    int                m_old_level{g_univ_level};
+    std::string        m_old_title{g_univ.title};
+    int                m_old_level{g_univ.level};
 };
 
 void UniversalPageDisplayState::SetUp()
 {
     NewsgroupPageDisplayState::SetUp();
-    g_univ_items.clear();
-    g_univ_items.reserve(16);
+    g_univ.items.clear();
+    g_univ.items.reserve(16);
     g_sel.mode = SM_UNIVERSAL;
     g_sel_page.page_univ_index = {};
     g_sel_page.next_univ_index = {};
-    g_univ_title = "Reading menu";
-    g_univ_level = 2;
+    g_univ.title = "Reading menu";
+    g_univ.level = 2;
     g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
                                 { return key.compare(reinterpret_cast<NewsgroupData *>(data.dat_ptr)->rc_name()); });
 }
@@ -52,19 +52,19 @@ void UniversalPageDisplayState::TearDown()
 {
     hash_destroy(g_newsrc_hash);
     g_newsrc_hash = m_old_hash;
-    g_univ_items = std::move(m_old_items);
+    g_univ.items = std::move(m_old_items);
     g_sel_page.page_univ_index = m_old_page;
     g_sel_page.next_univ_index = m_old_next;
-    g_univ_title = m_old_title;
-    g_univ_level = m_old_level;
+    g_univ.title = m_old_title;
+    g_univ.level = m_old_level;
     NewsgroupPageDisplayState::TearDown();
 }
 
 UniversalItem &UniversalPageDisplayState::add_item(UniversalData data, std::string description,
                                                    UniversalItemFlags flags)
 {
-    UniversalItem &item = g_univ_items.emplace_back();
-    item.m_num = static_cast<int>(g_univ_items.size()) * 11;
+    UniversalItem &item = g_univ.items.emplace_back();
+    item.m_num = static_cast<int>(g_univ.items.size()) * 11;
     item.m_data = std::move(data);
     item.m_desc = std::move(description);
     item.m_flags = flags;
@@ -174,22 +174,22 @@ TEST_P(UniversalMenuRowTest, displaysTheDescriptionWithoutChangingTheNavigationP
     EXPECT_THAT(output, testing::HasSubstr("[2] Reading menu"));
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11);
-    EXPECT_EQ(description, g_univ_items[0].m_desc);
-    EXPECT_EQ(0, g_univ_items[0].m_score);
+    EXPECT_EQ(description, g_univ.items[0].m_desc);
+    EXPECT_EQ(0, g_univ.items[0].m_score);
     if (kind == 0)
     {
-        EXPECT_EQ("Child menu", g_univ_items[0].config_file().title);
-        EXPECT_EQ("child.menu", g_univ_items[0].config_file().fname);
-        EXPECT_EQ("reading", g_univ_items[0].config_file().label);
+        EXPECT_EQ("Child menu", g_univ.items[0].config_file().title);
+        EXPECT_EQ("child.menu", g_univ.items[0].config_file().fname);
+        EXPECT_EQ("reading", g_univ.items[0].config_file().label);
     }
     else if (kind == 1)
     {
-        EXPECT_EQ("Languages", g_univ_items[0].group_mask().title);
-        EXPECT_EQ("comp.lang.*", g_univ_items[0].group_mask().mask_list);
+        EXPECT_EQ("Languages", g_univ.items[0].group_mask().title);
+        EXPECT_EQ("comp.lang.*", g_univ.items[0].group_mask().mask_list);
     }
     else
     {
-        EXPECT_EQ("reading.txt", g_univ_items[0].text_file().fname);
+        EXPECT_EQ("reading.txt", g_univ.items[0].text_file().fname);
     }
     EXPECT_EQ(0, g_sel_page.next_univ_index);
     EXPECT_TRUE(g_sel_page.at_end);
@@ -211,7 +211,7 @@ TEST_P(UniversalArticleRowTest, displaysCustomOrGeneratedDescriptionsWithoutChan
     EXPECT_THAT(output, testing::HasSubstr("a        " + (custom ? "Featured article" : generated.str()) + "\n"));
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11);
-    const UniversalItem &item = g_univ_items[0];
+    const UniversalItem &item = g_univ.items[0];
     EXPECT_EQ(score, item.m_score);
     EXPECT_EQ(custom ? "Featured article" : "", item.m_desc);
     EXPECT_EQ("comp.reading", item.article().ng);
@@ -234,8 +234,8 @@ TEST_F(UniversalPageDisplayState, suppliesMissingArticleMetadataInTheDisplayedRo
     const std::string output = render_page();
 
     EXPECT_THAT(output, testing::HasSubstr("[  0]     <No Author>  <No Subject>\n"));
-    EXPECT_TRUE(g_univ_items[0].article().from.empty());
-    EXPECT_TRUE(g_univ_items[0].article().subj.empty());
+    EXPECT_TRUE(g_univ.items[0].article().from.empty());
+    EXPECT_TRUE(g_univ.items[0].article().subj.empty());
 }
 
 TEST_P(UniversalGroupRowTest, displaysTheGroupReadStatusWithoutChangingItsNewsrc)
@@ -263,7 +263,7 @@ TEST_P(UniversalGroupRowTest, displaysTheGroupReadStatusWithoutChangingItsNewsrc
     expect_row(0, 11, count <= 0 ? 2 : 0);
     EXPECT_EQ(count, group.m_to_read);
     EXPECT_EQ(" 1-5", group.rc_numbers());
-    EXPECT_EQ("comp.reading", g_univ_items[0].group().ng);
+    EXPECT_EQ("comp.reading", g_univ.items[0].group().ng);
     EXPECT_EQ(0, g_sel_page.next_univ_index);
 }
 
@@ -283,7 +283,7 @@ TEST_P(UniversalHelpRowTest, displaysTheHelpDestinationInsteadOfItsDescription)
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Ignored help description")));
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11);
-    EXPECT_EQ(location, g_univ_items[0].help_location());
+    EXPECT_EQ(location, g_univ.items[0].help_location());
 }
 
 INSTANTIATE_TEST_SUITE_P(Destination, UniversalHelpRowTest,
@@ -311,7 +311,7 @@ TEST_P(UniversalMarkerTest, rendersTheActiveScopeSelectionAndDeletionMarker)
         flags |= UF_DEL;
     }
     add_article("Reading", 0, flags);
-    g_univ_items[0].article().num = ArticleNum{rereading ? 3 : 8};
+    g_univ.items[0].article().num = ArticleNum{rereading ? 3 : 8};
     initialize_page();
     // Read-mode initialization marks unselected read articles for deletion.
     const int marker = rereading && !(state & 1) ? 2 : state;
@@ -321,7 +321,7 @@ TEST_P(UniversalMarkerTest, rendersTheActiveScopeSelectionAndDeletionMarker)
     EXPECT_THAT(output, testing::HasSubstr(std::string{numeric ? "01" : "a"} + " +-*"[marker] + "       Reading\n"));
     ASSERT_EQ(1, g_sel_page.page_item_cnt);
     expect_row(0, 11, marker);
-    EXPECT_EQ(flags | UF_INCLUDED | (rereading && !(state & 1) ? UF_DEL : UF_NONE), g_univ_items[0].m_flags);
+    EXPECT_EQ(flags | UF_INCLUDED | (rereading && !(state & 1) ? UF_DEL : UF_NONE), g_univ.items[0].m_flags);
 }
 
 INSTANTIATE_TEST_SUITE_P(ScopeLabelAndState, UniversalMarkerTest,
@@ -379,12 +379,12 @@ TEST_P(UniversalEligibilityTest, omitsAnIneligibleEntryWithoutConsumingItsRowLab
 
     case 2:
         add_article("Hidden");
-        g_univ_items.back().article().num = ArticleNum{3};
+        g_univ.items.back().article().num = ArticleNum{3};
         break;
 
     default:
         add_article("Hidden");
-        g_univ_items.back().m_state = UIS_DESELECTED;
+        g_univ.items.back().m_state = UIS_DESELECTED;
         break;
     }
     (void) add_item(UniversalTextFile{"reading.txt"}, "Visible text");

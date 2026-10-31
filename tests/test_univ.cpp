@@ -125,10 +125,10 @@ UniversalItem *append_universal_item(UniversalItem item)
 {
     if (!item.m_num)
     {
-        item.m_num = static_cast<UniversalItemIndex>(g_univ_items.size() + 1);
+        item.m_num = static_cast<UniversalItemIndex>(g_univ.items.size() + 1);
     }
-    g_univ_items.push_back(std::move(item));
-    return &g_univ_items.back();
+    g_univ.items.push_back(std::move(item));
+    return &g_univ.items.back();
 }
 
 class UnivTest : public testing::Test
@@ -140,7 +140,7 @@ protected:
 
 void UnivTest::SetUp()
 {
-    while (g_univ_level > 0)
+    while (g_univ.level > 0)
     {
         univ_close();
     }
@@ -150,7 +150,7 @@ void UnivTest::SetUp()
 
 void UnivTest::TearDown()
 {
-    while (g_univ_level > 0)
+    while (g_univ.level > 0)
     {
         univ_close();
     }
@@ -208,7 +208,7 @@ TEST_F(UnivTest, maskLoadAcceptsStringLiteral)
     univ_mask_load("", "Empty");
 
     EXPECT_EQ(nullptr, univ_first_item());
-    EXPECT_EQ("Empty", g_univ_title);
+    EXPECT_EQ("Empty", g_univ.title);
 }
 
 TEST_F(UnivTest, keyHelpModeStringLabelsKnownMode)
@@ -236,11 +236,11 @@ TEST_F(UnivTest, closeRemovesTemporaryFile)
     std::ofstream{temp_file} << "temporary\n";
 
     univ_mask_load("", "Temp");
-    g_univ_tmp_file = temp_file.generic_string();
+    g_univ.tmp_file = temp_file.generic_string();
 
     univ_close();
 
-    EXPECT_TRUE(g_univ_tmp_file.empty());
+    EXPECT_TRUE(g_univ.tmp_file.empty());
     EXPECT_FALSE(fs::exists(temp_file));
     fs::remove_all(temp_dir, error);
 }
@@ -322,9 +322,9 @@ TEST_F(UnivTest, fileLoadStoresCurrentFileTitleAndLabel)
 
     ASSERT_TRUE(univ_file_load(file_name, "Top", "chapter"));
 
-    EXPECT_EQ(file_name, g_univ_fname);
-    EXPECT_EQ("Top", g_univ_title);
-    EXPECT_EQ("chapter", g_univ_label);
+    EXPECT_EQ(file_name, g_univ.fname);
+    EXPECT_EQ("Top", g_univ.title);
+    EXPECT_EQ("chapter", g_univ.label);
     fs::remove_all(temp_dir, error);
 }
 

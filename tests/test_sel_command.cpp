@@ -84,11 +84,11 @@ private:
     NewsgroupData           *m_old_current{g_current_newsgroup};
     std::string              m_old_display{g_sel_art_display_mode};
     std::size_t              m_old_display_index{g_sel_art_display_mode_index};
-    UniversalItemList        m_old_menu{std::move(g_univ_items)};
+    UniversalItemList        m_old_menu{std::move(g_univ.items)};
     UniversalItemIndex       m_old_menu_page{g_sel_page.page_univ_index};
     UniversalItemIndex       m_old_menu_next{g_sel_page.next_univ_index};
-    std::string              m_old_title{g_univ_title};
-    int                      m_old_level{g_univ_level};
+    std::string              m_old_title{g_univ.title};
+    int                      m_old_level{g_univ.level};
     HashTable               *m_old_hash{g_newsrc_hash};
 };
 
@@ -100,8 +100,8 @@ void SelectorPagingStateTest::SetUp()
     g_art_ptr = nullptr;
     g_sel_page.page_art = g_sel_page.next_art = nullptr;
     g_sel_page.page_subj = g_sel_page.next_subj = nullptr;
-    g_univ_items.clear();
-    g_univ_items.reserve(6);
+    g_univ.items.clear();
+    g_univ.items.reserve(6);
     g_sel_page.page_univ_index = g_sel_page.next_univ_index = {};
     g_tc_LINES = 7;
     g_can_home = false;
@@ -115,8 +115,8 @@ void SelectorPagingStateTest::SetUp()
     g_sel_grp_display_mode = "s";
     g_sel_grp_display_mode_index = 0;
     g_sel_page.item_index = 0;
-    g_univ_title = "Paging menu";
-    g_univ_level = 1;
+    g_univ.title = "Paging menu";
+    g_univ.level = 1;
     g_selected_count = TR_NONE;
     g_selected_subj_cnt = 0;
     g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
@@ -156,11 +156,11 @@ void SelectorPagingStateTest::TearDown()
     g_current_newsgroup = m_old_current;
     g_sel_art_display_mode = m_old_display;
     g_sel_art_display_mode_index = m_old_display_index;
-    g_univ_items = std::move(m_old_menu);
+    g_univ.items = std::move(m_old_menu);
     g_sel_page.page_univ_index = m_old_menu_page;
     g_sel_page.next_univ_index = m_old_menu_next;
-    g_univ_title = m_old_title;
-    g_univ_level = m_old_level;
+    g_univ.title = m_old_title;
+    g_univ.level = m_old_level;
     hash_destroy(g_newsrc_hash);
     g_newsrc_hash = m_old_hash;
     NewsgroupPageDisplayState::TearDown();
@@ -195,7 +195,7 @@ void SelectorPagingStateTest::prepare(SelectionMode mode, bool rereading, int co
         }
         else if (mode == SM_UNIVERSAL)
         {
-            g_univ_items[3].m_flags |= UF_DEL;
+            g_univ.items[3].m_flags |= UF_DEL;
         }
         else
         {
@@ -266,7 +266,7 @@ void SelectorPagingStateTest::prepare_menu(int count)
     g_selected_count = count ? ArticleUnread{2} : TR_NONE;
     for (int index = 0; index < count; ++index)
     {
-        UniversalItem &item = g_univ_items.emplace_back();
+        UniversalItem &item = g_univ.items.emplace_back();
         item.m_num = index + 1;
         item.m_desc = "paging-row-" + std::to_string(index + 1);
         item.m_data = UniversalVirtualArticle{"comp.paging", "<paging-" + std::to_string(index + 1) + "@example.test>",
@@ -690,7 +690,7 @@ void SelectorExitStateTest::set_object_flags(int number, int value)
     }
     else if (g_sel.mode == SM_UNIVERSAL)
     {
-        g_univ_items[number - 1].m_flags = static_cast<UniversalItemFlags>(value);
+        g_univ.items[number - 1].m_flags = static_cast<UniversalItemFlags>(value);
     }
     else
     {
