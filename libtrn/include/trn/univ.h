@@ -179,6 +179,9 @@ extern bool g_univ_follow_temp;
 
 struct UniversalMenuContext
 {
+    // TODO: private
+    std::size_t position(const UniversalItem *item);
+
     UniversalItemList items;
     UniversalNameSet  ng_names;
     UniversalNameSet  vg_names;

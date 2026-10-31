@@ -94,7 +94,6 @@ static bool           univ_do_line(std::string_view line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
-static std::size_t univ_position(const UniversalItem *item);
 static std::size_t univ_position(UniversalItemIndex item_index);
 
 void univ_init()
@@ -103,7 +102,7 @@ void univ_init()
 }
 
 UniversalItemIterator::UniversalItemIterator(UniversalItem *item) :
-    m_index{univ_position(item)}
+    m_index{g_univ.position(item)}
 {
 }
 
@@ -143,7 +142,7 @@ bool UniversalItemIterator::operator!=(const UniversalItemIterator &other) const
 }
 
 UniversalItems::UniversalItems(UniversalItem *first) :
-    m_first{univ_position(first)}
+    m_first{g_univ.position(first)}
 {
 }
 
@@ -185,13 +184,13 @@ UniversalItem *univ_last_item()
 
 UniversalItem *univ_next_item(const UniversalItem *item)
 {
-    const std::size_t position = univ_position(item);
+    const std::size_t position = g_univ.position(item);
     return position + 1 < g_univ.items.size() ? &g_univ.items[position + 1] : nullptr;
 }
 
 UniversalItem *univ_prev_item(const UniversalItem *item)
 {
-    const std::size_t position = univ_position(item);
+    const std::size_t position = g_univ.position(item);
     return position > 0 && position < g_univ.items.size() ? &g_univ.items[position - 1] : nullptr;
 }
 
@@ -206,20 +205,20 @@ UniversalItemIndex univ_index(const UniversalItem *item)
     return item ? item->m_num : UniversalItemIndex{};
 }
 
-static std::size_t univ_position(const UniversalItem *item)
+std::size_t UniversalMenuContext::position(const UniversalItem *item)
 {
     if (item == nullptr)
     {
-        return g_univ.items.size();
+        return items.size();
     }
-    for (std::size_t position = 0; position < g_univ.items.size(); ++position)
+    for (std::size_t position = 0; position < items.size(); ++position)
     {
-        if (&g_univ.items[position] == item)
+        if (&items[position] == item)
         {
             return position;
         }
     }
-    return g_univ.items.size();
+    return items.size();
 }
 
 static std::size_t univ_position(UniversalItemIndex item_index)
