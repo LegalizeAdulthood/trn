@@ -77,7 +77,6 @@ static UniversalItemIndex s_current_vg_ui_index{};   //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
 static void           univ_open();
-static UniversalItem *univ_add(UniversalData data, std::string_view desc);
 static void           univ_add_group(std::string_view desc, std::string_view grpname);
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
@@ -304,9 +303,9 @@ void univ_close()
     g_univ.level--;
 }
 
-static UniversalItem *univ_add(UniversalData data, std::string_view desc)
+UniversalItem *UniversalMenuContext::add(UniversalData data, std::string_view desc)
 {
-    UniversalItem &node = g_univ.items.emplace_back();
+    UniversalItem &node = items.emplace_back();
 
     node.m_flags = UF_NONE;
     node.m_desc.assign(desc);
@@ -350,13 +349,13 @@ static void univ_add_group(std::string_view desc, std::string_view grpname)
         return;
     }
     g_univ.ng_names.insert(group_name);
-    ui = univ_add(UniversalNewsgroup{}, desc);
+    ui = g_univ.add(UniversalNewsgroup{}, desc);
     ui->group().ng = group_name;
 }
 
 static void univ_add_mask(std::string_view desc, std::string_view mask)
 {
-    UniversalItem          *ui = univ_add(UniversalGroupMaskData{}, desc);
+    UniversalItem          *ui = g_univ.add(UniversalGroupMaskData{}, desc);
     UniversalGroupMaskData &group_mask = ui->group_mask();
     group_mask.mask_list.assign(mask);
     group_mask.title.assign(desc);
@@ -364,7 +363,7 @@ static void univ_add_mask(std::string_view desc, std::string_view mask)
 
 static void univ_add_file(std::string_view desc, std::string_view fname, std::string_view label)
 {
-    UniversalItem           *ui = univ_add(UniversalConfigFileData{}, desc);
+    UniversalItem           *ui = g_univ.add(UniversalConfigFileData{}, desc);
     UniversalConfigFileData &config_file = ui->config_file();
     config_file.title.assign(desc);
     config_file.fname = fname;
@@ -376,7 +375,7 @@ static void univ_add_file(std::string_view desc, std::string_view fname, std::st
 
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art)
 {
-    UniversalItem           *ui = univ_add(UniversalVirtualArticle{}, desc);
+    UniversalItem           *ui = g_univ.add(UniversalVirtualArticle{}, desc);
     UniversalVirtualArticle &article = ui->article();
     article.ng.assign(grp);
     article.num = art;
@@ -408,7 +407,7 @@ static void univ_add_text_file(std::string_view desc, std::string_view name)
     case '~': // ...or full file names
     case '%':
     case '/':
-        ui = univ_add(UniversalTextFile{}, desc);
+        ui = g_univ.add(UniversalTextFile{}, desc);
         ui->text_file().fname = file_exp(file_name.generic_string());
         break;
     }
@@ -449,7 +448,7 @@ static void univ_add_virtual_group(std::string_view grpname)
         return;
     }
     g_univ.vg_names.insert(group_name);
-    ui = univ_add(UniversalVirtualGroup{}, {});
+    ui = g_univ.add(UniversalVirtualGroup{}, {});
     UniversalVirtualGroup &vgroup = ui->vgroup();
     vgroup.flags = UF_VG_NONE;
     vgroup.min_score = 0;
@@ -1494,7 +1493,7 @@ void univ_help_main(HelpLocation where)
     g_univ.title = "Extended Help";
 
     // first add help on current mode
-    (void)univ_add(where, {});
+    (void) g_univ.add(where, {});
 
     // later, do other mode sensitive stuff
 

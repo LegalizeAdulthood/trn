@@ -188,6 +188,7 @@ struct UniversalMenuContext
     // TODO: private
     std::size_t position(const UniversalItem *item);
     std::size_t position(UniversalItemIndex item_index);
+    UniversalItem *add(UniversalData data, std::string_view desc);
 
     UniversalItemList items;
     UniversalNameSet  ng_names;
