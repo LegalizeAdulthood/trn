@@ -141,14 +141,14 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
     case -1:
     case 0:
     {
-        const int ser_int = nntp_response_code(g_ser_line);
+        const int ser_int = nntp_response_code(g_nntp.ser_line);
         if (ser_int != NNTP_NOSUCHGROUP_VAL //
             && ser_int != NNTP_SYNTAX_VAL)
         {
             if (ser_int != NNTP_AUTH_NEEDED_VAL && ser_int != NNTP_ACCESS_VAL //
                 && ser_int != NNTP_AUTH_REJECT_VAL)
             {
-                fmt::print(stderr, "\nServer's response to GROUP {}:\n{}\n", group_name, g_ser_line);
+                fmt::print(stderr, "\nServer's response to GROUP {}:\n{}\n", group_name, g_nntp.ser_line);
                 return -1;
             }
         }
@@ -186,7 +186,7 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
                 value = parsed;
             }
         };
-        std::string_view response{g_ser_line};
+        std::string_view response{g_nntp.ser_line};
         long             count{};
         long             first{};
         long             last{};
@@ -231,7 +231,7 @@ ArticleNum nntp_stat_id(std::string_view msg_id)
     long art_num{nntp_check()};
     if (art_num > 0)
     {
-        std::istringstream response{g_ser_line};
+        std::istringstream response{g_nntp.ser_line};
         long               status{};
         long               parsed_article_num{};
         art_num = response >> status >> parsed_article_num ? parsed_article_num : 0;
@@ -250,7 +250,7 @@ static ArticleNum nntp_next_art()
     artnum = nntp_check();
     if (artnum > 0)
     {
-        std::istringstream response{g_ser_line};
+        std::istringstream response{g_nntp.ser_line};
         long               status{};
         long               parsed_artnum{};
         artnum = response >> status >> parsed_artnum ? parsed_artnum : 0;
@@ -338,7 +338,7 @@ void nntp_body(ArticleNum art_num)
         }
     }
     fseek(g_art_input.fp, 0L, 0);
-    g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
+    g_nntp.link.flags &= ~NNTP_NEW_CMD_OK;
 }
 
 ArticlePosition nntp_art_size()
@@ -532,7 +532,7 @@ std::time_t nntp_time()
         return std::time(nullptr);
     }
 
-    const std::string_view response{g_ser_line};
+    const std::string_view response{g_nntp.ser_line};
     const std::size_t      date_start = response.find_last_of(' ');
     const std::string_view date_text =
         date_start == std::string_view::npos ? response : response.substr(date_start + 1);
@@ -690,7 +690,7 @@ std::string nntp_tmp_name(int ndx)
 
 int nntp_handle_nested_lists()
 {
-    if (string_case_equal(g_last_command, "quit"))
+    if (string_case_equal(g_nntp.last_command, "quit"))
     {
         return 0; // TODO: flush data needed?
     }
@@ -706,7 +706,7 @@ int nntp_handle_timeout()
 {
     static bool handling_timeout = false;
 
-    if (string_case_equal(g_last_command, "quit"))
+    if (string_case_equal(g_nntp.last_command, "quit"))
     {
         return 0;
     }
@@ -715,14 +715,14 @@ int nntp_handle_timeout()
         return -1;
     }
     handling_timeout = true;
-    const std::string last_command_save{g_last_command};
+    const std::string last_command_save{g_nntp.last_command};
     nntp_close(false);
-    g_data_source->m_nntp_link = g_nntp_link;
+    g_data_source->m_nntp_link = g_nntp.link;
     if (nntp_connect(g_data_source->m_news_id, false) <= 0)
     {
         return -2;
     }
-    g_data_source->m_nntp_link = g_nntp_link;
+    g_data_source->m_nntp_link = g_nntp.link;
     if (g_in_ng && nntp_group(g_newsgroup_name.c_str(), (NewsgroupData*)nullptr) <= 0)
     {
         return -2;
@@ -731,7 +731,7 @@ int nntp_handle_timeout()
     {
         return -1;
     }
-    g_last_command = last_command_save; // TODO: Is this really needed?
+    g_nntp.last_command = last_command_save; // TODO: Is this really needed?
     handling_timeout = false;
     return 1;
 }
@@ -746,6 +746,6 @@ void DataSource::nntp_server_died()
     {
         g_multirc = nullptr;
     }
-    fmt::print(stderr, "\n{}\n", g_ser_line);
+    fmt::print(stderr, "\n{}\n", g_nntp.ser_line);
     get_anything();
 }

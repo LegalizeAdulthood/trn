@@ -28,7 +28,7 @@ enum class AuthMethod
 
 AuthMethod authentication_method()
 {
-    const NntpCapabilities &capabilities = g_nntp_link.capabilities;
+    const NntpCapabilities &capabilities = g_nntp.link.capabilities;
     if (capabilities.has("AUTHINFO", "USER"))
     {
         return AuthMethod::UserPass;
@@ -37,7 +37,7 @@ AuthMethod authentication_method()
     {
         return AuthMethod::Sasl;
     }
-    return !capabilities.has("AUTHINFO") && g_nntp_link.allow_legacy_auth ? AuthMethod::UserPass
+    return !capabilities.has("AUTHINFO") && g_nntp.link.allow_legacy_auth ? AuthMethod::UserPass
                                                                           : AuthMethod::Unavailable;
 }
 
@@ -48,26 +48,26 @@ bool authenticate_user_pass()
     {
         return false;
     }
-    if (nntp_response_code(g_ser_line) == AUTH_ACCEPTED)
+    if (nntp_response_code(g_nntp.ser_line) == AUTH_ACCEPTED)
     {
         return true;
     }
-    if (nntp_response_code(g_ser_line) != PASSWORD_REQUIRED)
+    if (nntp_response_code(g_nntp.ser_line) != PASSWORD_REQUIRED)
     {
         return false;
     }
     const std::string auth_pass = get_auth_pass();
     return !auth_pass.empty() && nntp_command(fmt::format("AUTHINFO PASS {}", auth_pass)) > 0 && nntp_check() > 0 &&
-           nntp_response_code(g_ser_line) == AUTH_ACCEPTED;
+           nntp_response_code(g_nntp.ser_line) == AUTH_ACCEPTED;
 }
 
 } // namespace
 
 int nntp_handle_auth_err()
 {
-    const std::string last_command_save{g_last_command};
-    g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
-    if (g_nntp_link.auth_state != NntpAuthState::Unauthenticated)
+    const std::string last_command_save{g_nntp.last_command};
+    g_nntp.link.flags &= ~NNTP_FORCE_AUTH_NOW;
+    if (g_nntp.link.auth_state != NntpAuthState::Unauthenticated)
     {
         return -2;
     }
@@ -75,11 +75,11 @@ int nntp_handle_auth_err()
     bool capabilities_refreshed{};
     for (;;)
     {
-        if (g_nntp_link.require_tls_for_auth && nntp_require_tls() < 0)
+        if (g_nntp.link.require_tls_for_auth && nntp_require_tls() < 0)
         {
             return -2;
         }
-        if (g_nntp_link.auth_state == NntpAuthState::Authenticated)
+        if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
         {
             capabilities_refreshed = true;
             break;
@@ -91,37 +91,37 @@ int nntp_handle_auth_err()
 
         case AuthMethod::Sasl:
             // Dispatch future SASL mechanisms here, before obtaining credentials.
-            g_ser_line = "503 No supported SASL authentication mechanism.";
+            g_nntp.ser_line = "503 No supported SASL authentication mechanism.";
             return -2;
 
         case AuthMethod::Unavailable:
-            g_ser_line = "502 No permitted authentication method.";
+            g_nntp.ser_line = "502 No permitted authentication method.";
             return -2;
         }
 
-        g_nntp_link.auth_state = NntpAuthState::Authenticating;
+        g_nntp.link.auth_state = NntpAuthState::Authenticating;
         const bool authenticated = authenticate_user_pass();
-        g_nntp_link.auth_state = authenticated ? NntpAuthState::Authenticated : NntpAuthState::Unauthenticated;
+        g_nntp.link.auth_state = authenticated ? NntpAuthState::Authenticated : NntpAuthState::Unauthenticated;
         if (authenticated)
         {
             break;
         }
-        if (nntp_response_code(g_ser_line) != NNTP_ENCRYPTION_REQUIRED_VAL ||
-            g_nntp_link.security != NntpSecurity::Cleartext || nntp_start_tls() < 0)
+        if (nntp_response_code(g_nntp.ser_line) != NNTP_ENCRYPTION_REQUIRED_VAL ||
+            g_nntp.link.security != NntpSecurity::Cleartext || nntp_start_tls() < 0)
         {
             return -2;
         }
     }
 
-    const std::string auth_line = capabilities_refreshed ? "281 Authentication accepted" : g_ser_line;
+    const std::string auth_line = capabilities_refreshed ? "281 Authentication accepted" : g_nntp.ser_line;
     if (!capabilities_refreshed && last_command_save != "CAPABILITIES" && nntp_refresh_capabilities() < 0)
     {
         return -2;
     }
     if (last_command_save == "MODE READER")
     {
-        g_last_command = last_command_save;
-        g_ser_line = auth_line;
+        g_nntp.last_command = last_command_save;
+        g_nntp.ser_line = auth_line;
         return 1;
     }
     return nntp_command(last_command_save) > 0 ? 1 : -2;

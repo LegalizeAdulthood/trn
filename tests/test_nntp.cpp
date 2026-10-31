@@ -199,16 +199,16 @@ protected:
     void SetUp() override
     {
         init_nntp();
-        m_saved_nntp_link = g_nntp_link;
-        g_nntp_link = {};
+        m_saved_nntp_link = g_nntp.link;
+        g_nntp.link = {};
         set_nntp_connection_factory(m_factory.AsStdFunction());
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
     }
 
     void TearDown() override
     {
-        g_nntp_link.connection.reset();
-        g_nntp_link = std::move(m_saved_nntp_link);
+        g_nntp.link.connection.reset();
+        g_nntp.link = std::move(m_saved_nntp_link);
         nntp_gets_clear_buffer();
         init_nntp();
     }
@@ -237,16 +237,16 @@ protected:
 TEST_F(NNTPTest, server_init_connection_failed)
 {
     configure_factory_create(nullptr);
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("STARTTLS");
-    g_nntp_link.unsupported_commands.push_back("OVER");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("STARTTLS");
+    g_nntp.link.unsupported_commands.push_back("OVER");
 
     const int result = server_init(m_machine);
 
     EXPECT_EQ(-1, result);
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
-    EXPECT_TRUE(g_nntp_link.unsupported_commands.empty());
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp.link.unsupported_commands.empty());
 }
 
 TEST_F(NNTPTest, nntpConnectConnectionFailedReportsUnavailable)
@@ -263,8 +263,8 @@ TEST_F(NNTPTest, nntpConnectConnectionFailedReportsUnavailable)
 
 TEST_F(NNTPTest, connectsImplicitTlsBeforeGreetingAndOnReconnect)
 {
-    g_nntp_link.implicit_tls = true;
-    g_nntp_link.allow_starttls = false;
+    g_nntp.link.implicit_tls = true;
+    g_nntp.link.allow_starttls = false;
     InSequence sequence;
     for (int attempt = 0; attempt < 2; ++attempt)
     {
@@ -278,17 +278,17 @@ TEST_F(NNTPTest, connectsImplicitTlsBeforeGreetingAndOnReconnect)
     for (int attempt = 0; attempt < 2; ++attempt)
     {
         EXPECT_EQ(200, server_init(m_machine));
-        EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp_link.security);
+        EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
         nntp_close(false);
-        EXPECT_EQ(NntpSecurity::Cleartext, g_nntp_link.security);
-        EXPECT_TRUE(g_nntp_link.implicit_tls);
+        EXPECT_EQ(NntpSecurity::Cleartext, g_nntp.link.security);
+        EXPECT_TRUE(g_nntp.link.implicit_tls);
     }
 }
 
 TEST_F(NNTPTest, connectsImplicitTlsOnExplicitPortWithoutAnotherUpgrade)
 {
-    g_nntp_link.implicit_tls = true;
-    g_nntp_link.port_number = 5563;
+    g_nntp.link.implicit_tls = true;
+    g_nntp.link.port_number = 5563;
     InSequence sequence;
     EXPECT_CALL(m_factory, Call(std::string_view{m_machine}, 5563, std::string_view{"nntps"}))
         .WillOnce(Return(m_connection));
@@ -299,20 +299,20 @@ TEST_F(NNTPTest, connectsImplicitTlsOnExplicitPortWithoutAnotherUpgrade)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
 
     EXPECT_EQ(201, server_init(m_machine));
-    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp_link.security);
+    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
 }
 
 TEST_F(NNTPTest, closesImplicitTlsWhenHandshakeFailsBeforeGreeting)
 {
-    g_nntp_link.implicit_tls = true;
+    g_nntp.link.implicit_tls = true;
     EXPECT_CALL(m_factory, Call(std::string_view{m_machine}, 563, std::string_view{"nntps"}))
         .WillOnce(Return(m_connection));
     EXPECT_CALL(*m_connection, start_tls(_))
         .WillOnce([](error_code_t &ec) { ec = boost::asio::error::connection_reset; });
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_FALSE(g_nntp_link.connection);
-    EXPECT_EQ(NntpSecurity::Cleartext, g_nntp_link.security);
+    EXPECT_FALSE(g_nntp.link.connection);
+    EXPECT_EQ(NntpSecurity::Cleartext, g_nntp.link.security);
 }
 
 class NNTPConnectedTest : public NNTPTest
@@ -338,9 +338,9 @@ TEST_F(NNTPConnectedTest, upgradesAdvertisedStartTlsBeforeReading)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "OVER", "."});
 
     EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("XOLD"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("OVER"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("XOLD"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
 }
 
 TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsHandshakeFails)
@@ -353,8 +353,8 @@ TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsHandshakeFails)
         .WillOnce([](error_code_t &ec) { ec = boost::asio::error::connection_reset; });
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_FALSE(g_nntp_link.connection);
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.connection);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
 }
 
 TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsIsUnavailable)
@@ -365,7 +365,7 @@ TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsIsUnavailable)
     expect_reply("STARTTLS", {"502 command unavailable"});
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp.link.connection);
 }
 
 TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsCannotNegotiate)
@@ -376,7 +376,7 @@ TEST_F(NNTPConnectedTest, closesConnectionWhenStartTlsCannotNegotiate)
     expect_reply("STARTTLS", {"580 cannot initiate TLS negotiation"});
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp.link.connection);
 }
 
 TEST_F(NNTPConnectedTest, defersForcedAuthUntilAfterStartTlsDiscovery)
@@ -386,7 +386,7 @@ TEST_F(NNTPConnectedTest, defersForcedAuthUntilAfterStartTlsDiscovery)
     source.m_auth_pass = "secret";
     DataSource *const saved_source = g_data_source;
     g_data_source = &source;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK | NNTP_FORCE_AUTH_NOW;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK | NNTP_FORCE_AUTH_NOW;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
@@ -398,8 +398,8 @@ TEST_F(NNTPConnectedTest, defersForcedAuthUntilAfterStartTlsDiscovery)
     g_data_source = saved_source;
 
     EXPECT_EQ(200, result);
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_FORCE_AUTH_NOW);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_FORCE_AUTH_NOW);
 }
 
 TEST_F(NNTPConnectedTest, handlesAuthChallengeDuringStartTlsDiscovery)
@@ -409,7 +409,7 @@ TEST_F(NNTPConnectedTest, handlesAuthChallengeDuringStartTlsDiscovery)
     source.m_auth_pass = "secret";
     DataSource *const saved_source = g_data_source;
     g_data_source = &source;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK | NNTP_FORCE_AUTH_NOW;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK | NNTP_FORCE_AUTH_NOW;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"480 authentication required"});
@@ -421,7 +421,7 @@ TEST_F(NNTPConnectedTest, handlesAuthChallengeDuringStartTlsDiscovery)
     g_data_source = saved_source;
 
     EXPECT_EQ(200, result);
-    EXPECT_FALSE(g_nntp_link.flags & NNTP_FORCE_AUTH_NOW);
+    EXPECT_FALSE(g_nntp.link.flags & NNTP_FORCE_AUTH_NOW);
 }
 
 TEST_F(NNTPConnectedTest, server_init_ok)
@@ -437,7 +437,7 @@ TEST_F(NNTPConnectedTest, server_init_ok)
     const int result = server_init(m_machine);
 
     EXPECT_EQ(NNTP_POSTOK_VAL, result);
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
 }
 
 TEST_F(NNTPConnectedTest, server_init_posting_prohibited)
@@ -457,7 +457,7 @@ TEST_F(NNTPConnectedTest, server_init_posting_prohibited)
 
 TEST_F(NNTPConnectedTest, refreshesCapabilitiesAfterReaderMode)
 {
-    g_nntp_link.allow_starttls = false;
+    g_nntp.link.allow_starttls = false;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "STARTTLS", "."});
@@ -465,14 +465,14 @@ TEST_F(NNTPConnectedTest, refreshesCapabilitiesAfterReaderMode)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "OVER MSGID", "HDR", "."});
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
-    EXPECT_EQ("201 reader mode, posting prohibited", g_ser_line);
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_TRUE(g_nntp_link.capabilities.has("READER"));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER", "MSGID"));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("MODE-READER"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_EQ("201 reader mode, posting prohibited", g_nntp.ser_line);
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_TRUE(g_nntp.link.capabilities.has("READER"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("OVER", "MSGID"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("HDR"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("MODE-READER"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
 }
 
 TEST_F(NNTPConnectedTest, discoversCapabilitiesOnlyAvailableInReaderMode)
@@ -487,15 +487,15 @@ TEST_F(NNTPConnectedTest, discoversCapabilitiesOnlyAvailableInReaderMode)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "."});
 
     EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
-    EXPECT_EQ("200 reader ready", g_ser_line);
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ("200 reader ready", g_nntp.ser_line);
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
 }
 
 TEST_F(NNTPConnectedTest, clearsCapabilitiesWhenReaderModeDoesNotSupportDiscovery)
 {
-    g_nntp_link.allow_starttls = false;
+    g_nntp.link.allow_starttls = false;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "MODE-READER", "STARTTLS", "."});
@@ -503,8 +503,8 @@ TEST_F(NNTPConnectedTest, clearsCapabilitiesWhenReaderModeDoesNotSupportDiscover
     expect_reply("CAPABILITIES", {"501 unsupported command"});
 
     EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
 }
 
 TEST_F(NNTPConnectedTest, skipsReaderModeWhenAlreadyReading)
@@ -514,9 +514,9 @@ TEST_F(NNTPConnectedTest, skipsReaderModeWhenAlreadyReading)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "READER", "HDR", "."});
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
-    EXPECT_EQ("201 server ready", g_ser_line);
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
+    EXPECT_EQ("201 server ready", g_nntp.ser_line);
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_TRUE(g_nntp.link.capabilities.has("HDR"));
 }
 
 TEST_F(NNTPConnectedTest, skipsUnadvertisedReaderModeOnTransitServer)
@@ -526,8 +526,8 @@ TEST_F(NNTPConnectedTest, skipsUnadvertisedReaderModeOnTransitServer)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "VERSION 2", "IHAVE", "."});
 
     EXPECT_EQ(NNTP_POSTOK_VAL, server_init(m_machine));
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("READER"));
 }
 
 TEST_F(NNTPConnectedTest, preservesCapabilitiesWhenAdvertisedReaderModeIsUnsupported)
@@ -538,7 +538,7 @@ TEST_F(NNTPConnectedTest, preservesCapabilitiesWhenAdvertisedReaderModeIsUnsuppo
     expect_reply("MODE READER", {"501 unsupported mode"});
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("HDR"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("HDR"));
 }
 
 TEST_F(NNTPConnectedTest, fallsBackWhenDiscoveryAndReaderModeAreUnsupported)
@@ -549,8 +549,8 @@ TEST_F(NNTPConnectedTest, fallsBackWhenDiscoveryAndReaderModeAreUnsupported)
     expect_reply("MODE READER", {"500 unknown command"});
 
     EXPECT_EQ(NNTP_NOPOSTOK_VAL, server_init(m_machine));
-    EXPECT_EQ("201 server ready", g_ser_line);
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_EQ("201 server ready", g_nntp.ser_line);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
 }
 
 TEST_F(NNTPConnectedTest, failsWhenDiscoveryClosesConnection)
@@ -560,9 +560,9 @@ TEST_F(NNTPConnectedTest, failsWhenDiscoveryClosesConnection)
     expect_reply("CAPABILITIES", {"400 server shutting down"});
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_EQ("400 server shutting down", g_ser_line);
-    EXPECT_FALSE(g_nntp_link.connection);
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_EQ("400 server shutting down", g_nntp.ser_line);
+    EXPECT_FALSE(g_nntp.link.connection);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
 }
 
 TEST_F(NNTPConnectedTest, failsWhenReaderModeCapabilityRefreshClosesConnection)
@@ -574,8 +574,8 @@ TEST_F(NNTPConnectedTest, failsWhenReaderModeCapabilityRefreshClosesConnection)
     expect_reply("CAPABILITIES", {"502 service unavailable"});
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_FALSE(g_nntp_link.connection);
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.connection);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
 }
 
 TEST_F(NNTPTest, discoversCapabilitiesFromMockServer)
@@ -587,14 +587,14 @@ TEST_F(NNTPTest, discoversCapabilitiesFromMockServer)
     server.expect_quit();
     server.start();
     init_nntp();
-    g_nntp_link.port_number = server.port();
+    g_nntp.link.port_number = server.port();
 
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_TRUE(g_nntp_link.capabilities.has("LIST", "NEWSGROUPS"));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER"));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("AUTHINFO", "USER"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("MODE-READER"));
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_TRUE(g_nntp.link.capabilities.has("LIST", "NEWSGROUPS"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("OVER"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("AUTHINFO", "USER"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("MODE-READER"));
 
     nntp_close(true);
     server.verify();
@@ -708,18 +708,18 @@ protected:
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
         m_old_abs_first = g_abs_first;
         m_old_last_cached = g_last_cached;
-        m_saved_nntp_link = g_nntp_link;
-        g_nntp_link.connection = m_connection;
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
-        g_nntp_link.capabilities = {};
-        g_nntp_link.unsupported_commands.clear();
+        m_saved_nntp_link = g_nntp.link;
+        g_nntp.link.connection = m_connection;
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.link.capabilities = {};
+        g_nntp.link.unsupported_commands.clear();
     }
 
     void TearDown() override
     {
         Test::TearDown();
-        g_nntp_link.connection.reset();
-        g_nntp_link = std::move(m_saved_nntp_link);
+        g_nntp.link.connection.reset();
+        g_nntp.link = std::move(m_saved_nntp_link);
         g_abs_first = m_old_abs_first;
         g_last_cached = m_old_last_cached;
     }
@@ -749,7 +749,7 @@ TEST_F(NNTPGetStringTest, retriesEncryptionRequiredCommandAfterStartTls)
 
     ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
     EXPECT_EQ(1, nntp_check());
-    EXPECT_EQ("211 1 1 1 comp.lang.apl", g_ser_line);
+    EXPECT_EQ("211 1 1 1 comp.lang.apl", g_nntp.ser_line);
 }
 
 class RequiredTlsPolicyTest : public NNTPGetStringTest
@@ -761,9 +761,9 @@ protected:
 void RequiredTlsPolicyTest::SetUp()
 {
     NNTPGetStringTest::SetUp();
-    g_nntp_link.allow_starttls = false;
-    g_nntp_link.require_tls_for_auth = true;
-    g_nntp_link.require_tls_for_posting = true;
+    g_nntp.link.allow_starttls = false;
+    g_nntp.link.require_tls_for_auth = true;
+    g_nntp.link.require_tls_for_posting = true;
 }
 
 class CleartextTlsCommandTest : public RequiredTlsPolicyTest, public WithParamInterface<const char *>
@@ -779,7 +779,7 @@ protected:
 void ImplicitTlsPolicyTest::SetUp()
 {
     RequiredTlsPolicyTest::SetUp();
-    g_nntp_link.security = NntpSecurity::ImplicitTls;
+    g_nntp.link.security = NntpSecurity::ImplicitTls;
 }
 
 class ImplicitTlsCommandTest : public ImplicitTlsPolicyTest, public WithParamInterface<const char *>
@@ -834,14 +834,14 @@ TEST_F(NNTPGetStringTest, restoresSelectedGroupAndArticleAfterStartTls)
     ASSERT_EQ(1, nntp_check());
     ASSERT_EQ(1, nntp_command("BODY"));
     EXPECT_EQ(1, nntp_check());
-    EXPECT_EQ(222, nntp_response_code(g_ser_line));
+    EXPECT_EQ(222, nntp_response_code(g_nntp.ser_line));
 }
 
 TEST_F(NNTPGetStringTest, protectsPostingWithStartTlsBeforeSendingPost)
 {
-    g_nntp_link.require_tls_for_posting = true;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.require_tls_for_posting = true;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("STARTTLS");
     InSequence sequence;
     EXPECT_CALL(*m_connection, write_line(StrEq("STARTTLS"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("382 continue with TLS negotiation"));
@@ -854,7 +854,7 @@ TEST_F(NNTPGetStringTest, protectsPostingWithStartTlsBeforeSendingPost)
     EXPECT_CALL(*m_connection, write_line(StrEq("POST"), _));
 
     EXPECT_EQ(1, nntp_command("POST"));
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
 }
 
 TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
@@ -864,8 +864,8 @@ TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
     source.m_auth_pass = "secret";
     DataSource *const saved_source = g_data_source;
     g_data_source = &source;
-    g_nntp_link.allow_starttls = false;
-    g_nntp_link.require_tls_for_auth = true;
+    g_nntp.link.allow_starttls = false;
+    g_nntp.link.require_tls_for_auth = true;
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("480 authentication required"));
 
@@ -875,7 +875,7 @@ TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
 
     EXPECT_EQ(1, sent);
     EXPECT_LT(result, 0);
-    EXPECT_EQ(483, nntp_response_code(g_ser_line));
+    EXPECT_EQ(483, nntp_response_code(g_nntp.ser_line));
 }
 
 TEST_P(ImplicitTlsCommandTest, sendsTheCommandThroughImplicitTls)
@@ -920,12 +920,12 @@ void NntpAuthTest::SetUp()
     m_source.m_auth_user = "reader";
     m_source.m_auth_pass = "secret";
     g_data_source = &m_source;
-    g_nntp_link.connection = m_connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
-    g_nntp_link.allow_legacy_auth = false;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("AUTHINFO USER");
-    g_last_command = "GROUP comp.lang.apl";
+    g_nntp.link.connection = m_connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link.allow_legacy_auth = false;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("AUTHINFO USER");
+    g_nntp.last_command = "GROUP comp.lang.apl";
 }
 
 void NntpAuthTest::TearDown()
@@ -942,17 +942,17 @@ void NntpAuthTest::expect_authentication()
 
 TEST_F(NntpAuthTest, refreshesCapabilitiesAfterAdvertisedUserPass)
 {
-    g_nntp_link.unsupported_commands = {"OVER"};
+    g_nntp.link.unsupported_commands = {"OVER"};
     InSequence sequence;
     expect_authentication();
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "OVER", "."});
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
-    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("AUTHINFO"));
-    EXPECT_TRUE(g_nntp_link.unsupported_commands.empty());
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_TRUE(g_nntp.link.capabilities.has("OVER"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("AUTHINFO"));
+    EXPECT_TRUE(g_nntp.link.unsupported_commands.empty());
 }
 
 TEST_F(NntpAuthTest, acceptsUserWithoutSendingPassword)
@@ -964,12 +964,12 @@ TEST_F(NntpAuthTest, acceptsUserWithoutSendingPassword)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, rejectsUnadvertisedMethodsInStrictMode)
 {
-    g_nntp_link.capabilities = {};
+    g_nntp.link.capabilities = {};
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
@@ -977,10 +977,10 @@ TEST_F(NntpAuthTest, rejectsUnadvertisedMethodsInStrictMode)
 
 TEST_F(NntpAuthTest, refusesEmptyAuthinfoEvenInCompatibilityMode)
 {
-    g_nntp_link.allow_legacy_auth = true;
-    g_nntp_link.capabilities = {};
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("AUTHINFO");
+    g_nntp.link.allow_legacy_auth = true;
+    g_nntp.link.capabilities = {};
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("AUTHINFO");
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
@@ -988,11 +988,11 @@ TEST_F(NntpAuthTest, refusesEmptyAuthinfoEvenInCompatibilityMode)
 
 TEST_F(NntpAuthTest, leavesSaslOnlyServersForFutureMechanisms)
 {
-    g_nntp_link.allow_legacy_auth = true;
-    g_nntp_link.capabilities = {};
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("AUTHINFO SASL");
-    g_nntp_link.capabilities.add("SASL PLAIN SCRAM-SHA-256");
+    g_nntp.link.allow_legacy_auth = true;
+    g_nntp.link.capabilities = {};
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("AUTHINFO SASL");
+    g_nntp.link.capabilities.add("SASL PLAIN SCRAM-SHA-256");
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
@@ -1000,15 +1000,15 @@ TEST_F(NntpAuthTest, leavesSaslOnlyServersForFutureMechanisms)
 
 TEST_F(NntpAuthTest, permitsLegacyUserPassInCompatibilityMode)
 {
-    g_nntp_link.allow_legacy_auth = true;
-    g_nntp_link.capabilities = {};
+    g_nntp.link.allow_legacy_auth = true;
+    g_nntp.link.capabilities = {};
     InSequence sequence;
     expect_authentication();
     expect_reply("CAPABILITIES", {"500 unknown command"});
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, sendsPasswordOnlyForPasswordRequiredReply)
@@ -1017,7 +1017,7 @@ TEST_F(NntpAuthTest, sendsPasswordOnlyForPasswordRequiredReply)
     expect_reply("AUTHINFO USER reader", {"200 unrelated success"});
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, requiresAuthenticationAcceptedAfterPassword)
@@ -1027,7 +1027,7 @@ TEST_F(NntpAuthTest, requiresAuthenticationAcceptedAfterPassword)
     expect_reply("AUTHINFO PASS secret", {"381 invalid continuation"});
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, doesNotRecursivelyAuthenticateAnAuthinfoChallenge)
@@ -1040,7 +1040,7 @@ TEST_F(NntpAuthTest, doesNotRecursivelyAuthenticateAnAuthinfoChallenge)
 
 TEST_F(NntpAuthTest, doesNotAuthenticateAgainAfterSuccess)
 {
-    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::Authenticated;
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
@@ -1048,27 +1048,27 @@ TEST_F(NntpAuthTest, doesNotAuthenticateAgainAfterSuccess)
 
 TEST_F(NntpAuthTest, refusesCleartextWhenTlsIsRequired)
 {
-    g_nntp_link.require_tls_for_auth = true;
-    g_nntp_link.allow_starttls = false;
+    g_nntp.link.require_tls_for_auth = true;
+    g_nntp.link.allow_starttls = false;
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(483, nntp_response_code(g_ser_line));
+    EXPECT_EQ(483, nntp_response_code(g_nntp.ser_line));
 }
 
 TEST_F(NntpAuthTest, closeClearsAuthenticationState)
 {
-    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::Authenticated;
 
     nntp_close(false);
 
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, doesNotUpgradeAfterAuthentication)
 {
-    g_nntp_link.auth_state = NntpAuthState::Authenticated;
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.capabilities.add("STARTTLS");
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_start_tls(), 0);
@@ -1076,11 +1076,11 @@ TEST_F(NntpAuthTest, doesNotUpgradeAfterAuthentication)
 
 TEST_F(NntpAuthTest, selectsAuthMethodAfterRequiredTlsUpgrade)
 {
-    g_nntp_link.require_tls_for_auth = true;
-    g_nntp_link.capabilities = {};
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("STARTTLS");
-    g_nntp_link.capabilities.add("AUTHINFO SASL");
+    g_nntp.link.require_tls_for_auth = true;
+    g_nntp.link.capabilities = {};
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("STARTTLS");
+    g_nntp.link.capabilities.add("AUTHINFO SASL");
     InSequence sequence;
     expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
     EXPECT_CALL(*m_connection, start_tls(_));
@@ -1090,22 +1090,22 @@ TEST_F(NntpAuthTest, selectsAuthMethodAfterRequiredTlsUpgrade)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, acceptsImplicitTlsForPasswordAuthentication)
 {
-    g_nntp_link.require_tls_for_auth = true;
-    g_nntp_link.allow_starttls = false;
-    g_nntp_link.security = NntpSecurity::ImplicitTls;
+    g_nntp.link.require_tls_for_auth = true;
+    g_nntp.link.allow_starttls = false;
+    g_nntp.link.security = NntpSecurity::ImplicitTls;
     InSequence sequence;
     expect_authentication();
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, doesNotRepeatAuthenticationForAnotherChallenge)
@@ -1118,7 +1118,7 @@ TEST_F(NntpAuthTest, doesNotRepeatAuthenticationForAnotherChallenge)
 
     ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
     EXPECT_LE(nntp_check(), 0);
-    EXPECT_EQ(480, nntp_response_code(g_ser_line));
+    EXPECT_EQ(480, nntp_response_code(g_nntp.ser_line));
 }
 
 TEST_F(NntpAuthTest, doesNotReplayReaderModeAfterAuthentication)
@@ -1132,13 +1132,13 @@ TEST_F(NntpAuthTest, doesNotReplayReaderModeAfterAuthentication)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
 
     EXPECT_EQ(200, server_init(m_machine));
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, skipsReaderModeAfterDiscoveryAuthentication)
 {
     configure_factory_create(m_connection);
-    g_nntp_link.allow_legacy_auth = true;
+    g_nntp.link.allow_legacy_auth = true;
     InSequence sequence;
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 server ready"));
     expect_reply("CAPABILITIES", {"480 authentication required"});
@@ -1146,12 +1146,12 @@ TEST_F(NntpAuthTest, skipsReaderModeAfterDiscoveryAuthentication)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "MODE-READER", "."});
 
     EXPECT_EQ(200, server_init(m_machine));
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, restartsUserPassAfterPasswordRequiresTls)
 {
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.capabilities.add("STARTTLS");
     InSequence sequence;
     expect_reply("AUTHINFO USER reader", {"381 password required"});
     expect_reply("AUTHINFO PASS secret", {"483 encryption required"});
@@ -1163,12 +1163,12 @@ TEST_F(NntpAuthTest, restartsUserPassAfterPasswordRequiresTls)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
 }
 
 TEST_F(NntpAuthTest, reselectsMethodAfterAuthinfoRequiresTls)
 {
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.capabilities.add("STARTTLS");
     InSequence sequence;
     expect_reply("AUTHINFO USER reader", {"483 encryption required"});
     expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
@@ -1176,8 +1176,8 @@ TEST_F(NntpAuthTest, reselectsMethodAfterAuthinfoRequiresTls)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "AUTHINFO SASL", "SASL SCRAM-SHA-256", "."});
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, failsStartupWhenPostAuthDiscoveryFailsInReaderMode)
@@ -1195,9 +1195,9 @@ TEST_F(NntpAuthTest, failsStartupWhenPostAuthDiscoveryFailsInReaderMode)
 
 TEST_F(NntpAuthTest, authenticatesOnceWhenTlsDiscoveryNeedsCredentials)
 {
-    g_nntp_link.require_tls_for_auth = true;
-    g_nntp_link.allow_legacy_auth = true;
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.require_tls_for_auth = true;
+    g_nntp.link.allow_legacy_auth = true;
+    g_nntp.link.capabilities.add("STARTTLS");
     InSequence sequence;
     expect_reply("STARTTLS", {"382 continue with TLS negotiation"});
     EXPECT_CALL(*m_connection, start_tls(_));
@@ -1207,17 +1207,17 @@ TEST_F(NntpAuthTest, authenticatesOnceWhenTlsDiscoveryNeedsCredentials)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
 }
 
 TEST_F(NNTPTest, startupClearsPreviousAuthenticationState)
 {
     configure_factory_create(nullptr);
-    g_nntp_link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::Authenticated;
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp_link.auth_state);
+    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
 }
 
 class NntpTlsLoopbackTest : public NNTPTest
@@ -1272,10 +1272,10 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
     server.expect_body(1, {"encrypted article", "second line"});
     server.expect_quit();
     server.start();
-    g_nntp_link.port_number = server.port();
+    g_nntp.link.port_number = server.port();
 
     ASSERT_EQ(1, nntp_connect("localhost", false));
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp_link.security);
+    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
     ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, nntp_check());
     ASSERT_EQ(1, nntp_command("BODY 1"));
@@ -1297,10 +1297,10 @@ TEST_F(NntpTlsLoopbackTest, rejectsUntrustedStartTlsCertificate)
     server.expect_capabilities({"READER", "STARTTLS"});
     server.expect_starttls(true);
     server.start();
-    g_nntp_link.port_number = server.port();
+    g_nntp.link.port_number = server.port();
 
     EXPECT_EQ(0, nntp_connect("localhost", false));
-    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp.link.connection);
     server.verify();
 }
 
@@ -1310,10 +1310,10 @@ TEST_F(NntpTlsLoopbackTest, rejectsStartTlsCertificateForAnotherHost)
     server.expect_capabilities({"READER", "STARTTLS"});
     server.expect_starttls(true);
     server.start();
-    g_nntp_link.port_number = server.port();
+    g_nntp.link.port_number = server.port();
 
     EXPECT_EQ(0, nntp_connect("127.0.0.1", false));
-    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp.link.connection);
     server.verify();
 }
 
@@ -1326,12 +1326,12 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
     server.expect_body(1, {"encrypted article", "second line"});
     server.expect_quit();
     server.start();
-    g_nntp_link.port_number = server.port();
-    g_nntp_link.implicit_tls = true;
-    g_nntp_link.allow_starttls = false;
+    g_nntp.link.port_number = server.port();
+    g_nntp.link.implicit_tls = true;
+    g_nntp.link.allow_starttls = false;
 
     ASSERT_EQ(1, nntp_connect("localhost", false));
-    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp_link.security);
+    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
     ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, nntp_check());
     ASSERT_EQ(1, nntp_command("BODY 1"));
@@ -1352,11 +1352,11 @@ TEST_F(NntpTlsLoopbackTest, rejectsUntrustedImplicitTlsCertificate)
     MockNntpServer server;
     server.use_implicit_tls(true);
     server.start();
-    g_nntp_link.port_number = server.port();
-    g_nntp_link.implicit_tls = true;
+    g_nntp.link.port_number = server.port();
+    g_nntp.link.implicit_tls = true;
 
     EXPECT_EQ(0, nntp_connect("localhost", false));
-    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp.link.connection);
     server.verify();
 }
 
@@ -1365,11 +1365,11 @@ TEST_F(NntpTlsLoopbackTest, rejectsImplicitTlsCertificateForAnotherHost)
     MockNntpServer server;
     server.use_implicit_tls(true);
     server.start();
-    g_nntp_link.port_number = server.port();
-    g_nntp_link.implicit_tls = true;
+    g_nntp.link.port_number = server.port();
+    g_nntp.link.implicit_tls = true;
 
     EXPECT_EQ(0, nntp_connect("127.0.0.1", false));
-    EXPECT_FALSE(g_nntp_link.connection);
+    EXPECT_FALSE(g_nntp.link.connection);
     server.verify();
 }
 
@@ -1401,15 +1401,15 @@ protected:
 
 TEST_P(NntpCommandTest, prefersAdvertisedModernCommand)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add(GetParam().capability);
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add(GetParam().capability);
     InSequence sequence;
     expect_list(GetParam().modern);
 
     EXPECT_EQ(1, GetParam().request());
-    EXPECT_FALSE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_FALSE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
     nntp_finish_list();
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
 }
 
 TEST_P(NntpCommandTest, cachesModernRejectionAndUsesLegacyCommand)
@@ -1427,8 +1427,8 @@ TEST_P(NntpCommandTest, cachesModernRejectionAndUsesLegacyCommand)
 
 TEST_P(NntpCommandTest, fallsBackWhenAdvertisedModernCommandIsRejected)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add(GetParam().capability);
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add(GetParam().capability);
     InSequence sequence;
     expect_status(GetParam().modern, "500 unknown command");
     expect_list(GetParam().legacy);
@@ -1452,8 +1452,8 @@ TEST_P(NntpCommandTest, cachesRejectionOfBothCommands)
 
 TEST_P(NntpCommandTest, doesNotProbeUnadvertisedCommands)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("VERSION 2");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("VERSION 2");
 
     EXPECT_EQ(-1, GetParam().request());
     EXPECT_EQ(-1, GetParam().request());
@@ -1461,9 +1461,9 @@ TEST_P(NntpCommandTest, doesNotProbeUnadvertisedCommands)
 
 TEST_P(NntpCommandTest, usesAdvertisedLegacyExtension)
 {
-    g_nntp_link.capabilities.available = true;
+    g_nntp.link.capabilities.available = true;
     const std::string_view command{GetParam().legacy};
-    g_nntp_link.capabilities.add(command.substr(0, command.find(' ')));
+    g_nntp.link.capabilities.add(command.substr(0, command.find(' ')));
     InSequence sequence;
     expect_list(GetParam().legacy);
 
@@ -1508,7 +1508,7 @@ TEST_P(NntpCommandTest, closeClearsRejectedCommandState)
 
     EXPECT_EQ(-1, GetParam().request());
     nntp_close(false);
-    g_nntp_link.connection = m_connection;
+    g_nntp.link.connection = m_connection;
     EXPECT_EQ(1, GetParam().request());
     nntp_finish_list();
 }
@@ -1641,15 +1641,15 @@ TEST_F(NNTPGetStringTest, capabilitiesConsumeCompleteListBeforeNextCommand)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("111 20261019010000\r\n"));
 
     EXPECT_EQ(1, nntp_refresh_capabilities());
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_TRUE(g_nntp_link.capabilities.has("VERSION", "2"));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("LIST", "ACTIVE"));
-    EXPECT_TRUE(g_nntp_link.capabilities.has("OVER", "MSGID"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("HDR"));
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_TRUE(g_nntp.link.capabilities.has("VERSION", "2"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("LIST", "ACTIVE"));
+    EXPECT_TRUE(g_nntp.link.capabilities.has("OVER", "MSGID"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("HDR"));
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
     EXPECT_EQ(1, nntp_command("DATE"));
     EXPECT_EQ(1, nntp_check());
-    EXPECT_EQ("111 20261019010000", g_ser_line);
+    EXPECT_EQ("111 20261019010000", g_nntp.ser_line);
 }
 
 TEST_F(NNTPGetStringTest, emptyCapabilityListIsAvailable)
@@ -1658,27 +1658,27 @@ TEST_F(NNTPGetStringTest, emptyCapabilityListIsAvailable)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("101 capabilities follow")).WillOnce(Return("."));
 
     EXPECT_EQ(1, nntp_refresh_capabilities());
-    EXPECT_TRUE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+    EXPECT_TRUE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("READER"));
 }
 
 TEST_F(NNTPGetStringTest, unsupportedCapabilitiesClearPreviousList)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("STARTTLS");
     EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("500 unknown command"));
 
     EXPECT_EQ(0, nntp_refresh_capabilities());
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
 }
 
 TEST_F(NNTPGetStringTest, truncatedCapabilitiesDiscardPartialListAndConnection)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("STARTTLS");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("STARTTLS");
     EXPECT_CALL(*m_connection, write_line(StrEq("CAPABILITIES"), _));
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("101 capabilities follow"))
@@ -1691,22 +1691,22 @@ TEST_F(NNTPGetStringTest, truncatedCapabilitiesDiscardPartialListAndConnection)
             }));
 
     EXPECT_EQ(-1, nntp_refresh_capabilities());
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("STARTTLS"));
-    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
-    EXPECT_FALSE(g_nntp_link.connection);
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
+    EXPECT_FALSE(g_nntp.link.capabilities.has("READER"));
+    EXPECT_FALSE(g_nntp.link.connection);
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
 }
 
 TEST_F(NNTPGetStringTest, closeDiscardsCapabilities)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("READER");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("READER");
 
     nntp_close(false);
 
-    EXPECT_FALSE(g_nntp_link.capabilities.available);
-    EXPECT_FALSE(g_nntp_link.capabilities.has("READER"));
+    EXPECT_FALSE(g_nntp.link.capabilities.available);
+    EXPECT_FALSE(g_nntp.link.capabilities.has("READER"));
 }
 
 TEST_F(NNTPGetStringTest, getALineReturnsServerLine)
@@ -1729,7 +1729,7 @@ TEST_P(NNTPTransportFailureTest, checkReportsAReadFailureAsServerLoss)
     const int result = nntp_check();
 
     EXPECT_EQ(-2, result);
-    EXPECT_EQ("503 Server closed connection.", g_ser_line);
+    EXPECT_EQ("503 Server closed connection.", g_nntp.ser_line);
 }
 
 INSTANTIATE_TEST_SUITE_P(TransportError, NNTPTransportFailureTest,
@@ -1743,7 +1743,7 @@ TEST_F(NNTPGetStringTest, checkKeepsAServerErrorDistinctFromTransportLoss)
     const int result = nntp_check();
 
     EXPECT_EQ(-1, result);
-    EXPECT_EQ("503 Server cannot perform this command.", g_ser_line);
+    EXPECT_EQ("503 Server cannot perform this command.", g_nntp.ser_line);
 }
 
 TEST_F(NNTPGetStringTest, checkStoresStatusLineWithoutCrlf)
@@ -1752,7 +1752,7 @@ TEST_F(NNTPGetStringTest, checkStoresStatusLineWithoutCrlf)
 
     EXPECT_EQ(1, nntp_check());
 
-    EXPECT_EQ("200 ready", g_ser_line);
+    EXPECT_EQ("200 ready", g_nntp.ser_line);
 }
 
 TEST_F(NNTPGetStringTest, checkStoresFullStatusLine)
@@ -1763,7 +1763,7 @@ TEST_F(NNTPGetStringTest, checkStoresFullStatusLine)
 
     EXPECT_EQ(1, nntp_check());
 
-    EXPECT_EQ(status_line, g_ser_line);
+    EXPECT_EQ(status_line, g_nntp.ser_line);
 }
 
 TEST_F(NNTPGetStringTest, string_line_fits)
@@ -1947,7 +1947,7 @@ protected:
         m_old_art_fp = g_art_input.fp;
         m_old_current_path = fs::current_path();
         m_old_parsed_art = g_parsed_header.parsed_art;
-        m_old_nntp_flags = g_nntp_link.flags;
+        m_old_nntp_flags = g_nntp.link.flags;
         m_old_pid = g_our_pid;
 
         const TestInfo *test_info = UnitTest::GetInstance()->current_test_info();
@@ -1964,7 +1964,7 @@ protected:
         (void) nntp_art_name(ArticleNum{}, false);
         g_art_input.fp = nullptr;
         g_parsed_header.parsed_art = ArticleNum{};
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
         g_our_pid = 24680;
     }
 
@@ -1979,7 +1979,7 @@ protected:
 
         g_art_input.fp = m_old_art_fp;
         g_parsed_header.parsed_art = m_old_parsed_art;
-        g_nntp_link.flags = m_old_nntp_flags;
+        g_nntp.link.flags = m_old_nntp_flags;
         g_our_pid = m_old_pid;
         head_final();
 
@@ -2091,7 +2091,7 @@ protected:
         m_old_article_list = std::move(g_article_list);
         m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_last_art = g_last_art;
-        m_old_nntp_flags = g_nntp_link.flags;
+        m_old_nntp_flags = g_nntp.link.flags;
 
         g_data_source = &m_data_source;
         m_data_source.m_flags = DF_REMOTE;
@@ -2099,12 +2099,12 @@ protected:
         article_ptr(ArticleNum{1})->m_flags = AF_EXISTS;
         g_parsed_header.parsed_art = ArticleNum{};
         g_last_art = ArticleNum{1};
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
     }
 
     void TearDown() override
     {
-        g_nntp_link.flags = m_old_nntp_flags;
+        g_nntp.link.flags = m_old_nntp_flags;
         g_last_art = m_old_last_art;
         g_parsed_header.parsed_art = m_old_parsed_art;
         g_article_list.clear();
@@ -2141,8 +2141,8 @@ TEST_F(RemoteHeaderPrefetchTest, readsHeaderLineFromXhdr)
 TEST_F(RemoteHeaderPrefetchTest, readsHdrWithConfiguredBrokenXhdrPolicy)
 {
     m_data_source.m_flags |= DF_XHDR_BROKEN;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("HDR");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("HDR");
     EXPECT_CALL(*m_connection, write_line(StrEq("HDR from 1-1"), _));
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("225 headers follow"))
@@ -2154,8 +2154,8 @@ TEST_F(RemoteHeaderPrefetchTest, readsHdrWithConfiguredBrokenXhdrPolicy)
 
 TEST_F(RemoteHeaderPrefetchTest, readsUncachedHeaderFromHdr)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("HDR");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("HDR");
     EXPECT_CALL(*m_connection, write_line(StrEq("HDR keywords 1"), _));
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("225 headers follow"))
@@ -2167,8 +2167,8 @@ TEST_F(RemoteHeaderPrefetchTest, readsUncachedHeaderFromHdr)
 
 TEST_F(RemoteHeaderPrefetchTest, hdrEmptyValueDoesNotMarkArticleMissing)
 {
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("HDR");
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("HDR");
     g_last_art = ArticleNum{2};
     article_ptr(ArticleNum{2})->m_flags = AF_EXISTS;
     EXPECT_CALL(*m_connection, write_line(StrEq("HDR from 1-2"), _));

@@ -2300,9 +2300,9 @@ private:
     MockNntpServer            m_server;
     DataSource                m_remote_source{};
     DataSource               *m_local_source{};
-    ValueSaver<NNTPLink>      m_link{g_nntp_link, g_nntp_link};
-    ValueSaver<std::string>   m_response{g_ser_line, g_ser_line};
-    ValueSaver<std::string>   m_command{g_last_command, g_last_command};
+    ValueSaver<NNTPLink>      m_link{g_nntp.link, g_nntp.link};
+    ValueSaver<std::string>   m_response{g_nntp.ser_line, g_nntp.ser_line};
+    ValueSaver<std::string>   m_command{g_nntp.last_command, g_nntp.last_command};
     ValueSaver<bool>          m_hiding{g_do_hiding, g_do_hiding};
     ValueSaver<std::string>   m_hidden{g_hide_line.text, g_hide_line.text};
     ValueSaver<CompiledRegex> m_hide_regex{g_hide_line.compex, g_hide_line.compex};
@@ -2365,10 +2365,10 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     m_server.start();
     m_started = true;
     init_nntp();
-    g_nntp_link = {};
-    g_nntp_link.port_number = m_server.port();
+    g_nntp.link = {};
+    g_nntp.link.port_number = m_server.port();
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
-    const ConnectionPtr real_connection = g_nntp_link.connection;
+    const ConnectionPtr real_connection = g_nntp.link.connection;
     const auto          connection = std::make_shared<StrictMock<MockNNTPConnection>>();
     EXPECT_CALL(*connection, write_line(_, _))
         .WillRepeatedly([real_connection](const std::string &line, error_code_t &error)
@@ -2393,7 +2393,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
                 }
                 return line;
             });
-    g_nntp_link.connection = connection;
+    g_nntp.link.connection = connection;
     m_remote_source.m_flags = DF_REMOTE;
     g_data_source = &m_remote_source;
     nntp_gets_clear_buffer();
@@ -4764,11 +4764,11 @@ void ModeratorPostingTest::compose(std::string_view header, std::string_view com
 void ModeratorPostingTest::compose_without_remote_lookup(std::string_view policy)
 {
     const auto           connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    ValueSaver<NNTPLink> saved_link(g_nntp_link, NNTPLink{});
-    g_nntp_link.connection = connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add(policy == "none" ? "LIST ACTIVE MODERATORS" : "LIST ACTIVE");
+    ValueSaver<NNTPLink> saved_link(g_nntp.link, NNTPLink{});
+    g_nntp.link.connection = connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add(policy == "none" ? "LIST ACTIVE MODERATORS" : "LIST ACTIVE");
     m_source.m_flags |= DF_REMOTE | DF_USE_LIST_ACTIVE;
     m_source.m_moderators_file = policy;
     push_char('\n');
@@ -4843,11 +4843,11 @@ TEST_F(ModeratorPostingTest, foldedCrosspostDeduplicatesRecipientsAndReplacesTo)
 TEST_F(ModeratorPostingTest, remoteListRoutesNewTopicThroughMailComposer)
 {
     const auto           connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    ValueSaver<NNTPLink> saved_link(g_nntp_link, NNTPLink{});
-    g_nntp_link.connection = connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("LIST ACTIVE MODERATORS");
+    ValueSaver<NNTPLink> saved_link(g_nntp.link, NNTPLink{});
+    g_nntp.link.connection = connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("LIST ACTIVE MODERATORS");
     m_source.m_flags |= DF_REMOTE;
     m_source.m_moderators_file.clear();
     EXPECT_CALL(*connection, write_line(testing::StrEq("LIST MODERATORS"), testing::_));

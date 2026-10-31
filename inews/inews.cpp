@@ -46,7 +46,7 @@ static void inews_fputs(std::string_view buff)
     else
     {
         boost::system::error_code ec;
-        g_nntp_link.connection->write(buff, ec);
+        g_nntp.link.connection->write(buff, ec);
     }
 }
 
@@ -59,7 +59,7 @@ static void inews_fputc(char c)
     else
     {
         boost::system::error_code ec;
-        g_nntp_link.connection->write(std::string_view{&c, 1}, ec);
+        g_nntp.link.connection->write(std::string_view{&c, 1}, ec);
     }
 }
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         if (const std::string::size_type separator = server_name.find(';'); separator != std::string::npos)
         {
             const std::string_view port_text{server_name.data() + separator + 1, server_name.size() - separator - 1};
-            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), g_nntp_link.port_number);
+            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), g_nntp.link.port_number);
             server_name.resize(separator);
         }
         g_server_name = server_name;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
         if (!force_auth.empty() && (force_auth.front() == 'y' || force_auth.front() == 'Y'))
         {
-            g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
+            g_nntp.link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
     }
     else
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 
     if (!g_server_name.empty())
     {
-        if (!g_nntp_link.connection)
+        if (!g_nntp.link.connection)
         {
             if (init_nntp() < 0 || !nntp_connect(g_server_name, false))
             {
@@ -430,9 +430,9 @@ int nntp_handle_timeout()
     if (!new_connection)
     {
         static bool handling_timeout = false;
-        const std::string last_command_save{g_last_command};
+        const std::string last_command_save{g_nntp.last_command};
 
-        if (string_case_equal(g_last_command, "quit"))
+        if (string_case_equal(g_nntp.last_command, "quit"))
         {
             return 0;
         }

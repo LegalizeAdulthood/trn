@@ -89,7 +89,7 @@ protected:
     {
         SourceFileTest::SetUp();
         m_old_data_source = g_data_source;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         g_data_source = nullptr;
         nntp_gets_clear_buffer();
         m_source_path = m_output_dir / "active";
@@ -101,7 +101,7 @@ protected:
     {
         m_data_source.m_act_sf.close();
         g_data_source = m_old_data_source;
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link = m_old_nntp_link;
         nntp_gets_clear_buffer();
         SourceFileTest::TearDown();
     }
@@ -119,20 +119,20 @@ protected:
     void SetUp() override
     {
         SourceFileTest::SetUp();
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         m_old_net_speed = g_net_speed;
         nntp_gets_clear_buffer();
 
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-        g_nntp_link.connection = m_connection;
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.link.connection = m_connection;
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
         g_net_speed = 1;
     }
 
     void TearDown() override
     {
-        g_nntp_link.connection.reset();
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link.connection.reset();
+        g_nntp.link = m_old_nntp_link;
         g_net_speed = m_old_net_speed;
         nntp_gets_clear_buffer();
         SourceFileTest::TearDown();
@@ -150,7 +150,7 @@ protected:
     {
         SourceFileTest::SetUp();
         m_old_data_source = g_data_source;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         m_old_net_speed = g_net_speed;
         g_data_source = nullptr;
         nntp_gets_clear_buffer();
@@ -168,7 +168,7 @@ protected:
     {
         m_data_source.m_desc_sf.close();
         g_data_source = m_old_data_source;
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link = m_old_nntp_link;
         g_net_speed = m_old_net_speed;
         nntp_gets_clear_buffer();
         SourceFileTest::TearDown();
@@ -188,9 +188,9 @@ protected:
     {
         SourceFileTest::SetUp();
         m_old_data_source = g_data_source;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         m_old_net_speed = g_net_speed;
-        m_old_nntp_allow_timeout = g_nntp_allow_timeout;
+        m_old_nntp_allow_timeout = g_nntp.allow_timeout;
         g_data_source = nullptr;
         nntp_gets_clear_buffer();
 
@@ -207,13 +207,13 @@ protected:
 
     void TearDown() override
     {
-        g_nntp_link.connection.reset();
+        g_nntp.link.connection.reset();
         m_data_source.m_nntp_link.connection.reset();
         m_data_source.close();
         g_data_source = m_old_data_source;
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link = m_old_nntp_link;
         g_net_speed = m_old_net_speed;
-        g_nntp_allow_timeout = m_old_nntp_allow_timeout;
+        g_nntp.allow_timeout = m_old_nntp_allow_timeout;
         nntp_gets_clear_buffer();
         SourceFileTest::TearDown();
     }
@@ -504,9 +504,9 @@ TEST_F(SourceFileRemoteOpenTest, openFetchesRemoteLinesFromMockServer)
     server.start();
 
     init_nntp();
-    g_nntp_link.connection.reset();
-    g_nntp_link.port_number = server.port();
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link.connection.reset();
+    g_nntp.link.port_number = server.port();
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
 
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
     testing::internal::CaptureStdout();

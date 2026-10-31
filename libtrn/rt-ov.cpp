@@ -69,7 +69,7 @@ bool ov_init()
             return false;
         }
         // Just in case...
-        if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_OK)
+        if (!g_nntp.ser_line.empty() && g_nntp.ser_line.front() == NNTP_CLASS_OK)
         {
             nntp_finish_list();
         }

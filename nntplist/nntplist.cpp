@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
         if (separator != std::string::npos)
         {
             const std::string_view port_text{server_name.data() + separator + 1, server_name.size() - separator - 1};
-            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), g_nntp_link.port_number);
+            (void) std::from_chars(port_text.data(), port_text.data() + port_text.size(), g_nntp.link.port_number);
             server_name.resize(separator);
         }
         s_server_name = server_name;
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
         const std::string force_auth = get_env_var("NNTP_FORCE_AUTH");
         if (!force_auth.empty() && (force_auth.front() == 'y' || force_auth.front() == 'Y'))
         {
-            g_nntp_link.flags |= NNTP_FORCE_AUTH_NEEDED;
+            g_nntp.link.flags |= NNTP_FORCE_AUTH_NEEDED;
         }
     }
 
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
         {
             fmt::print(stderr, "nntplist: Can't get {} file from server.\n",
                        action.empty() ? std::string_view{"active"} : action);
-            fmt::print(stderr, "Server said: {}\n", g_ser_line);
+            fmt::print(stderr, "Server said: {}\n", g_nntp.ser_line);
             finalize(1);
         }
         std::string line;

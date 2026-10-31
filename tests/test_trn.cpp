@@ -199,7 +199,7 @@ protected:
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_multirc = g_multirc;
         m_old_data_source = g_data_source;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_newsgroup_dir = g_newsgroup_dir;
         m_old_default_cmd = g_default_cmd;
@@ -309,7 +309,7 @@ protected:
         g_multirc = &m_multirc;
         g_data_source = &m_data_source;
         init_nntp();
-        g_nntp_link.connection.reset();
+        g_nntp.link.connection.reset();
         g_newsgroup_name.clear();
         g_newsgroup_dir.clear();
         g_default_cmd = "npq";
@@ -436,8 +436,8 @@ protected:
         g_newsrc_hash = m_old_newsrc_hash;
         g_multirc = m_old_multirc;
         g_data_source = m_old_data_source;
-        g_nntp_link.connection.reset();
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link.connection.reset();
+        g_nntp.link = m_old_nntp_link;
         g_newsgroup_name = std::move(m_old_newsgroup_name);
         g_newsgroup_dir = std::move(m_old_newsgroup_dir);
         g_default_cmd = std::move(m_old_default_cmd);
@@ -4103,32 +4103,32 @@ protected:
     testing::Sequence                                        m_protocol;
 
 private:
-    bool                                                     m_old_allow_timeout{g_nntp_allow_timeout};
+    bool                                                     m_old_allow_timeout{g_nntp.allow_timeout};
     bool                                                     m_old_force_grow{g_force_grow};
     ArticleNum                                               m_old_go_article{g_ng_go_art_num};
-    std::string                                              m_old_server_line{g_ser_line};
-    std::string                                              m_old_last_command{g_last_command};
+    std::string                                              m_old_server_line{g_nntp.ser_line};
+    std::string                                              m_old_last_command{g_nntp.last_command};
 };
 
 void RemoteNewsgroupReadingStateTest::SetUp()
 {
     NewsgroupEndReadingStateTest::SetUp();
-    g_nntp_allow_timeout = false;
+    g_nntp.allow_timeout = false;
     g_force_grow = false;
     m_data_source.m_flags = DF_REMOTE | DF_NO_XREFS;
     m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.connection = m_connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
-    m_data_source.m_nntp_link = g_nntp_link;
+    g_nntp.link.connection = m_connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
+    m_data_source.m_nntp_link = g_nntp.link;
 }
 
 void RemoteNewsgroupReadingStateTest::TearDown()
 {
-    g_nntp_allow_timeout = m_old_allow_timeout;
+    g_nntp.allow_timeout = m_old_allow_timeout;
     g_force_grow = m_old_force_grow;
     g_ng_go_art_num = m_old_go_article;
-    g_ser_line = m_old_server_line;
-    g_last_command = m_old_last_command;
+    g_nntp.ser_line = m_old_server_line;
+    g_nntp.last_command = m_old_last_command;
     NewsgroupEndReadingStateTest::TearDown();
 }
 
@@ -4322,7 +4322,7 @@ void MultircServerLossTest::TearDown()
     {
         unuse_multirc(&m_multirc);
     }
-    g_nntp_link.connection.reset();
+    g_nntp.link.connection.reset();
     m_data_source.m_nntp_link.connection.reset();
     m_data_source.close();
     m_remaining_source.close();
@@ -7550,8 +7550,8 @@ protected:
 private:
     std::vector<DataSource> m_saved_sources;
     ArticleUnread           m_old_missing{g_missing_count};
-    std::string             m_old_server_line{g_ser_line};
-    std::string             m_old_last_command{g_last_command};
+    std::string             m_old_server_line{g_nntp.ser_line};
+    std::string             m_old_last_command{g_nntp.last_command};
 };
 
 void NewsgroupSelectorRefreshStateTest::SetUp()
@@ -7566,7 +7566,7 @@ void NewsgroupSelectorRefreshStateTest::SetUp()
 
 void NewsgroupSelectorRefreshStateTest::TearDown()
 {
-    g_nntp_link.connection.reset();
+    g_nntp.link.connection.reset();
     for (DataSource &source : g_data_sources)
     {
         source.m_nntp_link.connection.reset();
@@ -7578,8 +7578,8 @@ void NewsgroupSelectorRefreshStateTest::TearDown()
     m_newsrc.data_source = &m_data_source;
     g_data_source = &m_data_source;
     g_missing_count = m_old_missing;
-    g_ser_line = m_old_server_line;
-    g_last_command = m_old_last_command;
+    g_nntp.ser_line = m_old_server_line;
+    g_nntp.last_command = m_old_last_command;
     NewsgroupSelectorDelegatedExitStateTest::TearDown();
 }
 
@@ -7749,11 +7749,11 @@ private:
     std::string    m_saved_failed_text;
     std::string    m_saved_remaining_text;
     std::string    m_original_remaining_text;
-    std::string    m_old_server_line{g_ser_line};
-    std::string    m_old_last_command{g_last_command};
+    std::string    m_old_server_line{g_nntp.ser_line};
+    std::string    m_old_last_command{g_nntp.last_command};
     std::string    m_old_last_group{g_last_newsgroup_name};
     long           m_old_last_new_time{g_last_new_time};
-    bool           m_old_allow_timeout{g_nntp_allow_timeout};
+    bool           m_old_allow_timeout{g_nntp.allow_timeout};
     bool           m_old_check{g_check_flag};
     bool           m_old_suppress{g_suppress_cn};
     bool           m_old_paranoid{g_paranoid};
@@ -7775,7 +7775,7 @@ void NewsgroupSelectorDelegatedServerLossTest::prepare_server_loss(bool rereadin
     g_check_flag = false;
     g_suppress_cn = true;
     g_paranoid = false;
-    g_nntp_allow_timeout = false;
+    g_nntp.allow_timeout = false;
     if (remaining_source)
     {
         m_remaining_source.m_flags = DF_OPEN | DF_ACTIVE;
@@ -7811,9 +7811,9 @@ void NewsgroupSelectorDelegatedServerLossTest::prepare_server_loss(bool rereadin
     m_saved_failed_text = newsrc_text(m_newsrc);
     m_saved_remaining_text = newsrc_text(m_remaining_newsrc);
     const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.connection = connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
-    m_data_source.m_nntp_link = g_nntp_link;
+    g_nntp.link.connection = connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
+    m_data_source.m_nntp_link = g_nntp.link;
     m_data_source.m_flags = DF_REMOTE | DF_OPEN | DF_ACTIVE;
     testing::InSequence sequence;
     EXPECT_CALL(*connection, write_line(testing::StrEq("GROUP " + std::string{origin.np->rc_name()}), testing::_));
@@ -7835,11 +7835,11 @@ void NewsgroupSelectorDelegatedServerLossTest::TearDown()
         unuse_multirc(&m_multirc);
     }
     m_remaining_source.close();
-    g_ser_line = m_old_server_line;
-    g_last_command = m_old_last_command;
+    g_nntp.ser_line = m_old_server_line;
+    g_nntp.last_command = m_old_last_command;
     g_last_newsgroup_name = m_old_last_group;
     g_last_new_time = m_old_last_new_time;
-    g_nntp_allow_timeout = m_old_allow_timeout;
+    g_nntp.allow_timeout = m_old_allow_timeout;
     g_check_flag = m_old_check;
     g_suppress_cn = m_old_suppress;
     g_paranoid = m_old_paranoid;
@@ -10041,16 +10041,16 @@ protected:
     void TearDown() override;
 
 private:
-    std::string m_old_server_line{g_ser_line};
-    std::string m_old_last_command{g_last_command};
+    std::string m_old_server_line{g_nntp.ser_line};
+    std::string m_old_last_command{g_nntp.last_command};
 };
 
 void RemoteLegacyFollowupArticleTest::SetUp()
 {
     LegacyFollowupArticleTest::SetUp();
     const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.connection = connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link.connection = connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
     m_data_source.m_flags = DF_REMOTE;
     m_data_source.m_spool_dir = m_spool.generic_string();
     EXPECT_CALL(*connection, write_line(testing::StrEq("DATE"), testing::_));
@@ -10059,8 +10059,8 @@ void RemoteLegacyFollowupArticleTest::SetUp()
 
 void RemoteLegacyFollowupArticleTest::TearDown()
 {
-    g_ser_line = m_old_server_line;
-    g_last_command = m_old_last_command;
+    g_nntp.ser_line = m_old_server_line;
+    g_nntp.last_command = m_old_last_command;
     LegacyFollowupArticleTest::TearDown();
 }
 
@@ -15127,9 +15127,9 @@ TEST_F(NewsgroupSelectorRefreshStateTest, refreshRefetchesARecentRemoteActiveLis
     source.m_news_id = "news.example.test";
     source.m_flags |= DF_REMOTE;
     const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.connection = connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
-    source.m_nntp_link = g_nntp_link;
+    g_nntp.link.connection = connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
+    source.m_nntp_link = g_nntp.link;
     testing::InSequence sequence;
     EXPECT_CALL(*connection, write_line(testing::StrEq("LIST"), testing::_));
     EXPECT_CALL(*connection, read_line(testing::_)).WillOnce(testing::Return("215 active list follows"));
@@ -16316,11 +16316,11 @@ TEST_F(InputNewsgroupTest, readsRemoteArticleFromMockServer)
     server.expect_quit();
     server.start();
 
-    g_nntp_link.connection.reset();
-    g_nntp_link.port_number = server.port();
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link.connection.reset();
+    g_nntp.link.port_number = server.port();
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
-    m_data_source.m_nntp_link = g_nntp_link;
+    m_data_source.m_nntp_link = g_nntp.link;
     push_command(" qq");
 
     testing::internal::CaptureStdout();

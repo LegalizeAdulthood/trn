@@ -96,7 +96,7 @@ protected:
         m_saved_data_sources.swap(g_data_sources);
         m_old_trn_access_text = g_trn_access_text;
         m_old_use_newsrc_selector = g_use_newsrc_selector;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_sel_sort = g_sel.sort;
         m_old_sel_newsgroup_sort = g_sel.newsgroup_sort;
@@ -220,7 +220,7 @@ protected:
         g_trn_access_text = m_old_trn_access_text;
         g_use_newsrc_selector = m_old_use_newsrc_selector;
         g_data_source = m_old_data_source;
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link = m_old_nntp_link;
         nntp_gets_clear_buffer();
         g_newsrc_hash = m_old_newsrc_hash;
         g_sel.sort = m_old_sel_sort;

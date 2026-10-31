@@ -1045,12 +1045,12 @@ protected:
 private:
     MockNntpServer m_server;
     fs::path       m_old_directory{fs::current_path()};
-    NNTPLink       m_old_link{g_nntp_link};
+    NNTPLink       m_old_link{g_nntp.link};
     ArticleNum     m_old_parsed_art{g_parsed_header.parsed_art};
     ArticleNum     m_old_open_art{g_art_input.open_art};
     std::string    m_old_header{g_parsed_header.head_buf};
-    std::string    m_old_response{g_ser_line};
-    std::string    m_old_command{g_last_command};
+    std::string    m_old_response{g_nntp.ser_line};
+    std::string    m_old_command{g_nntp.last_command};
     bool           m_started{};
 };
 
@@ -1082,8 +1082,8 @@ void RemoteMultipartArticleTest::SetUp()
     m_server.start();
     m_started = true;
     init_nntp();
-    g_nntp_link = {};
-    g_nntp_link.port_number = m_server.port();
+    g_nntp.link = {};
+    g_nntp.link.port_number = m_server.port();
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
     nntp_gets_clear_buffer();
     m_data_source.m_flags = DF_REMOTE;
@@ -1114,22 +1114,22 @@ void RemoteMultipartArticleTest::TearDown()
     }
     (void) nntp_art_name(ArticleNum{}, false);
     nntp_gets_clear_buffer();
-    g_nntp_link = m_old_link;
+    g_nntp.link = m_old_link;
     g_parsed_header.parsed_art = m_old_parsed_art;
     g_art_input.open_art = m_old_open_art;
     g_parsed_header.head_buf = m_old_header;
-    g_ser_line = m_old_response;
-    g_last_command = m_old_command;
+    g_nntp.ser_line = m_old_response;
+    g_nntp.last_command = m_old_command;
     fs::current_path(m_old_directory);
     MultipartArticleIoTest::TearDown();
 }
 
 void RemoteMultipartArticleTest::expect_next_command()
 {
-    EXPECT_NE(NNTP_NONE, g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_NE(NNTP_NONE, g_nntp.link.flags & NNTP_NEW_CMD_OK);
     ASSERT_GT(nntp_command("GROUP example.next"), 0);
     ASSERT_EQ(1, nntp_check());
-    EXPECT_EQ("211 3 8 10 example.next", g_ser_line);
+    EXPECT_EQ("211 3 8 10 example.next", g_nntp.ser_line);
 }
 
 void RemoteMultipartArticleTest::expect_raw_cache()

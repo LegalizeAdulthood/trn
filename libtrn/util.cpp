@@ -183,9 +183,9 @@ int do_shell(std::string_view shell, std::string_view cmd)
                 close(fd);
             }
         }
-        if (g_nntp_link.port_number)
+        if (g_nntp.link.port_number)
         {
-            const std::string nntp_server = fmt::format("{};{}", g_data_source->m_news_id, g_nntp_link.port_number);
+            const std::string nntp_server = fmt::format("{};{}", g_data_source->m_news_id, g_nntp.link.port_number);
             set_env_var(s_nntp_server_env, nntp_server);
         }
         if (g_data_source->m_act_sf.m_fp)

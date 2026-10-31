@@ -95,6 +95,16 @@ struct NNTPLink
     long                     selected_article{};
 };
 
+struct NntpSession
+{
+    NNTPLink    link{}; // the current server's file handles
+    bool        allow_timeout{};
+    std::string ser_line;
+    std::string last_command;
+    std::time_t last_command_diff{};
+    std::string gets_line;
+};
+
 // RFC 977 defines these, so don't change them
 enum
 {
@@ -132,16 +142,13 @@ enum
     NNTP_STRLEN = 512
 };
 
-extern NNTPLink g_nntp_link; // the current server's file handles
-extern bool     g_nntp_allow_timeout;
-extern std::string g_ser_line;
-extern std::string g_last_command;
+extern NntpSession g_nntp;
 
 inline std::string nntp_get_a_line()
 {
     boost::system::error_code ec;
 
-    return g_nntp_link.connection->read_line(ec);
+    return g_nntp.link.connection->read_line(ec);
 }
 
 void        set_nntp_connection_factory(ConnectionFactory factory);

@@ -269,7 +269,7 @@ protected:
         m_old_data_source = g_data_source;
         m_old_newsrc_hash = g_newsrc_hash;
         m_old_multirc = g_multirc;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
         m_old_quick_start = g_quick_start;
         m_old_use_add_selector = g_use_add_selector;
         m_old_groups = std::move(g_add_groups);
@@ -346,7 +346,7 @@ protected:
         }
         g_newsrc_hash = m_old_newsrc_hash;
         nntp_gets_clear_buffer();
-        g_nntp_link = m_old_nntp_link;
+        g_nntp.link = m_old_nntp_link;
         g_data_source = m_old_data_source;
         g_multirc = m_old_multirc;
         g_add_groups = std::move(m_old_groups);

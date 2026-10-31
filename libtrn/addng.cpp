@@ -247,7 +247,7 @@ void new_nntp_groups(DataSource *dp)
     }
     if (nntp_new_groups(dp->m_last_new_group) < 1)
     {
-        fmt::print("Can't get new groups from server:\n{}\n", g_ser_line);
+        fmt::print("Can't get new groups from server:\n{}\n", g_nntp.ser_line);
         return;
     }
     std::string new_group_line;

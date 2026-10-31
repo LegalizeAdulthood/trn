@@ -144,8 +144,8 @@ protected:
         m_old_last_cached = g_last_cached;
         m_old_first_subject = g_first_subject;
         m_old_cached_all_in_range = g_cached_all_in_range;
-        m_old_nntp_link = g_nntp_link;
-        m_old_last_command = g_last_command;
+        m_old_nntp_link = g_nntp.link;
+        m_old_last_command = g_nntp.last_command;
         nntp_gets_clear_buffer();
 
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -167,9 +167,9 @@ protected:
         g_last_cached = ArticleNum{};
         g_first_subject = nullptr;
         g_cached_all_in_range = false;
-        g_nntp_link.connection.reset();
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
-        g_last_command.clear();
+        g_nntp.link.connection.reset();
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.last_command.clear();
 
         m_data_source.m_flags = DF_NONE;
         m_group.m_abs_first = ArticleNum{1};
@@ -198,8 +198,8 @@ protected:
         g_first_subject = m_old_first_subject;
         g_cached_all_in_range = m_old_cached_all_in_range;
         nntp_gets_clear_buffer();
-        g_nntp_link = m_old_nntp_link;
-        g_last_command = m_old_last_command;
+        g_nntp.link = m_old_nntp_link;
+        g_nntp.last_command = m_old_last_command;
     }
 
     void write_file(std::string_view name)
@@ -216,8 +216,8 @@ protected:
     {
         m_data_source.m_flags = DF_REMOTE;
         m_connection = std::make_shared<MockConnection>();
-        g_nntp_link.connection = m_connection;
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.link.connection = m_connection;
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
     }
 
     fs::path                      m_old_current_path;

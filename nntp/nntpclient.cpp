@@ -23,12 +23,7 @@
 #include <system_error>
 #include <utility>
 
-NNTPLink    g_nntp_link{}; // the current server's file handles
-bool        g_nntp_allow_timeout{};
-std::string g_ser_line;
-std::string g_last_command;
-
-static std::time_t s_last_command_diff{};
+NntpSession g_nntp{};
 
 static std::string capability_key(std::string_view value)
 {
@@ -80,7 +75,7 @@ bool NntpCapabilities::has(std::string_view capability, std::string_view argumen
 
 static std::string_view nntp_response_text()
 {
-    return g_ser_line.size() > 4 ? std::string_view{g_ser_line}.substr(4) : std::string_view{};
+    return g_nntp.ser_line.size() > 4 ? std::string_view{g_nntp.ser_line}.substr(4) : std::string_view{};
 }
 
 int nntp_response_code(std::string_view response)
@@ -96,16 +91,16 @@ int nntp_connect(std::string_view machine, bool verbose)
 {
     int response;
 
-    if (g_nntp_link.connection)
+    if (g_nntp.link.connection)
     {
         return 1;
     }
 
-    if (g_nntp_link.flags & NNTP_FORCE_AUTH_NEEDED)
+    if (g_nntp.link.flags & NNTP_FORCE_AUTH_NEEDED)
     {
-        g_nntp_link.flags |= NNTP_FORCE_AUTH_NOW;
+        g_nntp.link.flags |= NNTP_FORCE_AUTH_NOW;
     }
-    g_nntp_link.flags |= NNTP_NEW_CMD_OK;
+    g_nntp.link.flags |= NNTP_NEW_CMD_OK;
 #if 0
 try_to_connect:
 #endif
@@ -117,7 +112,7 @@ try_to_connect:
     switch (response = server_init(machine))
     {
     case NNTP_GOODBYE_VAL:
-        if (nntp_response_code(g_ser_line) == response)
+        if (nntp_response_code(g_nntp.ser_line) == response)
         {
             if (verbose)
             {
@@ -231,26 +226,26 @@ int nntp_command(std::string_view bp)
         fmt::print(">{}\n", command);
     }
 #endif
-    g_last_command = command;
-    if (!g_nntp_link.connection)
+    g_nntp.last_command = command;
+    if (!g_nntp.link.connection)
     {
         return nntp_handle_timeout();
     }
     const std::string_view verb = bp.substr(0, bp.find(' '));
-    if (((g_nntp_link.require_tls_for_auth && string_case_equal(verb, "AUTHINFO")) ||
-         (g_nntp_link.require_tls_for_posting && string_case_equal(verb, "POST"))) &&
+    if (((g_nntp.link.require_tls_for_auth && string_case_equal(verb, "AUTHINFO")) ||
+         (g_nntp.link.require_tls_for_posting && string_case_equal(verb, "POST"))) &&
         nntp_require_tls() < 0)
     {
         return -2;
     }
-    g_last_command = command;
+    g_nntp.last_command = command;
     const bool setup_command = command == "CAPABILITIES" || command == "MODE READER" || command == "STARTTLS";
-    if ((g_nntp_link.flags & NNTP_FORCE_AUTH_NOW) && !setup_command)
+    if ((g_nntp.link.flags & NNTP_FORCE_AUTH_NOW) && !setup_command)
     {
-        g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
+        g_nntp.link.flags &= ~NNTP_FORCE_AUTH_NOW;
         return nntp_handle_auth_err();
     }
-    if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
+    if (!(g_nntp.link.flags & NNTP_NEW_CMD_OK))
     {
         int ret = nntp_handle_nested_lists();
         if (ret <= 0)
@@ -259,27 +254,27 @@ int nntp_command(std::string_view bp)
         }
     }
     error_code_t ec;
-    g_nntp_link.connection->write_line(command, ec);
+    g_nntp.link.connection->write_line(command, ec);
     if (ec)
     {
         return nntp_handle_timeout();
     }
     now = std::time((std::time_t*)nullptr);
-    s_last_command_diff = now - g_nntp_link.last_command;
-    g_nntp_link.last_command = now;
+    g_nntp.last_command_diff = now - g_nntp.link.last_command;
+    g_nntp.link.last_command = now;
     return 1;
 }
 
 static int unsupported_command(std::string_view command)
 {
-    g_ser_line = fmt::format("500 {} is unavailable.", command);
+    g_nntp.ser_line = fmt::format("500 {} is unavailable.", command);
     return -1;
 }
 
 static int cached_command(std::string_view command, std::string_view arguments, bool variant = false)
 {
     const std::string               name{command};
-    const std::vector<std::string> &unsupported = g_nntp_link.unsupported_commands;
+    const std::vector<std::string> &unsupported = g_nntp.link.unsupported_commands;
     if (std::binary_search(unsupported.begin(), unsupported.end(), name))
     {
         return unsupported_command(command);
@@ -290,15 +285,15 @@ static int cached_command(std::string_view command, std::string_view arguments, 
     }
 
     const int status = nntp_check();
-    const int code = nntp_response_code(g_ser_line);
+    const int code = nntp_response_code(g_nntp.ser_line);
     if (code == NNTP_BAD_COMMAND_VAL || (variant && code == NNTP_SYNTAX_VAL))
     {
-        std::vector<std::string> &commands = g_nntp_link.unsupported_commands;
+        std::vector<std::string> &commands = g_nntp.link.unsupported_commands;
         commands.insert(std::lower_bound(commands.begin(), commands.end(), name), name);
     }
     if (status > 0)
     {
-        g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
+        g_nntp.link.flags &= ~NNTP_NEW_CMD_OK;
     }
     return status;
 }
@@ -306,17 +301,17 @@ static int cached_command(std::string_view command, std::string_view arguments, 
 static int preferred_command(std::string_view modern, std::string_view legacy, std::string_view arguments,
                              bool advertised, bool variant = false)
 {
-    const bool try_modern = !g_nntp_link.capabilities.available || advertised;
+    const bool try_modern = !g_nntp.link.capabilities.available || advertised;
     if (try_modern)
     {
         const int status = cached_command(modern, arguments, variant);
-        const int code = nntp_response_code(g_ser_line);
+        const int code = nntp_response_code(g_nntp.ser_line);
         if (status == -2 || (code != NNTP_BAD_COMMAND_VAL && !(variant && code == NNTP_SYNTAX_VAL)))
         {
             return status;
         }
     }
-    if (try_modern || g_nntp_link.capabilities.has(legacy))
+    if (try_modern || g_nntp.link.capabilities.has(legacy))
     {
         return cached_command(legacy, arguments);
     }
@@ -325,12 +320,12 @@ static int preferred_command(std::string_view modern, std::string_view legacy, s
 
 int nntp_overview(std::string_view range)
 {
-    return preferred_command("OVER", "XOVER", range, g_nntp_link.capabilities.has("OVER"));
+    return preferred_command("OVER", "XOVER", range, g_nntp.link.capabilities.has("OVER"));
 }
 
 int nntp_overview_format()
 {
-    const NntpCapabilities &capabilities = g_nntp_link.capabilities;
+    const NntpCapabilities &capabilities = g_nntp.link.capabilities;
     if (capabilities.available && !capabilities.has("OVER") && !capabilities.has("LIST", "OVERVIEW.FMT"))
     {
         return unsupported_command("LIST OVERVIEW.FMT");
@@ -340,18 +335,18 @@ int nntp_overview_format()
 
 int nntp_header_values(std::string_view header, std::string_view range)
 {
-    return preferred_command("HDR", "XHDR", fmt::format("{} {}", header, range), g_nntp_link.capabilities.has("HDR"));
+    return preferred_command("HDR", "XHDR", fmt::format("{} {}", header, range), g_nntp.link.capabilities.has("HDR"));
 }
 
 int nntp_group_description(std::string_view group)
 {
-    return preferred_command("LIST NEWSGROUPS", "XGTITLE", group, g_nntp_link.capabilities.has("LIST", "NEWSGROUPS"),
+    return preferred_command("LIST NEWSGROUPS", "XGTITLE", group, g_nntp.link.capabilities.has("LIST", "NEWSGROUPS"),
                              true);
 }
 
 int nntp_group_descriptions(std::string_view pattern)
 {
-    if (g_nntp_link.capabilities.available && !g_nntp_link.capabilities.has("LIST", "NEWSGROUPS"))
+    if (g_nntp.link.capabilities.available && !g_nntp.link.capabilities.has("LIST", "NEWSGROUPS"))
     {
         return unsupported_command("LIST NEWSGROUPS");
     }
@@ -360,14 +355,14 @@ int nntp_group_descriptions(std::string_view pattern)
 
 int nntp_require_tls()
 {
-    if (g_nntp_link.security != NntpSecurity::Cleartext)
+    if (g_nntp.link.security != NntpSecurity::Cleartext)
     {
         return 1;
     }
-    if (!g_nntp_link.allow_starttls ||
-        (g_nntp_link.capabilities.available && !g_nntp_link.capabilities.has("STARTTLS")))
+    if (!g_nntp.link.allow_starttls ||
+        (g_nntp.link.capabilities.available && !g_nntp.link.capabilities.has("STARTTLS")))
     {
-        g_ser_line = "483 TLS is required by policy.";
+        g_nntp.ser_line = "483 TLS is required by policy.";
         return -2;
     }
     return nntp_start_tls();
@@ -375,42 +370,42 @@ int nntp_require_tls()
 
 int nntp_start_tls()
 {
-    if (g_nntp_link.security != NntpSecurity::Cleartext)
+    if (g_nntp.link.security != NntpSecurity::Cleartext)
     {
         return 1;
     }
-    if (g_nntp_link.auth_state == NntpAuthState::Authenticated)
+    if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
     {
-        g_ser_line = "483 TLS must be negotiated before authentication.";
+        g_nntp.ser_line = "483 TLS must be negotiated before authentication.";
         return -1;
     }
-    if (!g_nntp_link.allow_starttls || g_nntp_link.tls_attempted || !g_nntp_link.connection ||
-        !(g_nntp_link.flags & NNTP_NEW_CMD_OK))
+    if (!g_nntp.link.allow_starttls || g_nntp.link.tls_attempted || !g_nntp.link.connection ||
+        !(g_nntp.link.flags & NNTP_NEW_CMD_OK))
     {
         return -1;
     }
-    const std::string selected_group = g_nntp_link.selected_group;
-    const long        selected_article = g_nntp_link.selected_article;
-    g_nntp_link.tls_attempted = true;
-    const NNTPFlags force_auth = g_nntp_link.flags & NNTP_FORCE_AUTH_NOW;
-    g_nntp_link.flags &= ~NNTP_FORCE_AUTH_NOW;
-    if (nntp_command("STARTTLS") <= 0 || nntp_check() <= 0 || nntp_response_code(g_ser_line) != NNTP_STARTTLS_VAL)
+    const std::string selected_group = g_nntp.link.selected_group;
+    const long        selected_article = g_nntp.link.selected_article;
+    g_nntp.link.tls_attempted = true;
+    const NNTPFlags force_auth = g_nntp.link.flags & NNTP_FORCE_AUTH_NOW;
+    g_nntp.link.flags &= ~NNTP_FORCE_AUTH_NOW;
+    if (nntp_command("STARTTLS") <= 0 || nntp_check() <= 0 || nntp_response_code(g_nntp.ser_line) != NNTP_STARTTLS_VAL)
     {
         nntp_close(false);
         return -1;
     }
     error_code_t ec;
-    g_nntp_link.connection->start_tls(ec);
+    g_nntp.link.connection->start_tls(ec);
     if (ec)
     {
-        g_ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
+        g_nntp.ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
         nntp_close(false);
         return -1;
     }
-    g_nntp_link.security = NntpSecurity::StartTls;
-    g_nntp_link.selected_group.clear();
-    g_nntp_link.selected_article = 0;
-    g_nntp_link.trailing_cr = false;
+    g_nntp.link.security = NntpSecurity::StartTls;
+    g_nntp.link.selected_group.clear();
+    g_nntp.link.selected_article = 0;
+    g_nntp.link.trailing_cr = false;
     nntp_gets_clear_buffer();
     if (nntp_refresh_capabilities() < 0)
     {
@@ -424,15 +419,15 @@ int nntp_start_tls()
         nntp_close(false);
         return -1;
     }
-    g_nntp_link.flags |= force_auth;
+    g_nntp.link.flags |= force_auth;
     return 1;
 }
 
 static void remember_selection()
 {
-    const std::string_view command{g_last_command};
-    const int              code = nntp_response_code(g_ser_line);
-    std::istringstream     response{g_ser_line};
+    const std::string_view command{g_nntp.last_command};
+    const int              code = nntp_response_code(g_nntp.ser_line);
+    std::istringstream     response{g_nntp.ser_line};
     int                    status{};
     if (code == 211 && string_case_equal(command.substr(0, command.find(' ')), "GROUP"))
     {
@@ -440,8 +435,8 @@ static void remember_selection()
         std::string group;
         if (response >> status >> count >> first >> last >> group)
         {
-            g_nntp_link.selected_group = std::move(group);
-            g_nntp_link.selected_article = count > 0 ? first : 0;
+            g_nntp.link.selected_group = std::move(group);
+            g_nntp.link.selected_article = count > 0 ? first : 0;
         }
     }
     else if (code >= 220 && code <= 223 && command.find('<') == std::string_view::npos)
@@ -449,7 +444,7 @@ static void remember_selection()
         long article{};
         if (response >> status >> article)
         {
-            g_nntp_link.selected_article = article;
+            g_nntp.link.selected_article = article;
         }
     }
 }
@@ -465,7 +460,7 @@ read_it:
 #endif
     errno = 0;
     error_code_t ec;
-    g_ser_line = g_nntp_link.connection->read_line(ec);
+    g_nntp.ser_line = g_nntp.link.connection->read_line(ec);
     int ret = ec ? -2 : 0;
 #ifdef HAS_SIGHOLD
     sigrelse(SIGINT);
@@ -476,10 +471,10 @@ read_it:
         {
             goto read_it;
         }
-        g_ser_line = "503 Server closed connection.";
+        g_nntp.ser_line = "503 Server closed connection.";
     }
-    if (!retried_timeout && nntp_response_code(g_ser_line) == NNTP_TMPERR_VAL //
-        && g_nntp_allow_timeout && s_last_command_diff > 60)
+    if (!retried_timeout && nntp_response_code(g_nntp.ser_line) == NNTP_TMPERR_VAL //
+        && g_nntp.allow_timeout && g_nntp.last_command_diff > 60)
     {
         ret = nntp_handle_timeout();
         switch (ret)
@@ -489,48 +484,49 @@ read_it:
             goto read_it;
 
         case 0: // We're quitting, so pretend it's OK
-            g_ser_line = "205 Ok";
+            g_nntp.ser_line = "205 Ok";
             break;
 
         default:
             break;
         }
     }
-    else if (!g_ser_line.empty() && g_ser_line.front() <= NNTP_CLASS_CONT && g_ser_line.front() >= NNTP_CLASS_INF)
+    else if (!g_nntp.ser_line.empty() && g_nntp.ser_line.front() <= NNTP_CLASS_CONT &&
+             g_nntp.ser_line.front() >= NNTP_CLASS_INF)
     {
         ret = 1; // (this includes NNTP_CLASS_OK)
     }
-    else if (ret >= 0 && !g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_FATAL)
+    else if (ret >= 0 && !g_nntp.ser_line.empty() && g_nntp.ser_line.front() == NNTP_CLASS_FATAL)
     {
         ret = -1;
     }
     // Even though the following check doesn't catch all possible lists, the
     // bit will get set right when the caller checks nntp_at_list_end().
-    if (nntp_response_code(g_ser_line) == NNTP_LIST_FOLLOWS_VAL ||
-        nntp_response_code(g_ser_line) == NNTP_CAPABILITIES_VAL)
+    if (nntp_response_code(g_nntp.ser_line) == NNTP_LIST_FOLLOWS_VAL ||
+        nntp_response_code(g_nntp.ser_line) == NNTP_CAPABILITIES_VAL)
     {
-        g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
+        g_nntp.link.flags &= ~NNTP_NEW_CMD_OK;
     }
     else
     {
-        g_nntp_link.flags |= NNTP_NEW_CMD_OK;
+        g_nntp.link.flags |= NNTP_NEW_CMD_OK;
     }
-    const std::size_t len = g_ser_line.size();
-    if (len >= 2 && g_ser_line[len - 1] == '\n' && g_ser_line[len - 2] == '\r')
+    const std::size_t len = g_nntp.ser_line.size();
+    if (len >= 2 && g_nntp.ser_line[len - 1] == '\n' && g_nntp.ser_line[len - 2] == '\r')
     {
-        g_ser_line.erase(len - 2);
+        g_nntp.ser_line.erase(len - 2);
     }
 #if defined(DEBUG) && defined(FLUSH)
     if (g_debug & DEB_NNTP)
     {
-        fmt::print("<{}\n", g_ser_line);
+        fmt::print("<{}\n", g_nntp.ser_line);
     }
 #endif
-    if (!retried_tls && nntp_response_code(g_ser_line) == NNTP_ENCRYPTION_REQUIRED_VAL &&
-        g_nntp_link.auth_state != NntpAuthState::Authenticating && g_nntp_link.security == NntpSecurity::Cleartext &&
-        g_nntp_link.allow_starttls && !g_nntp_link.tls_attempted)
+    if (!retried_tls && nntp_response_code(g_nntp.ser_line) == NNTP_ENCRYPTION_REQUIRED_VAL &&
+        g_nntp.link.auth_state != NntpAuthState::Authenticating && g_nntp.link.security == NntpSecurity::Cleartext &&
+        g_nntp.link.allow_starttls && !g_nntp.link.tls_attempted)
     {
-        const std::string command = g_last_command;
+        const std::string command = g_nntp.last_command;
         if (nntp_start_tls() < 0 || nntp_command(command) <= 0)
         {
             return -2;
@@ -538,11 +534,11 @@ read_it:
         retried_tls = true;
         goto read_it;
     }
-    if (nntp_response_code(g_ser_line) == NNTP_AUTH_NEEDED_VAL && g_last_command != "STARTTLS" &&
-        g_nntp_link.auth_state == NntpAuthState::Unauthenticated &&
-        !string_case_equal(std::string_view{g_last_command}.substr(0, g_last_command.find(' ')), "AUTHINFO"))
+    if (nntp_response_code(g_nntp.ser_line) == NNTP_AUTH_NEEDED_VAL && g_nntp.last_command != "STARTTLS" &&
+        g_nntp.link.auth_state == NntpAuthState::Unauthenticated &&
+        !string_case_equal(std::string_view{g_nntp.last_command}.substr(0, g_nntp.last_command.find(' ')), "AUTHINFO"))
     {
-        const bool reader_mode = g_last_command == "MODE READER";
+        const bool reader_mode = g_nntp.last_command == "MODE READER";
         ret = nntp_handle_auth_err();
         if (ret > 0 && !reader_mode)
         {
@@ -558,14 +554,14 @@ read_it:
 
 int nntp_refresh_capabilities()
 {
-    g_nntp_link.capabilities = {};
-    g_nntp_link.unsupported_commands.clear();
+    g_nntp.link.capabilities = {};
+    g_nntp.link.unsupported_commands.clear();
     if (nntp_command("CAPABILITIES") <= 0)
     {
         return -1;
     }
     const int result = nntp_check();
-    const int code = nntp_response_code(g_ser_line);
+    const int code = nntp_response_code(g_nntp.ser_line);
     if (code == NNTP_BAD_COMMAND_VAL || code == NNTP_SYNTAX_VAL)
     {
         return 0;
@@ -579,17 +575,17 @@ int nntp_refresh_capabilities()
     for (;;)
     {
         error_code_t      ec;
-        const std::string line = g_nntp_link.connection->read_line(ec);
+        const std::string line = g_nntp.link.connection->read_line(ec);
         if (ec || line.empty())
         {
-            g_ser_line = "503 Incomplete capability list.";
+            g_nntp.ser_line = "503 Incomplete capability list.";
             nntp_close(false);
             return -1;
         }
         if (nntp_at_list_end(line))
         {
             capabilities.available = true;
-            g_nntp_link.capabilities = std::move(capabilities);
+            g_nntp.link.capabilities = std::move(capabilities);
             return 1;
         }
         capabilities.add(line);
@@ -600,10 +596,10 @@ bool nntp_at_list_end(std::string_view s)
 {
     if (!s.empty() && s[0] == '.' && (s.size() == 1 || s[1] == '\r'))
     {
-        g_nntp_link.flags |= NNTP_NEW_CMD_OK;
+        g_nntp.link.flags |= NNTP_NEW_CMD_OK;
         return true;
     }
-    g_nntp_link.flags &= ~NNTP_NEW_CMD_OK;
+    g_nntp.link.flags &= ~NNTP_NEW_CMD_OK;
     return false;
 }
 
@@ -624,8 +620,6 @@ public:
     }
 };
 
-static std::string s_nntp_gets_line;
-
 // This returns 1 when it reads a full line, 0 if it reads a partial
 // line, and -2 on EOF/error.  The maximum length includes a spot for
 // the null-terminator, and we need room for our "\r\n"-stripping code
@@ -636,53 +630,53 @@ NNTPGetsResult nntp_gets(std::string &line, int len)
     SigIntHolder holder;
 
     error_code_t ec;
-    if (s_nntp_gets_line.empty())
+    if (g_nntp.gets_line.empty())
     {
-        s_nntp_gets_line = g_nntp_link.connection->read_line(ec);
+        g_nntp.gets_line = g_nntp.link.connection->read_line(ec);
         if (ec)
         {
             return NGSR_ERROR;
         }
-        if (const std::size_t line_len = s_nntp_gets_line.size();
-            line_len >= 2 && s_nntp_gets_line[line_len - 2] == '\r' && s_nntp_gets_line[line_len - 1] == '\n')
+        if (const std::size_t line_len = g_nntp.gets_line.size();
+            line_len >= 2 && g_nntp.gets_line[line_len - 2] == '\r' && g_nntp.gets_line[line_len - 1] == '\n')
         {
-            s_nntp_gets_line.erase(line_len - 2);
+            g_nntp.gets_line.erase(line_len - 2);
         }
     }
 
-    if (len >= static_cast<int>(s_nntp_gets_line.length()))
+    if (len >= static_cast<int>(g_nntp.gets_line.length()))
     {
-        line = s_nntp_gets_line;
-        s_nntp_gets_line.clear();
+        line = g_nntp.gets_line;
+        g_nntp.gets_line.clear();
         return NGSR_FULL_LINE;
     }
 
-    line.assign(s_nntp_gets_line, 0, static_cast<std::size_t>(len - 1));
-    s_nntp_gets_line = s_nntp_gets_line.substr(len);
+    line.assign(g_nntp.gets_line, 0, static_cast<std::size_t>(len - 1));
+    g_nntp.gets_line = g_nntp.gets_line.substr(len);
     return NGSR_PARTIAL_LINE;
 }
 
 void nntp_gets_clear_buffer()
 {
-    s_nntp_gets_line.clear();
+    g_nntp.gets_line.clear();
 }
 
 void nntp_close(bool send_quit)
 {
-    if (send_quit && g_nntp_link.connection)
+    if (send_quit && g_nntp.link.connection)
     {
         if (nntp_command("QUIT") > 0)
         {
             nntp_check();
         }
     }
-    g_nntp_link.connection.reset();
-    g_nntp_link.capabilities = {};
-    g_nntp_link.unsupported_commands.clear();
-    g_nntp_link.flags |= NNTP_NEW_CMD_OK;
-    g_nntp_link.security = NntpSecurity::Cleartext;
-    g_nntp_link.auth_state = NntpAuthState::Unauthenticated;
-    g_nntp_link.tls_attempted = false;
-    g_nntp_link.selected_group.clear();
-    g_nntp_link.selected_article = 0;
+    g_nntp.link.connection.reset();
+    g_nntp.link.capabilities = {};
+    g_nntp.link.unsupported_commands.clear();
+    g_nntp.link.flags |= NNTP_NEW_CMD_OK;
+    g_nntp.link.security = NntpSecurity::Cleartext;
+    g_nntp.link.auth_state = NntpAuthState::Unauthenticated;
+    g_nntp.link.tls_attempted = false;
+    g_nntp.link.selected_group.clear();
+    g_nntp.link.selected_article = 0;
 }

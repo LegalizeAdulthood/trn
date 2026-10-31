@@ -992,7 +992,7 @@ static std::string post_moderators(std::string_view draft)
     const std::string &file = g_data_source->m_moderators_file;
     const bool         remote_rules = (g_data_source->m_flags & DF_REMOTE) && (file.empty() || file == "remote");
     if (file == "none" ||
-        (remote_rules && (!g_nntp_link.connection || !g_nntp_link.capabilities.has("LIST", "MODERATORS"))))
+        (remote_rules && (!g_nntp.link.connection || !g_nntp.link.capabilities.has("LIST", "MODERATORS"))))
     {
         return {};
     }
@@ -1093,7 +1093,7 @@ static void follow_it_up()
     {
         int ret;
         if ((g_data_source->m_flags & DF_REMOTE) &&
-            (nntp_date() <= 0 || (nntp_check() < 0 && nntp_response_code(g_ser_line) != NNTP_BAD_COMMAND_VAL)))
+            (nntp_date() <= 0 || (nntp_check() < 0 && nntp_response_code(g_nntp.ser_line) != NNTP_BAD_COMMAND_VAL)))
         {
             ret = 1;
         }

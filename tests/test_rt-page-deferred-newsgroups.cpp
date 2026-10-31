@@ -266,7 +266,7 @@ protected:
 
 private:
     DataSource *m_old_source{g_data_source};
-    NNTPLink    m_old_link{g_nntp_link};
+    NNTPLink    m_old_link{g_nntp.link};
 };
 
 void DeferredNewsgroupDescriptionTest::SetUp()
@@ -287,7 +287,7 @@ void DeferredNewsgroupDescriptionTest::SetUp()
 void DeferredNewsgroupDescriptionTest::TearDown()
 {
     g_data_source = m_old_source;
-    g_nntp_link = m_old_link;
+    g_nntp.link = m_old_link;
     nntp_gets_clear_buffer();
     DeferredNewsgroupDisplayState::TearDown();
 }

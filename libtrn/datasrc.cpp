@@ -459,8 +459,8 @@ bool DataSource::open()
             m_flags |= DF_UNAVAILABLE;
             return false;
         }
-        g_nntp_allow_timeout = false;
-        m_nntp_link = g_nntp_link;
+        g_nntp.allow_timeout = false;
+        m_nntp_link = g_nntp.link;
         if (m_act_sf.m_refetch_secs)
         {
             constexpr std::string_view control_group_prefix{"control "};
@@ -504,7 +504,7 @@ bool DataSource::open()
                 break;
 
             case -2:
-                fmt::print("Failed to open news server {}:\n{}\n", m_news_id, g_ser_line);
+                fmt::print("Failed to open news server {}:\n{}\n", m_news_id, g_nntp.ser_line);
                 term_down(2);
                 success = false;
                 break;
@@ -537,7 +537,7 @@ bool DataSource::open()
     }
     if (m_flags & DF_REMOTE)
     {
-        g_nntp_allow_timeout = true;
+        g_nntp.allow_timeout = true;
     }
     return success;
 }
@@ -546,11 +546,11 @@ void set_data_source(DataSource *dp)
 {
     if (g_data_source)
     {
-        g_data_source->m_nntp_link = g_nntp_link;
+        g_data_source->m_nntp_link = g_nntp.link;
     }
     if (dp)
     {
-        g_nntp_link = dp->m_nntp_link;
+        g_nntp.link = dp->m_nntp_link;
     }
     g_data_source = dp;
 }
@@ -571,7 +571,7 @@ void check_data_sources()
                     DataSource *save_datasrc = g_data_source;
                     set_data_source(dp);
                     nntp_close(true);
-                    dp->m_nntp_link = g_nntp_link;
+                    dp->m_nntp_link = g_nntp.link;
                     set_data_source(save_datasrc);
                 }
             }
@@ -616,7 +616,7 @@ void DataSource ::close()
         DataSource* save_datasrc = g_data_source;
         set_data_source(this);
         nntp_close(true);
-        m_nntp_link = g_nntp_link;
+        m_nntp_link = g_nntp.link;
         set_data_source(save_datasrc);
     }
     m_act_sf.close();
@@ -798,12 +798,12 @@ std::string DataSource::find_moderator(std::string_view group_name)
         return {};
     }
     DataSource    *old_source = g_data_source;
-    const NNTPLink old_link = g_nntp_link;
+    const NNTPLink old_link = g_nntp.link;
     set_data_source(this);
     const auto fetch = []() -> std::string
     {
-        if (!g_nntp_link.connection || !g_nntp_link.capabilities.has("LIST", "MODERATORS") ||
-            nntp_list("MODERATORS", {}) <= 0 || nntp_response_code(g_ser_line) != NNTP_LIST_FOLLOWS_VAL)
+        if (!g_nntp.link.connection || !g_nntp.link.capabilities.has("LIST", "MODERATORS") ||
+            nntp_list("MODERATORS", {}) <= 0 || nntp_response_code(g_nntp.ser_line) != NNTP_LIST_FOLLOWS_VAL)
         {
             return {};
         }
@@ -835,7 +835,7 @@ std::string DataSource::find_moderator(std::string_view group_name)
     set_data_source(old_source);
     if (old_source == nullptr)
     {
-        g_nntp_link = old_link;
+        g_nntp.link = old_link;
     }
     return moderator_address(group_name, rules);
 }
@@ -904,7 +904,7 @@ try_group_description:
             description_line.reserve(NNTP_STRLEN);
             if (nntp_gets(description_line, NNTP_STRLEN - 1) == NGSR_ERROR)
             {
-                description_line = g_ser_line;
+                description_line = g_nntp.ser_line;
             }
             if (nntp_at_list_end(description_line))
             {
@@ -958,13 +958,13 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 fmt::print("Getting {} file from {}.", fetch_cmd, server);
                 std::fflush(stdout);
                 // tell server we want the file
-                if (!(g_nntp_link.flags & NNTP_NEW_CMD_OK))
+                if (!(g_nntp.link.flags & NNTP_NEW_CMD_OK))
                 {
                     use_first_line = !first_line.empty();
                 }
                 else if (nntp_list(fetch_cmd, "") < 0)
                 {
-                    fmt::print("\nCan't get {} file from server: \n{}\n", fetch_cmd, g_ser_line);
+                    fmt::print("\nCan't get {} file from server: \n{}\n", fetch_cmd, g_nntp.ser_line);
                     term_down(2);
                     std::fclose(fp);
                     return 0;

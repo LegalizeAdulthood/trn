@@ -129,7 +129,7 @@ int         find_close_match();
 
 inline NNTPFlags DataSource::nntp_flags() const
 {
-    return this == g_data_source ? g_nntp_link.flags : m_nntp_link.flags;
+    return this == g_data_source ? g_nntp.link.flags : m_nntp_link.flags;
 }
 
 inline DataSource *data_source_ptr(std::size_t n)

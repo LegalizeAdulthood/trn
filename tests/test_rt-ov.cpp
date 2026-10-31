@@ -63,7 +63,7 @@ protected:
         m_old_int_count = g_int_count;
         m_old_curr_artp = g_nav.current.art;
         m_old_sentinel_art_ptr = g_sentinel_art_ptr;
-        m_old_nntp_link = g_nntp_link;
+        m_old_nntp_link = g_nntp.link;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -103,8 +103,8 @@ protected:
         g_int_count = 0;
         g_nav.current.art = nullptr;
         g_sentinel_art_ptr = nullptr;
-        g_nntp_link = {};
-        g_nntp_link.flags = NNTP_NEW_CMD_OK;
+        g_nntp.link = {};
+        g_nntp.link.flags = NNTP_NEW_CMD_OK;
         nntp_gets_clear_buffer();
 
         head_init();
@@ -144,7 +144,7 @@ protected:
         g_int_count = m_old_int_count;
         g_nav.current.art = m_old_curr_artp;
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
-        g_nntp_link = std::move(m_old_nntp_link);
+        g_nntp.link = std::move(m_old_nntp_link);
         nntp_gets_clear_buffer();
 
         fs::remove_all(m_output_dir, error);
@@ -227,8 +227,8 @@ TEST_F(OverviewTest, remoteOverviewFallsBackToXoverRange)
     const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
         std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     const std::string date{"Tue, 01 Jan 2019 00:00:00 GMT"};
-    g_nntp_link.connection = connection;
-    m_data_source.m_nntp_link = g_nntp_link;
+    g_nntp.link.connection = connection;
+    m_data_source.m_nntp_link = g_nntp.link;
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
 
@@ -253,10 +253,10 @@ TEST_F(OverviewTest, initMapsRemoteOverviewFormatFields)
 {
     const std::shared_ptr<testing::StrictMock<MockNNTPConnection>> connection =
         std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.connection = connection;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("OVER");
-    m_data_source.m_nntp_link = g_nntp_link;
+    g_nntp.link.connection = connection;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("OVER");
+    m_data_source.m_nntp_link = g_nntp.link;
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
     for (int i = 0; i < OV_MAX_FIELDS; ++i)
@@ -300,9 +300,9 @@ TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
 {
     const auto        connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
     const std::string date{"Tue, 01 Jan 2019 00:00:00 GMT"};
-    g_nntp_link.connection = connection;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("OVER");
+    g_nntp.link.connection = connection;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("OVER");
     m_data_source.m_over_dir.clear();
     m_data_source.m_flags |= DF_REMOTE;
     g_last_art = ArticleNum{3};
@@ -330,9 +330,9 @@ TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
 
 TEST_F(OverviewTest, initDoesNotProbeMissingOverviewCapability)
 {
-    g_nntp_link.connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("READER");
+    g_nntp.link.connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("READER");
     m_data_source.m_over_dir.clear();
 
     EXPECT_FALSE(ov_init());
@@ -342,9 +342,9 @@ TEST_F(OverviewTest, initDoesNotProbeMissingOverviewCapability)
 TEST_F(OverviewTest, initUsesBuiltInFormatAfterListVariantIsRejected)
 {
     const auto connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link.connection = connection;
-    g_nntp_link.capabilities.available = true;
-    g_nntp_link.capabilities.add("OVER");
+    g_nntp.link.connection = connection;
+    g_nntp.link.capabilities.available = true;
+    g_nntp.link.capabilities.add("OVER");
     m_data_source.m_over_dir.clear();
     testing::InSequence sequence;
     EXPECT_CALL(*connection, write_line(testing::StrEq("OVER"), testing::_));

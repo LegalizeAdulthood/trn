@@ -5496,10 +5496,10 @@ protected:
 private:
     DataSource                                               m_remote_source{};
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
-    NNTPLink                                                 m_old_nntp_link{g_nntp_link};
+    NNTPLink                                                 m_old_nntp_link{g_nntp.link};
     std::string                                              m_old_head_buf{g_parsed_header.head_buf};
-    std::string                                              m_old_ser_line{g_ser_line};
-    std::string                                              m_old_last_command{g_last_command};
+    std::string                                              m_old_ser_line{g_nntp.ser_line};
+    std::string                                              m_old_last_command{g_nntp.last_command};
     std::filesystem::path                                    m_old_current_path{std::filesystem::current_path()};
     std::filesystem::path                                    m_download_file;
     std::string_view                                         m_old_tc_ce{g_tc_CE};
@@ -5511,9 +5511,9 @@ void DownloadEndArticleTest::SetUp()
     m_remote_source.m_flags = DF_REMOTE;
     g_data_source = &m_remote_source;
     m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
-    g_nntp_link = {};
-    g_nntp_link.connection = m_connection;
-    g_nntp_link.flags = NNTP_NEW_CMD_OK;
+    g_nntp.link = {};
+    g_nntp.link.connection = m_connection;
+    g_nntp.link.flags = NNTP_NEW_CMD_OK;
     g_tc_CE = "\033[K";
     nntp_gets_clear_buffer();
     (void) nntp_art_name(ArticleNum{}, false);
@@ -5536,10 +5536,10 @@ void DownloadEndArticleTest::TearDown()
     }
     (void) nntp_art_name(ArticleNum{}, false);
     nntp_gets_clear_buffer();
-    g_nntp_link = std::move(m_old_nntp_link);
+    g_nntp.link = std::move(m_old_nntp_link);
     g_parsed_header.head_buf = m_old_head_buf;
-    g_ser_line = m_old_ser_line;
-    g_last_command = m_old_last_command;
+    g_nntp.ser_line = m_old_ser_line;
+    g_nntp.last_command = m_old_last_command;
     g_tc_CE = m_old_tc_ce;
     std::error_code error;
     std::filesystem::current_path(m_old_current_path, error);
@@ -12604,7 +12604,7 @@ TEST_P(DownloadEndArticleTest, finishesThePendingBodyAndTargetsTheEndInTheCurren
     EXPECT_EQ(m_position, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 3 : 2}, g_art_buf.pos());
     EXPECT_EQ(GetParam(), g_do_hiding);
-    EXPECT_TRUE(g_nntp_link.flags & NNTP_NEW_CMD_OK);
+    EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
     std::string next_line;
     ASSERT_TRUE(read_art_buf(next_line, false));
     EXPECT_EQ("Last\n", next_line);

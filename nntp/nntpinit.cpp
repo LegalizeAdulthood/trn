@@ -181,92 +181,92 @@ int init_nntp()
 
 int server_init(std::string_view machine)
 {
-    g_nntp_link.security = NntpSecurity::Cleartext;
-    g_nntp_link.auth_state = NntpAuthState::Unauthenticated;
-    g_nntp_link.tls_attempted = false;
-    g_nntp_link.selected_group.clear();
-    g_nntp_link.selected_article = 0;
-    g_nntp_link.capabilities = {};
-    g_nntp_link.unsupported_commands.clear();
-    const int port = g_nntp_link.port_number ? g_nntp_link.port_number : g_nntp_link.implicit_tls ? 563 : 0;
-    g_nntp_link.connection = s_nntp_connection_factory(machine, port, g_nntp_link.implicit_tls ? "nntps" : "nntp");
-    if (g_nntp_link.connection == nullptr)
+    g_nntp.link.security = NntpSecurity::Cleartext;
+    g_nntp.link.auth_state = NntpAuthState::Unauthenticated;
+    g_nntp.link.tls_attempted = false;
+    g_nntp.link.selected_group.clear();
+    g_nntp.link.selected_article = 0;
+    g_nntp.link.capabilities = {};
+    g_nntp.link.unsupported_commands.clear();
+    const int port = g_nntp.link.port_number ? g_nntp.link.port_number : g_nntp.link.implicit_tls ? 563 : 0;
+    g_nntp.link.connection = s_nntp_connection_factory(machine, port, g_nntp.link.implicit_tls ? "nntps" : "nntp");
+    if (g_nntp.link.connection == nullptr)
     {
         return -1;
     }
 
-    if (g_nntp_link.implicit_tls)
+    if (g_nntp.link.implicit_tls)
     {
-        g_nntp_link.tls_attempted = true;
+        g_nntp.link.tls_attempted = true;
         error_code_t ec;
-        g_nntp_link.connection->start_tls(ec);
+        g_nntp.link.connection->start_tls(ec);
         if (ec)
         {
-            g_ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
+            g_nntp.ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
             nntp_close(false);
             return -1;
         }
-        g_nntp_link.security = NntpSecurity::ImplicitTls;
+        g_nntp.link.security = NntpSecurity::ImplicitTls;
     }
 
     // Now get the server's signon message
     nntp_check();
 
-    if (!g_ser_line.empty() && g_ser_line.front() == NNTP_CLASS_OK)
+    if (!g_nntp.ser_line.empty() && g_nntp.ser_line.front() == NNTP_CLASS_OK)
     {
-        const std::string save_line{g_ser_line};
+        const std::string save_line{g_nntp.ser_line};
         if (nntp_refresh_capabilities() < 0)
         {
             nntp_close(false);
             return -1;
         }
-        if (g_nntp_link.auth_state == NntpAuthState::Authenticated)
+        if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
         {
-            g_ser_line = save_line;
-            return nntp_response_code(g_ser_line);
+            g_nntp.ser_line = save_line;
+            return nntp_response_code(g_nntp.ser_line);
         }
-        if (g_nntp_link.allow_starttls && g_nntp_link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
+        if (g_nntp.link.allow_starttls && g_nntp.link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
         {
             return -1;
         }
-        if (g_nntp_link.capabilities.available && !g_nntp_link.capabilities.has("MODE-READER"))
+        if (g_nntp.link.capabilities.available && !g_nntp.link.capabilities.has("MODE-READER"))
         {
-            g_ser_line = save_line;
-            return nntp_response_code(g_ser_line);
+            g_nntp.ser_line = save_line;
+            return nntp_response_code(g_nntp.ser_line);
         }
         // Legacy servers may require reader mode without advertising it.
         int reader_status{};
         if (nntp_command("MODE READER") <= 0)
         {
-            g_ser_line = fmt::format("{} failed to send MODE READER\n", static_cast<int>(NNTP_ACCESS_VAL));
+            g_nntp.ser_line = fmt::format("{} failed to send MODE READER\n", static_cast<int>(NNTP_ACCESS_VAL));
         }
-        else if ((reader_status = nntp_check()) <= 0 && (nntp_response_code(g_ser_line) == NNTP_BAD_COMMAND_VAL ||
-                                                         nntp_response_code(g_ser_line) == NNTP_SYNTAX_VAL))
+        else if ((reader_status = nntp_check()) <= 0 && (nntp_response_code(g_nntp.ser_line) == NNTP_BAD_COMMAND_VAL ||
+                                                         nntp_response_code(g_nntp.ser_line) == NNTP_SYNTAX_VAL))
         {
-            g_ser_line = save_line;
+            g_nntp.ser_line = save_line;
         }
-        else if (reader_status > 0 && g_nntp_link.auth_state == NntpAuthState::Authenticated)
+        else if (reader_status > 0 && g_nntp.link.auth_state == NntpAuthState::Authenticated)
         {
-            g_ser_line = save_line;
+            g_nntp.ser_line = save_line;
         }
-        else if (nntp_response_code(g_ser_line) == NNTP_POSTOK_VAL ||
-                 nntp_response_code(g_ser_line) == NNTP_NOPOSTOK_VAL)
+        else if (nntp_response_code(g_nntp.ser_line) == NNTP_POSTOK_VAL ||
+                 nntp_response_code(g_nntp.ser_line) == NNTP_NOPOSTOK_VAL)
         {
-            const std::string reader_line{g_ser_line};
+            const std::string reader_line{g_nntp.ser_line};
             if (nntp_refresh_capabilities() < 0)
             {
                 nntp_close(false);
                 return -1;
             }
-            if (g_nntp_link.security == NntpSecurity::Cleartext && g_nntp_link.allow_starttls &&
-                g_nntp_link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
+            if (g_nntp.link.security == NntpSecurity::Cleartext && g_nntp.link.allow_starttls &&
+                g_nntp.link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
             {
                 return -1;
             }
-            g_ser_line = reader_line;
+            g_nntp.ser_line = reader_line;
         }
     }
-    return nntp_response_code(g_ser_line);
+    return nntp_response_code(g_nntp.ser_line);
 }
 
 void cleanup_nntp()
