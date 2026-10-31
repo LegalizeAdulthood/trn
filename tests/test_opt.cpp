@@ -139,7 +139,7 @@ protected:
     {
         g_subst.unicode_substitutions = m_old_profile;
         g_subst.charsets = m_old_charsets;
-        set_char_subst_mode(m_old_mode);
+        g_subst.set_mode(m_old_mode);
         SaveOptionsTest::TearDown();
     }
 

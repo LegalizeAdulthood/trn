@@ -25,7 +25,6 @@
 #include <utility>
 #include <vector>
 
-void        set_char_subst_mode(char mode);
 void        next_char_subst_mode();
 std::string current_char_subst();
 
@@ -48,6 +47,7 @@ struct SubstitutionSettings
 {
     char current_mode();
     void reset_mode();
+    void set_mode(char mode);
 
     // TODO: private
     void normalize_mode();

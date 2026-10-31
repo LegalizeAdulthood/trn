@@ -440,7 +440,7 @@ protected:
     void TearDown() override
     {
         g_subst.charsets = m_previous_charsets;
-        set_char_subst_mode(m_previous_char_subst);
+        g_subst.set_mode(m_previous_char_subst);
         g_verbose = m_previous_verbose;
     }
 
@@ -451,7 +451,7 @@ protected:
 
 TEST_F(CurrentCharSubstTest, showsVerboseMonoSubstitutionStatus)
 {
-    set_char_subst_mode('m');
+    g_subst.set_mode('m');
     g_verbose = true;
 
     EXPECT_EQ("[ISO->USmono] ", current_char_subst());
@@ -459,7 +459,7 @@ TEST_F(CurrentCharSubstTest, showsVerboseMonoSubstitutionStatus)
 
 TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
 {
-    set_char_subst_mode('t');
+    g_subst.set_mode('t');
     g_verbose = false;
 
     EXPECT_EQ("[T] ", current_char_subst());
@@ -546,14 +546,14 @@ TEST_F(EnabledUnicodeProfileTest, cyclesFromUnicodeToPlainText)
 
 TEST_F(CurrentCharSubstTest, returnsCurrentMode)
 {
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
 
     EXPECT_EQ('a', g_subst.current_mode());
 }
 
 TEST_F(CurrentCharSubstTest, resetsToFirstConfiguredMode)
 {
-    set_char_subst_mode(g_subst.charsets[2]);
+    g_subst.set_mode(g_subst.charsets[2]);
 
     g_subst.reset_mode();
 
@@ -571,7 +571,7 @@ TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
 
 TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
 {
-    set_char_subst_mode(g_subst.charsets.back());
+    g_subst.set_mode(g_subst.charsets.back());
 
     next_char_subst_mode();
 
@@ -592,7 +592,7 @@ TEST_F(CurrentCharSubstTest, emptyCharsetsHaveNoCurrentMode)
 
 TEST_F(CurrentCharSubstTest, reassigningCharsetsNormalizesOutOfRangeMode)
 {
-    set_char_subst_mode(g_subst.charsets.back());
+    g_subst.set_mode(g_subst.charsets.back());
 
     g_subst.charsets = "pa";
 

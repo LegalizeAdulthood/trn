@@ -81,7 +81,7 @@ protected:
         g_nav.recent.art = &m_recent;
         g_sel.selected_only = false;
         g_do_hiding = false;
-        set_char_subst_mode('\0');
+        g_subst.set_mode('\0');
         g_max_tree_lines = 6;
         g_tc_COLS = 40;
         g_tc_SO = m_standout_start;
@@ -109,7 +109,7 @@ protected:
         g_nav.recent.art = m_old_recent_artp;
         g_sel.selected_only = m_old_selected_only;
         g_do_hiding = m_old_do_hiding;
-        set_char_subst_mode(m_old_char_subst);
+        g_subst.set_mode(m_old_char_subst);
         g_max_tree_lines = m_old_max_tree_lines;
         g_threaded_group = m_old_threaded_group;
         g_tc_COLS = m_old_tc_cols;
@@ -503,7 +503,7 @@ TEST_F(TreeRenderingTest, hiddenHeaderSubstitutesDecodedLatinScalars)
 {
     g_nav.current.art = nullptr;
     g_do_hiding = true;
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
     init_tree();
     const std::string raw{"From: =?ISO-8859-1?Q?=C4?=\xE2\x80\x99"};
 
@@ -536,7 +536,7 @@ TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
 {
     g_nav.current.art = nullptr;
     g_do_hiding = true;
-    set_char_subst_mode('t');
+    g_subst.set_mode('t');
     init_tree();
 
     testing::internal::CaptureStdout();

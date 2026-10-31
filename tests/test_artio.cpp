@@ -115,7 +115,7 @@ protected:
         utf_init(m_old_input, m_old_output);
         g_subst.charsets = m_old_charsets;
         g_subst.unicode_substitutions = m_old_profile;
-        set_char_subst_mode(m_old_subst);
+        g_subst.set_mode(m_old_subst);
 
         std::error_code error;
         fs::remove_all(m_output_dir, error);
@@ -2018,7 +2018,7 @@ TEST_F(ArticleIoTest, htmlFilteringReceivesUtf8AfterTransferDecoding)
 
 TEST_F(ArticleIoTest, bodySubstitutionFollowsCharsetConversion)
 {
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
     g_mime.section = &m_mime_section;
     g_mime.state = TEXT_MIME;
@@ -2115,7 +2115,7 @@ TEST_F(ArticleIoTest, unfinishedTextIsFlushedBeforeNextMimePart)
 
 TEST_F(ArticleIoTest, texSubstitutionDoesNotReprocessCachedPartialLine)
 {
-    set_char_subst_mode('t');
+    g_subst.set_mode('t');
     m_mime_section.mime_parse_type("text/plain; charset=UTF-8");
     m_mime_section.m_encoding = MENCODE_BASE64;
     g_mime.section = &m_mime_section;
@@ -2178,7 +2178,7 @@ TEST_F(ArticleIoTest, unicodeExpansionGrowsPresentationCache)
 
 TEST_F(ArticleIoTest, htmlFinalLineIsSubstitutedAfterFiltering)
 {
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
     m_mime_section.mime_parse_type("text/html; charset=Latin1");
     g_mime.section = &m_mime_section;
     g_mime.state = HTML_TEXT_MIME;
@@ -2260,7 +2260,7 @@ TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
 
 TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
 {
-    set_char_subst_mode('p');
+    g_subst.set_mode('p');
     m_mime_section.mime_parse_type("text/plain; charset=Latin1");
     g_mime.section = &m_mime_section;
     g_mime.state = TEXT_MIME;

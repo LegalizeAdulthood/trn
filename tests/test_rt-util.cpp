@@ -236,7 +236,7 @@ protected:
 
     void TearDown() override
     {
-        set_char_subst_mode(m_previous_char_subst);
+        g_subst.set_mode(m_previous_char_subst);
     }
 
     char m_previous_char_subst{};
@@ -293,14 +293,14 @@ TEST_F(CompressFromTest, returnsEmptyForNonPositiveWidth)
 
 TEST_F(CompressFromTest, substitutesUnicodeBeforeCompression)
 {
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
 
     EXPECT_EQ("Aexyz", compress_from("\xC3\x84xyz <a@example.com>", 5));
 }
 
 TEST_F(CompressFromTest, texStateDoesNotLeakBetweenAuthors)
 {
-    set_char_subst_mode('t');
+    g_subst.set_mode('t');
 
     EXPECT_EQ("\xC3\x84", compress_from("\"A <a@example.com>", 1));
     EXPECT_EQ("A", compress_from("A <a@example.com>", 1));
@@ -330,7 +330,7 @@ protected:
 
     void TearDown() override
     {
-        set_char_subst_mode(m_previous_char_subst);
+        g_subst.set_mode(m_previous_char_subst);
         g_threaded_group = m_previous_threaded_group;
         g_sel.rereading = m_previous_sel_rereading;
         g_unbroken_subjects = m_previous_unbroken_subjects;
@@ -384,7 +384,7 @@ TEST_F(CompressSubjectTest, truncatesLongSubject)
 
 TEST_F(CompressSubjectTest, substitutesUnicodeBeforeTruncation)
 {
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
     m_subject.m_str = "    \xC3\x84xyz";
 
     EXPECT_EQ("Aex", compress(&m_article, 3));
@@ -401,7 +401,7 @@ protected:
 void TexSubjectTruncationTest::SetUp()
 {
     CompressSubjectTest::SetUp();
-    set_char_subst_mode('t');
+    g_subst.set_mode('t');
     m_subject.m_str = "    \"Axyz";
 }
 

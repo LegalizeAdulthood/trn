@@ -89,22 +89,22 @@ char SubstitutionSettings::current_mode()
     return index == NO_CHAR_SUBST ? '\0' : charsets[index];
 }
 
-void set_char_subst_mode(char mode)
+void SubstitutionSettings::set_mode(char mode)
 {
-    if (mode == '\0' || g_subst.charsets.empty())
+    if (mode == '\0' || charsets.empty())
     {
-        g_subst.index = NO_CHAR_SUBST;
+        index = NO_CHAR_SUBST;
         return;
     }
 
-    const std::string::size_type mode_pos = g_subst.charsets.find(mode);
+    const std::string::size_type mode_pos = charsets.find(mode);
     if (mode_pos == std::string::npos)
     {
-        g_subst.reset_mode();
+        reset_mode();
         return;
     }
 
-    g_subst.index = mode_pos;
+    index = mode_pos;
 }
 
 void SubstitutionSettings::reset_mode()

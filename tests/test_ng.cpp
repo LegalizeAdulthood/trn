@@ -5223,7 +5223,7 @@ void CachedDisplayArticleTest::SetUp()
     g_tc_COLS = 80;
     g_word_wrap_offset = 8;
     g_subst.charsets = "pa";
-    set_char_subst_mode('p');
+    g_subst.set_mode('p');
     const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
     m_output_dir =
         std::filesystem::path{TRN_TEST_TMP_DIR} / "CachedDisplayArticleTest" / info->test_suite_name() / info->name();
@@ -5274,7 +5274,7 @@ void CachedDisplayArticleTest::TearDown()
     g_tc_COLS = m_old_tc_cols;
     g_word_wrap_offset = m_old_word_wrap_offset;
     g_subst.charsets = m_old_charsets;
-    set_char_subst_mode(m_old_subst);
+    g_subst.set_mode(m_old_subst);
     std::error_code error;
     std::filesystem::remove(m_output_dir / "article", error);
     std::filesystem::remove(m_output_dir, error);
@@ -12194,7 +12194,7 @@ INSTANTIATE_TEST_SUITE_P(ReadOrUnread, SubstitutionArticleTest, testing::Values(
 TEST_F(CachedDisplayArticleTest, substitutionWrapsToTheFirstModeAndRegeneratesThePresentation)
 {
     set_reading_position(4);
-    set_char_subst_mode('a');
+    g_subst.set_mode('a');
     cache_article("Ae\n");
 
     const std::string output = display("_C");
@@ -12211,7 +12211,7 @@ TEST_F(CachedDisplayArticleTest, substitutionWrapsToTheFirstModeAndRegeneratesTh
 TEST_F(CachedDisplayArticleTest, substitutionEnablesTheFirstConfiguredModeWhenInitiallyDisabled)
 {
     set_reading_position(4);
-    set_char_subst_mode('\0');
+    g_subst.set_mode('\0');
     cache_article();
 
     const std::string output = display("_C");

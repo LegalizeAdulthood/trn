@@ -1714,7 +1714,7 @@ void ArticleHeaderPresentationTest::TearDown()
     g_tc_COLS = m_old_columns;
     utf_init(m_old_input, m_old_output);
     g_subst.charsets = m_old_charsets;
-    set_char_subst_mode(m_old_subst);
+    g_subst.set_mode(m_old_subst);
     g_prompt = m_old_prompt;
     g_nav.current.art = m_old_current_article;
     g_nav.target.art = m_old_article;
@@ -1869,7 +1869,7 @@ void PagerArticleTest::SetUp()
     ArticleHeaderPresentationTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     g_subst.charsets = "pt";
-    set_char_subst_mode('p');
+    g_subst.set_mode('p');
     g_rotate = false;
     m_previous_directory = fs::current_path();
     fs::current_path(m_output.path());
@@ -2080,7 +2080,7 @@ void ArticleCacheLifecycleTest::SetUp()
     g_word_wrap_offset = -1;
     g_multipart_separator = "Part";
     g_subst.charsets = "pu";
-    set_char_subst_mode('p');
+    g_subst.set_mode('p');
     g_subst.unicode_substitutions = UnicodeSubstitutionProfile{};
     ASSERT_TRUE(g_subst.unicode_substitutions.configure(
         IniSection{"unicode substitutions", {}, "U+00E9 = \"ECHO\\nNEXT\"\nU+00C4 = AE\nU+FFFD = ?\n"}));
