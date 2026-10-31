@@ -322,7 +322,7 @@ void HeaderEncodingPipelineTest::SetUp()
 TEST_P(HeaderEncodingPipelineTest, preservesRawBytesAndOrdersConversions)
 {
     const std::string semantic = decode_header(m_source);
-    const std::string presentation = str_char_subst(semantic, 'p');
+    const std::string presentation = g_subst.subst(semantic, 'p');
     const Utf8Scalar  result = decode_utf8_scalar(presentation);
     utf_init(CHARSET_NAME_UTF8, CHARSET_NAME_UTF8);
     const int width = visual_length_of(presentation);
@@ -515,7 +515,7 @@ TEST_F(CurrentCharSubstTest, unicodeProfileIsAbsentFromDefaultModes)
 
 TEST_P(UnicodeProfileTransformTest, substitutesOnlyWhenUnicodeModeIsEnabled)
 {
-    const std::string transformed = str_char_subst(m_text, g_subst.current_mode());
+    const std::string transformed = g_subst.subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ(std::get<1>(GetParam()), transformed);
 }
@@ -539,7 +539,7 @@ INSTANTIATE_TEST_SUITE_P(TerseAndVerbose, UnicodeProfileLabelTest,
 TEST_F(EnabledUnicodeProfileTest, cyclesFromUnicodeToPlainText)
 {
     g_subst.next_mode();
-    const std::string transformed = str_char_subst(m_text, g_subst.current_mode());
+    const std::string transformed = g_subst.subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ(m_text, transformed);
 }
@@ -601,14 +601,14 @@ TEST_F(CurrentCharSubstTest, reassigningCharsetsNormalizesOutOfRangeMode)
 
 TEST(CharSubstTest, copiesThroughFirstNewline)
 {
-    EXPECT_EQ("first\n", str_char_subst("first\nsecond", 'p'));
+    EXPECT_EQ("first\n", g_subst.subst("first\nsecond", 'p'));
 }
 
 TEST(CharSubstTest, unicodeProfileMapsPunctuationAndLatinScalars)
 {
-    EXPECT_EQ("`'\"\" - -- --- ... Ae", str_char_subst("\xE2\x80\x98\xE2\x80\x99\xE2\x80\x9C\xE2\x80\x9D "
-                                                       "\xE2\x80\x91 \xE2\x80\x93 \xE2\x80\x94 \xE2\x80\xA6 \xC3\x84",
-                                                       'u'));
+    EXPECT_EQ("`'\"\" - -- --- ... Ae", g_subst.subst("\xE2\x80\x98\xE2\x80\x99\xE2\x80\x9C\xE2\x80\x9D "
+                                                      "\xE2\x80\x91 \xE2\x80\x93 \xE2\x80\x94 \xE2\x80\xA6 \xC3\x84",
+                                                      'u'));
 }
 
 class UnicodeProfileConfigTest : public Test
@@ -903,14 +903,14 @@ TEST(CharSubstTest, transliteratesLatin1ToAscii)
 {
     constexpr std::string_view input{"\xC3\x84\xC3\x96\xC3\x9C\xC3\x9F"};
 
-    EXPECT_EQ("AeOeUess", str_char_subst(input, 'a'));
+    EXPECT_EQ("AeOeUess", g_subst.subst(input, 'a'));
 }
 
 TEST(CharSubstTest, transliteratesLatin1ToMonospacedAscii)
 {
     constexpr std::string_view input{"\xC3\x84\xC3\x96\xC3\x9C\xC3\x9F"};
 
-    EXPECT_EQ("AOUs", str_char_subst(input, 'm'));
+    EXPECT_EQ("AOUs", g_subst.subst(input, 'm'));
 }
 
 namespace
@@ -964,7 +964,7 @@ constexpr const char *UNMAPPED_UNICODE_TEXT = "\xC4\x80\xC2\x80\xE5\xA4\xA9"
 
 TEST_P(CharSubstInputTest, substitutesOneInputInTheConfiguredMode)
 {
-    const std::string transformed = str_char_subst(m_input, std::get<0>(GetParam()));
+    const std::string transformed = g_subst.subst(m_input, std::get<0>(GetParam()));
 
     EXPECT_EQ(m_expected, transformed);
 }
@@ -1140,7 +1140,7 @@ void GlobalCharsetSubstitutionTest::SetUp()
 
 TEST_P(GlobalCharsetSubstitutionTest, substitutionIgnoresGlobalCharsetState)
 {
-    const std::string transformed = str_char_subst("\xC3\x84\xE2\x80\x99", 'a');
+    const std::string transformed = g_subst.subst("\xC3\x84\xE2\x80\x99", 'a');
 
     EXPECT_EQ("Ae\xE2\x80\x99", transformed);
     EXPECT_EQ(GetParam(), input_charset_name());

@@ -342,14 +342,14 @@ std::string CharSubstitution::finish()
     return result;
 }
 
-std::string str_char_subst(std::string_view input, char_int subst)
+std::string SubstitutionSettings::subst(std::string_view input, char_int subst)
 {
     const std::size_t newline = input.find('\n');
     if (newline != std::string_view::npos)
     {
         input = input.substr(0, newline + 1);
     }
-    CharSubstitution substitution{subst};
+    CharSubstitution substitution{subst, unicode_substitutions};
     std::string      result = substitution.substitute(input);
     result += substitution.finish();
     return result;

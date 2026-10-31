@@ -132,8 +132,8 @@ empty.  Discarding an instance cannot affect another article or header.
 Callers split views only at UTF-8 scalar boundaries, retaining partial
 byte sequences themselves as described above.
 
-`str_char_subst` creates a fresh instance, substitutes through the first
-newline if present, and flushes its prefix.  Author and subject
+`SubstitutionSettings::subst` creates a fresh instance, substitutes through
+the first newline if present, and flushes its prefix.  Author and subject
 compression use this wrapper before layout.  Displayed headers apply
 the selected profile after encoded-word decoding.
 

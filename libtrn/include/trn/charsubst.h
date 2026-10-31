@@ -47,6 +47,8 @@ struct SubstitutionSettings
     void set_mode(char mode);
     void        next_mode();
     std::string current_char_subst();
+    // Substitute one line, including its first newline, with fresh instance state.
+    std::string subst(std::string_view input, char_int subst);
 
     // TODO: private
     void normalize_mode();
@@ -75,8 +77,5 @@ private:
     char     m_tex_prefix{};
     UnicodeSubstitutionProfile m_unicode_profile;
 };
-
-// Substitute one line, including its first newline, with fresh instance state.
-std::string str_char_subst(std::string_view input, char_int subst);
 
 #endif

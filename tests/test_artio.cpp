@@ -2192,7 +2192,7 @@ TEST_F(ArticleIoTest, htmlFinalLineIsSubstitutedAfterFiltering)
 
 TEST_P(UnicodeProfileArticleTest, presentsEncodedHeadersAndMimeBodiesIdentically)
 {
-    const std::string header = str_char_subst(decode_header(GetParam().header), 'u') + "\n";
+    const std::string header = g_subst.subst(decode_header(GetParam().header), 'u') + "\n";
 
     EXPECT_EQ(m_presentation, header);
 }
@@ -2231,7 +2231,7 @@ TEST_P(UnicodeReplacementArticleTest, preservesReplacementTextAndLineBoundariesO
 
 TEST_P(UnicodeReplacementArticleTest, presentsHeaderAndBodyReplacementTextIdentically)
 {
-    const std::string header = str_char_subst(decode_header(GetParam().header), 'u') + "\nNext\n";
+    const std::string header = g_subst.subst(decode_header(GetParam().header), 'u') + "\nNext\n";
 
     EXPECT_EQ(m_presentation, header);
 }
@@ -2255,7 +2255,7 @@ TEST_F(ArticleIoTest, unicodeProfileMalformedTextMatchesHeaderAndBodyRecovery)
 
     ASSERT_TRUE(read_art_buf(line, false));
     EXPECT_EQ("\xEF\xBF\xBD'\n", line);
-    EXPECT_EQ(str_char_subst(decode_header("=?UTF-8?Q?=FF=E2=80=99?="), 'u') + "\n", line);
+    EXPECT_EQ(g_subst.subst(decode_header("=?UTF-8?Q?=FF=E2=80=99?="), 'u') + "\n", line);
 }
 
 TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)

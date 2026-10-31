@@ -457,7 +457,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
     std::string_view line = line_buffer;
     if (header_conv())
     {
-        substituted_line = str_char_subst(line, g_subst.current_mode());
+        substituted_line = g_subst.subst(line, g_subst.current_mode());
         line = substituted_line;
     }
 

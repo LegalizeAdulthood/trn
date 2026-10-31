@@ -350,14 +350,14 @@ TEST_F(SaveOptionsTest, preservesNonOptionTextWhenReplacingOptionsSection)
 
 TEST_F(LoadedUnicodeMappingsTest, loadingMappingsDoesNotEnableSubstitution)
 {
-    const std::string text = str_char_subst(m_text, g_subst.current_mode());
+    const std::string text = g_subst.subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ(m_text, text);
 }
 
 TEST_F(EnabledUnicodeMappingsTest, explicitOptInUsesLoadedMappings)
 {
-    const std::string text = str_char_subst(m_text, g_subst.current_mode());
+    const std::string text = g_subst.subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ("custom:)", text);
 }
@@ -365,7 +365,7 @@ TEST_F(EnabledUnicodeMappingsTest, explicitOptInUsesLoadedMappings)
 TEST_F(EnabledUnicodeMappingsTest, cyclingReturnsToPlainOutput)
 {
     g_subst.next_mode();
-    const std::string text = str_char_subst(m_text, g_subst.current_mode());
+    const std::string text = g_subst.subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ(m_text, text);
 }
@@ -384,7 +384,7 @@ TEST_F(UnicodeConfigurationTest, savesAndReloadsOptInAndEscapedMappings)
     load_options(path);
     g_subst.reset_mode();
     EXPECT_EQ('u', g_subst.current_mode());
-    EXPECT_EQ("\t\n\\", str_char_subst("\xE2\x80\x99\xE2\x80\x94", g_subst.current_mode()));
+    EXPECT_EQ("\t\n\\", g_subst.subst("\xE2\x80\x99\xE2\x80\x94", g_subst.current_mode()));
 }
 
 TEST_F(UnicodeConfigurationTest, invalidSectionReportsErrorAndKeepsPreviousProfile)
@@ -399,7 +399,7 @@ TEST_F(UnicodeConfigurationTest, invalidSectionReportsErrorAndKeepsPreviousProfi
 
     EXPECT_NE(std::string::npos, output.find("Invalid Unicode substitution section"));
     g_subst.reset_mode();
-    EXPECT_EQ("old", str_char_subst("\xE2\x80\x99", g_subst.current_mode()));
+    EXPECT_EQ("old", g_subst.subst("\xE2\x80\x99", g_subst.current_mode()));
 }
 
 TEST(QuoteStringTest, leavesSimpleValuesUnquoted)
