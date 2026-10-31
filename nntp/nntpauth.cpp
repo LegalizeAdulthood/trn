@@ -19,16 +19,10 @@ namespace
 constexpr int AUTH_ACCEPTED = 281;
 constexpr int PASSWORD_REQUIRED = 381;
 
-enum class AuthMethod
-{
-    Unavailable,
-    UserPass,
-    Sasl
-};
+} // namespace
 
-AuthMethod authentication_method()
+NNTPLink::AuthMethod NNTPLink::authentication_method()
 {
-    const NntpCapabilities &capabilities = g_nntp.link.capabilities;
     if (capabilities.has("AUTHINFO", "USER"))
     {
         return AuthMethod::UserPass;
@@ -37,9 +31,11 @@ AuthMethod authentication_method()
     {
         return AuthMethod::Sasl;
     }
-    return !capabilities.has("AUTHINFO") && g_nntp.link.allow_legacy_auth ? AuthMethod::UserPass
-                                                                          : AuthMethod::Unavailable;
+    return !capabilities.has("AUTHINFO") && allow_legacy_auth ? AuthMethod::UserPass : AuthMethod::Unavailable;
 }
+
+namespace
+{
 
 bool authenticate_user_pass()
 {
@@ -84,17 +80,17 @@ int nntp_handle_auth_err()
             capabilities_refreshed = true;
             break;
         }
-        switch (authentication_method())
+        switch (g_nntp.link.authentication_method())
         {
-        case AuthMethod::UserPass:
+        case NNTPLink::AuthMethod::UserPass:
             break;
 
-        case AuthMethod::Sasl:
+        case NNTPLink::AuthMethod::Sasl:
             // Dispatch future SASL mechanisms here, before obtaining credentials.
             g_nntp.ser_line = "503 No supported SASL authentication mechanism.";
             return -2;
 
-        case AuthMethod::Unavailable:
+        case NNTPLink::AuthMethod::Unavailable:
             g_nntp.ser_line = "502 No permitted authentication method.";
             return -2;
         }

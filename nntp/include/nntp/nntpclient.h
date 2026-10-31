@@ -77,6 +77,16 @@ struct NNTPLink
 {
     bool at_list_end(std::string_view s);
 
+    // TODO: private
+    enum class AuthMethod
+    {
+        Unavailable,
+        UserPass,
+        Sasl
+    };
+
+    AuthMethod authentication_method();
+
     ConnectionPtr connection;
     std::time_t   last_command;
     int           port_number;
