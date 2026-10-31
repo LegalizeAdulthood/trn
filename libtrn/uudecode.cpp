@@ -266,7 +266,7 @@ all_done:
 
     while (read_line())
     {
-        if (!ifp && mime_end_of_section(line))
+        if (!ifp && g_mime.end_of_section(line))
         {
             break;
         }

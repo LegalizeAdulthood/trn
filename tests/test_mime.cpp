@@ -254,7 +254,7 @@ protected:
 
     int end_of_section(std::string_view line)
     {
-        return mime_end_of_section(line);
+        return g_mime.end_of_section(line);
     }
 
     MimeSection  m_parent{};

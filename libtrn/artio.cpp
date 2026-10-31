@@ -475,7 +475,7 @@ read_more:
             goto mime_switch;
         }
         o = line_offset + extra_offset;
-        if (mime_end_of_section(std::string_view{bp + o}) &&
+        if (g_mime.end_of_section(std::string_view{bp + o}) &&
             (line_offset || !g_mime.section->m_decoder_pending.empty()))
         {
             const std::string boundary{bp + o};
@@ -622,7 +622,7 @@ mime_switch:
             g_no_wait_fork = true;
             color_object(COLOR_MIME_DESC, true);
             // A failed decoder can already have consumed the next boundary.
-            if (decode_piece(mcp, bp) || mime_end_of_section(g_art_line))
+            if (decode_piece(mcp, bp) || g_mime.end_of_section(g_art_line))
             {
                 const std::size_t destination = static_cast<std::size_t>(g_art_buf.pos().value_of());
                 if (g_art_buf.bytes.size() <= destination + g_art_line.size())

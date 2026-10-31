@@ -84,6 +84,7 @@ struct MimeSection
     void mime_parse_encoding(std::string_view text);
     std::string decode_text_chunk(std::string_view bytes, bool final = false);
     std::string mime_description() const;
+    int         end_of_section(std::string_view bp, MimeSection **boundary_section = nullptr);
 
     MimeSection     *m_prev;
     std::optional<std::string> m_filename;
@@ -107,6 +108,10 @@ struct MimeSection
 struct MimeContext
 {
     void push_section();
+    int  end_of_section(std::string_view bp, MimeSection **boundary_section = nullptr)
+    {
+        return section->end_of_section(bp, boundary_section);
+    }
 
     // TODO: private
     bool pop_section();
@@ -194,7 +199,6 @@ int            mime_exec(std::string_view cmd);
 void          mime_set_article();
 void           mime_parse_sub_header(std::FILE *ifp, std::string_view first_line);
 bool           mime_set_state(std::string_view bp);
-int            mime_end_of_section(std::string_view bp, MimeSection **boundary_section = nullptr);
 MimeParamViews mime_parse_params(std::string_view text);
 void          mime_decode_article(bool view);
 std::string    qp_decode_string(std::string_view f, bool in_header);

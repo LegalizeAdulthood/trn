@@ -904,7 +904,7 @@ bool mime_set_state(std::string_view bp)
     }
 
     MimeSection *boundary_section{};
-    const int    ret = mime_end_of_section(state_line, &boundary_section);
+    const int    ret = g_mime.end_of_section(state_line, &boundary_section);
     if (ret)
     {
         while (g_mime.section->m_prev != boundary_section)
@@ -929,7 +929,7 @@ bool mime_set_state(std::string_view bp)
     return suppress_line;
 }
 
-int mime_end_of_section(std::string_view bp, MimeSection **boundary_section)
+int MimeSection::end_of_section(std::string_view bp, MimeSection **boundary_section)
 {
     if (boundary_section)
     {
@@ -939,7 +939,7 @@ int mime_end_of_section(std::string_view bp, MimeSection **boundary_section)
     {
         bp.remove_suffix(2);
     }
-    for (MimeSection *mp = g_mime.section->m_prev; mp; mp = mp->m_prev)
+    for (MimeSection *mp = m_prev; mp; mp = mp->m_prev)
     {
         if (!mp->m_boundary_len)
         {
@@ -1456,7 +1456,7 @@ static int mime_getc(std::FILE *fp)
         {
             return EOF;
         }
-        if (mime_end_of_section(g_art_line))
+        if (g_mime.end_of_section(g_art_line))
         {
             return EOF;
         }
@@ -1518,7 +1518,7 @@ DecodeState cat_decode(std::FILE *ifp, DecodeState state)
         g_mime.getc_line = {};
         while (read_art(g_art_line))
         {
-            if (mime_end_of_section(g_art_line))
+            if (g_mime.end_of_section(g_art_line))
             {
                 break;
             }

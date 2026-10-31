@@ -436,7 +436,7 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
         }
         while (read_art(g_art_line))
         {
-            if (mime_end_of_section(g_art_line))
+            if (g_mime.end_of_section(g_art_line))
             {
                 break;
             }
@@ -646,7 +646,7 @@ static bool decode_yenc_piece(MimeCapEntry *mcp, std::string_view first_line)
     std::string line;
     while (read_art(line))
     {
-        if (mime_end_of_section(line))
+        if (g_mime.end_of_section(line))
         {
             break;
         }
