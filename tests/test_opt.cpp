@@ -364,7 +364,7 @@ TEST_F(EnabledUnicodeMappingsTest, explicitOptInUsesLoadedMappings)
 
 TEST_F(EnabledUnicodeMappingsTest, cyclingReturnsToPlainOutput)
 {
-    next_char_subst_mode();
+    g_subst.next_mode();
     const std::string text = str_char_subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ(m_text, text);

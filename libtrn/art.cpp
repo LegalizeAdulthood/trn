@@ -858,7 +858,7 @@ reask_pager:
         {
             const std::string percent =
                 g_art_size < 0 ? "?" : std::to_string(g_art_input.pos.value_of() * 100 / g_art_size.value_of());
-            const std::string more_prompt = fmt::format("{}--MORE--({}%)", current_char_subst(), percent);
+            const std::string more_prompt = fmt::format("{}--MORE--({}%)", g_subst.current_char_subst(), percent);
             out_pos = g_term_col + static_cast<int>(more_prompt.size());
             draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? out_pos + 5 : 0), true);
             color_string(COLOR_MORE, more_prompt);
@@ -1344,7 +1344,7 @@ refresh_screen:
         switch (second_char)
         {
         case 'C':
-            next_char_subst_mode();
+            g_subst.next_mode();
             g_art_buf.clear_art_buf();
             g_top_line = ArticleLine{-1};
             goto refresh_screen;
@@ -1416,7 +1416,8 @@ leave_pager:
             set_default_cmd();
             color_object(COLOR_CMD, true);
             const std::string mail_call = interp_search(g_mail_call, command);
-            fmt::printf(g_prompt, mail_call, current_char_subst(), g_default_cmd); // print prompt, whatever it is
+            fmt::printf(g_prompt, mail_call, g_subst.current_char_subst(),
+                        g_default_cmd);         // print prompt, whatever it is
             color_pop();                        // of COLOR_CMD
             std::putchar(' ');
             std::fflush(stdout);

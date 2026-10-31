@@ -454,7 +454,7 @@ TEST_F(CurrentCharSubstTest, showsVerboseMonoSubstitutionStatus)
     g_subst.set_mode('m');
     g_verbose = true;
 
-    EXPECT_EQ("[ISO->USmono] ", current_char_subst());
+    EXPECT_EQ("[ISO->USmono] ", g_subst.current_char_subst());
 }
 
 TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
@@ -462,7 +462,7 @@ TEST_F(CurrentCharSubstTest, showsTerseTexSubstitutionStatus)
     g_subst.set_mode('t');
     g_verbose = false;
 
-    EXPECT_EQ("[T] ", current_char_subst());
+    EXPECT_EQ("[T] ", g_subst.current_char_subst());
 }
 
 constexpr std::string_view UNICODE_PROFILE_TEXT{"\xE2\x80\x99\xE2\x80\x94\xE4\xB8\xAD"};
@@ -528,7 +528,7 @@ TEST_P(UnicodeProfileLabelTest, showsTheUnicodeModeLabel)
 {
     g_verbose = std::get<0>(GetParam());
 
-    const std::string label{current_char_subst()};
+    const std::string label{g_subst.current_char_subst()};
 
     EXPECT_EQ(std::get<1>(GetParam()), label);
 }
@@ -538,7 +538,7 @@ INSTANTIATE_TEST_SUITE_P(TerseAndVerbose, UnicodeProfileLabelTest,
 
 TEST_F(EnabledUnicodeProfileTest, cyclesFromUnicodeToPlainText)
 {
-    next_char_subst_mode();
+    g_subst.next_mode();
     const std::string transformed = str_char_subst(m_text, g_subst.current_mode());
 
     EXPECT_EQ(m_text, transformed);
@@ -564,7 +564,7 @@ TEST_F(CurrentCharSubstTest, cyclesToNextConfiguredMode)
 {
     g_subst.reset_mode();
 
-    next_char_subst_mode();
+    g_subst.next_mode();
 
     EXPECT_EQ(g_subst.charsets[1], g_subst.current_mode());
 }
@@ -573,7 +573,7 @@ TEST_F(CurrentCharSubstTest, cyclesPastEndToFirstConfiguredMode)
 {
     g_subst.set_mode(g_subst.charsets.back());
 
-    next_char_subst_mode();
+    g_subst.next_mode();
 
     EXPECT_EQ(g_subst.charsets.front(), g_subst.current_mode());
 }
@@ -585,7 +585,7 @@ TEST_F(CurrentCharSubstTest, emptyCharsetsHaveNoCurrentMode)
 
     EXPECT_EQ('\0', g_subst.current_mode());
 
-    next_char_subst_mode();
+    g_subst.next_mode();
 
     EXPECT_EQ('\0', g_subst.current_mode());
 }

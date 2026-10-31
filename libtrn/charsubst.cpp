@@ -112,26 +112,26 @@ void SubstitutionSettings::reset_mode()
     index = charsets.empty() ? NO_CHAR_SUBST : 0;
 }
 
-void next_char_subst_mode()
+void SubstitutionSettings::next_mode()
 {
-    g_subst.normalize_mode();
-    if (g_subst.index == NO_CHAR_SUBST)
+    normalize_mode();
+    if (index == NO_CHAR_SUBST)
     {
-        g_subst.reset_mode();
+        reset_mode();
         return;
     }
-    ++g_subst.index;
-    if (g_subst.index >= g_subst.charsets.size())
+    ++index;
+    if (index >= charsets.size())
     {
-        g_subst.reset_mode();
+        reset_mode();
     }
 }
 
-std::string current_char_subst()
+std::string SubstitutionSettings::current_char_subst()
 {
     std::string_view show;
 
-    switch (g_subst.current_mode())
+    switch (current_mode())
     {
     case 'm':
         show = g_verbose ? "[ISO->USmono] " : "[M] ";

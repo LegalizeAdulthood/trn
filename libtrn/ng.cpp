@@ -628,7 +628,7 @@ reask_article:
         {
             const std::string mail_call = do_interp(g_mail_call);
             const std::string prompt_text =
-                fmt::sprintf(g_prompt, mail_call.c_str(), current_char_subst().c_str(), g_default_cmd.c_str());
+                fmt::sprintf(g_prompt, mail_call.c_str(), g_subst.current_char_subst().c_str(), g_default_cmd.c_str());
             draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? static_cast<int>(prompt_text.size()) + 5 : 0),
                            true);
             color_string(COLOR_CMD, prompt_text);
@@ -1933,7 +1933,7 @@ normal_search:
                 return AS_ASK;
 
             case 'C':
-                next_char_subst_mode();
+                g_subst.next_mode();
                 g_art_buf.clear_art_buf();
                 g_top_line = ArticleLine{-1};
                 goto refresh_screen;

@@ -25,9 +25,6 @@
 #include <utility>
 #include <vector>
 
-void        next_char_subst_mode();
-std::string current_char_subst();
-
 class IniSection;
 
 using ReplacementMapping = std::pair<CodePoint, std::string>;
@@ -48,6 +45,8 @@ struct SubstitutionSettings
     char current_mode();
     void reset_mode();
     void set_mode(char mode);
+    void        next_mode();
+    std::string current_char_subst();
 
     // TODO: private
     void normalize_mode();
