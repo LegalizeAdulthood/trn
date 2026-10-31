@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
     inews_fputs(".\r\n");
     inews_fflush();
 
-    const NNTPGetsResult post_response_result = nntp_gets(post_response, NNTP_STRLEN);
+    const NNTPGetsResult post_response_result = g_nntp.gets(post_response, NNTP_STRLEN);
     if (post_response_result == NGSR_ERROR //
         || post_response.empty() || post_response.front() != NNTP_CLASS_OK)
     {

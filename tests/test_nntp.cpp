@@ -1281,9 +1281,9 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
     ASSERT_EQ(1, nntp_command("BODY 1"));
     ASSERT_EQ(1, nntp_check());
     std::string line;
-    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("encrypted article", line);
-    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("second line", line);
     nntp_finish_list();
     nntp_close(true);
@@ -1337,9 +1337,9 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
     ASSERT_EQ(1, nntp_command("BODY 1"));
     ASSERT_EQ(1, nntp_check());
     std::string line;
-    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("encrypted article", line);
-    ASSERT_EQ(NGSR_FULL_LINE, nntp_gets(line, NNTP_STRLEN));
+    ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("second line", line);
     nntp_finish_list();
     nntp_close(true);
@@ -1771,7 +1771,7 @@ TEST_F(NNTPGetStringTest, string_line_fits)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits")));
     std::string line{"junk"};
 
-    const NNTPGetsResult result = nntp_gets(line, 1024);
+    const NNTPGetsResult result = g_nntp.gets(line, 1024);
 
     EXPECT_EQ(NGSR_FULL_LINE, result);
     EXPECT_EQ("this fits", line);
@@ -1782,7 +1782,7 @@ TEST_F(NNTPGetStringTest, string_line_strips_crlf)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this fits\r\n")));
     std::string line{"junk"};
 
-    const NNTPGetsResult result = nntp_gets(line, 1024);
+    const NNTPGetsResult result = g_nntp.gets(line, 1024);
 
     EXPECT_EQ(NGSR_FULL_LINE, result);
     EXPECT_EQ("this fits", line);
@@ -1793,13 +1793,13 @@ TEST_F(NNTPGetStringTest, string_partial_line_continues_from_saved_text)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
     std::string line;
 
-    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ(NGSR_PARTIAL_LINE, g_nntp.gets(line, 5));
     EXPECT_EQ("this", line);
-    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ(NGSR_PARTIAL_LINE, g_nntp.gets(line, 5));
     EXPECT_EQ("does", line);
-    EXPECT_EQ(NGSR_PARTIAL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ(NGSR_PARTIAL_LINE, g_nntp.gets(line, 5));
     EXPECT_EQ("not ", line);
-    EXPECT_EQ(NGSR_FULL_LINE, nntp_gets(line, 5));
+    EXPECT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, 5));
     EXPECT_EQ("it", line);
 }
 
@@ -1809,7 +1809,7 @@ TEST_F(NNTPGetStringTest, string_error_leaves_line_unchanged)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(m_ec), Return("this does not fit")));
     std::string line{"junk"};
 
-    const NNTPGetsResult result = nntp_gets(line, 1024);
+    const NNTPGetsResult result = g_nntp.gets(line, 1024);
 
     EXPECT_EQ(NGSR_ERROR, result);
     EXPECT_EQ("junk", line);

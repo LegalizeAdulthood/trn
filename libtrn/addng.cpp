@@ -256,7 +256,7 @@ void new_nntp_groups(DataSource *dp)
     while (true)
     {
         ActiveLineFields active_fields;
-        if (nntp_gets(new_group_line, NNTP_STRLEN) == NGSR_ERROR)
+        if (g_nntp.gets(new_group_line, NNTP_STRLEN) == NGSR_ERROR)
         {
             break;
         }
@@ -445,7 +445,7 @@ static void collect_active_groups()
                 while (!g_nntp.link.at_list_end(active_line))
                 {
                     scan_active_line(active_line);
-                    if (nntp_gets(active_line, NNTP_STRLEN) == NGSR_ERROR)
+                    if (g_nntp.gets(active_line, NNTP_STRLEN) == NGSR_ERROR)
                     {
                         break;
                     }

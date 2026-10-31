@@ -97,8 +97,18 @@ struct NNTPLink
     long                     selected_article{};
 };
 
+enum NNTPGetsResult
+{
+    // NGSR: nntp get string result
+    NGSR_ERROR = -2,
+    NGSR_PARTIAL_LINE = 0,
+    NGSR_FULL_LINE = 1,
+};
+
 struct NntpSession
 {
+    NNTPGetsResult gets(std::string &line, int len);
+
     // TODO: private
     std::string_view response_text();
     void             remember_selection();
@@ -174,14 +184,6 @@ int         nntp_require_tls();
 // Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.
 int         nntp_refresh_capabilities();
 int         nntp_response_code(std::string_view response);
-enum NNTPGetsResult
-{
-    // NGSR: nntp get string result
-    NGSR_ERROR = -2,
-    NGSR_PARTIAL_LINE = 0,
-    NGSR_FULL_LINE = 1,
-};
-NNTPGetsResult nntp_gets(std::string &line, int len);
 void           nntp_gets_clear_buffer();
 void           nntp_close(bool send_quit);
 

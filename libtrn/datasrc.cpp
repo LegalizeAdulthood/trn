@@ -478,7 +478,7 @@ bool DataSource::open()
                 }
                 std::string next_active_line;
                 next_active_line.reserve(LINE_BUF_LEN);
-                if (nntp_gets(next_active_line, LINE_BUF_LEN) == NGSR_FULL_LINE //
+                if (g_nntp.gets(next_active_line, LINE_BUF_LEN) == NGSR_FULL_LINE //
                     && !g_nntp.link.at_list_end(next_active_line))
                 {
                     nntp_finish_list();
@@ -812,7 +812,7 @@ std::string DataSource::find_moderator(std::string_view group_name)
         std::string line;
         for (;;)
         {
-            const NNTPGetsResult result = nntp_gets(line, NNTP_STRLEN);
+            const NNTPGetsResult result = g_nntp.gets(line, NNTP_STRLEN);
             if (result == NGSR_ERROR)
             {
                 return {};
@@ -902,7 +902,7 @@ try_group_description:
         {
             std::string description_line;
             description_line.reserve(NNTP_STRLEN);
-            if (nntp_gets(description_line, NNTP_STRLEN - 1) == NGSR_ERROR)
+            if (g_nntp.gets(description_line, NNTP_STRLEN - 1) == NGSR_ERROR)
             {
                 description_line = g_nntp.ser_line;
             }
@@ -1030,7 +1030,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
             {
                 use_first_line = false;
             }
-            else if (nntp_gets(remote_line, LINE_BUF_LEN) == NGSR_ERROR)
+            else if (g_nntp.gets(remote_line, LINE_BUF_LEN) == NGSR_ERROR)
             {
                 fmt::print("\nError getting {} file.\n", fetch_cmd);
                 term_down(2);

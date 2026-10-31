@@ -742,7 +742,7 @@ static bool open_newsrc(Newsrc *rp)
             && nntp_list("SUBSCRIPTIONS", "") == 1)
         {
             std::string subscription_line;
-            while (nntp_gets(subscription_line, NNTP_STRLEN) != NGSR_ERROR)
+            while (g_nntp.gets(subscription_line, NNTP_STRLEN) != NGSR_ERROR)
             {
                 if (g_nntp.link.at_list_end(subscription_line))
                 {

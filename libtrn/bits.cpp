@@ -327,7 +327,7 @@ void find_existing_articles()
             }
             while (true)
             {
-                if (nntp_gets(list_line, NNTP_STRLEN) == NGSR_ERROR)
+                if (g_nntp.gets(list_line, NNTP_STRLEN) == NGSR_ERROR)
                 {
                     break;
                 }

@@ -101,7 +101,7 @@ bool ov_init()
             std::string_view line;
             if (g_data_source->m_over_dir.empty())
             {
-                if (nntp_gets(overview_line, NNTP_STRLEN) == NGSR_ERROR)
+                if (g_nntp.gets(overview_line, NNTP_STRLEN) == NGSR_ERROR)
                 {
                     break;
                 }

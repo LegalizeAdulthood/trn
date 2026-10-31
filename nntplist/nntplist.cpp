@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
         }
         std::string line;
         line.reserve(NNTP_STRLEN);
-        while (nntp_gets(line, NNTP_STRLEN) == NGSR_FULL_LINE)
+        while (g_nntp.gets(line, NNTP_STRLEN) == NGSR_FULL_LINE)
         {
             if (g_nntp.link.at_list_end(line))
             {

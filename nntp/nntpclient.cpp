@@ -625,34 +625,34 @@ public:
 // the null-terminator, and we need room for our "\r\n"-stripping code
 // to work right, so "len" MUST be at least 3.
 //
-NNTPGetsResult nntp_gets(std::string &line, int len)
+NNTPGetsResult NntpSession::gets(std::string &line, int len)
 {
     SigIntHolder holder;
 
     error_code_t ec;
-    if (g_nntp.gets_line.empty())
+    if (gets_line.empty())
     {
-        g_nntp.gets_line = g_nntp.link.connection->read_line(ec);
+        gets_line = link.connection->read_line(ec);
         if (ec)
         {
             return NGSR_ERROR;
         }
-        if (const std::size_t line_len = g_nntp.gets_line.size();
-            line_len >= 2 && g_nntp.gets_line[line_len - 2] == '\r' && g_nntp.gets_line[line_len - 1] == '\n')
+        if (const std::size_t line_len = gets_line.size();
+            line_len >= 2 && gets_line[line_len - 2] == '\r' && gets_line[line_len - 1] == '\n')
         {
-            g_nntp.gets_line.erase(line_len - 2);
+            gets_line.erase(line_len - 2);
         }
     }
 
-    if (len >= static_cast<int>(g_nntp.gets_line.length()))
+    if (len >= static_cast<int>(gets_line.length()))
     {
-        line = g_nntp.gets_line;
-        g_nntp.gets_line.clear();
+        line = gets_line;
+        gets_line.clear();
         return NGSR_FULL_LINE;
     }
 
-    line.assign(g_nntp.gets_line, 0, static_cast<std::size_t>(len - 1));
-    g_nntp.gets_line = g_nntp.gets_line.substr(len);
+    line.assign(gets_line, 0, static_cast<std::size_t>(len - 1));
+    gets_line = gets_line.substr(len);
     return NGSR_PARTIAL_LINE;
 }
 

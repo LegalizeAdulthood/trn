@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
                     }
                     if (nntp_check() > 0)
                     {
-                        while (nntp_gets(line, NNTP_STRLEN) != NGSR_ERROR)
+                        while (g_nntp.gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
                             if (g_nntp.link.at_list_end(line))
                             {
@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
                     // TODO: use list newsgroups if this fails...?
                     if (nntp_check() > 0)
                     {
-                        while (nntp_gets(line, NNTP_STRLEN) != NGSR_ERROR)
+                        while (g_nntp.gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
                             if (g_nntp.link.at_list_end(line))
                             {

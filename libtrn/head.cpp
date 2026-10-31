@@ -462,7 +462,7 @@ bool parse_header(ArticleNum art_num)
         const std::size_t line_start = g_parsed_header.head_buf.size();
         if (g_parsed_header.reading_nntp_header)
         {
-            const NNTPGetsResult result = nntp_gets(nntp_header_line, LINE_BUF_LEN);
+            const NNTPGetsResult result = g_nntp.gets(nntp_header_line, LINE_BUF_LEN);
             found_nl = result == NGSR_FULL_LINE;
             if (result == NGSR_ERROR)
             {

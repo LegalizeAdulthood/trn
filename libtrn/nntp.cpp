@@ -84,7 +84,7 @@ int nntp_list(std::string_view type, std::string_view arg, std::string &first_li
     {
         return 1;
     }
-    if (nntp_gets(first_line, NNTP_STRLEN) == NGSR_ERROR)
+    if (g_nntp.gets(first_line, NNTP_STRLEN) == NGSR_ERROR)
     {
         return -1;
     }
@@ -108,11 +108,11 @@ void nntp_finish_list()
     line.reserve(NNTP_STRLEN);
     do
     {
-        while ((ret = nntp_gets(line, NNTP_STRLEN)) == NGSR_PARTIAL_LINE)
+        while ((ret = g_nntp.gets(line, NNTP_STRLEN)) == NGSR_PARTIAL_LINE)
         {
             // A line w/o a newline is too long to be the end of the
             // list, so grab the rest of this line and try again.
-            while ((ret = nntp_gets(line, NNTP_STRLEN)) == NGSR_PARTIAL_LINE)
+            while ((ret = g_nntp.gets(line, NNTP_STRLEN)) == NGSR_PARTIAL_LINE)
             {
             }
             if (ret < 0)
@@ -353,7 +353,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
 
     while (pos > s_body_end || !had_nl)
     {
-        const NNTPGetsResult result = nntp_gets(line, limit);
+        const NNTPGetsResult result = g_nntp.gets(line, limit);
         if (result == NGSR_ERROR)
         {
             line = ".";
