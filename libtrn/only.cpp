@@ -73,6 +73,18 @@ bool NewsgroupRestrictions::in_list(std::string_view newsgroup_name)
     return false;
 }
 
+void NewsgroupRestrictions::clear_active()
+{
+    for (int i = save_max_to_do; i < max_to_do + save_max_to_do; i++)
+    {
+        to_do[i].clear();
+        compex_to_do[i]->free_compex();
+        delete compex_to_do[i];
+        compex_to_do[i] = nullptr;
+    }
+    max_to_do = 0;
+}
+
 void end_only()
 {
     if (g_only.max_to_do) // did they specify newsgroup(s)
@@ -85,14 +97,7 @@ void end_only()
         {
             g_msg = "Exiting \"only\".";
         }
-        for (int i = g_only.save_max_to_do; i < g_only.max_to_do + g_only.save_max_to_do; i++)
-        {
-            g_only.to_do[i].clear();
-            g_only.compex_to_do[i]->free_compex();
-            delete g_only.compex_to_do[i];
-            g_only.compex_to_do[i] = nullptr;
-        }
-        g_only.max_to_do = 0;
+        g_only.clear_active();
         g_newsgroup_min_to_read = 1;
     }
 }

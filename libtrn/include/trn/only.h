@@ -24,6 +24,7 @@ struct NewsgroupRestrictions
 {
     void set_to_do(std::string_view pat);
     void push_only();
+    void clear_active();
 
     std::string_view restriction(int index);
     bool             in_list(std::string_view newsgroup_name);
