@@ -281,7 +281,7 @@ DoArticleResult do_article(std::string &article_command)
             s_restart = ArticlePosition{};
             g_art_input.line_num = ArticleLine{}; // start counting lines
             g_art_input.pos = ArticlePosition{};
-            virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
+            g_back_page.virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         }
         for (bool restart_color = true; // line_num already set
              g_inner_search                                 ? (g_parsed_header.in_header || inner_more())
@@ -782,7 +782,7 @@ DoArticleResult do_article(std::string &article_command)
             {
                 g_art_input.pos = g_art_buf.article_pos();
             }
-            virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
+            g_back_page.virtual_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         } // end of line loop
 
         g_inner_search = ArticlePosition{};
@@ -795,8 +795,8 @@ DoArticleResult do_article(std::string &article_command)
         if (line_num >= 32700)   // did last line have form feed?
         {
             // remember by negating pos in file
-            virtual_write(line_before(g_art_input.line_num),
-                          -g_back_page.virtual_read(line_before(g_art_input.line_num)));
+            g_back_page.virtual_write(line_before(g_art_input.line_num),
+                                      -g_back_page.virtual_read(line_before(g_art_input.line_num)));
         }
 
         s_special = false;      // end of page, so reset page length
@@ -832,7 +832,7 @@ recheck_pager:
             if (can_hide_tail && remaining_line.empty())
             {
                 seek_pos = g_art_input.pos = g_art_buf.article_pos();
-                virtual_write(g_art_input.line_num, g_art_input.pos);
+                g_back_page.virtual_write(g_art_input.line_num, g_art_input.pos);
             }
             seek_art_buf(seek_pos);
         }

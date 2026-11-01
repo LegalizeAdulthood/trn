@@ -567,7 +567,8 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             output_text = line.substr(0, split);
             next_offset = split;
             // keep rn's backpager happy
-            virtual_write(g_art_input.line_num, g_back_page.virtual_read(line_before(g_art_input.line_num)));
+            g_back_page.virtual_write(g_art_input.line_num,
+                                      g_back_page.virtual_read(line_before(g_art_input.line_num)));
             ++g_art_input.line_num;
         }
         if (is_subject)
@@ -625,7 +626,7 @@ ArticleLine finish_tree(ArticleLine last_line)
     {
         ++g_art_input.line_num;
         last_line += tree_puts("+", last_line, 0);
-        virtual_write(g_art_input.line_num, g_art_input.pos); // keep rn's backpager happy
+        g_back_page.virtual_write(g_art_input.line_num, g_art_input.pos); // keep rn's backpager happy
     }
     return last_line - start_line;
 }

@@ -1927,7 +1927,7 @@ void PagerArticleTest::load_article(std::string_view headers, std::string_view b
     g_art_buf.set_seek(m_body_start);
     ASSERT_EQ(0, seek_art(m_body_start));
     g_art_input.pos = m_body_start;
-    virtual_write(ArticleLine{}, m_body_start);
+    g_back_page.virtual_write(ArticleLine{}, m_body_start);
 }
 
 void PagerArticleTest::TearDown()
@@ -2403,7 +2403,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     g_art_buf.clear_art_buf();
     g_art_buf.set_seek(m_body_start);
     g_art_input.pos = m_body_start;
-    virtual_write(ArticleLine{}, m_body_start);
+    g_back_page.virtual_write(ArticleLine{}, m_body_start);
     ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
 }
 
@@ -3833,7 +3833,7 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, lon
     g_init_lines = ArticleLine{10};
     g_tc_SO = "<mark>";
     g_tc_SE = "</mark>";
-    virtual_write(ArticleLine{}, m_body_start);
+    g_back_page.virtual_write(ArticleLine{}, m_body_start);
     set_mode(GM_READ, MM_ARTICLE);
     while (macro_pending())
     {

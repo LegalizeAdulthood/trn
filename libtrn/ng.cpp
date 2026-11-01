@@ -579,7 +579,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                     }
                 }
                 ArticleLine linenum = tree_puts(message, ArticleLine{}, 0);
-                virtual_write(g_art_input.line_num, ArticlePosition{});
+                g_back_page.virtual_write(g_art_input.line_num, ArticlePosition{});
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_search_ahead = ArticleNum{};

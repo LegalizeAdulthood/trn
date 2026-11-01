@@ -5380,9 +5380,9 @@ void BackwardPagingArticleTest::load_article(long line_count, long page_break_af
         std::string           content;
         ASSERT_TRUE(read_art_buf(content, false));
         ASSERT_EQ("Line " + std::to_string(line) + (line == page_break_after ? "\f\n" : "\n"), content);
-        virtual_write(ArticleLine{line}, line == page_break_after ? -position : position);
+        g_back_page.virtual_write(ArticleLine{line}, line == page_break_after ? -position : position);
     }
-    virtual_write(ArticleLine{line_count}, g_art_buf.pos());
+    g_back_page.virtual_write(ArticleLine{line_count}, g_art_buf.pos());
 }
 
 void BackwardPagingArticleTest::expect_target(long line, std::string_view expected)
