@@ -540,7 +540,7 @@ try_again:
     {
         bool save_the_rest = false;
         s_group_init_done = true;
-        sort_newsgroups();
+        g_ng_order.sort();
         g_selected_count = 0;
         g_obj_count = ArticleNum{};
         for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))

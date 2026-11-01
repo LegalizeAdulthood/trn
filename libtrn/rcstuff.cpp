@@ -1421,14 +1421,14 @@ bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
             {
                 g_sel.sort = SS_NATURAL;
                 g_sel.direction = 1;
-                sort_newsgroups();
+                g_ng_order.sort();
             }
         }
         else
         {
             g_sel.sort = SS_NATURAL;
             g_sel.direction = 1;
-            sort_newsgroups();
+            g_ng_order.sort();
         }
     }
 
@@ -1588,7 +1588,7 @@ reinp_reloc:
     if (g_sel.newsgroup_sort != SS_NATURAL)
     {
         g_sel.sort = g_sel.newsgroup_sort;
-        sort_newsgroups();
+        g_ng_order.sort();
         g_sel.sort = save_sort;
     }
     return true;
@@ -1845,7 +1845,7 @@ bool write_newsrcs(Multirc *mptr)
     {
         g_sel.sort = SS_NATURAL;
         g_sel.direction = 1;
-        sort_newsgroups();
+        g_ng_order.sort();
     }
 
     for (Newsrc *rp = mptr->m_first; rp; rp = rp->next)
@@ -1970,7 +1970,7 @@ write_error:
     if (g_sel.newsgroup_sort != SS_NATURAL)
     {
         g_sel.sort = g_sel.newsgroup_sort;
-        sort_newsgroups();
+        g_ng_order.sort();
         g_sel.sort = save_sort;
     }
     return total_success;

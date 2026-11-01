@@ -383,12 +383,12 @@ static int newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *
 }
 
 // Sort the newsgroups into the chosen order.
-void sort_newsgroups()
+void NewsgroupOrder::sort()
 {
     int (*sort_procedure)(const NewsgroupData *np1, const NewsgroupData *np2);
 
     // If we don't have at least two newsgroups, we're done!
-    if (g_ng_order.order.size() < 2)
+    if (order.size() < 2)
     {
         return;
     }
@@ -409,10 +409,9 @@ void sort_newsgroups()
         break;
     }
 
-    std::sort(g_ng_order.order.begin(), g_ng_order.order.end(),
-              [sort_procedure](const NewsgroupData *np1, const NewsgroupData *np2)
+    std::sort(order.begin(), order.end(), [sort_procedure](const NewsgroupData *np1, const NewsgroupData *np2)
               { return sort_procedure(np1, np2) < 0; });
-    g_ng_order.sync_links();
+    sync_links();
 }
 
 void newsgroup_skip()

@@ -64,6 +64,7 @@ struct NewsgroupOrder
     void           append(NewsgroupData *np);
     void           pop();
     bool           move(NewsgroupData *np, NewsgroupNum newnum);
+    void           sort();
 
     // TODO: private
     void renumber();
@@ -103,7 +104,6 @@ NewsgroupData *newsgroup_prev(NewsgroupData *np);
 int            access_newsgroup();
 void           chdir_news_dir();
 void grow_newsgroup(ArticleNum new_last);
-void sort_newsgroups();
 void newsgroup_skip();
 
 #endif
