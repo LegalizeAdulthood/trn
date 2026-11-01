@@ -153,17 +153,17 @@ void NewsgroupOrder::append(NewsgroupData *np)
     last_newsgroup = np;
 }
 
-void pop_newsgroup_order()
+void NewsgroupOrder::pop()
 {
-    if (g_ng_order.order.empty())
+    if (order.empty())
     {
         return;
     }
-    NewsgroupData *np = g_ng_order.order.back();
-    g_ng_order.order.pop_back();
+    NewsgroupData *np = order.back();
+    order.pop_back();
     np->m_prev = nullptr;
     np->m_next = nullptr;
-    g_ng_order.sync_links();
+    sync_links();
 }
 
 bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)

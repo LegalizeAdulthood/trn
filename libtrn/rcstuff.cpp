@@ -1727,7 +1727,7 @@ reask_bogus:
             {
                 hash_delete(g_newsrc_hash, np->rc_name());
                 clear_newsgroup_item(np);
-                pop_newsgroup_order();
+                g_ng_order.pop();
                 --g_newsgroup_count;
             }
             rp->flags |= RF_RC_CHANGED; // TODO: needed?
