@@ -114,6 +114,7 @@ struct UserHeaderType
 struct HeaderRules
 {
     void init();
+    void clear();
 
     HeaderType                  type[HEAD_LAST]{};
     HeaderLineType              type_idx[26]{};

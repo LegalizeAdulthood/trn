@@ -104,6 +104,13 @@ void HeaderRules::init()
     user_type[user_type_count++].name = "*";
 }
 
+void HeaderRules::clear()
+{
+    user_type.clear();
+    user_type.shrink_to_fit();
+    user_type_count = 0;
+}
+
 void head_init()
 {
     g_header_rules.init();
@@ -116,9 +123,7 @@ void head_final()
 {
     g_parsed_header.head_buf.clear();
     g_parsed_header.head_buf.shrink_to_fit();
-    g_header_rules.user_type.clear();
-    g_header_rules.user_type.shrink_to_fit();
-    g_header_rules.user_type_count = 0;
+    g_header_rules.clear();
 }
 
 #ifdef DEBUG
