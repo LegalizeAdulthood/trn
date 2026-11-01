@@ -479,7 +479,7 @@ protected:
         m_old_use_sel_num = g_use_sel_num;
         m_old_in_ng = g_in_ng;
         m_old_min_to_read = g_newsgroup_min_to_read;
-        push_only();
+        g_only.push_only();
         g_use_add_selector = true;
         g_sel_grp_display_mode = "s";
         g_sel_grp_display_mode_index = 0;
@@ -613,7 +613,7 @@ TEST_F(ActiveListPatternTest, leadingCaretWithTrailingDollarMatchesExactPrefix)
 TEST_F(ActiveListPatternTest, usesCurrentRestrictionInsideSavedOuterRestrictions)
 {
     g_only.set_to_do("parent.*");
-    push_only();
+    g_only.push_only();
     g_only.set_to_do("news.*");
 
     EXPECT_EQ("*news.**", active_list_pattern());

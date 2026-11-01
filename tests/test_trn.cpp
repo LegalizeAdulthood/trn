@@ -706,7 +706,7 @@ MultircLoopContext::MultircLoopContext(Newsrc &newsrc, const fs::path &directory
     search_init();
     if (m_save_restrictions)
     {
-        push_only();
+        g_only.push_only();
     }
     g_use_univ_selector = g_use_newsgroup_selector = false;
     g_paranoid = false;
@@ -6307,7 +6307,7 @@ void NewsgroupSelectorDelegationStateTest::SetUp()
     m_options.assign(catalog.row_count() + 1, OF_NONE);
     g_opt_edit.flags = m_options.data();
     search_init();
-    push_only();
+    g_only.push_only();
 }
 
 void NewsgroupSelectorDelegationStateTest::TearDown()

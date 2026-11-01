@@ -23,6 +23,7 @@ class CompiledRegex;
 struct NewsgroupRestrictions
 {
     void set_to_do(std::string_view pat);
+    void push_only();
 
     std::string_view restriction(int index);
     bool             in_list(std::string_view newsgroup_name);
@@ -38,7 +39,6 @@ extern char g_empty_only_char;
 
 void only_init();
 void end_only();
-void push_only();
 void pop_only();
 
 #endif

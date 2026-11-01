@@ -40,7 +40,7 @@ void NewsgroupPageStateTest::SetUp()
     g_use_sel_num = false;
     set_read_scope(false);
     search_init();
-    push_only();
+    g_only.push_only();
 }
 
 void NewsgroupPageStateTest::TearDown()

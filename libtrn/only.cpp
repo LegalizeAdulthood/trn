@@ -97,10 +97,10 @@ void end_only()
     }
 }
 
-void push_only()
+void NewsgroupRestrictions::push_only()
 {
-    g_only.save_max_to_do = g_only.max_to_do;
-    g_only.max_to_do = 0;
+    save_max_to_do = max_to_do;
+    max_to_do = 0;
 }
 
 void pop_only()

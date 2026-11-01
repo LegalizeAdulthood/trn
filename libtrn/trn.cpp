@@ -938,7 +938,7 @@ display_multirc:
                     return ING_INPUT; // if rubbed out, try something else
                 }
                 std::string_view switches = trim_leading_spaces(command_argument(command));
-                push_only();
+                g_only.push_only();
                 if (!switches.empty())
                 {
                     sw_list(switches);
