@@ -58,7 +58,7 @@ void BackPageCache::final()
 
 // virtual array read
 
-ArticlePosition BackPageCache::virtual_read(ArticleLine index)
+ArticlePosition BackPageCache::vary_read(ArticleLine index)
 {
     int  sub_index;
     long offset;
@@ -95,7 +95,7 @@ ArticlePosition BackPageCache::virtual_read(ArticleLine index)
 }
 
 // write to virtual array
-void BackPageCache::virtual_write(ArticleLine index, ArticlePosition value)
+void BackPageCache::vary_write(ArticleLine index, ArticlePosition value)
 {
     int  sub_index;
     long offset;

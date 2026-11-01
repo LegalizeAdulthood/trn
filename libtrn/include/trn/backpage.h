@@ -15,8 +15,8 @@ struct BackPageCache
     void init();
     void final();
 
-    ArticlePosition virtual_read(ArticleLine index);
-    void            virtual_write(ArticleLine index, ArticlePosition value);
+    ArticlePosition vary_read(ArticleLine index);
+    void            vary_write(ArticleLine index, ArticlePosition value);
 
     int             vary_fd{-1};         // virtual array file for storing  file offsets
     ArticlePosition vary_buf[VARY_SIZE]; // current window onto virtual array

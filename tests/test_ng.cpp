@@ -5380,15 +5380,15 @@ void BackwardPagingArticleTest::load_article(long line_count, long page_break_af
         std::string           content;
         ASSERT_TRUE(read_art_buf(content, false));
         ASSERT_EQ("Line " + std::to_string(line) + (line == page_break_after ? "\f\n" : "\n"), content);
-        g_back_page.virtual_write(ArticleLine{line}, line == page_break_after ? -position : position);
+        g_back_page.vary_write(ArticleLine{line}, line == page_break_after ? -position : position);
     }
-    g_back_page.virtual_write(ArticleLine{line_count}, g_art_buf.pos());
+    g_back_page.vary_write(ArticleLine{line_count}, g_art_buf.pos());
 }
 
 void BackwardPagingArticleTest::expect_target(long line, std::string_view expected)
 {
     EXPECT_EQ(ArticleLine{line}, g_art_input.line_num);
-    const ArticlePosition saved_position = g_back_page.virtual_read(g_art_input.line_num);
+    const ArticlePosition saved_position = g_back_page.vary_read(g_art_input.line_num);
     const ArticlePosition position = saved_position < 0 ? -saved_position : saved_position;
     ASSERT_EQ(0, seek_art(g_art_buf.seek()));
     ASSERT_EQ(0, seek_art_buf(position));
@@ -12363,7 +12363,7 @@ TEST_P(BackwardPageBoundaryArticleTest, pageBackStopsAfterThePreviousFormFeedBou
     set_reading_position(4);
     load_article(40, 12);
     g_top_line = ArticleLine{20};
-    ASSERT_LT(g_back_page.virtual_read(ArticleLine{12}), ArticlePosition{});
+    ASSERT_LT(g_back_page.vary_read(ArticleLine{12}), ArticlePosition{});
 
     const std::string output = display(GetParam());
 
@@ -12381,7 +12381,7 @@ TEST_F(BackwardPagingArticleTest, singleLineBackCanReachTheLineBeforeAFormFeedBo
     set_reading_position(4);
     load_article(40, 12);
     g_top_line = ArticleLine{13};
-    ASSERT_LT(g_back_page.virtual_read(ArticleLine{12}), ArticlePosition{});
+    ASSERT_LT(g_back_page.vary_read(ArticleLine{12}), ArticlePosition{});
 
     const std::string output = display('B');
 

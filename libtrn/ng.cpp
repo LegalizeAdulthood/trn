@@ -579,7 +579,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                     }
                 }
                 ArticleLine linenum = tree_puts(message, ArticleLine{}, 0);
-                g_back_page.virtual_write(g_art_input.line_num, ArticlePosition{});
+                g_back_page.vary_write(g_art_input.line_num, ArticlePosition{});
                 finish_tree(linenum);
                 g_prompt = whatnext;
                 g_search_ahead = ArticleNum{};
@@ -1773,7 +1773,7 @@ normal_search:
                     {
                         g_art_input.line_num--;
                     } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
-                             g_back_page.virtual_read(line_before(g_art_input.line_num)) >= 0);
+                             g_back_page.vary_read(line_before(g_art_input.line_num)) >= 0);
                 }
                 g_top_line = g_art_input.line_num;
                 g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
