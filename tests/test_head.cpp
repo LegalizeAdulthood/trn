@@ -46,8 +46,8 @@ void HeaderLineTypeLookupTest::SetUp()
 {
     head_init();
     g_parsed_header.head_buf.clear();
-    g_header_type[CUSTOM_LINE].name.clear();
-    g_header_type[CUSTOM_LINE].length = 0;
+    g_header_rules.type[CUSTOM_LINE].name.clear();
+    g_header_rules.type[CUSTOM_LINE].length = 0;
 }
 
 class HeaderNameCaseTest : public HeaderLineTypeLookupTest, public testing::WithParamInterface<const char *>
@@ -59,7 +59,7 @@ class HeaderParseTest : public testing::Test
 protected:
     void SetUp() override
     {
-        std::copy(std::begin(g_header_type), std::end(g_header_type), m_old_header_type.begin());
+        std::copy(std::begin(g_header_rules.type), std::end(g_header_rules.type), m_old_header_type.begin());
         m_old_header_positions = g_parsed_header.positions;
         m_old_article_list = std::move(g_article_list);
         m_old_data_source = g_data_source;
@@ -104,7 +104,7 @@ protected:
 
         g_article_list.clear();
         g_article_list = std::move(m_old_article_list);
-        std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_type));
+        std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_rules.type));
         g_parsed_header.positions = m_old_header_positions;
         g_data_source = m_old_data_source;
         g_last_art = m_old_last_art;
@@ -188,7 +188,7 @@ TEST_F(HeaderLineTypeLookupTest, rejectsHeaderWithWhitespaceBeforeColon)
 TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderNameInLowerCase)
 {
     EXPECT_EQ(CUSTOM_LINE, get_header_num("X-Strange-Thing"));
-    EXPECT_EQ("x-strange-thing", g_header_type[CUSTOM_LINE].name);
+    EXPECT_EQ("x-strange-thing", g_header_rules.type[CUSTOM_LINE].name);
 }
 
 TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderOffsetsIncludingContinuation)

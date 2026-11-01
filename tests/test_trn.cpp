@@ -242,7 +242,7 @@ protected:
         m_old_our_pid = g_our_pid;
         m_old_tmp_dir = g_tmp_dir;
         m_old_current_path = fs::current_path();
-        std::copy(std::begin(g_header_type), std::end(g_header_type), m_old_header_type.begin());
+        std::copy(std::begin(g_header_rules.type), std::end(g_header_rules.type), m_old_header_type.begin());
         m_old_header_positions = g_parsed_header.positions;
         m_old_errno = errno;
         m_old_erase_char = g_erase_char;
@@ -479,7 +479,7 @@ protected:
         g_art_size = m_old_art_size;
         g_our_pid = m_old_our_pid;
         g_tmp_dir = m_old_tmp_dir;
-        std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_type));
+        std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_rules.type));
         g_parsed_header.positions = m_old_header_positions;
         errno = m_old_errno;
         g_erase_char = m_old_erase_char;

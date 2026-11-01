@@ -1340,17 +1340,17 @@ static std::string hidden_list()
 {
     std::string headers;
     headers.reserve(LINE_BUF_LEN);
-    for (int i = 1; i < g_user_header_type_count; i++)
+    for (int i = 1; i < g_header_rules.user_type_count; i++)
     {
         if (!headers.empty())
         {
             headers += ',';
         }
-        if (!g_user_header_type[i].flags)
+        if (!g_header_rules.user_type[i].flags)
         {
             headers += '!';
         }
-        headers += g_user_header_type[i].name;
+        headers += g_header_rules.user_type[i].name;
     }
     return headers;
 }
@@ -1361,17 +1361,17 @@ static std::string magic_list()
     headers.reserve(LINE_BUF_LEN);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!(g_header_type[i].flags & HT_MAGIC) != !(g_header_type[i].flags & HT_DEF_MAGIC))
+        if (!(g_header_rules.type[i].flags & HT_MAGIC) != !(g_header_rules.type[i].flags & HT_DEF_MAGIC))
         {
             if (!headers.empty())
             {
                 headers += ',';
             }
-            if (g_header_type[i].flags & HT_DEF_MAGIC)
+            if (g_header_rules.type[i].flags & HT_DEF_MAGIC)
             {
                 headers += '!';
             }
-            headers += g_header_type[i].name;
+            headers += g_header_rules.type[i].name;
         }
     }
     return headers;
@@ -1384,18 +1384,18 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::
     if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
         // Free old g_user_htype list
-        while (g_user_header_type_count > 1)
+        while (g_header_rules.user_type_count > 1)
         {
-            g_user_header_type[--g_user_header_type_count].name.clear();
+            g_header_rules.user_type[--g_header_rules.user_type_count].name.clear();
         }
-        g_user_header_type_index.fill(0);
+        g_header_rules.user_type_index.fill(0);
     }
 
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        g_header_type[i].flags = ((g_header_type[i].flags & defflag)
-                       ? (g_header_type[i].flags | flag)
-                       : (g_header_type[i].flags & ~flag));
+        g_header_rules.type[i].flags =
+            ((g_header_rules.type[i].flags & defflag) ? (g_header_rules.type[i].flags | flag)
+                                                      : (g_header_rules.type[i].flags & ~flag));
     }
     std::string_view remaining = str.empty() ? std::string_view{" "} : str;
     while (true)
@@ -1425,15 +1425,15 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
     const int len = static_cast<int>(s.size());
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!len || string_case_equal(s, std::string_view{g_header_type[i].name}.substr(0, s.size())))
+        if (!len || string_case_equal(s, std::string_view{g_header_rules.type[i].name}.substr(0, s.size())))
         {
-            if (setit && (flag != HT_MAGIC || (g_header_type[i].flags & HT_MAGIC_OK)))
+            if (setit && (flag != HT_MAGIC || (g_header_rules.type[i].flags & HT_MAGIC_OK)))
             {
-                g_header_type[i].flags |= flag;
+                g_header_rules.type[i].flags |= flag;
             }
             else
             {
-                g_header_type[i].flags &= ~flag;
+                g_header_rules.type[i].flags &= ~flag;
             }
         }
     }
@@ -1443,21 +1443,21 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
         int  add_at = 0;
         int  killed = 0;
         bool save_it = true;
-        for (int i = g_user_header_type_index[ch - 'a']; g_user_header_type[i].name[0] == ch; i--)
+        for (int i = g_header_rules.user_type_index[ch - 'a']; g_header_rules.user_type[i].name[0] == ch; i--)
         {
-            if (len <= g_user_header_type[i].length //
-                && string_case_equal(s, std::string_view{g_user_header_type[i].name}.substr(0, s.size())))
+            if (len <= g_header_rules.user_type[i].length //
+                && string_case_equal(s, std::string_view{g_header_rules.user_type[i].name}.substr(0, s.size())))
             {
-                g_user_header_type[i].name.clear();
+                g_header_rules.user_type[i].name.clear();
                 killed = i;
             }
-            else if (len > g_user_header_type[i].length //
-                     && string_case_equal(s.substr(0, static_cast<std::size_t>(g_user_header_type[i].length)),
-                                          g_user_header_type[i].name))
+            else if (len > g_header_rules.user_type[i].length //
+                     && string_case_equal(s.substr(0, static_cast<std::size_t>(g_header_rules.user_type[i].length)),
+                                          g_header_rules.user_type[i].name))
             {
                 if (!add_at)
                 {
-                    if (g_user_header_type[i].flags == (setit? flag : 0))
+                    if (g_header_rules.user_type[i].flags == (setit ? flag : 0))
                     {
                         save_it = false;
                     }
@@ -1467,35 +1467,35 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
         }
         if (save_it)
         {
-            if (!killed || (add_at && !g_user_header_type[add_at].name.empty()))
+            if (!killed || (add_at && !g_header_rules.user_type[add_at].name.empty()))
             {
-                if (g_user_header_type_count >= g_user_header_type_max)
+                if (g_header_rules.user_type_count >= g_header_rules.user_type_max)
                 {
-                    g_user_header_type_max += 10;
-                    g_user_header_type.resize(g_user_header_type_max);
+                    g_header_rules.user_type_max += 10;
+                    g_header_rules.user_type.resize(g_header_rules.user_type_max);
                 }
                 if (!add_at)
                 {
-                    add_at = g_user_header_type_index[ch - 'a']+1;
+                    add_at = g_header_rules.user_type_index[ch - 'a'] + 1;
                     if (add_at == 1)
                     {
-                        add_at = g_user_header_type_count;
+                        add_at = g_header_rules.user_type_count;
                     }
                 }
-                for (int i = g_user_header_type_count; i > add_at; i--)
+                for (int i = g_header_rules.user_type_count; i > add_at; i--)
                 {
-                    g_user_header_type[i] = g_user_header_type[i - 1];
+                    g_header_rules.user_type[i] = g_header_rules.user_type[i - 1];
                 }
-                g_user_header_type_count++;
+                g_header_rules.user_type_count++;
             }
             else if (!add_at)
             {
                 add_at = killed;
             }
-            g_user_header_type[add_at].length = len;
-            g_user_header_type[add_at].flags = setit? flag : 0;
-            g_user_header_type[add_at].name = s;
-            for (char &c : g_user_header_type[add_at].name)
+            g_header_rules.user_type[add_at].length = len;
+            g_header_rules.user_type[add_at].flags = setit ? flag : 0;
+            g_header_rules.user_type[add_at].name = s;
+            for (char &c : g_header_rules.user_type[add_at].name)
             {
                 if (std::isupper(c))
                 {
@@ -1505,23 +1505,23 @@ void set_header(std::string_view s, HeaderTypeFlags flag, bool setit)
         }
         if (killed)
         {
-            while (killed < g_user_header_type_count && !g_user_header_type[killed].name.empty())
+            while (killed < g_header_rules.user_type_count && !g_header_rules.user_type[killed].name.empty())
             {
                 killed++;
             }
-            for (int i = killed + 1; i < g_user_header_type_count; i++)
+            for (int i = killed + 1; i < g_header_rules.user_type_count; i++)
             {
-                if (!g_user_header_type[i].name.empty())
+                if (!g_header_rules.user_type[i].name.empty())
                 {
-                    g_user_header_type[killed++] = g_user_header_type[i];
+                    g_header_rules.user_type[killed++] = g_header_rules.user_type[i];
                 }
             }
-            g_user_header_type_count = killed;
+            g_header_rules.user_type_count = killed;
         }
-        g_user_header_type_index.fill(0);
-        for (int i = 1; i < g_user_header_type_count; i++)
+        g_header_rules.user_type_index.fill(0);
+        for (int i = 1; i < g_header_rules.user_type_count; i++)
         {
-            g_user_header_type_index[g_user_header_type[i].name[0] - 'a'] = i;
+            g_header_rules.user_type_index[g_header_rules.user_type[i].name[0] - 'a'] = i;
         }
     }
 }

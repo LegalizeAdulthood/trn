@@ -50,7 +50,7 @@ int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
 bool g_sf_verbose{true};   // if true print more stuff while loading
 
-// list of score array markers (in g_header_type field of score entry)
+// list of score array markers (in g_header_rules.type field of score entry)
 // entry is a file marker.  Score is the file level
 enum
 {
@@ -1194,7 +1194,7 @@ static void sf_print_match(int indx)
     }
     else
     {
-        head_name = g_header_type[s_sf_entries[indx].head_type].name;
+        head_name = g_header_rules.type[s_sf_entries[indx].head_type].name;
     }
     fmt::print("{} {}{}: {}", s_sf_entries[indx].score, pattern, head_name, s_sf_entries[indx].str1);
     if (!s_sf_entries[indx].str2.empty())

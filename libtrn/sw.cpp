@@ -322,11 +322,11 @@ void decode_switch(std::string_view s)
             if (switch_suffix(s).empty())
             {
                 // Free old g_user_htype list
-                while (g_user_header_type_count > 1)
+                while (g_header_rules.user_type_count > 1)
                 {
-                    g_user_header_type[--g_user_header_type_count].name.clear();
+                    g_header_rules.user_type[--g_header_rules.user_type_count].name.clear();
                 }
-                g_user_header_type_index.fill(0);
+                g_header_rules.user_type_index.fill(0);
             }
             // FALL THROUGH
 

@@ -111,11 +111,17 @@ struct UserHeaderType
     char        flags;  // the header's flags
 };
 
-extern HeaderType                  g_header_type[HEAD_LAST];
-extern std::vector<UserHeaderType> g_user_header_type;
-extern std::array<int, 26>         g_user_header_type_index;
-extern int                         g_user_header_type_count;
-extern int                         g_user_header_type_max;
+struct HeaderRules
+{
+    HeaderType                  type[HEAD_LAST]{};
+    HeaderLineType              type_idx[26]{};
+    std::vector<UserHeaderType> user_type;
+    std::array<int, 26>         user_type_index{};
+    int                         user_type_count{};
+    int                         user_type_max{};
+};
+
+extern HeaderRules g_header_rules;
 
 enum
 {

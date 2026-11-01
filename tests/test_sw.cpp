@@ -161,33 +161,33 @@ struct RefetchRestorer
 struct HeaderListRestorer
 {
     std::array<HeaderTypeFlags, HEAD_LAST> flags;
-    std::vector<UserHeaderType>            user_header_type;
-    std::array<int, 26>                    user_header_type_index;
-    int                                    user_header_type_count;
-    int                                    user_header_type_max;
+    std::vector<UserHeaderType>            user_type;
+    std::array<int, 26>                    user_type_index;
+    int                                    user_type_count;
+    int                                    user_type_max;
 
     HeaderListRestorer()
     {
         for (int i = 0; i < HEAD_LAST; i++)
         {
-            flags[static_cast<std::size_t>(i)] = g_header_type[i].flags;
+            flags[static_cast<std::size_t>(i)] = g_header_rules.type[i].flags;
         }
-        user_header_type = g_user_header_type;
-        user_header_type_index = g_user_header_type_index;
-        user_header_type_count = g_user_header_type_count;
-        user_header_type_max = g_user_header_type_max;
+        user_type = g_header_rules.user_type;
+        user_type_index = g_header_rules.user_type_index;
+        user_type_count = g_header_rules.user_type_count;
+        user_type_max = g_header_rules.user_type_max;
     }
 
     ~HeaderListRestorer()
     {
         for (int i = 0; i < HEAD_LAST; i++)
         {
-            g_header_type[i].flags = flags[static_cast<std::size_t>(i)];
+            g_header_rules.type[i].flags = flags[static_cast<std::size_t>(i)];
         }
-        g_user_header_type = user_header_type;
-        g_user_header_type_index = user_header_type_index;
-        g_user_header_type_count = user_header_type_count;
-        g_user_header_type_max = user_header_type_max;
+        g_header_rules.user_type = user_type;
+        g_header_rules.user_type_index = user_type_index;
+        g_header_rules.user_type_count = user_type_count;
+        g_header_rules.user_type_max = user_type_max;
     }
 };
 
@@ -358,13 +358,13 @@ TEST(OptionValueTest, formatsDefaultRefetchTime)
 TEST(OptionValueTest, formatsHeaderHidingList)
 {
     HeaderListRestorer restore;
-    g_user_header_type_max = 3;
-    g_user_header_type.assign(static_cast<std::size_t>(g_user_header_type_max), UserHeaderType{});
-    g_user_header_type[0].name = "*";
-    g_user_header_type[1].name = "x-hidden";
-    g_user_header_type[1].flags = HT_HIDE;
-    g_user_header_type[2].name = "x-visible";
-    g_user_header_type_count = 3;
+    g_header_rules.user_type_max = 3;
+    g_header_rules.user_type.assign(static_cast<std::size_t>(g_header_rules.user_type_max), UserHeaderType{});
+    g_header_rules.user_type[0].name = "*";
+    g_header_rules.user_type[1].name = "x-hidden";
+    g_header_rules.user_type[1].flags = HT_HIDE;
+    g_header_rules.user_type[2].name = "x-visible";
+    g_header_rules.user_type_count = 3;
 
     EXPECT_EQ("x-hidden,!x-visible", option_value(OI_HEADER_HIDING));
 }
@@ -372,8 +372,8 @@ TEST(OptionValueTest, formatsHeaderHidingList)
 TEST(OptionValueTest, formatsHeaderMagicList)
 {
     HeaderListRestorer restore;
-    g_header_type[DATE_LINE].flags &= ~HT_MAGIC;
-    g_header_type[FROM_LINE].flags |= HT_MAGIC;
+    g_header_rules.type[DATE_LINE].flags &= ~HT_MAGIC;
+    g_header_rules.type[FROM_LINE].flags |= HT_MAGIC;
 
     EXPECT_EQ("!date,from", option_value(OI_HEADER_MAGIC));
 }

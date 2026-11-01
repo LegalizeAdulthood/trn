@@ -2036,7 +2036,7 @@ protected:
 private:
     DataSource            m_data_source{};
     DataSource           *m_old_data_source{g_data_source};
-    HeaderType            m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderType            m_old_subject_header{g_header_rules.type[SUBJ_LINE]};
     HeaderPosition        m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
     std::string           m_old_last_pat{g_art_search.last_pat};
     ArtScope              m_old_art_how_much{g_art_search.how_much};
@@ -2061,7 +2061,7 @@ void SearchCommandArticleTest::SetUp()
 {
     UnreadScopeArticleTest::SetUp();
     g_data_source = &m_data_source;
-    g_header_type[SUBJ_LINE].flags |= HT_CACHED;
+    g_header_rules.type[SUBJ_LINE].flags |= HT_CACHED;
     g_art_search.last_pat.clear();
     g_art_search.how_much = ARTSCOPE_SUBJECT;
     g_art_search.srch_hdr = SOME_LINE;
@@ -2084,7 +2084,7 @@ void SearchCommandArticleTest::TearDown()
         (void) stop_capture();
     }
     g_data_source = m_old_data_source;
-    g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_header_rules.type[SUBJ_LINE] = m_old_subject_header;
     g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
     g_art_search.last_pat = m_old_last_pat;
     g_art_search.how_much = m_old_art_how_much;
@@ -2921,9 +2921,9 @@ private:
     KillFileStateFlags m_old_thread_change_set{g_kfs_thread_change_set};
     int                m_old_change_thread_count{g_kf_change_thread_cnt};
     bool               m_old_kill_thru_kludge{g_kill_thru_kludge};
-    HeaderType         m_old_from_header{g_header_type[FROM_LINE]};
+    HeaderType         m_old_from_header{g_header_rules.type[FROM_LINE]};
     HeaderPosition     m_old_from_header_pos{g_parsed_header.positions[FROM_LINE]};
-    HeaderType         m_old_reply_header{g_header_type[REPLY_LINE]};
+    HeaderType         m_old_reply_header{g_header_rules.type[REPLY_LINE]};
     HeaderPosition     m_old_reply_header_pos{g_parsed_header.positions[REPLY_LINE]};
     std::string        m_old_head_buf{g_parsed_header.head_buf};
     std::string_view   m_old_tc_ce{g_tc_CE};
@@ -2936,7 +2936,7 @@ void MemorizeArticleTest::SetUp()
     g_kfs_thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
     g_kf_change_thread_cnt = 0;
     g_kill_thru_kludge = false;
-    g_header_type[FROM_LINE].flags |= HT_CACHED;
+    g_header_rules.type[FROM_LINE].flags |= HT_CACHED;
     g_tc_CE = "\033[K";
     g_tc_CR = "\r";
     m_global_file = m_kill_file.parent_path() / "GLOBAL";
@@ -2957,9 +2957,9 @@ void MemorizeArticleTest::TearDown()
     g_kfs_thread_change_set = m_old_thread_change_set;
     g_kf_change_thread_cnt = m_old_change_thread_count;
     g_kill_thru_kludge = m_old_kill_thru_kludge;
-    g_header_type[FROM_LINE] = m_old_from_header;
+    g_header_rules.type[FROM_LINE] = m_old_from_header;
     g_parsed_header.positions[FROM_LINE] = m_old_from_header_pos;
-    g_header_type[REPLY_LINE] = m_old_reply_header;
+    g_header_rules.type[REPLY_LINE] = m_old_reply_header;
     g_parsed_header.positions[REPLY_LINE] = m_old_reply_header_pos;
     g_parsed_header.head_buf = m_old_head_buf;
     g_tc_CE = m_old_tc_ce;
@@ -5201,7 +5201,7 @@ private:
     ArticlePosition       m_old_art_pos{g_art_input.pos};
     ArticlePosition       m_old_raw_art_size{g_raw_art_size};
     ArticlePosition       m_old_art_size{g_art_size};
-    HeaderType            m_old_past_header{g_header_type[PAST_HEADER]};
+    HeaderType            m_old_past_header{g_header_rules.type[PAST_HEADER]};
     HeaderPosition        m_old_past_header_pos{g_parsed_header.positions[PAST_HEADER]};
     int                   m_old_tc_cols{g_tc_COLS};
     int                   m_old_word_wrap_offset{g_word_wrap_offset};
@@ -5269,7 +5269,7 @@ void CachedDisplayArticleTest::TearDown()
     g_art_input.pos = m_old_art_pos;
     g_raw_art_size = m_old_raw_art_size;
     g_art_size = m_old_art_size;
-    g_header_type[PAST_HEADER] = m_old_past_header;
+    g_header_rules.type[PAST_HEADER] = m_old_past_header;
     g_parsed_header.positions[PAST_HEADER] = m_old_past_header_pos;
     g_tc_COLS = m_old_tc_cols;
     g_word_wrap_offset = m_old_word_wrap_offset;
@@ -5598,7 +5598,7 @@ protected:
 private:
     DataSource                 m_data_source{};
     DataSource                *m_old_data_source{g_data_source};
-    HeaderType                 m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderType                 m_old_subject_header{g_header_rules.type[SUBJ_LINE]};
     HeaderPosition             m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
     std::optional<std::string> m_old_subj_line{g_subj_line};
     char                       m_old_int_count{g_int_count};
@@ -5616,7 +5616,7 @@ void SubjectListingArticleTest::SetUp()
 {
     RereadArticleTest::SetUp();
     g_data_source = &m_data_source;
-    g_header_type[SUBJ_LINE].flags |= HT_CACHED;
+    g_header_rules.type[SUBJ_LINE].flags |= HT_CACHED;
     g_subj_line = std::nullopt;
     g_int_count = 0;
     g_page_line = 9;
@@ -5633,7 +5633,7 @@ void SubjectListingArticleTest::SetUp()
 void SubjectListingArticleTest::TearDown()
 {
     g_data_source = m_old_data_source;
-    g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_header_rules.type[SUBJ_LINE] = m_old_subject_header;
     g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
     g_subj_line = m_old_subj_line;
     g_int_count = m_old_int_count;

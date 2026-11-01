@@ -45,7 +45,7 @@
 
 // This array must stay in the same order as the enum values header_line_type
 // clang-format off
-HeaderType g_header_type[HEAD_LAST] = {
+HeaderRules g_header_rules = {{
     // name             length   flag
     {"",/*BODY*/              0,      HT_NONE         },
     {"",/*SHOWN*/             0,      HT_NONE         },
@@ -79,7 +79,7 @@ HeaderType g_header_type[HEAD_LAST] = {
     {"summary",               7,      HT_NONE         },
     {"subject",               7,      MAGIC_ON|HT_CACHED},
     {"xref",                  4,      HIDDEN|XREF_CACHED},
-};
+}};
 // clang-format on
 
 #undef HIDDEN
@@ -88,12 +88,7 @@ HeaderType g_header_type[HEAD_LAST] = {
 #undef NGS_CACHED
 #undef XREF_CACHED
 
-std::vector<UserHeaderType> g_user_header_type;
-std::array<int, 26>         g_user_header_type_index;
-int                         g_user_header_type_count{};
-int                         g_user_header_type_max{};
 ParsedHeaderContext         g_parsed_header;
-static HeaderLineType s_htypeix[26]{};
 
 static std::string lower_header_name(std::string_view header_name);
 
@@ -101,12 +96,12 @@ void head_init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
     {
-        s_htypeix[g_header_type[i].name[0] - 'a'] = static_cast<HeaderLineType>(i);
+        g_header_rules.type_idx[g_header_rules.type[i].name[0] - 'a'] = static_cast<HeaderLineType>(i);
     }
 
-    g_user_header_type_max = 10;
-    g_user_header_type.resize(g_user_header_type_max);
-    g_user_header_type[g_user_header_type_count++].name = "*";
+    g_header_rules.user_type_max = 10;
+    g_header_rules.user_type.resize(g_header_rules.user_type_max);
+    g_header_rules.user_type[g_header_rules.user_type_count++].name = "*";
 
     g_parsed_header.head_buf.clear();
     g_parsed_header.head_buf.reserve(LINE_BUF_LEN * 8);
@@ -116,9 +111,9 @@ void head_final()
 {
     g_parsed_header.head_buf.clear();
     g_parsed_header.head_buf.shrink_to_fit();
-    g_user_header_type.clear();
-    g_user_header_type.shrink_to_fit();
-    g_user_header_type_count = 0;
+    g_header_rules.user_type.clear();
+    g_header_rules.user_type.shrink_to_fit();
+    g_header_rules.user_type_count = 0;
 }
 
 #ifdef DEBUG
@@ -128,8 +123,9 @@ static void dump_header(const char *where)
 
     for (int i = HEAD_FIRST - 1; i < HEAD_LAST; i++)
     {
-        fmt::print("{:>15} {:4} {:4} {:03o}\n", g_header_type[i].name, g_parsed_header.positions[i].min_pos.value_of(),
-                   g_parsed_header.positions[i].max_pos.value_of(), static_cast<unsigned>(g_header_type[i].flags));
+        fmt::print("{:>15} {:4} {:4} {:03o}\n", g_header_rules.type[i].name,
+                   g_parsed_header.positions[i].min_pos.value_of(), g_parsed_header.positions[i].max_pos.value_of(),
+                   static_cast<unsigned>(g_header_rules.type[i].flags));
     }
 }
 #endif
@@ -168,26 +164,26 @@ HeaderLineType set_line_type(std::string_view header_name)
         const char first = std::isupper(first_char) ? static_cast<char>(std::tolower(first_char)) : header_name[0];
         if (first >= 'a' && first <= 'z')
         {
-            for (int i = s_htypeix[first - 'a']; g_header_type[i].name[0] == first; i--)
+            for (int i = g_header_rules.type_idx[first - 'a']; g_header_rules.type[i].name[0] == first; i--)
             {
-                if (len == static_cast<std::size_t>(g_header_type[i].length) &&
-                    string_case_equal(header_name, g_header_type[i].name))
+                if (len == static_cast<std::size_t>(g_header_rules.type[i].length) &&
+                    string_case_equal(header_name, g_header_rules.type[i].name))
                 {
                     return static_cast<HeaderLineType>(i);
                 }
             }
-            if (len == static_cast<std::size_t>(g_header_type[CUSTOM_LINE].length) &&
-                string_case_equal(header_name, g_header_type[CUSTOM_LINE].name))
+            if (len == static_cast<std::size_t>(g_header_rules.type[CUSTOM_LINE].length) &&
+                string_case_equal(header_name, g_header_rules.type[CUSTOM_LINE].name))
             {
                 return CUSTOM_LINE;
             }
-            for (int i = g_user_header_type_index[first - 'a']; g_user_header_type[i].name[0] == first; i--)
+            for (int i = g_header_rules.user_type_index[first - 'a']; g_header_rules.user_type[i].name[0] == first; i--)
             {
-                const std::size_t user_len = static_cast<std::size_t>(g_user_header_type[i].length);
+                const std::size_t user_len = static_cast<std::size_t>(g_header_rules.user_type[i].length);
                 if (len >= user_len //
-                    && string_case_equal(header_name.substr(0, user_len), g_user_header_type[i].name))
+                    && string_case_equal(header_name.substr(0, user_len), g_header_rules.user_type[i].name))
                 {
-                    if (g_user_header_type[i].flags & HT_HIDE)
+                    if (g_header_rules.user_type[i].flags & HT_HIDE)
                     {
                         return HIDDEN_LINE;
                     }
@@ -205,9 +201,9 @@ HeaderLineType get_header_num(std::string_view header_name)
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
-        g_header_type[CUSTOM_LINE].name = lower_header_name(header_name);
-        g_header_type[CUSTOM_LINE].length = static_cast<char>(header_name.size());
-        g_header_type[CUSTOM_LINE].flags = g_header_type[i].flags;
+        g_header_rules.type[CUSTOM_LINE].name = lower_header_name(header_name);
+        g_header_rules.type[CUSTOM_LINE].length = static_cast<char>(header_name.size());
+        g_header_rules.type[CUSTOM_LINE].flags = g_header_rules.type[i].flags;
         g_parsed_header.positions[CUSTOM_LINE].min_pos = ArticlePosition{-1};
         g_parsed_header.positions[CUSTOM_LINE].max_pos = ArticlePosition{};
         if (!g_parsed_header.head_buf.empty())
@@ -282,11 +278,11 @@ void ParsedHeaderContext::end_line()
         first_one = false;
         // remember where line left off
         positions[in_header].max_pos = g_art_input.pos;
-        if (g_header_type[in_header].flags & HT_CACHED)
+        if (g_header_rules.type[in_header].flags & HT_CACHED)
         {
             if (parsed_artp->get_cached_line_view(in_header, true).empty())
             {
-                int start = positions[in_header].min_pos.value_of() + g_header_type[in_header].length + 1;
+                int start = positions[in_header].min_pos.value_of() + g_header_rules.type[in_header].length + 1;
                 while (is_hor_space(head_buf[start]))
                 {
                     start++;
@@ -351,7 +347,7 @@ bool ParsedHeaderContext::parse_line(std::string_view art_buf, int new_hide, int
             dump_header(header_text.data());
         }
 #endif
-        if (g_header_type[in_header].flags & HT_HIDE)
+        if (g_header_rules.type[in_header].flags & HT_HIDE)
         {
             return new_hide;
         }
@@ -530,7 +526,7 @@ bool ParsedHeaderContext::line_span(HeaderLineType which_line, char *&line, int 
         return false;
     }
 
-    firstpos += ArticlePosition{g_header_type[which_line].length + 1};
+    firstpos += ArticlePosition{g_header_rules.type[which_line].length + 1};
     ArticlePosition lastpos = positions[which_line].max_pos;
     size = (lastpos - firstpos).value_of();
     line = head_buf.data() + firstpos.value_of();
@@ -619,19 +615,19 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
 
     spin(20);
     ArticleNum prior_num{article_before(art_num)};
-    bool       cached = (g_header_type[which_line].flags & HT_CACHED);
+    bool       cached = (g_header_rules.type[which_line].flags & HT_CACHED);
     int        status;
     if (cached != 0)
     {
         lastnum = art_num + ArticleNum{PREFETCH_SIZE - 1};
         lastnum = std::min(lastnum, g_last_art);
-        status = nntp_header_values(g_header_type[which_line].name,
+        status = nntp_header_values(g_header_rules.type[which_line].name,
                                     fmt::format("{}-{}", art_num.value_of(), lastnum.value_of()));
     }
     else
     {
         lastnum = art_num;
-        status = nntp_header_values(g_header_type[which_line].name, std::to_string(art_num.value_of()));
+        status = nntp_header_values(g_header_rules.type[which_line].name, std::to_string(art_num.value_of()));
     }
     if (status == -2)
     {

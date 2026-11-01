@@ -59,7 +59,7 @@ protected:
         m_old_mime_section = g_mime.section;
         m_old_multipart_separator = g_multipart_separator;
         m_old_data_source = g_data_source;
-        m_old_past_header = g_header_type[PAST_HEADER];
+        m_old_past_header = g_header_rules.type[PAST_HEADER];
         m_old_past_header_pos = g_parsed_header.positions[PAST_HEADER];
         m_old_tc_cols = g_tc_COLS;
         m_old_word_wrap_offset = g_word_wrap_offset;
@@ -108,7 +108,7 @@ protected:
         g_mime.section = m_old_mime_section;
         g_multipart_separator = m_old_multipart_separator;
         g_data_source = m_old_data_source;
-        g_header_type[PAST_HEADER] = m_old_past_header;
+        g_header_rules.type[PAST_HEADER] = m_old_past_header;
         g_parsed_header.positions[PAST_HEADER] = m_old_past_header_pos;
         g_tc_COLS = m_old_tc_cols;
         g_word_wrap_offset = m_old_word_wrap_offset;

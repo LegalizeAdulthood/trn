@@ -5464,9 +5464,9 @@ protected:
     void         expect_search_selection(std::initializer_list<long> selected, bool rereading = false) const;
 
 private:
-    HeaderType     m_old_subject_header{g_header_type[SUBJ_LINE]};
+    HeaderType     m_old_subject_header{g_header_rules.type[SUBJ_LINE]};
     HeaderPosition m_old_subject_header_pos{g_parsed_header.positions[SUBJ_LINE]};
-    HeaderType     m_old_from_header{g_header_type[FROM_LINE]};
+    HeaderType     m_old_from_header{g_header_rules.type[FROM_LINE]};
     HeaderPosition m_old_from_header_pos{g_parsed_header.positions[FROM_LINE]};
     std::string    m_old_pattern{g_art_search.last_pat};
     CompiledRegex  m_old_regex{*g_art_search.bra_compex};
@@ -5481,8 +5481,8 @@ private:
 void ArticleSelectorSearchStateTest::SetUp()
 {
     ArticleSelectorInlineStateTest::SetUp();
-    g_header_type[SUBJ_LINE].flags |= HT_CACHED;
-    g_header_type[FROM_LINE].flags |= HT_CACHED;
+    g_header_rules.type[SUBJ_LINE].flags |= HT_CACHED;
+    g_header_rules.type[FROM_LINE].flags |= HT_CACHED;
     g_parsed_header.parsed_art = ArticleNum{};
     g_art_search.last_pat.clear();
     g_art_search.how_much = ARTSCOPE_SUBJECT;
@@ -5496,9 +5496,9 @@ void ArticleSelectorSearchStateTest::SetUp()
 
 void ArticleSelectorSearchStateTest::TearDown()
 {
-    g_header_type[SUBJ_LINE] = m_old_subject_header;
+    g_header_rules.type[SUBJ_LINE] = m_old_subject_header;
     g_parsed_header.positions[SUBJ_LINE] = m_old_subject_header_pos;
-    g_header_type[FROM_LINE] = m_old_from_header;
+    g_header_rules.type[FROM_LINE] = m_old_from_header;
     g_parsed_header.positions[FROM_LINE] = m_old_from_header_pos;
     g_art_search.last_pat = m_old_pattern;
     *g_art_search.bra_compex = m_old_regex;

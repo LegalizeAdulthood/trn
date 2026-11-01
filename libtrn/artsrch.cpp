@@ -421,7 +421,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             salt_command += g_scope_str[how_much];
             if (how_much == ARTSCOPE_ONE_HDR)
             {
-                salt_command += g_header_type[search_header].name;
+                salt_command += g_header_rules.type[search_header].name;
             }
         }
         salt_command += ':';
@@ -589,7 +589,7 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
         g_untrim_cache = true;
         const std::string header = prefetch_lines_copy(art_num, g_art_search.srch_hdr);
         g_untrim_cache = false;
-        search_text = g_header_type[g_art_search.srch_hdr].name + ": " + header;
+        search_text = g_header_rules.type[g_art_search.srch_hdr].name + ": " + header;
         break;
     }
 

@@ -310,13 +310,13 @@ protected:
     {
         for (int i = 0; i < HEAD_LAST; ++i)
         {
-            m_old_header_type[static_cast<std::size_t>(i)] = g_header_type[i];
+            m_old_header_type[static_cast<std::size_t>(i)] = g_header_rules.type[i];
             m_old_header_positions[static_cast<std::size_t>(i)] = g_parsed_header.positions[i];
         }
-        m_old_user_header_type = g_user_header_type;
-        m_old_user_header_type_index = g_user_header_type_index;
-        m_old_user_header_type_count = g_user_header_type_count;
-        m_old_user_header_type_max = g_user_header_type_max;
+        m_old_user_header_type = g_header_rules.user_type;
+        m_old_user_header_type_index = g_header_rules.user_type_index;
+        m_old_user_header_type_count = g_header_rules.user_type_count;
+        m_old_user_header_type_max = g_header_rules.user_type_max;
 
         reset_user_header_type();
         set_option(OI_HEADER_HIDING, "");
@@ -327,28 +327,28 @@ protected:
     {
         for (int i = 0; i < HEAD_LAST; ++i)
         {
-            g_header_type[i] = m_old_header_type[static_cast<std::size_t>(i)];
+            g_header_rules.type[i] = m_old_header_type[static_cast<std::size_t>(i)];
             g_parsed_header.positions[i] = m_old_header_positions[static_cast<std::size_t>(i)];
         }
-        g_user_header_type = m_old_user_header_type;
-        g_user_header_type_index = m_old_user_header_type_index;
-        g_user_header_type_count = m_old_user_header_type_count;
-        g_user_header_type_max = m_old_user_header_type_max;
+        g_header_rules.user_type = m_old_user_header_type;
+        g_header_rules.user_type_index = m_old_user_header_type_index;
+        g_header_rules.user_type_count = m_old_user_header_type_count;
+        g_header_rules.user_type_max = m_old_user_header_type_max;
     }
 
     static bool has_flag(HeaderLineType header, HeaderTypeFlags flag)
     {
-        return (g_header_type[header].flags & flag) != HT_NONE;
+        return (g_header_rules.type[header].flags & flag) != HT_NONE;
     }
 
 private:
     static void reset_user_header_type()
     {
-        g_user_header_type_max = 10;
-        g_user_header_type.assign(static_cast<std::size_t>(g_user_header_type_max), UserHeaderType{});
-        g_user_header_type_count = 1;
-        g_user_header_type[0].name = "*";
-        g_user_header_type_index.fill(0);
+        g_header_rules.user_type_max = 10;
+        g_header_rules.user_type.assign(static_cast<std::size_t>(g_header_rules.user_type_max), UserHeaderType{});
+        g_header_rules.user_type_count = 1;
+        g_header_rules.user_type[0].name = "*";
+        g_header_rules.user_type_index.fill(0);
     }
 
     std::array<HeaderType, HEAD_LAST> m_old_header_type;

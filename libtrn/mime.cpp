@@ -521,7 +521,7 @@ void mime_set_article()
     // TODO: Check mime version #?
     g_mime.multimedia_mime = false;
     g_mime.is_mime =
-        g_header_type[MIME_VER_LINE].flags & HT_MAGIC && g_parsed_header.positions[MIME_VER_LINE].min_pos >= 0;
+        g_header_rules.type[MIME_VER_LINE].flags & HT_MAGIC && g_parsed_header.positions[MIME_VER_LINE].min_pos >= 0;
 
     {
         std::string s = fetch_lines(g_nav.target.num, CONT_TYPE_LINE);

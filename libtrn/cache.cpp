@@ -380,7 +380,7 @@ void Article::uncache_article(bool remove_empties)
 std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill_cache)
 {
     Article *ap;
-    bool     cached = (g_header_type[which_line].flags & HT_CACHED);
+    bool     cached = (g_header_rules.type[which_line].flags & HT_CACHED);
 
     // article_find() returns a nullptr if the article number value is invalid
     if (!(ap = article_find(art_num)) || !(ap->m_flags & AF_EXISTS))

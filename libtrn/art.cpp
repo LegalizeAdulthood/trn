@@ -383,7 +383,8 @@ DoArticleResult do_article(std::string &article_command)
             {
                 hide_this_line = true;
             }
-            if (g_parsed_header.in_header && g_do_hiding && (g_header_type[g_parsed_header.in_header].flags & HT_MAGIC))
+            if (g_parsed_header.in_header && g_do_hiding &&
+                (g_header_rules.type[g_parsed_header.in_header].flags & HT_MAGIC))
             {
                 switch (g_parsed_header.in_header)
                 {
@@ -400,10 +401,10 @@ DoArticleResult do_article(std::string &article_command)
                 }
 
                 case EXPIR_LINE:
-                    if (!(g_header_type[EXPIR_LINE].flags & HT_HIDE))
+                    if (!(g_header_rules.type[EXPIR_LINE].flags & HT_HIDE))
                     {
                         const std::string_view expires_line = line_tail();
-                        const std::size_t      value_pos = g_header_type[EXPIR_LINE].length + 1;
+                        const std::size_t      value_pos = g_header_rules.type[EXPIR_LINE].length + 1;
                         const char value_char = value_pos < expires_line.size() ? expires_line[value_pos] : '\0';
                         const char next_value_char =
                             value_pos + 1 < expires_line.size() ? expires_line[value_pos + 1] : '\0';
@@ -452,7 +453,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
             }
             if (g_parsed_header.in_header == SUBJ_LINE && g_do_hiding //
-                && (g_header_type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
+                && (g_header_rules.type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
                 const std::string_view cached_subj = g_nav.target.art->get_cached_line_view(SUBJ_LINE, false);
                 if (!cached_subj.empty() && s_continuation)

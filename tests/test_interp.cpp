@@ -1666,7 +1666,7 @@ protected:
 
 private:
     int                                      m_old_mouse_bar_count{g_mouse_bar_cnt};
-    decltype(g_header_type[FROM_LINE].flags) m_old_from_flags{g_header_type[FROM_LINE].flags};
+    decltype(g_header_rules.type[FROM_LINE].flags) m_old_from_flags{g_header_rules.type[FROM_LINE].flags};
     ArticleLine                              m_old_top_line{g_top_line};
     ArticleLine                              m_old_init_lines{g_init_lines};
     int                                      m_old_lines{g_tc_LINES};
@@ -1686,7 +1686,7 @@ void ArticleHeaderPresentationTest::SetUp()
     InterpolatorNewsgroupTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     g_mouse_bar_cnt = 0;
-    g_header_type[FROM_LINE].flags |= HT_MAGIC;
+    g_header_rules.type[FROM_LINE].flags |= HT_MAGIC;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
@@ -1707,7 +1707,7 @@ void ArticleHeaderPresentationTest::TearDown()
     }
     InterpolatorNewsgroupTest::TearDown();
     g_mouse_bar_cnt = m_old_mouse_bar_count;
-    g_header_type[FROM_LINE].flags = m_old_from_flags;
+    g_header_rules.type[FROM_LINE].flags = m_old_from_flags;
     g_top_line = m_old_top_line;
     g_init_lines = m_old_init_lines;
     g_tc_LINES = m_old_lines;
@@ -2941,7 +2941,8 @@ private:
     ValueSaver<std::string>     m_first_line{g_first_line, g_first_line};
     ValueSaver<CompiledRegex>   m_hide_regex{g_hide_line.compex, g_hide_line.compex};
     ValueSaver<CompiledRegex>   m_stop_regex{g_page_stop.compex, g_page_stop.compex};
-    ValueSaver<HeaderTypeFlags> m_subject_flags{g_header_type[SUBJ_LINE].flags, g_header_type[SUBJ_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_subject_flags{g_header_rules.type[SUBJ_LINE].flags,
+                                                g_header_rules.type[SUBJ_LINE].flags};
 };
 
 void PagerFilteringArticleTest::SetUp()
@@ -2951,7 +2952,7 @@ void PagerFilteringArticleTest::SetUp()
     g_do_hiding = true;
     g_hide_line.text.clear();
     g_first_line = "Pager title";
-    g_header_type[SUBJ_LINE].flags &= ~HT_MAGIC;
+    g_header_rules.type[SUBJ_LINE].flags &= ~HT_MAGIC;
     g_tc_LINES = 5;
     g_init_lines = ArticleLine{g_tc_LINES};
     g_tc_COLS = 80;
@@ -3103,9 +3104,12 @@ protected:
     std::string m_headers;
 
 private:
-    ValueSaver<HeaderTypeFlags> m_from_flags{g_header_type[FROM_LINE].flags, g_header_type[FROM_LINE].flags};
-    ValueSaver<HeaderTypeFlags> m_path_flags{g_header_type[PATH_LINE].flags, g_header_type[PATH_LINE].flags};
-    ValueSaver<HeaderTypeFlags> m_unknown_flags{g_header_type[SOME_LINE].flags, g_header_type[SOME_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_from_flags{g_header_rules.type[FROM_LINE].flags,
+                                             g_header_rules.type[FROM_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_path_flags{g_header_rules.type[PATH_LINE].flags,
+                                             g_header_rules.type[PATH_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_unknown_flags{g_header_rules.type[SOME_LINE].flags,
+                                                g_header_rules.type[SOME_LINE].flags};
 };
 
 void PagerHiddenHeaderArticleTest::SetUp()
@@ -3113,8 +3117,8 @@ void PagerHiddenHeaderArticleTest::SetUp()
     PagerFilteringArticleTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
     const PagerHiddenHeaderCase &scenario = std::get<0>(GetParam());
-    g_header_type[scenario.type].flags |= HT_HIDE;
-    g_header_type[scenario.type].flags &= ~HT_MAGIC;
+    g_header_rules.type[scenario.type].flags |= HT_HIDE;
+    g_header_rules.type[scenario.type].flags &= ~HT_MAGIC;
     g_do_hiding = std::get<1>(GetParam());
     g_tc_LINES = 8;
     g_init_lines = ArticleLine{g_tc_LINES};
@@ -3160,11 +3164,14 @@ protected:
     long                                                               m_header_rows{};
 
 private:
-    ValueSaver<HeaderTypeFlags>  m_from_flags{g_header_type[FROM_LINE].flags, g_header_type[FROM_LINE].flags};
-    ValueSaver<HeaderTypeFlags>  m_date_flags{g_header_type[DATE_LINE].flags, g_header_type[DATE_LINE].flags};
-    ValueSaver<HeaderTypeFlags>  m_group_flags{g_header_type[NEWSGROUPS_LINE].flags,
-                                               g_header_type[NEWSGROUPS_LINE].flags};
-    ValueSaver<HeaderTypeFlags>  m_unknown_flags{g_header_type[SOME_LINE].flags, g_header_type[SOME_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_from_flags{g_header_rules.type[FROM_LINE].flags,
+                                              g_header_rules.type[FROM_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_date_flags{g_header_rules.type[DATE_LINE].flags,
+                                              g_header_rules.type[DATE_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_group_flags{g_header_rules.type[NEWSGROUPS_LINE].flags,
+                                               g_header_rules.type[NEWSGROUPS_LINE].flags};
+    ValueSaver<HeaderTypeFlags>  m_unknown_flags{g_header_rules.type[SOME_LINE].flags,
+                                                 g_header_rules.type[SOME_LINE].flags};
     ValueSaver<std::string>      m_group_name{g_newsgroup_name, g_newsgroup_name};
     ValueSaver<bool>             m_threaded{g_threaded_group, g_threaded_group};
     ValueSaver<std::string_view> m_underline_start{g_tc_US, g_tc_US};
@@ -3186,11 +3193,11 @@ void PagerFormattedHeaderArticleTest::SetUp()
     g_tc_US = "<mark>";
     g_tc_UE = "</mark>";
     g_tc_UC = "";
-    g_header_type[SOME_LINE].flags &= ~(HT_HIDE | HT_MAGIC);
-    g_header_type[scenario.type].flags &= ~(HT_HIDE | HT_MAGIC);
+    g_header_rules.type[SOME_LINE].flags &= ~(HT_HIDE | HT_MAGIC);
+    g_header_rules.type[scenario.type].flags &= ~(HT_HIDE | HT_MAGIC);
     if (scenario.magic)
     {
-        g_header_type[scenario.type].flags |= HT_MAGIC;
+        g_header_rules.type[scenario.type].flags |= HT_MAGIC;
     }
     m_env.expect_env("LOCALTIMEFMT", "local date");
     std::string              headers;
@@ -3443,7 +3450,8 @@ protected:
 
 private:
     ValueSaver<bool>            m_reread{g_reread, g_reread};
-    ValueSaver<HeaderTypeFlags> m_path_flags{g_header_type[PATH_LINE].flags, g_header_type[PATH_LINE].flags};
+    ValueSaver<HeaderTypeFlags> m_path_flags{g_header_rules.type[PATH_LINE].flags,
+                                             g_header_rules.type[PATH_LINE].flags};
 };
 
 void PagerPresentationArticleTest::SetUp()
@@ -3452,7 +3460,7 @@ void PagerPresentationArticleTest::SetUp()
     ASSERT_FALSE(HasFatalFailure());
     g_tc_LINES = 8;
     g_init_lines = ArticleLine{g_tc_LINES};
-    g_header_type[PATH_LINE].flags |= HT_HIDE;
+    g_header_rules.type[PATH_LINE].flags |= HT_HIDE;
     set_filters("^>");
     std::string body;
     for (long row = 0; row < 20; ++row)
@@ -5296,7 +5304,7 @@ TEST_P(PagerHiddenHeaderArticleTest, hiddenHeadersDoNotConsumeBodyRows)
         EXPECT_EQ(!hiding, m_rendered.find(continuation_line) != std::string::npos);
     }
     EXPECT_EQ(m_headers, g_parsed_header.head_buf);
-    EXPECT_EQ(HT_HIDE, g_header_type[scenario.type].flags & HT_HIDE);
+    EXPECT_EQ(HT_HIDE, g_header_rules.type[scenario.type].flags & HT_HIDE);
     const long        next_line = first_body_count + 6;
     const std::string next_text = numbered_pager_body(next_line, next_line + 1);
     expect_position(2 + shown_headers + next_line, std::string_view{next_text}.substr(0, next_text.size() - 1));
@@ -7268,7 +7276,7 @@ INSTANTIATE_TEST_SUITE_P(ThreadingAndBodyEncoding, PagerTreeArticleTest,
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
-    g_header_type[DATE_LINE].flags |= HT_MAGIC;
+    g_header_rules.type[DATE_LINE].flags |= HT_MAGIC;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
@@ -7292,7 +7300,7 @@ TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
     ValueSaver<std::string> newsgroup_name(g_newsgroup_name, TRN_TEST_NEWSGROUP);
     g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
-    g_header_type[NEWSGROUPS_LINE].flags |= HT_MAGIC;
+    g_header_rules.type[NEWSGROUPS_LINE].flags |= HT_MAGIC;
     g_top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;

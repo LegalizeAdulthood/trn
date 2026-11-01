@@ -452,7 +452,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                             search_command += g_scope_str[g_art_search.how_much];
                             if (g_art_search.how_much == ARTSCOPE_ONE_HDR)
                             {
-                                const std::string_view header_name{g_header_type[g_art_search.srch_hdr].name};
+                                const std::string_view header_name{g_header_rules.type[g_art_search.srch_hdr].name};
                                 const std::size_t      colon = header_name.find(':');
                                 search_command +=
                                     header_name.substr(0, colon == std::string_view::npos ? colon : colon + 1);
