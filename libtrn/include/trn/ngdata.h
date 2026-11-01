@@ -60,6 +60,7 @@ struct NewsgroupOrder
 {
     NewsgroupData *first();
     NewsgroupData *last();
+    void           sync_links();
 
     std::vector<NewsgroupData *> order; // current newsgroup order
     NewsgroupData               *first_newsgroup{};
@@ -96,7 +97,6 @@ NewsgroupData *newsgroup_prev(NewsgroupData *np);
 void           append_newsgroup_order(NewsgroupData *np);
 void           pop_newsgroup_order();
 bool           move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum);
-void           sync_newsgroup_order_links();
 int            access_newsgroup();
 void           chdir_news_dir();
 void grow_newsgroup(ArticleNum new_last);

@@ -164,7 +164,7 @@ void pop_newsgroup_order()
     g_ng_order.order.pop_back();
     np->m_prev = nullptr;
     np->m_next = nullptr;
-    sync_newsgroup_order_links();
+    g_ng_order.sync_links();
 }
 
 bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
@@ -184,7 +184,7 @@ bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
     const auto target_pos = static_cast<std::size_t>(target);
     const std::size_t pos = std::min(target_pos, g_ng_order.order.size());
     g_ng_order.order.insert(g_ng_order.order.begin() + pos, np);
-    sync_newsgroup_order_links();
+    g_ng_order.sync_links();
     renumber_newsgroup_order();
     return true;
 }
@@ -198,13 +198,13 @@ static void renumber_newsgroup_order()
     }
 }
 
-void sync_newsgroup_order_links()
+void NewsgroupOrder::sync_links()
 {
-    g_ng_order.first_newsgroup = g_ng_order.first();
-    g_ng_order.last_newsgroup = g_ng_order.last();
+    first_newsgroup = first();
+    last_newsgroup = last();
 
     NewsgroupData *prev = nullptr;
-    for (NewsgroupData *np : g_ng_order.order)
+    for (NewsgroupData *np : order)
     {
         np->m_prev = prev;
         if (prev != nullptr)
@@ -413,7 +413,7 @@ void sort_newsgroups()
     std::sort(g_ng_order.order.begin(), g_ng_order.order.end(),
               [sort_procedure](const NewsgroupData *np1, const NewsgroupData *np2)
               { return sort_procedure(np1, np2) < 0; });
-    sync_newsgroup_order_links();
+    g_ng_order.sync_links();
 }
 
 void newsgroup_skip()

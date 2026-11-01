@@ -144,7 +144,7 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     {
         g_ng_order.order[i] = newsgroup_pointer_from_index(new_base, order_indexes[i]);
     }
-    sync_newsgroup_order_links();
+    g_ng_order.sync_links();
     g_newsgroup_ptr = newsgroup_pointer_from_index(new_base, ptr_index);
     g_current_newsgroup = newsgroup_pointer_from_index(new_base, current_index);
     g_recent_newsgroup = newsgroup_pointer_from_index(new_base, recent_index);
