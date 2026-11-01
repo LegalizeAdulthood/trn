@@ -122,9 +122,9 @@ NewsgroupData *NewsgroupOrder::first()
     return order.empty() ? nullptr : order.front();
 }
 
-NewsgroupData *newsgroup_last()
+NewsgroupData *NewsgroupOrder::last()
 {
-    return g_ng_order.order.empty() ? nullptr : g_ng_order.order.back();
+    return order.empty() ? nullptr : order.back();
 }
 
 NewsgroupData *newsgroup_next(NewsgroupData *np)
@@ -201,7 +201,7 @@ static void renumber_newsgroup_order()
 void sync_newsgroup_order_links()
 {
     g_ng_order.first_newsgroup = g_ng_order.first();
-    g_ng_order.last_newsgroup = newsgroup_last();
+    g_ng_order.last_newsgroup = g_ng_order.last();
 
     NewsgroupData *prev = nullptr;
     for (NewsgroupData *np : g_ng_order.order)

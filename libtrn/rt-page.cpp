@@ -630,7 +630,7 @@ try_again:
         {
             (void) g_sel_page.first_page();
         }
-        else if (g_sel_page.page_ngd == newsgroup_last())
+        else if (g_sel_page.page_ngd == g_ng_order.last())
         {
             (void) g_sel_page.last_page();
         }
@@ -1471,7 +1471,7 @@ bool SelectorPage::prev_page()
 
         if (!np)
         {
-            np = newsgroup_last();
+            np = g_ng_order.last();
         }
         else
         {

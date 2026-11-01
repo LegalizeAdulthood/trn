@@ -14813,7 +14813,7 @@ TEST_P(NewsgroupSelectorHelpScopeTest, theSelectorDispatchesTheCommandReturnedFr
     expect_selector_session_preserved(rereading, -1);
     ASSERT_EQ(3, g_ng_order.order.size());
     EXPECT_EQ(&g_newsgroup_data[0], g_ng_order.first());
-    EXPECT_EQ(&g_newsgroup_data[1], newsgroup_last());
+    EXPECT_EQ(&g_newsgroup_data[1], g_ng_order.last());
     expect_next_command('Q');
 }
 

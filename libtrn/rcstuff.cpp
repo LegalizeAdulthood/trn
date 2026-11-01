@@ -1666,7 +1666,7 @@ void cleanup_newsrc(Newsrc *rp)
             ++bogosity;
         }
     }
-    for (np = newsgroup_last(); np && np->m_to_read == TR_BOGUS; np = newsgroup_prev(np))
+    for (np = g_ng_order.last(); np && np->m_to_read == TR_BOGUS; np = newsgroup_prev(np))
     {
         --bogosity; // discount already moved ones
     }
@@ -1723,7 +1723,7 @@ reask_bogus:
         }
         else if (command_ch == 'y')
         {
-            while ((np = newsgroup_last()) != nullptr && np->m_to_read == TR_BOGUS)
+            while ((np = g_ng_order.last()) != nullptr && np->m_to_read == TR_BOGUS)
             {
                 hash_delete(g_newsrc_hash, np->rc_name());
                 clear_newsgroup_item(np);

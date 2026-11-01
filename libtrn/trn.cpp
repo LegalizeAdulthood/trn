@@ -148,7 +148,7 @@ int trn_main(int argc, char *argv[])
                        "newsgroup use the g<newsgroup> command.\n");
             term_down(2);
         }
-        g_start_here = newsgroup_last();
+        g_start_here = g_ng_order.last();
     }
 
     do_multirc();
@@ -559,7 +559,7 @@ do_command:
     case 'p': // find previous unread newsgroup
         if (!g_newsgroup_ptr)
         {
-            g_newsgroup_ptr = newsgroup_last();
+            g_newsgroup_ptr = g_ng_order.last();
         }
         else if (g_newsgroup_ptr != g_ng_order.first())
         {
