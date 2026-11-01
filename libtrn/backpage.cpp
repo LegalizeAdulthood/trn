@@ -58,15 +58,15 @@ void BackPageCache::final()
 
 // virtual array read
 
-ArticlePosition virtual_read(ArticleLine index)
+ArticlePosition BackPageCache::virtual_read(ArticleLine index)
 {
     int  sub_index;
     long offset;
 
 #ifdef DEBUG
-    if (index > g_back_page.max_index)
+    if (index > max_index)
     {
-        fmt::print("vrdary({}) > {}\n", index.value_of(), g_back_page.max_index);
+        fmt::print("vrdary({}) > {}\n", index.value_of(), max_index);
         return ArticlePosition{};
     }
 #endif
@@ -75,23 +75,23 @@ ArticlePosition virtual_read(ArticleLine index)
         return ArticlePosition{};
     }
     sub_index = index.value_of() % VARY_SIZE;
-    offset = (index.value_of() - sub_index) * sizeof(g_back_page.vary_buf[0]);
-    if (offset != g_back_page.old_offset)
+    offset = (index.value_of() - sub_index) * sizeof(vary_buf[0]);
+    if (offset != old_offset)
     {
-        if (g_back_page.old_offset >= 0)
+        if (old_offset >= 0)
         {
 #ifndef lint
-            (void) lseek(g_back_page.vary_fd, g_back_page.old_offset, 0);
-            write(g_back_page.vary_fd, (char *) g_back_page.vary_buf, sizeof(g_back_page.vary_buf));
+            (void) lseek(vary_fd, old_offset, 0);
+            write(vary_fd, (char *) vary_buf, sizeof(vary_buf));
 #endif // lint
         }
 #ifndef lint
-        (void) lseek(g_back_page.vary_fd, offset, 0);
-        read(g_back_page.vary_fd, (char *) g_back_page.vary_buf, sizeof(g_back_page.vary_buf));
+        (void) lseek(vary_fd, offset, 0);
+        read(vary_fd, (char *) vary_buf, sizeof(vary_buf));
 #endif // lint
-        g_back_page.old_offset = offset;
+        old_offset = offset;
     }
-    return g_back_page.vary_buf[sub_index];
+    return vary_buf[sub_index];
 }
 
 // write to virtual array

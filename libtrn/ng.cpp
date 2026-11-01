@@ -1773,7 +1773,7 @@ normal_search:
                     {
                         g_art_input.line_num--;
                     } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
-                             virtual_read(line_before(g_art_input.line_num)) >= 0);
+                             g_back_page.virtual_read(line_before(g_art_input.line_num)) >= 0);
                 }
                 g_top_line = g_art_input.line_num;
                 g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});

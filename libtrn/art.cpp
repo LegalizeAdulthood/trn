@@ -209,7 +209,7 @@ DoArticleResult do_article(std::string &article_command)
                 mime_set_article();
                 g_art_buf.set_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
             }
-            g_art_input.pos = virtual_read(g_art_input.line_num);
+            g_art_input.pos = g_back_page.virtual_read(g_art_input.line_num);
             if (g_art_input.pos < 0)
             {
                 g_art_input.pos = -g_art_input.pos; // labs(), anyone?
@@ -795,7 +795,8 @@ DoArticleResult do_article(std::string &article_command)
         if (line_num >= 32700)   // did last line have form feed?
         {
             // remember by negating pos in file
-            virtual_write(line_before(g_art_input.line_num), -virtual_read(line_before(g_art_input.line_num)));
+            virtual_write(line_before(g_art_input.line_num),
+                          -g_back_page.virtual_read(line_before(g_art_input.line_num)));
         }
 
         s_special = false;      // end of page, so reset page length
@@ -1030,7 +1031,7 @@ PageSwitchResult page_switch(std::string_view command)
         pager_line = line_view(s_a_line_begin);
         while (!pager_line.empty() && at_nl(pager_line.front()) && i >= g_top_line)
         {
-            ArticlePosition pos = virtual_read(--i);
+            ArticlePosition pos = g_back_page.virtual_read(--i);
             if (pos < 0)
             {
                 pos = -pos;
@@ -1107,7 +1108,7 @@ caseG:
         }
         else
         {
-            start_where = virtual_read(g_top_line + ArticleLine{g_g_line + 1});
+            start_where = g_back_page.virtual_read(g_top_line + ArticleLine{g_g_line + 1});
             if (start_where < 0)
             {
                 start_where = -start_where;
@@ -1157,7 +1158,7 @@ caseG:
             if (g_inner_search < g_art_input.pos)
             {
                 g_art_input.line_num = line_after(g_top_line);
-                while (virtual_read(g_art_input.line_num) < g_inner_search)
+                while (g_back_page.virtual_read(g_art_input.line_num) < g_inner_search)
                 {
                     ++g_art_input.line_num;
                 }
@@ -1237,7 +1238,7 @@ refresh_screen:
             home_cursor();
             insert_line();
             carriage_return();
-            ArticlePosition pos = virtual_read(line_before(g_top_line));
+            ArticlePosition pos = g_back_page.virtual_read(line_before(g_top_line));
             if (pos < 0)
             {
                 pos = -pos;
@@ -1247,7 +1248,7 @@ refresh_screen:
                 seek_art_buf(pos);
                 if (read_art_buf(pager_line_storage, false))
                 {
-                    g_art_input.pos = virtual_read(g_top_line);
+                    g_art_input.pos = g_back_page.virtual_read(g_top_line);
                     if (g_art_input.pos < 0)
                     {
                         g_art_input.pos = -g_art_input.pos;
@@ -1261,13 +1262,13 @@ refresh_screen:
                     color_default();
                     std::putchar('\n');
                     --g_top_line;
-                    g_art_input.pos = virtual_read(--g_art_input.line_num);
+                    g_art_input.pos = g_back_page.virtual_read(--g_art_input.line_num);
                     if (g_art_input.pos < 0)
                     {
                         g_art_input.pos = -g_art_input.pos;
                     }
                     seek_art_buf(g_art_input.pos);
-                    s_a_line_begin = virtual_read(line_before(g_art_input.line_num));
+                    s_a_line_begin = g_back_page.virtual_read(line_before(g_art_input.line_num));
                     if (s_a_line_begin < 0)
                     {
                         s_a_line_begin = -s_a_line_begin;
@@ -1314,7 +1315,7 @@ refresh_screen:
             {
                 --g_art_input.line_num;
             } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
-                     virtual_read(line_before(g_art_input.line_num)) >= 0);
+                     g_back_page.virtual_read(line_before(g_art_input.line_num)) >= 0);
         }
         g_top_line = g_art_input.line_num; // remember top line of screen
                                            // (line # within article file)
