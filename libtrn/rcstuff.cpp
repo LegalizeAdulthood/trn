@@ -1433,7 +1433,7 @@ bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
     }
 
     g_start_here = nullptr; // Disable this optimization
-    if (!move_newsgroup_order(this, newsgroup_before(g_newsgroup_count)))
+    if (!g_ng_order.move(this, newsgroup_before(g_newsgroup_count)))
     {
         return false;
     }
@@ -1580,7 +1580,7 @@ reinp_reloc:
 
     if (newnum < newsgroup_before(g_newsgroup_count))
     {
-        if (!move_newsgroup_order(this, newnum))
+        if (!g_ng_order.move(this, newnum))
         {
             return false;
         }

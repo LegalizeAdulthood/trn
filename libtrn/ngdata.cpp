@@ -166,14 +166,14 @@ void NewsgroupOrder::pop()
     sync_links();
 }
 
-bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
+bool NewsgroupOrder::move(NewsgroupData *np, NewsgroupNum newnum)
 {
-    auto it = std::find(g_ng_order.order.begin(), g_ng_order.order.end(), np);
-    if (it == g_ng_order.order.end())
+    auto it = std::find(order.begin(), order.end(), np);
+    if (it == order.end())
     {
         return false;
     }
-    g_ng_order.order.erase(it);
+    order.erase(it);
 
     long target = newnum.value_of();
     if (target < 0)
@@ -181,10 +181,10 @@ bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
         target = 0;
     }
     const auto target_pos = static_cast<std::size_t>(target);
-    const std::size_t pos = std::min(target_pos, g_ng_order.order.size());
-    g_ng_order.order.insert(g_ng_order.order.begin() + pos, np);
-    g_ng_order.sync_links();
-    g_ng_order.renumber();
+    const std::size_t pos = std::min(target_pos, order.size());
+    order.insert(order.begin() + pos, np);
+    sync_links();
+    renumber();
     return true;
 }
 

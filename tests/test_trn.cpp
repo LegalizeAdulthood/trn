@@ -11792,7 +11792,7 @@ TEST_P(InputNewsgroupForwardTest, advancingFollowsTheCurrentGroupOrder)
 {
     const auto &[command, expected_result] = GetParam();
     prepare_groups();
-    ASSERT_TRUE(move_newsgroup_order(&g_newsgroup_data[2], NewsgroupNum{1}));
+    ASSERT_TRUE(g_ng_order.move(&g_newsgroup_data[2], NewsgroupNum{1}));
     set_current_newsgroup(0);
 
     const InputNewsgroupResult result = run_command(std::string(1, command));
@@ -11852,7 +11852,7 @@ TEST_P(InputNewsgroupBackwardTest, retreatingFollowsTheCurrentGroupOrder)
 {
     const auto &[command, expected_result] = GetParam();
     prepare_groups();
-    ASSERT_TRUE(move_newsgroup_order(&g_newsgroup_data[2], NewsgroupNum{1}));
+    ASSERT_TRUE(g_ng_order.move(&g_newsgroup_data[2], NewsgroupNum{1}));
 
     const InputNewsgroupResult result = run_command(std::string(1, command));
 
@@ -12089,7 +12089,7 @@ TEST_P(InputNewsgroupLookupCancelTest, erasingTheLookupCommandPreservesTheCurren
 
 TEST_F(InputNewsgroupLookupTest, numericLookupUsesTheDisplayedGroupNumberAfterReordering)
 {
-    ASSERT_TRUE(move_newsgroup_order(&g_newsgroup_data[2], NewsgroupNum{0}));
+    ASSERT_TRUE(g_ng_order.move(&g_newsgroup_data[2], NewsgroupNum{0}));
 
     const InputNewsgroupResult result = run_command("g 0\n");
 
