@@ -136,21 +136,21 @@ NewsgroupData *newsgroup_prev(NewsgroupData *np)
     return np == nullptr ? nullptr : np->m_prev;
 }
 
-void append_newsgroup_order(NewsgroupData *np)
+void NewsgroupOrder::append(NewsgroupData *np)
 {
-    np->m_prev = g_ng_order.last_newsgroup;
+    np->m_prev = last_newsgroup;
     np->m_next = nullptr;
-    np->m_num = NewsgroupNum{size_cast<long>(g_ng_order.order)};
-    if (g_ng_order.last_newsgroup)
+    np->m_num = NewsgroupNum{size_cast<long>(order)};
+    if (last_newsgroup)
     {
-        g_ng_order.last_newsgroup->m_next = np;
+        last_newsgroup->m_next = np;
     }
     else
     {
-        g_ng_order.first_newsgroup = np;
+        first_newsgroup = np;
     }
-    g_ng_order.order.push_back(np);
-    g_ng_order.last_newsgroup = np;
+    order.push_back(np);
+    last_newsgroup = np;
 }
 
 void pop_newsgroup_order()

@@ -274,7 +274,7 @@ protected:
             group.m_num_offset = static_cast<int>(delimiter + 1);
             group.m_subscribe_char = group.m_rc_line[delimiter];
         }
-        append_newsgroup_order(&group);
+        g_ng_order.append(&group);
         g_newsgroup_count = NewsgroupNum{static_cast<long>(g_newsgroup_data.size())};
     }
 

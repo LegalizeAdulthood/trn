@@ -90,7 +90,7 @@ NewsgroupData &NewsgroupPageStateTest::add_group(std::string_view name, ArticleU
     group.m_abs_first = ArticleNum{1};
     group.m_to_read = unread;
     group.m_flags = flags;
-    append_newsgroup_order(&group);
+    g_ng_order.append(&group);
     ++g_newsgroup_count;
     return group;
 }

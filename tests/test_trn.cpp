@@ -529,7 +529,7 @@ protected:
         group.m_ng_max = high;
         group.m_to_read = TR_NONE;
         group.hide_subscribe_char();
-        append_newsgroup_order(&group);
+        g_ng_order.append(&group);
         g_newsgroup_count = NewsgroupNum{static_cast<long>(g_newsgroup_data.size())};
 
         HashDatum data{};

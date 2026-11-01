@@ -815,7 +815,7 @@ static bool open_newsrc(Newsrc *rp)
             continue;
         }
         NewsgroupData *np = append_newsgroup_data();
-        append_newsgroup_order(np);
+        g_ng_order.append(np);
         np->m_rc = rp;
         ++g_newsgroup_count;
         if (line.back() == '\n')
@@ -1294,7 +1294,7 @@ reask_unsub:
 static NewsgroupData *add_newsgroup(Newsrc *rp, std::string_view ngn, char_int c)
 {
     NewsgroupData *np = append_newsgroup_data();
-    append_newsgroup_order(np);
+    g_ng_order.append(np);
     ++g_newsgroup_count;
 
     np->m_rc = rp;

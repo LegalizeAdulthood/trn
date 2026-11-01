@@ -50,7 +50,7 @@ NewsgroupData *add_test_newsgroup(std::string_view group_name)
     NewsgroupData &group = g_newsgroup_data.emplace_back();
     group.m_rc_line = group_name;
     group.m_to_read = 1;
-    append_newsgroup_order(&group);
+    g_ng_order.append(&group);
     g_newsgroup_count = NewsgroupNum{static_cast<int>(g_newsgroup_data.size())};
     g_newsgroup_to_read = g_newsgroup_count;
     return &group;
