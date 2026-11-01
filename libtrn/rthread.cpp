@@ -202,7 +202,7 @@ void thread_close()
 {
     g_nav.current.art = nullptr;
     g_nav.target.art = nullptr;
-    init_tree();                        // free any tree lines
+    g_tree_view.init(); // free any tree lines
 
     update_thread_kill_file();
     if (g_msg_id_hash)

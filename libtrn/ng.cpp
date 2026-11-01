@@ -567,7 +567,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             if (!art_open(g_nav.target.num, (ArticlePosition) 0))
             {
                 // see if we have tree data for this article anyway
-                init_tree();
+                g_tree_view.init();
                 std::string message{g_newsgroup_name};
                 message += ": article is not available.";
                 if (g_nav.target.art && !(g_nav.target.art->m_flags & AF_CACHED))

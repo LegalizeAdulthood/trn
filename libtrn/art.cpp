@@ -198,7 +198,7 @@ DoArticleResult do_article(std::string &article_command)
     {
         if (g_threaded_group && g_max_tree_lines)
         {
-            init_tree(); // init tree display
+            g_tree_view.init(); // init tree display
         }
         TRN_ASSERT(g_nav.target.num == g_art_input.open_art);
         if (g_do_fseek)

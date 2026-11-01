@@ -103,7 +103,7 @@ protected:
         EXPECT_FALSE(error) << error.message();
 
         g_nav.current.art = nullptr;
-        init_tree();
+        g_tree_view.init();
 
         g_nav.current.art = m_old_curr_artp;
         g_nav.recent.art = m_old_recent_artp;
@@ -459,7 +459,7 @@ constexpr char BRANCH_TREE[]{"\n[1] Topic\n[2] Branch\n\n  <so>[1]<se>+-[<so>1<s
 
 TEST_F(TreeRenderingTest, currentAndRecentArticlesAreMarked)
 {
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("+", ArticleLine{}, 0);
@@ -475,7 +475,7 @@ TEST_F(TreeRenderingTest, currentAndRecentArticlesAreMarked)
 TEST_F(TreeRenderingTest, normalHeaderKeywordIsSplitFromValue)
 {
     g_nav.current.art = nullptr;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("From: Tester\nignored", ArticleLine{1}, 0);
@@ -489,7 +489,7 @@ TEST_F(TreeRenderingTest, hiddenHeaderDecodesEncodedWords)
 {
     g_nav.current.art = nullptr;
     g_do_hiding = true;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("From: =?US-ASCII?B?Qm96byB0aGUgQ2xvd24=?=\nignored", ArticleLine{1}, 0);
@@ -504,7 +504,7 @@ TEST_F(TreeRenderingTest, hiddenHeaderSubstitutesDecodedLatinScalars)
     g_nav.current.art = nullptr;
     g_do_hiding = true;
     g_subst.set_mode('a');
-    init_tree();
+    g_tree_view.init();
     const std::string raw{"From: =?ISO-8859-1?Q?=C4?=\xE2\x80\x99"};
 
     testing::internal::CaptureStdout();
@@ -523,7 +523,7 @@ TEST_F(TreeRenderingTest, unicodeModeSubstitutesDecodedHeaders)
     g_subst.reset_mode();
     g_nav.current.art = nullptr;
     g_do_hiding = true;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     tree_puts("From: =?UTF-8?Q?=E2=80=99?=", ArticleLine{1}, 0);
@@ -537,7 +537,7 @@ TEST_F(TreeRenderingTest, texConversionDoesNotLeakBetweenHeaders)
     g_nav.current.art = nullptr;
     g_do_hiding = true;
     g_subst.set_mode('t');
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     tree_puts("From: =?US-ASCII?Q?=22A?=", ArticleLine{1}, 0);
@@ -553,7 +553,7 @@ TEST_F(TreeRenderingTest, headerWrapMeasuresUtf8Columns)
     g_nav.current.art = nullptr;
     g_do_hiding = true;
     g_tc_COLS = 10;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("From: =?Latin1?Q?=C4=C4=C4?=", ArticleLine{1}, 0);
@@ -568,7 +568,7 @@ TEST_F(TreeRenderingTest, headerHardWrapRetainsWholeUnicodeScalars)
     g_nav.current.art = nullptr;
     g_do_hiding = true;
     g_tc_COLS = 8;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("From: =?Latin1?Q?=C4=C4?=", ArticleLine{1}, 0);
@@ -581,7 +581,7 @@ TEST_F(TreeRenderingTest, headerHardWrapRetainsWholeUnicodeScalars)
 TEST_F(TreeRenderingTest, continuationLineUsesPreviousHeaderIndent)
 {
     g_nav.current.art = nullptr;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine first_lines = tree_puts("From: Tester", ArticleLine{1}, 0);
@@ -597,7 +597,7 @@ TEST_F(TreeRenderingTest, longHeaderValueWrapsAtWordBoundary)
 {
     g_nav.current.art = nullptr;
     g_tc_COLS = 20;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("From: alpha beta gamma delta", ArticleLine{1}, 0);
@@ -611,7 +611,7 @@ TEST_F(TreeRenderingTest, subjectLineGetsSubjectPrefixWhenUnthreaded)
 {
     g_nav.current.art = nullptr;
     g_threaded_group = false;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("Thread title", ArticleLine{1}, 1);
@@ -630,7 +630,7 @@ TEST_F(TreeRenderingTest, issue30SubjectRestoresUnderlineBeforeFollowingText)
     g_tc_US = "\x1B[4m";
     g_tc_UE = "\x1B[24m";
     g_fire_is_out = UNDERLINE | STANDOUT;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     tree_puts(UNDERLINE_SUBJECT, ArticleLine{1}, 1);
@@ -647,7 +647,7 @@ TEST_F(TreeRenderingTest, issue30SubjectUnderlinesWholeScalarsOnUndercharTermina
     g_do_hiding = true;
     g_tc_COLS = 120;
     g_tc_UC = "<uc>";
-    init_tree();
+    g_tree_view.init();
     std::string expected{"Subject: "};
     expected += "\xE2\x80\x9C\b<uc>";
     for (char ch : std::string_view{"Microsoft CEO says up to 30% of the company"})
@@ -678,7 +678,7 @@ TEST_F(TreeRenderingTest, issue30WrappedSubjectRestoresUnderlineOnEveryLine)
     g_tc_US = "\x1B[4m";
     g_tc_UE = "\x1B[24m";
     g_fire_is_out = UNDERLINE | STANDOUT;
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     tree_puts(UNDERLINE_SUBJECT, ArticleLine{1}, 1);
@@ -740,7 +740,7 @@ TEST_F(TreeRenderingTest, siblingBranchesAreRenderedOnSeparateLines)
     sibling.m_flags = AF_EXISTS | AF_CACHED | AF_UNREAD;
     m_recent.m_sibling = &sibling;
 
-    init_tree();
+    g_tree_view.init();
 
     testing::internal::CaptureStdout();
     const ArticleLine lines = tree_puts("+", ArticleLine{}, 0);

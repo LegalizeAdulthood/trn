@@ -65,18 +65,18 @@ static TreeLines render_tree_lines(Article *article, TreeRenderState &render);
 static void     print_tree_line(std::string_view tree_line);
 
 // Prepare tree display for inclusion in the article header.
-void init_tree()
+void ThreadTreeView::init()
 {
     Article*thread;
 
-    g_tree_view.tree_lines.clear();
-    g_tree_view.max_line = -1;
+    tree_lines.clear();
+    max_line = -1;
 
-    if (!(g_tree_view.tree_article = g_nav.current.art) || !g_tree_view.tree_article->m_subj)
+    if (!(tree_article = g_nav.current.art) || !tree_article->m_subj)
     {
         return;
     }
-    if (!(thread = g_tree_view.tree_article->m_subj->m_thread))
+    if (!(thread = tree_article->m_subj->m_thread))
     {
         return;
     }
@@ -89,61 +89,61 @@ void init_tree()
         sp = sp->m_thread_link;
     } while (sp != thread->m_subj);
 
-    g_tree_view.max_depth = 0;
-    g_tree_view.max_line = 0;
-    g_tree_view.my_depth = 0;
-    g_tree_view.my_line = 0;
-    g_tree_view.find_depth(thread, 0);
+    max_depth = 0;
+    max_line = 0;
+    my_depth = 0;
+    my_line = 0;
+    find_depth(thread, 0);
 
-    if (g_tree_view.max_depth <= 5)
+    if (max_depth <= 5)
     {
-        g_tree_view.first_depth = 0;
+        first_depth = 0;
     }
     else
     {
-        if (g_tree_view.my_depth + 2 > g_tree_view.max_depth)
+        if (my_depth + 2 > max_depth)
         {
-            g_tree_view.first_depth = g_tree_view.max_depth - 5;
+            first_depth = max_depth - 5;
         }
         else
         {
-            g_tree_view.first_depth = g_tree_view.my_depth - 3;
-            g_tree_view.first_depth = std::max(g_tree_view.first_depth, 0);
+            first_depth = my_depth - 3;
+            first_depth = std::max(first_depth, 0);
         }
-        g_tree_view.max_depth = g_tree_view.first_depth + 5;
+        max_depth = first_depth + 5;
     }
-    if (--g_tree_view.max_line < g_max_tree_lines)
+    if (--max_line < g_max_tree_lines)
     {
-        g_tree_view.first_line = 0;
+        first_line = 0;
     }
     else
     {
-        if (g_tree_view.my_line + g_max_tree_lines / 2 > g_tree_view.max_line)
+        if (my_line + g_max_tree_lines / 2 > max_line)
         {
-            g_tree_view.first_line = g_tree_view.max_line - (g_max_tree_lines - 1);
+            first_line = max_line - (g_max_tree_lines - 1);
         }
         else
         {
-            g_tree_view.first_line = g_tree_view.my_line - (g_max_tree_lines - 1) / 2;
-            g_tree_view.first_line = std::max(g_tree_view.first_line, 0);
+            first_line = my_line - (g_max_tree_lines - 1) / 2;
+            first_line = std::max(first_line, 0);
         }
-        g_tree_view.max_line = g_tree_view.first_line + g_max_tree_lines - 1;
+        max_line = first_line + g_max_tree_lines - 1;
     }
 
     TreeRenderState render;
-    render.first_depth = g_tree_view.first_depth;
-    render.max_depth = g_tree_view.max_depth;
-    render.first_line = g_tree_view.first_line;
-    render.max_line = g_tree_view.max_line;
-    g_tree_view.tree_lines = render_tree_lines(thread, render);
-    g_tree_view.first_line = render.first_line;
+    render.first_depth = first_depth;
+    render.max_depth = max_depth;
+    render.first_line = first_line;
+    render.max_line = max_line;
+    tree_lines = render_tree_lines(thread, render);
+    first_line = render.first_line;
 
-    g_tree_view.max_depth = (g_tree_view.max_depth - g_tree_view.first_depth + 1) * 5; // turn depth into char width
-    g_tree_view.max_line -= g_tree_view.first_line; // turn g_tree_view.max_line into count
+    max_depth = (max_depth - first_depth + 1) * 5; // turn depth into char width
+    max_line -= first_line;                        // turn max_line into count
     // shorten tree if lower lines aren't visible
-    if (render.node_line_count < g_tree_view.max_line)
+    if (render.node_line_count < max_line)
     {
-        g_tree_view.max_line = render.node_line_count + 1;
+        max_line = render.node_line_count + 1;
     }
 }
 
