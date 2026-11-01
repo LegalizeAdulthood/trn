@@ -116,10 +116,10 @@ struct HeaderRules
     void init();
     void clear();
     HeaderLineType set_line_type(std::string_view header_name);
-    void           set(std::string_view s, HeaderTypeFlags flag, bool setit);
+    void           set(std::string_view s, HeaderTypeFlags flag, bool set_flag);
 
     // TODO: private
-    void set_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str);
+    void set_list(HeaderTypeFlags flag, HeaderTypeFlags def_flag, std::string_view prefix_list);
 
     HeaderType                  type[HEAD_LAST]{};
     HeaderLineType              type_idx[26]{};

@@ -1376,10 +1376,8 @@ static std::string magic_list()
     return headers;
 }
 
-void HeaderRules::set_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str)
+void HeaderRules::set_list(HeaderTypeFlags flag, HeaderTypeFlags def_flag, std::string_view prefix_list)
 {
-    bool setit;
-
     if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
         // Free old user_type list
@@ -1392,23 +1390,24 @@ void HeaderRules::set_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::s
 
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        type[i].flags = ((type[i].flags & defflag) ? (type[i].flags | flag) : (type[i].flags & ~flag));
+        type[i].flags = ((type[i].flags & def_flag) ? (type[i].flags | flag) : (type[i].flags & ~flag));
     }
-    std::string_view remaining = str.empty() ? std::string_view{" "} : str;
+    std::string_view remaining = prefix_list.empty() ? std::string_view{" "} : prefix_list;
     while (true)
     {
         const std::size_t comma = remaining.find(',');
         std::string_view  header = remaining.substr(0, comma);
+        bool set_flag;
         if (!header.empty() && header.front() == '!')
         {
-            setit = false;
+            set_flag = false;
             header.remove_prefix(1);
         }
         else
         {
-            setit = true;
+            set_flag = true;
         }
-        set(header, flag, setit);
+        set(header, flag, set_flag);
         if (comma == std::string_view::npos)
         {
             break;
@@ -1417,14 +1416,14 @@ void HeaderRules::set_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::s
     }
 }
 
-void HeaderRules::set(std::string_view s, HeaderTypeFlags flag, bool setit)
+void HeaderRules::set(std::string_view s, HeaderTypeFlags flag, bool set_flag)
 {
     const int len = static_cast<int>(s.size());
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
         if (!len || string_case_equal(s, std::string_view{type[i].name}.substr(0, s.size())))
         {
-            if (setit && (flag != HT_MAGIC || (type[i].flags & HT_MAGIC_OK)))
+            if (set_flag && (flag != HT_MAGIC || (type[i].flags & HT_MAGIC_OK)))
             {
                 type[i].flags |= flag;
             }
@@ -1454,7 +1453,7 @@ void HeaderRules::set(std::string_view s, HeaderTypeFlags flag, bool setit)
             {
                 if (!add_at)
                 {
-                    if (user_type[i].flags == (setit ? flag : 0))
+                    if (user_type[i].flags == (set_flag ? flag : 0))
                     {
                         save_it = false;
                     }
@@ -1490,7 +1489,7 @@ void HeaderRules::set(std::string_view s, HeaderTypeFlags flag, bool setit)
                 add_at = killed;
             }
             user_type[add_at].length = len;
-            user_type[add_at].flags = setit ? flag : 0;
+            user_type[add_at].flags = set_flag ? flag : 0;
             user_type[add_at].name = s;
             for (char &c : user_type[add_at].name)
             {
