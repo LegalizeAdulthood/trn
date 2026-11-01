@@ -56,13 +56,19 @@ struct NewsgroupData
     NewsgroupFlags m_flags;          // flags for each group
 };
 
+struct NewsgroupOrder
+{
+    std::vector<NewsgroupData *> order; // current newsgroup order
+    NewsgroupData               *first_newsgroup{};
+    NewsgroupData               *last_newsgroup{};
+};
+
+extern NewsgroupOrder g_ng_order;
+
 extern std::vector<NewsgroupData>   g_newsgroup_data;        // all newsgroup data
-extern std::vector<NewsgroupData *> g_newsgroup_order;       // current newsgroup order
 extern NewsgroupNum                 g_newsgroup_count;       // all newsgroups in our current newsrc(s)
 extern NewsgroupNum                 g_newsgroup_to_read;     //
 extern ArticleUnread                g_newsgroup_min_to_read; // == TR_ONE or TR_NONE
-extern NewsgroupData *g_first_newsgroup;       //
-extern NewsgroupData *g_last_newsgroup;        //
 extern NewsgroupData *g_newsgroup_ptr;         // current newsgroup data ptr
 extern NewsgroupData *g_current_newsgroup;     // stable current newsgroup so we can ditz with g_ngptr
 extern NewsgroupData *g_recent_newsgroup;      // the prior newsgroup we visited

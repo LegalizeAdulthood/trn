@@ -1304,7 +1304,7 @@ int find_close_match()
 
     if (ret < 0)
     {
-        for (const NewsgroupData *newsgroup : g_newsgroup_order)
+        for (const NewsgroupData *newsgroup : g_ng_order.order)
         {
             if (newsgroup->m_num_offset != 0 && newsgroup->m_to_read != TR_IGNORE)
             {

@@ -39,9 +39,7 @@ protected:
 
 private:
     std::vector<NewsgroupData>   m_groups;
-    std::vector<NewsgroupData *> m_old_order{std::move(g_newsgroup_order)};
-    NewsgroupData               *m_old_first{g_first_newsgroup};
-    NewsgroupData               *m_old_last{g_last_newsgroup};
+    NewsgroupOrder               m_old_order{std::move(g_ng_order)};
     NewsgroupData               *m_old_page{g_sel_page.page_ngd};
     NewsgroupData               *m_old_next{g_sel_page.next_ngd};
     NewsgroupNum                 m_old_count{g_newsgroup_count};

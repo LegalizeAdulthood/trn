@@ -21,9 +21,7 @@ const std::array<std::string_view, 8> DISPLAY_GROUP_NAMES{"comp.alpha", "alt.hid
 void NewsgroupPageStateTest::SetUp()
 {
     m_groups.reserve(8);
-    g_newsgroup_order.clear();
-    g_first_newsgroup = nullptr;
-    g_last_newsgroup = nullptr;
+    g_ng_order = {};
     g_sel_page.page_ngd = nullptr;
     g_sel_page.next_ngd = nullptr;
     g_newsgroup_count = NewsgroupNum{};
@@ -46,9 +44,7 @@ void NewsgroupPageStateTest::SetUp()
 void NewsgroupPageStateTest::TearDown()
 {
     pop_only();
-    g_newsgroup_order = std::move(m_old_order);
-    g_first_newsgroup = m_old_first;
-    g_last_newsgroup = m_old_last;
+    g_ng_order = std::move(m_old_order);
     g_sel_page.page_ngd = m_old_page;
     g_sel_page.next_ngd = m_old_next;
     g_newsgroup_count = m_old_count;
@@ -110,7 +106,7 @@ void NewsgroupPageStateTest::initialize_page()
 std::vector<std::string> NewsgroupPageStateTest::groups_with_flag(NewsgroupFlags flag) const
 {
     std::vector<std::string> names;
-    for (const NewsgroupData *group : g_newsgroup_order)
+    for (const NewsgroupData *group : g_ng_order.order)
     {
         if (group->m_flags & flag)
         {

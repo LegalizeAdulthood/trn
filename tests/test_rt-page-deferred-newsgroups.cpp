@@ -548,9 +548,9 @@ TEST_P(DeferredNewsgroupCleanupTest, rebuildsRowsAndPointersAfterCleanupMovesOrD
     EXPECT_EQ(&first, g_sel_page.page_ngd);
     EXPECT_EQ(nullptr, g_sel_page.next_ngd);
     EXPECT_EQ(NewsgroupNum{remove ? 2 : 3}, g_newsgroup_count);
-    ASSERT_EQ(remove ? 2U : 3U, g_newsgroup_order.size());
-    EXPECT_EQ(&first, g_newsgroup_order[0]);
-    EXPECT_EQ(&last, g_newsgroup_order[1]);
+    ASSERT_EQ(remove ? 2U : 3U, g_ng_order.order.size());
+    EXPECT_EQ(&first, g_ng_order.order[0]);
+    EXPECT_EQ(&last, g_ng_order.order[1]);
     if (remove)
     {
         EXPECT_TRUE(bogus.m_rc_line.empty());
@@ -560,7 +560,7 @@ TEST_P(DeferredNewsgroupCleanupTest, rebuildsRowsAndPointersAfterCleanupMovesOrD
     }
     else
     {
-        EXPECT_EQ(&bogus, g_newsgroup_order[2]);
+        EXPECT_EQ(&bogus, g_ng_order.order[2]);
         EXPECT_EQ(TR_BOGUS, bogus.m_to_read);
     }
     EXPECT_TRUE(m_newsrc.flags & RF_RC_CHANGED);

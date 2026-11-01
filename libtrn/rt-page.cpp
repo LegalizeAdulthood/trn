@@ -1055,7 +1055,7 @@ try_again:
 ///
 /// @globals
 /// - g_sel.mode: Read to select the active population.
-/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ.items: Read through catalog helpers.
+/// - g_multircs, g_ng_order.order, g_add_groups, g_univ.items: Read through catalog helpers.
 /// - g_art_ptr_list, g_first_subject: Read for article and subject traversal.
 ///
 bool SelectorPage::first_page()
@@ -1419,7 +1419,7 @@ bool SelectorPage::next_page()
 ///
 /// @globals
 /// - g_sel: Read for the active mode and selection policy.
-/// - g_multircs, g_newsgroup_order, g_add_groups, g_univ.items: Read through catalog helpers.
+/// - g_multircs, g_ng_order.order, g_add_groups, g_univ.items: Read through catalog helpers.
 /// - g_opt_edit.flags, g_art_ptr_list, g_first_subject, g_last_subject: Read for included entries and traversal.
 /// - g_tc_COLS, g_sel_art_display_mode, g_sel_art_display_mode_index: Read by line-count helpers.
 ///

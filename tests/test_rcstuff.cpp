@@ -65,7 +65,7 @@ std::string unsubscribed_newsrc_line(std::string_view group_name, std::string_vi
 std::vector<std::string> ordered_newsgroup_names()
 {
     std::vector<std::string> names;
-    for (NewsgroupData *group : g_newsgroup_order)
+    for (NewsgroupData *group : g_ng_order.order)
     {
         names.emplace_back(group->rc_name());
     }
@@ -78,11 +78,11 @@ protected:
     void SetUp() override
     {
         m_old_newsgroup_data = std::move(g_newsgroup_data);
-        m_old_newsgroup_order = std::move(g_newsgroup_order);
+        m_old_newsgroup_order = std::move(g_ng_order.order);
         m_old_newsgroup_count = g_newsgroup_count;
         m_old_newsgroup_to_read = g_newsgroup_to_read;
-        m_old_first_newsgroup = g_first_newsgroup;
-        m_old_last_newsgroup = g_last_newsgroup;
+        m_old_first_newsgroup = g_ng_order.first_newsgroup;
+        m_old_last_newsgroup = g_ng_order.last_newsgroup;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_current_newsgroup = g_current_newsgroup;
         m_old_recent_newsgroup = g_recent_newsgroup;
@@ -138,11 +138,11 @@ protected:
         g_sel.newsgroup_sort = SS_NATURAL;
         g_sel.direction = 1;
         g_newsgroup_data.clear();
-        g_newsgroup_order.clear();
+        g_ng_order.order.clear();
         g_newsgroup_count = NewsgroupNum{};
         g_newsgroup_to_read = NewsgroupNum{};
-        g_first_newsgroup = nullptr;
-        g_last_newsgroup = nullptr;
+        g_ng_order.first_newsgroup = nullptr;
+        g_ng_order.last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_recent_newsgroup = nullptr;
@@ -200,11 +200,11 @@ protected:
         fs::remove_all(m_output_dir, error);
 
         g_newsgroup_data = std::move(m_old_newsgroup_data);
-        g_newsgroup_order = std::move(m_old_newsgroup_order);
+        g_ng_order.order = std::move(m_old_newsgroup_order);
         g_newsgroup_count = m_old_newsgroup_count;
         g_newsgroup_to_read = m_old_newsgroup_to_read;
-        g_first_newsgroup = m_old_first_newsgroup;
-        g_last_newsgroup = m_old_last_newsgroup;
+        g_ng_order.first_newsgroup = m_old_first_newsgroup;
+        g_ng_order.last_newsgroup = m_old_last_newsgroup;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_current_newsgroup = m_old_current_newsgroup;
         g_recent_newsgroup = m_old_recent_newsgroup;
@@ -354,7 +354,7 @@ TEST_F(NewsrcRotationTest, writeNewsrcsConvertsUnthreadedMarkerOnlyInOutput)
     Multirc multirc{};
     multirc.m_first = &newsrc;
     add_newsgroup(newsrc, "comp.lang.apl: 1-3");
-    NewsgroupData &group = *g_newsgroup_order[0];
+    NewsgroupData &group = *g_ng_order.order[0];
     group.m_flags |= NF_UNTHREADED;
     std::ofstream{newsrc.name} << "old contents\n";
 
@@ -465,9 +465,9 @@ TEST_F(NewsrcRotationTest, useMultircReadsLongOptionsLine)
 
     ASSERT_TRUE(multirc.use_multirc());
 
-    ASSERT_EQ(1, g_newsgroup_order.size());
-    EXPECT_EQ(options_line, g_newsgroup_order[0]->m_rc_line);
-    EXPECT_EQ(TR_JUNK, g_newsgroup_order[0]->m_to_read);
+    ASSERT_EQ(1, g_ng_order.order.size());
+    EXPECT_EQ(options_line, g_ng_order.order[0]->m_rc_line);
+    EXPECT_EQ(TR_JUNK, g_ng_order.order[0]->m_to_read);
     unuse_multirc(&multirc);
 }
 
@@ -485,8 +485,8 @@ TEST_F(NewsrcRotationTest, useMultircRepairsMissingNewsrcDelimiter)
 
     ASSERT_TRUE(multirc.use_multirc());
 
-    ASSERT_EQ(1, g_newsgroup_order.size());
-    NewsgroupData *group = g_newsgroup_order[0];
+    ASSERT_EQ(1, g_ng_order.order.size());
+    NewsgroupData *group = g_ng_order.order[0];
     EXPECT_EQ("comp.lang.apl", group->rc_name());
     EXPECT_EQ(':', group->m_subscribe_char);
     EXPECT_EQ(static_cast<int>(std::string_view{"comp.lang.apl"}.size() + 1), group->m_num_offset);
@@ -510,8 +510,8 @@ TEST_F(NewsrcRotationTest, useMultircDetectsUnthreadedNewsrcLine)
 
     ASSERT_TRUE(multirc.use_multirc());
 
-    ASSERT_EQ(1, g_newsgroup_order.size());
-    NewsgroupData *group = g_newsgroup_order[0];
+    ASSERT_EQ(1, g_ng_order.order.size());
+    NewsgroupData *group = g_ng_order.order[0];
     EXPECT_EQ(NF_UNTHREADED, group->m_flags & NF_UNTHREADED);
     EXPECT_EQ(':', group->m_subscribe_char);
     group->show_subscribe_char();
@@ -573,11 +573,11 @@ TEST_F(NewsrcRotationTest, relocateNewsgroupMovesToPromptedNumber)
 {
     Newsrc newsrc = make_newsrc();
     g_newsgroup_data.reserve(3);
-    g_newsgroup_order.reserve(3);
+    g_ng_order.order.reserve(3);
     add_newsgroup(newsrc, "comp.lang.apl: 1-3");
     add_newsgroup(newsrc, "comp.lang.c++: 1-2");
     add_newsgroup(newsrc, "comp.lang.python: 1");
-    NewsgroupData *group = g_newsgroup_order[2];
+    NewsgroupData *group = g_ng_order.order[2];
 
     push_string("0junk\n", 0200);
     testing::internal::CaptureStdout();
@@ -604,7 +604,7 @@ TEST_F(NewsrcRotationTest, relocateNewsgroupMovesAfterNamedGroup)
                                << "comp.lang.python: 1\n";
     ASSERT_TRUE(multirc.use_multirc());
 
-    NewsgroupData *group = g_newsgroup_order[0];
+    NewsgroupData *group = g_ng_order.order[0];
     push_string("+comp.lang.c++\n", 0200);
     testing::internal::CaptureStdout();
     const bool        relocated = group->relocate_newsgroup(NewsgroupNum{-1});
@@ -757,8 +757,8 @@ TEST_F(NewsrcRotationTest, getNewsgroupAppendsUnsubscribedMissingGroup)
     g_multirc = nullptr;
 
     EXPECT_FALSE(found);
-    ASSERT_EQ(1, g_newsgroup_order.size());
-    NewsgroupData *group = g_newsgroup_order[0];
+    ASSERT_EQ(1, g_ng_order.order.size());
+    NewsgroupData *group = g_ng_order.order[0];
     EXPECT_EQ("comp.lang.apl", group->rc_name());
     EXPECT_EQ(UNSUBSCRIBED_CHAR, group->m_subscribe_char);
     EXPECT_EQ(static_cast<int>(std::string_view{"comp.lang.apl"}.size() + 1), group->m_num_offset);
@@ -820,11 +820,11 @@ TEST_F(NewsrcRotationTest, listNewsgroupsPrintsStatusAndNames)
 {
     Newsrc newsrc = make_newsrc();
     g_newsgroup_data.reserve(2);
-    g_newsgroup_order.reserve(2);
+    g_ng_order.order.reserve(2);
     add_newsgroup(newsrc, "comp.lang.apl: 1-3");
     add_newsgroup(newsrc, unsubscribed_newsrc_line("comp.lang.c++", " 1-2"));
-    g_newsgroup_order[0]->m_to_read = ArticleUnread{-1};
-    g_newsgroup_order[1]->m_to_read = ArticleUnread{-2};
+    g_ng_order.order[0]->m_to_read = ArticleUnread{-1};
+    g_ng_order.order[1]->m_to_read = ArticleUnread{-2};
 
     testing::internal::CaptureStdout();
     list_newsgroups();

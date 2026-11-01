@@ -176,15 +176,15 @@ protected:
     void SetUp() override
     {
         m_old_newsgroup_data = std::move(g_newsgroup_data);
-        m_old_newsgroup_order = std::move(g_newsgroup_order);
+        m_old_newsgroup_order = std::move(g_ng_order.order);
         m_old_newsgroup_count = g_newsgroup_count;
         m_old_newsgroup_to_read = g_newsgroup_to_read;
         m_old_newsgroup_min_to_read = g_newsgroup_min_to_read;
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
-        m_old_first_newsgroup = g_first_newsgroup;
-        m_old_last_newsgroup = g_last_newsgroup;
+        m_old_first_newsgroup = g_ng_order.first_newsgroup;
+        m_old_last_newsgroup = g_ng_order.last_newsgroup;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_current_newsgroup = g_current_newsgroup;
         m_old_article_list = std::move(g_article_list);
@@ -280,17 +280,17 @@ protected:
         g_tmp_dir = m_output_dir.generic_string();
         drain_macro_buffer();
         g_newsgroup_data.clear();
-        g_newsgroup_order.clear();
+        g_ng_order.order.clear();
         g_newsgroup_data.reserve(3);
-        g_newsgroup_order.reserve(3);
+        g_ng_order.order.reserve(3);
         g_newsgroup_count = NewsgroupNum{};
         g_newsgroup_to_read = NewsgroupNum{};
         g_newsgroup_min_to_read = TR_NONE;
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{};
-        g_first_newsgroup = nullptr;
-        g_last_newsgroup = nullptr;
+        g_ng_order.first_newsgroup = nullptr;
+        g_ng_order.last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_article_list.clear();
@@ -412,15 +412,15 @@ protected:
         }
 
         g_newsgroup_data = std::move(m_old_newsgroup_data);
-        g_newsgroup_order = std::move(m_old_newsgroup_order);
+        g_ng_order.order = std::move(m_old_newsgroup_order);
         g_newsgroup_count = m_old_newsgroup_count;
         g_newsgroup_to_read = m_old_newsgroup_to_read;
         g_newsgroup_min_to_read = m_old_newsgroup_min_to_read;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
-        g_first_newsgroup = m_old_first_newsgroup;
-        g_last_newsgroup = m_old_last_newsgroup;
+        g_ng_order.first_newsgroup = m_old_first_newsgroup;
+        g_ng_order.last_newsgroup = m_old_last_newsgroup;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_current_newsgroup = m_old_current_newsgroup;
         g_article_list.clear();
@@ -777,7 +777,7 @@ void MultircTraversalStateTest::SetUp()
     InputNewsgroupTest::SetUp();
     m_loop_context.emplace(m_newsrc, m_output_dir);
     g_newsgroup_data.reserve(8);
-    g_newsgroup_order.reserve(8);
+    g_ng_order.order.reserve(8);
     g_newsgroup_min_to_read = ArticleUnread{2};
     g_allow_typeahead = true;
     m_data_source.m_flags = DF_NONE;
@@ -1576,7 +1576,7 @@ TEST_P(MultircEmptyStartupTest, nextOnAnEmptyCatalogRepeatsTheEndPromptAndAllows
 
     expect_prompts({"", ""}, "qnp");
     EXPECT_TRUE(g_newsgroup_data.empty());
-    EXPECT_TRUE(g_newsgroup_order.empty());
+    EXPECT_TRUE(g_ng_order.order.empty());
     EXPECT_EQ(NewsgroupNum{}, g_newsgroup_count);
     EXPECT_EQ(nullptr, g_newsgroup_ptr);
     EXPECT_EQ(nullptr, g_current_newsgroup);
@@ -14811,7 +14811,7 @@ TEST_P(NewsgroupSelectorHelpScopeTest, theSelectorDispatchesTheCommandReturnedFr
     EXPECT_EQ('q', result);
     EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
     expect_selector_session_preserved(rereading, -1);
-    ASSERT_EQ(3, g_newsgroup_order.size());
+    ASSERT_EQ(3, g_ng_order.order.size());
     EXPECT_EQ(&g_newsgroup_data[0], newsgroup_first());
     EXPECT_EQ(&g_newsgroup_data[1], newsgroup_last());
     expect_next_command('Q');
@@ -15169,8 +15169,9 @@ TEST_F(NewsgroupSelectorRefreshStateTest, aRefreshOfAnEmptyCatalogStillRefreshes
     DataSource &source = g_data_sources.front();
     replace_active_counts(source, 5);
     g_newsgroup_data.clear();
-    g_newsgroup_order.clear();
-    g_first_newsgroup = g_last_newsgroup = g_newsgroup_ptr = g_current_newsgroup = g_recent_newsgroup = nullptr;
+    g_ng_order.order.clear();
+    g_ng_order.first_newsgroup = g_ng_order.last_newsgroup = g_newsgroup_ptr = g_current_newsgroup =
+        g_recent_newsgroup = nullptr;
     g_sel_page.page_ngd = g_sel_page.next_ngd = nullptr;
     g_newsgroup_count = g_newsgroup_to_read = NewsgroupNum{};
 

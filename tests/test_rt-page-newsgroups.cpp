@@ -469,14 +469,14 @@ void NewsgroupSelectorSortStateTest::expect_selections_preserved() const
     EXPECT_EQ(SM_NEWSGROUP, g_sel.mode);
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
-    for (std::size_t index = 0; index < g_newsgroup_order.size(); ++index)
+    for (std::size_t index = 0; index < g_ng_order.order.size(); ++index)
     {
-        EXPECT_EQ(index ? g_newsgroup_order[index - 1] : nullptr, g_newsgroup_order[index]->m_prev);
-        EXPECT_EQ(index + 1 < g_newsgroup_order.size() ? g_newsgroup_order[index + 1] : nullptr,
-                  g_newsgroup_order[index]->m_next);
+        EXPECT_EQ(index ? g_ng_order.order[index - 1] : nullptr, g_ng_order.order[index]->m_prev);
+        EXPECT_EQ(index + 1 < g_ng_order.order.size() ? g_ng_order.order[index + 1] : nullptr,
+                  g_ng_order.order[index]->m_next);
     }
-    EXPECT_EQ(g_newsgroup_order.front(), g_first_newsgroup);
-    EXPECT_EQ(g_newsgroup_order.back(), g_last_newsgroup);
+    EXPECT_EQ(g_ng_order.order.front(), g_ng_order.first_newsgroup);
+    EXPECT_EQ(g_ng_order.order.back(), g_ng_order.last_newsgroup);
 }
 
 void NewsgroupSelectorSortStateTest::expect_sorted(const NewsgroupSortChoice &choice) const
@@ -625,7 +625,7 @@ void NewsgroupSelectorCatchupStateTest::expect_other_groups_preserved() const
     EXPECT_EQ(" 1-3", m_recent->rc_numbers());
     EXPECT_EQ(':', m_recent->m_subscribe_char);
     EXPECT_EQ(NF_DEL | NF_VISIT | included, m_recent->m_flags);
-    EXPECT_EQ((std::vector<NewsgroupData *>{m_first, m_target, m_recent}), g_newsgroup_order);
+    EXPECT_EQ((std::vector<NewsgroupData *>{m_first, m_target, m_recent}), g_ng_order.order);
     EXPECT_EQ(m_target, m_first->m_next);
     EXPECT_EQ(m_target, m_recent->m_prev);
     EXPECT_EQ(m_first, m_target->m_prev);
@@ -937,8 +937,8 @@ void NewsgroupSelectorExclusiveTest::expect_read_state_preserved() const
     EXPECT_EQ(SM_NEWSGROUP, g_sel.mode);
     EXPECT_EQ(SS_NATURAL, g_sel.sort);
     EXPECT_EQ(1, g_sel.direction);
-    EXPECT_EQ(m_objects.front(), g_first_newsgroup);
-    EXPECT_EQ(m_objects.back(), g_last_newsgroup);
+    EXPECT_EQ(m_objects.front(), g_ng_order.first_newsgroup);
+    EXPECT_EQ(m_objects.back(), g_ng_order.last_newsgroup);
 }
 
 class NewsgroupSelectorBulkStateTest : public NewsgroupSelectorPromptStateTest
@@ -1068,8 +1068,8 @@ void NewsgroupSelectorBulkStateTest::expect_context() const
     EXPECT_EQ(SS_NATURAL, g_sel.sort);
     EXPECT_EQ(1, g_sel.direction);
     EXPECT_EQ(NewsgroupNum{GROUP_COUNT}, g_newsgroup_count);
-    EXPECT_EQ(m_groups.front(), g_first_newsgroup);
-    EXPECT_EQ(m_groups.back(), g_last_newsgroup);
+    EXPECT_EQ(m_groups.front(), g_ng_order.first_newsgroup);
+    EXPECT_EQ(m_groups.back(), g_ng_order.last_newsgroup);
 }
 
 class NewsgroupSelectorExclusiveBulkTest : public NewsgroupSelectorBulkStateTest,
@@ -1848,7 +1848,7 @@ TEST_P(NewsgroupSelectorSortCancelTest, rejectedChoicesRetainTheOrderAndPageAnch
     const auto [rereading, key] = GetParam();
     prepare_sort(rereading, static_cast<SelectionSortMode>(-SS_STRING));
     g_can_home = true;
-    const std::vector<NewsgroupData *> order = g_newsgroup_order;
+    const std::vector<NewsgroupData *> order = g_ng_order.order;
     const NewsgroupData               *anchor = g_sel_page.page_ngd;
     const int                          prior = g_sel_page.prior_obj_cnt;
     const int                          rows = g_sel_page.page_item_cnt;
@@ -1856,7 +1856,7 @@ TEST_P(NewsgroupSelectorSortCancelTest, rejectedChoicesRetainTheOrderAndPageAnch
     const DisplayState result = run_command('O', std::string(1, key));
 
     EXPECT_EQ(DS_ASK, result);
-    EXPECT_EQ(order, g_newsgroup_order);
+    EXPECT_EQ(order, g_ng_order.order);
     EXPECT_EQ(anchor, g_sel_page.page_ngd);
     EXPECT_EQ(prior, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(rows, g_sel_page.page_item_cnt);

@@ -122,8 +122,8 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     const std::ptrdiff_t        sel_next_index = newsgroup_pointer_index(old_base, old_count, g_sel_page.next_ngd);
     const std::ptrdiff_t        go_index = newsgroup_pointer_index(old_base, old_count, g_ng_go_newsgroup_ptr);
     std::vector<std::ptrdiff_t> order_indexes;
-    order_indexes.reserve(g_newsgroup_order.size());
-    for (NewsgroupData *np : g_newsgroup_order)
+    order_indexes.reserve(g_ng_order.order.size());
+    for (NewsgroupData *np : g_ng_order.order)
     {
         order_indexes.push_back(newsgroup_pointer_index(old_base, old_count, np));
     }
@@ -140,9 +140,9 @@ static void ensure_newsgroup_data_capacity(std::size_t count)
     g_newsgroup_data.reserve(std::max(count, capacity + std::max(capacity, NEWSGROUP_DATA_RESERVE_SLACK)));
 
     NewsgroupData *new_base = g_newsgroup_data.data();
-    for (std::size_t i = 0; i != g_newsgroup_order.size(); ++i)
+    for (std::size_t i = 0; i != g_ng_order.order.size(); ++i)
     {
-        g_newsgroup_order[i] = newsgroup_pointer_from_index(new_base, order_indexes[i]);
+        g_ng_order.order[i] = newsgroup_pointer_from_index(new_base, order_indexes[i]);
     }
     sync_newsgroup_order_links();
     g_newsgroup_ptr = newsgroup_pointer_from_index(new_base, ptr_index);
@@ -475,9 +475,9 @@ void unuse_multirc(Multirc *mptr)
             clear_newsgroup_item(&np);
         }
         g_newsgroup_data.clear();
-        g_newsgroup_order.clear();
-        g_first_newsgroup = nullptr;
-        g_last_newsgroup = nullptr;
+        g_ng_order.order.clear();
+        g_ng_order.first_newsgroup = nullptr;
+        g_ng_order.last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_recent_newsgroup = nullptr;

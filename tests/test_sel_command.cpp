@@ -191,7 +191,7 @@ void SelectorPagingStateTest::prepare(SelectionMode mode, bool rereading, int co
     {
         if (mode == SM_NEWSGROUP)
         {
-            g_newsgroup_order[3]->m_flags |= NF_DEL;
+            g_ng_order.order[3]->m_flags |= NF_DEL;
         }
         else if (mode == SM_UNIVERSAL)
         {
@@ -300,8 +300,8 @@ int SelectorPagingStateTest::row_number(int index) const
 {
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        const auto item = std::find(g_newsgroup_order.begin(), g_newsgroup_order.end(), g_sel_page.items[index].u.np);
-        return static_cast<int>(item - g_newsgroup_order.begin()) + 1;
+        const auto item = std::find(g_ng_order.order.begin(), g_ng_order.order.end(), g_sel_page.items[index].u.np);
+        return static_cast<int>(item - g_ng_order.order.begin()) + 1;
     }
     if (g_sel.mode == SM_UNIVERSAL)
     {
@@ -317,7 +317,7 @@ std::vector<int> SelectorPagingStateTest::flags() const
     std::vector<int> result;
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        for (const NewsgroupData *group : g_newsgroup_order)
+        for (const NewsgroupData *group : g_ng_order.order)
         {
             result.push_back(group->m_flags);
         }
@@ -347,7 +347,7 @@ void SelectorPagingStateTest::expect_preserved() const
     EXPECT_EQ(m_selected_subjects, g_selected_subj_cnt);
     EXPECT_EQ(SS_NATURAL, g_sel.sort);
     EXPECT_EQ(1, g_sel.direction);
-    for (const NewsgroupData *group : g_newsgroup_order)
+    for (const NewsgroupData *group : g_ng_order.order)
     {
         EXPECT_EQ(g_sel.mode == SM_UNIVERSAL ? (g_sel.rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
         EXPECT_EQ(':', group->m_subscribe_char);
@@ -571,7 +571,7 @@ TEST_P(SelectorGroupEscapeTest, commandPromptUsesTheCursorGroupInsteadOfThePrevi
     NewsgroupData *const target = g_sel_page.items[1].u.np;
     std::string          directory{target->rc_line()};
     std::replace(directory.begin(), directory.end(), '.', '/');
-    g_newsgroup_ptr = g_newsgroup_order.front();
+    g_newsgroup_ptr = g_ng_order.order.front();
     g_newsgroup_name = "stale.group";
 
     const DisplayState result = escape(' ');
@@ -686,7 +686,7 @@ void SelectorExitStateTest::set_object_flags(int number, int value)
 {
     if (g_sel.mode == SM_NEWSGROUP)
     {
-        g_newsgroup_order[number - 1]->m_flags = static_cast<NewsgroupFlags>(value);
+        g_ng_order.order[number - 1]->m_flags = static_cast<NewsgroupFlags>(value);
     }
     else if (g_sel.mode == SM_UNIVERSAL)
     {
@@ -855,7 +855,7 @@ void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit
         EXPECT_EQ(m_empty ? nullptr : g_sel_page.items[1].u.np, g_newsgroup_ptr);
     }
     EXPECT_EQ(RF_ACTIVE, m_newsrc.flags);
-    for (const NewsgroupData *group : g_newsgroup_order)
+    for (const NewsgroupData *group : g_ng_order.order)
     {
         EXPECT_EQ(g_sel.mode == SM_UNIVERSAL ? (g_sel.rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
         EXPECT_EQ(':', group->m_subscribe_char);

@@ -1632,7 +1632,7 @@ void InterpolatorNewsgroupTest::SetUp()
     g_in_ng = true;
     g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NUM};
     g_last_art = ArticleNum{TRN_TEST_NEWSGROUP_HIGH};
-    g_newsgroup_ptr = g_first_newsgroup;
+    g_newsgroup_ptr = g_ng_order.first_newsgroup;
     ASSERT_NE(nullptr, g_data_source);
     g_data_source->m_flags &= ~DF_REMOTE;
     g_data_source->m_spool_dir = TRN_TEST_LOCAL_SPOOL_DIR;
