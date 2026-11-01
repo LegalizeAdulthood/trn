@@ -285,7 +285,7 @@ static void sf_add_extra_header(std::string_view head)
 {
     // check to see if it's already known
     // first see if it is a known system header
-    if (set_line_type(head) != SOME_LINE)
+    if (g_header_rules.set_line_type(head) != SOME_LINE)
     {
         return; // known types should be interpreted in normal way
     }
@@ -659,7 +659,7 @@ static bool sf_do_line(std::string_view line, bool check)
             return false; // error
         }
     } // while
-    int j = set_line_type(header);
+    int j = g_header_rules.set_line_type(header);
     if (j == SOME_LINE)
     {
         j = sf_check_extra_headers(header);

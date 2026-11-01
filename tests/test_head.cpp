@@ -173,7 +173,7 @@ void FoldedHeaderParseTest::SetUp()
 
 TEST_P(HeaderNameCaseTest, findsKnownHeaderIgnoringCase)
 {
-    const int line_type = set_line_type(GetParam());
+    const int line_type = g_header_rules.set_line_type(GetParam());
 
     EXPECT_EQ(SUBJ_LINE, line_type);
 }
@@ -182,7 +182,7 @@ INSTANTIATE_TEST_SUITE_P(MixedAndUpperCase, HeaderNameCaseTest, testing::Values(
 
 TEST_F(HeaderLineTypeLookupTest, rejectsHeaderWithWhitespaceBeforeColon)
 {
-    EXPECT_EQ(SOME_LINE, set_line_type("Subject "));
+    EXPECT_EQ(SOME_LINE, g_header_rules.set_line_type("Subject "));
 }
 
 TEST_F(HeaderLineTypeLookupTest, recordsCustomHeaderNameInLowerCase)

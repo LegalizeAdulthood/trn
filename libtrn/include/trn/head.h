@@ -115,6 +115,7 @@ struct HeaderRules
 {
     void init();
     void clear();
+    HeaderLineType set_line_type(std::string_view header_name);
 
     HeaderType                  type[HEAD_LAST]{};
     HeaderLineType              type_idx[26]{};
@@ -134,7 +135,6 @@ enum
 void head_init();
 void head_final();
 
-HeaderLineType set_line_type(std::string_view header_name);
 HeaderLineType get_header_num(std::string_view header_name);
 void           end_header();
 bool           parse_header(ArticleNum art_num);

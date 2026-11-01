@@ -171,7 +171,7 @@ bool ov_init()
 
 OverviewFieldNum ov_num(std::string_view header_name)
 {
-    switch (set_line_type(header_name))
+    switch (g_header_rules.set_line_type(header_name))
     {
     case SUBJ_LINE:
         return OV_SUBJ;

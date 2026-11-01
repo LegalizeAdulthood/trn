@@ -839,7 +839,7 @@ void mime_parse_sub_header(std::FILE *ifp, std::string_view first_line)
             break;
         }
 
-        int linetype = set_line_type(header_line.substr(0, colon));
+        int linetype = g_header_rules.set_line_type(header_line.substr(0, colon));
         switch (linetype)
         {
         case CONT_TYPE_LINE:

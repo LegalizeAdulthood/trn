@@ -152,7 +152,7 @@ static std::string lower_header_name(std::string_view header_name)
     return result;
 }
 
-HeaderLineType set_line_type(std::string_view header_name)
+HeaderLineType HeaderRules::set_line_type(std::string_view header_name)
 {
     for (char ch : header_name)
     {
@@ -174,26 +174,25 @@ HeaderLineType set_line_type(std::string_view header_name)
         const char first = std::isupper(first_char) ? static_cast<char>(std::tolower(first_char)) : header_name[0];
         if (first >= 'a' && first <= 'z')
         {
-            for (int i = g_header_rules.type_idx[first - 'a']; g_header_rules.type[i].name[0] == first; i--)
+            for (int i = type_idx[first - 'a']; type[i].name[0] == first; i--)
             {
-                if (len == static_cast<std::size_t>(g_header_rules.type[i].length) &&
-                    string_case_equal(header_name, g_header_rules.type[i].name))
+                if (len == static_cast<std::size_t>(type[i].length) && string_case_equal(header_name, type[i].name))
                 {
                     return static_cast<HeaderLineType>(i);
                 }
             }
-            if (len == static_cast<std::size_t>(g_header_rules.type[CUSTOM_LINE].length) &&
-                string_case_equal(header_name, g_header_rules.type[CUSTOM_LINE].name))
+            if (len == static_cast<std::size_t>(type[CUSTOM_LINE].length) &&
+                string_case_equal(header_name, type[CUSTOM_LINE].name))
             {
                 return CUSTOM_LINE;
             }
-            for (int i = g_header_rules.user_type_index[first - 'a']; g_header_rules.user_type[i].name[0] == first; i--)
+            for (int i = user_type_index[first - 'a']; user_type[i].name[0] == first; i--)
             {
-                const std::size_t user_len = static_cast<std::size_t>(g_header_rules.user_type[i].length);
+                const std::size_t user_len = static_cast<std::size_t>(user_type[i].length);
                 if (len >= user_len //
-                    && string_case_equal(header_name.substr(0, user_len), g_header_rules.user_type[i].name))
+                    && string_case_equal(header_name.substr(0, user_len), user_type[i].name))
                 {
-                    if (g_header_rules.user_type[i].flags & HT_HIDE)
+                    if (user_type[i].flags & HT_HIDE)
                     {
                         return HIDDEN_LINE;
                     }
@@ -207,7 +206,7 @@ HeaderLineType set_line_type(std::string_view header_name)
 
 HeaderLineType get_header_num(std::string_view header_name)
 {
-    HeaderLineType i = set_line_type(header_name);
+    HeaderLineType i = g_header_rules.set_line_type(header_name);
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
@@ -229,7 +228,8 @@ HeaderLineType get_header_num(std::string_view header_name)
                 const std::string_view line = header_text.substr(line_start, line_end - line_start);
                 const std::size_t      colon = line.find(':');
                 const std::size_t      next_line_start = line_end + 1;
-                if (colon == std::string_view::npos || set_line_type(line.substr(0, colon)) != CUSTOM_LINE)
+                if (colon == std::string_view::npos ||
+                    g_header_rules.set_line_type(line.substr(0, colon)) != CUSTOM_LINE)
                 {
                     line_start = next_line_start;
                     continue;
@@ -335,7 +335,7 @@ bool ParsedHeaderContext::parse_line(std::string_view art_buf, int new_hide, int
     }
     else // it is a new header line
     {
-        in_header = set_line_type(art_buf.substr(0, colon));
+        in_header = g_header_rules.set_line_type(art_buf.substr(0, colon));
         first_one = (positions[in_header].min_pos < ArticlePosition{});
         if (first_one)
         {
