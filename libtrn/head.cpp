@@ -92,16 +92,21 @@ ParsedHeaderContext         g_parsed_header;
 
 static std::string lower_header_name(std::string_view header_name);
 
-void head_init()
+void HeaderRules::init()
 {
     for (int i = HEAD_FIRST + 1; i < HEAD_LAST; i++)
     {
-        g_header_rules.type_idx[g_header_rules.type[i].name[0] - 'a'] = static_cast<HeaderLineType>(i);
+        type_idx[type[i].name[0] - 'a'] = static_cast<HeaderLineType>(i);
     }
 
-    g_header_rules.user_type_max = 10;
-    g_header_rules.user_type.resize(g_header_rules.user_type_max);
-    g_header_rules.user_type[g_header_rules.user_type_count++].name = "*";
+    user_type_max = 10;
+    user_type.resize(user_type_max);
+    user_type[user_type_count++].name = "*";
+}
+
+void head_init()
+{
+    g_header_rules.init();
 
     g_parsed_header.head_buf.clear();
     g_parsed_header.head_buf.reserve(LINE_BUF_LEN * 8);

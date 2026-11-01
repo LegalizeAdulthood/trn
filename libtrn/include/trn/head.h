@@ -113,6 +113,8 @@ struct UserHeaderType
 
 struct HeaderRules
 {
+    void init();
+
     HeaderType                  type[HEAD_LAST]{};
     HeaderLineType              type_idx[26]{};
     std::vector<UserHeaderType> user_type;
