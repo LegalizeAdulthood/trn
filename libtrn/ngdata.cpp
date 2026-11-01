@@ -76,7 +76,6 @@ static int  newsgroup_order_number(const NewsgroupData *np1, const NewsgroupData
 static int  newsgroup_order_group_name(const NewsgroupData *np1, const NewsgroupData *np2);
 static int  newsgroup_order_count(const NewsgroupData *np1, const NewsgroupData *np2);
 static ActiveLineFields parse_active_line_fields(std::string_view fields, bool has_low_field);
-static void renumber_newsgroup_order();
 
 void newsgroup_data_init()
 {
@@ -185,16 +184,16 @@ bool move_newsgroup_order(NewsgroupData *np, NewsgroupNum newnum)
     const std::size_t pos = std::min(target_pos, g_ng_order.order.size());
     g_ng_order.order.insert(g_ng_order.order.begin() + pos, np);
     g_ng_order.sync_links();
-    renumber_newsgroup_order();
+    g_ng_order.renumber();
     return true;
 }
 
-static void renumber_newsgroup_order()
+void NewsgroupOrder::renumber()
 {
-    long num = 0;
-    for (NewsgroupData *np : g_ng_order.order)
+    NewsgroupNum num{0};
+    for (NewsgroupData *np : order)
     {
-        np->m_num = NewsgroupNum{num++};
+        np->m_num = num++;
     }
 }
 

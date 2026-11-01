@@ -62,6 +62,9 @@ struct NewsgroupOrder
     NewsgroupData *last();
     void           sync_links();
 
+    // TODO: private
+    void renumber();
+
     std::vector<NewsgroupData *> order; // current newsgroup order
     NewsgroupData               *first_newsgroup{};
     NewsgroupData               *last_newsgroup{};
