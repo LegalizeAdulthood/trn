@@ -335,7 +335,7 @@ void decode_switch(std::string_view s)
             {
                 break;
             }
-            set_header(switch_suffix(s), option == 'h' ? HT_HIDE : HT_MAGIC, upordown);
+            g_header_rules.set(switch_suffix(s), option == 'h' ? HT_HIDE : HT_MAGIC, upordown);
             break;
 
         case 'i':

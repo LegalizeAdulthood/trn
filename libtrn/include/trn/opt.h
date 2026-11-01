@@ -170,7 +170,6 @@ void        set_options(const OptionDraft &draft);
 void        set_option(OptionIndex num, std::string_view s);
 void        save_options(const std::filesystem::path &filename);
 std::string option_value(OptionIndex num);
-void        set_header(std::string_view s, HeaderTypeFlags flag, bool setit);
 std::string quote_string(std::string_view val);
 void        cwd_check();
 

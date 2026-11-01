@@ -116,6 +116,7 @@ struct HeaderRules
     void init();
     void clear();
     HeaderLineType set_line_type(std::string_view header_name);
+    void           set(std::string_view s, HeaderTypeFlags flag, bool setit);
 
     HeaderType                  type[HEAD_LAST]{};
     HeaderLineType              type_idx[26]{};
