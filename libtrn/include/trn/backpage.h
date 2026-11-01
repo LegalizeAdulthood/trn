@@ -12,6 +12,7 @@
 
 struct BackPageCache
 {
+    void init();
     void final();
 
     int             vary_fd{-1};         // virtual array file for storing  file offsets
@@ -24,7 +25,6 @@ struct BackPageCache
 
 extern BackPageCache g_back_page;
 
-void back_page_init();
 ArticlePosition virtual_read(ArticleLine index);
 void virtual_write(ArticleLine index, ArticlePosition value);
 

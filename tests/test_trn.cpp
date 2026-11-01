@@ -376,7 +376,7 @@ protected:
 
         head_init();
         g_art_buf.init();
-        back_page_init();
+        g_back_page.init();
         cache_init();
         (void) nntp_art_name(ArticleNum{}, false);
 
@@ -2929,7 +2929,7 @@ TEST_P(MultircSaveReadingTest, processExitPreservesSavedReadsAndRemovesBothNewsr
             {
                 std::exit(2);
             }
-            back_page_init();
+            g_back_page.init();
             run_session("yQnyQq");
             g_check_flag = false;
             g_bizarre = false;
@@ -2997,7 +2997,7 @@ void MultircExitRecoveryStateTest::initialize_child()
 {
     ASSERT_EQ(1, m_data_source.m_act_sf.open(m_output_dir / "active", "", ""));
     ASSERT_EQ(1, m_second_source.m_act_sf.open(m_output_dir / "active", "", ""));
-    back_page_init();
+    g_back_page.init();
 }
 
 void MultircExitRecoveryStateTest::finalize_child()
@@ -7017,7 +7017,7 @@ void MultircUniversalStartupTest::release_child_files()
 void MultircUniversalStartupTest::initialize_child()
 {
     ASSERT_EQ(1, m_data_source.m_act_sf.open(m_output_dir / "active", "", ""));
-    back_page_init();
+    g_back_page.init();
     univ_init();
     g_bizarre = false;
     g_head_name.clear();

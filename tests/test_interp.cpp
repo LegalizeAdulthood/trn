@@ -232,7 +232,7 @@ void InterpolatorTest::SetUp()
     art_init();
     g_art_buf.init();
     g_art_search.init();
-    back_page_init();
+    g_back_page.init();
     bits_init();
     cache_init();
     help_init();

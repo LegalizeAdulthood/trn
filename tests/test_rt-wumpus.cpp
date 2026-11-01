@@ -66,7 +66,7 @@ protected:
         std::filesystem::create_directories(m_output_dir, error);
         ASSERT_FALSE(error) << error.message();
         g_tmp_dir = m_output_dir.generic_string();
-        back_page_init();
+        g_back_page.init();
 
         m_subject.m_thread = &m_current;
         m_subject.m_thread_link = &m_subject;

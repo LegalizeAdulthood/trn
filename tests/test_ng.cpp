@@ -5342,7 +5342,7 @@ void BackwardPagingArticleTest::SetUp()
     CachedDisplayArticleTest::SetUp();
     g_tmp_dir = output_dir().generic_string();
     m_vary_file = file_exp(VARYNAME);
-    back_page_init();
+    g_back_page.init();
     g_tc_LINES = 10;
     g_marking = NO_MARKING;
     g_marking_areas = BACK_PAGE_MARKING;

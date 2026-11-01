@@ -23,19 +23,19 @@ namespace fs = std::filesystem;
 
 BackPageCache g_back_page;
 
-void back_page_init()
+void BackPageCache::init()
 {
-    g_back_page.final();
+    final();
     const std::string vary_name = file_exp(VARYNAME);
     close(creat(vary_name.c_str(), 0600));
     int open_flags = O_RDWR;
 #ifdef _WIN32
     open_flags |= _O_BINARY;
 #endif
-    g_back_page.vary_fd = open(vary_name.c_str(), open_flags);
+    vary_fd = open(vary_name.c_str(), open_flags);
     std::error_code error;
     fs::remove(vary_name, error);
-    if (g_back_page.vary_fd < 0)
+    if (vary_fd < 0)
     {
         fmt::print("Can't open {}\n", vary_name);
         sig_catcher(0);
