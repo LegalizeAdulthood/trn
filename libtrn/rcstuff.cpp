@@ -849,7 +849,7 @@ static bool open_newsrc(Newsrc *rp)
 
         // now find out how much there is to read
 
-        if (!in_list(np->rc_line()) || (g_suppress_cn && s_found_any && !g_paranoid))
+        if (!g_only.in_list(np->rc_line()) || (g_suppress_cn && s_found_any && !g_paranoid))
         {
             np->m_to_read = TR_NONE; // no need to calculate now
         }

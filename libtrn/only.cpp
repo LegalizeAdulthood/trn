@@ -56,16 +56,16 @@ std::string_view NewsgroupRestrictions::restriction(int index)
 
 // if command line list is non-null, is this newsgroup wanted?
 
-bool in_list(std::string_view newsgroup_name)
+bool NewsgroupRestrictions::in_list(std::string_view newsgroup_name)
 {
-    if (g_only.max_to_do == 0)
+    if (max_to_do == 0)
     {
         return true;
     }
     const std::string group_name{newsgroup_name};
-    for (int i = g_only.save_max_to_do; i < g_only.max_to_do + g_only.save_max_to_do; i++)
+    for (int i = save_max_to_do; i < max_to_do + save_max_to_do; i++)
     {
-        if (g_only.compex_to_do[i]->execute(group_name.c_str()))
+        if (compex_to_do[i]->execute(group_name.c_str()))
         {
             return true;
         }

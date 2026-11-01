@@ -290,7 +290,7 @@ restart:
                 if (g_newsgroup_ptr->m_to_read >= TR_NONE) // recalc toread?
                 {
                     set_newsgroup_name(g_newsgroup_ptr->rc_line());
-                    shoe_fits = in_list(g_newsgroup_name.c_str());
+                    shoe_fits = g_only.in_list(g_newsgroup_name.c_str());
                     if (shoe_fits)
                     {
                         g_newsgroup_ptr->set_to_read(ST_LAX);

@@ -518,7 +518,7 @@ static void scan_active_line(std::string_view active_line)
     {
         return;
     }
-    if (!in_list(group_name))
+    if (!g_only.in_list(group_name))
     {
         return;
     }

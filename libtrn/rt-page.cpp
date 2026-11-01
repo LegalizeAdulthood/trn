@@ -554,7 +554,7 @@ try_again:
             {
                 continue;
             }
-            if (!in_list(np->rc_line()))
+            if (!g_only.in_list(np->rc_line()))
             {
                 continue;
             }

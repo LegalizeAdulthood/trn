@@ -619,8 +619,8 @@ TEST_F(ActiveListPatternTest, usesCurrentRestrictionInsideSavedOuterRestrictions
     EXPECT_EQ("*news.**", active_list_pattern());
 
     pop_only();
-    EXPECT_TRUE(in_list("parent.group"));
-    EXPECT_FALSE(in_list("news.test"));
+    EXPECT_TRUE(g_only.in_list("parent.group"));
+    EXPECT_FALSE(g_only.in_list("news.test"));
     end_only();
 }
 
