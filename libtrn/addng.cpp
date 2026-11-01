@@ -398,7 +398,7 @@ std::string active_list_pattern()
         return "*";
     }
 
-    const std::string_view restriction = newsgroup_restriction(0);
+    const std::string_view restriction = g_only.restriction(0);
     std::string            pattern;
     pattern.reserve(LINE_BUF_LEN);
     if (!restriction.empty() && restriction.front() == '^')

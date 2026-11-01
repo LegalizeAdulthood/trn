@@ -738,7 +738,7 @@ std::vector<std::string> multirc_restrictions()
     std::vector<std::string> restrictions;
     for (int index = 0; index < g_only.max_to_do; ++index)
     {
-        restrictions.emplace_back(newsgroup_restriction(index));
+        restrictions.emplace_back(g_only.restriction(index));
     }
     return restrictions;
 }
@@ -15855,7 +15855,7 @@ TEST_P(NewsgroupSelectorDelegatedRestrictedLookupTest, lookupRetainsTheActiveRes
     EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & NF_INCLUDED);
     EXPECT_EQ(1, g_only.max_to_do);
-    EXPECT_EQ("comp.[ln]*", newsgroup_restriction(0));
+    EXPECT_EQ("comp.[ln]*", g_only.restriction(0));
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
     EXPECT_EQ(RF_NONE, m_newsrc.flags & RF_RC_CHANGED);

@@ -24,6 +24,8 @@ struct NewsgroupRestrictions
 {
     void set_to_do(std::string_view pat);
 
+    std::string_view restriction(int index);
+
     std::array<std::string, MAX_NG_TO_DO> to_do;       // restrictions in effect
     int                                   max_to_do{}; // 0 => no restrictions; >0 => # of entries in to_do
     int                                   save_max_to_do{};
@@ -34,7 +36,6 @@ extern NewsgroupRestrictions g_only;
 extern char g_empty_only_char;
 
 void only_init();
-std::string_view newsgroup_restriction(int index);
 bool in_list(std::string_view newsgroup_name);
 void end_only();
 void push_only();

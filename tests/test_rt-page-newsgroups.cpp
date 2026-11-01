@@ -2057,7 +2057,7 @@ TEST_P(NewsgroupSelectorExclusiveTest, selectedGroupsOutsideARestrictionDoNotPre
     EXPECT_EQ(1, g_sel_page.page_item_cnt);
     EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(1, g_only.max_to_do);
-    EXPECT_EQ("comp.alpha", newsgroup_restriction(0));
+    EXPECT_EQ("comp.alpha", g_only.restriction(0));
     expect_read_state_preserved();
 }
 

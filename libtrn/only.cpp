@@ -49,9 +49,9 @@ void NewsgroupRestrictions::set_to_do(std::string_view pat)
     }
 }
 
-std::string_view newsgroup_restriction(int index)
+std::string_view NewsgroupRestrictions::restriction(int index)
 {
-    return g_only.to_do[g_only.save_max_to_do + index];
+    return to_do[save_max_to_do + index];
 }
 
 // if command line list is non-null, is this newsgroup wanted?
