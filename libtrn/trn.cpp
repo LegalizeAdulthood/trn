@@ -208,7 +208,7 @@ ng_start_sel:
 
     // loop through all unread news
 restart:
-    g_current_newsgroup = newsgroup_first();
+    g_current_newsgroup = g_ng_order.first();
     while (true)
     {
         bool retry = false;
@@ -216,13 +216,13 @@ restart:
         {
             g_find_last = -1;
             g_start_here = nullptr;
-            g_newsgroup_ptr = newsgroup_first();
+            g_newsgroup_ptr = g_ng_order.first();
             if (!g_last_newsgroup_name.empty())
             {
                 g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name);
                 if (g_newsgroup_ptr == nullptr)
                 {
-                    g_newsgroup_ptr = newsgroup_first();
+                    g_newsgroup_ptr = g_ng_order.first();
                 }
                 else
                 {
@@ -230,7 +230,7 @@ restart:
                     g_newsgroup_ptr->set_to_read(ST_LAX);
                     if (g_newsgroup_ptr->m_to_read <= TR_NONE)
                     {
-                        g_newsgroup_ptr = newsgroup_first();
+                        g_newsgroup_ptr = g_ng_order.first();
                     }
                 }
             }
@@ -242,7 +242,7 @@ restart:
         }
         else
         {
-            g_newsgroup_ptr = newsgroup_first();
+            g_newsgroup_ptr = g_ng_order.first();
         }
         while (true) // for each newsgroup
         {
@@ -319,7 +319,7 @@ restart:
                         g_newsgroup_ptr = newsgroup_prev(g_newsgroup_ptr);
                         if (g_newsgroup_ptr == nullptr)
                         {
-                            g_newsgroup_ptr = newsgroup_next(newsgroup_first());
+                            g_newsgroup_ptr = newsgroup_next(g_ng_order.first());
                             s_go_forward = true;
                         }
                     }
@@ -561,7 +561,7 @@ do_command:
         {
             g_newsgroup_ptr = newsgroup_last();
         }
-        else if (g_newsgroup_ptr != newsgroup_first())
+        else if (g_newsgroup_ptr != g_ng_order.first())
         {
             g_newsgroup_ptr = newsgroup_prev(g_newsgroup_ptr);
         }
@@ -610,7 +610,7 @@ do_command:
         {
             newline();
         }
-        g_newsgroup_ptr = newsgroup_first();
+        g_newsgroup_ptr = g_ng_order.first();
         break;
 
     case 'N': // goto next newsgroup
@@ -628,7 +628,7 @@ do_command:
         break;
 
     case '1': // goto 1st newsgroup
-        g_newsgroup_ptr = newsgroup_first();
+        g_newsgroup_ptr = g_ng_order.first();
         return ING_SPECIAL;
 
     case '$':
@@ -722,7 +722,7 @@ do_command:
                 int rcnum{};
                 const std::from_chars_result parsed =
                     std::from_chars(target.data(), target.data() + target.size(), rcnum);
-                for (g_newsgroup_ptr = parsed.ec == std::errc{} ? newsgroup_first() : nullptr; g_newsgroup_ptr;
+                for (g_newsgroup_ptr = parsed.ec == std::errc{} ? g_ng_order.first() : nullptr; g_newsgroup_ptr;
                      g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
                 {
                     if (g_newsgroup_ptr->m_num.value_of() == rcnum)
@@ -915,7 +915,7 @@ display_multirc:
                     }
                     g_newsgroup_min_to_read = command_ch == g_empty_only_char && g_only.max_to_do ? TR_NONE : TR_ONE;
                 }
-                g_newsgroup_ptr = newsgroup_first(); // simulate ^
+                g_newsgroup_ptr = g_ng_order.first(); // simulate ^
                 if (!g_msg.empty() && !g_only.max_to_do)
                 {
                     return ING_MESSAGE;

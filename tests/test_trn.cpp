@@ -14812,7 +14812,7 @@ TEST_P(NewsgroupSelectorHelpScopeTest, theSelectorDispatchesTheCommandReturnedFr
     EXPECT_THAT(m_output, testing::HasSubstr("The Newsgroup Selector:"));
     expect_selector_session_preserved(rereading, -1);
     ASSERT_EQ(3, g_ng_order.order.size());
-    EXPECT_EQ(&g_newsgroup_data[0], newsgroup_first());
+    EXPECT_EQ(&g_newsgroup_data[0], g_ng_order.first());
     EXPECT_EQ(&g_newsgroup_data[1], newsgroup_last());
     expect_next_command('Q');
 }
@@ -15362,7 +15362,7 @@ TEST_P(NewsgroupSelectorDelegatedServerLossTest, theSelectorRecoversOrQuitsAfter
         EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
         EXPECT_EQ(0, g_sel_page.item_index);
         EXPECT_EQ(2, g_sel_page.total_obj_cnt);
-        EXPECT_EQ(newsgroup_first(), g_sel_page.page_ngd);
+        EXPECT_EQ(g_ng_order.first(), g_sel_page.page_ngd);
         EXPECT_EQ(0, g_selected_count);
     }
     EXPECT_THAT(m_diagnostic, testing::HasSubstr("503 Server closed connection."));

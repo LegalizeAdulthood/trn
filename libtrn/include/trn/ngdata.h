@@ -58,6 +58,8 @@ struct NewsgroupData
 
 struct NewsgroupOrder
 {
+    NewsgroupData *first();
+
     std::vector<NewsgroupData *> order; // current newsgroup order
     NewsgroupData               *first_newsgroup{};
     NewsgroupData               *last_newsgroup{};
@@ -88,7 +90,6 @@ extern bool           g_in_ng;                 // true if in a newsgroup
 
 void newsgroup_data_init();
 void set_newsgroup(NewsgroupData *np);
-NewsgroupData *newsgroup_first();
 NewsgroupData *newsgroup_last();
 NewsgroupData *newsgroup_next(NewsgroupData *np);
 NewsgroupData *newsgroup_prev(NewsgroupData *np);

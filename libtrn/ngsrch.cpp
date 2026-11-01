@@ -173,7 +173,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
         }
         else if (cmdlst.empty())
         {
-            if (g_newsgroup_ptr == newsgroup_first()) // skip current newsgroup
+            if (g_newsgroup_ptr == g_ng_order.first()) // skip current newsgroup
             {
                 g_newsgroup_ptr = newsgroup_last();
             }
@@ -187,14 +187,14 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     {
         if (!g_newsgroup_ptr)
         {
-            g_newsgroup_ptr = newsgroup_first();
-            ng_start = newsgroup_first();
+            g_newsgroup_ptr = g_ng_order.first();
+            ng_start = g_ng_order.first();
         }
         else if (cmdlst.empty())
         {
             if (g_newsgroup_ptr == newsgroup_last()) // skip current newsgroup
             {
-                g_newsgroup_ptr = newsgroup_first();
+                g_newsgroup_ptr = g_ng_order.first();
             }
             else
             {
@@ -248,7 +248,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     } while ((g_newsgroup_ptr =
                   (backward ? (newsgroup_prev(g_newsgroup_ptr) ? newsgroup_prev(g_newsgroup_ptr) : newsgroup_last())
                             : (newsgroup_next(g_newsgroup_ptr) ? newsgroup_next(g_newsgroup_ptr)
-                                                               : newsgroup_first()))) != ng_start);
+                                                               : g_ng_order.first()))) != ng_start);
 
     return ret;
 }

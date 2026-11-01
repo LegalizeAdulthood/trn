@@ -117,9 +117,9 @@ void NewsgroupData::show_subscribe_char()
     }
 }
 
-NewsgroupData *newsgroup_first()
+NewsgroupData *NewsgroupOrder::first()
 {
-    return g_ng_order.order.empty() ? nullptr : g_ng_order.order.front();
+    return order.empty() ? nullptr : order.front();
 }
 
 NewsgroupData *newsgroup_last()
@@ -200,7 +200,7 @@ static void renumber_newsgroup_order()
 
 void sync_newsgroup_order_links()
 {
-    g_ng_order.first_newsgroup = newsgroup_first();
+    g_ng_order.first_newsgroup = g_ng_order.first();
     g_ng_order.last_newsgroup = newsgroup_last();
 
     NewsgroupData *prev = nullptr;

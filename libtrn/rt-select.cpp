@@ -435,7 +435,7 @@ static void sel_do_groups()
     int ret;
     int save_selected_count = g_selected_count;
 
-    for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+    for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
     {
         if (!(np->m_flags & NF_VISIT))
         {
@@ -662,7 +662,7 @@ sel_restart:
     if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
     {
         PUSH_SELECTOR();
-        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+        for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
         {
             if ((np->m_flags & NF_INCLUDED) && (!g_selected_count || (np->m_flags & g_sel.mask)))
             {
@@ -2162,7 +2162,7 @@ static void sel_cleanup()
     case SM_NEWSGROUP:
         if (g_sel.rereading)
         {
-            for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+            for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
             {
                 if (np->m_flags & NF_DEL_SEL)
                 {
@@ -2177,7 +2177,7 @@ static void sel_cleanup()
         }
         else
         {
-            for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+            for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
             {
                 if (np->m_flags & NF_DEL)
                 {
@@ -3341,7 +3341,7 @@ DisplayState newsgroup_commands(char_int ch)
             }
             else
             {
-                np = newsgroup_first();
+                np = g_ng_order.first();
             }
             while (np)
             {
@@ -3372,7 +3372,7 @@ DisplayState newsgroup_commands(char_int ch)
         }
         else if (ch == 'J')
         {
-            for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+            for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
             {
                 np->m_flags &= ~NF_DEL_SEL;
             }
@@ -3385,7 +3385,7 @@ DisplayState newsgroup_commands(char_int ch)
     {
         sel_cleanup();
         g_missing_count = 0;
-        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+        for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
         {
             if (np->m_to_read > TR_UNSUB && np->m_to_read < g_newsgroup_min_to_read)
             {

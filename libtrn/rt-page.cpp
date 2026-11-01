@@ -543,7 +543,7 @@ try_again:
         sort_newsgroups();
         g_selected_count = 0;
         g_obj_count = ArticleNum{};
-        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+        for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
         {
             if (g_sel_page.page_ngd == np)
             {
@@ -1083,7 +1083,7 @@ bool SelectorPage::first_page()
 
     case SM_NEWSGROUP:
     {
-        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+        for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
         {
             if (np->m_flags & NF_INCLUDED)
             {

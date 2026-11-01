@@ -1607,7 +1607,7 @@ void list_newsgroups()
     line.reserve(2048);
     page_start();
     print_lines("  #  Status  Newsgroup\n", STANDOUT);
-    for (np = newsgroup_first(), i = NewsgroupNum{}; np && !g_int_count; np = newsgroup_next(np), ++i)
+    for (np = g_ng_order.first(), i = NewsgroupNum{}; np && !g_int_count; np = newsgroup_next(np), ++i)
     {
         if (np->m_to_read >= 0)
         {
@@ -1655,7 +1655,7 @@ void cleanup_newsrc(Newsrc *rp)
     }
     term_down(1);
     NewsgroupData *np;
-    for (np = newsgroup_first(); np; np = newsgroup_next(np))
+    for (np = g_ng_order.first(); np; np = newsgroup_next(np))
     {
         if (np->m_to_read >= TR_UNSUB)
         {
@@ -1733,15 +1733,15 @@ reask_bogus:
             rp->flags |= RF_RC_CHANGED; // TODO: needed?
             if (g_current_newsgroup && g_current_newsgroup->m_rc_line.empty())
             {
-                g_current_newsgroup = newsgroup_first();
+                g_current_newsgroup = g_ng_order.first();
             }
             if (g_recent_newsgroup && g_recent_newsgroup->m_rc_line.empty())
             {
-                g_recent_newsgroup = newsgroup_first();
+                g_recent_newsgroup = g_ng_order.first();
             }
             if (g_newsgroup_ptr && g_newsgroup_ptr->m_rc_line.empty())
             {
-                g_newsgroup_ptr = newsgroup_first();
+                g_newsgroup_ptr = g_ng_order.first();
             }
             if (g_sel_page.page_ngd && g_sel_page.page_ngd->m_rc_line.empty())
             {
@@ -1905,7 +1905,7 @@ bool write_newsrcs(Multirc *mptr)
 #endif
         // write out each line
 
-        for (NewsgroupData *np = newsgroup_first(); np; np = newsgroup_next(np))
+        for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
         {
             if (np->m_rc != rp)
             {

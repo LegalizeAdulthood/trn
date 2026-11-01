@@ -899,7 +899,7 @@ int newsgroup_sel_perform(std::string_view command)
         }
     }
 
-    for (g_newsgroup_ptr = newsgroup_first(); g_newsgroup_ptr; g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
+    for (g_newsgroup_ptr = g_ng_order.first(); g_newsgroup_ptr; g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr))
     {
         if (dot_scope && g_newsgroup_ptr == current_group)
         {

@@ -556,7 +556,7 @@ static void univ_use_pattern(std::string_view pattern, int type)
         switch (type)
         {
         case 0:
-            for (np = newsgroup_first(); np; np = newsgroup_next(np))
+            for (np = g_ng_order.first(); np; np = newsgroup_next(np))
             {
                 if (univ_do_match(np->rc_line(), pattern))
                 {
@@ -566,7 +566,7 @@ static void univ_use_pattern(std::string_view pattern, int type)
             break;
 
         case 1:
-            for (np = newsgroup_first(); np; np = newsgroup_next(np))
+            for (np = g_ng_order.first(); np; np = newsgroup_next(np))
             {
                 if (univ_do_match(np->rc_line(), pattern))
                 {
