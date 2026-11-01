@@ -108,14 +108,19 @@ void NewsgroupRestrictions::push_only()
     max_to_do = 0;
 }
 
+void NewsgroupRestrictions::restore_saved()
+{
+    max_to_do = save_max_to_do;
+    save_max_to_do = 0;
+}
+
 void pop_only()
 {
     ArticleUnread save_ng_min_toread = g_newsgroup_min_to_read;
 
     end_only();
 
-    g_only.max_to_do = g_only.save_max_to_do;
-    g_only.save_max_to_do = 0;
+    g_only.restore_saved();
 
     g_newsgroup_min_to_read = save_ng_min_toread;
 }
