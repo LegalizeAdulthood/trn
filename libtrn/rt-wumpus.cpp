@@ -69,14 +69,14 @@ void ThreadTreeView::init()
 {
     Article*thread;
 
-    tree_lines.clear();
+    lines.clear();
     max_line = -1;
 
-    if (!(tree_article = g_nav.current.art) || !tree_article->m_subj)
+    if (!(article = g_nav.current.art) || !article->m_subj)
     {
         return;
     }
-    if (!(thread = tree_article->m_subj->m_thread))
+    if (!(thread = article->m_subj->m_thread))
     {
         return;
     }
@@ -135,7 +135,7 @@ void ThreadTreeView::init()
     render.max_depth = max_depth;
     render.first_line = first_line;
     render.max_line = max_line;
-    tree_lines = render_tree_lines(thread, render);
+    lines = render_tree_lines(thread, render);
     first_line = render.first_line;
 
     max_depth = (max_depth - first_depth + 1) * 5; // turn depth into char width
@@ -153,7 +153,7 @@ void ThreadTreeView::find_depth(Article *article, int depth)
     max_depth = std::max(depth, max_depth);
     while (true)
     {
-        if (article == tree_article)
+        if (article == article)
         {
             my_depth = depth;
             my_line = max_line;
@@ -333,11 +333,11 @@ static void cache_tree(Article *ap, int depth, TreeRenderState &render)
 
 Article *get_tree_artp(int x, int y)
 {
-    if (!g_tree_view.tree_article || !g_tree_view.tree_article->m_subj)
+    if (!g_tree_view.article || !g_tree_view.article->m_subj)
     {
         return nullptr;
     }
-    Article *ap = g_tree_view.tree_article->m_subj->m_thread;
+    Article *ap = g_tree_view.article->m_subj->m_thread;
     x -= g_tc_COLS - 1 - g_tree_view.max_depth;
     if (x < 0 || y > g_tree_view.max_line || !ap)
     {
@@ -588,9 +588,9 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             // Check string for the '*' flagging our current node
             // and the '@' flagging our prior node.
             color_object(COLOR_TREE, true);
-            if (header_line.value_of() < static_cast<int>(g_tree_view.tree_lines.size()))
+            if (header_line.value_of() < static_cast<int>(g_tree_view.lines.size()))
             {
-                print_tree_line(g_tree_view.tree_lines[header_line.value_of()]);
+                print_tree_line(g_tree_view.lines[header_line.value_of()]);
             }
             color_pop(); // of COLOR_TREE
         } // if

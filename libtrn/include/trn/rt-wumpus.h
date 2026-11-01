@@ -20,7 +20,7 @@ struct ThreadTreeView
 {
     void init();
 
-    Article  *tree_article{};
+    Article  *article{};
     int       max_depth{};
     int       max_line{-1}; // TODO: ArticleLine?
     int       first_depth{};
@@ -28,7 +28,7 @@ struct ThreadTreeView
     int       my_depth{};
     int       my_line{};
     int       header_indent{};
-    TreeLines tree_lines{};
+    TreeLines lines{};
     int       find_artp_y{};
 
     // TODO: private
