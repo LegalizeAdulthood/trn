@@ -189,7 +189,7 @@ void NewsgroupPageDisplayState::prepare_display(bool rereading, char mode, bool 
         group.m_rc_line += "1-3";
         m_entries[index] = &group;
     }
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     g_sel.exclusive = exclusive;
     g_sel_grp_display_mode.assign(1, mode);
     g_sel_grp_display_mode_index = 0;

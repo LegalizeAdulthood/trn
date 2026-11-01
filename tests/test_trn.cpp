@@ -885,7 +885,7 @@ void MultircRecoveryStateTest::prepare_context(bool at_end, bool verbose)
 {
     g_verbose = verbose;
     g_start_here = &g_newsgroup_data[at_end ? 2 : 1];
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
 }
 
 void MultircRecoveryStateTest::expect_groups_preserved() const
@@ -1180,7 +1180,7 @@ TEST_P(MultircRefetchTest, anotherTraversalRetainsRestrictionsWhileRecalculating
     const bool                  refreshed = policy.expired && policy.interval != 0;
     g_newsgroup_data[0].m_rc_line.resize(g_newsgroup_data[0].m_num_offset);
     g_newsgroup_data[0].m_rc_line += " 1-4";
-    set_newsgroup_to_do("comp.first");
+    g_only.set_to_do("comp.first");
 
     run_groups("nnq");
 
@@ -1308,7 +1308,7 @@ TEST_P(MultircGroupTraversalTest, restrictionsSkipNonmatchingGroupsInBothDirecti
     add_newsgroup("comp.match.first", "1-4", ArticleNum{1}, ArticleNum{6});
     add_newsgroup("comp.excluded.middle", "1", ArticleNum{1}, ArticleNum{6});
     add_newsgroup("comp.match.last", "1-3", ArticleNum{1}, ArticleNum{6});
-    set_newsgroup_to_do("comp.match.*");
+    g_only.set_to_do("comp.match.*");
 
     run_groups("npq");
 
@@ -1653,12 +1653,12 @@ void MultircRetainedRestrictionTest::SetUp()
     g_verbose = verbose;
     if (multiple)
     {
-        set_newsgroup_to_do("comp.match.first");
-        set_newsgroup_to_do("comp.match.last");
+        g_only.set_to_do("comp.match.first");
+        g_only.set_to_do("comp.match.last");
     }
     else
     {
-        set_newsgroup_to_do("comp.match.*");
+        g_only.set_to_do("comp.match.*");
     }
 }
 
@@ -1698,7 +1698,7 @@ void MultircExhaustedRestrictionTest::SetUp()
     MultircRestrictionStateTest::SetUp();
     const auto [pattern, verbose] = GetParam();
     g_verbose = verbose;
-    set_newsgroup_to_do(pattern);
+    g_only.set_to_do(pattern);
 }
 
 TEST_P(MultircExhaustedRestrictionTest, anExhaustedRestrictionIsReleasedBeforeRestartingWithOtherUnreadGroups)
@@ -1728,7 +1728,7 @@ void MultircRestrictionTest::SetUp()
 {
     MultircRestrictionStateTest::SetUp();
     g_verbose = GetParam();
-    set_newsgroup_to_do("comp.match.*");
+    g_only.set_to_do("comp.match.*");
 }
 
 TEST_P(MultircRestrictionTest, aBareRestrictionCommandReturnsToEarlierUnrestrictedNews)
@@ -1823,7 +1823,7 @@ void MultircRestrictionScopeTest::SetUp()
 {
     MultircRestrictionStateTest::SetUp();
     g_verbose = std::get<1>(GetParam());
-    set_newsgroup_to_do("comp.match.*");
+    g_only.set_to_do("comp.match.*");
 }
 
 TEST_P(MultircRestrictionScopeTest, theRestrictionCommandControlsWhetherMatchingReadGroupsAreOffered)
@@ -2728,7 +2728,7 @@ protected:
 void MultircRestrictionReadingTest::SetUp()
 {
     MultircReadingTest::SetUp();
-    set_newsgroup_to_do("comp.lang.cpp");
+    g_only.set_to_do("comp.lang.cpp");
 }
 
 TEST_P(MultircRestrictionReadingTest, readingAllRestrictedNewsReleasesTheRestrictionOnTheNextTraversal)
@@ -4280,7 +4280,7 @@ void MultircServerLossTest::SetUp()
     std::ofstream{m_remaining_newsrc.old_name} << m_original_remaining;
     std::ofstream{m_output_dir / "unrelated"} << "unrelated file\n";
     g_start_here = &g_newsgroup_data[1];
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     m_parent_reader = g_terminal_input_reader;
     g_terminal_input_reader = [this](char *buffer, int)
     {
@@ -6816,7 +6816,7 @@ TEST_P(MultircSelectorSourceTest, switchingSourcesAndReturningRestoresEachSource
 {
     const char command = std::get<0>(GetParam());
     const char reverse = command == Ctl('n') ? Ctl('p') : Ctl('n');
-    set_newsgroup_to_do("comp.lang.cpp");
+    g_only.set_to_do("comp.lang.cpp");
 
     run_outer(std::string{command, reverse, 'q'});
 
@@ -15441,7 +15441,7 @@ TEST_P(NewsgroupSelectorDelegatedMessageTest, removingARestrictionReturnsItsStat
 {
     const auto [later_page, scrolled, verbose] = GetParam();
     prepare_recovery(false, later_page);
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     g_verbose = verbose;
     g_term_scrolled = scrolled;
 
@@ -15484,7 +15484,7 @@ INSTANTIATE_TEST_SUITE_P(ReadScopeAndScrolling, NewsgroupSelectorDelegatedRedisp
 TEST_F(NewsgroupSelectorDelegatedRecoveryTest, theSelectorShowsTheRestrictionRemovalMessageAfterChangingPages)
 {
     prepare_recovery(false, false);
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
 
     const char result = run_selector_session(">\\\\o\nqQ");
 
@@ -15841,7 +15841,7 @@ TEST_F(NewsgroupSelectorDelegatedReadGroupTest, lookingUpAnAlreadySelectedReadGr
 TEST_P(NewsgroupSelectorDelegatedRestrictedLookupTest, lookupRetainsTheActiveRestrictionAndSelections)
 {
     prepare_selector();
-    set_newsgroup_to_do("comp.[ln]*");
+    g_only.set_to_do("comp.[ln]*");
     init_pages(PRESERVE_PAGE);
     const std::string input = std::string{GetParam()} + "Q";
 

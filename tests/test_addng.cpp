@@ -612,9 +612,9 @@ TEST_F(ActiveListPatternTest, leadingCaretWithTrailingDollarMatchesExactPrefix)
 
 TEST_F(ActiveListPatternTest, usesCurrentRestrictionInsideSavedOuterRestrictions)
 {
-    set_newsgroup_to_do("parent.*");
+    g_only.set_to_do("parent.*");
     push_only();
-    set_newsgroup_to_do("news.*");
+    g_only.set_to_do("news.*");
 
     EXPECT_EQ("*news.**", active_list_pattern());
 
@@ -984,7 +984,7 @@ TEST_F(SelectorGroupListingTest, narrowsSourceGlob)
 TEST_F(SelectorGroupListingTest, broadensSourceGlobByRescanning)
 {
     add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
 
     const std::string output = last_display(run_listing("l*\nq"));
 
@@ -1109,7 +1109,7 @@ TEST_F(SelectorGroupListingTest, globCommandWorksWithAlphabeticSelectionKeys)
 TEST_F(SelectorGroupListingTest, initiallyEmptyResultsAllowAnotherGlob)
 {
     add_active_source("news.test 3 1 y\n");
-    set_newsgroup_to_do("missing.*");
+    g_only.set_to_do("missing.*");
 
     const std::string output = run_listing("lnews.*\nq");
 
@@ -1120,7 +1120,7 @@ TEST_F(SelectorGroupListingTest, initiallyEmptyResultsAllowAnotherGlob)
 TEST_F(SelectorGroupListingTest, globRefinementPreservesUnreadThreshold)
 {
     add_active_source("comp.lang.apl 42 7 y\nnews.test 3 1 y\n");
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     g_newsgroup_min_to_read = TR_NONE;
 
     (void) run_listing("lnews.*\nq");

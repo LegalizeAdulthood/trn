@@ -473,7 +473,7 @@ std::string refine_add_group_list(std::string_view pattern)
     g_newsgroup_min_to_read = old_min_to_read;
     if (!replacement.empty() && replacement != "*")
     {
-        set_newsgroup_to_do(replacement);
+        g_only.set_to_do(replacement);
     }
     collect_active_groups();
     return {};

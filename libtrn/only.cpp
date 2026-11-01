@@ -25,9 +25,9 @@ void only_init()
 {
 }
 
-void set_newsgroup_to_do(std::string_view pat)
+void NewsgroupRestrictions::set_to_do(std::string_view pat)
 {
-    int i = g_only.max_to_do + g_only.save_max_to_do;
+    int i = max_to_do + save_max_to_do;
 
     if (pat.empty())
     {
@@ -35,17 +35,17 @@ void set_newsgroup_to_do(std::string_view pat)
     }
     if (i < MAX_NG_TO_DO)
     {
-        g_only.to_do[i].assign(pat);
-        g_only.compex_to_do[i] = new CompiledRegex;
-        g_only.compex_to_do[i]->init_compex();
-        g_only.compex_to_do[i]->compile(g_only.to_do[i], true, true);
-        const std::string_view err = newsgroup_comp(*g_only.compex_to_do[i], pat, true, true);
+        to_do[i].assign(pat);
+        compex_to_do[i] = new CompiledRegex;
+        compex_to_do[i]->init_compex();
+        compex_to_do[i]->compile(to_do[i], true, true);
+        const std::string_view err = newsgroup_comp(*compex_to_do[i], pat, true, true);
         if (!err.empty())
         {
             fmt::print("\n{}\n", err);
             finalize(1);
         }
-        g_only.max_to_do++;
+        max_to_do++;
     }
 }
 

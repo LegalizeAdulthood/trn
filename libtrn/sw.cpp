@@ -175,7 +175,7 @@ void decode_switch(std::string_view s)
 #endif
     if (s.empty() || (s.front() != '-' && s.front() != '+')) // newsgroup pattern
     {
-        set_newsgroup_to_do(s);
+        g_only.set_to_do(s);
         if (g_mode == MM_INITIALIZING)
         {
             g_newsgroup_min_to_read = 0;

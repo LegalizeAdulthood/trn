@@ -2043,7 +2043,7 @@ TEST_P(NewsgroupSelectorExclusiveTest, activeSelectionRetainsAGroupOutsideTheCur
 TEST_P(NewsgroupSelectorExclusiveTest, selectedGroupsOutsideARestrictionDoNotPreventFallbackWithinIt)
 {
     prepare_groups();
-    set_newsgroup_to_do("comp.alpha");
+    g_only.set_to_do("comp.alpha");
 
     const DisplayState result = toggle_exclusive();
 
@@ -2532,7 +2532,7 @@ TEST_F(NewsgroupSelectorBulkStateTest, JReadsSelectedGroupsAcrossPagesAndRebuild
 TEST_F(NewsgroupSelectorBulkStateTest, XPreservesUnselectedGroupsHiddenByANameRestriction)
 {
     prepare_groups();
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     initialize_page();
     remember_groups();
 
@@ -2555,7 +2555,7 @@ TEST_F(NewsgroupSelectorBulkStateTest, XPreservesUnselectedGroupsHiddenByANameRe
 TEST_F(NewsgroupSelectorBulkStateTest, JIncludesSelectionsHiddenByANameRestriction)
 {
     prepare_groups();
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     initialize_page();
     remember_groups();
 
@@ -3064,7 +3064,7 @@ TEST_P(NewsgroupSelectorInlineScopeTest, unsubscribingReadGroupsKeepsTheUnreadPo
 TEST_F(NewsgroupSelectorInlineStateTest, selectedCommandsRetainSelectionsOutsideANameRestriction)
 {
     prepare_inline();
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     initialize_page();
     remember_groups();
 
@@ -3088,7 +3088,7 @@ TEST_F(NewsgroupSelectorInlineStateTest, selectedCommandsRetainSelectionsOutside
 TEST_F(NewsgroupSelectorInlineStateTest, doubledColonAddressesUnselectedGroupsOutsideANameRestriction)
 {
     prepare_inline();
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     initialize_page();
     remember_groups();
 
@@ -3629,7 +3629,7 @@ TEST_P(NewsgroupSelectorSearchDisplayTest, aSearchSelectsMatchingGroupsWhileReta
     prepare_search(rereading);
     if (restricted)
     {
-        set_newsgroup_to_do("comp.*");
+        g_only.set_to_do("comp.*");
     }
     else
     {
@@ -3658,7 +3658,7 @@ TEST_P(NewsgroupSelectorSearchDisplayTest, aSearchSelectsMatchingGroupsWhileReta
 TEST_P(NewsgroupSelectorSearchReadScopeTest, anExplicitPatternCanSelectGroupsOutsideADisplayRestriction)
 {
     prepare_search(GetParam());
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     initialize_page();
     remember_groups();
 
@@ -3958,7 +3958,7 @@ TEST_P(NewsgroupSelectorSearchReadScopeTest, aCatchupActionCanAddressGroupsHidde
 {
     const bool rereading = GetParam();
     prepare_search(rereading);
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
     initialize_page();
     remember_groups();
 
@@ -4002,7 +4002,7 @@ TEST_P(NewsgroupSelectorSearchActionFallbackTest,
         group.m_flags &= ~NF_DEL_SEL;
     }
     g_newsgroup_to_read = NewsgroupNum{2};
-    set_newsgroup_to_do("comp.page*");
+    g_only.set_to_do("comp.page*");
     initialize_page();
     remember_groups();
     prepare_screen(GetParam());
@@ -4674,7 +4674,7 @@ TEST_P(NewsgroupPageReadScopeTest, selectionsCannotBypassNameRestrictions)
     NewsgroupData       &included = add_group("comp.keep", rereading ? 0 : 3, selected);
     NewsgroupData       &excluded = add_group("alt.hidden", rereading ? 0 : 3, selected | NF_INCLUDED);
     excluded.m_abs_first = ArticleNum{};
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
 
     initialize_page();
 
@@ -4772,7 +4772,7 @@ TEST_P(NewsgroupPageFallbackTest, restrictionsWithNoEligibleGroupsAreRemovedBefo
     g_newsgroup_min_to_read = 2;
     add_group("comp.other-scope", rereading ? 3 : 0);
     NewsgroupData &eligible = add_group("alt.eligible", rereading ? 0 : 3);
-    set_newsgroup_to_do("comp.*");
+    g_only.set_to_do("comp.*");
 
     initialize_page();
 
