@@ -8,9 +8,29 @@
 #include <config/typedef.h>
 #include <trn/addng.h>
 
+#include <string>
 #include <string_view>
+#include <vector>
 
 struct Article;
+
+using TreeLines = std::vector<std::string>;
+
+struct ThreadTreeView
+{
+    Article  *tree_article{};
+    int       max_depth{};
+    int       max_line{-1}; // TODO: ArticleLine?
+    int       first_depth{};
+    int       first_line{};
+    int       my_depth{};
+    int       my_line{};
+    int       header_indent{};
+    TreeLines tree_lines{};
+    int       find_artp_y{};
+};
+
+extern ThreadTreeView g_tree_view;
 
 extern int g_max_tree_lines;
 
