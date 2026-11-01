@@ -393,7 +393,7 @@ AddGroupIndex add_to_list(std::string_view name, int to_read, char_int ch)
 
 std::string active_list_pattern()
 {
-    if (g_max_newsgroup_to_do != 1)
+    if (g_only.max_to_do != 1)
     {
         return "*";
     }

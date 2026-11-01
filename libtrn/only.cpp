@@ -18,13 +18,8 @@
 #include <string>
 #include <string_view>
 
-std::array<std::string, MAX_NG_TO_DO> g_newsgroup_to_do;       // restrictions in effect
-int                                   g_max_newsgroup_to_do{}; // 0 => no restrictions
-                                                               // >0 => # of entries in g_ngtodo
+NewsgroupRestrictions g_only;
 char g_empty_only_char{'o'};
-
-static int            s_save_max_newsgroup_to_do{};
-static CompiledRegex *s_compex_to_do[MAX_NG_TO_DO]; // restrictions in compiled form
 
 void only_init()
 {
@@ -32,7 +27,7 @@ void only_init()
 
 void set_newsgroup_to_do(std::string_view pat)
 {
-    int i = g_max_newsgroup_to_do + s_save_max_newsgroup_to_do;
+    int i = g_only.max_to_do + g_only.save_max_to_do;
 
     if (pat.empty())
     {
@@ -40,37 +35,37 @@ void set_newsgroup_to_do(std::string_view pat)
     }
     if (i < MAX_NG_TO_DO)
     {
-        g_newsgroup_to_do[i].assign(pat);
-        s_compex_to_do[i] = new CompiledRegex;
-        s_compex_to_do[i]->init_compex();
-        s_compex_to_do[i]->compile(g_newsgroup_to_do[i], true, true);
-        const std::string_view err = newsgroup_comp(*s_compex_to_do[i], pat, true, true);
+        g_only.to_do[i].assign(pat);
+        g_only.compex_to_do[i] = new CompiledRegex;
+        g_only.compex_to_do[i]->init_compex();
+        g_only.compex_to_do[i]->compile(g_only.to_do[i], true, true);
+        const std::string_view err = newsgroup_comp(*g_only.compex_to_do[i], pat, true, true);
         if (!err.empty())
         {
             fmt::print("\n{}\n", err);
             finalize(1);
         }
-        g_max_newsgroup_to_do++;
+        g_only.max_to_do++;
     }
 }
 
 std::string_view newsgroup_restriction(int index)
 {
-    return g_newsgroup_to_do[s_save_max_newsgroup_to_do + index];
+    return g_only.to_do[g_only.save_max_to_do + index];
 }
 
 // if command line list is non-null, is this newsgroup wanted?
 
 bool in_list(std::string_view newsgroup_name)
 {
-    if (g_max_newsgroup_to_do == 0)
+    if (g_only.max_to_do == 0)
     {
         return true;
     }
     const std::string group_name{newsgroup_name};
-    for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
+    for (int i = g_only.save_max_to_do; i < g_only.max_to_do + g_only.save_max_to_do; i++)
     {
-        if (s_compex_to_do[i]->execute(group_name.c_str()))
+        if (g_only.compex_to_do[i]->execute(group_name.c_str()))
         {
             return true;
         }
@@ -80,33 +75,32 @@ bool in_list(std::string_view newsgroup_name)
 
 void end_only()
 {
-    if (g_max_newsgroup_to_do)                    // did they specify newsgroup(s)
+    if (g_only.max_to_do) // did they specify newsgroup(s)
     {
         if (g_verbose)
         {
-            g_msg = fmt::format("Restriction {}{} removed.", g_newsgroup_to_do[0],
-                                g_max_newsgroup_to_do > 1 ? ", etc." : "");
+            g_msg = fmt::format("Restriction {}{} removed.", g_only.to_do[0], g_only.max_to_do > 1 ? ", etc." : "");
         }
         else
         {
             g_msg = "Exiting \"only\".";
         }
-        for (int i = s_save_max_newsgroup_to_do; i < g_max_newsgroup_to_do + s_save_max_newsgroup_to_do; i++)
+        for (int i = g_only.save_max_to_do; i < g_only.max_to_do + g_only.save_max_to_do; i++)
         {
-            g_newsgroup_to_do[i].clear();
-            s_compex_to_do[i]->free_compex();
-            delete s_compex_to_do[i];
-            s_compex_to_do[i] = nullptr;
+            g_only.to_do[i].clear();
+            g_only.compex_to_do[i]->free_compex();
+            delete g_only.compex_to_do[i];
+            g_only.compex_to_do[i] = nullptr;
         }
-        g_max_newsgroup_to_do = 0;
+        g_only.max_to_do = 0;
         g_newsgroup_min_to_read = 1;
     }
 }
 
 void push_only()
 {
-    s_save_max_newsgroup_to_do = g_max_newsgroup_to_do;
-    g_max_newsgroup_to_do = 0;
+    g_only.save_max_to_do = g_only.max_to_do;
+    g_only.max_to_do = 0;
 }
 
 void pop_only()
@@ -115,8 +109,8 @@ void pop_only()
 
     end_only();
 
-    g_max_newsgroup_to_do = s_save_max_newsgroup_to_do;
-    s_save_max_newsgroup_to_do = 0;
+    g_only.max_to_do = g_only.save_max_to_do;
+    g_only.save_max_to_do = 0;
 
     g_newsgroup_min_to_read = save_ng_min_toread;
 }

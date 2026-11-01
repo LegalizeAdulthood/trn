@@ -18,9 +18,17 @@
 
 constexpr int MAX_NG_TO_DO{512}; // number of newsgroups allowed on command line
 
-extern std::array<std::string, MAX_NG_TO_DO> g_newsgroup_to_do;     // restrictions in effect
-extern int                                   g_max_newsgroup_to_do; // 0 => no restrictions
-                                                                    // >0 => # of entries in g_ngtodo
+class CompiledRegex;
+
+struct NewsgroupRestrictions
+{
+    std::array<std::string, MAX_NG_TO_DO> to_do;       // restrictions in effect
+    int                                   max_to_do{}; // 0 => no restrictions; >0 => # of entries in to_do
+    int                                   save_max_to_do{};
+    CompiledRegex                        *compex_to_do[MAX_NG_TO_DO]{}; // restrictions in compiled form
+};
+
+extern NewsgroupRestrictions g_only;
 extern char g_empty_only_char;
 
 void only_init();

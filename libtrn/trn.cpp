@@ -136,7 +136,7 @@ int trn_main(int argc, char *argv[])
         g_start_here = nullptr;          // start ng scan from the top
     }
 
-    if (g_max_newsgroup_to_do)
+    if (g_only.max_to_do)
     {
         g_start_here = nullptr;
     }
@@ -249,14 +249,14 @@ restart:
             if (g_newsgroup_ptr == nullptr) // after the last newsgroup?
             {
                 set_mode(GM_READ,MM_FINISH_NEWSGROUP_LIST);
-                if (g_max_newsgroup_to_do)
+                if (g_only.max_to_do)
                 {
                     if (retry)
                     {
                         if (g_verbose)
                         {
-                            fmt::print("\nRestriction {}{} still in effect.\n", g_newsgroup_to_do[0],
-                                       g_max_newsgroup_to_do > 1 ? ", etc." : "");
+                            fmt::print("\nRestriction {}{} still in effect.\n", g_only.to_do[0],
+                                       g_only.max_to_do > 1 ? ", etc." : "");
                         }
                         else
                         {
@@ -909,15 +909,14 @@ display_multirc:
                     {
                         cwd_check();
                     }
-                    if (doscan && g_max_newsgroup_to_do)
+                    if (doscan && g_only.max_to_do)
                     {
                         scan_active(true);
                     }
-                    g_newsgroup_min_to_read =
-                        command_ch == g_empty_only_char && g_max_newsgroup_to_do ? TR_NONE : TR_ONE;
+                    g_newsgroup_min_to_read = command_ch == g_empty_only_char && g_only.max_to_do ? TR_NONE : TR_ONE;
                 }
                 g_newsgroup_ptr = newsgroup_first(); // simulate ^
-                if (!g_msg.empty() && !g_max_newsgroup_to_do)
+                if (!g_msg.empty() && !g_only.max_to_do)
                 {
                     return ING_MESSAGE;
                 }

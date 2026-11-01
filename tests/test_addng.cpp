@@ -46,26 +46,26 @@ protected:
     void SetUp() override
     {
         search_init();
-        m_old_newsgroup_to_do = g_newsgroup_to_do;
-        m_old_max_newsgroup_to_do = g_max_newsgroup_to_do;
+        m_old_newsgroup_to_do = g_only.to_do;
+        m_old_max_newsgroup_to_do = g_only.max_to_do;
 
-        g_newsgroup_to_do.fill(std::string{});
-        g_max_newsgroup_to_do = 0;
+        g_only.to_do.fill(std::string{});
+        g_only.max_to_do = 0;
     }
 
     void TearDown() override
     {
-        g_newsgroup_to_do = m_old_newsgroup_to_do;
-        g_max_newsgroup_to_do = m_old_max_newsgroup_to_do;
+        g_only.to_do = m_old_newsgroup_to_do;
+        g_only.max_to_do = m_old_max_newsgroup_to_do;
     }
 
     void set_restrictions(std::initializer_list<std::string_view> restrictions)
     {
-        g_max_newsgroup_to_do = 0;
+        g_only.max_to_do = 0;
         for (std::string_view restriction : restrictions)
         {
-            g_newsgroup_to_do[g_max_newsgroup_to_do] = restriction;
-            ++g_max_newsgroup_to_do;
+            g_only.to_do[g_only.max_to_do] = restriction;
+            ++g_only.max_to_do;
         }
     }
 
@@ -1011,7 +1011,7 @@ TEST_F(SelectorGroupListingTest, invalidGlobKeepsCurrentResults)
 
     EXPECT_NE(std::string::npos, output.find("comp.lang.apl"));
     EXPECT_NE(std::string::npos, output.find("news.test"));
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
 }
 
 TEST_F(SelectorGroupListingTest, returnLeavesListingWithoutSubscribing)

@@ -736,7 +736,7 @@ MultircLoopContext::~MultircLoopContext()
 std::vector<std::string> multirc_restrictions()
 {
     std::vector<std::string> restrictions;
-    for (int index = 0; index < g_max_newsgroup_to_do; ++index)
+    for (int index = 0; index < g_only.max_to_do; ++index)
     {
         restrictions.emplace_back(newsgroup_restriction(index));
     }
@@ -1316,7 +1316,7 @@ TEST_P(MultircGroupTraversalTest, restrictionsSkipNonmatchingGroupsInBothDirecti
     EXPECT_EQ(TR_NONE, g_newsgroup_data[0].m_to_read);
     EXPECT_EQ(TR_NONE, g_newsgroup_data[2].m_to_read);
     EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
 }
 
 TEST_P(MultircGroupTraversalTest, previousAtTheFirstGroupRetainsItsPrompt)
@@ -1709,7 +1709,7 @@ TEST_P(MultircExhaustedRestrictionTest, anExhaustedRestrictionIsReleasedBeforeRe
     EXPECT_TRUE(m_prompts[0].restrictions.empty());
     EXPECT_TRUE(m_prompts[1].restrictions.empty());
     EXPECT_EQ(ArticleUnread{4}, m_prompts[1].unread);
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     EXPECT_EQ(TR_ONE, g_newsgroup_min_to_read);
     expect_exhaustion(std::get<0>(GetParam()));
     expect_groups_preserved();
@@ -1738,7 +1738,7 @@ TEST_P(MultircRestrictionTest, aBareRestrictionCommandReturnsToEarlierUnrestrict
     expect_prompts({"comp.match.first", "comp.first"});
     EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[0].restrictions);
     EXPECT_TRUE(m_prompts[1].restrictions.empty());
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     EXPECT_EQ(TR_ONE, m_prompts[1].minimum_unread);
     EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction comp.match.* removed." : "Exiting \"only\"."));
     expect_groups_preserved();
@@ -1780,7 +1780,7 @@ TEST_P(MultircRestrictionTest, aNewRestrictionWithNoMatchesReleasesAndResumesUnr
     EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[0].restrictions);
     EXPECT_TRUE(m_prompts[1].restrictions.empty());
     EXPECT_TRUE(m_prompts[2].restrictions.empty());
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     expect_exhaustion("soc.missing");
     expect_groups_preserved();
 }
@@ -1805,7 +1805,7 @@ TEST_P(MultircRestrictionTest, clearingTheRestrictionAtTheEndOffersEarlierUnrest
     EXPECT_EQ(std::vector<std::string>{"comp.match.*"}, m_prompts[2].restrictions);
     EXPECT_TRUE(m_prompts[3].restrictions.empty());
     EXPECT_EQ(ArticleUnread{4}, m_prompts[3].unread);
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction comp.match.* removed." : "Exiting \"only\"."));
     expect_groups_preserved();
 }
@@ -2752,7 +2752,7 @@ TEST_P(MultircRestrictionReadingTest, readingAllRestrictedNewsReleasesTheRestric
     EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
     EXPECT_EQ(" 1-2", g_newsgroup_data[2].rc_numbers());
     EXPECT_EQ(ArticleUnread{1}, m_prompts[5].unread);
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     EXPECT_THAT(m_output, testing::HasSubstr(g_verbose ? "Restriction comp.lang.cpp removed." : "Exiting \"only\"."));
 }
 
@@ -15449,7 +15449,7 @@ TEST_P(NewsgroupSelectorDelegatedMessageTest, removingARestrictionReturnsItsStat
 
     EXPECT_EQ(DS_STATUS, result);
     EXPECT_EQ(verbose ? "Restriction comp.* removed." : "Exiting \"only\".", g_msg);
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     EXPECT_EQ(&g_newsgroup_data[1], g_newsgroup_ptr);
     expect_page(false, 0);
     expect_groups_preserved();
@@ -15854,7 +15854,7 @@ TEST_P(NewsgroupSelectorDelegatedRestrictedLookupTest, lookupRetainsTheActiveRes
     EXPECT_EQ(2, g_sel_page.page_item_cnt);
     EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & NF_INCLUDED);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     EXPECT_EQ("comp.[ln]*", newsgroup_restriction(0));
     EXPECT_EQ(1, g_selected_count);
     EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);

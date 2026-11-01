@@ -613,7 +613,7 @@ try_again:
                 g_sel_page.page_ngd = nullptr;
                 goto try_again;
             }
-            if (g_max_newsgroup_to_do)
+            if (g_only.max_to_do)
             {
                 end_only();
                 fmt::print("{}", g_msg);
@@ -2007,7 +2007,7 @@ static void display_page_title(bool home_only)
         {
             fmt::print(" out of {}", g_obj_count.value_of());
         }
-        if (g_max_newsgroup_to_do)
+        if (g_only.max_to_do)
         {
             fmt::print(" (Restriction)");
         }

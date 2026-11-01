@@ -2056,7 +2056,7 @@ TEST_P(NewsgroupSelectorExclusiveTest, selectedGroupsOutsideARestrictionDoNotPre
     EXPECT_EQ(m_objects[0], g_sel_page.page_ngd);
     EXPECT_EQ(1, g_sel_page.page_item_cnt);
     EXPECT_EQ(0, g_sel_page.item_index);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     EXPECT_EQ("comp.alpha", newsgroup_restriction(0));
     expect_read_state_preserved();
 }
@@ -2547,7 +2547,7 @@ TEST_F(NewsgroupSelectorBulkStateTest, XPreservesUnselectedGroupsHiddenByANameRe
     }
     EXPECT_EQ(NewsgroupNum{4}, g_newsgroup_to_read);
     EXPECT_EQ(2, g_selected_count);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
     expect_context();
 }
@@ -2575,7 +2575,7 @@ TEST_F(NewsgroupSelectorBulkStateTest, JIncludesSelectionsHiddenByANameRestricti
     EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(m_groups[BEFORE_UNSELECTED], g_sel_page.page_ngd);
     EXPECT_EQ(0, g_sel_page.item_index);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     EXPECT_EQ(RF_RC_CHANGED, m_newsrc.flags);
     expect_context();
 }
@@ -3081,7 +3081,7 @@ TEST_F(NewsgroupSelectorInlineStateTest, selectedCommandsRetainSelectionsOutside
     EXPECT_EQ(NewsgroupNum{4}, g_newsgroup_to_read);
     EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(2, g_perform_count);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     expect_inline_context();
 }
 
@@ -3108,7 +3108,7 @@ TEST_F(NewsgroupSelectorInlineStateTest, doubledColonAddressesUnselectedGroupsOu
     EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
     EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(3, g_perform_count);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     expect_inline_context();
 }
 
@@ -4683,7 +4683,7 @@ TEST_P(NewsgroupPageReadScopeTest, selectionsCannotBypassNameRestrictions)
     EXPECT_EQ(1, g_sel_page.total_obj_cnt);
     EXPECT_EQ(ArticleNum{1}, g_obj_count);
     EXPECT_EQ(1, g_selected_count);
-    EXPECT_EQ(1, g_max_newsgroup_to_do);
+    EXPECT_EQ(1, g_only.max_to_do);
     EXPECT_EQ(ArticleNum{}, excluded.m_abs_first);
 }
 
@@ -4783,7 +4783,7 @@ TEST_P(NewsgroupPageFallbackTest, restrictionsWithNoEligibleGroupsAreRemovedBefo
     EXPECT_EQ(ArticleNum{1}, g_obj_count);
     EXPECT_EQ(1, g_sel_page.page_obj_cnt);
     EXPECT_EQ(0, g_selected_count);
-    EXPECT_EQ(0, g_max_newsgroup_to_do);
+    EXPECT_EQ(0, g_only.max_to_do);
     EXPECT_EQ(TR_ONE, g_newsgroup_min_to_read);
     EXPECT_EQ("Exiting \"only\".", g_msg);
     EXPECT_FALSE(g_sel.exclusive);

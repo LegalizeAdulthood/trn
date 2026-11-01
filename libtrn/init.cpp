@@ -173,7 +173,7 @@ bool initialize(int argc, char *argv[])
 
     write_last();        // remember last runtime in .rnlast
 
-    if (g_max_newsgroup_to_do)                    // patterns on command line?
+    if (g_only.max_to_do) // patterns on command line?
     {
         found_any = scan_active(true) || found_any;
     }
