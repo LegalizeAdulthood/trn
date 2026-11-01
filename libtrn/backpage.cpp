@@ -21,12 +21,22 @@
 
 namespace fs = std::filesystem;
 
-static int             s_vary_fd{-1};         // virtual array file for storing  file offsets
-static ArticlePosition s_vary_buf[VARY_SIZE]; // current window onto virtual array
-static long            s_old_offset{-1};     // offset to block currently in window
+namespace
+{
+
+struct BackPageCache
+{
+    int             vary_fd{-1};         // virtual array file for storing  file offsets
+    ArticlePosition vary_buf[VARY_SIZE]; // current window onto virtual array
+    long            old_offset{-1};      // offset to block currently in window
 #ifdef DEBUG
-static int             s_max_index{-1};
+    int max_index{-1};
 #endif
+};
+
+static BackPageCache s_back_page;
+
+} // namespace
 
 void back_page_init()
 {
@@ -37,10 +47,10 @@ void back_page_init()
 #ifdef _WIN32
     open_flags |= _O_BINARY;
 #endif
-    s_vary_fd = open(vary_name.c_str(), open_flags);
+    s_back_page.vary_fd = open(vary_name.c_str(), open_flags);
     std::error_code error;
     fs::remove(vary_name, error);
-    if (s_vary_fd < 0)
+    if (s_back_page.vary_fd < 0)
     {
         fmt::print("Can't open {}\n", vary_name);
         sig_catcher(0);
@@ -49,15 +59,15 @@ void back_page_init()
 
 void back_page_final()
 {
-    if (s_vary_fd >= 0)
+    if (s_back_page.vary_fd >= 0)
     {
-        close(s_vary_fd);
-        s_vary_fd = -1;
+        close(s_back_page.vary_fd);
+        s_back_page.vary_fd = -1;
     }
-    s_old_offset = -1;
-    std::fill_n(s_vary_buf, VARY_SIZE, ArticlePosition{});
+    s_back_page.old_offset = -1;
+    std::fill_n(s_back_page.vary_buf, VARY_SIZE, ArticlePosition{});
 #ifdef DEBUG
-    s_max_index = -1;
+    s_back_page.max_index = -1;
 #endif
 }
 
@@ -69,9 +79,9 @@ ArticlePosition virtual_read(ArticleLine index)
     long offset;
 
 #ifdef DEBUG
-    if (index > s_max_index)
+    if (index > s_back_page.max_index)
     {
-        fmt::print("vrdary({}) > {}\n", index.value_of(), s_max_index);
+        fmt::print("vrdary({}) > {}\n", index.value_of(), s_back_page.max_index);
         return ArticlePosition{};
     }
 #endif
@@ -80,23 +90,23 @@ ArticlePosition virtual_read(ArticleLine index)
         return ArticlePosition{};
     }
     sub_index = index.value_of() % VARY_SIZE;
-    offset = (index.value_of() - sub_index) * sizeof(s_vary_buf[0]);
-    if (offset != s_old_offset)
+    offset = (index.value_of() - sub_index) * sizeof(s_back_page.vary_buf[0]);
+    if (offset != s_back_page.old_offset)
     {
-        if (s_old_offset >= 0)
+        if (s_back_page.old_offset >= 0)
         {
 #ifndef lint
-            (void) lseek(s_vary_fd, s_old_offset, 0);
-            write(s_vary_fd, (char *) s_vary_buf, sizeof(s_vary_buf));
+            (void) lseek(s_back_page.vary_fd, s_back_page.old_offset, 0);
+            write(s_back_page.vary_fd, (char *) s_back_page.vary_buf, sizeof(s_back_page.vary_buf));
 #endif // lint
         }
 #ifndef lint
-        (void) lseek(s_vary_fd, offset, 0);
-        read(s_vary_fd, (char *) s_vary_buf, sizeof(s_vary_buf));
+        (void) lseek(s_back_page.vary_fd, offset, 0);
+        read(s_back_page.vary_fd, (char *) s_back_page.vary_buf, sizeof(s_back_page.vary_buf));
 #endif // lint
-        s_old_offset = offset;
+        s_back_page.old_offset = offset;
     }
-    return s_vary_buf[sub_index];
+    return s_back_page.vary_buf[sub_index];
 }
 
 // write to virtual array
@@ -112,33 +122,33 @@ void virtual_write(ArticleLine index, ArticlePosition value)
     }
     if (!index && value >= 0)
     {
-        s_max_index = 0;
+        s_back_page.max_index = 0;
     }
-    if (index > s_max_index)
+    if (index > s_back_page.max_index)
     {
-        if (index != s_max_index + 1)
+        if (index != s_back_page.max_index + 1)
         {
-            fmt::print("index skipped {}-{}\n", s_max_index + 1, index.value_of() - 1);
+            fmt::print("index skipped {}-{}\n", s_back_page.max_index + 1, index.value_of() - 1);
         }
-        s_max_index = index.value_of();
+        s_back_page.max_index = index.value_of();
     }
 #endif
     sub_index = index.value_of() % VARY_SIZE;
-    offset = (index.value_of() - sub_index) * sizeof(s_vary_buf[0]);
-    if (offset != s_old_offset)
+    offset = (index.value_of() - sub_index) * sizeof(s_back_page.vary_buf[0]);
+    if (offset != s_back_page.old_offset)
     {
-        if (s_old_offset >= 0)
+        if (s_back_page.old_offset >= 0)
         {
 #ifndef lint
-            (void)lseek(s_vary_fd,s_old_offset,0);
-            write(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
+            (void) lseek(s_back_page.vary_fd, s_back_page.old_offset, 0);
+            write(s_back_page.vary_fd, (char *) s_back_page.vary_buf, sizeof(s_back_page.vary_buf));
 #endif // lint
         }
 #ifndef lint
-        (void)lseek(s_vary_fd,offset,0);
-        read(s_vary_fd,(char*)s_vary_buf,sizeof(s_vary_buf));
+        (void) lseek(s_back_page.vary_fd, offset, 0);
+        read(s_back_page.vary_fd, (char *) s_back_page.vary_buf, sizeof(s_back_page.vary_buf));
 #endif // lint
-        s_old_offset = offset;
+        s_back_page.old_offset = offset;
     }
-    s_vary_buf[sub_index] = value;
+    s_back_page.vary_buf[sub_index] = value;
 }
