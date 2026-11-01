@@ -75,7 +75,6 @@ static std::string s_univ_sel_cmds{"Z>"};
 
 static std::string hidden_list();
 static std::string magic_list();
-static void  set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str);
 static MouseButtonList parse_mouse_buttons(std::string_view btns);
 static std::string expand_mouse_buttons(const MouseButtonList &buttons);
 
@@ -107,8 +106,8 @@ void opt_init(int argc, char *argv[], TermCapScratchBuffer &tcbuf)
     const int            len = catalog.option_limit();
     g_option_def_vals = OptionValueList(static_cast<std::size_t>(len));
     // Set DEFHIDE and DEFMAGIC to current values and clear g_user_htype list
-    set_header_list(HT_DEF_HIDE, HT_HIDE, "");
-    set_header_list(HT_DEF_MAGIC, HT_MAGIC, "");
+    g_header_rules.set_list(HT_DEF_HIDE, HT_HIDE, "");
+    g_header_rules.set_list(HT_DEF_MAGIC, HT_MAGIC, "");
 
     g_ini_file = file_exp(g_use_threads ? get_env_var("TRNRC", "%+/trnrc") : get_env_var("RNRC", "%+/rnrc"));
 
@@ -563,12 +562,12 @@ void apply_global_option(OptionIndex num, std::string_view value)
     case OI_HEADER_MAGIC:
         if (!g_check_flag)
         {
-            set_header_list(HT_MAGIC, HT_DEF_MAGIC, value);
+            g_header_rules.set_list(HT_MAGIC, HT_DEF_MAGIC, value);
         }
         break;
 
     case OI_HEADER_HIDING:
-        set_header_list(HT_HIDE, HT_DEF_HIDE, value);
+        g_header_rules.set_list(HT_HIDE, HT_DEF_HIDE, value);
         break;
 
     case OI_INITIAL_ARTICLE_LINES:
@@ -1377,25 +1376,23 @@ static std::string magic_list()
     return headers;
 }
 
-static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str)
+void HeaderRules::set_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::string_view str)
 {
     bool setit;
 
     if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
-        // Free old g_user_htype list
-        while (g_header_rules.user_type_count > 1)
+        // Free old user_type list
+        while (user_type_count > 1)
         {
-            g_header_rules.user_type[--g_header_rules.user_type_count].name.clear();
+            user_type[--user_type_count].name.clear();
         }
-        g_header_rules.user_type_index.fill(0);
+        user_type_index.fill(0);
     }
 
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        g_header_rules.type[i].flags =
-            ((g_header_rules.type[i].flags & defflag) ? (g_header_rules.type[i].flags | flag)
-                                                      : (g_header_rules.type[i].flags & ~flag));
+        type[i].flags = ((type[i].flags & defflag) ? (type[i].flags | flag) : (type[i].flags & ~flag));
     }
     std::string_view remaining = str.empty() ? std::string_view{" "} : str;
     while (true)
@@ -1411,7 +1408,7 @@ static void set_header_list(HeaderTypeFlags flag, HeaderTypeFlags defflag, std::
         {
             setit = true;
         }
-        g_header_rules.set(header, flag, setit);
+        set(header, flag, setit);
         if (comma == std::string_view::npos)
         {
             break;
