@@ -73,7 +73,6 @@ OptionEditSession g_opt_edit;
 
 static std::string s_univ_sel_cmds{"Z>"};
 
-static std::string magic_list();
 static MouseButtonList parse_mouse_buttons(std::string_view btns);
 static std::string expand_mouse_buttons(const MouseButtonList &buttons);
 
@@ -1147,7 +1146,7 @@ std::string option_value(OptionIndex num)
         return yes_or_no(g_fuzzy_get);
 
     case OI_HEADER_MAGIC:
-        return magic_list();
+        return g_header_rules.magic_list();
 
     case OI_HEADER_HIDING:
         return g_header_rules.hidden_list();
@@ -1353,23 +1352,23 @@ std::string HeaderRules::hidden_list()
     return headers;
 }
 
-static std::string magic_list()
+std::string HeaderRules::magic_list()
 {
     std::string headers;
     headers.reserve(LINE_BUF_LEN);
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)
     {
-        if (!(g_header_rules.type[i].flags & HT_MAGIC) != !(g_header_rules.type[i].flags & HT_DEF_MAGIC))
+        if (!(type[i].flags & HT_MAGIC) != !(type[i].flags & HT_DEF_MAGIC))
         {
             if (!headers.empty())
             {
                 headers += ',';
             }
-            if (g_header_rules.type[i].flags & HT_DEF_MAGIC)
+            if (type[i].flags & HT_DEF_MAGIC)
             {
                 headers += '!';
             }
-            headers += g_header_rules.type[i].name;
+            headers += type[i].name;
         }
     }
     return headers;

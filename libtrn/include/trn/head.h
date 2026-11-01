@@ -121,6 +121,7 @@ struct HeaderRules
     // TODO: private
     void set_list(HeaderTypeFlags flag, HeaderTypeFlags def_flag, std::string_view prefix_list);
     std::string hidden_list();
+    std::string magic_list();
 
     HeaderType                  type[HEAD_LAST]{};
     HeaderLineType              type_idx[26]{};
