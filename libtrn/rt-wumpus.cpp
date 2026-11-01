@@ -59,7 +59,6 @@ struct TreeRenderState
     TreeLines                lines;
 };
 
-static void     find_depth(Article *article, int depth);
 static void     cache_tree(Article *ap, int depth, TreeRenderState &render);
 static Article *find_artp(Article *article, int x);
 static TreeLines render_tree_lines(Article *article, TreeRenderState &render);
@@ -94,7 +93,7 @@ void init_tree()
     g_tree_view.max_line = 0;
     g_tree_view.my_depth = 0;
     g_tree_view.my_line = 0;
-    find_depth(thread, 0);
+    g_tree_view.find_depth(thread, 0);
 
     if (g_tree_view.max_depth <= 5)
     {
@@ -149,15 +148,15 @@ void init_tree()
 }
 
 // A recursive routine to find the maximum tree extents and where we are.
-static void find_depth(Article *article, int depth)
+void ThreadTreeView::find_depth(Article *article, int depth)
 {
-    g_tree_view.max_depth = std::max(depth, g_tree_view.max_depth);
+    max_depth = std::max(depth, max_depth);
     while (true)
     {
-        if (article == g_tree_view.tree_article)
+        if (article == tree_article)
         {
-            g_tree_view.my_depth = depth;
-            g_tree_view.my_line = g_tree_view.max_line;
+            my_depth = depth;
+            my_line = max_line;
         }
         if (article->m_child1)
         {
@@ -165,7 +164,7 @@ static void find_depth(Article *article, int depth)
         }
         else
         {
-            g_tree_view.max_line++;
+            max_line++;
         }
         if (!(article = article->m_sibling))
         {

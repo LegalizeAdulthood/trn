@@ -28,6 +28,9 @@ struct ThreadTreeView
     int       header_indent{};
     TreeLines tree_lines{};
     int       find_artp_y{};
+
+    // TODO: private
+    void find_depth(Article *article, int depth);
 };
 
 extern ThreadTreeView g_tree_view;
