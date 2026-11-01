@@ -399,7 +399,7 @@ protected:
         }
         (void) nntp_art_name(ArticleNum{}, false);
         g_art_buf.final();
-        back_page_final();
+        g_back_page.final();
         head_final();
         std::error_code error;
         fs::current_path(m_old_current_path, error);
@@ -2919,7 +2919,7 @@ TEST_P(MultircSaveReadingTest, processExitPreservesSavedReadsAndRemovesBothNewsr
     std::ofstream{m_second_newsrc.lock_name} << "private second lock\n";
     m_data_source.m_act_sf.close();
     m_second_source.m_act_sf.close();
-    back_page_final();
+    g_back_page.final();
     fs::current_path(m_output_dir.parent_path());
 
     EXPECT_EXIT(
@@ -2989,7 +2989,7 @@ void MultircExitRecoveryStateTest::release_child_files()
     std::ofstream{m_second_newsrc.lock_name} << "private second lock\n";
     m_data_source.m_act_sf.close();
     m_second_source.m_act_sf.close();
-    back_page_final();
+    g_back_page.final();
     fs::current_path(m_output_dir.parent_path());
 }
 
@@ -7010,7 +7010,7 @@ void MultircUniversalStartupTest::TearDown()
 void MultircUniversalStartupTest::release_child_files()
 {
     m_data_source.m_act_sf.close();
-    back_page_final();
+    g_back_page.final();
     fs::current_path(m_output_dir.parent_path());
 }
 

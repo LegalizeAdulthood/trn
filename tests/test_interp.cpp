@@ -1936,7 +1936,7 @@ void PagerArticleTest::TearDown()
     {
         (void) read_tty_char();
     }
-    back_page_final();
+    g_back_page.final();
     if (!m_previous_directory.empty())
     {
         fs::current_path(m_previous_directory);
@@ -3849,7 +3849,7 @@ void PagerGroupArticleTest::TearDown()
     }
     art_close();
     close_cache();
-    back_page_final();
+    g_back_page.final();
     m_private_group.pop();
     ArticleHeaderPresentationTest::TearDown();
 }

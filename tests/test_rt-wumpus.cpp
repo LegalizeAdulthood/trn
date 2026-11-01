@@ -96,7 +96,7 @@ protected:
 
     void TearDown() override
     {
-        back_page_final();
+        g_back_page.final();
         g_tmp_dir = m_old_tmp_dir;
         std::error_code error;
         std::filesystem::remove_all(m_output_dir, error);

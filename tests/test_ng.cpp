@@ -5351,7 +5351,7 @@ void BackwardPagingArticleTest::SetUp()
 
 void BackwardPagingArticleTest::TearDown()
 {
-    back_page_final();
+    g_back_page.final();
     std::error_code error;
     std::filesystem::remove(m_vary_file, error);
     g_tmp_dir = m_old_tmp_dir;
