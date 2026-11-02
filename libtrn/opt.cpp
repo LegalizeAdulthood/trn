@@ -228,7 +228,7 @@ void load_options(const fs::path &filename, bool bleat)
             {
                 for (const IniSetting setting : section)
                 {
-                    color_rc_attribute(setting.name(), setting.value());
+                    g_color.rc_attribute(setting.name(), setting.value());
                 }
             }
         }

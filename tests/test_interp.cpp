@@ -7338,11 +7338,11 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
     {
         CitedTextAttribute()
         {
-            color_rc_attribute("cited text", "s");
+            g_color.rc_attribute("cited text", "s");
         }
         ~CitedTextAttribute()
         {
-            color_rc_attribute("cited text", "-");
+            g_color.rc_attribute("cited text", "-");
             g_color.deefault();
         }
     } cited_text_attribute;

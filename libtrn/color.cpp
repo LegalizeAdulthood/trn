@@ -147,13 +147,13 @@ static std::string_view next_attribute_token(std::string_view &text)
 }
 
 // Parse a line from the [attribute] section of trnrc.
-void color_rc_attribute(std::string_view object, std::string_view value)
+void ColorOutputContext::rc_attribute(std::string_view object, std::string_view value)
 {
     // Find the specified object.
     int i;
     for (i = 0; i < MAX_COLORS; i++)
     {
-        if (string_case_equal(object, g_color.objects[i].name))
+        if (string_case_equal(object, objects[i].name))
         {
             break;
         }
@@ -167,19 +167,19 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     // Parse the video attribute.
     if (!value.empty() && (value.front() == 's' || value.front() == 'S'))
     {
-        g_color.objects[i].attr = STANDOUT;
+        objects[i].attr = STANDOUT;
     }
     else if (!value.empty() && (value.front() == 'u' || value.front() == 'U'))
     {
-        g_color.objects[i].attr = UNDERLINE;
+        objects[i].attr = UNDERLINE;
     }
     else if (!value.empty() && (value.front() == 'n' || value.front() == 'N'))
     {
-        g_color.objects[i].attr = NO_MARKING;
+        objects[i].attr = NO_MARKING;
     }
     else if (!value.empty() && value.front() == '-')
     {
-        g_color.objects[i].attr = LAST_MARKING;
+        objects[i].attr = LAST_MARKING;
     }
     else
     {
@@ -193,18 +193,18 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     std::string_view color = next_attribute_token(rest);
     if (color.empty())
     {
-        g_color.objects[i].fg.clear();
-        g_color.objects[i].bg.clear();
+        objects[i].fg.clear();
+        objects[i].bg.clear();
         return;
     }
 
     // We have both colors and attributes, so turn colors on.
-    g_color.use_colors = true;
+    use_colors = true;
 
     // Parse the foreground color.
     if (color.front() == '-')
     {
-        g_color.objects[i].fg.clear();
+        objects[i].fg.clear();
     }
     else
     {
@@ -215,7 +215,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
         }
-        g_color.objects[i].fg = color_capability;
+        objects[i].fg = color_capability;
     }
 
     // Make sure we have one more parameter.
@@ -229,7 +229,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     // Parse the background color.
     if (color.front() == '-')
     {
-        g_color.objects[i].bg.clear();
+        objects[i].bg.clear();
     }
     else
     {
@@ -240,7 +240,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
         }
-        g_color.objects[i].bg = color_capability;
+        objects[i].bg = color_capability;
     }
 }
 

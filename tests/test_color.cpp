@@ -29,7 +29,7 @@ TEST(ColorAttributeTest, parsesForegroundAndBackgroundCapabilities)
             add_tc_string("bg default", "<bg-default>");
             add_color_capabilities();
 
-            color_rc_attribute("notice", "n red blue");
+            g_color.rc_attribute("notice", "n red blue");
 
             testing::internal::CaptureStdout();
             g_color.init();
@@ -51,7 +51,7 @@ TEST(ColorAttributeTest, rejectsUnknownObject)
 {
     EXPECT_EXIT(
         {
-            color_rc_attribute("missing", "n red blue");
+            g_color.rc_attribute("missing", "n red blue");
             std::exit(0);
         },
         ::testing::ExitedWithCode(1), "unknown object");
@@ -61,7 +61,7 @@ TEST(ColorAttributeTest, rejectsBadAttribute)
 {
     EXPECT_EXIT(
         {
-            color_rc_attribute("notice", "x red blue");
+            g_color.rc_attribute("notice", "x red blue");
             std::exit(0);
         },
         ::testing::ExitedWithCode(1), "bad attribute");
@@ -73,7 +73,7 @@ TEST(ColorAttributeTest, rejectsMissingBackgroundColor)
         {
             add_color_capabilities();
 
-            color_rc_attribute("notice", "n red");
+            g_color.rc_attribute("notice", "n red");
             std::exit(0);
         },
         ::testing::ExitedWithCode(1), "wrong number of parameters");
@@ -85,7 +85,7 @@ TEST(ColorAttributeTest, rejectsExtraColorParameter)
         {
             add_color_capabilities();
 
-            color_rc_attribute("notice", "n red blue extra");
+            g_color.rc_attribute("notice", "n red blue extra");
             std::exit(0);
         },
         ::testing::ExitedWithCode(1), "wrong number of parameters");
@@ -97,7 +97,7 @@ TEST(ColorAttributeTest, rejectsUnknownForegroundColor)
         {
             add_color_capabilities();
 
-            color_rc_attribute("notice", "n chartreuse blue");
+            g_color.rc_attribute("notice", "n chartreuse blue");
             std::exit(0);
         },
         ::testing::ExitedWithCode(1), "no color 'fg chartreuse'");
@@ -109,7 +109,7 @@ TEST(ColorAttributeTest, rejectsUnknownBackgroundColor)
         {
             add_color_capabilities();
 
-            color_rc_attribute("notice", "n red chartreuse");
+            g_color.rc_attribute("notice", "n red chartreuse");
             std::exit(0);
         },
         ::testing::ExitedWithCode(1), "no color 'bg chartreuse'");
