@@ -226,7 +226,6 @@ private:
 static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
 static void                sel_display();
-static void                sel_status_msg(std::string_view cp);
 static void                sel_prompt();
 static bool                select_item(Selection u);
 static bool                delay_return_item(Selection u);
@@ -1180,7 +1179,9 @@ static void sel_display()
     }
 }
 
-static void sel_status_msg(std::string_view cp)
+// Reads terminal capabilities and selector page positions. Cursor helpers
+// update terminal position and write to stdout; the message is flushed here.
+void SelectorSession::status_msg(std::string_view cp)
 {
     if (g_can_home)
     {
@@ -1197,7 +1198,7 @@ static void sel_status_msg(std::string_view cp)
     g_term_col = static_cast<int>(cp.size());
     goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
     std::fflush(stdout);     // otherwise may not be visible
-    g_sel_session.disp_status_line = 2;
+    disp_status_line = 2;
 }
 
 /// @brief Handles user input for the selector and processes commands or selections.
@@ -1295,11 +1296,11 @@ reinp_selector:
                 j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
                 if (g_use_sel_num)
                 {
-                    sel_status_msg(fmt::format("Range: {}-", j));
+                    g_sel_session.status_msg(fmt::format("Range: {}-", j));
                 }
                 else
                 {
-                    sel_status_msg(fmt::format("Range: {}-", g_sel_page.chars[j - 1]));
+                    g_sel_session.status_msg(fmt::format("Range: {}-", g_sel_page.chars[j - 1]));
                 }
             }
         }
@@ -1340,11 +1341,11 @@ reinp_selector:
         {
             if (g_use_sel_num)
             {
-                sel_status_msg("Go to number?");
+                g_sel_session.status_msg("Go to number?");
             }
             else
             {
-                sel_status_msg("Go to letter?");
+                g_sel_session.status_msg("Go to letter?");
             }
         }
         goto reinp_selector;
@@ -1363,17 +1364,17 @@ reinp_selector:
             if (got_dash)
             {
                 j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
-                sel_status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
+                g_sel_session.status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
             }
             else
             {
                 if (got_goto)
                 {
-                    sel_status_msg(fmt::format("Go to number: {}", static_cast<char>(ch)));
+                    g_sel_session.status_msg(fmt::format("Go to number: {}", static_cast<char>(ch)));
                 }
                 else
                 {
-                    sel_status_msg(fmt::format("{}", static_cast<char>(ch)));
+                    g_sel_session.status_msg(fmt::format("{}", static_cast<char>(ch)));
                 }
             }
         }
@@ -1409,12 +1410,12 @@ reinp_selector:
             if (got_dash)
             {
                 j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
-                sel_status_msg(fmt::format("Range: {}- ", j));
+                g_sel_session.status_msg(fmt::format("Range: {}- ", j));
                 goto reinp_selector;
             }
             if (got_goto)
             {
-                sel_status_msg("Go to number?  ");
+                g_sel_session.status_msg("Go to number?  ");
                 goto reinp_selector;
             }
             goto position_selector;
@@ -1432,7 +1433,7 @@ reinp_selector:
         if ((j < 0) || (j >= g_sel_page.page_item_cnt))
         {
             dingaling();
-            sel_status_msg(fmt::format("No item {} on this page.", sel_number));
+            g_sel_session.status_msg(fmt::format("No item {} on this page.", sel_number));
             goto position_selector;
         }
         else if (got_goto || (g_sel_num_goto && !got_dash))
@@ -1460,7 +1461,7 @@ reinp_selector:
         if (j >= g_sel_page.page_item_cnt)
         {
             dingaling();
-            sel_status_msg(fmt::format("No item '{}' on this page.", static_cast<char>(ch)));
+            g_sel_session.status_msg(fmt::format("No item '{}' on this page.", static_cast<char>(ch)));
             goto position_selector;
         }
         else if (got_goto)
@@ -1621,7 +1622,7 @@ reinp_selector:
                 sel_display();
                 goto reask_selector;
             }
-            sel_status_msg(g_msg);
+            g_sel_session.status_msg(g_msg);
 
             if (!g_can_home)
             {
