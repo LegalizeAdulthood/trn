@@ -219,16 +219,21 @@ void sf_init()
     }
 }
 
-void sf_clean()
+void ScoreRules::free_patterns()
 {
-    for (int i = 0; i < g_score_rules.num_entries; i++)
+    for (int i = 0; i < num_entries; i++)
     {
-        if (g_score_rules.entries[i].compex != nullptr)
+        if (entries[i].compex != nullptr)
         {
-            g_score_rules.entries[i].compex->free_compex();
-            delete g_score_rules.entries[i].compex;
+            entries[i].compex->free_compex();
+            delete entries[i].compex;
         }
     }
+}
+
+void sf_clean()
+{
+    g_score_rules.free_patterns();
     s_sf_abbr = {};
     g_score_rules.entries.clear();
     g_score_rules.num_entries = 0;

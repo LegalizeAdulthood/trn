@@ -33,6 +33,8 @@ struct ScoreFileEntry
 
 struct ScoreRules
 {
+    void free_patterns();
+
     // TODO: private
     void grow();
     int  check_extra_headers(std::string_view head);
