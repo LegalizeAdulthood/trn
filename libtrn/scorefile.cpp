@@ -71,7 +71,6 @@ static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(std::string_view name);
-static void  sf_grow();
 static int sf_check_extra_headers(std::string_view head);
 static void sf_add_extra_header(std::string_view head);
 static fs::path sf_get_filename(int level);
@@ -239,10 +238,10 @@ void sf_clean()
     g_score_rules.extra_headers.clear();
 }
 
-static void sf_grow()
+void ScoreRules::grow()
 {
-    g_score_rules.entries.push_back(ScoreFileEntry{});
-    g_score_rules.num_entries = size_cast<int>(g_score_rules.entries);
+    entries.push_back(ScoreFileEntry{});
+    num_entries = size_cast<int>(entries);
 }
 
 // Returns -1 if no matching extra header found, otherwise returns offset
@@ -421,7 +420,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
         {
             head_type = SF_REPLY;
         }
-        sf_grow();
+        g_score_rules.grow();
         g_score_rules.entries[g_score_rules.num_entries - 1].head_type = head_type;
         g_score_rules.entries[g_score_rules.num_entries - 1].score = score;
         return true;
@@ -676,7 +675,7 @@ static bool sf_do_line(std::string_view line, bool check)
     {
         return true; // limits of check
     }
-    sf_grow(); // acutally make an entry
+    g_score_rules.grow(); // acutally make an entry
     ScoreFileEntry &entry = g_score_rules.entries[g_score_rules.num_entries - 1];
     entry.head_type = j;
     entry.score = score;
@@ -741,7 +740,7 @@ static void sf_do_file(std::string_view fname)
         fmt::print("Score file: {}\n", filename);
     }
     // add end marker to scoring array
-    sf_grow();
+    g_score_rules.grow();
     g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_START;
     // file_level is 1 to n
     g_score_rules.entries[g_score_rules.num_entries - 1].score = s_sf_file_level;
@@ -754,7 +753,7 @@ static void sf_do_file(std::string_view fname)
         (void)sf_do_line(s, false);
     }
     // add end marker to scoring array
-    sf_grow();
+    g_score_rules.grow();
     g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_END;
     // file_level is 1 to n
     g_score_rules.entries[g_score_rules.num_entries - 1].score = s_sf_file_level;

@@ -33,6 +33,9 @@ struct ScoreFileEntry
 
 struct ScoreRules
 {
+    // TODO: private
+    void grow();
+
     std::vector<ScoreFileEntry> entries;       // array of entries
     int                         num_entries{}; // # of entries
     std::vector<std::string>    extra_headers;
