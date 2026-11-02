@@ -419,6 +419,16 @@ std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill
     return {};
 }
 
+void SubjectIndex::rekey(Subject *subj, std::string &new_subj)
+{
+    HashDatum data;
+
+    hash_delete(hash, subj->stripped_view());
+    subj->m_str = std::move(new_subj);
+    data.dat_ptr = (char *) subj;
+    hash_store(hash, subj->stripped_view(), data);
+}
+
 // subj not yet allocated, so we can tweak it first
 //
 // TODO: decouple from g_subj.hash
@@ -454,10 +464,7 @@ void Article::set_subj_line(std::string_view subj)
     if (m_subj)
     {
         // This only happens when we freshen truncated subjects
-        hash_delete(g_subj.hash, m_subj->stripped_view());
-        m_subj->m_str = std::move(new_subj);
-        data.dat_ptr = (char*)m_subj;
-        hash_store(g_subj.hash, m_subj->stripped_view(), data);
+        g_subj.rekey(m_subj, new_subj);
     }
     else
     {
