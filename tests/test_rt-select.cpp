@@ -605,7 +605,7 @@ DisplayState SelectorCallbackTest::dispatch(char command, std::string_view input
 {
     set_input(input);
     testing::internal::CaptureStdout();
-    const DisplayState result = sel_command(command);
+    const DisplayState result = g_sel_session.command(command);
     m_output = testing::internal::GetCapturedStdout();
     return result;
 }

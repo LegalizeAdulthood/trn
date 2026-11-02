@@ -1565,7 +1565,7 @@ reinp_selector:
     {
         range_start = -1;
         g_sel_session.ret = ch;
-        switch (sel_command(ch))
+        switch (g_sel_session.command(ch))
         {
         case DS_ASK:
             if (!g_sel_session.clean_screen)
@@ -2245,26 +2245,26 @@ static bool mark_del_as_read(Article &article, int arg)
 ///         DS_QUIT, DS_RESTART, DS_STATUS, DS_DO_COMMAND, DS_ERROR).
 ///
 /// @globals
+/// Navigation, selection, input, mail checks, and command execution retain
+/// their existing global side effects. PUSH_SELECTOR/POP_SELECTOR retain
+/// their global policy, count, callback, and terminal restoration boundaries.
 /// This function directly sets or modifies these global variables:
-/// - `g_sel_session.clean_screen`
 /// - `g_term_scrolled`
 /// - `g_page_line`
 /// - `g_newsgroup_ptr` (may be set to `nullptr` when no newsgroup selected)
 /// - `g_output_chase_phrase`
 /// - `g_sel_page.item_index`
-/// - `g_sel_session.removed_prompt`
 /// - `g_one_command`
-/// - `g_sel_session.ret`
 /// - `g_msg`
 ///
-DisplayState sel_command(char_int ch)
+DisplayState SelectorSession::command(char_int ch)
 {
     DisplayState ret;
     if (g_can_home)
     {
         goto_xy(0, g_sel_page.last_line);
     }
-    g_sel_session.clean_screen = true;
+    clean_screen = true;
     g_term_scrolled = 0;
     g_page_line = 1;
     if (g_sel.mode == SM_NEWSGROUP)
@@ -2319,7 +2319,7 @@ do_command:
 
     case Ctl('^'):
         erase_line(false);              // erase the prompt
-        g_sel_session.removed_prompt |= RP_NEWLINE;
+        removed_prompt |= RP_NEWLINE;
 #ifdef MAIL_CALL
         set_mail(true);          // force a mail check
 #endif
@@ -2342,7 +2342,7 @@ do_command:
         return DS_QUIT;
 
     case Ctl('Q'):  case '\033':
-        g_sel_session.ret = '\033';
+        this->ret = '\033';
         return DS_QUIT;
 
     case '\b':  case '\177':
@@ -2355,11 +2355,11 @@ do_command:
     case '&':  case '!':
     {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        g_sel_session.removed_prompt = RP_ALL;
+        removed_prompt = RP_ALL;
         const std::string command = finish_selector_command(ch, true);
         if (command.empty())      // get rest of command
         {
-            if (g_sel_session.clean_screen)
+            if (clean_screen)
             {
                 break;
             }
@@ -2372,20 +2372,20 @@ do_command:
             g_one_command = false;
             if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
             {
-                g_sel_session.clean_screen = false;
+                clean_screen = false;
             }
             POP_SELECTOR();
             if (!save_sel_mode)
             {
                 return DS_RESTART;
             }
-            if (g_sel_session.clean_screen)
+            if (clean_screen)
             {
                 erase_line(false);
                 return DS_ASK;
             }
         }
-        ch = g_sel_session.another_command(1);
+        ch = another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2396,7 +2396,7 @@ do_command:
     case 'v':
         newline();
         trn_version();
-        ch = g_sel_session.another_command(1);
+        ch = another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2405,7 +2405,7 @@ do_command:
 
     case '\\':
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        g_sel_session.removed_prompt = RP_ALL;
+        removed_prompt = RP_ALL;
         if (g_sel.mode == SM_NEWSGROUP)
         {
             fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
@@ -2424,12 +2424,12 @@ do_command:
         {
             goto do_command;
         }
-        if (g_sel_session.clean_screen)
+        if (clean_screen)
         {
             erase_line(false);
             break;
         }
-        ch = g_sel_session.another_command(1);
+        ch = another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2438,14 +2438,14 @@ do_command:
 
 the_default:
     default:
-        ret = g_sel_session.extra_commands(ch);
+        ret = extra_commands(ch);
         switch (ret)
         {
         case DS_ERROR:
             break;
 
         case DS_DO_COMMAND:
-            ch = g_sel_session.ret;
+            ch = this->ret;
             goto do_command;
 
         default:
@@ -2453,12 +2453,12 @@ the_default:
         }
         g_msg = "Type ? for help.";
         settle_down();
-        if (g_sel_session.clean_screen)
+        if (clean_screen)
         {
             return DS_STATUS;
         }
         fmt::print("\n{}\n", g_msg);
-        ch = g_sel_session.another_command(1);
+        ch = another_command(1);
         if (ch != '\0')
         {
             goto do_command;

@@ -1414,7 +1414,7 @@ void NewsgroupSelectorSearchActionStateTest::prepare_screen(bool clean)
 {
     g_tc_UP = "";
     g_sel_page.item_index = g_sel_page.page_item_cnt;
-    ASSERT_EQ(DS_DISPLAY, sel_command(Ctl('l')));
+    ASSERT_EQ(DS_DISPLAY, g_sel_session.command(Ctl('l')));
     g_sel_page.item_index = 1;
     set_newsgroup(m_groups[PAGE_SELECTED]);
     g_sel_page.last_line = 3;

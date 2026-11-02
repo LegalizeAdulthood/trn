@@ -291,7 +291,7 @@ void SelectorPagingStateTest::position_page(int page)
 DisplayState SelectorPagingStateTest::dispatch(char command)
 {
     testing::internal::CaptureStdout();
-    const DisplayState result = sel_command(command);
+    const DisplayState result = g_sel_session.command(command);
     (void) testing::internal::GetCapturedStdout();
     return result;
 }
@@ -493,7 +493,7 @@ DisplayState SelectorEscapedPageState::escape(char command)
     g_pushback.push('Q' | 0200);
     g_pushback.push(static_cast<unsigned char>(command) | 0200);
     testing::internal::CaptureStdout();
-    const DisplayState result = sel_command('\\');
+    const DisplayState result = g_sel_session.command('\\');
     m_output = testing::internal::GetCapturedStdout();
     return result;
 }

@@ -6361,7 +6361,7 @@ void NewsgroupSelectorDelegationStateTest::prepare_selector(bool rereading)
     no_search.op = OI_NONE;
     (void) calc_page(no_search);
     g_sel_page.item_index = g_sel_page.page_item_cnt;
-    ASSERT_EQ(DS_DISPLAY, sel_command(Ctl('l')));
+    ASSERT_EQ(DS_DISPLAY, g_sel_session.command(Ctl('l')));
     g_sel_page.item_index = 0;
     set_newsgroup(&g_newsgroup_data[1]);
     g_sel_page.last_line = 3;

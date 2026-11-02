@@ -102,6 +102,8 @@ struct SelectorSession
     int              force_pos{};
     SelectorCommand *extra_commands{};
 
+    DisplayState command(char_int ch);
+
     // TODO: private
     char another_command(char_int ch);
     void status_msg(std::string_view cp);
