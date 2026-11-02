@@ -294,26 +294,26 @@ void ColorOutputContext::pop()
 }
 
 // Color a string with the given object's color/attribute.
-void color_string(int object, std::string_view str)
+void ColorOutputContext::print(int obj, std::string_view str)
 {
     const bool had_newline = !str.empty() && str.back() == '\n';
     if (had_newline)
     {
         str.remove_suffix(1);
     }
-    if (!g_color.use_colors && has_underchar_capability() && g_color.objects[object].attr == UNDERLINE)
+    if (!use_colors && has_underchar_capability() && objects[obj].attr == UNDERLINE)
     {
         const std::string text{str};
         under_print(text); // hack for stupid terminals
     }
     else
     {
-        g_color.object(object, true);
+        object(obj, true);
         if (!str.empty())
         {
             std::fwrite(str.data(), 1, str.size(), stdout);
         }
-        g_color.pop();
+        pop();
     }
     if (had_newline)
     {

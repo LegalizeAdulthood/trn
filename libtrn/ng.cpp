@@ -631,7 +631,7 @@ reask_article:
                 fmt::sprintf(g_prompt, mail_call.c_str(), g_subst.current_char_subst().c_str(), g_default_cmd.c_str());
             draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? static_cast<int>(prompt_text.size()) + 5 : 0),
                            true);
-            color_string(COLOR_CMD, prompt_text);
+            g_color.print(COLOR_CMD, prompt_text);
             std::putchar(' ');
             std::fflush(stdout);
             g_term_col = static_cast<int>(prompt_text.size()) + 1;

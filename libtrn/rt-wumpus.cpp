@@ -560,11 +560,11 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         }
         if (is_subject)
         {
-            color_string(COLOR_SUBJECT, output_text);
+            g_color.print(COLOR_SUBJECT, output_text);
         }
         else if (g_tree_view.header_indent == 0 && !output_text.empty() && output_text.front() != '+')
         {
-            color_string(COLOR_ART_LINE1, output_text);
+            g_color.print(COLOR_ART_LINE1, output_text);
         }
         else
         {

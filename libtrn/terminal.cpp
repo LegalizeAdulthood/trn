@@ -2708,7 +2708,7 @@ void draw_mouse_bar(int limit, bool restore_cursor)
     {
         const MouseButtonDisplay display = mouse_button_display((*s_mouse_bar_btns)[static_cast<std::size_t>(i)]);
         std::putchar(' ');
-        color_string(COLOR_MOUSE, display.text);
+        g_color.print(COLOR_MOUSE, display.text);
     }
     g_term_col = g_tc_COLS - 1;
     if (restore_cursor)

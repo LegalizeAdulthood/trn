@@ -36,7 +36,7 @@ TEST(ColorAttributeTest, parsesForegroundAndBackgroundCapabilities)
             (void) testing::internal::GetCapturedStdout();
 
             testing::internal::CaptureStdout();
-            color_string(COLOR_NOTICE, "sample");
+            g_color.print(COLOR_NOTICE, "sample");
             const std::string output = testing::internal::GetCapturedStdout();
             if (output != "<fg-red><bg-blue>sample<fg-default><bg-default>")
             {

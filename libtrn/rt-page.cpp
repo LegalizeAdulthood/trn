@@ -1924,11 +1924,11 @@ static void display_page_title(bool home_only)
     }
     if (g_sel.mode == SM_MULTIRC)
     {
-        color_string(COLOR_HEADING, "Newsrcs");
+        g_color.print(COLOR_HEADING, "Newsrcs");
     }
     else if (g_sel.mode == SM_OPTIONS)
     {
-        color_string(COLOR_HEADING, "Options");
+        g_color.print(COLOR_HEADING, "Options");
     }
     else if (g_sel.mode == SM_UNIVERSAL)
     {
@@ -1938,15 +1938,15 @@ static void display_page_title(bool home_only)
     }
     else if (g_sel.group_listing)
     {
-        color_string(COLOR_HEADING, "Unsubscribed newsgroups");
+        g_color.print(COLOR_HEADING, "Unsubscribed newsgroups");
     }
     else if (g_in_ng)
     {
-        color_string(COLOR_NG_NAME, g_newsgroup_name.c_str());
+        g_color.print(COLOR_NG_NAME, g_newsgroup_name.c_str());
     }
     else if (g_sel.mode == SM_ADD_GROUP)
     {
-        color_string(COLOR_HEADING, "ADD newsgroups");
+        g_color.print(COLOR_HEADING, "ADD newsgroups");
     }
     else
     {

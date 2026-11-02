@@ -153,7 +153,7 @@ static void mention(std::string_view str)
 {
     if (g_verbose)
     {
-        color_string(COLOR_NOTICE,str);
+        g_color.print(COLOR_NOTICE, str);
         newline();
     }
     else

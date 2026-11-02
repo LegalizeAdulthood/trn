@@ -863,7 +863,7 @@ reask_pager:
             const std::string more_prompt = fmt::format("{}--MORE--({}%)", g_subst.current_char_subst(), percent);
             out_pos = g_term_col + static_cast<int>(more_prompt.size());
             draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? out_pos + 5 : 0), true);
-            color_string(COLOR_MORE, more_prompt);
+            g_color.print(COLOR_MORE, more_prompt);
         }
         std::fflush(stdout);
         g_term_col = out_pos;

@@ -55,6 +55,7 @@ struct ColorOutputContext
     void rc_attribute(std::string_view object, std::string_view value);
     void object(int object, bool push);
     void pop();
+    void print(int obj, std::string_view str);
 
     enum
     {
@@ -73,7 +74,5 @@ struct ColorOutputContext
 };
 
 extern ColorOutputContext g_color;
-
-void color_string(int object, std::string_view str);
 
 #endif

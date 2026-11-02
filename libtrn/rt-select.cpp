@@ -1786,7 +1786,7 @@ static void sel_prompt()
                     : g_sel.exclusive && g_in_ng ? "SELECTED"
                                                  : "Select",
                     g_sel.mode_string, g_sel.direction < 0 ? "reverse " : "", g_sel.sort_string, page_prompt);
-    color_string(COLOR_CMD, prompt);
+    g_color.print(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());
     s_removed_prompt = RP_NONE;
 }
