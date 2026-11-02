@@ -6,6 +6,8 @@
 #ifndef TRN_COLOR_H
 #define TRN_COLOR_H
 
+#include <trn/terminal.h>
+
 #include <string>
 #include <string_view>
 
@@ -58,6 +60,10 @@ struct ColorOutputContext
     // The attribute stack.  The 0th element is always the "normal" object.
     ColorObj stack[STACK_SIZE]{};
     int      stack_pointer{};
+    ColorObj prior{"", {}, {}, NO_MARKING};
+
+    // TODO: private
+    void output();
 };
 
 extern ColorOutputContext g_color;

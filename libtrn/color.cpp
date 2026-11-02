@@ -44,7 +44,6 @@
 static bool             is_attribute_space(char ch);
 static void             skip_attribute_token(std::string_view &text);
 static std::string_view next_attribute_token(std::string_view &text);
-static void             output_color();
 
 //
 // Object properties.
@@ -277,7 +276,7 @@ void color_object(int object, bool push)
     g_color.stack[g_color.stack_pointer] = merged;
 
     // Set colors/attributes.
-    output_color();
+    g_color.output();
 }
 
 // Pop the color/attribute stack.
@@ -290,7 +289,7 @@ void color_pop()
     }
     else
     {
-        output_color();
+        g_color.output();
     }
 }
 
@@ -326,14 +325,13 @@ void color_string(int object, std::string_view str)
 void color_default()
 {
     g_color.stack[g_color.stack_pointer] = g_color.objects[COLOR_DEFAULT];
-    output_color();
+    g_color.output();
 }
 
 // Set colors/attribute for an object.
-static void output_color()
+void ColorOutputContext::output()
 {
-    static ColorObj prior{"", {}, {}, NO_MARKING};
-    ColorObj       *op = &g_color.stack[g_color.stack_pointer];
+    ColorObj *op = &stack[stack_pointer];
 
     // If no change, just return.
     if (op->attr == prior.attr && op->fg == prior.fg && op->bg == prior.bg)
@@ -342,13 +340,13 @@ static void output_color()
     }
 
     // Start by turning off any existing colors and/or attributes.
-    if (g_color.use_colors)
+    if (use_colors)
     {
-        if (g_color.objects[COLOR_DEFAULT].fg != prior.fg //
-            || g_color.objects[COLOR_DEFAULT].bg != prior.bg)
+        if (objects[COLOR_DEFAULT].fg != prior.fg //
+            || objects[COLOR_DEFAULT].bg != prior.bg)
         {
-            prior.fg = g_color.objects[COLOR_DEFAULT].fg;
-            prior.bg = g_color.objects[COLOR_DEFAULT].bg;
+            prior.fg = objects[COLOR_DEFAULT].fg;
+            prior.bg = objects[COLOR_DEFAULT].bg;
             fmt::print("{}", prior.fg);
             fmt::print("{}", prior.bg);
         }
@@ -368,7 +366,7 @@ static void output_color()
     }
 
     // For color terminals we set the foreground and background color.
-    if (g_color.use_colors)
+    if (use_colors)
     {
         if (op->fg != prior.fg)
         {
