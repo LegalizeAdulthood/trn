@@ -529,7 +529,7 @@ void sc_rescore()
 {
     s_sc_rescoring = true; // in case routines need to know
     sc_cleanup();        // get rid of the old
-    sf_file_clear();
+    g_score_cache.file_clear();
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
         g_cache.ptr(a)->m_score_flags = SFLAG_NONE;

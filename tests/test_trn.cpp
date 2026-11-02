@@ -8383,7 +8383,7 @@ void ScoreArticleTest::SetUp()
     g_sc_delay = false;
     g_sf_verbose = false;
     g_sf_score_verbose = 0;
-    sf_file_clear();
+    g_score_cache.file_clear();
     sc_init(false);
     ASSERT_TRUE(g_sc_initialized);
     for (long number = 1; number <= 3; ++number)
@@ -8401,7 +8401,7 @@ void ScoreArticleTest::TearDown()
 {
     g_sc_saves_cores = false;
     sc_cleanup();
-    sf_file_clear();
+    g_score_cache.file_clear();
     g_sc_delay = m_old_sc_delay;
     g_sc_scoring = m_old_sc_scoring;
     g_sc_saves_cores = m_old_sc_saves_cores;

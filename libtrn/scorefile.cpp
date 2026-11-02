@@ -97,7 +97,7 @@ void sf_set_url_getter_for_test(ScoreFileUrlGetter *getter)
 
 void sf_clear_file_cache_for_test()
 {
-    sf_file_clear();
+    g_score_cache.file_clear();
 }
 
 // Must be called before any other sf_ routine (once for each group)
@@ -1070,7 +1070,7 @@ void sf_append(std::string_view line)
     // make sure directory exists...
     std::error_code error;
     fs::create_directories(score_file.parent_path(), error);
-    sf_file_clear();
+    g_score_cache.file_clear();
     std::ofstream output{score_file, std::ios::app};
     if (output)
     {
@@ -1295,7 +1295,7 @@ void sf_edit_file(std::string_view filespec)
     if (!error)
     {
         (void)edit_file(fname_noexpand);
-        sf_file_clear();
+        g_score_cache.file_clear();
     }
     else
     {
@@ -1365,7 +1365,7 @@ int ScoreFileCache::open_file(std::string_view name)
     return static_cast<int>(i);
 }
 
-void sf_file_clear()
+void ScoreFileCache::file_clear()
 {
-    g_score_cache.files.clear();
+    files.clear();
 }

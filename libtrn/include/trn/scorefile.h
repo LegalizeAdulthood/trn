@@ -67,6 +67,8 @@ using ScoreFileUrlGetter = bool(std::string_view url, const std::filesystem::pat
 
 struct ScoreFileCache
 {
+    void file_clear();
+
     // TODO: private
     int open_file(std::string_view name);
 
@@ -81,7 +83,6 @@ extern bool g_sf_verbose;       // if true print more stuff while loading
 
 void sf_init();
 void sf_clean();
-void sf_file_clear();
 
 int   sf_score(ArticleNum a);
 void  sf_append(std::string_view line);
