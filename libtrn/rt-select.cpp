@@ -2209,7 +2209,7 @@ static void sel_cleanup()
         {
             if (g_sel.mode == SM_ARTICLE)
             {
-                article_walk(mark_del_as_read, 0);
+                g_cache.walk(mark_del_as_read, 0);
             }
             else
             {

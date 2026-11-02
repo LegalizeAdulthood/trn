@@ -451,7 +451,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 goto article_level;
             }
             count_subjects(CS_RETAIN);
-            article_walk(count_uncached_article, 0);
+            g_cache.walk(count_uncached_article, 0);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
             if (g_nav.target != g_nav.current)
             {
@@ -893,7 +893,7 @@ reask_unread:
         else if (unread_ch == 'a')
         {
             check_first(g_abs_first);
-            article_walk(mark_all_unread, 0);
+            g_cache.walk(mark_all_unread, 0);
             count_subjects(CS_NORM);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
         }
@@ -1638,7 +1638,7 @@ normal_search:
         {
             const ArticleLocation old_location = g_nav.target;
             page_start();
-            article_walk(output_subject, AF_UNREAD);
+            g_cache.walk(output_subject, AF_UNREAD);
             g_int_count = 0;
             g_subj_line = std::nullopt;
             g_nav.target = old_location;
@@ -1654,7 +1654,7 @@ normal_search:
         case 'D':
             fmt::print("\nFirst article: {}\n", g_first_art.value_of());
             term_down(2);
-            article_walk(debug_article_output, 0);
+            g_cache.walk(debug_article_output, 0);
             g_int_count = 0;
             return AS_ASK;
 #endif
@@ -2107,11 +2107,11 @@ reask_catchup:
     }
     if (g_in_ng)
     {
-        article_walk(mark_all_read, leave_unread);
+        g_cache.walk(mark_all_read, leave_unread);
         if (leave_unread)
         {
             count_subjects(CS_NORM);
-            article_walk(count_uncached_article, 0);
+            g_cache.walk(count_uncached_article, 0);
             g_newsgroup_ptr->m_to_read = (ArticleUnread)g_obj_count.value_of();
         }
         else

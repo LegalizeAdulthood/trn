@@ -102,9 +102,9 @@ Article *GroupArticleCache::find(ArticleNum an)
     return it == article_list.end() ? nullptr : &it->second;
 }
 
-bool article_walk(bool (*callback)(Article &, int), int arg)
+bool GroupArticleCache::walk(ArticleWalker *callback, int arg)
 {
-    for (auto &[num, article] : g_cache.article_list)
+    for (auto &[num, article] : article_list)
     {
         if (callback(article, arg))
         {
@@ -241,7 +241,7 @@ void close_cache()
     g_sel_page.next_art = nullptr;
     thread_close();
 
-    article_walk(
+    g_cache.walk(
         [](Article &article, int)
         {
             article.clear_article();

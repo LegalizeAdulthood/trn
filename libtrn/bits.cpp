@@ -545,7 +545,7 @@ void yank_back()
             fmt::print("\nReturning {} Marked article{}...\n", g_dm_count, plural(g_dm_count));
             term_down(2);
         }
-        article_walk(yank_article, 0);
+        g_cache.walk(yank_article, 0);
         g_dm_count = 0;
     }
 }
@@ -578,7 +578,7 @@ bool chase_xrefs(bool until_key)
         set_spin(SPIN_BACKGROUND);
     }
 
-    article_walk(check_chase, until_key);
+    g_cache.walk(check_chase, until_key);
     s_chase_count = 0;
     return true;
 }

@@ -410,7 +410,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 // FALL THROUGH
 
             case 'j':
-                article_walk(kill_file_junk, killmask);
+                g_cache.walk(kill_file_junk, killmask);
                 break;
             }
             g_kf_state |= KFS_NORMAL_LINES;
