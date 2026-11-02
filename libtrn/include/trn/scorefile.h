@@ -85,6 +85,7 @@ struct ScoreRuleCompiler
     std::string_view free_form(std::string_view keyword, std::string_view remaining);
     bool             do_command(std::string_view cmd, bool check);
     bool             do_line(std::string_view line, bool check);
+    void             do_file(std::string_view fname);
 
     std::array<std::string, 256> abbr;             // abbreviations
     int                          file_level{};     // how deep are we?

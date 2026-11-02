@@ -68,7 +68,6 @@ ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
 
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
-static void  sf_do_file(std::string_view fname);
 static std::string sf_missing_score(std::string_view line);
 static std::string sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
@@ -127,7 +126,7 @@ void sf_init()
         const fs::path score_file = sf_get_filename(i);
         if (!score_file.empty())
         {
-            sf_do_file(score_file.generic_string());
+            g_score_compiler.do_file(score_file.generic_string());
         }
     }
 
@@ -463,7 +462,7 @@ bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
         }
         if (command == "include")
         {
-            sf_do_file(file_exp(sf_cmd_fname(argument)));
+            do_file(file_exp(sf_cmd_fname(argument)));
         }
         else
         {
@@ -721,7 +720,7 @@ bool ScoreRuleCompiler::do_line(std::string_view line, bool check)
     return true;
 }
 
-static void sf_do_file(std::string_view fname)
+void ScoreRuleCompiler::do_file(std::string_view fname)
 {
     const std::string filename{fname};
     int               sf_fp = g_score_cache.open_file(filename);
@@ -729,10 +728,10 @@ static void sf_do_file(std::string_view fname)
     {
         return;
     }
-    g_score_compiler.file_level++;
+    file_level++;
     if (g_sf_verbose)
     {
-        for (int i = 1; i < g_score_compiler.file_level; i++)
+        for (int i = 1; i < file_level; i++)
         {
             fmt::print("."); // maybe later putchar...
         }
@@ -742,23 +741,23 @@ static void sf_do_file(std::string_view fname)
     g_score_rules.grow();
     g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_START;
     // file_level is 1 to n
-    g_score_rules.entries[g_score_rules.num_entries - 1].score = g_score_compiler.file_level;
+    g_score_rules.entries[g_score_rules.num_entries - 1].score = file_level;
     g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
     g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
 
     const ScoreFile &file = g_score_cache.files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
     {
-        (void) g_score_compiler.do_line(s, false);
+        (void) do_line(s, false);
     }
     // add end marker to scoring array
     g_score_rules.grow();
     g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_END;
     // file_level is 1 to n
-    g_score_rules.entries[g_score_rules.num_entries - 1].score = g_score_compiler.file_level;
+    g_score_rules.entries[g_score_rules.num_entries - 1].score = file_level;
     g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
     g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
-    g_score_compiler.file_level--;
+    file_level--;
 }
 
 //const std::string& text; // string to match on
