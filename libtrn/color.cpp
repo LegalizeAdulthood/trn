@@ -13,9 +13,9 @@
 //
 //      g_color.object(COLOR_HEADER, 1);
 //      fputs(header_string, stdout);
-//      color_pop();
+//      g_color.pop();
 //
-// The color_pop function will take care of restoring all colors and
+// The g_color.pop function will take care of restoring all colors and
 // attribute to the state before the g_color.object function was called.
 //
 // Colors and attributes are parsed from the [attribute] section
@@ -280,16 +280,16 @@ void ColorOutputContext::object(int object, bool push)
 }
 
 // Pop the color/attribute stack.
-void color_pop()
+void ColorOutputContext::pop()
 {
     // Trying to pop an empty stack?
-    if (--g_color.stack_pointer < 0)
+    if (--stack_pointer < 0)
     {
-        g_color.stack_pointer = 0;
+        stack_pointer = 0;
     }
     else
     {
-        g_color.output();
+        output();
     }
 }
 
@@ -313,7 +313,7 @@ void color_string(int object, std::string_view str)
         {
             std::fwrite(str.data(), 1, str.size(), stdout);
         }
-        color_pop();
+        g_color.pop();
     }
     if (had_newline)
     {

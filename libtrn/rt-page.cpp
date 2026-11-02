@@ -1934,7 +1934,7 @@ static void display_page_title(bool home_only)
     {
         g_color.object(COLOR_HEADING, true);
         fmt::print("[{}] {}", g_univ.level, g_univ.title.empty() ? "Universal Selector" : g_univ.title.c_str());
-        color_pop();
+        g_color.pop();
     }
     else if (g_sel.group_listing)
     {
@@ -1973,7 +1973,7 @@ static void display_page_title(bool home_only)
         {
             fmt::print(" (group #{}: {})", g_multirc->m_num, news_sources);
         }
-        color_pop(); // of COLOR_HEADING
+        g_color.pop(); // of COLOR_HEADING
     }
     if (home_only || (g_erase_screen && g_erase_each_line))
     {
@@ -2587,7 +2587,7 @@ void output_sel(int ix, int sel, bool update)
         break;
     }
     std::putchar(" +-*"[sel]);
-    color_pop();        // of COLOR_PLUS/MINUS/STAR/DEFAULT
+    g_color.pop(); // of COLOR_PLUS/MINUS/STAR/DEFAULT
 
     if (update)
     {

@@ -2068,7 +2068,7 @@ static bool select_option(OptionIndex i)
     const std::string_view name = catalog.name(row);
     const std::string_view help = catalog.help(option);
     fmt::print("Change `{}' ({})", name, help);
-    color_pop();        // of COLOR_CMD
+    g_color.pop(); // of COLOR_CMD
     newline();
     const std::string oldval = quote_string(option_value(option));
     const bool        had_draft = g_opt_edit.draft->contains(option);

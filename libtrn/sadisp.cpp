@@ -77,7 +77,7 @@ void sa_refresh_top()
     {
         fmt::print(" follow");
     }
-    color_pop(); // of COLOR_SCORE
+    g_color.pop(); // of COLOR_SCORE
     erase_eol();
     fmt::print("\n");
 }
@@ -88,7 +88,7 @@ void sa_refresh_bot()
     s_mail_and_place();
     const std::string_view order = sa_order_text();
     fmt::print("({} order, {}% scored)", order, sc_percent_scored());
-    color_pop();        // of COLOR_SCORE
+    g_color.pop(); // of COLOR_SCORE
     std::fflush(stdout);
 }
 

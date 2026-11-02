@@ -1619,7 +1619,7 @@ reask_anything:
     {
         fmt::print("[MORE] ");
     }
-    color_pop(); // of COLOR_MORE
+    g_color.pop(); // of COLOR_MORE
     std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
@@ -1687,7 +1687,7 @@ int pause_get_cmd()
     {
         fmt::print("[CMD] ");
     }
-    color_pop(); // of COLOR_CMD
+    g_color.pop(); // of COLOR_CMD
     std::fflush(stdout);
     eat_typeahead();
     if (g_int_count)
@@ -2797,7 +2797,7 @@ bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 }
                 if (btn == 3)
                 {
-                    color_pop(); // of COLOR_MOUSE
+                    g_color.pop(); // of COLOR_MOUSE
                 }
                 goto_xy(tcol, tline);
                 std::fflush(stdout);

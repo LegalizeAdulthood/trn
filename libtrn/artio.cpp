@@ -642,7 +642,7 @@ mime_switch:
             {
                 g_mime.state = SKIP_MIME;
             }
-            color_pop();
+            g_color.pop();
             chdir_news_dir();
             erase_line(false);
             g_no_wait_fork = false;

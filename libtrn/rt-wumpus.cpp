@@ -411,7 +411,7 @@ static void print_tree_line(std::string_view tree_line)
         tree_line.remove_prefix(marker + 1);
         g_color.object(COLOR_TREE_MARK, true);
         fmt::print("{}", tree_line.substr(0, marked_size));
-        color_pop(); // of COLOR_TREE_MARK
+        g_color.pop(); // of COLOR_TREE_MARK
         tree_line.remove_prefix(marked_size);
     }
     fmt::print("{}", tree_line);
@@ -463,7 +463,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         {
             g_color.object(COLOR_TREE_MARK, true);
             fmt::print("[{}]", g_nav.current.art->thread_letter());
-            color_pop();
+            g_color.pop();
             fmt::print(" ");
             g_tree_view.header_indent = 4;
         }
@@ -591,13 +591,13 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             {
                 print_tree_line(g_tree_view.lines[header_line.value_of()]);
             }
-            color_pop(); // of COLOR_TREE
+            g_color.pop(); // of COLOR_TREE
         } // if
         newline();
         ++header_line;
     } // for remainder of line
 
-    color_pop(); // of COLOR_HEADER
+    g_color.pop(); // of COLOR_HEADER
     // return number of lines displayed
     return header_line - start_line;
 }
@@ -717,7 +717,7 @@ void entire_tree(Article* ap)
         }
         g_color.object(COLOR_TREE, true);
         print_tree_line(tree_line);
-        color_pop(); // of COLOR_TREE
+        g_color.pop(); // of COLOR_TREE
         newline();
     }
     newline();

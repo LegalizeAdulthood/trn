@@ -1420,7 +1420,7 @@ leave_pager:
             const std::string mail_call = interp_search(g_mail_call, command);
             fmt::printf(g_prompt, mail_call, g_subst.current_char_subst(),
                         g_default_cmd);         // print prompt, whatever it is
-            color_pop();                        // of COLOR_CMD
+            g_color.pop();                      // of COLOR_CMD
             std::putchar(' ');
             std::fflush(stdout);
         }
