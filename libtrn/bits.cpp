@@ -95,7 +95,7 @@ void rc_to_bits()
         ArticleNum n;
         for (n = article_first(g_abs_first); n < g_first_art; n = article_next(n))
         {
-            article_ptr(n)->m_flags &= ~AF_UNREAD;
+            g_cache.ptr(n)->m_flags &= ~AF_UNREAD;
         }
         g_first_art = n;
     }
@@ -135,7 +135,7 @@ void rc_to_bits()
         }
         for (; n < min; n = article_next(n))
         {
-            ap = article_ptr(n);
+            ap = g_cache.ptr(n);
             if (ap->m_flags & AF_EXISTS)
             {
                 if (ap->m_auto_flags & AUTO_KILL_MASK)
@@ -166,7 +166,7 @@ void rc_to_bits()
         // mark all arts in range as read
         for ( ; n <= max; n = article_next(n))
         {
-            article_ptr(n)->m_flags &= ~AF_UNREAD;
+            g_cache.ptr(n)->m_flags &= ~AF_UNREAD;
         }
 #ifdef DEBUG
         if (g_debug & DEB_CTLAREA_BITMAP)
@@ -186,7 +186,7 @@ void rc_to_bits()
     }
     for (; n <= g_last_art; n = article_next(n))
     {
-        ap = article_ptr(n);
+        ap = g_cache.ptr(n);
         if (ap->m_flags & AF_EXISTS)
         {
             if (ap->m_auto_flags & AUTO_KILL_MASK)
@@ -319,8 +319,7 @@ void find_existing_articles()
         {
             std::string list_line;
             list_line.reserve(NNTP_STRLEN);
-            for (ap = article_ptr(article_first(g_abs_first));
-                 ap && ap->article_num() <= g_last_art;
+            for (ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art;
                  ap = article_nextp(ap))
             {
                 ap->m_flags &= ~AF_EXISTS;
@@ -342,7 +341,7 @@ void find_existing_articles()
                 {
                     continue;   // Ignore some whacked-out NNTP servers
                 }
-                ap = article_ptr(an);
+                ap = g_cache.ptr(an);
                 if (!(ap->m_flags2 & AF2_BOGUS))
                 {
                     ap->m_flags |= AF_EXISTS;
@@ -353,7 +352,7 @@ void find_existing_articles()
         {
             if (!g_data_source->m_ov_opened || !g_data_source->m_over_dir.empty())
             {
-                for (ap = article_ptr(article_first(g_cache.first_cached));
+                for (ap = g_cache.ptr(article_first(g_cache.first_cached));
                      ap && ap->article_num() <= g_cache.last_cached; ap = article_nextp(ap))
                 {
                     if (ap->m_flags & AF_CACHED)
@@ -364,7 +363,7 @@ void find_existing_articles()
             }
             for (an = g_abs_first; an < g_cache.first_cached; ++an)
             {
-                ap = article_ptr(an);
+                ap = g_cache.ptr(an);
                 if (!(ap->m_flags2 & AF2_BOGUS))
                 {
                     ap->m_flags |= AF_EXISTS;
@@ -372,7 +371,7 @@ void find_existing_articles()
             }
             for (an = article_after(g_cache.last_cached); an <= g_last_art; ++an)
             {
-                ap = article_ptr(an);
+                ap = g_cache.ptr(an);
                 if (!(ap->m_flags2 & AF2_BOGUS))
                 {
                     ap->m_flags |= AF_EXISTS;
@@ -383,7 +382,7 @@ void find_existing_articles()
         {
             for (an = g_abs_first; an <= g_last_art; ++an)
             {
-                ap = article_ptr(an);
+                ap = g_cache.ptr(an);
                 if (!(ap->m_flags2 & AF2_BOGUS))
                 {
                     ap->m_flags |= AF_EXISTS;
@@ -405,8 +404,7 @@ void find_existing_articles()
         }
 
         // Scan the directory to find which articles are present.
-        for (ap = article_ptr(article_first(g_abs_first));
-             ap && ap->article_num() <= g_last_art;
+        for (ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art;
              ap = article_nextp(ap))
         {
             ap->m_flags &= ~AF_EXISTS;
@@ -425,7 +423,7 @@ void find_existing_articles()
                 {
                     first = std::min(an, first);
                     last = std::max(an, last);
-                    ap = article_ptr(an);
+                    ap = g_cache.ptr(an);
                     if (!(ap->m_flags2 & AF2_BOGUS))
                     {
                         ap->m_flags |= AF_EXISTS;
@@ -444,7 +442,7 @@ void find_existing_articles()
                  g_abs_first < first;
                  g_abs_first = article_next(g_abs_first))
             {
-                article_ptr(g_abs_first)->one_missing();
+                g_cache.ptr(g_abs_first)->one_missing();
             }
             g_abs_first = first;
         }
@@ -512,8 +510,7 @@ void note_chase_xref()
 
 void mark_missing_articles()
 {
-    for (Article *ap = article_ptr(article_first(g_abs_first));
-         ap && ap->article_num() <= g_last_art;
+    for (Article *ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art;
          ap = article_nextp(ap))
     {
         if (!(ap->m_flags & AF_EXISTS))
@@ -711,12 +708,12 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
                 }
                 if (mark_read)
                 {
-                    article_ptr(x)->one_less(); // take care of old C newses
+                    g_cache.ptr(x)->one_less(); // take care of old C newses
                 }
 # ifdef MCHASE
                 else
                 {
-                    article_ptr(x)->one_more();
+                    g_cache.ptr(x)->one_more();
                 }
 # endif
             }

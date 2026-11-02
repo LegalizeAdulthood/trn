@@ -77,9 +77,9 @@ static bool cache_unread_arts();
 #endif
 static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_articles);
 
-Article *article_ptr(ArticleNum an)
+Article *GroupArticleCache::ptr(ArticleNum an)
 {
-    auto [it, inserted] = g_cache.article_list.try_emplace(an, Article{});
+    auto [it, inserted] = article_list.try_emplace(an, Article{});
     if (inserted)
     {
         it->second.m_num = an;
@@ -180,7 +180,7 @@ void build_cache()
         }
         for (ArticleNum an{article_after(g_cache.last_cached)}; an <= g_last_art; ++an)
         {
-            article_ptr(an)->m_flags |= AF_EXISTS;
+            g_cache.ptr(an)->m_flags |= AF_EXISTS;
         }
         rc_to_bits();
         thread_grow();
@@ -901,7 +901,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
     for (i = article_first(first); i <= last; i = article_next(i))
     {
-        if ((article_ptr(i)->m_flags & cache_mask) ^ cache_mask2)
+        if ((g_cache.ptr(i)->m_flags & cache_mask) ^ cache_mask2)
         {
             continue;
         }

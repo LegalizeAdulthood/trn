@@ -160,8 +160,8 @@ protected:
 
 TEST_F(SubjectStorageTest, setSubjectLineStripsReplyPrefixAndSharesSubject)
 {
-    Article *first = article_ptr(ArticleNum{1});
-    Article *second = article_ptr(ArticleNum{2});
+    Article *first = g_cache.ptr(ArticleNum{1});
+    Article *second = g_cache.ptr(ArticleNum{2});
 
     first->set_subj_line("Re: Shared Topic");
     second->set_subj_line("Shared Topic");
@@ -176,7 +176,7 @@ TEST_F(SubjectStorageTest, setSubjectLineStripsReplyPrefixAndSharesSubject)
 
 TEST_F(SubjectStorageTest, setSubjectLineStoresPlainSubject)
 {
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
 
     article->set_subj_line("Plain Topic");
 
@@ -188,7 +188,7 @@ TEST_F(SubjectStorageTest, setSubjectLineStoresPlainSubject)
 
 TEST_F(SubjectStorageTest, setSubjectLineDecodesEncodedReplyPrefix)
 {
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
 
     article->set_subj_line("=?US-ASCII?B?UmU6IEVuY29kZWQgVG9waWM=?=");
 
@@ -200,8 +200,8 @@ TEST_F(SubjectStorageTest, setSubjectLineDecodesEncodedReplyPrefix)
 
 TEST_F(SubjectStorageTest, replacingSubjectUpdatesHashKey)
 {
-    Article *first = article_ptr(ArticleNum{1});
-    Article *second = article_ptr(ArticleNum{2});
+    Article *first = g_cache.ptr(ArticleNum{1});
+    Article *second = g_cache.ptr(ArticleNum{2});
 
     first->set_subj_line("Original Topic");
     Subject *original = first->m_subj;
@@ -220,7 +220,7 @@ TEST_F(SubjectStorageTest, replacingSubjectUpdatesHashKey)
 
 TEST_F(SubjectStorageTest, outputSubjectPrintsArticleNumberAndSubject)
 {
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->set_subj_line("A Subject");
 
     testing::internal::CaptureStdout();
@@ -233,7 +233,7 @@ TEST_F(SubjectStorageTest, outputSubjectPrintsArticleNumberAndSubject)
 
 TEST_F(SubjectStorageTest, outputSubjectPrintsCustomSubjectLine)
 {
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->set_subj_line("A Subject");
     g_subj_line = std::string{"[%s]"};
     g_in_ng = true;
@@ -251,7 +251,7 @@ TEST_F(SubjectStorageTest, outputSubjectReadsCustomSubjectLineFromEnvironment)
 {
     trn::testing::MockEnvironment env;
     env.expect_env("SUBJLINE", "[%s]");
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->set_subj_line("A Subject");
     g_subj_line = std::nullopt;
     g_in_ng = true;
@@ -267,7 +267,7 @@ TEST_F(SubjectStorageTest, outputSubjectReadsCustomSubjectLineFromEnvironment)
 
 TEST_F(SubjectStorageTest, threadArticleBuildsParentChainFromReferences)
 {
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->m_date = 100;
     article->m_msg_id = "<child@example.com>";
     article->set_subj_line("A Subject");

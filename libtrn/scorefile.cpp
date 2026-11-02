@@ -854,7 +854,7 @@ int sf_score(ArticleNum a)
                     sum = sum + s_sf_entries[j].score;
                     if (h == FROM_LINE)
                     {
-                        article_ptr(a)->m_score_flags |= SFLAG_AUTHOR;
+                        g_cache.ptr(a)->m_score_flags |= SFLAG_AUTHOR;
                     }
                     if (g_sf_score_verbose)
                     {
@@ -864,7 +864,7 @@ int sf_score(ArticleNum a)
             }
         }
     }
-    if (s_new_author_active && !(article_ptr(a)->m_score_flags & SFLAG_AUTHOR))
+    if (s_new_author_active && !(g_cache.ptr(a)->m_score_flags & SFLAG_AUTHOR))
     {
         sum = sum + s_new_author; // add new author bonus
         if (g_sf_score_verbose)

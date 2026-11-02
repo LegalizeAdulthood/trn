@@ -238,7 +238,7 @@ void sc_set_score(ArticleNum a, int score)
         one_less_art_num(a);
     }
 
-    Article *ap = article_ptr(a);
+    Article *ap = g_cache.ptr(a);
     ap->m_score = score;  // update the score
     ap->m_score_flags |= SFLAG_SCORED;
     g_s_order_changed = true;   // resort
@@ -296,7 +296,7 @@ int sc_score_art(ArticleNum a, bool now)
     {
         return LOW_SCORE;
     }
-    return article_ptr(a)->m_score;
+    return g_cache.ptr(a)->m_score;
 }
 
 // scores articles in a range
@@ -533,7 +533,7 @@ void sc_rescore()
     sf_file_clear();
     for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
-        article_ptr(a)->m_score_flags = SFLAG_NONE;
+        g_cache.ptr(a)->m_score_flags = SFLAG_NONE;
     }
     sc_init(true);       // enter the new... (wait for rescore)
     if (g_sa_initialized)
@@ -649,7 +649,7 @@ void sc_kill_threshold(int thresh)
 {
     for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
     {
-        if (article_ptr(a)->m_score <= thresh &&
+        if (g_cache.ptr(a)->m_score <= thresh &&
             article_unread(a)
             // this is needed for zoom mode
             && sa_basic_elig(sa_artnum_to_ent(a)))

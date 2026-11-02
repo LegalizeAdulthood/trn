@@ -208,7 +208,7 @@ TEST_F(OverviewTest, localOverviewLinePopulatesArticleFields)
 
     EXPECT_TRUE(ov_data(TEST_ARTICLE_NUM, TEST_ARTICLE_NUM, false));
 
-    Article *article = article_ptr(TEST_ARTICLE_NUM);
+    Article *article = g_cache.ptr(TEST_ARTICLE_NUM);
     EXPECT_TRUE(article->m_flags & AF_CACHED);
     EXPECT_EQ("Re: Overview Subject", article->get_cached_line_text(SUBJ_LINE, false));
     ASSERT_TRUE(article->m_from);
@@ -244,7 +244,7 @@ TEST_F(OverviewTest, remoteOverviewFallsBackToXoverRange)
 
     EXPECT_TRUE(ov_data(TEST_ARTICLE_NUM, TEST_ARTICLE_NUM, false));
 
-    Article *article = article_ptr(TEST_ARTICLE_NUM);
+    Article *article = g_cache.ptr(TEST_ARTICLE_NUM);
     EXPECT_TRUE(article->m_flags & AF_CACHED);
     EXPECT_EQ("Re: Overview Subject", article->get_cached_line_text(SUBJ_LINE, false));
 }
@@ -307,8 +307,8 @@ TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
     m_data_source.m_flags |= DF_REMOTE;
     g_last_art = ArticleNum{3};
     m_group.m_ng_max = g_last_art;
-    article_ptr(ArticleNum{2})->m_flags = AF_EXISTS;
-    article_ptr(ArticleNum{3})->m_flags = AF_EXISTS;
+    g_cache.ptr(ArticleNum{2})->m_flags = AF_EXISTS;
+    g_cache.ptr(ArticleNum{3})->m_flags = AF_EXISTS;
     g_spin_todo = 3;
 
     EXPECT_CALL(*connection, write_line(testing::StrEq("OVER 1-3"), testing::_));
@@ -323,9 +323,9 @@ TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
     EXPECT_TRUE(ov_data(ArticleNum{1}, ArticleNum{3}, false));
     EXPECT_EQ(ArticleNum{3}, g_cache.last_cached);
     EXPECT_TRUE(g_cache.cached_all_in_range);
-    EXPECT_EQ("First", article_ptr(ArticleNum{1})->get_cached_line_text(SUBJ_LINE, false));
-    EXPECT_EQ("Second", article_ptr(ArticleNum{2})->get_cached_line_text(SUBJ_LINE, false));
-    EXPECT_EQ("Third", article_ptr(ArticleNum{3})->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("First", g_cache.ptr(ArticleNum{1})->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("Second", g_cache.ptr(ArticleNum{2})->get_cached_line_text(SUBJ_LINE, false));
+    EXPECT_EQ("Third", g_cache.ptr(ArticleNum{3})->get_cached_line_text(SUBJ_LINE, false));
 }
 
 TEST_F(OverviewTest, initDoesNotProbeMissingOverviewCapability)

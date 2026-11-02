@@ -749,7 +749,7 @@ static int sa_art_cmd(int multiple, SaCommand cmd, long a)
 #ifdef UNDEF
 static std::string sa_author_key(long entry)
 {
-    return compress_from(article_ptr(g_sa_ents[entry].artnum)->from_view(), 20);
+    return compress_from(g_cache.ptr(g_sa_ents[entry].artnum)->from_view(), 20);
 }
 #endif
 

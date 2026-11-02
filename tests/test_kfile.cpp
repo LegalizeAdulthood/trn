@@ -284,7 +284,7 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     g_last_art = ArticleNum{42};
     g_kf_state = KFS_LOCAL_CHANGES | KFS_THREAD_LINES;
 
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->m_msg_id = "<case@example.com>";
     article->m_flags = AF_EXISTS;
     article->m_auto_flags = AUTO_SEL_THD;
@@ -338,7 +338,7 @@ TEST_F(KillFileEditTest, editLocalKillFileAppliesThreadCommand)
     std::ofstream{kill_file} << "<case@example.com> T+\n";
 
     g_in_ng = true;
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->m_msg_id = "<case@example.com>";
     hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
 
@@ -411,7 +411,7 @@ TEST_F(KillFileEditTest, defaultThreadKillFileUsesTrnDirectory)
     EXPECT_CALL(m_env.getter, Call(StrEq("KILLTHREADS"))).WillRepeatedly(Return(nullptr));
     kill_file_init();
 
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->m_msg_id = "<case@example.com>";
     article->m_flags = AF_EXISTS;
     article->m_auto_flags = AUTO_SEL_THD;

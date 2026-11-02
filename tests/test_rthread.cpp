@@ -64,7 +64,7 @@ protected:
 
     void add_article(ArticleNum num, std::time_t date)
     {
-        Article *article = article_ptr(num);
+        Article *article = g_cache.ptr(num);
         article->m_flags = AF_EXISTS | AF_UNREAD;
         article->m_date = date;
     }

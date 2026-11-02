@@ -199,7 +199,7 @@ void SelectorPagingStateTest::prepare(SelectionMode mode, bool rereading, int co
         }
         else
         {
-            article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
+            g_cache.ptr(ArticleNum{4})->m_flags |= AF_DEL;
         }
     }
     m_flags = flags();
@@ -218,7 +218,7 @@ void SelectorPagingStateTest::prepare_articles(int count)
     for (int index = 0; index < count; ++index)
     {
         Subject &subject = m_subjects[index];
-        Article *article = article_ptr(ArticleNum{index + 1});
+        Article *article = g_cache.ptr(ArticleNum{index + 1});
         subject.m_str = "Re: paging-row-" + std::to_string(index + 1);
         subject.m_prev = index ? &m_subjects[index - 1] : nullptr;
         subject.m_next = index + 1 < count ? &m_subjects[index + 1] : nullptr;
@@ -654,8 +654,8 @@ void SelectorExitStateTest::group_current_row()
     {
         return;
     }
-    Article *first = article_ptr(ArticleNum{2});
-    Article *reply = article_ptr(ArticleNum{3});
+    Article *first = g_cache.ptr(ArticleNum{2});
+    Article *reply = g_cache.ptr(ArticleNum{3});
     Subject *first_subject = first->m_subj;
     Subject *reply_subject = reply->m_subj;
     if (g_sel.mode == SM_SUBJECT)
@@ -694,7 +694,7 @@ void SelectorExitStateTest::set_object_flags(int number, int value)
     }
     else
     {
-        article_ptr(ArticleNum{number})->m_flags = static_cast<ArticleFlags>(value);
+        g_cache.ptr(ArticleNum{number})->m_flags = static_cast<ArticleFlags>(value);
     }
 }
 
@@ -763,7 +763,7 @@ void SelectorExitStateTest::set_selection(std::vector<int> selected, bool killed
             set_object_flags(number, killed ? value | AGF_DEL : value & ~static_cast<int>(AGF_DEL));
             if (g_in_ng)
             {
-                Subject *subject = article_ptr(ArticleNum{number})->m_subj;
+                Subject *subject = g_cache.ptr(ArticleNum{number})->m_subj;
                 subject->m_flags = killed ? subject->m_flags | SF_DEL : subject->m_flags & ~SF_DEL;
             }
         }
@@ -822,7 +822,7 @@ void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit
     {
         for (int number : selected)
         {
-            Subject *subject = article_ptr(ArticleNum{number})->m_subj;
+            Subject *subject = g_cache.ptr(ArticleNum{number})->m_subj;
             if (std::find(selected_subjects.begin(), selected_subjects.end(), subject) == selected_subjects.end())
             {
                 selected_subjects.push_back(subject);

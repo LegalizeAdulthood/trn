@@ -2096,7 +2096,7 @@ protected:
         g_data_source = &m_data_source;
         m_data_source.m_flags = DF_REMOTE;
         g_cache.article_list.clear();
-        article_ptr(ArticleNum{1})->m_flags = AF_EXISTS;
+        g_cache.ptr(ArticleNum{1})->m_flags = AF_EXISTS;
         g_parsed_header.parsed_art = ArticleNum{};
         g_last_art = ArticleNum{1};
         g_nntp.link.flags = NNTP_NEW_CMD_OK;
@@ -2135,7 +2135,7 @@ TEST_F(RemoteHeaderPrefetchTest, readsHeaderLineFromXhdr)
     const std::string from = prefetch_lines_copy(ArticleNum{1}, FROM_LINE);
 
     EXPECT_EQ("Casey <casey@example.test>", from);
-    EXPECT_EQ("Casey <casey@example.test>", article_ptr(ArticleNum{1})->get_cached_line_text(FROM_LINE, false));
+    EXPECT_EQ("Casey <casey@example.test>", g_cache.ptr(ArticleNum{1})->get_cached_line_text(FROM_LINE, false));
 }
 
 TEST_F(RemoteHeaderPrefetchTest, readsHdrWithConfiguredBrokenXhdrPolicy)
@@ -2170,7 +2170,7 @@ TEST_F(RemoteHeaderPrefetchTest, hdrEmptyValueDoesNotMarkArticleMissing)
     g_nntp.link.capabilities.available = true;
     g_nntp.link.capabilities.add("HDR");
     g_last_art = ArticleNum{2};
-    article_ptr(ArticleNum{2})->m_flags = AF_EXISTS;
+    g_cache.ptr(ArticleNum{2})->m_flags = AF_EXISTS;
     EXPECT_CALL(*m_connection, write_line(StrEq("HDR from 1-2"), _));
     EXPECT_CALL(*m_connection, read_line(_))
         .WillOnce(Return("225 headers follow"))
@@ -2179,6 +2179,6 @@ TEST_F(RemoteHeaderPrefetchTest, hdrEmptyValueDoesNotMarkArticleMissing)
         .WillOnce(Return("."));
 
     EXPECT_TRUE(prefetch_lines_copy(ArticleNum{1}, FROM_LINE).empty());
-    EXPECT_TRUE(article_ptr(ArticleNum{1})->m_flags & AF_EXISTS);
-    EXPECT_EQ("Casey <casey@example.test>", article_ptr(ArticleNum{2})->get_cached_line_text(FROM_LINE, false));
+    EXPECT_TRUE(g_cache.ptr(ArticleNum{1})->m_flags & AF_EXISTS);
+    EXPECT_EQ("Casey <casey@example.test>", g_cache.ptr(ArticleNum{2})->get_cached_line_text(FROM_LINE, false));
 }

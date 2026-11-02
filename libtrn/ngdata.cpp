@@ -334,7 +334,7 @@ void grow_newsgroup(ArticleNum new_last)
         do
         {
             ++g_last_art;
-            Article *const article = article_ptr(g_last_art);
+            Article *const article = g_cache.ptr(g_last_art);
             article->m_flags |= AF_EXISTS | AF_UNREAD;
             if (!(g_data_source->m_flags & DF_REMOTE) && eaccess(std::to_string(g_last_art.value_of()), 0))
             {
@@ -434,7 +434,7 @@ void newsgroup_skip()
             sleep(1);
         }
         g_nav.target.num = article_next(g_nav.target.num);
-        g_nav.target.art = article_ptr(g_nav.target.num);
+        g_nav.target.art = g_cache.ptr(g_nav.target.num);
         do
         {
             // tries to grab PREFETCH_SIZE XHDRS, flagging missing articles
@@ -448,7 +448,7 @@ void newsgroup_skip()
                     return;
                 }
                 g_nav.target.num = article_next(g_nav.target.num);
-                g_nav.target.art = article_ptr(g_nav.target.num);
+                g_nav.target.art = g_cache.ptr(g_nav.target.num);
             }
         } while (g_nav.target.num <= g_last_art);
     }

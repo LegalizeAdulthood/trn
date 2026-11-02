@@ -51,7 +51,7 @@ static Article *allocate_article(ArticleNum artnum)
     // create an new article
     if (artnum >= g_abs_first)
     {
-        article = article_ptr(artnum);
+        article = g_cache.ptr(artnum);
     }
     else
     {

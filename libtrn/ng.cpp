@@ -367,7 +367,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         ng_virtual = true;
         if (g_ng_go_art_num >= g_abs_first)
         {
-            g_nav.target = {g_ng_go_art_num, article_ptr(g_ng_go_art_num)};
+            g_nav.target = {g_ng_go_art_num, g_cache.ptr(g_ng_go_art_num)};
         }
         g_ng_go_art_num = ArticleNum{};
     }
@@ -1291,7 +1291,7 @@ no_previous_article:
             }
             else if (!g_first_subject)
             {
-                g_nav.target = {g_abs_first, article_ptr(g_abs_first)};
+                g_nav.target = {g_abs_first, g_cache.ptr(g_abs_first)};
             }
             else
             {

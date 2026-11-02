@@ -75,7 +75,7 @@ protected:
         g_sf_verbose = false;
         g_sf_score_verbose = 0;
         g_cache.article_list.clear();
-        Article *article = article_ptr(TEST_ARTICLE_NUM);
+        Article *article = g_cache.ptr(TEST_ARTICLE_NUM);
         article->m_flags = AF_EXISTS;
         article->m_subj = &m_subject;
         article->set_cached_line(FROM_LINE, "casey@news.example.test");
@@ -91,7 +91,7 @@ protected:
         sf_set_url_getter_for_test(nullptr);
         sf_clear_file_cache_for_test();
         sf_clean();
-        article_ptr(TEST_ARTICLE_NUM)->clear_article();
+        g_cache.ptr(TEST_ARTICLE_NUM)->clear_article();
         g_cache.article_list.clear();
         g_cache.article_list = std::move(m_old_article_list);
         head_final();
@@ -265,7 +265,7 @@ TEST_F(ScoreFileTest, replyScoreRecognizesReplyPrefix)
     fs::create_directories(score_dir);
     std::ofstream{score_dir / "global"} << "reply 17\n";
     g_newsgroup_name = "comp.lang.apl";
-    article_ptr(TEST_ARTICLE_NUM)->m_flags |= AF_HAS_RE;
+    g_cache.ptr(TEST_ARTICLE_NUM)->m_flags |= AF_HAS_RE;
 
     trn::testing::MockEnvironment env;
     const std::string             score_dir_name{score_dir.string()};

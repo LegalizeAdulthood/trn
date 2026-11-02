@@ -106,7 +106,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
         }
         if (g_sa_mode_desc_author)
         {
-            desc += compress_from(article_ptr(artnum)->from_view(), trunc ? 16 : 200);
+            desc += compress_from(g_cache.ptr(artnum)->from_view(), trunc ? 16 : 200);
             desc += ' ';
         }
         if (g_sa_mode_desc_subject)

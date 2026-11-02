@@ -143,7 +143,7 @@ void ArticlePageStateTest::prepare_articles(bool rereading, std::initializer_lis
     Article *previous = nullptr;
     for (const ArticleFlags state : flags)
     {
-        Article *article = article_ptr(ArticleNum{++number});
+        Article *article = g_cache.ptr(ArticleNum{++number});
         article->m_flags = state | AF_CACHED | AF_THREADED;
         article->m_subj = &m_subject;
         article->m_date = number;
@@ -311,22 +311,22 @@ void ArticlePageDisplayState::prepare_display(bool rereading, char mode, bool ex
                                              "Missing article", "Next page"};
     for (long number = 1; number <= 7; ++number)
     {
-        Article *article = article_ptr(ArticleNum{number});
+        Article *article = g_cache.ptr(ArticleNum{number});
         article->m_from = authors[static_cast<std::size_t>(number - 1)] + " <author@example.test>";
         article->m_date = static_cast<std::time_t>(number * 86400);
     }
     init_pages(PRESERVE_PAGE);
     for (long number = 1; number <= 7; ++number)
     {
-        article_ptr(ArticleNum{number})->m_flags &= ~AF_DEL;
+        g_cache.ptr(ArticleNum{number})->m_flags &= ~AF_DEL;
     }
-    article_ptr(ArticleNum{3})->m_flags |= AF_DEL;
-    article_ptr(ArticleNum{4})->m_flags |= AF_DEL;
+    g_cache.ptr(ArticleNum{3})->m_flags |= AF_DEL;
+    g_cache.ptr(ArticleNum{4})->m_flags |= AF_DEL;
     for (long number = 1; number <= 7; ++number)
     {
-        m_flags[static_cast<std::size_t>(number - 1)] = article_ptr(ArticleNum{number})->m_flags;
+        m_flags[static_cast<std::size_t>(number - 1)] = g_cache.ptr(ArticleNum{number})->m_flags;
     }
-    g_sel_page.last_art = article_ptr(ArticleNum{exclusive ? 4 : 3});
+    g_sel_page.last_art = g_cache.ptr(ArticleNum{exclusive ? 4 : 3});
     g_sel_page.item_index = -1;
 }
 
@@ -350,7 +350,7 @@ std::string ArticlePageDisplayState::expected_rows(char mode, std::initializer_l
         rows += marks[index];
         if (mode == 'd')
         {
-            rows += std::string{std::ctime(&article_ptr(ArticleNum{number})->m_date)}.substr(0, 16);
+            rows += std::string{std::ctime(&g_cache.ptr(ArticleNum{number})->m_date)}.substr(0, 16);
         }
         else if (mode != 's')
         {
@@ -367,7 +367,7 @@ void ArticlePageDisplayState::expect_article_state() const
     for (long number = 1; number <= 7; ++number)
     {
         SCOPED_TRACE(number);
-        EXPECT_EQ(m_flags[static_cast<std::size_t>(number - 1)], article_ptr(ArticleNum{number})->m_flags);
+        EXPECT_EQ(m_flags[static_cast<std::size_t>(number - 1)], g_cache.ptr(ArticleNum{number})->m_flags);
     }
     EXPECT_EQ(2, g_selected_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
@@ -516,8 +516,8 @@ void SubjectPageStateTest::prepare_groups(SelectionMode mode, bool rereading)
     m_bravo.m_next = &m_charlie;
     m_charlie.m_prev = &m_bravo;
     g_last_subject = &m_charlie;
-    m_bravo.m_articles = article_ptr(ArticleNum{4});
-    m_charlie.m_articles = article_ptr(ArticleNum{7});
+    m_bravo.m_articles = g_cache.ptr(ArticleNum{4});
+    m_charlie.m_articles = g_cache.ptr(ArticleNum{7});
     m_bravo.m_thread = m_bravo.m_articles;
     m_charlie.m_thread = m_subject.m_thread;
     m_subject.m_thread_link = &m_charlie;
@@ -527,30 +527,30 @@ void SubjectPageStateTest::prepare_groups(SelectionMode mode, bool rereading)
                                             &m_bravo,   &m_charlie, &m_charlie, &m_charlie};
     for (std::size_t i = 0; i < subjects.size(); ++i)
     {
-        article_ptr(ArticleNum{static_cast<long>(i + 1)})->m_subj = subjects[i];
+        g_cache.ptr(ArticleNum{static_cast<long>(i + 1)})->m_subj = subjects[i];
     }
-    article_ptr(ArticleNum{3})->m_subj_next = nullptr;
-    article_ptr(ArticleNum{6})->m_subj_next = nullptr;
-    article_ptr(ArticleNum{1})->m_child1 = article_ptr(ArticleNum{2});
-    article_ptr(ArticleNum{2})->m_parent = article_ptr(ArticleNum{1});
-    article_ptr(ArticleNum{2})->m_sibling = article_ptr(ArticleNum{3});
-    article_ptr(ArticleNum{3})->m_parent = article_ptr(ArticleNum{1});
-    article_ptr(ArticleNum{3})->m_sibling = article_ptr(ArticleNum{7});
-    article_ptr(ArticleNum{7})->m_parent = article_ptr(ArticleNum{1});
-    article_ptr(ArticleNum{7})->m_child1 = article_ptr(ArticleNum{8});
-    article_ptr(ArticleNum{8})->m_parent = article_ptr(ArticleNum{7});
-    article_ptr(ArticleNum{8})->m_sibling = article_ptr(ArticleNum{9});
-    article_ptr(ArticleNum{9})->m_parent = article_ptr(ArticleNum{7});
-    article_ptr(ArticleNum{4})->m_child1 = article_ptr(ArticleNum{5});
-    article_ptr(ArticleNum{5})->m_parent = article_ptr(ArticleNum{4});
-    article_ptr(ArticleNum{5})->m_sibling = article_ptr(ArticleNum{6});
-    article_ptr(ArticleNum{6})->m_parent = article_ptr(ArticleNum{4});
+    g_cache.ptr(ArticleNum{3})->m_subj_next = nullptr;
+    g_cache.ptr(ArticleNum{6})->m_subj_next = nullptr;
+    g_cache.ptr(ArticleNum{1})->m_child1 = g_cache.ptr(ArticleNum{2});
+    g_cache.ptr(ArticleNum{2})->m_parent = g_cache.ptr(ArticleNum{1});
+    g_cache.ptr(ArticleNum{2})->m_sibling = g_cache.ptr(ArticleNum{3});
+    g_cache.ptr(ArticleNum{3})->m_parent = g_cache.ptr(ArticleNum{1});
+    g_cache.ptr(ArticleNum{3})->m_sibling = g_cache.ptr(ArticleNum{7});
+    g_cache.ptr(ArticleNum{7})->m_parent = g_cache.ptr(ArticleNum{1});
+    g_cache.ptr(ArticleNum{7})->m_child1 = g_cache.ptr(ArticleNum{8});
+    g_cache.ptr(ArticleNum{8})->m_parent = g_cache.ptr(ArticleNum{7});
+    g_cache.ptr(ArticleNum{8})->m_sibling = g_cache.ptr(ArticleNum{9});
+    g_cache.ptr(ArticleNum{9})->m_parent = g_cache.ptr(ArticleNum{7});
+    g_cache.ptr(ArticleNum{4})->m_child1 = g_cache.ptr(ArticleNum{5});
+    g_cache.ptr(ArticleNum{5})->m_parent = g_cache.ptr(ArticleNum{4});
+    g_cache.ptr(ArticleNum{5})->m_sibling = g_cache.ptr(ArticleNum{6});
+    g_cache.ptr(ArticleNum{6})->m_parent = g_cache.ptr(ArticleNum{4});
     count_subjects(CS_UNSEL_STORE);
 }
 
 void SubjectPageStateTest::select_article(long number)
 {
-    article_ptr(ArticleNum{number})->m_flags |= static_cast<ArticleFlags>(g_sel.mask);
+    g_cache.ptr(ArticleNum{number})->m_flags |= static_cast<ArticleFlags>(g_sel.mask);
     count_subjects(CS_UNSEL_STORE);
 }
 
@@ -685,7 +685,7 @@ void SubjectPageDisplayState::prepare_subjects(bool rereading, char mode, std::i
         Article *last_article = nullptr;
         for (int i = 0; i <= row.articles; ++i)
         {
-            Article   *article = article_ptr(ArticleNum{++number});
+            Article   *article = g_cache.ptr(ArticleNum{++number});
             const bool in_scope = i < row.articles;
             article->m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
             if (in_scope != rereading)
@@ -1381,13 +1381,13 @@ TEST_P(ArticlePageDisplayTest, displaysArticleRowsWithoutChangingTheirReadingSta
     for (int index = 0; index < 4; ++index)
     {
         SCOPED_TRACE(index);
-        EXPECT_EQ(article_ptr(ArticleNum{index + 1}), g_sel_page.items[index].u.ap);
+        EXPECT_EQ(g_cache.ptr(ArticleNum{index + 1}), g_sel_page.items[index].u.ap);
         EXPECT_EQ(index + 2, g_sel_page.items[index].line);
         EXPECT_EQ(index == 0 ? 1 : index == 1 ? 0 : index, g_sel_page.items[index].sel);
     }
     EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
     ASSERT_EQ(article_ptr_list_begin() + 4, g_sel_page.next_art);
-    EXPECT_EQ(article_ptr(ArticleNum{7}), *g_sel_page.next_art);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{7}), *g_sel_page.next_art);
     EXPECT_EQ(2, g_sel_page.item_index);
     EXPECT_EQ(7, g_sel_page.last_line);
     EXPECT_EQ(nullptr, g_sel_page.last_art);
@@ -1416,8 +1416,8 @@ TEST_P(ExclusiveArticlePageDisplayTest, skipsUnselectedArticlesWithoutAssigningT
     EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_EQ(ArticleNum{5}, g_obj_count);
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
-    EXPECT_EQ(article_ptr(ArticleNum{1}), g_sel_page.items[0].u.ap);
-    EXPECT_EQ(article_ptr(ArticleNum{4}), g_sel_page.items[1].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{1}), g_sel_page.items[0].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_sel_page.items[1].u.ap);
     EXPECT_EQ(2, g_sel_page.items[0].line);
     EXPECT_EQ(3, g_sel_page.items[1].line);
     EXPECT_EQ(1, g_sel_page.items[0].sel);
@@ -1465,7 +1465,7 @@ TEST_P(FinalArticlePageDisplayTest, endsAtTheLastArticleWithoutInventingAnotherP
     for (int index = 0; index < count; ++index)
     {
         SCOPED_TRACE(index);
-        EXPECT_EQ(article_ptr(ArticleNum{numbers[5 - count + index]}), g_sel_page.items[index].u.ap);
+        EXPECT_EQ(g_cache.ptr(ArticleNum{numbers[5 - count + index]}), g_sel_page.items[index].u.ap);
         EXPECT_EQ(index + 2, g_sel_page.items[index].line);
     }
     EXPECT_EQ(article_ptr_list_end() - count, g_sel_page.page_art);
@@ -1484,7 +1484,7 @@ TEST_P(RemovedArticlePageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleAr
     const bool rereading = GetParam();
     prepare_display(rereading, 'l');
     (void) page_to_end();
-    article_ptr(ArticleNum{7})->m_flags ^= AF_UNREAD;
+    g_cache.ptr(ArticleNum{7})->m_flags ^= AF_UNREAD;
     count_subjects(CS_UNSEL_STORE);
 
     init_pages(PRESERVE_PAGE);
@@ -1500,7 +1500,7 @@ TEST_P(RemovedArticlePageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleAr
     EXPECT_EQ(ArticleNum{4}, g_obj_count);
     for (int index = 0; index < 4; ++index)
     {
-        EXPECT_EQ(article_ptr(ArticleNum{index + 1}), g_sel_page.items[index].u.ap);
+        EXPECT_EQ(g_cache.ptr(ArticleNum{index + 1}), g_sel_page.items[index].u.ap);
     }
     EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
     EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
@@ -2112,7 +2112,7 @@ TEST_P(ArticlePageLayoutTest, fitsLongSubjectRowsToTheAvailableColumnsAndLabelWi
     ASSERT_EQ(items, g_sel_page.page_item_cnt);
     for (int i = 0; i < items; ++i)
     {
-        EXPECT_EQ(article_ptr(ArticleNum{i + 1}), g_sel_page.items[i].u.ap);
+        EXPECT_EQ(g_cache.ptr(ArticleNum{i + 1}), g_sel_page.items[i].u.ap);
         EXPECT_EQ(i + 2, g_sel_page.items[i].line);
     }
     EXPECT_EQ(2, g_sel_page.item_index);
@@ -2140,13 +2140,13 @@ TEST_P(ArticlePageResizeTest, shrinkingTheTerminalRebuildsThePageAndRetainsVisib
     EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "01+  Article eligibility\n" : "a+  Article eligibility\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Alice")));
     ASSERT_EQ(2, g_sel_page.page_item_cnt);
-    EXPECT_EQ(article_ptr(ArticleNum{1}), g_sel_page.items[0].u.ap);
-    EXPECT_EQ(article_ptr(ArticleNum{2}), g_sel_page.items[1].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{1}), g_sel_page.items[0].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{2}), g_sel_page.items[1].u.ap);
     EXPECT_EQ(2, g_sel_page.items[0].line);
     EXPECT_EQ(3, g_sel_page.items[1].line);
     EXPECT_EQ(2, g_sel_page.page_obj_cnt);
     EXPECT_EQ(5, g_sel_page.total_obj_cnt);
-    EXPECT_EQ(article_ptr(ArticleNum{3}), *g_sel_page.next_art);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), *g_sel_page.next_art);
     EXPECT_FALSE(g_sel_page.at_end);
     expect_article_state();
 }
@@ -2157,7 +2157,7 @@ TEST_P(ArticlePageResizeTest, enlargingTheTerminalShowsTheRemainingArticlesOnThe
     g_use_sel_num = GetParam();
     g_tc_COLS = 39;
     g_tc_LINES = 8;
-    g_sel_page.last_art = article_ptr(ArticleNum{2});
+    g_sel_page.last_art = g_cache.ptr(ArticleNum{2});
     (void) render_page();
     g_tc_COLS = 80;
     g_tc_LINES = 11;
@@ -2167,7 +2167,7 @@ TEST_P(ArticlePageResizeTest, enlargingTheTerminalShowsTheRemainingArticlesOnThe
 
     EXPECT_THAT(output, testing::HasSubstr(GetParam() ? "05 Next page" : "e Next page"));
     ASSERT_EQ(5, g_sel_page.page_item_cnt);
-    EXPECT_EQ(article_ptr(ArticleNum{7}), g_sel_page.items[4].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{7}), g_sel_page.items[4].u.ap);
     EXPECT_EQ(6, g_sel_page.items[4].line);
     EXPECT_EQ(5, g_sel_page.page_obj_cnt);
     EXPECT_EQ(1, g_sel_page.item_index);
@@ -2196,7 +2196,7 @@ TEST_P(ArticlePageLabelCapacityTest, numericLabelsAllowMoreRowsThanTheConfigured
     EXPECT_EQ(8, g_sel_page.total_obj_cnt);
     EXPECT_EQ(items + 3, g_sel_page.last_line);
     EXPECT_EQ(GetParam(), g_sel_page.at_end);
-    EXPECT_EQ(article_ptr(ArticleNum{items}), g_sel_page.items[items - 1].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{items}), g_sel_page.items[items - 1].u.ap);
 }
 
 INSTANTIATE_TEST_SUITE_P(LabelStyle, ArticlePageLabelCapacityTest, testing::Bool());

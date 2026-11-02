@@ -64,7 +64,7 @@ protected:
 
     void cache_subject(std::string_view subject)
     {
-        Article *article = article_ptr(s_article_num);
+        Article *article = g_cache.ptr(s_article_num);
         article->m_flags |= AF_EXISTS;
         article->m_subj = &m_subject;
         m_subject.m_str = "Re: ";

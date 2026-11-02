@@ -220,7 +220,7 @@ beginning:
     while (true)
     {
         artnum = article_first(first);
-        if (artnum > first || !(article_ptr(artnum)->m_flags & AF_CACHED))
+        if (artnum > first || !(g_cache.ptr(artnum)->m_flags & AF_CACHED))
         {
             break;
         }
@@ -243,7 +243,7 @@ beginning:
     while (true)
     {
         artnum = article_last(last);
-        if (artnum < last || !(article_ptr(artnum)->m_flags & AF_CACHED))
+        if (artnum < last || !(g_cache.ptr(artnum)->m_flags & AF_CACHED))
         {
             break;
         }
@@ -370,8 +370,7 @@ beginning:
     if (remote)
     {
         int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
-        for (Article *ap = article_ptr(article_first(real_first));
-             ap && ap->article_num() <= artnum;
+        for (Article *ap = g_cache.ptr(article_first(real_first)); ap && ap->article_num() <= artnum;
              ap = article_nextp(ap))
         {
             if (!(ap->m_flags & cachemask))
@@ -441,7 +440,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
     std::array<std::string_view, OV_MAX_FIELDS> fields{};
     std::array<bool, OV_MAX_FIELDS>             field_present{};
 
-    Article *article = article_ptr(artnum);
+    Article *article = g_cache.ptr(artnum);
     if (article->m_flags & AF_THREADED)
     {
         g_spin_todo--;
@@ -565,7 +564,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
         {
             for (ArticleNum an = article_first(g_abs_first); an < artnum; an = article_next(an))
             {
-                Article *ap = article_ptr(an);
+                Article *ap = g_cache.ptr(an);
                 if (!ap->m_xrefs)
                 {
                     ap->m_xrefs = "";

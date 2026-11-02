@@ -80,7 +80,7 @@ protected:
 
     void add_article(long num, bool unread)
     {
-        Article *article = article_ptr(ArticleNum{num});
+        Article *article = g_cache.ptr(ArticleNum{num});
         article->m_flags = AF_EXISTS;
         if (unread)
         {
@@ -177,7 +177,7 @@ protected:
 
         for (long num = 1; num <= 5; ++num)
         {
-            article_ptr(ArticleNum{num})->m_flags = AF_EXISTS;
+            g_cache.ptr(ArticleNum{num})->m_flags = AF_EXISTS;
         }
     }
 
@@ -315,7 +315,7 @@ protected:
 
     Article *add_xref_article()
     {
-        Article *article = article_ptr(ArticleNum{1});
+        Article *article = g_cache.ptr(ArticleNum{1});
         article->m_flags = AF_EXISTS | AF_UNREAD;
         article->set_cached_line(XREF_LINE, "news.example comp.lang.apl:1 comp.lang.cpp:5");
         return article;

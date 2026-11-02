@@ -88,7 +88,7 @@ protected:
         g_parsed_header.parsed_art = ArticleNum{};
         g_threaded_group = false;
 
-        Article *article = article_ptr(TEST_ARTICLE);
+        Article *article = g_cache.ptr(TEST_ARTICLE);
         article->m_flags = AF_EXISTS;
     }
 
@@ -160,8 +160,8 @@ void FoldedHeaderParseTest::SetUp()
 {
     HeaderParseTest::SetUp();
     m_subject.m_str = "Re: first continuation";
-    article_ptr(TEST_ARTICLE)->m_flags |= AF_CACHED;
-    article_ptr(TEST_ARTICLE)->m_subj = &m_subject;
+    g_cache.ptr(TEST_ARTICLE)->m_flags |= AF_CACHED;
+    g_cache.ptr(TEST_ARTICLE)->m_subj = &m_subject;
     write_article(std::string{"From: writer@example.test\n"
                               "Subject: first\n"
                               " continuation\n"
@@ -215,8 +215,8 @@ TEST_F(HeaderParseTest, preservesHeaderOffsetsAcrossBufferGrowth)
     const std::string subject(LINE_BUF_LEN * 9, 'x');
     const std::string article = "From: writer@example.test\nSubject: " + subject + "\nX-Test: value\n\nbody\n";
     m_subject.m_str = "Re: " + subject;
-    article_ptr(TEST_ARTICLE)->m_flags |= AF_CACHED;
-    article_ptr(TEST_ARTICLE)->m_subj = &m_subject;
+    g_cache.ptr(TEST_ARTICLE)->m_flags |= AF_CACHED;
+    g_cache.ptr(TEST_ARTICLE)->m_subj = &m_subject;
     write_article(article);
 
     ASSERT_TRUE(parse_header(TEST_ARTICLE));
@@ -238,5 +238,5 @@ TEST_F(FoldedHeaderParseTest, interpretsDateHeader)
 {
     ASSERT_TRUE(parse_header(TEST_ARTICLE));
 
-    EXPECT_EQ(parsedate(DATE), article_ptr(TEST_ARTICLE)->m_date);
+    EXPECT_EQ(parsedate(DATE), g_cache.ptr(TEST_ARTICLE)->m_date);
 }

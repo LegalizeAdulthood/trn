@@ -356,7 +356,7 @@ NumNumResult num_num(std::string_view command)
         for (g_nav.target.num = article_first(min); g_nav.target.num <= max;
              g_nav.target.num = article_next(g_nav.target.num))
         {
-            g_nav.target.art = article_ptr(g_nav.target.num);
+            g_nav.target.art = g_cache.ptr(g_nav.target.num);
             const int result = perform(cmdlst, output_level && g_page_line == 1);
             if (result < 0)
             {

@@ -165,7 +165,7 @@ protected:
         g_art_size = g_raw_art_size;
         g_art_buf.clear_art_buf();
 
-        Article *article = article_ptr(ArticleNum{1});
+        Article *article = g_cache.ptr(ArticleNum{1});
         m_subject.m_str = "Body search";
         article->m_flags = AF_EXISTS | AF_UNREAD | AF_CACHED;
         article->m_subj = &m_subject;

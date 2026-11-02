@@ -47,7 +47,7 @@ protected:
         g_sa_ents.assign(2, ScanArticleEntryData{});
 
         g_sa_ents[1].artnum = ArticleNum{1};
-        Article *article = article_ptr(ArticleNum{1});
+        Article *article = g_cache.ptr(ArticleNum{1});
         article->m_from = m_author;
         article->m_flags = AF_EXISTS | AF_UNREAD;
 
@@ -179,7 +179,7 @@ INSTANTIATE_TEST_SUITE_P(DirectionAndWrap, ScanCommandSearchTest,
 
 TEST_F(ScanCommandTest, subjectDescriptionShortensReplyPrefix)
 {
-    Article *article = article_ptr(ArticleNum{1});
+    Article *article = g_cache.ptr(ArticleNum{1});
     article->m_subj = &m_subject;
     article->m_flags |= AF_HAS_RE;
     m_subject.m_str = "Re: Replied Subject";
@@ -197,7 +197,7 @@ TEST_F(ScanCommandTest, articleStatusShowsUnreadSelectedAndMarked)
 
 TEST_F(ScanCommandTest, articleStatusShowsReadArticle)
 {
-    article_ptr(ArticleNum{1})->m_flags = AF_EXISTS;
+    g_cache.ptr(ArticleNum{1})->m_flags = AF_EXISTS;
 
     EXPECT_EQ("-..", sa_get_stat_chars(1, 1));
 }

@@ -272,13 +272,13 @@ void ParsedHeaderContext::start_header(ArticleNum artnum)
     restart_header(artnum);
 }
 
-// article_ptr looks up or creates an entry in the active g_cache.article_list.
+// g_cache.ptr looks up or creates an entry in the active g_cache.article_list.
 void ParsedHeaderContext::restart_header(ArticleNum artnum)
 {
     in_header = SOME_LINE;
     first_one = false;
     parsed_art = artnum;
-    parsed_artp = article_ptr(artnum);
+    parsed_artp = g_cache.ptr(artnum);
 }
 
 void ParsedHeaderContext::end_line()
@@ -439,7 +439,7 @@ bool parse_header(ArticleNum art_num)
         }
         else if (nntp_header(art_num) <= 0)
         {
-            article_ptr(art_num)->uncache_article(false);
+            g_cache.ptr(art_num)->uncache_article(false);
             return false;
         }
         else
@@ -682,7 +682,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             {
                 while ((prior_num = article_next(prior_num)) < num)
                 {
-                    article_ptr(prior_num)->uncache_article(false);
+                    g_cache.ptr(prior_num)->uncache_article(false);
                 }
             }
             ap = article_find(num);
@@ -721,7 +721,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
     {
         for (prior_num = article_first(prior_num); prior_num < lastnum; prior_num = article_next(prior_num))
         {
-            article_ptr(prior_num)->uncache_article(false);
+            g_cache.ptr(prior_num)->uncache_article(false);
         }
     }
 }

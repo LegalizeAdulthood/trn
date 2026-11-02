@@ -312,11 +312,11 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
                 }
                 if (cmd_chr == ',')
                 {
-                    kill_sub_thread(article_ptr(g_nav.target.num), AFFECT_ALL);
+                    kill_sub_thread(g_cache.ptr(g_nav.target.num), AFFECT_ALL);
                 }
                 else
                 {
-                    article_ptr(g_nav.target.num)->mark_as_read();
+                    g_cache.ptr(g_nav.target.num)->mark_as_read();
                 }
             }
             const std::string finding_text = pattern_text.substr(finding_start);
@@ -504,7 +504,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             ret = SRCH_INTR;
             break;
         }
-        g_nav.target.art = article_ptr(g_nav.target.num);
+        g_nav.target.art = g_cache.ptr(g_nav.target.num);
         const bool matches_selection = !g_sel.selected_only                    //
                                        || (g_nav.target.art->m_flags & AF_SEL) //
                                        || (cmd_chr != Ctl('n') && cmd_chr != Ctl('p'));

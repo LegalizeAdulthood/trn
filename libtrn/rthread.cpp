@@ -142,7 +142,7 @@ void thread_open()
         rc_to_bits();
     }
 
-    for (ap = article_ptr(article_first(g_first_art)); ap && ap->article_num() <= g_cache.last_cached;
+    for (ap = g_cache.ptr(article_first(g_first_art)); ap && ap->article_num() <= g_cache.last_cached;
          ap = article_nextp(ap))
     {
         if ((ap->m_flags & (AF_EXISTS|AF_CACHED)) == AF_EXISTS)
@@ -158,9 +158,7 @@ void thread_open()
         g_newsgroup_ptr->m_ng_max = g_cache.last_cached;
         g_last_art = g_cache.last_cached;
     }
-    for (ap = article_ptr(article_first(g_abs_first));
-         ap && ap->article_num() <= g_last_art;
-         ap = article_nextp(ap))
+    for (ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art; ap = article_nextp(ap))
     {
         if (ap->m_flags & AF_CACHED)
         {
@@ -358,7 +356,7 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
             }
             if (num <= g_last_art)
             {
-                art = article_ptr(num);
+                art = g_cache.ptr(num);
             }
             else
             {
@@ -383,7 +381,7 @@ num_inc:
             ap = nullptr;
             break;
         }
-        ap = article_ptr(num);
+        ap = g_cache.ptr(num);
         if (!(ap->m_flags & AF_EXISTS))
         {
             ap->one_less();
@@ -501,7 +499,7 @@ num_dec:
             ap = nullptr;
             break;
         }
-        ap = article_ptr(num);
+        ap = g_cache.ptr(num);
         if (!(ap->m_flags & AF_EXISTS))
         {
             ap->one_less();
@@ -1575,7 +1573,7 @@ static void build_article_ptrs()
     g_art_ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
     for (ArticleNum an = article_first(g_abs_first); count; an = article_next(an))
     {
-        Article *ap = article_ptr(an);
+        Article *ap = g_cache.ptr(an);
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
             g_art_ptr_list.push_back(ap);
