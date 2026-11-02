@@ -41,12 +41,12 @@ class DecodeSubjectTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_data_source = g_data_source;
         m_old_last_art = g_last_art;
         m_old_parsed_art = g_parsed_header.parsed_art;
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_data_source = &m_data_source;
         g_last_art = s_article_num;
         g_parsed_header.parsed_art = ArticleNum{};
@@ -56,7 +56,7 @@ protected:
 
     void TearDown() override
     {
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
         g_data_source = m_old_data_source;
         g_last_art = m_old_last_art;
         g_parsed_header.parsed_art = m_old_parsed_art;

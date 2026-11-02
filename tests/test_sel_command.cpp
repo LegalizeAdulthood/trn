@@ -53,15 +53,15 @@ private:
     std::string              m_rendered;
     ArticleUnread            m_selected{};
     int                      m_selected_subjects{};
-    decltype(g_article_list) m_old_articles{std::move(g_article_list)};
+    decltype(g_cache.article_list) m_old_articles{std::move(g_cache.article_list)};
     decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
     Article                **m_old_art_ptr{g_art_ptr};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first{g_first_art};
     ArticleNum               m_old_last{g_last_art};
-    ArticleNum               m_old_first_cached{g_first_cached};
-    ArticleNum               m_old_last_cached{g_last_cached};
-    bool                     m_old_cached_all{g_cached_all_in_range};
+    ArticleNum                     m_old_first_cached{g_cache.first_cached};
+    ArticleNum                     m_old_last_cached{g_cache.last_cached};
+    bool                           m_old_cached_all{g_cache.cached_all_in_range};
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
     int                      m_old_subject_count{g_subject_count};
@@ -95,7 +95,7 @@ private:
 void SelectorPagingStateTest::SetUp()
 {
     NewsgroupPageDisplayState::SetUp();
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
     g_sel_page.page_art = g_sel_page.next_art = nullptr;
@@ -125,15 +125,15 @@ void SelectorPagingStateTest::SetUp()
 
 void SelectorPagingStateTest::TearDown()
 {
-    g_article_list = std::move(m_old_articles);
+    g_cache.article_list = std::move(m_old_articles);
     g_art_ptr_list = std::move(m_old_article_ptrs);
     g_art_ptr = m_old_art_ptr;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first;
     g_last_art = m_old_last;
-    g_first_cached = m_old_first_cached;
-    g_last_cached = m_old_last_cached;
-    g_cached_all_in_range = m_old_cached_all;
+    g_cache.first_cached = m_old_first_cached;
+    g_cache.last_cached = m_old_last_cached;
+    g_cache.cached_all_in_range = m_old_cached_all;
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
     g_subject_count = m_old_subject_count;
@@ -209,9 +209,9 @@ void SelectorPagingStateTest::prepare(SelectionMode mode, bool rereading, int co
 
 void SelectorPagingStateTest::prepare_articles(int count)
 {
-    g_abs_first = g_first_art = g_first_cached = ArticleNum{1};
-    g_last_art = g_last_cached = ArticleNum{count};
-    g_cached_all_in_range = true;
+    g_abs_first = g_first_art = g_cache.first_cached = ArticleNum{1};
+    g_last_art = g_cache.last_cached = ArticleNum{count};
+    g_cache.cached_all_in_range = true;
     g_subject_count = count;
     g_first_subject = count ? &m_subjects[0] : nullptr;
     g_last_subject = count ? &m_subjects[count - 1] : nullptr;
@@ -331,7 +331,7 @@ std::vector<int> SelectorPagingStateTest::flags() const
     }
     else
     {
-        for (const auto &[number, article] : g_article_list)
+        for (const auto &[number, article] : g_cache.article_list)
         {
             result.push_back(article.m_flags);
             result.push_back(article.m_subj->m_flags);
@@ -860,7 +860,7 @@ void SelectorExitStateTest::expect_exit(std::vector<int> selected, bool implicit
         EXPECT_EQ(g_sel.mode == SM_UNIVERSAL ? (g_sel.rereading ? " 1-6" : " 0") : " 1-3", group->rc_numbers());
         EXPECT_EQ(':', group->m_subscribe_char);
     }
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         EXPECT_NE(AF_NONE, article.m_flags & AF_EXISTS);
         EXPECT_EQ(!g_sel.rereading, (article.m_flags & AF_UNREAD) != 0);

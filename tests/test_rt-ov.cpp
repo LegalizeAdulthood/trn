@@ -46,15 +46,15 @@ protected:
     {
         m_old_current_path = fs::current_path();
         m_old_data_source = g_data_source;
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
-        m_old_first_cached = g_first_cached;
-        m_old_last_cached = g_last_cached;
-        m_old_cached_all_in_range = g_cached_all_in_range;
+        m_old_first_cached = g_cache.first_cached;
+        m_old_last_cached = g_cache.last_cached;
+        m_old_cached_all_in_range = g_cache.cached_all_in_range;
         m_old_verbose = g_verbose;
         m_old_threaded_group = g_threaded_group;
         m_old_thread_always = g_thread_always;
@@ -92,9 +92,9 @@ protected:
         g_abs_first = TEST_ARTICLE_NUM;
         g_first_art = TEST_ARTICLE_NUM;
         g_last_art = TEST_ARTICLE_NUM;
-        g_first_cached = TEST_ARTICLE_NUM;
-        g_last_cached = ArticleNum{};
-        g_cached_all_in_range = false;
+        g_cache.first_cached = TEST_ARTICLE_NUM;
+        g_cache.last_cached = ArticleNum{};
+        g_cache.cached_all_in_range = false;
         g_verbose = false;
         g_threaded_group = false;
         g_thread_always = false;
@@ -127,15 +127,15 @@ protected:
         fs::current_path(m_old_current_path, error);
 
         g_data_source = m_old_data_source;
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_newsgroup_name = m_old_newsgroup_name;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
-        g_first_cached = m_old_first_cached;
-        g_last_cached = m_old_last_cached;
-        g_cached_all_in_range = m_old_cached_all_in_range;
+        g_cache.first_cached = m_old_first_cached;
+        g_cache.last_cached = m_old_last_cached;
+        g_cache.cached_all_in_range = m_old_cached_all_in_range;
         g_verbose = m_old_verbose;
         g_threaded_group = m_old_threaded_group;
         g_thread_always = m_old_thread_always;
@@ -321,8 +321,8 @@ TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
         .WillOnce(testing::Return("."));
 
     EXPECT_TRUE(ov_data(ArticleNum{1}, ArticleNum{3}, false));
-    EXPECT_EQ(ArticleNum{3}, g_last_cached);
-    EXPECT_TRUE(g_cached_all_in_range);
+    EXPECT_EQ(ArticleNum{3}, g_cache.last_cached);
+    EXPECT_TRUE(g_cache.cached_all_in_range);
     EXPECT_EQ("First", article_ptr(ArticleNum{1})->get_cached_line_text(SUBJ_LINE, false));
     EXPECT_EQ("Second", article_ptr(ArticleNum{2})->get_cached_line_text(SUBJ_LINE, false));
     EXPECT_EQ("Third", article_ptr(ArticleNum{3})->get_cached_line_text(SUBJ_LINE, false));

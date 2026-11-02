@@ -22,7 +22,7 @@ class ArticlePointerListTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
@@ -34,7 +34,7 @@ protected:
         m_old_art_ptr_list = std::move(g_art_ptr_list);
         m_old_art_ptr = g_art_ptr;
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{3};
@@ -59,7 +59,7 @@ protected:
         g_last_art = m_old_last_art;
         g_first_art = m_old_first_art;
         g_abs_first = m_old_abs_first;
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
     }
 
     void add_article(ArticleNum num, std::time_t date)

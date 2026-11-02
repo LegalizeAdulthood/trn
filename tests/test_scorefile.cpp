@@ -59,7 +59,7 @@ protected:
         m_old_tmp_dir = g_tmp_dir;
         m_old_pid = g_our_pid;
         m_old_newsgroup_name = g_newsgroup_name;
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_art = g_nav.target.num;
         m_old_last_art = g_last_art;
         m_old_in_ng = g_in_ng;
@@ -74,7 +74,7 @@ protected:
         g_sf_num_entries = 0;
         g_sf_verbose = false;
         g_sf_score_verbose = 0;
-        g_article_list.clear();
+        g_cache.article_list.clear();
         Article *article = article_ptr(TEST_ARTICLE_NUM);
         article->m_flags = AF_EXISTS;
         article->m_subj = &m_subject;
@@ -92,8 +92,8 @@ protected:
         sf_clear_file_cache_for_test();
         sf_clean();
         article_ptr(TEST_ARTICLE_NUM)->clear_article();
-        g_article_list.clear();
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list.clear();
+        g_cache.article_list = std::move(m_old_article_list);
         head_final();
         g_sf_num_entries = 0;
         g_tmp_dir = m_old_tmp_dir;

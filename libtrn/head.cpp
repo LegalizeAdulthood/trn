@@ -255,7 +255,7 @@ HeaderLineType get_header_num(std::string_view header_name)
     return i;
 }
 
-// restart_header may insert into the active g_article_list.
+// restart_header may insert into the active g_cache.article_list.
 void ParsedHeaderContext::start_header(ArticleNum artnum)
 {
 #ifdef DEBUG
@@ -272,7 +272,7 @@ void ParsedHeaderContext::start_header(ArticleNum artnum)
     restart_header(artnum);
 }
 
-// article_ptr looks up or creates an entry in the active g_article_list.
+// article_ptr looks up or creates an entry in the active g_cache.article_list.
 void ParsedHeaderContext::restart_header(ArticleNum artnum)
 {
     in_header = SOME_LINE;

@@ -381,9 +381,9 @@ beginning:
         }
         g_spin_todo -= (last - artnum).value_of();
     }
-    if (artnum > g_last_cached && artnum >= first)
+    if (artnum > g_cache.last_cached && artnum >= first)
     {
-        g_last_cached = artnum;
+        g_cache.last_cached = artnum;
     }
 exit:
     if (g_int_count || !success)
@@ -425,10 +425,10 @@ exit:
     {
         std::fseek(g_data_source->m_ov_in, 0L, 0); // rewind it for the cheating phase
     }
-    if (success && real_first <= g_first_cached)
+    if (success && real_first <= g_cache.first_cached)
     {
-        g_first_cached = real_first;
-        g_cached_all_in_range = true;
+        g_cache.first_cached = real_first;
+        g_cache.cached_all_in_range = true;
     }
     set_spin(SPIN_POP);
     return success;

@@ -46,7 +46,7 @@ protected:
         m_old_kf_change_thread_cnt = g_kf_change_thread_cnt;
         m_old_local_kfp = g_local_kfp;
         m_old_msg_id_hash = g_msg_id_hash;
-        m_old_article_list = g_article_list;
+        m_old_article_list = g_cache.article_list;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_priv_dir = g_priv_dir;
         m_old_trn_dir = g_trn_dir;
@@ -82,7 +82,7 @@ protected:
         g_kf_change_thread_cnt = 0;
         g_local_kfp = nullptr;
         g_msg_id_hash = hash_create(17, msg_id_cmp);
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_newsgroup_ptr = nullptr;
         g_priv_dir.clear();
         g_trn_dir.clear();
@@ -120,7 +120,7 @@ protected:
         g_kf_change_thread_cnt = m_old_kf_change_thread_cnt;
         g_local_kfp = m_old_local_kfp;
         g_msg_id_hash = m_old_msg_id_hash;
-        g_article_list = m_old_article_list;
+        g_cache.article_list = m_old_article_list;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_priv_dir = m_old_priv_dir;
         g_trn_dir = m_old_trn_dir;

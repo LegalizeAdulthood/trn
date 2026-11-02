@@ -61,7 +61,7 @@ protected:
     {
         std::copy(std::begin(g_header_rules.type), std::end(g_header_rules.type), m_old_header_type.begin());
         m_old_header_positions = g_parsed_header.positions;
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_data_source = g_data_source;
         m_old_last_art = g_last_art;
         m_old_parsed_art = g_parsed_header.parsed_art;
@@ -82,7 +82,7 @@ protected:
         head_init();
         g_art_input.fp = nullptr;
         g_art_buf.init();
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_data_source = &m_data_source;
         g_last_art = TEST_ARTICLE;
         g_parsed_header.parsed_art = ArticleNum{};
@@ -102,8 +102,8 @@ protected:
         g_art_buf.final();
         head_final();
 
-        g_article_list.clear();
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list.clear();
+        g_cache.article_list = std::move(m_old_article_list);
         std::copy(m_old_header_type.begin(), m_old_header_type.end(), std::begin(g_header_rules.type));
         g_parsed_header.positions = m_old_header_positions;
         g_data_source = m_old_data_source;

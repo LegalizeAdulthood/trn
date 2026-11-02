@@ -732,9 +732,8 @@ char Article::thread_letter()
 {
     int subj = m_subj->m_misc;
 
-    if (!(m_flags & AF_CACHED)
-     && (g_abs_first < g_first_cached || g_last_cached < g_last_art
-      || !g_cached_all_in_range))
+    if (!(m_flags & AF_CACHED) &&
+        (g_abs_first < g_cache.first_cached || g_cache.last_cached < g_last_art || !g_cache.cached_all_in_range))
     {
         return '?';
     }

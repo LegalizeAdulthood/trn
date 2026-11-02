@@ -48,13 +48,11 @@
 #include <utility>
 #include <vector>
 
-std::map<ArticleNum, Article> g_article_list;
+GroupArticleCache g_cache;
+
 std::vector<Article *>        g_art_ptr_list;        // the article-selector creates this
 Article                     **g_art_ptr{};           // ditto -- used for article order
 ArticleNum                    g_search_ahead{};      // are we in subject scan mode? (if so, contains art # found or -1)
-ArticleNum                    g_first_cached{};      //
-ArticleNum                    g_last_cached{};       //
-bool                          g_cached_all_in_range{};  //
 Article                      *g_sentinel_art_ptr{};     //
 Subject                      *g_first_subject{};        //
 Subject                      *g_last_subject{};         //
@@ -81,7 +79,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
 
 Article *article_ptr(ArticleNum an)
 {
-    auto [it, inserted] = g_article_list.try_emplace(an, Article{});
+    auto [it, inserted] = g_cache.article_list.try_emplace(an, Article{});
     if (inserted)
     {
         it->second.m_num = an;
@@ -91,7 +89,7 @@ Article *article_ptr(ArticleNum an)
 
 bool article_hasdata(ArticleNum an)
 {
-    return g_article_list.find(an) != g_article_list.end();
+    return g_cache.article_list.find(an) != g_cache.article_list.end();
 }
 
 Article *article_find(ArticleNum an)
@@ -100,13 +98,13 @@ Article *article_find(ArticleNum an)
     {
         return nullptr;
     }
-    const auto it = g_article_list.find(an);
-    return it == g_article_list.end() ? nullptr : &it->second;
+    const auto it = g_cache.article_list.find(an);
+    return it == g_cache.article_list.end() ? nullptr : &it->second;
 }
 
 bool article_walk(bool (*callback)(Article &, int), int arg)
 {
-    for (auto &[num, article] : g_article_list)
+    for (auto &[num, article] : g_cache.article_list)
     {
         if (callback(article, arg))
         {
@@ -118,20 +116,20 @@ bool article_walk(bool (*callback)(Article &, int), int arg)
 
 ArticleNum article_first(ArticleNum an)
 {
-    const auto it = g_article_list.lower_bound(an);
-    return it == g_article_list.end() ? article_after(g_last_art) : it->first;
+    const auto it = g_cache.article_list.lower_bound(an);
+    return it == g_cache.article_list.end() ? article_after(g_last_art) : it->first;
 }
 
 ArticleNum article_next(ArticleNum an)
 {
-    const auto it = g_article_list.upper_bound(an);
-    return it == g_article_list.end() ? article_after(g_last_art) : it->first;
+    const auto it = g_cache.article_list.upper_bound(an);
+    return it == g_cache.article_list.end() ? article_after(g_last_art) : it->first;
 }
 
 ArticleNum article_last(ArticleNum an)
 {
-    auto it = g_article_list.upper_bound(an);
-    if (it == g_article_list.begin())
+    auto it = g_cache.article_list.upper_bound(an);
+    if (it == g_cache.article_list.begin())
     {
         return article_before(g_abs_first);
     }
@@ -141,8 +139,8 @@ ArticleNum article_last(ArticleNum an)
 
 ArticleNum article_prev(ArticleNum an)
 {
-    auto it = g_article_list.lower_bound(an);
-    if (it == g_article_list.begin())
+    auto it = g_cache.article_list.lower_bound(an);
+    if (it == g_cache.article_list.begin())
     {
         return article_before(g_abs_first);
     }
@@ -156,8 +154,8 @@ Article *article_nextp(Article *ap)
     {
         return nullptr;
     }
-    const auto it = g_article_list.upper_bound(ap->article_num());
-    return it == g_article_list.end() ? nullptr : &it->second;
+    const auto it = g_cache.article_list.upper_bound(ap->article_num());
+    return it == g_cache.article_list.end() ? nullptr : &it->second;
 }
 
 void cache_init()
@@ -167,14 +165,11 @@ void cache_init()
 #endif
 }
 
-static NewsgroupData *s_cached_ng{};
-static std::time_t    s_cached_time{};
-
 void build_cache()
 {
-    if (s_cached_ng == g_newsgroup_ptr && std::time(nullptr) < s_cached_time + 6 * 60 * 60L)
+    if (g_cache.cached_ng == g_newsgroup_ptr && std::time(nullptr) < g_cache.cached_time + 6 * 60 * 60L)
     {
-        s_cached_time = std::time(nullptr);
+        g_cache.cached_time = std::time(nullptr);
         if (g_sel.mode == SM_ARTICLE)
         {
             g_sel.set_selector(g_sel.mode, g_sel.art_sort);
@@ -183,7 +178,7 @@ void build_cache()
         {
             g_sel.set_selector(g_sel.thread_mode, g_sel.thread_sort);
         }
-        for (ArticleNum an{article_after(g_last_cached)}; an <= g_last_art; ++an)
+        for (ArticleNum an{article_after(g_cache.last_cached)}; an <= g_last_art; ++an)
         {
             article_ptr(an)->m_flags |= AF_EXISTS;
         }
@@ -194,15 +189,15 @@ void build_cache()
 
     close_cache();
 
-    s_cached_ng = g_newsgroup_ptr;
-    s_cached_time = std::time(nullptr);
-    g_article_list.clear();
+    g_cache.cached_ng = g_newsgroup_ptr;
+    g_cache.cached_time = std::time(nullptr);
+    g_cache.article_list.clear();
     s_subj_hash = hash_create(991, subject_cmp); // TODO: pick a better size
 
     set_first_art(g_newsgroup_ptr->rc_numbers());
-    g_first_cached = g_thread_always ? g_abs_first : g_first_art;
-    g_last_cached = article_before(g_first_cached);
-    g_cached_all_in_range = false;
+    g_cache.first_cached = g_thread_always ? g_abs_first : g_first_art;
+    g_cache.last_cached = article_before(g_cache.first_cached);
+    g_cache.cached_all_in_range = false;
 #ifdef PENDING
     s_subj_to_get = g_first_art;
     s_xref_to_get = g_first_art;
@@ -253,8 +248,8 @@ void close_cache()
             return false;
         },
         0);
-    g_article_list.clear();
-    s_cached_ng = nullptr;
+    g_cache.article_list.clear();
+    g_cache.cached_ng = nullptr;
 }
 
 // TODO: decouple this from s_short_subj_hash
@@ -818,45 +813,45 @@ static bool cache_xrefs()
 
 static bool cache_all_arts()
 {
-    ArticleNum old_last_cached = g_last_cached;
-    if (!g_cached_all_in_range)
+    ArticleNum old_last_cached = g_cache.last_cached;
+    if (!g_cache.cached_all_in_range)
     {
-        g_last_cached = article_before(g_first_cached);
+        g_cache.last_cached = article_before(g_cache.first_cached);
     }
-    if (g_last_cached >= g_last_art && g_first_cached <= g_abs_first)
+    if (g_cache.last_cached >= g_last_art && g_cache.first_cached <= g_abs_first)
     {
         return true;
     }
 
     // turn it on as late as possible to avoid fseek()ing open art
     set_spin(SPIN_BACKGROUND);
-    if (g_last_cached < g_last_art)
+    if (g_cache.last_cached < g_last_art)
     {
         if (g_data_source->m_ov_opened)
         {
-            ov_data(article_after(g_last_cached), g_last_art, true);
+            ov_data(article_after(g_cache.last_cached), g_last_art, true);
         }
-        if (!art_data(article_after(g_last_cached), g_last_art, true, true))
+        if (!art_data(article_after(g_cache.last_cached), g_last_art, true, true))
         {
-            g_last_cached = old_last_cached;
+            g_cache.last_cached = old_last_cached;
             return false;
         }
-        g_cached_all_in_range = true;
+        g_cache.cached_all_in_range = true;
     }
-    if (g_first_cached > g_abs_first)
+    if (g_cache.first_cached > g_abs_first)
     {
         if (g_data_source->m_ov_opened)
         {
-            ov_data(g_abs_first, article_before(g_first_cached), true);
+            ov_data(g_abs_first, article_before(g_cache.first_cached), true);
         }
         else
         {
-            art_data(g_abs_first, article_before(g_first_cached), true, true);
+            art_data(g_abs_first, article_before(g_cache.first_cached), true, true);
         }
         // If we got interrupted, make a quick exit
-        if (g_first_cached > g_abs_first)
+        if (g_cache.first_cached > g_abs_first)
         {
-            g_last_cached = old_last_cached;
+            g_cache.last_cached = old_last_cached;
             return false;
         }
     }
@@ -876,12 +871,12 @@ static bool cache_all_arts()
 
 static bool cache_unread_arts()
 {
-    if (g_last_cached >= g_last_art)
+    if (g_cache.last_cached >= g_last_art)
     {
         return true;
     }
     set_spin(SPIN_BACKGROUND);
-    return art_data(article_after(g_last_cached), g_last_art, true, false);
+    return art_data(article_after(g_cache.last_cached), g_last_art, true, false);
 }
 #endif
 
@@ -938,10 +933,10 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
     }
     set_spin(SPIN_POP);
     i = std::min(i, last);
-    g_last_cached = std::max(i, g_last_cached);
+    g_cache.last_cached = std::max(i, g_cache.last_cached);
     if (i == last)
     {
-        g_first_cached = std::min(first, g_first_cached);
+        g_cache.first_cached = std::min(first, g_cache.first_cached);
         return true;
     }
     return false;
@@ -953,18 +948,18 @@ bool cache_range(ArticleNum first, ArticleNum last)
     bool       all_arts = (g_sel.rereading || g_thread_always);
     ArticleNum count{};
 
-    if (g_sel.rereading && !g_cached_all_in_range)
+    if (g_sel.rereading && !g_cache.cached_all_in_range)
     {
-        g_first_cached = first;
-        g_last_cached = article_before(first);
+        g_cache.first_cached = first;
+        g_cache.last_cached = article_before(first);
     }
-    if (first < g_first_cached)
+    if (first < g_cache.first_cached)
     {
-        count = g_first_cached - first;
+        count = g_cache.first_cached - first;
     }
-    if (last > g_last_cached)
+    if (last > g_cache.last_cached)
     {
-        count += last - g_last_cached;
+        count += last - g_cache.last_cached;
     }
     if (!count)
     {
@@ -972,7 +967,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
     }
     g_spin_todo = count.value_of();
 
-    if (g_first_cached > g_last_cached)
+    if (g_cache.first_cached > g_cache.last_cached)
     {
         if (g_sel.rereading)
         {
@@ -994,27 +989,27 @@ bool cache_range(ArticleNum first, ArticleNum last)
 
     set_spin(SPIN_FOREGROUND);
 
-    if (first < g_first_cached)
+    if (first < g_cache.first_cached)
     {
         if (g_data_source->m_ov_opened)
         {
-            ov_data(g_abs_first, article_before(g_first_cached), false);
-            success = (g_first_cached == g_abs_first);
+            ov_data(g_abs_first, article_before(g_cache.first_cached), false);
+            success = (g_cache.first_cached == g_abs_first);
         }
         else
         {
-            success = art_data(first, article_before(g_first_cached), false, all_arts);
-            g_cached_all_in_range = (all_arts && success);
+            success = art_data(first, article_before(g_cache.first_cached), false, all_arts);
+            g_cache.cached_all_in_range = (all_arts && success);
         }
     }
-    if (success && g_last_cached < last)
+    if (success && g_cache.last_cached < last)
     {
         if (g_data_source->m_ov_opened)
         {
-            ov_data(article_after(g_last_cached), last, false);
+            ov_data(article_after(g_cache.last_cached), last, false);
         }
-        success = art_data(article_after(g_last_cached), last, false, all_arts);
-        g_cached_all_in_range = (all_arts && success);
+        success = art_data(article_after(g_cache.last_cached), last, false, all_arts);
+        g_cache.cached_all_in_range = (all_arts && success);
     }
     set_spin(SPIN_POP);
     return success;

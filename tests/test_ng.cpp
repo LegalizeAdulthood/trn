@@ -72,7 +72,7 @@ protected:
 
 private:
     Subject                  m_subject{};
-    decltype(g_article_list) m_old_article_list{std::move(g_article_list)};
+    decltype(g_cache.article_list) m_old_article_list{std::move(g_cache.article_list)};
     decltype(g_art_ptr_list) m_old_art_ptr_list{std::move(g_art_ptr_list)};
     Article                **m_old_art_ptr{g_art_ptr};
     ArticleLocation          m_old_target{g_nav.target};
@@ -82,8 +82,8 @@ private:
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
-    ArticleNum               m_old_first_cached{g_first_cached};
-    ArticleNum               m_old_last_cached{g_last_cached};
+    ArticleNum                     m_old_first_cached{g_cache.first_cached};
+    ArticleNum                     m_old_last_cached{g_cache.last_cached};
     ArticleNum               m_old_search_ahead{g_search_ahead};
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
@@ -111,12 +111,12 @@ private:
 
 void ArticleStateTest::SetUp()
 {
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
     g_abs_first = ArticleNum{1};
     g_first_art = ArticleNum{1};
-    g_first_cached = ArticleNum{1};
+    g_cache.first_cached = ArticleNum{1};
     g_search_ahead = ArticleNum{};
     g_first_subject = &m_subject;
     g_last_subject = &m_subject;
@@ -147,7 +147,7 @@ void ArticleStateTest::SetUp()
 
 void ArticleStateTest::TearDown()
 {
-    g_article_list = std::move(m_old_article_list);
+    g_cache.article_list = std::move(m_old_article_list);
     g_art_ptr_list = std::move(m_old_art_ptr_list);
     g_art_ptr = m_old_art_ptr;
     g_nav.target = m_old_target;
@@ -157,8 +157,8 @@ void ArticleStateTest::TearDown()
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
-    g_first_cached = m_old_first_cached;
-    g_last_cached = m_old_last_cached;
+    g_cache.first_cached = m_old_first_cached;
+    g_cache.last_cached = m_old_last_cached;
     g_search_ahead = m_old_search_ahead;
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
@@ -216,7 +216,7 @@ void ArticleStateTest::set_articles(std::initializer_list<ArticleFlags> flags, l
         previous = article;
     }
     g_last_art = ArticleNum{number - 1};
-    g_last_cached = g_last_art;
+    g_cache.last_cached = g_last_art;
     g_nav.target.num = ArticleNum{current};
     g_nav.target.art = g_nav.target.num <= g_last_art ? article_ptr(g_nav.target.num) : nullptr;
     g_nav.current = g_nav.target;
@@ -380,7 +380,7 @@ void ScopeSelectionArticleTest::SetUp()
 
 void ScopeSelectionArticleTest::set_selection_scope(std::initializer_list<ArticleFlags> flags, long current)
 {
-    g_article_list.clear();
+    g_cache.article_list.clear();
     m_newsgroup.m_to_read = ArticleUnread{};
     g_selected_count = ArticleUnread{};
     g_selected_subj_cnt = 0;
@@ -1089,7 +1089,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     const SubjectFlags                               subject_flags = g_first_subject->m_flags;
     const int                                        selected_subjects = g_selected_subj_cnt;
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         flags.emplace_back(number, article.m_flags);
     }
@@ -1121,7 +1121,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(g_nav.current.num > g_last_art ? MM_ARTICLE_END : MM_ARTICLE, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
-    EXPECT_EQ(flags.size(), g_article_list.size());
+    EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[number, expected_flags] : flags)
     {
         SCOPED_TRACE(number.value_of());
@@ -1209,7 +1209,7 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const bool reread = g_reread;
     m_before_flags.clear();
-    for (const auto &[number, entry] : g_article_list)
+    for (const auto &[number, entry] : g_cache.article_list)
     {
         m_before_flags.emplace_back(number.value_of(), entry.m_flags);
     }
@@ -1260,7 +1260,7 @@ void NumericRangeArticleTest::expect_changes(std::initializer_list<std::pair<lon
         ASSERT_NE(m_before_flags.end(), entry);
         entry->second = flags;
     }
-    ASSERT_EQ(m_before_flags.size(), g_article_list.size());
+    ASSERT_EQ(m_before_flags.size(), g_cache.article_list.size());
     for (const auto &[number, flags] : m_before_flags)
     {
         SCOPED_TRACE(number);
@@ -1398,7 +1398,7 @@ std::string UnsubscribeArticleTest::unsubscribe()
     const std::string                      rc_line = m_newsgroup.m_rc_line;
 
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[number, entry] : g_article_list)
+    for (const auto &[number, entry] : g_cache.article_list)
     {
         flags.emplace_back(number, entry.m_flags);
     }
@@ -1439,7 +1439,7 @@ std::string UnsubscribeArticleTest::unsubscribe()
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
-    EXPECT_EQ(flags.size(), g_article_list.size());
+    EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[number, expected] : flags)
     {
         const Article *entry = article_find(number);
@@ -1840,7 +1840,7 @@ void ScanContinuationArticleTest::set_scan_articles(std::initializer_list<Articl
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = article_find(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{3};
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         if (article.m_flags & AF_SEL)
         {
@@ -1874,7 +1874,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     const bool                                       univ_follow = g_univ_follow;
     const bool                                       virtual_read = g_univ_read_virt_flag;
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[article_number, article] : g_article_list)
+    for (const auto &[article_number, article] : g_cache.article_list)
     {
         flags.emplace_back(article_number, article.m_flags);
     }
@@ -1915,7 +1915,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_TRUE(g_art_ptr_list.empty());
     EXPECT_EQ(nullptr, g_art_ptr);
-    EXPECT_EQ(flags.size(), g_article_list.size());
+    EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[article_number, expected_flags] : flags)
     {
         SCOPED_TRACE(article_number.value_of());
@@ -2155,7 +2155,7 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     const int                                        selected_subjects = g_selected_subj_cnt;
     const bool                                       selected_only = g_sel.selected_only;
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         flags.emplace_back(number, article.m_flags);
     }
@@ -2485,9 +2485,9 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     const int                                        selected_subjects = g_selected_subj_cnt;
     const bool                                       selected_only = g_sel.selected_only;
     const bool                                       force_last = g_force_last;
-    const std::size_t                                article_count = g_article_list.size();
+    const std::size_t                                article_count = g_cache.article_list.size();
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[article_number, article] : g_article_list)
+    for (const auto &[article_number, article] : g_cache.article_list)
     {
         flags.emplace_back(article_number, article.m_flags);
     }
@@ -2514,7 +2514,7 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
     EXPECT_EQ(selected_only, g_sel.selected_only);
     EXPECT_EQ(force_last, g_force_last);
-    EXPECT_EQ(article_count, g_article_list.size());
+    EXPECT_EQ(article_count, g_cache.article_list.size());
     EXPECT_EQ("retained search", g_art_search.last_pat);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -3162,7 +3162,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     const bool force_last = g_force_last;
 
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[article_number, article] : g_article_list)
+    for (const auto &[article_number, article] : g_cache.article_list)
     {
         flags.emplace_back(article_number, article.m_flags);
     }
@@ -3990,7 +3990,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     const MinorMode                                  mode = g_mode;
     const std::pair<bool, bool>                      follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         flags.emplace_back(number, article.m_flags);
     }
@@ -4034,7 +4034,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(mode, g_mode);
-    EXPECT_EQ(flags.size(), g_article_list.size());
+    EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[number, expected_flags] : flags)
     {
         SCOPED_TRACE(number.value_of());
@@ -4082,9 +4082,9 @@ protected:
 void EmptyDirectNavigationArticleTest::SetUp()
 {
     DirectNavigationArticleTest::SetUp();
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_first_subject = g_last_subject = nullptr;
-    g_last_art = g_last_cached = ArticleNum{};
+    g_last_art = g_cache.last_cached = ArticleNum{};
     m_newsgroup.m_to_read = ArticleUnread{};
     g_selected_count = ArticleUnread{};
     g_selected_subj_cnt = 0;
@@ -5674,7 +5674,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     const bool                                       reread = g_reread;
     const bool                                       force_last = g_force_last;
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
-    for (const auto &[number, entry] : g_article_list)
+    for (const auto &[number, entry] : g_cache.article_list)
     {
         flags.emplace_back(number, entry.m_flags);
     }
@@ -5717,7 +5717,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     EXPECT_FALSE(g_rotate);
     EXPECT_EQ(0, g_int_count);
     EXPECT_FALSE(g_subj_line.has_value());
-    EXPECT_EQ(flags.size(), g_article_list.size());
+    EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[number, expected] : flags)
     {
         SCOPED_TRACE(number.value_of());
@@ -5837,7 +5837,7 @@ TEST_F(SelectorEntryArticleTest, emptyGroupRequestsCleanupAndAllowsRepeatedSelec
 
         EXPECT_EQ(ArticleNum{1}, g_nav.target.num);
         EXPECT_EQ(nullptr, g_nav.target.art);
-        EXPECT_TRUE(g_article_list.empty());
+        EXPECT_TRUE(g_cache.article_list.empty());
         EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
         EXPECT_EQ(ArticleUnread{}, g_selected_count);
         EXPECT_FALSE(g_sel.selected_only);
@@ -6283,7 +6283,7 @@ TEST_P(KillSubjectSearchArticleTest, fallbackKillsMatchingSubjectsAndRestoresThe
 {
     set_kill_articles(2);
     g_threaded_group = GetParam();
-    g_last_cached = GetParam() ? ArticleNum{5} : g_last_art;
+    g_cache.last_cached = GetParam() ? ArticleNum{5} : g_last_art;
     std::vector<ArticleNum> visited;
 
     const std::string output = kill_subject(AS_ASK, 2, [&](ArticleNum number) { visited.push_back(number); });
@@ -6322,7 +6322,7 @@ TEST_F(KillSubjectArticleTest, fallbackWithSubjectSearchAheadResumesAtTheFirstRe
 TEST_F(KillSubjectArticleTest, interruptingFallbackKeepsCompletedKillsAndRestoresTheCurrentArticlePair)
 {
     set_kill_articles(2);
-    g_last_cached = ArticleNum{5};
+    g_cache.last_cached = ArticleNum{5};
 
     const std::string output = kill_subject(AS_ASK, 2,
                                             [](ArticleNum number)
@@ -8033,7 +8033,7 @@ INSTANTIATE_TEST_SUITE_P(GroupEnd, CatchupUnsubscribeArticleTest, testing::Bool(
 TEST_P(CatchupUncachedTailArticleTest, partialCatchupCountsCachedAndUncachedUnreadArticlesExactlyOnce)
 {
     set_catchup_articles();
-    g_last_cached = ArticleNum{5};
+    g_cache.last_cached = ArticleNum{5};
     article_ptr(ArticleNum{6})->m_flags = AF_EXISTS | AF_UNREAD;
     article_ptr(ArticleNum{6})->m_subj = nullptr;
     article_ptr(ArticleNum{7})->m_flags = AF_EXISTS | AF_YANK_BACK;
@@ -8109,7 +8109,7 @@ TEST_F(UnsubscribeArticleTest, anAlreadyDirtyNewsrcRetainsItsOtherFlags)
 TEST_F(UnsubscribeArticleTest, unsubscribingTheLastGroupInTheAllGroupsViewLeavesNoGroupsToRead)
 {
     set_catchup_articles(8);
-    for (auto &[number, entry] : g_article_list)
+    for (auto &[number, entry] : g_cache.article_list)
     {
         entry.one_less();
         entry.m_flags &= ~AF_YANK_BACK;
@@ -10748,7 +10748,7 @@ TEST_F(GroupUnreadArticleTest, leavesEmptyGroupEmpty)
 
     mark_unread('a');
 
-    EXPECT_TRUE(g_article_list.empty());
+    EXPECT_TRUE(g_cache.article_list.empty());
     EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleNum{}, g_obj_count);
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
@@ -12652,7 +12652,7 @@ INSTANTIATE_TEST_SUITE_P(ReadUnreadAndGroupEnd, SubjectListingPositionArticleTes
 TEST_F(SubjectListingArticleTest, noUnreadArticlesProduceNoSubjectRows)
 {
     set_listing_articles();
-    for (auto &[number, article] : g_article_list)
+    for (auto &[number, article] : g_cache.article_list)
     {
         article.m_flags &= ~(AF_UNREAD | AF_SEL);
     }
@@ -12676,7 +12676,7 @@ TEST_F(SubjectListingArticleTest, anEmptyGroupReturnsToItsPromptWithoutCreatingA
     const std::string output = list_subjects();
 
     EXPECT_EQ("\n", output);
-    EXPECT_TRUE(g_article_list.empty());
+    EXPECT_TRUE(g_cache.article_list.empty());
     EXPECT_EQ(1, g_page_line);
 }
 
@@ -13318,7 +13318,7 @@ TEST_F(NumericJumpArticleTest, jumpsBackIntoAnExhaustedGroup)
 
 TEST_F(NumericJumpArticleTest, rejectsANumberInAnEmptyGroupWithoutRequestingAReread)
 {
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_first_subject->m_articles = nullptr;
     g_first_subject->m_thread = nullptr;
     g_last_art = ArticleNum{};
@@ -13343,7 +13343,7 @@ TEST_P(NumericJumpMissingArticleTest, retainsTheMissingNumberWithoutCreatingAnAr
 {
     if (!GetParam())
     {
-        g_article_list.erase(ArticleNum{5});
+        g_cache.article_list.erase(ArticleNum{5});
     }
     g_threaded_group = false;
     g_search_ahead = ArticleNum{};
@@ -13494,7 +13494,7 @@ TEST_F(NumericRangeArticleTest, currentArticleCanBeTheUpperRangeEndpoint)
 
 TEST_F(NumericRangeArticleTest, dotThroughDollarIncludesTheLastArticleAndSkipsAbsentNumbers)
 {
-    g_article_list.erase(ArticleNum{8});
+    g_cache.article_list.erase(ArticleNum{8});
     --m_newsgroup.m_to_read;
 
     apply_range(".-$:j\n");
@@ -13523,7 +13523,7 @@ INSTANTIATE_TEST_SUITE_P(SelectOrDeselect, NumericRangeSelectionArticleTest, tes
 
 TEST_F(NumericRangeArticleTest, rangeWithoutAnyStoredTargetsReportsNoArticlesAffected)
 {
-    g_article_list.erase(ArticleNum{8});
+    g_cache.article_list.erase(ArticleNum{8});
     --m_newsgroup.m_to_read;
 
     const std::string output = apply_range("8-8:j\n");
@@ -13692,7 +13692,7 @@ TEST_P(DirectNumericMissingArticleTest, numericStepRetainsAnAbsentNumberWithoutA
 {
     const char direction = GetParam();
     position(direction == 'N' ? 4 : 6);
-    g_article_list.erase(ArticleNum{5});
+    g_cache.article_list.erase(ArticleNum{5});
 
     navigate(std::string{'_', direction}, 5, true);
 

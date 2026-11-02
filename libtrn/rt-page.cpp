@@ -109,7 +109,7 @@ bool set_sel_mode(char_int ch)
             term_down(1);
             thread_open();
             g_thread_always = always_save;
-            if (g_last_cached < g_last_art)
+            if (g_cache.last_cached < g_last_art)
             {
                 g_threaded_group = false;
             }

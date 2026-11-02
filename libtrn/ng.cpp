@@ -572,7 +572,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 message += ": article is not available.";
                 if (g_nav.target.art && !(g_nav.target.art->m_flags & AF_CACHED))
                 {
-                    if (g_abs_first < g_first_cached || g_last_cached < g_last_art || !g_cached_all_in_range)
+                    if (g_abs_first < g_cache.first_cached || g_cache.last_cached < g_last_art ||
+                        !g_cache.cached_all_in_range)
                     {
                         message = g_newsgroup_name;
                         message += ": article may show up in a moment.";
@@ -1085,7 +1086,7 @@ not_threaded:
             goto not_threaded;
         }
         g_nav.target.art->m_subj->kill_subject(AFFECT_ALL);
-        if (!g_threaded_group || g_last_cached < g_last_art)
+        if (!g_threaded_group || g_cache.last_cached < g_last_art)
         {
             command = "k";
             goto normal_search;

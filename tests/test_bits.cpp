@@ -51,13 +51,13 @@ class BitsToRcTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_newsgroup_ptr = &m_group;
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
@@ -71,7 +71,7 @@ protected:
 
     void TearDown() override
     {
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
@@ -134,16 +134,16 @@ protected:
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
 
         m_old_current_path = fs::current_path();
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_data_source = g_data_source;
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
-        m_old_first_cached = g_first_cached;
-        m_old_last_cached = g_last_cached;
+        m_old_first_cached = g_cache.first_cached;
+        m_old_last_cached = g_cache.last_cached;
         m_old_first_subject = g_first_subject;
-        m_old_cached_all_in_range = g_cached_all_in_range;
+        m_old_cached_all_in_range = g_cache.cached_all_in_range;
         m_old_nntp_link = g_nntp.link;
         m_old_last_command = g_nntp.last_command;
         g_nntp.gets_clear_buffer();
@@ -157,16 +157,16 @@ protected:
         fs::current_path(m_output_dir, error);
         ASSERT_FALSE(error);
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_newsgroup_ptr = &m_group;
         g_data_source = &m_data_source;
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{5};
-        g_first_cached = ArticleNum{1};
-        g_last_cached = ArticleNum{};
+        g_cache.first_cached = ArticleNum{1};
+        g_cache.last_cached = ArticleNum{};
         g_first_subject = nullptr;
-        g_cached_all_in_range = false;
+        g_cache.cached_all_in_range = false;
         g_nntp.link.connection.reset();
         g_nntp.link.flags = NNTP_NEW_CMD_OK;
         g_nntp.last_command.clear();
@@ -187,16 +187,16 @@ protected:
         fs::current_path(m_old_current_path, error);
         fs::remove_all(m_output_dir, error);
 
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_data_source = m_old_data_source;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
-        g_first_cached = m_old_first_cached;
-        g_last_cached = m_old_last_cached;
+        g_cache.first_cached = m_old_first_cached;
+        g_cache.last_cached = m_old_last_cached;
         g_first_subject = m_old_first_subject;
-        g_cached_all_in_range = m_old_cached_all_in_range;
+        g_cache.cached_all_in_range = m_old_cached_all_in_range;
         g_nntp.gets_clear_buffer();
         g_nntp.link = m_old_nntp_link;
         g_nntp.last_command = m_old_last_command;
@@ -209,7 +209,7 @@ protected:
 
     bool article_exists(long num) const
     {
-        return g_article_list.at(ArticleNum{num}).m_flags & AF_EXISTS;
+        return g_cache.article_list.at(ArticleNum{num}).m_flags & AF_EXISTS;
     }
 
     void use_remote_connection()
@@ -244,7 +244,7 @@ class XrefChaseTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_data_source = g_data_source;
         m_old_newsrc_hash = g_newsrc_hash;
@@ -255,7 +255,7 @@ protected:
         m_old_check_count = g_check_count;
         m_old_output_chase_phrase = g_output_chase_phrase;
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_newsrc_hash = hash_create(17, compare_newsgroup_name);
         g_data_source = &m_data_source;
         g_newsgroup_name = "comp.lang.apl";
@@ -278,7 +278,7 @@ protected:
     {
         chase_xrefs(false);
         hash_destroy(g_newsrc_hash);
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_data_source = m_old_data_source;
         g_newsrc_hash = m_old_newsrc_hash;

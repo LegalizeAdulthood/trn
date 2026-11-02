@@ -30,7 +30,7 @@ class ScanCommandTest : public testing::Test
 protected:
     void SetUp() override
     {
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_subst.reset_mode();
         g_last_art = ArticleNum{1};
         g_s_cur_type = S_ART;
@@ -82,7 +82,7 @@ protected:
         g_tc_CE = m_old_tc_ce;
         g_tc_CM = m_old_tc_cm;
         g_erase_char = m_old_erase_char;
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_sa_ents.clear();
         g_subst.set_mode('\0');
         g_last_art = ArticleNum{};

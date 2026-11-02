@@ -44,7 +44,7 @@ protected:
     void SetUp() override
     {
         m_old_newsgroup_name = g_newsgroup_name;
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
@@ -71,8 +71,8 @@ protected:
 
     void TearDown() override
     {
-        g_article_list.clear();
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list.clear();
+        g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_name = m_old_newsgroup_name;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;

@@ -90,8 +90,8 @@ void thread_open()
         // If cached but not threaded articles exist, set up to thread them.
         if (g_first_subject)
         {
-            g_first_cached = g_first_art;
-            g_last_cached = article_before(g_first_art);
+            g_cache.first_cached = g_first_art;
+            g_cache.last_cached = article_before(g_first_art);
             g_parsed_header.parsed_art = ArticleNum{};
         }
     }
@@ -105,7 +105,7 @@ void thread_open()
         g_sel.set_selector(g_sel.thread_mode, g_sel.thread_sort);
     }
 
-    if ((g_data_source->m_flags & DF_TRY_OVERVIEW) && !g_cached_all_in_range)
+    if ((g_data_source->m_flags & DF_TRY_OVERVIEW) && !g_cache.cached_all_in_range)
     {
         if (g_thread_always)
         {
@@ -127,7 +127,7 @@ void thread_open()
             {
                 // If no unread articles, see if ov. exists as fast as possible
                 (void) ov_data(g_abs_first, g_abs_first, false);
-                g_cached_all_in_range = false;
+                g_cache.cached_all_in_range = false;
             }
             else
             {
@@ -142,8 +142,7 @@ void thread_open()
         rc_to_bits();
     }
 
-    for (ap = article_ptr(article_first(g_first_art));
-         ap && ap->article_num() <= g_last_cached;
+    for (ap = article_ptr(article_first(g_first_art)); ap && ap->article_num() <= g_cache.last_cached;
          ap = article_nextp(ap))
     {
         if ((ap->m_flags & (AF_EXISTS|AF_CACHED)) == AF_EXISTS)
@@ -152,12 +151,12 @@ void thread_open()
         }
     }
 
-    if (g_last_cached > g_last_art)
+    if (g_cache.last_cached > g_last_art)
     {
-        g_newsgroup_ptr->m_to_read += (ArticleUnread)(g_last_cached-g_last_art).value_of();
+        g_newsgroup_ptr->m_to_read += (ArticleUnread) (g_cache.last_cached - g_last_art).value_of();
         // ensure getngsize() knows the new maximum
-        g_newsgroup_ptr->m_ng_max = g_last_cached;
-        g_last_art = g_last_cached;
+        g_newsgroup_ptr->m_ng_max = g_cache.last_cached;
+        g_last_art = g_cache.last_cached;
     }
     for (ap = article_ptr(article_first(g_abs_first));
          ap && ap->article_num() <= g_last_art;
@@ -182,10 +181,10 @@ void thread_open()
 //
 void thread_grow()
 {
-    g_added_articles += (g_last_art - g_last_cached).value_of();
+    g_added_articles += (g_last_art - g_cache.last_cached).value_of();
     if (g_added_articles && g_thread_always)
     {
-        cache_range(article_after(g_last_cached), g_last_art);
+        cache_range(article_after(g_cache.last_cached), g_last_art);
     }
     count_subjects(CS_NORM);
     if (!g_art_ptr_list.empty())
@@ -249,7 +248,7 @@ void ArticleLocation::first()
     num = article_after(g_last_art);
     art = nullptr;
     next(g_sel.selected_only, false);
-    if (num > g_last_art && g_last_cached < g_last_art)
+    if (num > g_last_art && g_cache.last_cached < g_last_art)
     {
         num = g_first_art;
     }
@@ -349,9 +348,9 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
         }
         else
         {
-            if (num <= g_last_cached)
+            if (num <= g_cache.last_cached)
             {
-                num = article_after(g_last_cached);
+                num = article_after(g_cache.last_cached);
             }
             else
             {
@@ -1039,7 +1038,7 @@ void count_subjects(CountSubjectMode cmode)
     g_obj_count = ArticleNum{};
     g_selected_count = 0;
     g_selected_subj_cnt = 0;
-    if (g_last_cached >= g_last_art)
+    if (g_cache.last_cached >= g_last_art)
     {
         g_first_art = article_after(g_last_art);
     }

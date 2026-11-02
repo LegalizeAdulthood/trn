@@ -187,12 +187,12 @@ protected:
         m_old_last_newsgroup = g_ng_order.last_newsgroup;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_current_newsgroup = g_current_newsgroup;
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_art_ptr_list = std::move(g_art_ptr_list);
         m_old_art_ptr = g_art_ptr;
-        m_old_first_cached = g_first_cached;
-        m_old_last_cached = g_last_cached;
-        m_old_cached_all_in_range = g_cached_all_in_range;
+        m_old_first_cached = g_cache.first_cached;
+        m_old_last_cached = g_cache.last_cached;
+        m_old_cached_all_in_range = g_cache.cached_all_in_range;
         m_old_target = g_nav.target;
         m_old_recent = g_nav.recent;
         m_old_current = g_nav.current;
@@ -293,12 +293,12 @@ protected:
         g_ng_order.last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_art_ptr_list.clear();
         g_art_ptr = nullptr;
-        g_first_cached = ArticleNum{};
-        g_last_cached = ArticleNum{};
-        g_cached_all_in_range = false;
+        g_cache.first_cached = ArticleNum{};
+        g_cache.last_cached = ArticleNum{};
+        g_cache.cached_all_in_range = false;
         g_nav.target.num = ArticleNum{};
         g_nav.recent.num = ArticleNum{};
         g_nav.current.num = ArticleNum{};
@@ -423,13 +423,13 @@ protected:
         g_ng_order.last_newsgroup = m_old_last_newsgroup;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_current_newsgroup = m_old_current_newsgroup;
-        g_article_list.clear();
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list.clear();
+        g_cache.article_list = std::move(m_old_article_list);
         g_art_ptr_list = std::move(m_old_art_ptr_list);
         g_art_ptr = m_old_art_ptr;
-        g_first_cached = m_old_first_cached;
-        g_last_cached = m_old_last_cached;
-        g_cached_all_in_range = m_old_cached_all_in_range;
+        g_cache.first_cached = m_old_first_cached;
+        g_cache.last_cached = m_old_last_cached;
+        g_cache.cached_all_in_range = m_old_cached_all_in_range;
         g_nav.target = m_old_target;
         g_nav.recent = m_old_recent;
         g_nav.current = m_old_current;
@@ -4687,7 +4687,7 @@ TEST_P(RemoteNewsgroupParentReadingTest, anUncachedParentCanBeLeftWhileTheHeader
         .WillOnce(
             [this](error_code_t &)
             {
-                EXPECT_LT(g_last_cached, g_last_art);
+                EXPECT_LT(g_cache.last_cached, g_last_art);
                 push_command("]");
                 return std::string{"430 No such article"};
             });
@@ -5720,12 +5720,13 @@ void ArticleSelectorRecoveryReadingStateTest::SetUp()
         const bool        empty_anchor = g_sel.mode == SM_ARTICLE
                                              ? !g_sel_page.page_art || g_sel_page.page_art == article_ptr_list_end()
                                              : !g_sel_page.page_subj || g_sel_page.page_subj->m_misc == 0;
-        m_cache.push_back({g_last_cached, g_cached_all_in_range, g_sel_page.page_item_cnt, g_sel_page.page_obj_cnt,
-                           g_sel_page.total_obj_cnt, g_sel_page.prior_obj_cnt, g_sel_page.item_index, empty_anchor});
+        m_cache.push_back({g_cache.last_cached, g_cache.cached_all_in_range, g_sel_page.page_item_cnt,
+                           g_sel_page.page_obj_cnt, g_sel_page.total_obj_cnt, g_sel_page.prior_obj_cnt,
+                           g_sel_page.item_index, empty_anchor});
         const int result = reader(buffer, size);
         if (m_interrupt_input && index == *m_interrupt_input)
         {
-            EXPECT_FALSE(g_cached_all_in_range);
+            EXPECT_FALSE(g_cache.cached_all_in_range);
             g_int_count = 1;
             ++m_interruptions;
         }
@@ -5834,7 +5835,7 @@ void InterruptedArticleSelectorReadingTest::SetUp()
 char InterruptedArticleSelectorReadingTest::interrupt_entry()
 {
     prepare_commands({"Q"});
-    EXPECT_LT(g_last_cached, g_last_art);
+    EXPECT_LT(g_cache.last_cached, g_last_art);
     EXPECT_FALSE(article_ptr(ArticleNum{6})->m_flags & AF_CACHED);
     g_int_count = 1;
     testing::internal::CaptureStdout();
@@ -5878,8 +5879,8 @@ void InterruptedArticleSelectorReadingTest::expect_interrupted_return() const
     EXPECT_EQ((std::vector<int>{1, 2, 3, 4}), read);
     EXPECT_EQ(0, g_sel_page.page_item_cnt);
     EXPECT_EQ(0, g_int_count);
-    EXPECT_LT(g_last_cached, g_last_art);
-    EXPECT_FALSE(g_cached_all_in_range);
+    EXPECT_LT(g_cache.last_cached, g_last_art);
+    EXPECT_FALSE(g_cache.cached_all_in_range);
     EXPECT_FALSE(macro_pending());
 }
 
@@ -11617,10 +11618,10 @@ TEST_P(SelectedOnDemandThreadArticleTest, threadsSpoolHeadersAndRetainsReadAndSe
     EXPECT_NE(AF_NONE, article_ptr(ArticleNum{2})->m_flags & AF_SEL);
     EXPECT_EQ(AF_NONE, article_ptr(ArticleNum{3})->m_flags & AF_UNREAD);
     EXPECT_EQ(1, g_selected_subj_cnt);
-    EXPECT_EQ(ArticleNum{1}, g_first_cached);
-    EXPECT_EQ(ArticleNum{3}, g_last_cached);
-    EXPECT_TRUE(g_cached_all_in_range);
-    for (const auto &[number, article] : g_article_list)
+    EXPECT_EQ(ArticleNum{1}, g_cache.first_cached);
+    EXPECT_EQ(ArticleNum{3}, g_cache.last_cached);
+    EXPECT_TRUE(g_cache.cached_all_in_range);
+    for (const auto &[number, article] : g_cache.article_list)
     {
         if (number > g_last_art)
         {

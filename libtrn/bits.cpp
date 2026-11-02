@@ -349,13 +349,12 @@ void find_existing_articles()
                 }
             }
         }
-        else if (g_first_subject && g_cached_all_in_range)
+        else if (g_first_subject && g_cache.cached_all_in_range)
         {
             if (!g_data_source->m_ov_opened || !g_data_source->m_over_dir.empty())
             {
-                for (ap = article_ptr(article_first(g_first_cached));
-                     ap && ap->article_num() <= g_last_cached;
-                     ap = article_nextp(ap))
+                for (ap = article_ptr(article_first(g_cache.first_cached));
+                     ap && ap->article_num() <= g_cache.last_cached; ap = article_nextp(ap))
                 {
                     if (ap->m_flags & AF_CACHED)
                     {
@@ -363,7 +362,7 @@ void find_existing_articles()
                     }
                 }
             }
-            for (an = g_abs_first; an < g_first_cached; ++an)
+            for (an = g_abs_first; an < g_cache.first_cached; ++an)
             {
                 ap = article_ptr(an);
                 if (!(ap->m_flags2 & AF2_BOGUS))
@@ -371,7 +370,7 @@ void find_existing_articles()
                     ap->m_flags |= AF_EXISTS;
                 }
             }
-            for (an = article_after(g_last_cached); an <= g_last_art; ++an)
+            for (an = article_after(g_cache.last_cached); an <= g_last_art; ++an)
             {
                 ap = article_ptr(an);
                 if (!(ap->m_flags2 & AF2_BOGUS))
@@ -457,10 +456,10 @@ void find_existing_articles()
     {
         g_first_art = article_after(g_last_art);
     }
-    g_first_cached = std::max(g_first_cached, g_abs_first);
-    if (g_last_cached < g_abs_first)
+    g_cache.first_cached = std::max(g_cache.first_cached, g_abs_first);
+    if (g_cache.last_cached < g_abs_first)
     {
-        g_last_cached = article_before(g_abs_first);
+        g_cache.last_cached = article_before(g_abs_first);
     }
 }
 

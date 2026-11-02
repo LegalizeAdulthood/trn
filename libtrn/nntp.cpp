@@ -615,8 +615,8 @@ ArticleNum nntp_find_real_art(ArticleNum after)
 {
     ArticleNum an;
 
-    if (g_last_cached > after || g_last_cached < g_abs_first //
-        || nntp_stat(g_last_cached) <= 0)
+    if (g_cache.last_cached > after || g_cache.last_cached < g_abs_first //
+        || nntp_stat(g_cache.last_cached) <= 0)
     {
         if (nntp_stat_id("") > after)
         {

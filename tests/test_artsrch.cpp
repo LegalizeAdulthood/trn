@@ -42,7 +42,7 @@ class ArticleSearchTest : public testing::Test
 protected:
     void SetUp() override
     {
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_abs_first = g_abs_first;
         m_old_first_art = g_first_art;
@@ -72,7 +72,7 @@ protected:
         fs::remove_all(m_output_dir, error);
         fs::create_directories(m_output_dir, error);
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_newsgroup_ptr = &m_group;
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
@@ -110,8 +110,8 @@ protected:
         g_art_buf.final();
         head_final();
 
-        g_article_list.clear();
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list.clear();
+        g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_abs_first = m_old_abs_first;
         g_first_art = m_old_first_art;

@@ -707,7 +707,7 @@ protected:
         g_nntp.gets_clear_buffer();
         m_connection = std::make_shared<StrictMock<MockNNTPConnection>>();
         m_old_abs_first = g_abs_first;
-        m_old_last_cached = g_last_cached;
+        m_old_last_cached = g_cache.last_cached;
         m_saved_nntp_link = g_nntp.link;
         g_nntp.link.connection = m_connection;
         g_nntp.link.flags = NNTP_NEW_CMD_OK;
@@ -721,7 +721,7 @@ protected:
         g_nntp.link.connection.reset();
         g_nntp.link = std::move(m_saved_nntp_link);
         g_abs_first = m_old_abs_first;
-        g_last_cached = m_old_last_cached;
+        g_cache.last_cached = m_old_last_cached;
     }
 
     std::shared_ptr<StrictMock<MockNNTPConnection>> m_connection;
@@ -1875,7 +1875,7 @@ TEST_F(NNTPGetStringTest, findRealArticleParsesNextArticleNumber)
 {
     InSequence sequence;
     g_abs_first = ArticleNum{1};
-    g_last_cached = ArticleNum{100};
+    g_cache.last_cached = ArticleNum{100};
     EXPECT_CALL(*m_connection, write_line(StrEq("STAT 100"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 100 <cached@example.test>"));
     EXPECT_CALL(*m_connection, write_line(StrEq("NEXT"), _));
@@ -1888,7 +1888,7 @@ TEST_F(NNTPGetStringTest, findRealArticleReturnsZeroForMalformedNextArticleNumbe
 {
     InSequence sequence;
     g_abs_first = ArticleNum{1};
-    g_last_cached = ArticleNum{100};
+    g_cache.last_cached = ArticleNum{100};
     EXPECT_CALL(*m_connection, write_line(StrEq("STAT 100"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("223 100 <cached@example.test>"));
     EXPECT_CALL(*m_connection, write_line(StrEq("NEXT"), _));
@@ -2088,14 +2088,14 @@ protected:
         NNTPGetStringTest::SetUp();
 
         m_old_data_source = g_data_source;
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_parsed_art = g_parsed_header.parsed_art;
         m_old_last_art = g_last_art;
         m_old_nntp_flags = g_nntp.link.flags;
 
         g_data_source = &m_data_source;
         m_data_source.m_flags = DF_REMOTE;
-        g_article_list.clear();
+        g_cache.article_list.clear();
         article_ptr(ArticleNum{1})->m_flags = AF_EXISTS;
         g_parsed_header.parsed_art = ArticleNum{};
         g_last_art = ArticleNum{1};
@@ -2107,8 +2107,8 @@ protected:
         g_nntp.link.flags = m_old_nntp_flags;
         g_last_art = m_old_last_art;
         g_parsed_header.parsed_art = m_old_parsed_art;
-        g_article_list.clear();
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list.clear();
+        g_cache.article_list = std::move(m_old_article_list);
         g_data_source = m_old_data_source;
 
         NNTPGetStringTest::TearDown();

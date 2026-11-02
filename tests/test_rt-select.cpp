@@ -130,21 +130,21 @@ protected:
 
 private:
     DataSource               m_data_source{};
-    decltype(g_article_list) m_old_articles{std::move(g_article_list)};
+    decltype(g_cache.article_list) m_old_articles{std::move(g_cache.article_list)};
     decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
     Article                **m_old_art_ptr{g_art_ptr};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
-    ArticleNum               m_old_first_cached{g_first_cached};
-    ArticleNum               m_old_last_cached{g_last_cached};
+    ArticleNum                     m_old_first_cached{g_cache.first_cached};
+    ArticleNum                     m_old_last_cached{g_cache.last_cached};
     ArticleNum               m_old_parsed_art{g_parsed_header.parsed_art};
     ArticleNum               m_old_obj_count{g_obj_count};
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
     NewsgroupData           *m_old_newsgroup{g_newsgroup_ptr};
     DataSource              *m_old_data_source{g_data_source};
-    bool                     m_old_cached_all{g_cached_all_in_range};
+    bool                           m_old_cached_all{g_cache.cached_all_in_range};
     bool                     m_old_threaded{g_threaded_group};
     bool                     m_old_thread_always{g_thread_always};
     bool                     m_old_rereading{g_sel.rereading};
@@ -181,15 +181,15 @@ private:
 
 void ArticleSelectorCommandTest::SetUp()
 {
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
     g_abs_first = ArticleNum{1};
     g_first_art = ArticleNum{3};
     g_last_art = ArticleNum{4};
-    g_first_cached = g_abs_first;
-    g_last_cached = g_last_art;
-    g_cached_all_in_range = true;
+    g_cache.first_cached = g_abs_first;
+    g_cache.last_cached = g_last_art;
+    g_cache.cached_all_in_range = true;
     g_first_subject = &m_subject;
     g_last_subject = &m_subject;
     g_newsgroup_ptr = &m_newsgroup;
@@ -236,21 +236,21 @@ void ArticleSelectorCommandTest::SetUp()
 
 void ArticleSelectorCommandTest::TearDown()
 {
-    g_article_list = std::move(m_old_articles);
+    g_cache.article_list = std::move(m_old_articles);
     g_art_ptr_list = std::move(m_old_article_ptrs);
     g_art_ptr = m_old_art_ptr;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
-    g_first_cached = m_old_first_cached;
-    g_last_cached = m_old_last_cached;
+    g_cache.first_cached = m_old_first_cached;
+    g_cache.last_cached = m_old_last_cached;
     g_parsed_header.parsed_art = m_old_parsed_art;
     g_obj_count = m_old_obj_count;
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
     g_newsgroup_ptr = m_old_newsgroup;
     g_data_source = m_old_data_source;
-    g_cached_all_in_range = m_old_cached_all;
+    g_cache.cached_all_in_range = m_old_cached_all;
     g_threaded_group = m_old_threaded;
     g_thread_always = m_old_thread_always;
     g_sel.rereading = m_old_rereading;
@@ -2357,7 +2357,7 @@ void SelectorGroupedInputState::prepare_grouped(SelectionMode mode, bool rereadi
 {
     g_subject_count = 3;
     g_last_art = ArticleNum{5};
-    g_last_cached = g_last_art;
+    g_cache.last_cached = g_last_art;
     m_newsgroup.m_to_read = rereading ? 1 : 4;
     Article *root = article_ptr(ArticleNum{1});
     Article *same_subject = article_ptr(ArticleNum{2});
@@ -2449,7 +2449,7 @@ void SelectorGroupedInputState::sync_page()
 void SelectorGroupedInputState::expect_selected(const std::vector<long> &numbers, int subjects) const
 {
     std::vector<long> selected;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         if (article.m_flags & g_sel.mask)
         {
@@ -3519,14 +3519,14 @@ void SelectorNumericInputState::prepare_numeric(bool rereading, int page_size)
     g_sel.mask = rereading ? AGF_DEL_SEL : AGF_SEL;
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
     g_abs_first = ArticleNum{100};
     g_last_art = ArticleNum{100 + MAX_SEL};
     g_first_art = rereading ? article_after(g_last_art) : g_abs_first;
-    g_first_cached = g_abs_first;
-    g_last_cached = g_last_art;
+    g_cache.first_cached = g_abs_first;
+    g_cache.last_cached = g_last_art;
     m_subject = {};
     m_subject.m_str = "Re: Numeric selection";
     m_subject.m_thread_link = &m_subject;
@@ -5001,7 +5001,7 @@ void ArticleSelectorSortTest::TearDown()
 void ArticleSelectorSortTest::prepare_sort(SelectionMode mode, bool rereading, int direction)
 {
     const ArticleFlags selected = rereading ? AF_DEL_SEL : AF_SEL;
-    for (auto &[number, article] : g_article_list)
+    for (auto &[number, article] : g_cache.article_list)
     {
         article.m_flags = AF_EXISTS | AF_CACHED | AF_THREADED;
         if (!rereading)
@@ -5051,7 +5051,7 @@ std::vector<long> ArticleSelectorSortTest::displayed_order() const
 void ArticleSelectorSortTest::expect_selection_preserved(bool rereading) const
 {
     std::vector<long> selected;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         if (article.m_flags & g_sel.mask)
         {
@@ -5132,7 +5132,7 @@ void ArticleSelectorExclusiveStateTest::prepare_exclusive(SelectionMode mode, bo
 
 void ArticleSelectorExclusiveStateTest::clear_selections()
 {
-    for (auto &[number, article] : g_article_list)
+    for (auto &[number, article] : g_cache.article_list)
     {
         article.m_flags &= ~(AF_SEL | AF_DEL_SEL);
     }
@@ -5263,7 +5263,7 @@ void ArticleSelectorBulkStateTest::calculate_page()
 
 void ArticleSelectorBulkStateTest::select_all()
 {
-    for (auto &[number, article] : g_article_list)
+    for (auto &[number, article] : g_cache.article_list)
     {
         article.m_flags |= static_cast<ArticleFlags>(g_sel.mask);
     }
@@ -5297,7 +5297,7 @@ void ArticleSelectorBulkStateTest::expect_articles(std::initializer_list<long> u
 {
     std::vector<long> actual_unread;
     std::vector<long> actual_selected;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         if (article.m_flags & AF_UNREAD)
         {
@@ -5772,7 +5772,7 @@ TEST_P(ArticleSelectorModeTest, restoresMarkedReadArticlesBeforeShowingUnreadArt
 TEST_P(ArticleSelectorModeTest, retainsUnreadModeWhenReadArticleCachingIsInterrupted)
 {
     prepare_page(GetParam(), false);
-    g_cached_all_in_range = false;
+    g_cache.cached_all_in_range = false;
     // The current header is already parsed; interrupt the remaining cache work.
     g_parsed_header.parsed_art = ArticleNum{1};
     article_ptr(ArticleNum{1})->m_flags &= ~(AF_CACHED | AF_THREADED);
@@ -5785,8 +5785,8 @@ TEST_P(ArticleSelectorModeTest, retainsUnreadModeWhenReadArticleCachingIsInterru
     EXPECT_EQ(AGF_SEL, g_sel.mask);
     EXPECT_EQ(nullptr, g_sel_page.page_art);
     EXPECT_EQ(nullptr, g_sel_page.page_subj);
-    EXPECT_FALSE(g_cached_all_in_range);
-    EXPECT_LT(g_last_cached, g_last_art);
+    EXPECT_FALSE(g_cache.cached_all_in_range);
+    EXPECT_LT(g_cache.last_cached, g_last_art);
     EXPECT_EQ(0, g_int_count);
     EXPECT_EQ(2, m_newsgroup.m_to_read);
 }

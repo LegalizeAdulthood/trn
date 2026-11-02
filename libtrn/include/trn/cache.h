@@ -28,13 +28,21 @@ enum : bool
     FILL_CACHE = true
 };
 
-extern std::map<ArticleNum, Article> g_article_list;
+struct GroupArticleCache
+{
+    std::map<ArticleNum, Article> article_list;
+    ArticleNum                    first_cached{};
+    ArticleNum                    last_cached{};
+    bool                          cached_all_in_range{};
+    NewsgroupData                *cached_ng{};
+    std::time_t                   cached_time{};
+};
+
+extern GroupArticleCache g_cache;
+
 extern std::vector<Article *>        g_art_ptr_list; // the article-selector creates this
 extern Article                     **g_art_ptr;      // ditto -- used for article order
 extern ArticleNum                    g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
-extern ArticleNum                    g_first_cached;
-extern ArticleNum                    g_last_cached;
-extern bool                          g_cached_all_in_range;
 extern Article                      *g_sentinel_art_ptr;
 extern Subject                      *g_first_subject;
 extern Subject                      *g_last_subject;

@@ -39,13 +39,13 @@ protected:
     Subject m_subject{};
 
 private:
-    decltype(g_article_list) m_old_articles{std::move(g_article_list)};
+    decltype(g_cache.article_list) m_old_articles{std::move(g_cache.article_list)};
     decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
     Article                **m_old_art_ptr{g_art_ptr};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
-    ArticleNum               m_old_last_cached{g_last_cached};
+    ArticleNum                     m_old_last_cached{g_cache.last_cached};
     ArticleNum               m_old_obj_count{g_obj_count};
     Subject                 *m_old_first_subject{g_first_subject};
     Subject                 *m_old_last_subject{g_last_subject};
@@ -75,7 +75,7 @@ private:
 
 void ArticlePageStateTest::SetUp()
 {
-    g_article_list.clear();
+    g_cache.article_list.clear();
     g_art_ptr_list.clear();
     g_art_ptr = nullptr;
     g_abs_first = ArticleNum{1};
@@ -101,13 +101,13 @@ void ArticlePageStateTest::SetUp()
 
 void ArticlePageStateTest::TearDown()
 {
-    g_article_list = std::move(m_old_articles);
+    g_cache.article_list = std::move(m_old_articles);
     g_art_ptr_list = std::move(m_old_article_ptrs);
     g_art_ptr = m_old_art_ptr;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
-    g_last_cached = m_old_last_cached;
+    g_cache.last_cached = m_old_last_cached;
     g_obj_count = m_old_obj_count;
     g_first_subject = m_old_first_subject;
     g_last_subject = m_old_last_subject;
@@ -159,7 +159,7 @@ void ArticlePageStateTest::prepare_articles(bool rereading, std::initializer_lis
         previous = article;
     }
     g_last_art = ArticleNum{number};
-    g_last_cached = g_last_art;
+    g_cache.last_cached = g_last_art;
     count_subjects(CS_UNSEL_STORE);
 }
 
@@ -176,7 +176,7 @@ std::vector<long> ArticlePageStateTest::article_numbers() const
 std::vector<long> ArticlePageStateTest::articles_with_flag(ArticleFlags flag) const
 {
     std::vector<long> result;
-    for (const auto &[number, article] : g_article_list)
+    for (const auto &[number, article] : g_cache.article_list)
     {
         if (article.m_flags & flag)
         {
@@ -716,7 +716,7 @@ void SubjectPageDisplayState::prepare_subjects(bool rereading, char mode, std::i
     g_first_subject = rows.size() ? &m_subject : nullptr;
     g_last_subject = previous;
     g_last_art = ArticleNum{number};
-    g_last_cached = g_last_art;
+    g_cache.last_cached = g_last_art;
     rebuild_page();
 }
 

@@ -36,7 +36,7 @@ protected:
     void SetUp() override
     {
         m_old_current_path = fs::current_path();
-        m_old_article_list = std::move(g_article_list);
+        m_old_article_list = std::move(g_cache.article_list);
         m_old_data_source = g_data_source;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_abs_first = g_abs_first;
@@ -70,7 +70,7 @@ protected:
         fs::current_path(m_output_dir, error);
         ASSERT_FALSE(error) << error.message();
 
-        g_article_list.clear();
+        g_cache.article_list.clear();
         g_data_source = &m_data_source;
         g_newsgroup_ptr = &m_group;
         g_abs_first = ArticleNum{1};
@@ -108,7 +108,7 @@ protected:
         fs::current_path(m_old_current_path, error);
         fs::remove_all(m_output_dir, error);
 
-        g_article_list = std::move(m_old_article_list);
+        g_cache.article_list = std::move(m_old_article_list);
         g_data_source = m_old_data_source;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_abs_first = m_old_abs_first;
