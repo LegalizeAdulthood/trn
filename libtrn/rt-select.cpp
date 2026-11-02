@@ -235,7 +235,6 @@ static bool                select_option(OptionIndex i);
 static void                sel_cleanup();
 static bool                mark_del_as_read(Article &article, int arg);
 static bool                sel_perform_change(long cnt, std::string_view obj_type);
-static char                another_command(char_int ch);
 static DisplayState        add_group_commands(char_int ch);
 static DisplayState        unsubscribed_group_commands(char_int ch);
 static DisplayState        multirc_commands(char_int ch);
@@ -1038,7 +1037,7 @@ do_group:
     }
     else if (std::holds_alternative<HelpLocation>(ui->m_data))
     {
-        if (another_command(univ_key_help(ui->help_location())))
+        if (g_sel_session.another_command(univ_key_help(ui->help_location())))
         {
             g_pushback.push(g_sel_session.ret | 0200);
         }
@@ -2384,7 +2383,7 @@ do_command:
                 return DS_ASK;
             }
         }
-        ch = another_command(1);
+        ch = g_sel_session.another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2395,7 +2394,7 @@ do_command:
     case 'v':
         newline();
         trn_version();
-        ch = another_command(1);
+        ch = g_sel_session.another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2428,7 +2427,7 @@ do_command:
             erase_line(false);
             break;
         }
-        ch = another_command(1);
+        ch = g_sel_session.another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2457,7 +2456,7 @@ the_default:
             return DS_STATUS;
         }
         fmt::print("\n{}\n", g_msg);
-        ch = another_command(1);
+        ch = g_sel_session.another_command(1);
         if (ch != '\0')
         {
             goto do_command;
@@ -2652,16 +2651,18 @@ static constexpr std::string_view SPECIAL_CMD_LETTERS{R"(<+>^$!?&:/\hDEJLNOPqQRS
 /// This function reads a single character from the user (or from the input buffer),
 /// determines if it is a special selector command or a selection character, and
 /// processes it accordingly. If the command is recognized as a special command,
-/// it sets `g_sel_session.ret` and returns the character; otherwise, it pushes the character
+/// it sets `ret` and returns the character; otherwise, it pushes the character
 /// for later processing and returns '\0'.
 ///
 /// @param ch The initial command character or indicator for input (may be 0 or 1 to trigger input).
 /// @return The processed command character if handled, or '\0' if deferred.
 ///
 /// @globals
-/// - g_sel_session.ret: Set to the recognized special command character.
+/// - g_sel_page.chars: Read to distinguish selection characters.
+/// - g_pushback: Receives deferred command input.
+/// - Follow-up input retains read_tty_char/pause_get_cmd side effects.
 ///
-static char another_command(char_int ch)
+char SelectorSession::another_command(char_int ch)
 {
     bool skip_q = !ch;
     if (ch < 0)
@@ -2677,7 +2678,7 @@ static char another_command(char_int ch)
             if (g_sel_page.chars.find(static_cast<char>(ch)) == std::string::npos //
                 && (SPECIAL_CMD_LETTERS.find(static_cast<char>(ch)) != std::string_view::npos || ch == Ctl('k')))
             {
-                g_sel_session.ret = ch;
+                ret = ch;
                 return ch;
             }
             g_pushback.push(ch | 0200);
@@ -3219,7 +3220,7 @@ reask_sort:
                 return DS_DISPLAY;
             }
         }
-        if (another_command(1))
+        if (g_sel_session.another_command(1))
         {
             return DS_DO_COMMAND;
         }
@@ -3260,7 +3261,7 @@ reask_sort:
 
     case 'H':
         newline();
-        if (another_command(help_article_selector()))
+        if (g_sel_session.another_command(help_article_selector()))
         {
             return DS_DO_COMMAND;
         }
@@ -3562,7 +3563,7 @@ reask_sort:
                 return DS_DISPLAY;
             }
         }
-        if (another_command(1))
+        if (g_sel_session.another_command(1))
         {
             return DS_DO_COMMAND;
         }
@@ -3609,7 +3610,7 @@ reask_sort:
 
     case 'H':
         newline();
-        if (another_command(help_newsgroup_selector()))
+        if (g_sel_session.another_command(help_newsgroup_selector()))
         {
             return DS_DO_COMMAND;
         }
@@ -3723,7 +3724,7 @@ reask_sort:
             return DS_ASK;
         }
         newline();
-        if (another_command(1))
+        if (g_sel_session.another_command(1))
         {
             return DS_DO_COMMAND;
         }
@@ -3964,7 +3965,7 @@ reask_sort:
                 return DS_DISPLAY;
             }
         }
-        if (another_command(1))
+        if (g_sel_session.another_command(1))
         {
             return DS_DO_COMMAND;
         }
@@ -3978,7 +3979,7 @@ reask_sort:
 
     case 'H':
         newline();
-        if (another_command(help_add_group_selector()))
+        if (g_sel_session.another_command(help_add_group_selector()))
         {
             return DS_DO_COMMAND;
         }
@@ -4033,7 +4034,7 @@ static DisplayState unsubscribed_group_commands(char_int ch)
     case 'h':
     case '?':
         newline();
-        if (another_command(help_add_group_selector()))
+        if (g_sel_session.another_command(help_add_group_selector()))
         {
             return DS_DO_COMMAND;
         }
@@ -4089,7 +4090,7 @@ static DisplayState multirc_commands(char_int ch)
 
     case 'H':
         newline();
-        if (another_command(help_multirc()))
+        if (g_sel_session.another_command(help_multirc()))
         {
             return DS_DO_COMMAND;
         }
@@ -4207,7 +4208,7 @@ static DisplayState option_commands(char_int ch)
 
     case 'H':
         newline();
-        if (another_command(help_options()))
+        if (g_sel_session.another_command(help_options()))
         {
             return DS_DO_COMMAND;
         }
@@ -4281,7 +4282,7 @@ static DisplayState universal_commands(char_int ch)
 
     case 'H':
         newline();
-        if (another_command(help_univ()))
+        if (g_sel_session.another_command(help_univ()))
         {
             return DS_DO_COMMAND;
         }

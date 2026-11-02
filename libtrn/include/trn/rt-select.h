@@ -101,6 +101,9 @@ struct SelectorSession
     RemovedPrompt    removed_prompt{};
     int              force_pos{};
     SelectorCommand *extra_commands{};
+
+    // TODO: private
+    char another_command(char_int ch);
 };
 
 extern SelectorSession   g_sel_session;
