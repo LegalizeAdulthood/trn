@@ -68,7 +68,6 @@ ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
 
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
-static bool        sf_do_command(std::string_view cmd, bool check);
 static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
 static std::string sf_missing_score(std::string_view line);
@@ -374,7 +373,7 @@ static std::string sf_cmd_fname(std::string_view s)
 }
 
 // returns true if good command, false otherwise
-static bool sf_do_command(std::string_view cmd, bool check)
+bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
 {
     const std::size_t      command_end = cmd.find_first_of(" \t=");
     const std::string_view command = cmd.substr(0, command_end);
@@ -515,7 +514,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
             fmt::print("Bad file command (missing parameters)\n");
             return false;
         }
-        g_score_compiler.abbr[static_cast<unsigned char>(abbreviation)] = sf_cmd_fname(argument);
+        abbr[static_cast<unsigned char>(abbreviation)] = sf_cmd_fname(argument);
         return true;
     }
     if (command == "newsclip")
@@ -572,7 +571,7 @@ static bool sf_do_line(std::string_view line, bool check)
 
     if (std::isalpha(static_cast<unsigned char>(ch))) // command line
     {
-        return sf_do_command(line, check);
+        return g_score_compiler.do_command(line, check);
     }
 
     // skip whitespace
