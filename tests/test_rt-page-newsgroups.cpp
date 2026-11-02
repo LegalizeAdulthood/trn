@@ -564,7 +564,7 @@ void NewsgroupSelectorCatchupStateTest::SetUp()
     g_recent_newsgroup = nullptr;
     g_newsgroup_name.clear();
     g_newsgroup_dir.clear();
-    push_char('Q');
+    g_pushback.push('Q');
 }
 
 void NewsgroupSelectorCatchupStateTest::TearDown()
@@ -1310,7 +1310,7 @@ DisplayState NewsgroupSelectorSearchStateTest::run_search(std::string_view input
     const std::string command = std::string{input} + "\n\n";
     for (auto ch = command.rbegin(); ch != command.rend(); ++ch)
     {
-        push_char(static_cast<unsigned char>(*ch) | 0200);
+        g_pushback.push(static_cast<unsigned char>(*ch) | 0200);
     }
     return run_command('/');
 }
@@ -1497,7 +1497,7 @@ DisplayState NewsgroupSelectorRecoveryStateTest::run_prompt(char command, std::s
 {
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(static_cast<unsigned char>(*ch) | 0200);
+        g_pushback.push(static_cast<unsigned char>(*ch) | 0200);
     }
     return run_command(command);
 }

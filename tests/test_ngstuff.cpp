@@ -247,7 +247,7 @@ TEST_F(SwitcherooMacroTest, definesMacroFromCommandText)
     const bool result = switcheroo(command);
 
     EXPECT_FALSE(result);
-    push_char('~');
+    g_pushback.push('~');
     const std::string expanded_command = get_cmd();
     EXPECT_EQ('z', expanded_command[0]);
     EXPECT_EQ(FINISH_CMD, expanded_command[1]);
@@ -267,7 +267,7 @@ TEST_F(PerformExpansionTest, splitsSwitcherooCommandBeforeContinuingAfterColon)
 
     EXPECT_EQ(-1, result);
     EXPECT_EQ("Unknown command: Z", g_msg);
-    push_char('~');
+    g_pushback.push('~');
     const std::string expanded_command = get_cmd();
     EXPECT_EQ(':', expanded_command[0]);
     EXPECT_EQ(FINISH_CMD, expanded_command[1]);

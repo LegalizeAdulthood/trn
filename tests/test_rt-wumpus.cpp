@@ -351,7 +351,7 @@ void ThreadTreeArticleTest::TearDown()
     }
     for (auto ch = m_old_typeahead.rbegin(); ch != m_old_typeahead.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     g_nav.target = m_old_target;
     g_nav.current.num = m_old_curr_art;
@@ -403,10 +403,10 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
     const bool                             selected_only = g_sel.selected_only;
     const MinorMode                        mode = g_mode;
     const char                             interrupts = g_int_count;
-    push_char('q');
+    g_pushback.push('q');
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 

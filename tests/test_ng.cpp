@@ -279,7 +279,7 @@ void UnreadScopeArticleTest::TearDown()
     }
     for (auto ch = m_old_typeahead.rbegin(); ch != m_old_typeahead.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     g_selected_subj_cnt = m_old_selected_subj_cnt;
     g_sel.rereading = m_old_sel_rereading;
@@ -336,7 +336,7 @@ void UnreadScopeArticleTest::set_scope(std::initializer_list<ArticleFlags> flags
 
 std::string UnreadScopeArticleTest::mark_unread(char scope, ArticleSwitchResult expected)
 {
-    push_char(scope);
+    g_pushback.push(scope);
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch("U");
@@ -416,8 +416,8 @@ std::string ScopeSelectionArticleTest::change_scope(char action, long target, Ar
     const ArticleLocation recent = g_nav.recent;
     const ArticleUnread unread = m_newsgroup.m_to_read;
     const ArticleNum    first = g_first_art;
-    push_char('n');
-    push_char(action);
+    g_pushback.push('n');
+    g_pushback.push(action);
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::string{'_', FINISH_CMD});
@@ -591,7 +591,7 @@ std::string ThreadKillArticleTest::kill_articles(std::string command, ArticleSwi
     const ArticleLocation article = g_nav.target;
     const ArticleLocation current = g_nav.current;
     const ArticleLocation recent = g_nav.recent;
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::move(command));
@@ -672,8 +672,8 @@ std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult 
     const bool          follow = g_sa_follow;
     const bool          temporary_follow = g_s_follow_temp;
     const ArticleNum    first = g_first_art;
-    push_char('n');
-    push_char(action);
+    g_pushback.push('n');
+    g_pushback.push(action);
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::string{'_', FINISH_CMD});
@@ -761,7 +761,7 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
     const bool          temporary_follow = g_s_follow_temp;
     const bool          reread = g_reread;
     const bool          force_last = g_force_last;
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch("Y");
@@ -910,10 +910,10 @@ std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchRe
     const bool threaded = g_threaded_group;
     const bool breadth_first = g_breadth_first;
     const bool scan = g_sa_in;
-    push_char('Q');
+    g_pushback.push('Q');
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 
@@ -1093,11 +1093,11 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     {
         flags.emplace_back(number, article.m_flags);
     }
-    push_char('Q');
+    g_pushback.push('Q');
     const std::string_view suffix = input.substr(1);
     for (auto ch = suffix.rbegin(); ch != suffix.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 
@@ -1213,11 +1213,11 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     {
         m_before_flags.emplace_back(number.value_of(), entry.m_flags);
     }
-    push_char('Q');
+    g_pushback.push('Q');
     const std::string_view suffix = input.substr(1);
     for (auto ch = suffix.rbegin(); ch != suffix.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 
@@ -1402,7 +1402,7 @@ std::string UnsubscribeArticleTest::unsubscribe()
     {
         flags.emplace_back(number, entry.m_flags);
     }
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::string{'u', FINISH_CMD});
@@ -1649,7 +1649,7 @@ void QuitCommandArticleTest::SetUp()
         g_mode = MM_ARTICLE_END;
     }
     g_newsgroup_exit_code = NG_MINUS;
-    push_char('n');
+    g_pushback.push('n');
 }
 
 void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupResult expected)
@@ -1753,7 +1753,7 @@ protected:
 void DefaultLineEndingArticleTest::SetUp()
 {
     DefaultCommandArticleTest::SetUp();
-    push_char('q');
+    g_pushback.push('q');
 }
 
 class SelectorDefaultReturnArticleTest : public DefaultCommandArticleTest,
@@ -1771,7 +1771,7 @@ void SelectorDefaultReturnArticleTest::SetUp()
     g_univ_read_virt_flag = universal;
     g_search_ahead = ArticleNum{std::get<1>(GetParam())};
     set_default_cmd();
-    push_char('n');
+    g_pushback.push('n');
 }
 
 class ScanContinuationArticleTest : public UnreadScopeArticleTest
@@ -1883,7 +1883,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     {
         subject_flags.push_back(subject.m_flags);
     }
-    push_char('q');
+    g_pushback.push('q');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::move(command));
@@ -2161,7 +2161,7 @@ std::string SearchCommandArticleTest::enter_search(char direction, std::string_v
     }
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     capture_output();
 
@@ -2358,12 +2358,12 @@ std::string SearchActionArticleTest::perform_search(std::string_view command, Ar
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
     const ArticleNum                       parsed = g_parsed_header.parsed_art;
-    push_char('q');
-    push_char('\n');
+    g_pushback.push('q');
+    g_pushback.push('\n');
     const std::string_view input = command.substr(1);
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 
@@ -2496,7 +2496,7 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     {
         subject_flags.push_back(subject.m_flags);
     }
-    push_char('q');
+    g_pushback.push('q');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::string{command}, progress);
@@ -2687,7 +2687,7 @@ std::string KillSubjectArticleTest::kill_subject(ArticleSwitchResult expected, l
 {
     const ArticleLocation current = g_nav.current;
     const ArticleLocation recent = g_nav.recent;
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::move(command), progress);
@@ -2768,10 +2768,10 @@ std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, Article
     const ArticleLocation                  recent = g_nav.recent;
     const std::vector<Article *>           order = g_art_ptr_list;
     Article **const                        cursor = g_art_ptr;
-    push_char('n');
+    g_pushback.push('n');
     for (auto it = input.rbegin(); it != input.rend(); ++it)
     {
-        push_char(*it);
+        g_pushback.push(*it);
     }
     testing::internal::CaptureStdout();
 
@@ -2974,10 +2974,10 @@ std::string MemorizeArticleTest::memorize(char command, std::string_view replies
     const ArticleLocation article = g_nav.target;
     const ArticleLocation current = g_nav.current;
     const ArticleLocation recent = g_nav.recent;
-    push_char('n');
+    g_pushback.push('n');
     for (auto it = replies.rbegin(); it != replies.rend(); ++it)
     {
-        push_char(*it);
+        g_pushback.push(*it);
     }
     testing::internal::CaptureStdout();
 
@@ -3999,10 +3999,10 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     {
         subjects.push_back(subject.m_flags);
     }
-    push_char('Q');
+    g_pushback.push('Q');
     if (typed_second)
     {
-        push_char(typed_second);
+        g_pushback.push(typed_second);
     }
     testing::internal::CaptureStdout();
 
@@ -5070,10 +5070,10 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
     {
         subject_flags.push_back(subject.m_flags);
     }
-    push_char('q');
+    g_pushback.push('q');
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 
@@ -5683,10 +5683,10 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     {
         subject_flags.push_back(subject.m_flags);
     }
-    push_char('q');
+    g_pushback.push('q');
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(*ch);
+        g_pushback.push(*ch);
     }
     testing::internal::CaptureStdout();
 
@@ -5746,7 +5746,7 @@ TEST_F(SelectorEntryArticleTest, retainsTheChosenArticleAndSelectionWhenReturnin
     g_nav.recent.art = article_ptr(g_nav.recent.num);
     g_reread = true;
     g_force_last = true;
-    push_char('n');
+    g_pushback.push('n');
 
     const std::string output = run_selector(
         [&](char_int)
@@ -5943,7 +5943,7 @@ TEST_P(SelectorGroupExitArticleTest, leavesForTheRequestedGroupDestinationWithou
     g_search_ahead = ArticleNum{2};
     g_reread = true;
     g_force_last = true;
-    push_char('n');
+    g_pushback.push('n');
 
     const std::string output = run_selector([&](char_int) { return GetParam().first; }, AS_CLEAN, GetParam().second);
 
@@ -6000,7 +6000,7 @@ TEST_F(SelectorExitArticleTest, groupExitAtExhaustionRetainsTheEndPositionAndExi
 TEST_F(SelectorExitArticleTest, scanReturnRequestsExplicitSelectedThreadScanningForTheChosenArticle)
 {
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
-    push_char('n');
+    g_pushback.push('n');
 
     const std::string output = run_selector(
         [&](char_int)
@@ -6052,8 +6052,8 @@ TEST_P(SelectorModeShortcutArticleTest, typedShortcutForwardsTheRequestedUnreadV
     set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD}, 2);
     g_first_art = ArticleNum{2};
     g_sel.mode = SM_THREAD;
-    push_char('n');
-    push_char(GetParam());
+    g_pushback.push('n');
+    g_pushback.push(GetParam());
 
     const std::string output = run_selector(
         std::string{'_', FINISH_CMD}, GetParam(),
@@ -6101,7 +6101,7 @@ TEST_F(AlternateSelectorArticleTest, completedShortcutCancellationPreservesReadi
     g_search_ahead = ArticleNum{3};
     g_reread = true;
     g_force_last = true;
-    push_char('n');
+    g_pushback.push('n');
 
     run_selector("_s", 's', [](char_int) { return '+'; }, AS_ASK);
 
@@ -6128,8 +6128,8 @@ TEST_F(AlternateSelectorArticleTest, readSelectorCanReturnARevivedArticleFromAnE
 {
     set_articles({AF_EXISTS, AF_EXISTS, AF_EXISTS}, 4);
     g_first_art = ArticleNum{4};
-    push_char('n');
-    push_char('+');
+    g_pushback.push('n');
+    g_pushback.push('+');
 
     const std::string output = run_selector(
         "U", 'U',
@@ -6169,8 +6169,8 @@ TEST_P(ReadSelectorPromptArticleTest, explicitOrDefaultSelectionCancellationPres
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
     g_first_subject->m_flags |= SF_SEL;
-    push_char('n');
-    push_char(GetParam());
+    g_pushback.push('n');
+    g_pushback.push(GetParam());
 
     const std::string output = run_selector("U", 'U', [](char_int) { return '+'; }, AS_ASK);
 
@@ -6198,8 +6198,8 @@ TEST_P(CancelSelectorPrefixArticleTest, erasingOrKillingThePrefixNeverEntersTheS
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
     g_first_subject->m_flags |= SF_SEL;
-    push_char('n');
-    push_char(GetParam());
+    g_pushback.push('n');
+    g_pushback.push(GetParam());
     int calls = 0;
     testing::internal::CaptureStdout();
 
@@ -7670,7 +7670,7 @@ TEST_P(RestoreScopeArticleTest, restoresTheDelayedScopeAndEarlierPendingArticles
 {
     set_thread(2);
     article_ptr(ArticleNum{1})->one_less();
-    push_char(GetParam());
+    g_pushback.push(GetParam());
     testing::internal::CaptureStdout();
     EXPECT_EQ(AS_NORM, art_switch(std::string{'_', FINISH_CMD}));
     (void) testing::internal::GetCapturedStdout();
@@ -10721,7 +10721,7 @@ TEST_F(GroupUnreadArticleTest, restoresGroupFromEndAfterShowingGroupHelp)
     set_scope({AF_NONE, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE, AF_EXISTS, AF_EXISTS}, 8);
     g_first_art = ArticleNum{3};
     g_verbose = true;
-    push_char('a');
+    g_pushback.push('a');
 
     const std::string output = mark_unread('h');
 
@@ -10798,7 +10798,7 @@ TEST_F(GroupUnreadArticleTest, helpThenCancelPreservesReadState)
     set_scope({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE, AF_EXISTS, AF_EXISTS, AF_EXISTS}, 3);
     g_first_art = ArticleNum{2};
     g_obj_count = ArticleNum{1};
-    push_char('n');
+    g_pushback.push('n');
 
     const std::string output = mark_unread('h', AS_ASK);
 
@@ -11831,7 +11831,7 @@ TEST_F(SearchCommandArticleTest, erasingInitialDelimiterCancelsAndPreservesNextC
     set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
                          AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
                         3);
-    push_char('n');
+    g_pushback.push('n');
 
     const std::string output = enter_search('/', "\b", AS_INP);
 
@@ -11853,7 +11853,7 @@ TEST_F(SearchCommandArticleTest, lineKillCancelsPartialSearchAtGroupEndAndRetain
     ASSERT_EQ(ArticleNum{6}, g_nav.target.num);
     g_nav.target.num = g_nav.current.num = ArticleNum{8};
     g_nav.target.art = g_nav.current.art = nullptr;
-    push_char('p');
+    g_pushback.push('p');
 
     const std::string output = enter_search('?', std::string{"unfinished"} + Ctl('U'), AS_INP);
 
@@ -11873,7 +11873,7 @@ TEST_F(SearchCommandArticleTest, erasingWholePatternCancelsWithoutCompilingOrCon
     set_search_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_NONE,
                          AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD},
                         3);
-    push_char('n');
+    g_pushback.push('n');
 
     const std::string output = enter_search('?', "needle\b\b\b\b\b\b\b", AS_INP);
 
@@ -13091,8 +13091,8 @@ TEST_F(ScanContinuationArticleTest, nonThreadedReadingDoesNotApplyTheThreadedSca
 TEST_F(DefaultCommandArticleTest, spaceExecutesOneDefaultAndLeavesLaterCommandsForTheirOwnDispatch)
 {
     ASSERT_EQ("npq", g_default_cmd);
-    push_char('Q');
-    push_char('n');
+    g_pushback.push('Q');
+    g_pushback.push('n');
 
     EXPECT_EQ(AS_NORM, art_switch(" "));
 
@@ -13137,7 +13137,7 @@ TEST_F(DefaultCommandArticleTest, caretDefaultDispatchesTheControlCommandWithout
     g_search_ahead = ArticleNum{1};
     set_default_cmd();
     ASSERT_EQ("^Nnpq", g_default_cmd);
-    push_char('q');
+    g_pushback.push('q');
 
     EXPECT_EQ(AS_NORM, art_switch(" "));
 
@@ -13175,7 +13175,7 @@ TEST_F(DefaultCommandArticleTest, explicitNextOverridesSelectorReturnAndLaterDef
     g_sel.mode = SM_SUBJECT;
     g_s_default_cmd = true;
     g_univ_default_cmd = true;
-    push_char('q');
+    g_pushback.push('q');
 
     EXPECT_EQ(AS_NORM, art_switch("n"));
 
@@ -13197,7 +13197,7 @@ TEST_F(DefaultCommandArticleTest, explicitNextOverridesSelectorReturnAndLaterDef
 
 TEST_F(DefaultCommandArticleTest, repeatedDefaultInputUsesTheCurrentConfigurationOnceEachTime)
 {
-    push_char('n');
+    g_pushback.push('n');
     EXPECT_EQ(AS_NORM, art_switch(" "));
     expect_position(2);
     g_default_cmd = "Qnpq";
@@ -13223,7 +13223,7 @@ TEST_F(DefaultCommandArticleTest, defaultAtAnExhaustedGroupPreservesTheEndPositi
     }
     set_default_cmd();
     ASSERT_EQ("npq", g_default_cmd);
-    push_char('Q');
+    g_pushback.push('Q');
 
     EXPECT_EQ(AS_CLEAN, art_switch(" "));
 

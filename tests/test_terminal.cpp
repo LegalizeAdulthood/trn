@@ -414,7 +414,7 @@ TEST_F(TerminalTest, getCommandExpandsMacroString)
 {
     set_macro("~", "z");
 
-    push_char('~');
+    g_pushback.push('~');
     const std::string command = get_cmd();
 
     ASSERT_EQ(2, command.size());
@@ -458,7 +458,7 @@ TEST_F(TerminalTest, macLineParsesExpandedKey)
 
     mac_line(line);
 
-    push_char('\002');
+    g_pushback.push('\002');
     const std::string command = get_cmd();
 
     EXPECT_EQ('q', command[0]);
@@ -475,7 +475,7 @@ TEST_F(MacroFileInitTest, termSetLoadsMacroFile)
     term_init();
     term_set(tcbuf);
 
-    push_char('\004');
+    g_pushback.push('\004');
     const std::string command = get_cmd();
 
     EXPECT_EQ('y', command[0]);
@@ -521,7 +521,7 @@ TEST_F(TerminalTest, saveTypeaheadCopiesPendingInput)
 
 TEST_F(TerminalTest, pauseGetCommandReturnsPushedCommand)
 {
-    push_char('x');
+    g_pushback.push('x');
 
     testing::internal::CaptureStdout();
     const int command = pause_get_cmd();
@@ -552,7 +552,7 @@ TEST_F(TerminalTest, inCharPrintsPromptDefaultAndReturnsInput)
 {
     const std::string prompt{"Continue?"};
     const std::string dflt{"yn"};
-    push_char('y');
+    g_pushback.push('y');
 
     testing::internal::CaptureStdout();
     const std::string command = in_char(prompt, MM_ADD_NEWSGROUP_PROMPT, dflt);
@@ -568,7 +568,7 @@ TEST_F(TerminalTest, inCharCountsPromptNewlinesAndAppliesDefault)
 {
     g_term_line = 4;
     g_term_col = 12;
-    push_char(' ');
+    g_pushback.push(' ');
 
     testing::internal::CaptureStdout();
     const std::string command = in_char("First\nSecond", MM_ADD_NEWSGROUP_PROMPT, "^N");
@@ -587,8 +587,8 @@ TEST_F(TerminalTest, inAnswerPrintsPromptAndReturnsCommand)
     g_term_line = 4;
     g_term_col = 12;
     const std::string prompt{"Really? "};
-    push_char('\n');
-    push_char('y');
+    g_pushback.push('\n');
+    g_pushback.push('y');
 
     testing::internal::CaptureStdout();
     const std::string command = in_answer(prompt, MM_FOLLOWUP_NEW_TOPIC_PROMPT);
@@ -653,8 +653,8 @@ TEST_F(MacroDisplayTest, printLinesUsesStringViewExtent)
 
 TEST_F(ChoiceInputTest, inChoiceCyclesToNextValue)
 {
-    push_char('\n');
-    push_char(' ');
+    g_pushback.push('\n');
+    g_pushback.push(' ');
 
     testing::internal::CaptureStdout();
     std::string       value{"yes"};
@@ -668,8 +668,8 @@ TEST_F(ChoiceInputTest, inChoiceCyclesToNextValue)
 
 TEST_F(ChoiceInputTest, inChoiceCyclesValueWithinPrefix)
 {
-    push_char('\n');
-    push_char(' ');
+    g_pushback.push('\n');
+    g_pushback.push(' ');
 
     testing::internal::CaptureStdout();
     std::string value{"reverse date"};
@@ -684,7 +684,7 @@ TEST_F(ChoiceInputTest, inChoiceCyclesValueWithinPrefix)
 
 TEST_F(ChoiceInputTest, inChoicePreservesNumericValue)
 {
-    push_char('\n');
+    g_pushback.push('\n');
 
     testing::internal::CaptureStdout();
     std::string       value{"12"};
@@ -698,7 +698,7 @@ TEST_F(ChoiceInputTest, inChoicePreservesNumericValue)
 
 TEST_F(ChoiceInputTest, inChoiceDoesNotSplitSlashInsideFreeFormValue)
 {
-    push_char('\n');
+    g_pushback.push('\n');
 
     testing::internal::CaptureStdout();
     std::string       value{"a/b"};
@@ -715,9 +715,9 @@ TEST_F(ChoiceInputTest, inChoiceEscapeEscapeInterpolatesWholeBuffer)
     g_art_search.last_pat = "needle";
     g_art_search.do_read = false;
     g_art_search.how_much = ARTSCOPE_SUBJECT;
-    push_char('\n');
-    push_char('\033');
-    push_char('\033');
+    g_pushback.push('\n');
+    g_pushback.push('\033');
+    g_pushback.push('\033');
 
     testing::internal::CaptureStdout();
     std::string value{"%/"};
@@ -732,9 +732,9 @@ TEST_F(ChoiceInputTest, inChoiceEscapeSlashInsertsSearchPattern)
     g_art_search.last_pat = "needle";
     g_art_search.do_read = false;
     g_art_search.how_much = ARTSCOPE_SUBJECT;
-    push_char('\n');
-    push_char('/');
-    push_char('\033');
+    g_pushback.push('\n');
+    g_pushback.push('/');
+    g_pushback.push('\033');
 
     testing::internal::CaptureStdout();
     std::string value{"prefix"};

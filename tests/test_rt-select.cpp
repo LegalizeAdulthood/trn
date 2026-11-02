@@ -711,7 +711,7 @@ INSTANTIATE_TEST_SUITE_P(NextPreviousAndScan, SelectorCallbackQuitTest, testing:
 
 TEST_F(SelectorCallbackTest, unknownCommandOnACleanScreenReturnsAHelpStatus)
 {
-    push_char('x' | 0200);
+    g_pushback.push('x' | 0200);
 
     const DisplayState result = dispatch('%');
 
@@ -927,7 +927,7 @@ char SelectorEscapedArticleTest::run_escaped_input(std::string_view commands)
     const std::string input = std::string(commands) + 'q';
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(static_cast<unsigned char>(*ch) | 0200);
+        g_pushback.push(static_cast<unsigned char>(*ch) | 0200);
     }
     g_in_ng = true;
     testing::internal::CaptureStdout();
@@ -5552,7 +5552,7 @@ class ArticleSelectorSearchCancelTest : public ArticleSelectorSearchStateTest,
 
 TEST_F(SelectorCommandInputTest, readsCommandText)
 {
-    push_char('x');
+    g_pushback.push('x');
 
     const std::string command = read_selector_command_for_test('>', 'Z', false);
 
@@ -5565,7 +5565,7 @@ TEST_F(SelectorCommandInputTest, readsCommandText)
 
 TEST_F(SelectorCommandInputTest, readsPageDefaultCommand)
 {
-    push_char(' ');
+    g_pushback.push(' ');
 
     const std::string command = read_selector_command_for_test('>', 'Z', false);
 
@@ -5578,7 +5578,7 @@ TEST_F(SelectorCommandInputTest, readsPageDefaultCommand)
 
 TEST_F(SelectorCommandInputTest, readsEndDefaultCommand)
 {
-    push_char(' ');
+    g_pushback.push(' ');
 
     const std::string command = read_selector_command_for_test('>', 'Z', true);
 
@@ -5591,49 +5591,49 @@ TEST_F(SelectorCommandInputTest, readsEndDefaultCommand)
 
 TEST_F(SelectorCommandInputTest, readsEscapedCommandCharacter)
 {
-    push_char('x');
+    g_pushback.push('x');
 
     EXPECT_EQ('x', read_selector_escaped_command_for_test());
 }
 
 TEST_F(SelectorCommandInputTest, readsEscapedDefaultCommandCharacter)
 {
-    push_char('\\');
+    g_pushback.push('\\');
 
     EXPECT_EQ('\\', read_selector_escaped_command_for_test());
 }
 
 TEST_F(SelectorCommandInputTest, readsEscapedBlankCommandCharacter)
 {
-    push_char(' ');
+    g_pushback.push(' ');
 
     EXPECT_EQ(' ', read_selector_escaped_command_for_test());
 }
 
 TEST_F(SelectorCommandInputTest, readsNumericContinuationDigit)
 {
-    push_char('7');
+    g_pushback.push('7');
 
     EXPECT_EQ('7', read_selector_numeric_continuation_for_test());
 }
 
 TEST_F(SelectorCommandInputTest, readsNumericContinuationEraseCharacter)
 {
-    push_char(g_erase_char);
+    g_pushback.push(g_erase_char);
 
     EXPECT_EQ(g_erase_char, read_selector_numeric_continuation_for_test());
 }
 
 TEST_F(SelectorCommandInputTest, readsNumericContinuationKillCharacter)
 {
-    push_char(g_kill_char);
+    g_pushback.push(g_kill_char);
 
     EXPECT_EQ(g_kill_char, read_selector_numeric_continuation_for_test());
 }
 
 TEST_F(SelectorCommandInputTest, readsPromptCommandText)
 {
-    push_char('s');
+    g_pushback.push('s');
 
     testing::internal::CaptureStdout();
     const std::string command =
@@ -5649,7 +5649,7 @@ TEST_F(SelectorCommandInputTest, readsPromptCommandText)
 
 TEST_F(SelectorCommandInputTest, readsPromptDefaultCommand)
 {
-    push_char(' ');
+    g_pushback.push(' ');
 
     testing::internal::CaptureStdout();
     const std::string command =
@@ -5665,7 +5665,7 @@ TEST_F(SelectorCommandInputTest, readsPromptDefaultCommand)
 
 TEST_F(SelectorCommandInputTest, readsFollowupCommandText)
 {
-    push_char('x');
+    g_pushback.push('x');
 
     EXPECT_EQ('x', read_selector_followup_command_for_test(2));
 }

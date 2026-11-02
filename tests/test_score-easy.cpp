@@ -59,7 +59,7 @@ protected:
 
 TEST_F(ScoreEasyTest, appendExitReturnsEmptyString)
 {
-    push_char('0');
+    g_pushback.push('0');
 
     testing::internal::CaptureStdout();
     const std::string line = sc_easy_append();
@@ -80,9 +80,9 @@ TEST_F(ScoreEasyTest, appendExitReturnsEmptyString)
 
 TEST_F(ScoreEasyTest, appendOtherScorefileReadsSingleCharacterAbbreviation)
 {
-    push_char('0');
-    push_char('x');
-    push_char('4');
+    g_pushback.push('0');
+    g_pushback.push('x');
+    g_pushback.push('4');
 
     testing::internal::CaptureStdout();
     const std::string line = sc_easy_append();
@@ -146,7 +146,7 @@ TEST_F(ScoreEasyTest, appendRuleDestinationExitReturnsEmptyString)
 
 TEST_F(ScoreEasyTest, commandExitReturnsEmptyString)
 {
-    push_char('0');
+    g_pushback.push('0');
 
     testing::internal::CaptureStdout();
     const std::string line = sc_easy_command();
@@ -168,7 +168,7 @@ TEST_F(ScoreEasyTest, commandExitReturnsEmptyString)
 
 TEST_F(ScoreEasyTest, commandAppendReturnsAppendMarker)
 {
-    push_char('1');
+    g_pushback.push('1');
 
     testing::internal::CaptureStdout();
     const std::string line = sc_easy_command();
@@ -201,8 +201,8 @@ TEST_F(ScoreCommandTest, unknownCommandReportsCommandText)
 
 TEST_F(ScoreCommandTest, easyAppendCommandRunsAppendMenu)
 {
-    push_char('0');
-    push_char('1');
+    g_pushback.push('0');
+    g_pushback.push('1');
 
     testing::internal::CaptureStdout();
     sc_score_cmd({});

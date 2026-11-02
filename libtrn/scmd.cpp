@@ -612,7 +612,7 @@ static void s_jump_num(char_int firstchar)
         break;
 
     default:
-        push_char(command_char);
+        g_pushback.push(command_char);
         break;
     }
     if (value == 0 || value > g_s_bot_ent+1)

@@ -351,7 +351,7 @@ beginning:
             }
             if (g_nav.current.art != g_sentinel_art_ptr)
             {
-                push_char('\f' | 0200);
+                g_pushback.push('\f' | 0200);
                 success = false;
                 break;
             }
@@ -395,7 +395,7 @@ exit:
     {
         if (cheating && g_nav.current.art != g_sentinel_art_ptr)
         {
-            push_char('\f' | 0200);
+            g_pushback.push('\f' | 0200);
             success = false;
         }
         else if (last < real_last)

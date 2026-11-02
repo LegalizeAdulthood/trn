@@ -1946,10 +1946,10 @@ void PagerArticleTest::TearDown()
 
 void PagerArticleTest::read_pages(std::string_view commands)
 {
-    push_char('q');
+    g_pushback.push('q');
     for (auto character = commands.rbegin(); character != commands.rend(); ++character)
     {
-        push_char(*character);
+        g_pushback.push(*character);
     }
     render_article();
 }
@@ -2388,7 +2388,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
                     // Supply user input only after the background download completes.
                     for (auto key = m_completion_input.rbegin(); key != m_completion_input.rend(); ++key)
                     {
-                        push_char(*key);
+                        g_pushback.push(*key);
                     }
                 }
                 return line;
@@ -3717,11 +3717,11 @@ void PagerExitArticleTest::SetUp()
     m_article_command = "stale command";
     set_mode(GM_READ, MM_ARTICLE);
     (void) pending_input();
-    push_char('q');
+    g_pushback.push('q');
     const std::string_view input{scenario.input};
     for (auto character = input.rbegin(); character != input.rend(); ++character)
     {
-        push_char(*character);
+        g_pushback.push(*character);
     }
 }
 
@@ -3864,10 +3864,10 @@ void PagerGroupArticleTest::TearDown()
 
 void PagerGroupArticleTest::read_pages(std::string_view commands)
 {
-    push_char('q');
+    g_pushback.push('q');
     for (auto character = commands.rbegin(); character != commands.rend(); ++character)
     {
-        push_char(*character);
+        g_pushback.push(*character);
     }
     render_article();
 }
@@ -4320,7 +4320,7 @@ TEST_F(InterpolatorNewsgroupTest, interactiveSaveAbortRecordsArticleReason)
 {
     std::string command{"s"};
     command.push_back(FINISH_CMD);
-    push_char('\b');
+    g_pushback.push('\b');
 
     testing::internal::CaptureStdout();
     const SaveResult result = save_article(command);
@@ -4334,7 +4334,7 @@ TEST_F(InterpolatorNewsgroupTest, performPropagatesInteractiveSaveAbort)
 {
     std::string command{"s"};
     command.push_back(FINISH_CMD);
-    push_char('\b');
+    g_pushback.push('\b');
 
     testing::internal::CaptureStdout();
     const int result = perform(command, 0);
@@ -4779,7 +4779,7 @@ void ModeratorPostingTest::compose_without_remote_lookup(std::string_view policy
     g_nntp.link.capabilities.add(policy == "none" ? "LIST ACTIVE MODERATORS" : "LIST ACTIVE");
     m_source.m_flags |= DF_REMOTE | DF_USE_LIST_ACTIVE;
     m_source.m_moderators_file = policy;
-    push_char('\n');
+    g_pushback.push('\n');
 
     compose("Newsgroups: list.test\nSubject: topic\n\n", "f");
 
@@ -4802,7 +4802,7 @@ TEST_F(ModeratorPostingTest, routesFollowupThroughMailComposer)
 
 TEST_F(ModeratorPostingTest, routesNewTopicToModerator)
 {
-    push_char('\n');
+    g_pushback.push('\n');
     compose("Newsgroups: list.test\nSubject: new topic\n\n", "f");
 
     EXPECT_TRUE(fs::exists(fs::path{m_output.path()} / "mail-used"));
@@ -4863,7 +4863,7 @@ TEST_F(ModeratorPostingTest, remoteListRoutesNewTopicThroughMailComposer)
         .WillOnce(testing::Return("215 list follows"))
         .WillOnce(testing::Return("list.*:%s@remote.example.test"))
         .WillOnce(testing::Return("."));
-    push_char('\n');
+    g_pushback.push('\n');
 
     compose("Newsgroups: list.test\nSubject: remote topic\n\n", "f");
 
@@ -4932,7 +4932,7 @@ TEST_F(InterpolatorNewsgroupTest, followupPromptDefaultStartsNewTopic)
     ValueSaver<std::string> group_dir(g_newsgroup_dir, TRN_TEST_NEWSGROUP_SUBDIR);
     m_env.expect_env("NEWSPOSTER", "exit 0");
     m_env.expect_env("NEWSHEADER", "Message-Id: %i\n\n");
-    push_char('\n');
+    g_pushback.push('\n');
 
     testing::internal::CaptureStdout();
     followup("f");
@@ -6956,10 +6956,10 @@ TEST_P(DownloadingPagerArticleTest, continuesReadingAfterTheBackgroundDownloadMa
 TEST_P(DownloadingPagerArticleTest, continuesPagingWhileTheDownloadIsIncomplete)
 {
     const int continuation_pages = (GetParam().visible_lines - 9 + 7) / 8;
-    push_char('n');
+    g_pushback.push('n');
     for (int page = 0; page < continuation_pages; ++page)
     {
-        push_char(' ');
+        g_pushback.push(' ');
     }
 
     render_article();
@@ -6980,7 +6980,7 @@ INSTANTIATE_TEST_SUITE_P(ContentAndTail, DownloadingPagerArticleTest,
 TEST_F(RemotePagerArticleTest, quittingLeavesTheDownloadIncomplete)
 {
     ASSERT_NO_FATAL_FAILURE(start_article({"PlainText", false, false, 27, false}));
-    push_char('q');
+    g_pushback.push('q');
 
     render_article();
 
@@ -7006,10 +7006,10 @@ TEST_F(RemotePagerArticleTest, reopensTheCompletedDownloadWithAKnownSize)
     art_close();
     ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     g_art_buf.set_seek(m_body_start);
-    push_char('n');
-    push_char(' ');
-    push_char(' ');
-    push_char(' ');
+    g_pushback.push('n');
+    g_pushback.push(' ');
+    g_pushback.push(' ');
+    g_pushback.push(' ');
 
     render_article();
 
@@ -7477,7 +7477,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     g_nav.current.art = article_ptr(g_nav.target.num);
     g_nav.target.art = g_nav.current.art;
     ASSERT_TRUE(parse_header(g_nav.target.num));
-    push_char('?');
+    g_pushback.push('?');
     std::string article_command;
 
     testing::internal::CaptureStdout();
@@ -7506,7 +7506,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
     g_nav.current.art = article_ptr(g_nav.target.num);
     g_nav.target.art = g_nav.current.art;
     ASSERT_TRUE(parse_header(g_nav.target.num));
-    push_char('n');
+    g_pushback.push('n');
     std::string article_command;
 
     testing::internal::CaptureStdout();

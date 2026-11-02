@@ -580,7 +580,7 @@ protected:
     {
         for (std::string_view::const_reverse_iterator ch = command.rbegin(); ch != command.rend(); ++ch)
         {
-            push_char(*ch);
+            g_pushback.push(*ch);
         }
     }
 
@@ -1004,7 +1004,7 @@ TEST_P(MultircPromptRecoveryTest, restrictionRemovalDisplaysItsMessageAndConsume
         const int result = reader(buffer, count);
         if (!queued && g_general_mode == GM_INPUT && *buffer == '\n')
         {
-            push_char('q' | 0200);
+            g_pushback.push('q' | 0200);
             queued = true;
         }
         return result;
@@ -1042,7 +1042,7 @@ TEST_P(MultircQueuedRecoveryTest, cancellationRetainsQueuedNavigationBeforeTheFo
         const int result = reader(buffer, count);
         if (!queued && *buffer == command.back())
         {
-            push_char((at_end ? 'p' : 'n') | 0200);
+            g_pushback.push((at_end ? 'p' : 'n') | 0200);
             queued = true;
         }
         return result;
@@ -6375,7 +6375,7 @@ void NewsgroupSelectorDelegationStateTest::queue_input(std::string_view input)
 {
     for (auto ch = input.rbegin(); ch != input.rend(); ++ch)
     {
-        push_char(static_cast<unsigned char>(*ch) | 0200);
+        g_pushback.push(static_cast<unsigned char>(*ch) | 0200);
     }
 }
 
@@ -6861,7 +6861,7 @@ TEST_P(MultircSelectorSourceTest, switchingSourcesRetainsTheQueuedQuitAtTheResta
         const int result = reader(buffer, count);
         if (!queued && g_mode == MM_NEWSGROUP_LIST && *buffer == command)
         {
-            push_char('q' | 0200);
+            g_pushback.push('q' | 0200);
             queued = true;
         }
         return result;
@@ -8157,7 +8157,7 @@ std::string OnDemandThreadArticleTest::display_tree()
     const ArticleUnread                    unread = g_newsgroup_ptr->m_to_read;
     const ArticleUnread                    selected = g_selected_count;
     const bool                             selected_only = g_sel.selected_only;
-    push_char('q');
+    g_pushback.push('q');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch("t");
@@ -8298,7 +8298,7 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     }
     if (next_command)
     {
-        push_char('n');
+        g_pushback.push('n');
     }
     push_command(input);
     testing::internal::CaptureStdout();
@@ -11259,7 +11259,7 @@ TEST_P(ArticleRevisionDisplayTest, aMissingArticleDoesNotCreateARevisionDraft)
     const ArticlePosition position = g_art_input.pos;
     art_close();
     ASSERT_TRUE(fs::remove(m_spool / "1"));
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
 
     const ArticleSwitchResult result = art_switch(std::string{command, FINISH_CMD});

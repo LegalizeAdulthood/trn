@@ -438,7 +438,7 @@ TEST_F(NewsrcRotationTest, useMultircRejectsLockHeldByThisProcess)
     const fs::path lock_path{newsrc.name.generic_string() + ".LOCK"};
     std::ofstream{lock_path} << "  " << g_our_pid << "junk\n" << g_local_host << '\n';
 
-    push_char('\n');
+    g_pushback.push('\n');
     testing::internal::CaptureStdout();
     const bool        opened = multirc.use_multirc();
     const std::string output = testing::internal::GetCapturedStdout();
@@ -726,7 +726,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForMissingNewsrcGroup)
     g_multirc = &multirc;
     g_newsrc_hash = hash_create(3001, nullptr);
 
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
     const bool        found = get_newsgroup("comp.lang.apl", GNG_NONE);
     const std::string output = testing::internal::GetCapturedStdout();
@@ -750,7 +750,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupAppendsUnsubscribedMissingGroup)
     g_newsrc_hash = hash_create(3001, nullptr);
     g_append_unsub = true;
 
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
     const bool found = get_newsgroup("comp.lang.apl", GNG_NONE);
     (void) testing::internal::GetCapturedStdout();
@@ -780,7 +780,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForUnsubscribedGroup)
     std::ofstream{newsrc.name} << unsubscribed_newsrc_line("comp.lang.apl", " 1") << '\n';
     ASSERT_TRUE(multirc.use_multirc());
 
-    push_char('n');
+    g_pushback.push('n');
     testing::internal::CaptureStdout();
     const bool        found = get_newsgroup("comp.lang.apl", GNG_NONE);
     const std::string output = testing::internal::GetCapturedStdout();
@@ -803,7 +803,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupResubscribeRestoresUnthreadedFlag)
     std::ofstream{newsrc.name} << unsubscribed_newsrc_line("comp.lang.apl", " 0-3") << '\n';
     ASSERT_TRUE(multirc.use_multirc());
 
-    push_char('y');
+    g_pushback.push('y');
     testing::internal::CaptureStdout();
     const bool found = get_newsgroup("comp.lang.apl", GNG_NONE);
     (void) testing::internal::GetCapturedStdout();

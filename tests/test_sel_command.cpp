@@ -490,8 +490,8 @@ void SelectorEscapedPageState::discard_input()
 
 DisplayState SelectorEscapedPageState::escape(char command)
 {
-    push_char('Q' | 0200);
-    push_char(static_cast<unsigned char>(command) | 0200);
+    g_pushback.push('Q' | 0200);
+    g_pushback.push(static_cast<unsigned char>(command) | 0200);
     testing::internal::CaptureStdout();
     const DisplayState result = sel_command('\\');
     m_output = testing::internal::GetCapturedStdout();

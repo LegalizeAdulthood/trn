@@ -1054,7 +1054,7 @@ do_group:
     {
         if (another_command(univ_key_help(ui->help_location())))
         {
-            push_char(s_sel_ret | 0200);
+            g_pushback.push(s_sel_ret | 0200);
         }
     }
     return exit_code;
@@ -1438,7 +1438,7 @@ reinp_selector:
         }
         else
         {
-            push_char(ch);       // for later use
+            g_pushback.push(ch); // for later use
             sel_number = (ch_num1 - '0');
         }
         j = sel_number-1;
@@ -2550,7 +2550,7 @@ static std::string read_selector_command(char page_command, char end_command, bo
     {
         g_s_default_cmd = true;
         g_univ_default_cmd = true;
-        push_char(at_end ? end_command : page_command);
+        g_pushback.push(at_end ? end_command : page_command);
         command = get_cmd();
     }
     return command;
@@ -2602,11 +2602,11 @@ static std::string read_selector_prompt_command(std::string_view prompt, MinorMo
             g_univ_default_cmd = true;
             if (dflt.size() > 1 && dflt.front() == '^' && std::isupper(static_cast<unsigned char>(dflt[1])))
             {
-                push_char(Ctl(dflt[1]));
+                g_pushback.push(Ctl(dflt[1]));
             }
             else
             {
-                push_char(dflt.empty() ? '\0' : dflt.front());
+                g_pushback.push(dflt.empty() ? '\0' : dflt.front());
             }
             command = get_cmd();
         }
@@ -2692,7 +2692,7 @@ static char another_command(char_int ch)
                 s_sel_ret = ch;
                 return ch;
             }
-            push_char(ch | 0200);
+            g_pushback.push(ch | 0200);
         }
     }
     return '\0';
@@ -3653,7 +3653,7 @@ reask_sort:
         }
         else
         {
-            push_char(ch | 0200);
+            g_pushback.push(ch | 0200);
         }
         do
         {
@@ -4461,7 +4461,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             {
                 if (btn & 4)
                 {
-                    push_char(btn_clk == 0? '\n' : 'Z');
+                    g_pushback.push(btn_clk == 0 ? '\n' : 'Z');
                     g_mouse_is_down = false;
                 }
                 else
@@ -4469,16 +4469,16 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                     s_force_sel_pos = g_sel_page.find_line(y);
                     if (g_use_sel_num)
                     {
-                        push_char(('0' + (s_force_sel_pos+1) % 10) | 0200);
-                        push_char(('0' + (s_force_sel_pos+1)/10) | 0200);
+                        g_pushback.push(('0' + (s_force_sel_pos + 1) % 10) | 0200);
+                        g_pushback.push(('0' + (s_force_sel_pos + 1) / 10) | 0200);
                     }
                     else
                     {
-                        push_char(g_sel_page.chars[s_force_sel_pos] | 0200);
+                        g_pushback.push(g_sel_page.chars[s_force_sel_pos] | 0200);
                     }
                     if (btn == 1)
                     {
-                        push_char(Ctl('g') | 0200);
+                        g_pushback.push(Ctl('g') | 0200);
                     }
                 }
             }
@@ -4496,11 +4496,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         case 0:
             if (!y)
             {
-                push_char('<' | 0200);
+                g_pushback.push('<' | 0200);
             }
             else if (y >= g_sel_page.last_line)
             {
-                push_char(' ');
+                g_pushback.push(' ');
             }
             else
             {
@@ -4509,14 +4509,14 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 {
                     if (g_use_sel_num)
                     {
-                        push_char(('0' + (i+1) % 10) | 0200);
-                        push_char(('0' + (i+1) / 10) | 0200);
+                        g_pushback.push(('0' + (i + 1) % 10) | 0200);
+                        g_pushback.push(('0' + (i + 1) / 10) | 0200);
                     }
                     else
                     {
-                        push_char(g_sel_page.chars[i] | 0200);
+                        g_pushback.push(g_sel_page.chars[i] | 0200);
                     }
-                    push_char('-' | 0200);
+                    g_pushback.push('-' | 0200);
                     s_force_sel_pos = i;
                 }
             }
@@ -4525,11 +4525,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         case 1:
             if (!y)
             {
-                push_char('<' | 0200);
+                g_pushback.push('<' | 0200);
             }
             else if (y >= g_sel_page.last_line)
             {
-                push_char('>' | 0200);
+                g_pushback.push('>' | 0200);
             }
             break;
 
@@ -4539,11 +4539,11 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             //   if cursor in bottom half: forwards
             if (y < g_tc_LINES/2)
             {
-                push_char('<' | 0200);
+                g_pushback.push('<' | 0200);
             }
             else
             {
-                push_char('>' | 0200);
+                g_pushback.push('>' | 0200);
             }
             break;
         }

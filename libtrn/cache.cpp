@@ -864,7 +864,7 @@ static bool cache_all_arts()
     // still in doubt, tell them it's missing.
     if (g_nav.current.art && !(g_nav.current.art->m_flags & AF_CACHED) && !input_pending())
     {
-        push_char('\f' | 0200);
+        g_pushback.push('\f' | 0200);
     }
     // A completely empty group needs a count & a sort
     if (g_general_mode != GM_SELECTOR && !g_obj_count && !g_sel.selected_only)
@@ -931,7 +931,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
             // If the current article is no longer a '?', let them know.
             if (g_nav.current.art != g_sentinel_art_ptr)
             {
-                push_char('\f' | 0200);
+                g_pushback.push('\f' | 0200);
                 break;
             }
         }

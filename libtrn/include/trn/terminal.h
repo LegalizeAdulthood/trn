@@ -189,6 +189,8 @@ extern TerminalInputReader g_terminal_input_reader;
 
 struct InputPushback
 {
+    void push(char_int c);
+
     char circle_buf[PUSH_SIZE]{};
     int  next_in{};
     int  next_out{};
@@ -198,7 +200,6 @@ extern InputPushback g_pushback;
 
 int  read_terminal_input(char *address, int size);
 char read_tty_char();
-void push_char(char_int c);
 void under_print(std::string_view text);
 #ifdef NO_FIREWORKS
 void no_so_fire();

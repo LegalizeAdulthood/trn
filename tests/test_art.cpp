@@ -78,7 +78,7 @@ TEST_F(ArticlePagerCommandTest, searchCommandCompletesFromInput)
 
 TEST_F(ArticlePagerCommandTest, doubleCommandCompletesFromInput)
 {
-    push_char('x');
+    g_pushback.push('x');
     const std::string command = unfinished_pager_command('_');
 
     testing::internal::CaptureStdout();

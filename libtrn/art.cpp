@@ -1599,15 +1599,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             }
             g_nav.target = {ap->article_num(), ap};
             g_reread = true;
-            push_char(Ctl('r'));
+            g_pushback.push(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
-            push_char(' ');
+            g_pushback.push(' ');
         }
         else if (g_top_line != -1)
         {
-            push_char('b');
+            g_pushback.push('b');
         }
         break;
 
@@ -1617,15 +1617,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             select_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_special_lines = 1;
-            push_char(Ctl('r'));
+            g_pushback.push(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
-            push_char('\n');
+            g_pushback.push('\n');
         }
         else if (g_top_line != -1)
         {
-            push_char('B');
+            g_pushback.push('B');
         }
         break;
 
@@ -1635,15 +1635,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
             kill_sub_thread(ap, AUTO_KILL_NONE);
             s_special = true;
             s_special_lines = 1;
-            push_char(Ctl('r'));
+            g_pushback.push(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
-            push_char('n');
+            g_pushback.push('n');
         }
         else
         {
-            push_char(Ctl('r'));
+            g_pushback.push(Ctl('r'));
         }
         break;
     }

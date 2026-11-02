@@ -882,7 +882,7 @@ static int s_not_echoing{};
 void hide_pending()
 {
     s_not_echoing = 1;
-    push_char(0200);
+    g_pushback.push(0200);
 }
 
 bool finput_pending(bool check_term)
@@ -1375,19 +1375,19 @@ static int circfill()
 # endif // FIONREAD
 #endif // PENDING
 
-void push_char(char_int c)
+void InputPushback::push(char_int c)
 {
-    g_pushback.next_out--;
-    if (g_pushback.next_out < 0)
+    next_out--;
+    if (next_out < 0)
     {
-        g_pushback.next_out = PUSH_SIZE - 1;
+        next_out = PUSH_SIZE - 1;
     }
-    if (g_pushback.next_out == g_pushback.next_in)
+    if (next_out == next_in)
     {
         fmt::print("\npushback buffer overflow\n");
         sig_catcher(0);
     }
-    g_pushback.circle_buf[g_pushback.next_out] = c;
+    circle_buf[next_out] = c;
 }
 
 // print an underlined string, one way or another
@@ -1598,7 +1598,7 @@ void push_string(std::string_view str, char_int bits)
     const std::string expanded = do_interp(str);
     for (std::string::const_reverse_iterator ch = expanded.rbegin(); ch != expanded.rend(); ++ch)
     {
-        push_char(*ch ^ bits);
+        g_pushback.push(*ch ^ bits);
     }
 }
 
@@ -2130,7 +2130,7 @@ int check_page_line()
             g_page_line = -1;           // disable further printing
             if (cmd > 0)
             {
-                push_char(cmd);
+                g_pushback.push(cmd);
             }
             return cmd;
         }
@@ -2763,7 +2763,7 @@ static void mouse_input(const char *cp)
     }
     else
     {
-        push_char(' ');
+        g_pushback.push(' ');
     }
 }
 

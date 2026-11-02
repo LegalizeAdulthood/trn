@@ -471,11 +471,11 @@ static std::string apply_newsgroup_default_command(std::string command)
         if (g_default_cmd.size() > 1 && g_default_cmd.front() == '^' &&
             std::isupper(static_cast<unsigned char>(g_default_cmd[1])))
         {
-            push_char(Ctl(g_default_cmd[1]));
+            g_pushback.push(Ctl(g_default_cmd[1]));
         }
         else
         {
-            push_char(g_default_cmd.empty() ? '\0' : g_default_cmd.front());
+            g_pushback.push(g_default_cmd.empty() ? '\0' : g_default_cmd.front());
         }
         command = get_cmd();
     }

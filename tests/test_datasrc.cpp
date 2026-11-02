@@ -1063,7 +1063,7 @@ TEST_F(FindCloseMatchTest, promptsForMultipleCloseMatches)
     add_active_source("comp.lang.apl 10 1 y\n"
                       "comp.lang.apm 10 1 y\n");
     set_newsgroup_name("comp.lang.apx");
-    push_char('2');
+    g_pushback.push('2');
     testing::internal::CaptureStdout();
 
     const int         result = find_close_match();

@@ -130,7 +130,7 @@ INSTANTIATE_TEST_SUITE_P(SearchText, ScanDescriptionMatchTest,
 
 TEST_F(ScanCommandTest, jumpNumberReadsSecondDigit)
 {
-    push_char('2');
+    g_pushback.push('2');
 
     testing::internal::CaptureStdout();
     scmd_jump_num_for_test('1');
@@ -141,7 +141,7 @@ TEST_F(ScanCommandTest, jumpNumberReadsSecondDigit)
 
 TEST_F(ScanCommandTest, jumpNumberPushesBackCommandAfterFirstDigit)
 {
-    push_char('x');
+    g_pushback.push('x');
 
     testing::internal::CaptureStdout();
     scmd_jump_num_for_test('1');

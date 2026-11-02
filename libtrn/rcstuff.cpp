@@ -1352,11 +1352,11 @@ static std::string read_newsrc_prompt_command(std::string_view prompt, MinorMode
             g_univ_default_cmd = true;
             if (dflt.size() > 1 && dflt.front() == '^' && std::isupper(static_cast<unsigned char>(dflt[1])))
             {
-                push_char(Ctl(dflt[1]));
+                g_pushback.push(Ctl(dflt[1]));
             }
             else
             {
-                push_char(dflt.empty() ? '\0' : dflt.front());
+                g_pushback.push(dflt.empty() ? '\0' : dflt.front());
             }
             command = get_cmd();
         }

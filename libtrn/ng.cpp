@@ -196,11 +196,11 @@ static std::string apply_article_default_command(std::string command)
         if (g_default_cmd.size() > 1 && g_default_cmd.front() == '^' &&
             std::isupper(static_cast<unsigned char>(g_default_cmd[1])))
         {
-            push_char(Ctl(g_default_cmd[1]));
+            g_pushback.push(Ctl(g_default_cmd[1]));
         }
         else
         {
-            push_char(g_default_cmd.empty() ? '\0' : g_default_cmd.front());
+            g_pushback.push(g_default_cmd.empty() ? '\0' : g_default_cmd.front());
         }
         command = get_cmd();
     }
@@ -426,7 +426,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 if (g_use_news_selector >= 0 && !ng_virtual &&
                     g_newsgroup_ptr->m_to_read >= (ArticleUnread) g_use_news_selector)
                 {
-                    push_char('+');
+                    g_pushback.push('+');
                 }
             }
             else
