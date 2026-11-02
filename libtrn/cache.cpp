@@ -168,6 +168,31 @@ void GroupArticleCache::clear()
     cached_ng = nullptr;
 }
 
+void SubjectIndex::clear()
+{
+    Subject *next;
+
+    if (hash)
+    {
+        hash_destroy(hash);
+        hash = nullptr;
+    }
+    if (short_hash)
+    {
+        hash_destroy(short_hash);
+        short_hash = nullptr;
+    }
+    // Free all the subjects.
+    for (Subject *sp = first; sp; sp = next)
+    {
+        next = sp->m_next;
+        delete sp;
+    }
+    first = nullptr;
+    last = nullptr;
+    count = 0; // just to be sure
+}
+
 void cache_init()
 {
 #ifdef PENDING
@@ -220,29 +245,9 @@ void build_cache()
 
 void close_cache()
 {
-    Subject *next;
-
     nntp_art_name(ArticleNum{}, false); // clear the tmp file cache
 
-    if (g_subj.hash)
-    {
-        hash_destroy(g_subj.hash);
-        g_subj.hash = nullptr;
-    }
-    if (g_subj.short_hash)
-    {
-        hash_destroy(g_subj.short_hash);
-        g_subj.short_hash = nullptr;
-    }
-    // Free all the subjects.
-    for (Subject *sp = g_subj.first; sp; sp = next)
-    {
-        next = sp->m_next;
-        delete sp;
-    }
-    g_subj.first = nullptr;
-    g_subj.last = nullptr;
-    g_subj.count = 0; // just to be sure
+    g_subj.clear();
     g_parsed_header.parsed_art = ArticleNum{};
 
     g_art_ptr_list.clear();

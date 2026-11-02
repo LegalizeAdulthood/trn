@@ -80,6 +80,8 @@ extern GroupArticleCache g_cache;
 
 struct SubjectIndex
 {
+    void clear();
+
     HashTable *hash{};
     HashTable *short_hash{};
     Subject   *first{};
