@@ -135,14 +135,14 @@ Article *get_article(std::string_view msgid)
         article->m_msg_id = take_pending_msg_id(&data);
         data.dat_ptr = (char *) article;
         data.dat_len = 0;
-        hash_store_last(data);
+        g_hash_cursor.store_last(data);
     }
     else if (!(article = (Article *) data.dat_ptr))
     {
         article = allocate_article(ArticleNum{});
         data.dat_ptr = (char *) article;
         article->m_msg_id = std::move(normalized_msg_id);
-        hash_store_last(data);
+        g_hash_cursor.store_last(data);
     }
     return article;
 }

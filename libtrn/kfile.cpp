@@ -131,7 +131,7 @@ void kill_file_init()
                             g_kf_change_thread_cnt++;
                             data.dat_len = auto_flag | age;
                         }
-                        hash_store_last(data);
+                        g_hash_cursor.store_last(data);
                     }
                     s_kill_file_thread_cnt++;
                 }

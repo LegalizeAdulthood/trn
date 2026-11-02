@@ -112,15 +112,16 @@ HashDatum hash_fetch(HashTable *tbl, std::string_view key)
     return bucket[entry_index].he_data;
 }
 
-void hash_store_last(HashDatum data)
+// Mutates entries in the borrowed table; storage ownership stays with it.
+void HashLookupCursor::store_last(HashDatum data)
 {
-    std::vector<HashEntry> &bucket = g_hash_cursor.table->ht_addr[g_hash_cursor.bucket];
-    if (g_hash_cursor.index == bucket.size()) // absent; allocate an entry
+    std::vector<HashEntry> &bucket = table->ht_addr[this->bucket];
+    if (index == bucket.size()) // absent; allocate an entry
     {
-        bucket.push_back({data, g_hash_cursor.keylen});
+        bucket.push_back({data, keylen});
         return;
     }
-    bucket[g_hash_cursor.index].he_data = data; // supersede any old data for this key
+    bucket[index].he_data = data; // supersede any old data for this key
 }
 
 // Visit each entry by calling nodefunc at each, with keylen, data,

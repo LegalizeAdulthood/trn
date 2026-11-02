@@ -160,7 +160,7 @@ TEST_F(StoreLastHashTest, insertsTheLastMissingFetch)
     const HashDatum missing = hash_fetch(m_table.get(), m_alpha);
     ASSERT_EQ(nullptr, missing.dat_ptr);
 
-    hash_store_last(make_datum(m_alpha, 3));
+    g_hash_cursor.store_last(make_datum(m_alpha, 3));
 
     EXPECT_EQ(3U, hash_fetch(m_table.get(), m_alpha).dat_len);
 }
@@ -171,7 +171,7 @@ TEST_F(StoreLastHashTest, replacesTheLastExistingFetch)
     const HashDatum existing = hash_fetch(m_table.get(), m_alpha);
     ASSERT_EQ(3U, existing.dat_len);
 
-    hash_store_last(make_datum(m_alpha, 4));
+    g_hash_cursor.store_last(make_datum(m_alpha, 4));
 
     EXPECT_EQ(4U, hash_fetch(m_table.get(), m_alpha).dat_len);
 }

@@ -808,7 +808,7 @@ bool Article::valid_article()
         if (fake_ap == nullptr)
         {
             data.dat_ptr = (char*)this;
-            hash_store_last(data);
+            g_hash_cursor.store_last(data);
             s_fake_had_subj = nullptr;
             return true;
         }
@@ -896,7 +896,7 @@ bool Article::valid_article()
             fake_ap->clear_article();
             delete fake_ap;
             data.dat_ptr = (char*)this;
-            hash_store_last(data);
+            g_hash_cursor.store_last(data);
             return true;
         }
     }

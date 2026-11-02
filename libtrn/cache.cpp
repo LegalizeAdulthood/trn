@@ -300,7 +300,7 @@ void SubjectIndex::check_for_near_subj(Subject *current_subj)
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char *) sp;
-                hash_store_last(data);
+                g_hash_cursor.store_last(data);
             }
             else if (sp->m_thread != sp2->m_thread)
             {
@@ -457,7 +457,7 @@ Subject *SubjectIndex::find_or_create(std::string new_subj, std::string_view new
         sp->m_flags = SF_NONE;
 
         data.dat_ptr = (char *) sp;
-        hash_store_last(data);
+        g_hash_cursor.store_last(data);
     }
     return sp;
 }
