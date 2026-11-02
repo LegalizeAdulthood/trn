@@ -71,7 +71,6 @@ static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(std::string_view name);
-static int sf_check_extra_headers(std::string_view head);
 static void sf_add_extra_header(std::string_view head);
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
@@ -245,10 +244,10 @@ void ScoreRules::grow()
 }
 
 // Returns -1 if no matching extra header found, otherwise returns offset
-// into the g_score_rules.extra_headers array.
+// into the extra_headers array.
 //
 // header name, without ':' character
-static int sf_check_extra_headers(std::string_view head)
+int ScoreRules::check_extra_headers(std::string_view head)
 {
     std::string lower_head{head};
 
@@ -260,9 +259,9 @@ static int sf_check_extra_headers(std::string_view head)
             ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    for (std::size_t i = 0; i < g_score_rules.extra_headers.size(); i++)
+    for (std::size_t i = 0; i < extra_headers.size(); i++)
     {
-        if (lower_head == g_score_rules.extra_headers[i])
+        if (lower_head == extra_headers[i])
         {
             return static_cast<int>(i);
         }
@@ -283,7 +282,7 @@ static void sf_add_extra_header(std::string_view head)
         return; // known types should be interpreted in normal way
     }
     // then check to see if it's a known extra header
-    if (sf_check_extra_headers(head) >= 0)
+    if (g_score_rules.check_extra_headers(head) >= 0)
     {
         return;
     }
@@ -655,7 +654,7 @@ static bool sf_do_line(std::string_view line, bool check)
     int j = g_header_rules.set_line_type(header);
     if (j == SOME_LINE)
     {
-        j = sf_check_extra_headers(header);
+        j = g_score_rules.check_extra_headers(header);
         if (j >= 0)
         {
             j += HEAD_LAST;
