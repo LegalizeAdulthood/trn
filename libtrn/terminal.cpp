@@ -1610,7 +1610,7 @@ int get_anything()
 
 reask_anything:
     unflush_output(); // disable any ^O in effect
-    color_object(COLOR_MORE, true);
+    g_color.object(COLOR_MORE, true);
     if (g_verbose)
     {
         fmt::print("[Type space to continue] ");
@@ -1678,7 +1678,7 @@ int pause_get_cmd()
     MinorMode mode_save = g_mode;
 
     unflush_output(); // disable any ^O in effect
-    color_object(COLOR_CMD, true);
+    g_color.object(COLOR_CMD, true);
     if (g_verbose)
     {
         fmt::print("[Type space or a command] ");
@@ -2788,7 +2788,7 @@ bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 goto_xy(col + display.highlight_col, g_tc_LINES - 1);
                 if (btn == 3)
                 {
-                    color_object(COLOR_MOUSE, true);
+                    g_color.object(COLOR_MOUSE, true);
                 }
                 for (const char ch : display.highlight)
                 {

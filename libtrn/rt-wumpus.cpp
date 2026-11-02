@@ -409,7 +409,7 @@ static void print_tree_line(std::string_view tree_line)
         fmt::print("{}", tree_line.substr(0, marker));
         const std::size_t marked_size = tree_line[marker] == '*' ? 3 : 1;
         tree_line.remove_prefix(marker + 1);
-        color_object(COLOR_TREE_MARK, true);
+        g_color.object(COLOR_TREE_MARK, true);
         fmt::print("{}", tree_line.substr(0, marked_size));
         color_pop(); // of COLOR_TREE_MARK
         tree_line.remove_prefix(marked_size);
@@ -455,13 +455,13 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
         line = blank_line;
     }
 
-    color_object(COLOR_HEADER, true);
+    g_color.object(COLOR_HEADER, true);
     // If this is the first subject line, output it with a preceding [1]
     if (is_subject && !std::isspace(static_cast<unsigned char>(line.front())))
     {
         if (g_threaded_group)
         {
-            color_object(COLOR_TREE_MARK, true);
+            g_color.object(COLOR_TREE_MARK, true);
             fmt::print("[{}]", g_nav.current.art->thread_letter());
             color_pop();
             fmt::print(" ");
@@ -586,7 +586,7 @@ ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int i
             g_term_col = wrap_at;
             // Check string for the '*' flagging our current node
             // and the '@' flagging our prior node.
-            color_object(COLOR_TREE, true);
+            g_color.object(COLOR_TREE, true);
             if (header_line.value_of() < static_cast<int>(g_tree_view.lines.size()))
             {
                 print_tree_line(g_tree_view.lines[header_line.value_of()]);
@@ -715,7 +715,7 @@ void entire_tree(Article* ap)
         {
             return;
         }
-        color_object(COLOR_TREE, true);
+        g_color.object(COLOR_TREE, true);
         print_tree_line(tree_line);
         color_pop(); // of COLOR_TREE
         newline();

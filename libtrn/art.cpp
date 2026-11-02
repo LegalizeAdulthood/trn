@@ -951,11 +951,11 @@ static bool maybe_set_color(std::string_view line, std::size_t pos, bool back_se
     const char ch = (pos == 0 ? 0 : line[pos - 1]);
     if (after_line_marker && ch == '\001')
     {
-        color_object(COLOR_MIME_DESC, false);
+        g_color.object(COLOR_MIME_DESC, false);
     }
     else if (after_line_marker && ch == '\002')
     {
-        color_object(COLOR_MIME_SEP, false);
+        g_color.object(COLOR_MIME_SEP, false);
     }
     else if (ch == WRAPPED_NL)
     {
@@ -972,11 +972,11 @@ static bool maybe_set_color(std::string_view line, std::size_t pos, bool back_se
         const char       current = text.empty() ? '\0' : text.front();
         if (std::string_view{">}]#!:|"}.find(current) != std::string_view::npos)
         {
-            color_object(COLOR_CITE_DTEXT, false);
+            g_color.object(COLOR_CITE_DTEXT, false);
         }
         else
         {
-            color_object(COLOR_BODY_TEXT, false);
+            g_color.object(COLOR_BODY_TEXT, false);
         }
     }
     return false;
@@ -1416,7 +1416,7 @@ leave_pager:
             && std::string_view{"wWsSe:!&|/?123456789."}.find(command_char) != std::string_view::npos)
         {
             set_default_cmd();
-            color_object(COLOR_CMD, true);
+            g_color.object(COLOR_CMD, true);
             const std::string mail_call = interp_search(g_mail_call, command);
             fmt::printf(g_prompt, mail_call, g_subst.current_char_subst(),
                         g_default_cmd);         // print prompt, whatever it is

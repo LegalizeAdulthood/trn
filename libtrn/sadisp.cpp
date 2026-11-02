@@ -52,7 +52,7 @@ std::string_view sa_order_text_for_test()
 
 void sa_refresh_top()
 {
-    color_object(COLOR_SCORE, true);
+    g_color.object(COLOR_SCORE, true);
     fmt::print("{} |", g_newsgroup_name);
     // # of articles might be optional later
     fmt::print(" {}", sa_number_arts());
@@ -84,7 +84,7 @@ void sa_refresh_top()
 
 void sa_refresh_bot()
 {
-    color_object(COLOR_SCORE, true);
+    g_color.object(COLOR_SCORE, true);
     s_mail_and_place();
     const std::string_view order = sa_order_text();
     fmt::print("({} order, {}% scored)", order, sc_percent_scored());

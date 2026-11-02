@@ -2063,7 +2063,7 @@ static bool select_option(OptionIndex i)
 
     goto_xy(0, g_sel_page.last_line);
     erase_line(g_mouse_bar_cnt > 0);     // erase the prompt
-    color_object(COLOR_CMD, true);
+    g_color.object(COLOR_CMD, true);
     const OptionIndex      option = catalog.option(row);
     const std::string_view name = catalog.name(row);
     const std::string_view help = catalog.help(option);

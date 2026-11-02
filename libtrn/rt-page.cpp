@@ -1932,7 +1932,7 @@ static void display_page_title(bool home_only)
     }
     else if (g_sel.mode == SM_UNIVERSAL)
     {
-        color_object(COLOR_HEADING, true);
+        g_color.object(COLOR_HEADING, true);
         fmt::print("[{}] {}", g_univ.level, g_univ.title.empty() ? "Universal Selector" : g_univ.title.c_str());
         color_pop();
     }
@@ -1954,7 +1954,7 @@ static void display_page_title(bool home_only)
         std::string news_sources;
         news_sources.reserve(34);
         std::size_t len = 0;
-        color_object(COLOR_HEADING, true);
+        g_color.object(COLOR_HEADING, true);
         fmt::print("Newsgroups");
         for (rp = g_multirc->m_first; rp && len < 34; rp = rp->next)
         {
@@ -2570,19 +2570,19 @@ void output_sel(int ix, int sel, bool update)
     switch (sel)
     {
     case 1:                   // '+'
-        color_object(COLOR_PLUS, true);
+        g_color.object(COLOR_PLUS, true);
         break;
 
     case 2:                   // '-'
-        color_object(COLOR_MINUS, true);
+        g_color.object(COLOR_MINUS, true);
         break;
 
     case 3:                   // '*'
-        color_object(COLOR_STAR, true);
+        g_color.object(COLOR_STAR, true);
         break;
 
     default:
-        color_object(COLOR_DEFAULT, true);
+        g_color.object(COLOR_DEFAULT, true);
         sel = 0;
         break;
     }

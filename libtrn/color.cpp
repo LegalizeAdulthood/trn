@@ -11,12 +11,12 @@
 // "subject line", and "command prompt". The intended use is something
 // like this:
 //
-//      color_object(COLOR_HEADER, 1);
+//      g_color.object(COLOR_HEADER, 1);
 //      fputs(header_string, stdout);
 //      color_pop();
 //
 // The color_pop function will take care of restoring all colors and
-// attribute to the state before the color_object function was called.
+// attribute to the state before the g_color.object function was called.
 //
 // Colors and attributes are parsed from the [attribute] section
 // in the trnrc file. Escape sequences for the colors are picked up
@@ -245,38 +245,38 @@ void ColorOutputContext::rc_attribute(std::string_view object, std::string_view 
 }
 
 // Turn on color attribute for an object.
-void color_object(int object, bool push)
+void ColorOutputContext::object(int object, bool push)
 {
     // Merge in the colors/attributes that we are not setting
     // from the current object.
-    ColorObj merged = g_color.stack[g_color.stack_pointer];
+    ColorObj merged = stack[stack_pointer];
 
     // Merge in the new colors/attributes.
-    if (!g_color.objects[object].fg.empty())
+    if (!objects[object].fg.empty())
     {
-        merged.fg = g_color.objects[object].fg;
+        merged.fg = objects[object].fg;
     }
-    if (!g_color.objects[object].bg.empty())
+    if (!objects[object].bg.empty())
     {
-        merged.bg = g_color.objects[object].bg;
+        merged.bg = objects[object].bg;
     }
-    if (g_color.objects[object].attr != LAST_MARKING)
+    if (objects[object].attr != LAST_MARKING)
     {
-        merged.attr = g_color.objects[object].attr;
+        merged.attr = objects[object].attr;
     }
 
     // Push onto stack.
-    if (push && ++g_color.stack_pointer >= ColorOutputContext::STACK_SIZE)
+    if (push && ++stack_pointer >= STACK_SIZE)
     {
         // TODO: error reporting?
-        g_color.stack_pointer = 0;      // empty stack
-        g_color.deefault();             // and set normal colors
+        stack_pointer = 0; // empty stack
+        deefault();        // and set normal colors
         return;
     }
-    g_color.stack[g_color.stack_pointer] = merged;
+    stack[stack_pointer] = merged;
 
     // Set colors/attributes.
-    g_color.output();
+    output();
 }
 
 // Pop the color/attribute stack.
@@ -308,7 +308,7 @@ void color_string(int object, std::string_view str)
     }
     else
     {
-        color_object(object, true);
+        g_color.object(object, true);
         if (!str.empty())
         {
             std::fwrite(str.data(), 1, str.size(), stdout);

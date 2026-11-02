@@ -620,7 +620,7 @@ mime_switch:
         {
             int save_term_line = g_term_line;
             g_no_wait_fork = true;
-            color_object(COLOR_MIME_DESC, true);
+            g_color.object(COLOR_MIME_DESC, true);
             // A failed decoder can already have consumed the next boundary.
             if (decode_piece(mcp, bp) || g_mime.end_of_section(g_art_line))
             {
