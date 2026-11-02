@@ -69,7 +69,6 @@ ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
-static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining);
 static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
 static std::string sf_missing_score(std::string_view line);
@@ -529,11 +528,11 @@ static bool sf_do_command(std::string_view cmd, bool check)
     return false;
 }
 
-static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining)
+std::string_view ScoreRuleCompiler::free_form(std::string_view keyword, std::string_view remaining)
 {
     if (keyword == "pattern")
     {
-        g_score_compiler.pattern_status = true;
+        pattern_status = true;
         remaining = skip_hor_space(remaining);
         return remaining;
     }
@@ -647,7 +646,7 @@ static bool sf_do_line(std::string_view line, bool check)
         }
         const std::string_view remaining =
             keyword_end == std::string_view::npos ? std::string_view{} : line_rest.substr(keyword_end);
-        line_rest = sf_freeform(keyword, remaining);
+        line_rest = g_score_compiler.free_form(keyword, remaining);
         if (line_rest.empty()) // used up all the line's text, or error
         {
             fmt::print("Scorefile entry error error (freeform parse).  Line was:\n|{}|\n", normalized_text);

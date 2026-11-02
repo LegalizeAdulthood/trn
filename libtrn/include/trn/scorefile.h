@@ -81,6 +81,9 @@ extern ScoreFileCache g_score_cache;
 
 struct ScoreRuleCompiler
 {
+    // TODO: private
+    std::string_view free_form(std::string_view keyword, std::string_view remaining);
+
     std::array<std::string, 256> abbr;             // abbreviations
     int                          file_level{};     // how deep are we?
     bool                         pattern_status{}; // should we match by pattern?
