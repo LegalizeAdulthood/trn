@@ -324,7 +324,7 @@ sel_restart:
     cmd = 0;
 
     g_sel_session.display();
-    if (sel_input() == 'R')
+    if (g_sel_session.input() == 'R')
     {
         scope_changed = scope_changed || g_sel.rereading != initial_rereading;
         goto sel_restart;
@@ -524,7 +524,7 @@ sel_restart:
     g_sel_page.item_index = 0;
 
     g_sel_session.display();
-    if (sel_input() == 'R')
+    if (g_sel_session.input() == 'R')
     {
         goto sel_restart;
     }
@@ -628,7 +628,7 @@ sel_restart:
     g_sel_page.item_index = 0;
 
     g_sel_session.display();
-    if (sel_input() == 'R')
+    if (g_sel_session.input() == 'R')
     {
         goto sel_restart;
     }
@@ -728,7 +728,7 @@ sel_restart:
     g_sel_page.item_index = 0;
 
     g_sel_session.display();
-    if (sel_input() == 'R')
+    if (g_sel_session.input() == 'R')
     {
         goto sel_restart;
     }
@@ -806,7 +806,7 @@ sel_restart:
     g_sel_page.item_index = 0;
 
     g_sel_session.display();
-    if (sel_input() == 'R' || g_sel_session.ret == '\r' || g_sel_session.ret == '\n')
+    if (g_sel_session.input() == 'R' || g_sel_session.ret == '\r' || g_sel_session.ret == '\n')
     {
         goto sel_restart;
     }
@@ -1095,7 +1095,7 @@ sel_restart:
     g_sel_page.item_index = 0;
 
     g_sel_session.display();
-    if (sel_input() == 'R')
+    if (g_sel_session.input() == 'R')
     {
         goto sel_restart;
     }
@@ -1211,14 +1211,16 @@ void SelectorSession::status_msg(std::string_view cp)
 /// @return The character indicating the user's final action or selection.
 ///
 /// @globals
-/// - g_sel_session.force_pos: Set to -1 to reset the forced selection position.
-/// - g_sel_session.removed_prompt: Updated to manage the state of removed prompts.
+/// - g_sel, g_sel_page, selection totals, and item flags: Updated through
+///   the existing selection and page helpers.
+/// - Terminal state, input buffering, and g_pushback: Keep existing helper
+///   reads, writes, and output side effects.
+/// - g_use_sel_num, g_sel_num_goto, g_in_ng: Read for input interpretation.
+/// - g_msg: Read for status output.
 /// - g_spin_char: Updated to display the current spin character.
-/// - g_sel_session.disp_status_line: Updated to manage the status line display state.
 /// - g_sel_page.item_index: Updated to track the currently selected item index.
-/// - g_sel_session.ret: Updated to store the return character from the selector.
 ///
-char sel_input()
+char SelectorSession::input()
 {
     int j;
     int sel_number;
@@ -1234,15 +1236,15 @@ char sel_input()
     int range_start = -1; // One-based origin; -1 uses the current cursor.
 reask_selector:
     // Prompt the user
-    g_sel_session.prompt();
+    prompt();
 position_selector:
       int got_dash = 0;
       int got_goto = 0;
-      g_sel_session.force_pos = -1;
-      if (g_sel_session.removed_prompt & RP_MOUSE_BAR)
+      force_pos = -1;
+      if (removed_prompt & RP_MOUSE_BAR)
       {
           draw_mouse_bar(g_tc_COLS, false);
-          g_sel_session.removed_prompt &= ~RP_MOUSE_BAR;
+          removed_prompt &= ~RP_MOUSE_BAR;
       }
     if (g_can_home)
     {
@@ -1250,7 +1252,7 @@ position_selector:
     }
 
 reinp_selector:
-    if (g_sel_session.removed_prompt & RP_MOUSE_BAR)
+    if (removed_prompt & RP_MOUSE_BAR)
     {
         goto position_selector; // (TRN considered harmful? :-)
     }
@@ -1265,14 +1267,13 @@ reinp_selector:
     {
         g_spin_char = g_sel_page.chars[g_sel_page.item_index];
     }
-    const std::string command =
-        read_selector_command(g_sel_session.page_char, g_sel_session.end_char, g_sel_page.at_end);
+    const std::string command = read_selector_command(page_char, end_char, g_sel_page.at_end);
     int               ch = command.empty() ? '\0' : command.front();
     if (errno)
     {
         ch = Ctl('l');
     }
-    if (g_sel_session.disp_status_line == 2)
+    if (disp_status_line == 2)
     {
         if (g_can_home)
         {
@@ -1280,10 +1281,10 @@ reinp_selector:
             erase_line(false);
             if (g_term_line == g_tc_LINES-1)
             {
-                g_sel_session.removed_prompt |= RP_MOUSE_BAR;
+                removed_prompt |= RP_MOUSE_BAR;
             }
         }
-        g_sel_session.disp_status_line = 0;
+        disp_status_line = 0;
     }
     if (ch == '-' && g_sel_page.page_item_cnt)
     {
@@ -1296,11 +1297,11 @@ reinp_selector:
                 j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
                 if (g_use_sel_num)
                 {
-                    g_sel_session.status_msg(fmt::format("Range: {}-", j));
+                    status_msg(fmt::format("Range: {}-", j));
                 }
                 else
                 {
-                    g_sel_session.status_msg(fmt::format("Range: {}-", g_sel_page.chars[j - 1]));
+                    status_msg(fmt::format("Range: {}-", g_sel_page.chars[j - 1]));
                 }
             }
         }
@@ -1318,7 +1319,7 @@ reinp_selector:
         got_dash = 0;
         got_goto = 0;
         // following if statement should be function
-        if (g_sel_session.disp_status_line == 2) // status was printed
+        if (disp_status_line == 2) // status was printed
         {
             if (g_can_home)
             {
@@ -1326,10 +1327,10 @@ reinp_selector:
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
-                    g_sel_session.removed_prompt |= RP_MOUSE_BAR;
+                    removed_prompt |= RP_MOUSE_BAR;
                 }
             }
-            g_sel_session.disp_status_line = 0;
+            disp_status_line = 0;
         }
         goto position_selector;
     }
@@ -1341,11 +1342,11 @@ reinp_selector:
         {
             if (g_use_sel_num)
             {
-                g_sel_session.status_msg("Go to number?");
+                status_msg("Go to number?");
             }
             else
             {
-                g_sel_session.status_msg("Go to letter?");
+                status_msg("Go to letter?");
             }
         }
         goto reinp_selector;
@@ -1364,17 +1365,17 @@ reinp_selector:
             if (got_dash)
             {
                 j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
-                g_sel_session.status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
+                status_msg(fmt::format("Range: {}-{}", j, static_cast<char>(ch)));
             }
             else
             {
                 if (got_goto)
                 {
-                    g_sel_session.status_msg(fmt::format("Go to number: {}", static_cast<char>(ch)));
+                    status_msg(fmt::format("Go to number: {}", static_cast<char>(ch)));
                 }
                 else
                 {
-                    g_sel_session.status_msg(fmt::format("{}", static_cast<char>(ch)));
+                    status_msg(fmt::format("{}", static_cast<char>(ch)));
                 }
             }
         }
@@ -1382,7 +1383,7 @@ reinp_selector:
         // number is a lousy time to delay, however.
         //
         ch = read_selector_numeric_continuation();
-        if (g_sel_session.disp_status_line == 2) // status was printed
+        if (disp_status_line == 2) // status was printed
         {
             if (g_can_home)
             {
@@ -1390,10 +1391,10 @@ reinp_selector:
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
-                    g_sel_session.removed_prompt |= RP_MOUSE_BAR;
+                    removed_prompt |= RP_MOUSE_BAR;
                 }
             }
-            g_sel_session.disp_status_line = 0;
+            disp_status_line = 0;
         }
         if (ch == g_kill_char)          // kill whole command in progress
         {
@@ -1410,12 +1411,12 @@ reinp_selector:
             if (got_dash)
             {
                 j = range_start >= 0 ? range_start : g_sel_page.item_index + 1;
-                g_sel_session.status_msg(fmt::format("Range: {}- ", j));
+                status_msg(fmt::format("Range: {}- ", j));
                 goto reinp_selector;
             }
             if (got_goto)
             {
-                g_sel_session.status_msg("Go to number?  ");
+                status_msg("Go to number?  ");
                 goto reinp_selector;
             }
             goto position_selector;
@@ -1433,7 +1434,7 @@ reinp_selector:
         if ((j < 0) || (j >= g_sel_page.page_item_cnt))
         {
             dingaling();
-            g_sel_session.status_msg(fmt::format("No item {} on this page.", sel_number));
+            status_msg(fmt::format("No item {} on this page.", sel_number));
             goto position_selector;
         }
         else if (got_goto || (g_sel_num_goto && !got_dash))
@@ -1461,7 +1462,7 @@ reinp_selector:
         if (j >= g_sel_page.page_item_cnt)
         {
             dingaling();
-            g_sel_session.status_msg(fmt::format("No item '{}' on this page.", static_cast<char>(ch)));
+            status_msg(fmt::format("No item '{}' on this page.", static_cast<char>(ch)));
             goto position_selector;
         }
         else if (got_goto)
@@ -1517,7 +1518,7 @@ reinp_selector:
         }
         if (ch == Ctl('t'))
         {
-            g_sel_session.force_pos = j;
+            force_pos = j;
         }
     }
     else if (ch == 'k' || ch == 'j' || ch == ',')
@@ -1564,16 +1565,16 @@ reinp_selector:
     else
     {
         range_start = -1;
-        g_sel_session.ret = ch;
-        switch (g_sel_session.command(ch))
+        ret = ch;
+        switch (this->command(ch))
         {
         case DS_ASK:
-            if (!g_sel_session.clean_screen)
+            if (!clean_screen)
             {
-                g_sel_session.display();
+                display();
                 goto reask_selector;
             }
-            if (g_sel_session.removed_prompt & RP_NEWLINE)
+            if (removed_prompt & RP_NEWLINE)
             {
                 carriage_return();
                 goto reask_selector;
@@ -1581,26 +1582,26 @@ reinp_selector:
             goto position_selector;
 
         case DS_DISPLAY:
-            g_sel_session.display();
+            display();
             goto reask_selector;
 
         case DS_UPDATE:
-            if (!g_sel_session.clean_screen)
+            if (!clean_screen)
             {
-                g_sel_session.display();
+                display();
                 goto reask_selector;
             }
-            if (g_sel_session.disp_status_line == 1)
+            if (disp_status_line == 1)
             {
                 newline();
                 fmt::print("{}", g_msg);
                 g_term_col = static_cast<int>(g_msg.size());
-                if (g_sel_session.removed_prompt & RP_MOUSE_BAR)
+                if (removed_prompt & RP_MOUSE_BAR)
                 {
                     draw_mouse_bar(g_tc_COLS,false);
-                    g_sel_session.removed_prompt &= ~RP_MOUSE_BAR;
+                    removed_prompt &= ~RP_MOUSE_BAR;
                 }
-                g_sel_session.disp_status_line = 2;
+                disp_status_line = 2;
             }
             update_page();
             if (g_can_home)
@@ -1616,19 +1617,19 @@ reinp_selector:
             return 'Q'; // Quit
 
         case DS_STATUS:
-            g_sel_session.disp_status_line = 1;
-            if (!g_sel_session.clean_screen)
+            disp_status_line = 1;
+            if (!clean_screen)
             {
-                g_sel_session.display();
+                display();
                 goto reask_selector;
             }
-            g_sel_session.status_msg(g_msg);
+            status_msg(g_msg);
 
             if (!g_can_home)
             {
                 newline();
             }
-            if (g_sel_session.removed_prompt & RP_NEWLINE)
+            if (removed_prompt & RP_NEWLINE)
             {
                 goto reask_selector;
             }
@@ -1696,7 +1697,7 @@ reinp_selector:
             }
             if (g_term_line >= g_sel_page.last_line)
             {
-                g_sel_session.display();
+                display();
                 goto reask_selector;
             }
             break;
@@ -1716,7 +1717,7 @@ reinp_selector:
             g_sel.rereading = sel_reread_save;
             if (g_term_line >= g_sel_page.last_line)
             {
-                g_sel_session.display();
+                display();
                 goto reask_selector;
             }
             break;
@@ -1733,9 +1734,9 @@ reinp_selector:
         }
     } while (g_sel_page.item_index != j);
     range_start = g_sel_page.item_index ? g_sel_page.item_index : g_sel_page.page_item_cnt;
-    if (g_sel_session.force_pos >= 0)
+    if (force_pos >= 0)
     {
-        g_sel_page.item_index = g_sel_session.force_pos;
+        g_sel_page.item_index = force_pos;
     }
     goto position_selector;
 }

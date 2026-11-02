@@ -446,7 +446,7 @@ char SelectorInputTest::run_input(std::string_view commands)
 {
     push_string(std::string(commands) + "q", 0200);
     testing::internal::CaptureStdout();
-    const char result = sel_input();
+    const char result = g_sel_session.input();
     m_output = testing::internal::GetCapturedStdout();
     return result;
 }
@@ -620,7 +620,7 @@ char SelectorCallbackTest::run_commands(std::string_view input)
 {
     set_input(input);
     testing::internal::CaptureStdout();
-    const char result = sel_input();
+    const char result = g_sel_session.input();
     m_output = testing::internal::GetCapturedStdout();
     return result;
 }
@@ -931,7 +931,7 @@ char SelectorEscapedArticleTest::run_escaped_input(std::string_view commands)
     }
     g_in_ng = true;
     testing::internal::CaptureStdout();
-    const char result = sel_input();
+    const char result = g_sel_session.input();
     m_output = testing::internal::GetCapturedStdout();
     return result;
 }
@@ -4228,7 +4228,7 @@ char SelectorNumericPromptState::answer_after_prompt(std::string_view commands, 
     close(m_output_pipe[1]);
     m_output_pipe[1] = -1;
     std::thread responder(&SelectorNumericPromptState::read_output, this, std::cref(replies));
-    const char  result = sel_input();
+    const char  result = g_sel_session.input();
     std::fflush(stdout);
     EXPECT_GE(dup2(saved_stdout, fileno(stdout)), 0);
     close(saved_stdout);

@@ -103,6 +103,7 @@ struct SelectorSession
     SelectorCommand *extra_commands{};
 
     DisplayState command(char_int ch);
+    char         input();
 
     // TODO: private
     char another_command(char_int ch);
