@@ -78,12 +78,21 @@ struct GroupArticleCache
 
 extern GroupArticleCache g_cache;
 
+struct SubjectIndex
+{
+    HashTable *hash{};
+    HashTable *short_hash{};
+    Subject   *first{};
+    Subject   *last{};
+    int        count{};
+};
+
+extern SubjectIndex g_subj;
+
 extern std::vector<Article *>        g_art_ptr_list; // the article-selector creates this
 extern Article                     **g_art_ptr;      // ditto -- used for article order
 extern ArticleNum                    g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
 extern Article                      *g_sentinel_art_ptr;
-extern Subject                      *g_first_subject;
-extern Subject                      *g_last_subject;
 extern bool                          g_untrim_cache;
 extern int                           g_join_subject_len;     // -J
 extern int                           g_olden_days;           // -o

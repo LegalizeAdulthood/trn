@@ -258,7 +258,7 @@ beginning:
             success = false;
             goto exit;
         }
-        if (g_verbose && !g_first_subject && !g_data_source->m_ov_opened)
+        if (g_verbose && !g_subj.first && !g_data_source->m_ov_opened)
         {
             fmt::print("\nGetting overview file.");
             std::fflush(stdout);
@@ -272,7 +272,7 @@ beginning:
         {
             return false;
         }
-        if (g_verbose && !g_first_subject)
+        if (g_verbose && !g_subj.first)
         {
             fmt::print("\nReading overview file.");
             std::fflush(stdout);

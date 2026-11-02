@@ -1290,13 +1290,13 @@ no_previous_article:
                 g_nav.target.art = nullptr;
                 g_nav.target.next(false, true);
             }
-            else if (!g_first_subject)
+            else if (!g_subj.first)
             {
                 g_nav.target = {g_abs_first, g_cache.ptr(g_abs_first)};
             }
             else
             {
-                g_nav.target = {g_first_subject->m_articles->article_num(), g_first_subject->m_articles};
+                g_nav.target = {g_subj.first->m_articles->article_num(), g_subj.first->m_articles};
                 if (!(g_nav.target.art->m_flags & AF_EXISTS))
                 {
                     g_nav.target.art->one_less();

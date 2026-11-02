@@ -171,7 +171,7 @@ TEST_F(SubjectStorageTest, setSubjectLineStripsReplyPrefixAndSharesSubject)
     EXPECT_EQ(first->m_subj, second->m_subj);
     EXPECT_EQ("Re: Shared Topic", first->get_cached_line_text(SUBJ_LINE, false));
     EXPECT_EQ("Shared Topic", second->get_cached_line_text(SUBJ_LINE, false));
-    EXPECT_EQ(1, g_subject_count);
+    EXPECT_EQ(1, g_subj.count);
 }
 
 TEST_F(SubjectStorageTest, setSubjectLineStoresPlainSubject)
@@ -215,7 +215,7 @@ TEST_F(SubjectStorageTest, replacingSubjectUpdatesHashKey)
     EXPECT_NE(first->m_subj, second->m_subj);
     EXPECT_EQ("Replacement Topic", first->get_cached_line_text(SUBJ_LINE, false));
     EXPECT_EQ("Original Topic", second->get_cached_line_text(SUBJ_LINE, false));
-    EXPECT_EQ(2, g_subject_count);
+    EXPECT_EQ(2, g_subj.count);
 }
 
 TEST_F(SubjectStorageTest, outputSubjectPrintsArticleNumberAndSubject)

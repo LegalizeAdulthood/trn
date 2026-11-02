@@ -140,8 +140,8 @@ private:
     ArticleNum                     m_old_last_cached{g_cache.last_cached};
     ArticleNum               m_old_parsed_art{g_parsed_header.parsed_art};
     ArticleNum               m_old_obj_count{g_obj_count};
-    Subject                 *m_old_first_subject{g_first_subject};
-    Subject                 *m_old_last_subject{g_last_subject};
+    Subject                       *m_old_first_subject{g_subj.first};
+    Subject                       *m_old_last_subject{g_subj.last};
     NewsgroupData           *m_old_newsgroup{g_newsgroup_ptr};
     DataSource              *m_old_data_source{g_data_source};
     bool                           m_old_cached_all{g_cache.cached_all_in_range};
@@ -190,8 +190,8 @@ void ArticleSelectorCommandTest::SetUp()
     g_cache.first_cached = g_abs_first;
     g_cache.last_cached = g_last_art;
     g_cache.cached_all_in_range = true;
-    g_first_subject = &m_subject;
-    g_last_subject = &m_subject;
+    g_subj.first = &m_subject;
+    g_subj.last = &m_subject;
     g_newsgroup_ptr = &m_newsgroup;
     g_data_source = &m_data_source;
     g_threaded_group = true;
@@ -246,8 +246,8 @@ void ArticleSelectorCommandTest::TearDown()
     g_cache.last_cached = m_old_last_cached;
     g_parsed_header.parsed_art = m_old_parsed_art;
     g_obj_count = m_old_obj_count;
-    g_first_subject = m_old_first_subject;
-    g_last_subject = m_old_last_subject;
+    g_subj.first = m_old_first_subject;
+    g_subj.last = m_old_last_subject;
     g_newsgroup_ptr = m_old_newsgroup;
     g_data_source = m_old_data_source;
     g_cache.cached_all_in_range = m_old_cached_all;
@@ -319,7 +319,7 @@ private:
     int                                m_old_page_line{g_page_line};
     bool                               m_old_chase_phrase{g_output_chase_phrase};
     std::string_view                   m_old_tc_vb{g_tc_VB};
-    int                                m_old_subject_count{g_subject_count};
+    int                                m_old_subject_count{g_subj.count};
     std::string_view                   m_old_tc_so{g_tc_SO};
     std::string_view                   m_old_tc_se{g_tc_SE};
     std::string_view                   m_old_tc_cr{g_tc_CR};
@@ -345,7 +345,7 @@ void SelectorInputTest::SetUp()
 {
     ArticleSelectorCommandTest::SetUp();
     g_tc_VB = "";
-    g_subject_count = 2;
+    g_subj.count = 2;
     g_tc_SO = "";
     g_tc_SE = "";
     g_tc_CR = "\r";
@@ -382,7 +382,7 @@ void SelectorInputTest::prepare_input(SelectionMode mode, bool rereading)
     m_second.m_thread = second;
     m_second.m_thread_link = &m_second;
     m_second.m_prev = &m_subject;
-    g_last_subject = &m_second;
+    g_subj.last = &m_second;
     if (rereading)
     {
         first->m_flags &= ~AF_UNREAD;
@@ -418,7 +418,7 @@ void SelectorInputTest::TearDown()
     g_page_line = m_old_page_line;
     g_output_chase_phrase = m_old_chase_phrase;
     g_tc_VB = m_old_tc_vb;
-    g_subject_count = m_old_subject_count;
+    g_subj.count = m_old_subject_count;
     g_tc_SO = m_old_tc_so;
     g_tc_SE = m_old_tc_se;
     g_tc_CR = m_old_tc_cr;
@@ -2355,7 +2355,7 @@ void SelectorGroupedInputState::TearDown()
 
 void SelectorGroupedInputState::prepare_grouped(SelectionMode mode, bool rereading)
 {
-    g_subject_count = 3;
+    g_subj.count = 3;
     g_last_art = ArticleNum{5};
     g_cache.last_cached = g_last_art;
     m_newsgroup.m_to_read = rereading ? 1 : 4;
@@ -2401,7 +2401,7 @@ void SelectorGroupedInputState::prepare_grouped(SelectionMode mode, bool rereadi
     m_unrelated.m_thread = unrelated;
     m_unrelated.m_thread_link = &m_unrelated;
     m_unrelated.m_prev = &m_reply;
-    g_last_subject = &m_unrelated;
+    g_subj.last = &m_unrelated;
     opposite_scope->m_flags |= rereading ? AF_SEL : AF_DEL_SEL;
     prepare_page(mode, rereading);
     m_opposite_flags = opposite_scope->m_flags;
@@ -2560,7 +2560,7 @@ void SelectorMarkInputState::expect_pending(const std::vector<long> &articles, c
             actual_delayed.push_back(number);
         }
     }
-    for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    for (const Subject *subject = g_subj.first; subject; subject = subject->m_next)
     {
         if (subject->m_flags & SF_DEL)
         {
@@ -3555,9 +3555,9 @@ void SelectorNumericInputState::prepare_numeric(bool rereading, int page_size)
     }
     m_subject.m_articles = row_article(0);
     m_subject.m_thread = m_subject.m_articles;
-    g_first_subject = &m_subject;
-    g_last_subject = &m_subject;
-    g_subject_count = 1;
+    g_subj.first = &m_subject;
+    g_subj.last = &m_subject;
+    g_subj.count = 1;
     g_selected_count = 0;
     g_selected_subj_cnt = 0;
     g_sel_page.item_index = 0;
@@ -4903,7 +4903,7 @@ protected:
 
 private:
     int               m_old_errno{errno};
-    int               m_old_subject_count{g_subject_count};
+    int               m_old_subject_count{g_subj.count};
     SelectionMode     m_old_thread_mode{g_sel.thread_mode};
     SelectionSortMode m_old_art_sort{g_sel.art_sort};
     SelectionSortMode m_old_thread_sort{g_sel.thread_sort};
@@ -4928,7 +4928,7 @@ void ArticleSelectorSortTest::SetUp()
     ArticleSelectorCommandTest::SetUp();
     drain_input();
     errno = 0;
-    g_subject_count = 3;
+    g_subj.count = 3;
     g_sc_initialized = true;
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
@@ -4947,7 +4947,7 @@ void ArticleSelectorSortTest::SetUp()
     m_bravo.m_prev = &m_subject;
     m_bravo.m_next = &m_charlie;
     m_charlie.m_prev = &m_bravo;
-    g_last_subject = &m_charlie;
+    g_subj.last = &m_charlie;
     const std::array<Subject *, 4>    subjects{&m_subject, &m_bravo, &m_charlie, &m_subject};
     const std::array<std::time_t, 4>  dates{10, 30, 20, 40};
     const std::array<const char *, 4> authors{"Delta", "Charlie", "Bravo", "Alpha"};
@@ -4977,7 +4977,7 @@ void ArticleSelectorSortTest::TearDown()
 {
     drain_input();
     errno = m_old_errno;
-    g_subject_count = m_old_subject_count;
+    g_subj.count = m_old_subject_count;
     g_sel.thread_mode = m_old_thread_mode;
     g_sel.art_sort = m_old_art_sort;
     g_sel.thread_sort = m_old_thread_sort;
@@ -5040,7 +5040,7 @@ std::vector<long> ArticleSelectorSortTest::displayed_order() const
     }
     else
     {
-        for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+        for (const Subject *subject = g_subj.first; subject; subject = subject->m_next)
         {
             result.push_back(subject->m_articles->article_num().value_of());
         }
@@ -5136,7 +5136,7 @@ void ArticleSelectorExclusiveStateTest::clear_selections()
     {
         article.m_flags &= ~(AF_SEL | AF_DEL_SEL);
     }
-    for (Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    for (Subject *subject = g_subj.first; subject; subject = subject->m_next)
     {
         subject->m_flags &= ~(SF_SEL | SF_DEL_SEL);
     }
@@ -5157,7 +5157,7 @@ std::vector<long> ArticleSelectorExclusiveStateTest::included_items() const
     }
     else
     {
-        for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+        for (const Subject *subject = g_subj.first; subject; subject = subject->m_next)
         {
             if (subject->m_flags & SF_INCLUDED)
             {
@@ -5181,7 +5181,7 @@ void ArticleSelectorExclusiveStateTest::expect_first_page(int total) const
     }
     else
     {
-        EXPECT_EQ(g_first_subject, g_sel_page.page_subj);
+        EXPECT_EQ(g_subj.first, g_sel_page.page_subj);
     }
 }
 
@@ -5267,7 +5267,7 @@ void ArticleSelectorBulkStateTest::select_all()
     {
         article.m_flags |= static_cast<ArticleFlags>(g_sel.mask);
     }
-    for (Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    for (Subject *subject = g_subj.first; subject; subject = subject->m_next)
     {
         subject->m_flags |= static_cast<SubjectFlags>(g_sel.mask);
     }
@@ -5824,7 +5824,7 @@ TEST_P(ArticleSelectorSortCommandTest, ordersThePopulationWithoutChangingSelecti
     }
     else
     {
-        EXPECT_EQ(g_first_subject, g_sel_page.page_subj);
+        EXPECT_EQ(g_subj.first, g_sel_page.page_subj);
     }
     expect_selection_preserved(false);
 }

@@ -85,8 +85,8 @@ private:
     ArticleNum                     m_old_first_cached{g_cache.first_cached};
     ArticleNum                     m_old_last_cached{g_cache.last_cached};
     ArticleNum               m_old_search_ahead{g_search_ahead};
-    Subject                 *m_old_first_subject{g_first_subject};
-    Subject                 *m_old_last_subject{g_last_subject};
+    Subject                       *m_old_first_subject{g_subj.first};
+    Subject                       *m_old_last_subject{g_subj.last};
     NewsgroupData           *m_old_newsgroup_ptr{g_newsgroup_ptr};
     DoNewsgroupResult        m_old_newsgroup_exit_code{g_newsgroup_exit_code};
     bool                     m_old_threaded_group{g_threaded_group};
@@ -118,8 +118,8 @@ void ArticleStateTest::SetUp()
     g_first_art = ArticleNum{1};
     g_cache.first_cached = ArticleNum{1};
     g_search_ahead = ArticleNum{};
-    g_first_subject = &m_subject;
-    g_last_subject = &m_subject;
+    g_subj.first = &m_subject;
+    g_subj.last = &m_subject;
     g_newsgroup_ptr = &m_newsgroup;
     g_newsgroup_exit_code = NG_NORM;
     g_threaded_group = true;
@@ -160,8 +160,8 @@ void ArticleStateTest::TearDown()
     g_cache.first_cached = m_old_first_cached;
     g_cache.last_cached = m_old_last_cached;
     g_search_ahead = m_old_search_ahead;
-    g_first_subject = m_old_first_subject;
-    g_last_subject = m_old_last_subject;
+    g_subj.first = m_old_first_subject;
+    g_subj.last = m_old_last_subject;
     g_newsgroup_ptr = m_old_newsgroup_ptr;
     g_newsgroup_exit_code = m_old_newsgroup_exit_code;
     g_threaded_group = m_old_threaded_group;
@@ -330,8 +330,8 @@ void UnreadScopeArticleTest::set_scope(std::initializer_list<ArticleFlags> flags
         subject.m_prev = index ? &m_subjects[index - 1] : nullptr;
         subject.m_next = index < 2 ? &m_subjects[index + 1] : nullptr;
     }
-    g_first_subject = &m_subjects[0];
-    g_last_subject = &m_subjects[2];
+    g_subj.first = &m_subjects[0];
+    g_subj.last = &m_subjects[2];
 }
 
 std::string UnreadScopeArticleTest::mark_unread(char scope, ArticleSwitchResult expected)
@@ -1051,7 +1051,7 @@ void NumericJumpArticleTest::SetUp()
                   cached | AF_UNREAD | AF_SEL, cached | AF_UNREAD | AF_SEL},
                  4);
     g_sel.selected_only = true;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     g_selected_subj_cnt = 1;
     g_nav.recent.num = ArticleNum{7};
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
@@ -1086,7 +1086,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
     const ArticleUnread                              selected = g_selected_count;
-    const SubjectFlags                               subject_flags = g_first_subject->m_flags;
+    const SubjectFlags                               subject_flags = g_subj.first->m_flags;
     const int                                        selected_subjects = g_selected_subj_cnt;
     std::vector<std::pair<ArticleNum, ArticleFlags>> flags;
     for (const auto &[number, article] : g_cache.article_list)
@@ -1114,7 +1114,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
-    EXPECT_EQ(subject_flags, g_first_subject->m_flags);
+    EXPECT_EQ(subject_flags, g_subj.first->m_flags);
     EXPECT_EQ(selected_subjects, g_selected_subj_cnt);
     EXPECT_TRUE(g_sel.selected_only);
     EXPECT_TRUE(g_force_last);
@@ -1633,7 +1633,7 @@ void QuitCommandArticleTest::SetUp()
     set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 2);
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     g_nav.recent.num = ArticleNum{1};
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{2};
@@ -1670,7 +1670,7 @@ void QuitCommandArticleTest::expect_quit(std::string_view command, DoNewsgroupRe
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
     EXPECT_TRUE(g_sel.selected_only);
-    EXPECT_EQ(SF_SEL | SF_VISIT, g_first_subject->m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, g_subj.first->m_flags);
     EXPECT_EQ(ArticleNum{1}, g_first_art);
     EXPECT_EQ(ArticleNum{2}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{2}, g_search_ahead);
@@ -3156,7 +3156,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     const ArticleNum                       first = g_first_art;
     const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const ArticleNum                       search_ahead = g_search_ahead;
-    const SubjectFlags                     subject_flags = g_first_subject->m_flags;
+    const SubjectFlags                     subject_flags = g_subj.first->m_flags;
     const bool                             selected_only = g_sel.selected_only;
     const bool reread = g_reread;
     const bool force_last = g_force_last;
@@ -3182,7 +3182,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
     EXPECT_EQ(selected, g_selected_count);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
-    EXPECT_EQ(subject_flags, g_first_subject->m_flags);
+    EXPECT_EQ(subject_flags, g_subj.first->m_flags);
     EXPECT_EQ(selected_only, g_sel.selected_only);
     const bool explicit_reread =
         (command == 'N' || command == 'P') && result == AS_NORM && number <= g_last_art.value_of();
@@ -3371,8 +3371,8 @@ void BranchingArticleTest::set_tree(std::initializer_list<ArticleFlags> flags, l
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{1};
-    g_first_subject = &m_subjects[0];
-    g_last_subject = &m_subjects[1];
+    g_subj.first = &m_subjects[0];
+    g_subj.last = &m_subjects[1];
     struct ArticleLinks
     {
         long parent;
@@ -4083,7 +4083,7 @@ void EmptyDirectNavigationArticleTest::SetUp()
 {
     DirectNavigationArticleTest::SetUp();
     g_cache.article_list.clear();
-    g_first_subject = g_last_subject = nullptr;
+    g_subj.first = g_subj.last = nullptr;
     g_last_art = g_cache.last_cached = ArticleNum{};
     m_newsgroup.m_to_read = ArticleUnread{};
     g_selected_count = ArticleUnread{};
@@ -4148,8 +4148,8 @@ void SubjectOrderPreviousArticleTest::set_subjects(std::initializer_list<Article
     g_nav.recent.num = ArticleNum{6};
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{1};
-    g_first_subject = &m_subjects[0];
-    g_last_subject = &m_subjects[2];
+    g_subj.first = &m_subjects[0];
+    g_subj.last = &m_subjects[2];
     g_selected_count = ArticleUnread{};
     // Each subject's articles are numeric; the subject order is not.
     const long order[][4]{{5, 7, 10, 12}, {1, 3, 8, 11}, {2, 4, 6, 9}};
@@ -4406,7 +4406,7 @@ void EarliestUnreadArticleTest::SetUp()
     g_cache.ptr(ArticleNum{3})->m_child1 = nullptr;
     m_selected_subject.m_articles->m_subj = &m_selected_subject;
     m_selected_subject.m_articles->m_parent = nullptr;
-    g_last_subject = &m_selected_subject;
+    g_subj.last = &m_selected_subject;
     g_sel.selected_only = true;
     g_first_art = ArticleNum{earlier_unread ? 2L : 4L};
     g_nav.recent.num = ArticleNum{1};
@@ -4510,8 +4510,8 @@ void SubjectThreadArticleStateTest::set_subjects(std::initializer_list<ArticleFl
     set_articles(flags, current);
     const long subject_count = static_cast<long>(flags.size() / 2);
     g_sel.mode = threaded ? SM_THREAD : SM_SUBJECT;
-    g_first_subject = &m_subjects[0];
-    g_last_subject = &m_subjects[subject_count - 1];
+    g_subj.first = &m_subjects[0];
+    g_subj.last = &m_subjects[subject_count - 1];
     for (long index = 0; index < subject_count; ++index)
     {
         Subject &subject = m_subjects[index];
@@ -4670,8 +4670,8 @@ void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char comma
     const ArticleNum                        search_ahead = g_search_ahead;
     const int                               selected_subjects = g_selected_subj_cnt;
     const std::pair<GeneralMode, MinorMode> mode = std::make_pair(g_general_mode, g_mode);
-    Subject *const                          first_subject = g_first_subject;
-    Subject *const                          last_subject = g_last_subject;
+    Subject *const                          first_subject = g_subj.first;
+    Subject *const                          last_subject = g_subj.last;
     const std::pair<int, int>               terminal = std::make_pair(g_term_line, g_term_col);
     const std::pair<bool, bool>             follow = std::make_pair(g_s_follow_temp, g_univ_follow_temp);
     const bool                breadth_first = g_breadth_first;
@@ -4721,8 +4721,8 @@ void SelectedPreviousSubjectThreadArticleStateTest::expect_navigation(char comma
     EXPECT_EQ(mode, std::make_pair(g_general_mode, g_mode));
     EXPECT_EQ(terminal, std::make_pair(g_term_line, g_term_col));
     EXPECT_EQ(follow, std::make_pair(g_s_follow_temp, g_univ_follow_temp));
-    EXPECT_EQ(first_subject, g_first_subject);
-    EXPECT_EQ(last_subject, g_last_subject);
+    EXPECT_EQ(first_subject, g_subj.first);
+    EXPECT_EQ(last_subject, g_subj.last);
     EXPECT_EQ(selected_only, g_sel.selected_only);
     EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(force_last, g_force_last);
@@ -5801,7 +5801,7 @@ TEST_F(SelectorEntryArticleTest, cancellationPreservesSelectionAndAllowsRepeated
     set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     for (int attempt = 1; attempt <= 2; ++attempt)
     {
         SCOPED_TRACE(attempt);
@@ -5936,7 +5936,7 @@ TEST_P(SelectorGroupExitArticleTest, leavesForTheRequestedGroupDestinationWithou
     set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 1);
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     g_nav.recent.num = ArticleNum{2};
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{2};
@@ -5953,7 +5953,7 @@ TEST_P(SelectorGroupExitArticleTest, leavesForTheRequestedGroupDestinationWithou
     EXPECT_TRUE(g_sel.selected_only);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
-    EXPECT_EQ(SF_SEL | SF_VISIT, g_first_subject->m_flags);
+    EXPECT_EQ(SF_SEL | SF_VISIT, g_subj.first->m_flags);
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleNum{1}, g_first_art);
     EXPECT_EQ(ArticleNum{2}, g_parsed_header.parsed_art);
@@ -6094,7 +6094,7 @@ TEST_F(AlternateSelectorArticleTest, completedShortcutCancellationPreservesReadi
     g_first_art = ArticleNum{2};
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     g_nav.recent.num = ArticleNum{1};
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{2};
@@ -6168,7 +6168,7 @@ TEST_P(ReadSelectorPromptArticleTest, explicitOrDefaultSelectionCancellationPres
     g_first_art = ArticleNum{2};
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     g_pushback.push('n');
     g_pushback.push(GetParam());
 
@@ -6197,7 +6197,7 @@ TEST_P(CancelSelectorPrefixArticleTest, erasingOrKillingThePrefixNeverEntersTheS
     set_articles({AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD}, 2);
     g_sel.selected_only = true;
     g_selected_subj_cnt = 1;
-    g_first_subject->m_flags |= SF_SEL;
+    g_subj.first->m_flags |= SF_SEL;
     g_pushback.push('n');
     g_pushback.push(GetParam());
     int calls = 0;
@@ -9138,8 +9138,8 @@ TEST_P(NextArticleTest, restartsAtFirstArticleIncludingReadArticles)
     g_first_art = ArticleNum{2};
     if (!GetParam())
     {
-        g_first_subject = nullptr;
-        g_last_subject = nullptr;
+        g_subj.first = nullptr;
+        g_subj.last = nullptr;
     }
 
     EXPECT_EQ(AS_NORM, art_switch("N"));
@@ -10320,8 +10320,8 @@ TEST_P(EarliestUnreadArticleTest, markingUnreadPreservesSelectionsAndKeepsTheEar
         EXPECT_EQ(AF_EXISTS | AF_UNREAD | AF_SEL, m_selected_subject.m_articles->m_flags);
         EXPECT_EQ(SF_NONE, m_unselected_subject->m_flags);
         EXPECT_EQ(SF_SEL | SF_VISIT, m_selected_subject.m_flags);
-        EXPECT_EQ(m_unselected_subject, g_first_subject);
-        EXPECT_EQ(&m_selected_subject, g_last_subject);
+        EXPECT_EQ(m_unselected_subject, g_subj.first);
+        EXPECT_EQ(&m_selected_subject, g_subj.last);
         EXPECT_EQ(ArticleNum{2}, g_first_art);
         EXPECT_EQ(ArticleUnread{m_current.value_of()}, m_newsgroup.m_to_read);
         EXPECT_EQ(ArticleUnread{1}, g_selected_count);
@@ -13319,8 +13319,8 @@ TEST_F(NumericJumpArticleTest, jumpsBackIntoAnExhaustedGroup)
 TEST_F(NumericJumpArticleTest, rejectsANumberInAnEmptyGroupWithoutRequestingAReread)
 {
     g_cache.article_list.clear();
-    g_first_subject->m_articles = nullptr;
-    g_first_subject->m_thread = nullptr;
+    g_subj.first->m_articles = nullptr;
+    g_subj.first->m_thread = nullptr;
     g_last_art = ArticleNum{};
     g_nav.target.num = g_nav.current.num = ArticleNum{1};
     g_nav.target.art = g_nav.current.art = nullptr;
@@ -13760,8 +13760,8 @@ TEST_P(DirectFirstUnreadArticleTest, caretUsesConfiguredOrderAndSkipsReadAndUnse
         m_subjects[1].m_next = &m_subjects[0];
         m_subjects[0].m_prev = &m_subjects[1];
         m_subjects[0].m_next = nullptr;
-        g_first_subject = &m_subjects[1];
-        g_last_subject = &m_subjects[0];
+        g_subj.first = &m_subjects[1];
+        g_subj.last = &m_subjects[0];
         target = 11;
         break;
     case DirectReadingOrder::Sorted:

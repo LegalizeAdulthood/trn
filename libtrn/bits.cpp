@@ -348,7 +348,7 @@ void find_existing_articles()
                 }
             }
         }
-        else if (g_first_subject && g_cache.cached_all_in_range)
+        else if (g_subj.first && g_cache.cached_all_in_range)
         {
             if (!g_data_source->m_ov_opened || !g_data_source->m_over_dir.empty())
             {

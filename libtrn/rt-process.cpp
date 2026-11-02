@@ -232,7 +232,7 @@ void merge_threads(Subject *s1, Subject *s2)
         // Unlink the s2 chunk of subjects from the list
         if (!sp->m_prev)
         {
-            g_first_subject = s2->m_next;
+            g_subj.first = s2->m_next;
         }
         else
         {
@@ -240,7 +240,7 @@ void merge_threads(Subject *s1, Subject *s2)
         }
         if (!s2->m_next)
         {
-            g_last_subject = sp->m_prev;
+            g_subj.last = sp->m_prev;
         }
         else
         {
@@ -251,7 +251,7 @@ void merge_threads(Subject *s1, Subject *s2)
         s2->m_next = s1->m_next;
         if (!s1->m_next)
         {
-            g_last_subject = s2;
+            g_subj.last = s2;
         }
         else
         {

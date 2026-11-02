@@ -12,7 +12,6 @@ struct HashTable;
 struct Subject;
 
 extern ArticleNum g_obj_count;
-extern int        g_subject_count;
 extern bool       g_output_chase_phrase;
 extern HashTable *g_msg_id_hash;
 extern bool       g_thread_always; // -a

@@ -2200,7 +2200,7 @@ static void sel_cleanup()
         {
             g_sel_page.last_art = nullptr;
             g_sel_page.last_subj = nullptr;
-            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+            for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
             {
                 sp->unkill_subject();
             }
@@ -2213,7 +2213,7 @@ static void sel_cleanup()
             }
             else
             {
-                for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+                for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
                 {
                     if (sp->m_flags & SF_DEL)
                     {
@@ -2740,7 +2740,7 @@ DisplayState article_commands(char_int ch)
     case '#':
         if (g_sel_page.page_item_cnt)
         {
-            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+            for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
             {
                 sp->m_flags &= ~SF_SEL;
             }
@@ -3000,7 +3000,7 @@ reask_sort:
                 }
                 else
                 {
-                    sp = g_first_subject;
+                    sp = g_subj.first;
                 }
                 const Subject *group_sp = sp;
                 while (sp)
@@ -3039,7 +3039,7 @@ reask_sort:
         }
         else if (ch == 'J')
         {
-            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+            for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
             {
                 sp->deselect_subject();
             }
@@ -3175,7 +3175,7 @@ reask_sort:
                 thread_perform(search_command);
                 if (!g_sel.rereading)
                 {
-                    for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+                    for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
                     {
                         if (sp->m_flags & SF_DEL)
                         {

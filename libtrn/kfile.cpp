@@ -775,7 +775,7 @@ void edit_kill_file()
         }
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
         {
-            for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+            for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
             {
                 sp->clear_subject();
             }

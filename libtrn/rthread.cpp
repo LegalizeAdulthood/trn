@@ -37,7 +37,6 @@
 #include <vector>
 
 ArticleNum g_obj_count{};
-int        g_subject_count{};
 bool       g_output_chase_phrase{};
 HashTable *g_msg_id_hash{};
 bool       g_thread_always{}; // -a
@@ -77,7 +76,7 @@ void thread_init()
 //
 void thread_open()
 {
-    bool    find_existing = !g_first_subject;
+    bool    find_existing = !g_subj.first;
     Article*ap;
 
     if (!g_msg_id_hash)
@@ -88,7 +87,7 @@ void thread_open()
     {
         // Parse input and use g_msgid_hash for quick article lookups.
         // If cached but not threaded articles exist, set up to thread them.
-        if (g_first_subject)
+        if (g_subj.first)
         {
             g_cache.first_cached = g_first_art;
             g_cache.last_cached = article_before(g_first_art);
@@ -590,7 +589,7 @@ Subject *next_subject(Subject *sp, int subj_mask)
 {
     if (!sp)
     {
-        sp = g_first_subject;
+        sp = g_subj.first;
     }
     else if (g_sel.mode == SM_THREAD)
     {
@@ -618,7 +617,7 @@ static Subject *prev_subject(Subject *sp, int subj_mask)
 {
     if (!sp)
     {
-        sp = g_last_subject;
+        sp = g_subj.last;
     }
     else if (g_sel.mode == SM_THREAD)
     {
@@ -692,7 +691,7 @@ void select_sub_thread(Article *ap, AutoKillFlags auto_flags)
 //
 void deselect_all()
 {
-    for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+    for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
     {
         sp->deselect_subject();
     }
@@ -1047,7 +1046,7 @@ void count_subjects(CountSubjectMode cmode)
         break;
 
     case CS_UNSEL_STORE:
-        for (sp = g_first_subject; sp; sp = sp->m_next)
+        for (sp = g_subj.first; sp; sp = sp->m_next)
         {
             if (sp->m_flags & SF_VISIT)
             {
@@ -1061,7 +1060,7 @@ void count_subjects(CountSubjectMode cmode)
         break;
 
     case CS_RESELECT:
-        for (sp = g_first_subject; sp; sp = sp->m_next)
+        for (sp = g_subj.first; sp; sp = sp->m_next)
         {
             if (sp->m_flags & SF_OLD_VISIT)
             {
@@ -1075,13 +1074,13 @@ void count_subjects(CountSubjectMode cmode)
         break;
 
     default:
-        for (sp = g_first_subject; sp; sp = sp->m_next)
+        for (sp = g_subj.first; sp; sp = sp->m_next)
         {
             sp->m_flags &= ~SF_VISIT;
         }
     }
 
-    for (sp = g_first_subject; sp; sp = sp->m_next)
+    for (sp = g_subj.first; sp; sp = sp->m_next)
     {
         std::time_t subjdate = 0;
         int    count = 0;
@@ -1152,7 +1151,7 @@ void count_subjects(CountSubjectMode cmode)
     if (cmode != CS_RETAIN && cmode != CS_RESELECT //
         && !g_obj_count && !g_sel.selected_only)
     {
-        for (sp = g_first_subject; sp; sp = sp->m_next)
+        for (sp = g_subj.first; sp; sp = sp->m_next)
         {
             sp->m_flags |= SF_VISIT;
         }
@@ -1381,7 +1380,7 @@ void sort_subjects()
     int (*   sort_procedure)(const Subject **spp1, const Subject**spp2);
 
     // If we don't have at least two subjects, we're done!
-    if (!g_first_subject || !g_first_subject->m_next)
+    if (!g_subj.first || !g_subj.first->m_next)
     {
         return;
     }
@@ -1411,21 +1410,21 @@ void sort_subjects()
         break;
     }
 
-    std::vector<Subject *> subj_list(g_subject_count);
-    for (lp = subj_list.data(), sp = g_first_subject; sp; sp = sp->m_next)
+    std::vector<Subject *> subj_list(g_subj.count);
+    for (lp = subj_list.data(), sp = g_subj.first; sp; sp = sp->m_next)
     {
         *lp++ = sp;
     }
-    TRN_ASSERT(lp - subj_list.data() == g_subject_count);
+    TRN_ASSERT(lp - subj_list.data() == g_subj.count);
 
     std::qsort(subj_list.data(), subj_list.size(), sizeof (Subject*),
                ((int(*)(const void *, const void *))sort_procedure));
 
-    g_first_subject = subj_list[0];
+    g_subj.first = subj_list[0];
     sp = subj_list[0];
     sp->m_prev = nullptr;
     lp = subj_list.data();
-    for (int i = g_subject_count; --i; lp++)
+    for (int i = g_subj.count; --i; lp++)
     {
         lp[0]->m_next = lp[1];
         lp[1]->m_prev = lp[0];
@@ -1442,11 +1441,11 @@ void sort_subjects()
             }
         }
     }
-    g_last_subject = lp[0];
-    g_last_subject->m_next = nullptr;
+    g_subj.last = lp[0];
+    g_subj.last->m_next = nullptr;
     if (g_sel.mode == SM_THREAD)
     {
-        g_last_subject->m_thread_link = sp;
+        g_subj.last->m_thread_link = sp;
     }
 }
 

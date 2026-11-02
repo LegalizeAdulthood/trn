@@ -47,8 +47,8 @@ private:
     ArticleNum               m_old_last_art{g_last_art};
     ArticleNum                     m_old_last_cached{g_cache.last_cached};
     ArticleNum               m_old_obj_count{g_obj_count};
-    Subject                 *m_old_first_subject{g_first_subject};
-    Subject                 *m_old_last_subject{g_last_subject};
+    Subject                       *m_old_first_subject{g_subj.first};
+    Subject                       *m_old_last_subject{g_subj.last};
     bool                     m_old_selected_only{g_sel.selected_only};
     bool                     m_old_rereading{g_sel.rereading};
     bool                     m_old_exclusive{g_sel.exclusive};
@@ -80,8 +80,8 @@ void ArticlePageStateTest::SetUp()
     g_art_ptr = nullptr;
     g_abs_first = ArticleNum{1};
     g_first_art = g_abs_first;
-    g_first_subject = &m_subject;
-    g_last_subject = &m_subject;
+    g_subj.first = &m_subject;
+    g_subj.last = &m_subject;
     g_sel.selected_only = false;
     g_sel.exclusive = false;
     g_sel.group_listing = false;
@@ -109,8 +109,8 @@ void ArticlePageStateTest::TearDown()
     g_last_art = m_old_last_art;
     g_cache.last_cached = m_old_last_cached;
     g_obj_count = m_old_obj_count;
-    g_first_subject = m_old_first_subject;
-    g_last_subject = m_old_last_subject;
+    g_subj.first = m_old_first_subject;
+    g_subj.last = m_old_last_subject;
     g_sel.selected_only = m_old_selected_only;
     g_sel.rereading = m_old_rereading;
     g_sel.exclusive = m_old_exclusive;
@@ -471,7 +471,7 @@ protected:
     Subject m_charlie{};
 
 private:
-    int         m_old_subject_count{g_subject_count};
+    int         m_old_subject_count{g_subj.count};
     bool        m_old_threaded{g_threaded_group};
     Subject    *m_old_next_sp{g_sel_page.next_subj};
     int         m_old_item_index{g_sel_page.item_index};
@@ -483,7 +483,7 @@ private:
 void SubjectPageStateTest::SetUp()
 {
     ArticlePageStateTest::SetUp();
-    g_subject_count = 3;
+    g_subj.count = 3;
     g_threaded_group = true;
     g_sel_page.next_subj = nullptr;
     g_sel_art_display_mode = "s";
@@ -492,7 +492,7 @@ void SubjectPageStateTest::SetUp()
 
 void SubjectPageStateTest::TearDown()
 {
-    g_subject_count = m_old_subject_count;
+    g_subj.count = m_old_subject_count;
     g_threaded_group = m_old_threaded;
     g_sel_page.next_subj = m_old_next_sp;
     g_sel_page.item_index = m_old_item_index;
@@ -515,7 +515,7 @@ void SubjectPageStateTest::prepare_groups(SelectionMode mode, bool rereading)
     m_bravo.m_prev = &m_subject;
     m_bravo.m_next = &m_charlie;
     m_charlie.m_prev = &m_bravo;
-    g_last_subject = &m_charlie;
+    g_subj.last = &m_charlie;
     m_bravo.m_articles = g_cache.ptr(ArticleNum{4});
     m_charlie.m_articles = g_cache.ptr(ArticleNum{7});
     m_bravo.m_thread = m_bravo.m_articles;
@@ -581,7 +581,7 @@ void SubjectPageStateTest::initialize_page(bool fill_last_page)
 std::vector<long> SubjectPageStateTest::subjects_with_flag(SubjectFlags flag) const
 {
     std::vector<long> result;
-    for (const Subject *subject = g_first_subject; subject; subject = subject->m_next)
+    for (const Subject *subject = g_subj.first; subject; subject = subject->m_next)
     {
         if (subject->m_flags & flag)
         {
@@ -639,7 +639,7 @@ protected:
     Subject m_charlie{};
 
 private:
-    int         m_old_subject_count{g_subject_count};
+    int         m_old_subject_count{g_subj.count};
     Subject    *m_old_next_subject{g_sel_page.next_subj};
     std::string m_old_input_charset{input_charset_name()};
     std::string m_old_output_charset{output_charset_name()};
@@ -654,7 +654,7 @@ void SubjectPageDisplayState::SetUp()
 
 void SubjectPageDisplayState::TearDown()
 {
-    g_subject_count = m_old_subject_count;
+    g_subj.count = m_old_subject_count;
     g_sel_page.next_subj = m_old_next_subject;
     utf_init(m_old_input_charset, m_old_output_charset);
     ArticlePageDisplayState::TearDown();
@@ -666,7 +666,7 @@ void SubjectPageDisplayState::prepare_subjects(bool rereading, char mode, std::i
     g_sel.mask = rereading ? AGF_DEL_SEL : AGF_SEL;
     g_sel_art_display_mode.assign(1, mode);
     g_sel_art_display_mode_index = 0;
-    g_subject_count = static_cast<int>(rows.size());
+    g_subj.count = static_cast<int>(rows.size());
     const std::array<Subject *, 3>   subjects{&m_subject, &m_bravo, &m_charlie};
     const std::array<std::string, 3> names{"Alpha", "Bravo", "Charlie"};
     std::size_t                      index = 0;
@@ -713,8 +713,8 @@ void SubjectPageDisplayState::prepare_subjects(bool rereading, char mode, std::i
         previous = &subject;
         ++index;
     }
-    g_first_subject = rows.size() ? &m_subject : nullptr;
-    g_last_subject = previous;
+    g_subj.first = rows.size() ? &m_subject : nullptr;
+    g_subj.last = previous;
     g_last_art = ArticleNum{number};
     g_cache.last_cached = g_last_art;
     rebuild_page();
@@ -1322,7 +1322,7 @@ TEST_P(SubjectPageAnchorTest, removingEarlierArticlesKeepsTheGroupAnchorAndRecou
     initialize_page();
 
     EXPECT_EQ(&m_bravo, g_sel_page.page_subj);
-    EXPECT_EQ(mode == SM_THREAD ? &m_bravo : &m_subject, g_first_subject);
+    EXPECT_EQ(mode == SM_THREAD ? &m_bravo : &m_subject, g_subj.first);
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(1, g_sel_page.page_item_cnt);
     EXPECT_EQ(rereading ? 1 : 2, g_sel_page.page_obj_cnt);

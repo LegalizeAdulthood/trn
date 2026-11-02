@@ -2181,10 +2181,10 @@ protected:
     void        open_group(bool cache_all = true);
 
 private:
-    Subject           *m_old_first_subject{g_first_subject};
-    Subject           *m_old_last_subject{g_last_subject};
+    Subject           *m_old_first_subject{g_subj.first};
+    Subject           *m_old_last_subject{g_subj.last};
     HashTable         *m_old_msg_id_hash{g_msg_id_hash};
-    int                m_old_subject_count{g_subject_count};
+    int                m_old_subject_count{g_subj.count};
     ArticleNum         m_old_obj_count{g_obj_count};
     SelectionMode      m_old_sel_mode{g_sel.mode};
     SelectionSortMode  m_old_sel_sort{g_sel.sort};
@@ -2211,9 +2211,9 @@ void LocalSpoolArticleTest::SetUp()
 {
     InputNewsgroupTest::SetUp();
     m_data_source.m_flags = DF_NONE;
-    g_first_subject = g_last_subject = nullptr;
+    g_subj.first = g_subj.last = nullptr;
     g_msg_id_hash = nullptr;
-    g_subject_count = 0;
+    g_subj.count = 0;
     g_obj_count = ArticleNum{};
     g_sel.mode = SM_ARTICLE;
     g_sel.art_sort = SS_NATURAL;
@@ -2254,9 +2254,9 @@ void LocalSpoolArticleTest::TearDown()
     close_cache();
     hash_destroy(g_msg_id_hash);
     g_msg_id_hash = m_old_msg_id_hash;
-    g_first_subject = m_old_first_subject;
-    g_last_subject = m_old_last_subject;
-    g_subject_count = m_old_subject_count;
+    g_subj.first = m_old_first_subject;
+    g_subj.last = m_old_last_subject;
+    g_subj.count = m_old_subject_count;
     g_obj_count = m_old_obj_count;
     g_sel.mode = m_old_sel_mode;
     g_sel.sort = m_old_sel_sort;

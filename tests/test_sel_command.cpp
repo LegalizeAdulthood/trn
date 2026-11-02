@@ -62,9 +62,9 @@ private:
     ArticleNum                     m_old_first_cached{g_cache.first_cached};
     ArticleNum                     m_old_last_cached{g_cache.last_cached};
     bool                           m_old_cached_all{g_cache.cached_all_in_range};
-    Subject                 *m_old_first_subject{g_first_subject};
-    Subject                 *m_old_last_subject{g_last_subject};
-    int                      m_old_subject_count{g_subject_count};
+    Subject                       *m_old_first_subject{g_subj.first};
+    Subject                       *m_old_last_subject{g_subj.last};
+    int                            m_old_subject_count{g_subj.count};
     Article                **m_old_page_app{g_sel_page.page_art};
     Article                **m_old_next_app{g_sel_page.next_art};
     Subject                 *m_old_page_sp{g_sel_page.page_subj};
@@ -134,9 +134,9 @@ void SelectorPagingStateTest::TearDown()
     g_cache.first_cached = m_old_first_cached;
     g_cache.last_cached = m_old_last_cached;
     g_cache.cached_all_in_range = m_old_cached_all;
-    g_first_subject = m_old_first_subject;
-    g_last_subject = m_old_last_subject;
-    g_subject_count = m_old_subject_count;
+    g_subj.first = m_old_first_subject;
+    g_subj.last = m_old_last_subject;
+    g_subj.count = m_old_subject_count;
     g_sel_page.page_art = m_old_page_app;
     g_sel_page.next_art = m_old_next_app;
     g_sel_page.page_subj = m_old_page_sp;
@@ -212,9 +212,9 @@ void SelectorPagingStateTest::prepare_articles(int count)
     g_abs_first = g_first_art = g_cache.first_cached = ArticleNum{1};
     g_last_art = g_cache.last_cached = ArticleNum{count};
     g_cache.cached_all_in_range = true;
-    g_subject_count = count;
-    g_first_subject = count ? &m_subjects[0] : nullptr;
-    g_last_subject = count ? &m_subjects[count - 1] : nullptr;
+    g_subj.count = count;
+    g_subj.first = count ? &m_subjects[0] : nullptr;
+    g_subj.last = count ? &m_subjects[count - 1] : nullptr;
     for (int index = 0; index < count; ++index)
     {
         Subject &subject = m_subjects[index];
@@ -665,7 +665,7 @@ void SelectorExitStateTest::group_current_row()
         reply_subject->m_articles = nullptr;
         first_subject->m_next = reply_subject->m_next;
         reply_subject->m_next->m_prev = first_subject;
-        --g_subject_count;
+        --g_subj.count;
     }
     else
     {
@@ -743,7 +743,7 @@ void SelectorExitStateTest::set_selection(std::vector<int> selected, bool killed
     }
     if (g_in_ng)
     {
-        for (Subject *subject = g_first_subject; subject; subject = subject->m_next)
+        for (Subject *subject = g_subj.first; subject; subject = subject->m_next)
         {
             subject->m_flags &= ~(SF_SEL | SF_DEL_SEL | SF_DEL);
         }

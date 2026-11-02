@@ -142,7 +142,7 @@ protected:
         m_old_last_art = g_last_art;
         m_old_first_cached = g_cache.first_cached;
         m_old_last_cached = g_cache.last_cached;
-        m_old_first_subject = g_first_subject;
+        m_old_first_subject = g_subj.first;
         m_old_cached_all_in_range = g_cache.cached_all_in_range;
         m_old_nntp_link = g_nntp.link;
         m_old_last_command = g_nntp.last_command;
@@ -165,7 +165,7 @@ protected:
         g_last_art = ArticleNum{5};
         g_cache.first_cached = ArticleNum{1};
         g_cache.last_cached = ArticleNum{};
-        g_first_subject = nullptr;
+        g_subj.first = nullptr;
         g_cache.cached_all_in_range = false;
         g_nntp.link.connection.reset();
         g_nntp.link.flags = NNTP_NEW_CMD_OK;
@@ -195,7 +195,7 @@ protected:
         g_last_art = m_old_last_art;
         g_cache.first_cached = m_old_first_cached;
         g_cache.last_cached = m_old_last_cached;
-        g_first_subject = m_old_first_subject;
+        g_subj.first = m_old_first_subject;
         g_cache.cached_all_in_range = m_old_cached_all_in_range;
         g_nntp.gets_clear_buffer();
         g_nntp.link = m_old_nntp_link;

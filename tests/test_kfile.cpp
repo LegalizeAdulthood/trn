@@ -58,7 +58,7 @@ protected:
         m_old_general_mode = g_general_mode;
         m_old_mode = g_mode;
         m_old_background_threading = option_value(OI_BACKGROUND_THREADING);
-        m_old_first_subject = g_first_subject;
+        m_old_first_subject = g_subj.first;
         m_old_verbose = g_verbose;
         m_old_novice_delays = g_novice_delays;
         m_old_tc_cr = g_tc_CR;
@@ -93,7 +93,7 @@ protected:
         g_force_last = false;
         g_general_mode = GM_READ;
         g_mode = MM_NONE;
-        g_first_subject = nullptr;
+        g_subj.first = nullptr;
         g_verbose = false;
         g_novice_delays = false;
         g_tc_CR = "\r";
@@ -132,7 +132,7 @@ protected:
         g_general_mode = m_old_general_mode;
         g_mode = m_old_mode;
         set_option(OI_BACKGROUND_THREADING, m_old_background_threading);
-        g_first_subject = m_old_first_subject;
+        g_subj.first = m_old_first_subject;
         g_verbose = m_old_verbose;
         g_novice_delays = m_old_novice_delays;
         g_tc_CR = m_old_tc_cr;

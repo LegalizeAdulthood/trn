@@ -962,14 +962,14 @@ try_again:
             sort_subjects();
             if (!g_sel_page.page_subj)
             {
-                g_sel_page.page_subj = g_last_subject;
+                g_sel_page.page_subj = g_subj.last;
             }
         }
         else
         {
             sort_subjects();
         }
-        for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+        for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
         {
             if (g_sel.rereading && !(sp->m_flags & g_sel.mask))
             {
@@ -1029,7 +1029,7 @@ try_again:
         {
             (void) g_sel_page.first_page();
         }
-        else if (g_sel_page.page_subj == g_last_subject)
+        else if (g_sel_page.page_subj == g_subj.last)
         {
             (void) g_sel_page.last_page();
         }
@@ -1056,7 +1056,7 @@ try_again:
 /// @globals
 /// - g_sel.mode: Read to select the active population.
 /// - g_multircs, g_ng_order.order, g_add_groups, g_univ.items: Read through catalog helpers.
-/// - g_art_ptr_list, g_first_subject: Read for article and subject traversal.
+/// - g_art_ptr_list, g_subj.first: Read for article and subject traversal.
 ///
 bool SelectorPage::first_page()
 {
@@ -1162,7 +1162,7 @@ bool SelectorPage::first_page()
 
     default:
     {
-        for (Subject *sp = g_first_subject; sp; sp = sp->m_next)
+        for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
         {
             if (sp->m_flags & SF_INCLUDED)
             {
@@ -1420,7 +1420,8 @@ bool SelectorPage::next_page()
 /// @globals
 /// - g_sel: Read for the active mode and selection policy.
 /// - g_multircs, g_ng_order.order, g_add_groups, g_univ.items: Read through catalog helpers.
-/// - g_opt_edit.flags, g_art_ptr_list, g_first_subject, g_last_subject: Read for included entries and traversal.
+/// - g_opt_edit.flags, g_art_ptr_list, g_subj.first, g_subj.last: Read for included entries and
+/// traversal.
 /// - g_tc_COLS, g_sel_art_display_mode, g_sel_art_display_mode_index: Read by line-count helpers.
 ///
 bool SelectorPage::prev_page()
@@ -1621,7 +1622,7 @@ bool SelectorPage::prev_page()
         int       line_cnt;
 
         int line = 2;
-        for (Subject *sp = (!page_sp ? g_last_subject : page_sp->m_prev); sp; sp = sp->m_prev)
+        for (Subject *sp = (!page_sp ? g_subj.last : page_sp->m_prev); sp; sp = sp->m_prev)
         {
             int item_arts = sp->m_misc;
             if (g_sel.mode == SM_THREAD)
@@ -1657,7 +1658,7 @@ bool SelectorPage::prev_page()
         }
         if (page_subj != page_sp)
         {
-            page_subj = (page_sp ? page_sp : g_first_subject);
+            page_subj = (page_sp ? page_sp : g_subj.first);
             return true;
         }
         break;
