@@ -1582,8 +1582,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         return;
     }
 
-    Article *ap = get_tree_artp(x_clk, y_clk + g_top_line.value_of() + 1 + g_term_scrolled);
-    if (ap && ap != get_tree_artp(x,y+g_top_line.value_of()+1+g_term_scrolled))
+    Article *ap = g_tree_view.get_artp(x_clk, y_clk + g_top_line.value_of() + 1 + g_term_scrolled);
+    if (ap && ap != g_tree_view.get_artp(x, y + g_top_line.value_of() + 1 + g_term_scrolled))
     {
         return;
     }

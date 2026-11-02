@@ -18,7 +18,8 @@ using TreeLines = std::vector<std::string>;
 
 struct ThreadTreeView
 {
-    void init();
+    void     init();
+    Article *get_artp(int x, int y);
 
     Article  *article{};
     int       max_depth{};
@@ -40,7 +41,6 @@ extern ThreadTreeView g_tree_view;
 
 extern int g_max_tree_lines;
 
-Article    *get_tree_artp(int x, int y);
 ArticleLine tree_puts(std::string_view orig_line, ArticleLine header_line, int is_subject);
 ArticleLine finish_tree(ArticleLine last_line);
 void entire_tree(Article *ap);

@@ -330,21 +330,21 @@ static void cache_tree(Article *ap, int depth, TreeRenderState &render)
     }
 }
 
-Article *get_tree_artp(int x, int y)
+Article *ThreadTreeView::get_artp(int x, int y)
 {
-    if (!g_tree_view.article || !g_tree_view.article->m_subj)
+    if (!article || !article->m_subj)
     {
         return nullptr;
     }
-    Article *ap = g_tree_view.article->m_subj->m_thread;
-    x -= g_tc_COLS - 1 - g_tree_view.max_depth;
-    if (x < 0 || y > g_tree_view.max_line || !ap)
+    Article *ap = article->m_subj->m_thread;
+    x -= g_tc_COLS - 1 - max_depth;
+    if (x < 0 || y > max_line || !ap)
     {
         return nullptr;
     }
-    x = (x - (x == g_tree_view.max_depth)) / 5 + g_tree_view.first_depth;
-    g_tree_view.find_artp_y = y + g_tree_view.first_line;
-    ap = g_tree_view.find_artp(ap, x);
+    x = (x - (x == max_depth)) / 5 + first_depth;
+    find_artp_y = y + first_line;
+    ap = find_artp(ap, x);
     return ap;
 }
 
