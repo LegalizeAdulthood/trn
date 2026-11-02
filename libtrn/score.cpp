@@ -124,7 +124,7 @@ void sc_init(bool pend_wait)
 
     s_sc_do_spin = false;
     ArticleNum i;
-    for (i = g_cache.last(g_last_art); i >= g_abs_first; i = article_prev(i))
+    for (i = g_cache.last(g_last_art); i >= g_abs_first; i = g_cache.prev(i))
     {
         if (article_scored(i))
         {
@@ -135,7 +135,7 @@ void sc_init(bool pend_wait)
     {
         // score one article, or give up
         ArticleNum a;
-        for (a = g_cache.last(g_last_art); a >= g_abs_first; a = article_prev(a))
+        for (a = g_cache.last(g_last_art); a >= g_abs_first; a = g_cache.prev(a))
         {
             sc_score_art(a,true);       // I want it *now*
             if (article_scored(a))
@@ -159,7 +159,7 @@ void sc_init(bool pend_wait)
     if (!g_sf_num_entries)
     {
         // score everything really fast
-        for (ArticleNum art = g_cache.last(g_last_art); art >= g_abs_first; art = article_prev(art))
+        for (ArticleNum art = g_cache.last(g_last_art); art >= g_abs_first; art = g_cache.prev(art))
         {
             sc_score_art(art, true);
         }

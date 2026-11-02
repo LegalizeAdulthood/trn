@@ -489,7 +489,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
     while (true)
     {
         // check if we're out of articles
-        if (backward ? ((g_nav.target.num = article_prev(g_nav.target.num)) < search_first)
+        if (backward ? ((g_nav.target.num = g_cache.prev(g_nav.target.num)) < search_first)
                      : ((g_nav.target.num = g_cache.next(g_nav.target.num)) > g_last_art))
         {
             break;

@@ -39,6 +39,7 @@ struct GroupArticleCache
     ArticleNum first(ArticleNum an);
     ArticleNum next(ArticleNum an);
     ArticleNum last(ArticleNum an);
+    ArticleNum prev(ArticleNum an);
 
     std::map<ArticleNum, Article> article_list;
     ArticleNum                    first_cached{};
@@ -87,7 +88,6 @@ inline Article **article_ptr_list_end()
     return g_art_ptr_list.data() + g_art_ptr_list.size();
 }
 
-ArticleNum article_prev(ArticleNum an);
 Article   *article_nextp(Article *ap);
 
 inline bool article_exists(ArticleNum an)

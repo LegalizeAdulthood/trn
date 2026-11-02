@@ -137,10 +137,10 @@ ArticleNum GroupArticleCache::last(ArticleNum an)
     return it->first;
 }
 
-ArticleNum article_prev(ArticleNum an)
+ArticleNum GroupArticleCache::prev(ArticleNum an)
 {
-    auto it = g_cache.article_list.lower_bound(an);
-    if (it == g_cache.article_list.begin())
+    auto it = article_list.lower_bound(an);
+    if (it == article_list.begin())
     {
         return article_before(g_abs_first);
     }

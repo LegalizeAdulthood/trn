@@ -312,7 +312,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
                 {
                     repeat_art = g_cache.next(repeat_art);
                 }
-                art = article_prev(repeat_art); // prepare for the for loop increment
+                art = g_cache.prev(repeat_art); // prepare for the for loop increment
                 if (repeat_count == 1)
                 {
                     line += 'r'; // repeat one

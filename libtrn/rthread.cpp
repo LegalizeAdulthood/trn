@@ -492,7 +492,7 @@ void ArticleLocation::prev(bool sel_flag, bool rereading)
 num_dec:
     while (true)
     {
-        num = article_prev(num);
+        num = g_cache.prev(num);
         if (num < g_abs_first)
         {
             num = article_before(g_abs_first);
