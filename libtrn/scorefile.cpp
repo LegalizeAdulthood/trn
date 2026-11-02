@@ -71,7 +71,6 @@ static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(std::string_view name);
-static void sf_add_extra_header(std::string_view head);
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
@@ -273,7 +272,7 @@ int ScoreRules::check_extra_headers(std::string_view head)
 // known.
 //
 // new header name, without ':' character
-static void sf_add_extra_header(std::string_view head)
+void ScoreRules::add_extra_header(std::string_view head)
 {
     // check to see if it's already known
     // first see if it is a known system header
@@ -282,7 +281,7 @@ static void sf_add_extra_header(std::string_view head)
         return; // known types should be interpreted in normal way
     }
     // then check to see if it's a known extra header
-    if (g_score_rules.check_extra_headers(head) >= 0)
+    if (check_extra_headers(head) >= 0)
     {
         return;
     }
@@ -295,7 +294,7 @@ static void sf_add_extra_header(std::string_view head)
             ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    g_score_rules.extra_headers.push_back(header_name);
+    extra_headers.push_back(header_name);
 }
 
 //ART_NUM art;          // article number to check
@@ -485,7 +484,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
         {
             return true;
         }
-        sf_add_extra_header(argument.substr(0, colon));
+        g_score_rules.add_extra_header(argument.substr(0, colon));
         return true;
     }
     if (command == "begin" || command == "end")

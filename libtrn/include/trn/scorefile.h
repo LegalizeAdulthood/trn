@@ -36,6 +36,7 @@ struct ScoreRules
     // TODO: private
     void grow();
     int  check_extra_headers(std::string_view head);
+    void add_extra_header(std::string_view head);
 
     std::vector<ScoreFileEntry> entries;       // array of entries
     int                         num_entries{}; // # of entries
