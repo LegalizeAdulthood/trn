@@ -231,13 +231,18 @@ void ScoreRules::free_patterns()
     }
 }
 
+void ScoreRules::clear_lists()
+{
+    entries.clear();
+    num_entries = 0;
+    extra_headers.clear();
+}
+
 void sf_clean()
 {
     g_score_rules.free_patterns();
     s_sf_abbr = {};
-    g_score_rules.entries.clear();
-    g_score_rules.num_entries = 0;
-    g_score_rules.extra_headers.clear();
+    g_score_rules.clear_lists();
 }
 
 void ScoreRules::grow()

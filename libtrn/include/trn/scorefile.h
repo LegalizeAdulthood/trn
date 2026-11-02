@@ -34,6 +34,7 @@ struct ScoreFileEntry
 struct ScoreRules
 {
     void free_patterns();
+    void clear_lists();
 
     // TODO: private
     void grow();
