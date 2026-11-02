@@ -225,7 +225,6 @@ private:
 
 static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
-static void                sel_display();
 static bool                select_item(Selection u);
 static bool                delay_return_item(Selection u);
 static bool                deselect_item(Selection u);
@@ -324,7 +323,7 @@ sel_restart:
     }
     cmd = 0;
 
-    sel_display();
+    g_sel_session.display();
     if (sel_input() == 'R')
     {
         scope_changed = scope_changed || g_sel.rereading != initial_rereading;
@@ -524,7 +523,7 @@ sel_restart:
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
 
-    sel_display();
+    g_sel_session.display();
     if (sel_input() == 'R')
     {
         goto sel_restart;
@@ -628,7 +627,7 @@ sel_restart:
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
 
-    sel_display();
+    g_sel_session.display();
     if (sel_input() == 'R')
     {
         goto sel_restart;
@@ -728,7 +727,7 @@ sel_restart:
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
 
-    sel_display();
+    g_sel_session.display();
     if (sel_input() == 'R')
     {
         goto sel_restart;
@@ -806,7 +805,7 @@ sel_restart:
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
 
-    sel_display();
+    g_sel_session.display();
     if (sel_input() == 'R' || g_sel_session.ret == '\r' || g_sel_session.ret == '\n')
     {
         goto sel_restart;
@@ -1095,7 +1094,7 @@ sel_restart:
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
 
-    sel_display();
+    g_sel_session.display();
     if (sel_input() == 'R')
     {
         goto sel_restart;
@@ -1151,11 +1150,13 @@ sel_restart:
 /// the item index if necessary, and displaying any status messages.
 ///
 /// @globals
+/// - g_sel and g_sel_page: Used by the existing page renderer.
 /// - g_sel_page.item_index: Reset to 0 if it exceeds the number of items on the page.
+/// - g_erase_screen, g_erase_each_line: Read for terminal clearing.
+/// - g_msg: Read for status output; terminal helpers retain their side effects.
 /// - g_term_col: Updated to the length of the displayed status message.
-/// - g_sel_session.disp_status_line: Updated to 2 after displaying the status message.
 ///
-static void sel_display()
+void SelectorSession::display()
 {
     // Present a page of items to the user
     display_page();
@@ -1169,12 +1170,12 @@ static void sel_display()
         g_sel_page.item_index = 0;
     }
 
-    if (g_sel_session.disp_status_line == 1)
+    if (disp_status_line == 1)
     {
         newline();
         fmt::print("{}", g_msg);
         g_term_col = static_cast<int>(g_msg.size());
-        g_sel_session.disp_status_line = 2;
+        disp_status_line = 2;
     }
 }
 
@@ -1569,7 +1570,7 @@ reinp_selector:
         case DS_ASK:
             if (!g_sel_session.clean_screen)
             {
-                sel_display();
+                g_sel_session.display();
                 goto reask_selector;
             }
             if (g_sel_session.removed_prompt & RP_NEWLINE)
@@ -1580,13 +1581,13 @@ reinp_selector:
             goto position_selector;
 
         case DS_DISPLAY:
-            sel_display();
+            g_sel_session.display();
             goto reask_selector;
 
         case DS_UPDATE:
             if (!g_sel_session.clean_screen)
             {
-                sel_display();
+                g_sel_session.display();
                 goto reask_selector;
             }
             if (g_sel_session.disp_status_line == 1)
@@ -1618,7 +1619,7 @@ reinp_selector:
             g_sel_session.disp_status_line = 1;
             if (!g_sel_session.clean_screen)
             {
-                sel_display();
+                g_sel_session.display();
                 goto reask_selector;
             }
             g_sel_session.status_msg(g_msg);
@@ -1695,7 +1696,7 @@ reinp_selector:
             }
             if (g_term_line >= g_sel_page.last_line)
             {
-                sel_display();
+                g_sel_session.display();
                 goto reask_selector;
             }
             break;
@@ -1715,7 +1716,7 @@ reinp_selector:
             g_sel.rereading = sel_reread_save;
             if (g_term_line >= g_sel_page.last_line)
             {
-                sel_display();
+                g_sel_session.display();
                 goto reask_selector;
             }
             break;
