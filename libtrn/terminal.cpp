@@ -1288,7 +1288,7 @@ void settle_down()
     dingaling();
     std::fflush(stdout);
     // sleep(1);
-    g_pushback.next_out = g_pushback.next_in; // empty circle_buf
+    g_pushback.clear();
     s_not_echoing = 0;
     eat_typeahead();
 }
@@ -1393,6 +1393,11 @@ int InputPushback::take(char *addr)
     *addr = circle_buf[next_out++];
     next_out %= PUSH_SIZE;
     return 1;
+}
+
+void InputPushback::clear()
+{
+    next_out = next_in; // empty circle_buf
 }
 
 // print an underlined string, one way or another
