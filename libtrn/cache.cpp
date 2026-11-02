@@ -268,19 +268,22 @@ void close_cache()
     g_cache.clear();
 }
 
-// TODO: decouple this from g_subj.short_hash
-//
 void Article::check_for_near_subj()
 {
-    Subject* sp;
-    if (!g_subj.short_hash)
+    g_subj.check_for_near_subj(m_subj);
+}
+
+void SubjectIndex::check_for_near_subj(Subject *current_subj)
+{
+    Subject *sp;
+    if (!short_hash)
     {
-        g_subj.short_hash = hash_create(401, subject_cmp); // TODO: pick a better size
-        sp = g_subj.first;
+        short_hash = hash_create(401, subject_cmp); // TODO: pick a better size
+        sp = first;
     }
     else
     {
-        sp = m_subj;
+        sp = current_subj;
         if (sp->m_next)
         {
             sp = nullptr;
@@ -291,12 +294,12 @@ void Article::check_for_near_subj()
         const std::string_view subject_text = sp->stripped_view();
         if ((int) subject_text.size() >= g_join_subject_len && sp->m_thread)
         {
-            Subject* sp2;
+            Subject  *sp2;
             HashDatum data =
-                hash_fetch(g_subj.short_hash, subject_text.substr(0, static_cast<std::size_t>(g_join_subject_len)));
+                hash_fetch(short_hash, subject_text.substr(0, static_cast<std::size_t>(g_join_subject_len)));
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
-                data.dat_ptr = (char*)sp;
+                data.dat_ptr = (char *) sp;
                 hash_store_last(data);
             }
             else if (sp->m_thread != sp2->m_thread)

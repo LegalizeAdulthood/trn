@@ -82,6 +82,7 @@ struct SubjectIndex
 {
     void clear();
     void clear_short_hash();
+    void check_for_near_subj(Subject *current_subj);
 
     HashTable *hash{};
     HashTable *short_hash{};
