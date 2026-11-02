@@ -63,11 +63,10 @@ enum
     SF_REPLY = -5
 };
 
-static std::vector<ScoreFile> s_sf_files;
 static std::array<std::string, 256> s_sf_abbr; // abbreviations
 static bool            s_sf_pattern_status{}; // should we match by pattern?
 static int             s_sf_file_level{};     // how deep are we?
-static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
+ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
 static int sf_open_file(std::string_view name);
@@ -92,9 +91,9 @@ static bool sf_default_url_get(std::string_view url, const fs::path &outfile)
     return url_get(url, outfile);
 }
 
-void sf_set_url_getter_for_test(ScoreFileUrlGetter getter)
+void sf_set_url_getter_for_test(ScoreFileUrlGetter *getter)
 {
-    s_url_getter = getter != nullptr ? getter : sf_default_url_get;
+    g_score_cache.url_getter = getter != nullptr ? getter : sf_default_url_get;
 }
 
 void sf_clear_file_cache_for_test()
@@ -754,7 +753,7 @@ static void sf_do_file(std::string_view fname)
     g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
     g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
 
-    const ScoreFile &file = s_sf_files[static_cast<std::size_t>(sf_fp)];
+    const ScoreFile &file = g_score_cache.files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
     {
         (void)sf_do_line(s, false);
@@ -1316,20 +1315,20 @@ static int sf_open_file(std::string_view name)
         return 0;       // unable to open
     }
     const std::string name_text{name};
-    for (i = 0; i < s_sf_files.size(); i++)
+    for (i = 0; i < g_score_cache.files.size(); i++)
     {
-        if (s_sf_files[i].fname == name_text)
+        if (g_score_cache.files[i].fname == name_text)
         {
-            if (!s_sf_files[i].exists)          // nonexistent
+            if (!g_score_cache.files[i].exists) // nonexistent
             {
                 return -1;      // no such file
             }
             return static_cast<int>(i);
         }
     }
-    s_sf_files.push_back(ScoreFile{});
-    i = s_sf_files.size() - 1;
-    ScoreFile &file = s_sf_files[i];
+    g_score_cache.files.push_back(ScoreFile{});
+    i = g_score_cache.files.size() - 1;
+    ScoreFile &file = g_score_cache.files[i];
     file.fname = name_text;
 
     std::string temp_name;
@@ -1337,7 +1336,7 @@ static int sf_open_file(std::string_view name)
     if (sf_is_url(name_text))
     {
         temp_name = temp_filename();
-        if (!s_url_getter(std::string_view{name_text}.substr(4), temp_name))
+        if (!g_score_cache.url_getter(std::string_view{name_text}.substr(4), temp_name))
         {
             return -1;
         }
@@ -1369,5 +1368,5 @@ static int sf_open_file(std::string_view name)
 
 void sf_file_clear()
 {
-    s_sf_files.clear();
+    g_score_cache.files.clear();
 }

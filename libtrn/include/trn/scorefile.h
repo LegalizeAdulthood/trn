@@ -9,6 +9,7 @@
 #include <trn/head.h>
 
 #include <cstddef>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -61,6 +62,16 @@ struct ScoreFile
     std::vector<std::string> lines;
     bool                     exists{};
 };
+
+using ScoreFileUrlGetter = bool(std::string_view url, const std::filesystem::path &outfile);
+
+struct ScoreFileCache
+{
+    std::vector<ScoreFile> files;
+    ScoreFileUrlGetter    *url_getter{};
+};
+
+extern ScoreFileCache g_score_cache;
 
 extern int  g_sf_score_verbose; // when true, the scoring routine prints lots of info...
 extern bool g_sf_verbose;       // if true print more stuff while loading
