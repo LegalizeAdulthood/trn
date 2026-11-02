@@ -67,6 +67,9 @@ using ScoreFileUrlGetter = bool(std::string_view url, const std::filesystem::pat
 
 struct ScoreFileCache
 {
+    // TODO: private
+    int open_file(std::string_view name);
+
     std::vector<ScoreFile> files;
     ScoreFileUrlGetter    *url_getter{};
 };

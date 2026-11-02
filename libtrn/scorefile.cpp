@@ -69,7 +69,6 @@ static int             s_sf_file_level{};     // how deep are we?
 ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
-static int sf_open_file(std::string_view name);
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
 static bool        sf_do_command(std::string_view cmd, bool check);
@@ -731,7 +730,7 @@ static bool sf_do_line(std::string_view line, bool check)
 static void sf_do_file(std::string_view fname)
 {
     const std::string filename{fname};
-    int               sf_fp = sf_open_file(filename);
+    int               sf_fp = g_score_cache.open_file(filename);
     if (sf_fp < 0)
     {
         return;
@@ -1306,7 +1305,7 @@ void sf_edit_file(std::string_view filespec)
 
 // returns file number
 // if file number is negative, the file does not exist or cannot be opened
-static int sf_open_file(std::string_view name)
+int ScoreFileCache::open_file(std::string_view name)
 {
     std::size_t i;
 
@@ -1315,20 +1314,20 @@ static int sf_open_file(std::string_view name)
         return 0;       // unable to open
     }
     const std::string name_text{name};
-    for (i = 0; i < g_score_cache.files.size(); i++)
+    for (i = 0; i < files.size(); i++)
     {
-        if (g_score_cache.files[i].fname == name_text)
+        if (files[i].fname == name_text)
         {
-            if (!g_score_cache.files[i].exists) // nonexistent
+            if (!files[i].exists) // nonexistent
             {
                 return -1;      // no such file
             }
             return static_cast<int>(i);
         }
     }
-    g_score_cache.files.push_back(ScoreFile{});
-    i = g_score_cache.files.size() - 1;
-    ScoreFile &file = g_score_cache.files[i];
+    files.push_back(ScoreFile{});
+    i = files.size() - 1;
+    ScoreFile &file = files[i];
     file.fname = name_text;
 
     std::string temp_name;
@@ -1336,7 +1335,7 @@ static int sf_open_file(std::string_view name)
     if (sf_is_url(name_text))
     {
         temp_name = temp_filename();
-        if (!g_score_cache.url_getter(std::string_view{name_text}.substr(4), temp_name))
+        if (!url_getter(std::string_view{name_text}.substr(4), temp_name))
         {
             return -1;
         }
