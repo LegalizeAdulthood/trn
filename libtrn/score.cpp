@@ -156,7 +156,7 @@ void sc_init(bool pend_wait)
 
     // if no scoring rules/methods are present, score everything
     // XXX will be bad if later methods are added.
-    if (!g_sf_num_entries)
+    if (!g_score_rules.num_entries)
     {
         // score everything really fast
         for (ArticleNum art = g_cache.last(g_last_art); art >= g_abs_first; art = g_cache.prev(art))

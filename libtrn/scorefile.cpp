@@ -46,9 +46,10 @@ namespace fs = std::filesystem;
 static std::string_view sf_get_extra_header(ArticleNum art, int hnum);
 static bool             sf_default_url_get(std::string_view url, const fs::path &outfile);
 
-int  g_sf_num_entries{};   // # of entries
 int  g_sf_score_verbose{}; // when true, the scoring routine prints lots of info...
 bool g_sf_verbose{true};   // if true print more stuff while loading
+
+ScoreRules g_score_rules;
 
 // list of score array markers (in g_header_rules.type field of score entry)
 // entry is a file marker.  Score is the file level
@@ -62,17 +63,10 @@ enum
     SF_REPLY = -5
 };
 
-static std::vector<ScoreFileEntry> s_sf_entries; // array of entries
 static std::vector<ScoreFile> s_sf_files;
 static std::array<std::string, 256> s_sf_abbr; // abbreviations
-static bool            s_new_author_active{}; // if true, s_newauthor is active
-static int             s_new_author{};        // bonus score given to a new (unscored) author
 static bool            s_sf_pattern_status{}; // should we match by pattern?
-static bool            s_reply_active{};      // if true, s_reply_score is active
-static int             s_reply_score{};       // score amount added to an article reply
 static int             s_sf_file_level{};     // how deep are we?
-static std::vector<std::string> s_sf_extra_headers;
-static bool            s_sf_has_extra_headers{};
 static ScoreFileUrlGetter s_url_getter{sf_default_url_get};
 static CompiledRegex  *s_sf_compex{};
 
@@ -115,9 +109,9 @@ void sf_clear_file_cache_for_test()
 // Must be called before any other sf_ routine (once for each group)
 void sf_init()
 {
-    g_sf_num_entries = 0;
-    s_sf_entries.clear();
-    s_sf_extra_headers.clear();
+    g_score_rules.num_entries = 0;
+    g_score_rules.entries.clear();
+    g_score_rules.extra_headers.clear();
 
     // initialize abbreviation list
     s_sf_abbr = {};
@@ -150,34 +144,34 @@ void sf_init()
     }
 
     // do post-processing (set thresholds and detect extra header usage)
-    s_sf_has_extra_headers = false;
-    // set thresholds from the s_sf_entries
-    s_reply_active = false;
-    s_new_author_active = false;
+    g_score_rules.has_extra_headers = false;
+    // set thresholds from the g_score_rules.entries
+    g_score_rules.reply_active = false;
+    g_score_rules.new_author_active = false;
     g_kill_thresh_active = false;
-    for (int i = 0; i < g_sf_num_entries; i++)
+    for (int i = 0; i < g_score_rules.num_entries; i++)
     {
-        if (s_sf_entries[i].head_type >= HEAD_LAST)
+        if (g_score_rules.entries[i].head_type >= HEAD_LAST)
         {
-            s_sf_has_extra_headers = true;
+            g_score_rules.has_extra_headers = true;
         }
-        switch (s_sf_entries[i].head_type)
+        switch (g_score_rules.entries[i].head_type)
         {
         case SF_KILL_THRESHOLD:
             g_kill_thresh_active = true;
-            g_kill_thresh = s_sf_entries[i].score;
+            g_kill_thresh = g_score_rules.entries[i].score;
             if (g_sf_verbose)
             {
                 int j;
                 // rethink?
-                for (j = i + 1; j < g_sf_num_entries; j++)
+                for (j = i + 1; j < g_score_rules.num_entries; j++)
                 {
-                    if (s_sf_entries[j].head_type == SF_KILL_THRESHOLD)
+                    if (g_score_rules.entries[j].head_type == SF_KILL_THRESHOLD)
                     {
                         break;
                     }
                 }
-                if (j == g_sf_num_entries) // no later thresholds
+                if (j == g_score_rules.num_entries) // no later thresholds
                 {
                     fmt::print("killthreshold {}\n", g_kill_thresh);
                 }
@@ -185,43 +179,43 @@ void sf_init()
             break;
 
         case SF_NEW_AUTHOR:
-            s_new_author_active = true;
-            s_new_author = s_sf_entries[i].score;
+            g_score_rules.new_author_active = true;
+            g_score_rules.new_author = g_score_rules.entries[i].score;
             if (g_sf_verbose)
             {
                 int j;
                 // rethink?
-                for (j = i + 1; j < g_sf_num_entries; j++)
+                for (j = i + 1; j < g_score_rules.num_entries; j++)
                 {
-                    if (s_sf_entries[j].head_type == SF_NEW_AUTHOR)
+                    if (g_score_rules.entries[j].head_type == SF_NEW_AUTHOR)
                     {
                         break;
                     }
                 }
-                if (j == g_sf_num_entries) // no later newauthors
+                if (j == g_score_rules.num_entries) // no later newauthors
                 {
-                    fmt::print("New Author score: {}\n", s_new_author);
+                    fmt::print("New Author score: {}\n", g_score_rules.new_author);
                 }
             }
             break;
 
         case SF_REPLY:
-            s_reply_active = true;
-            s_reply_score = s_sf_entries[i].score;
+            g_score_rules.reply_active = true;
+            g_score_rules.reply_score = g_score_rules.entries[i].score;
             if (g_sf_verbose)
             {
                 int j;
                 // rethink?
-                for (j = i + 1; j < g_sf_num_entries; j++)
+                for (j = i + 1; j < g_score_rules.num_entries; j++)
                 {
-                    if (s_sf_entries[j].head_type == SF_REPLY)
+                    if (g_score_rules.entries[j].head_type == SF_REPLY)
                     {
                         break;
                     }
                 }
-                if (j == g_sf_num_entries) // no later reply rules
+                if (j == g_score_rules.num_entries) // no later reply rules
                 {
-                    fmt::print("Reply score: {}\n", s_reply_score);
+                    fmt::print("Reply score: {}\n", g_score_rules.reply_score);
                 }
             }
             break;
@@ -231,28 +225,28 @@ void sf_init()
 
 void sf_clean()
 {
-    for (int i = 0; i < g_sf_num_entries; i++)
+    for (int i = 0; i < g_score_rules.num_entries; i++)
     {
-        if (s_sf_entries[i].compex != nullptr)
+        if (g_score_rules.entries[i].compex != nullptr)
         {
-            s_sf_entries[i].compex->free_compex();
-            delete s_sf_entries[i].compex;
+            g_score_rules.entries[i].compex->free_compex();
+            delete g_score_rules.entries[i].compex;
         }
     }
     s_sf_abbr = {};
-    s_sf_entries.clear();
-    g_sf_num_entries = 0;
-    s_sf_extra_headers.clear();
+    g_score_rules.entries.clear();
+    g_score_rules.num_entries = 0;
+    g_score_rules.extra_headers.clear();
 }
 
 static void sf_grow()
 {
-    s_sf_entries.push_back(ScoreFileEntry{});
-    g_sf_num_entries = size_cast<int>(s_sf_entries);
+    g_score_rules.entries.push_back(ScoreFileEntry{});
+    g_score_rules.num_entries = size_cast<int>(g_score_rules.entries);
 }
 
 // Returns -1 if no matching extra header found, otherwise returns offset
-// into the s_sf_extra_headers array.
+// into the g_score_rules.extra_headers array.
 //
 // header name, without ':' character
 static int sf_check_extra_headers(std::string_view head)
@@ -267,9 +261,9 @@ static int sf_check_extra_headers(std::string_view head)
             ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    for (std::size_t i = 0; i < s_sf_extra_headers.size(); i++)
+    for (std::size_t i = 0; i < g_score_rules.extra_headers.size(); i++)
     {
-        if (lower_head == s_sf_extra_headers[i])
+        if (lower_head == g_score_rules.extra_headers[i])
         {
             return static_cast<int>(i);
         }
@@ -303,16 +297,16 @@ static void sf_add_extra_header(std::string_view head)
             ch = static_cast<char>(std::tolower(ch)); // convert to lower case
         }
     }
-    s_sf_extra_headers.push_back(header_name);
+    g_score_rules.extra_headers.push_back(header_name);
 }
 
 //ART_NUM art;          // article number to check
-//int hnum;             // header number: offset into s_sf_extra_headers
+// int hnum;             // header number: offset into g_score_rules.extra_headers
 static std::string_view sf_get_extra_header(ArticleNum art, int hnum)
 {
     parse_header(art); // fast if already parsed
 
-    const std::string     &head = s_sf_extra_headers[hnum];
+    const std::string     &head = g_score_rules.extra_headers[hnum];
     const std::string_view header_text{g_parsed_header.head_buf};
 
     for (std::size_t line_start{}; line_start < header_text.size();)
@@ -428,8 +422,8 @@ static bool sf_do_command(std::string_view cmd, bool check)
             head_type = SF_REPLY;
         }
         sf_grow();
-        s_sf_entries[g_sf_num_entries - 1].head_type = head_type;
-        s_sf_entries[g_sf_num_entries - 1].score = score;
+        g_score_rules.entries[g_score_rules.num_entries - 1].head_type = head_type;
+        g_score_rules.entries[g_score_rules.num_entries - 1].score = score;
         return true;
     }
     if (command == "savescores")
@@ -683,7 +677,7 @@ static bool sf_do_line(std::string_view line, bool check)
         return true; // limits of check
     }
     sf_grow(); // acutally make an entry
-    ScoreFileEntry &entry = s_sf_entries[g_sf_num_entries - 1];
+    ScoreFileEntry &entry = g_score_rules.entries[g_score_rules.num_entries - 1];
     entry.head_type = j;
     entry.score = score;
     if (s_sf_pattern_status) // in pattern matching mode
@@ -748,11 +742,11 @@ static void sf_do_file(std::string_view fname)
     }
     // add end marker to scoring array
     sf_grow();
-    s_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_START;
+    g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_START;
     // file_level is 1 to n
-    s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
-    s_sf_entries[g_sf_num_entries-1].str2.clear();
-    s_sf_entries[g_sf_num_entries-1].str1 = filename;
+    g_score_rules.entries[g_score_rules.num_entries - 1].score = s_sf_file_level;
+    g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
+    g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
 
     const ScoreFile &file = s_sf_files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
@@ -761,24 +755,24 @@ static void sf_do_file(std::string_view fname)
     }
     // add end marker to scoring array
     sf_grow();
-    s_sf_entries[g_sf_num_entries-1].head_type = SF_FILE_MARK_END;
+    g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_END;
     // file_level is 1 to n
-    s_sf_entries[g_sf_num_entries-1].score = s_sf_file_level;
-    s_sf_entries[g_sf_num_entries-1].str2.clear();
-    s_sf_entries[g_sf_num_entries-1].str1 = filename;
+    g_score_rules.entries[g_score_rules.num_entries - 1].score = s_sf_file_level;
+    g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
+    g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
     s_sf_file_level--;
 }
 
 //const std::string& text; // string to match on
-//int ind;                 // index into s_sf_entries
+// int ind;                 // index into g_score_rules.entries
 static int score_match(const std::string &text, int ind)
 {
-    if (s_sf_entries[ind].flags & 1)    // pattern style match
+    if (g_score_rules.entries[ind].flags & 1) // pattern style match
     {
-        if (s_sf_entries[ind].compex != nullptr)
+        if (g_score_rules.entries[ind].compex != nullptr)
         {
             // we have a good pattern
-            if (s_sf_entries[ind].compex->execute(text))
+            if (g_score_rules.entries[ind].compex->execute(text))
             {
                 return true;
             }
@@ -786,8 +780,8 @@ static int score_match(const std::string &text, int ind)
         return false;
     }
     // default case
-    const std::string     &s1 = s_sf_entries[ind].str1;
-    const std::string     &s2 = s_sf_entries[ind].str2;
+    const std::string     &s1 = g_score_rules.entries[ind].str1;
+    const std::string     &s2 = g_score_rules.entries[ind].str2;
     const std::size_t      first = text.find(s1);
     return first != std::string::npos &&
            (s2.empty() || text.find(s2, first + s1.size()) != std::string::npos);
@@ -801,7 +795,7 @@ int sf_score(ArticleNum a)
     }
 
     // if there are no score entries, then the answer is real easy and quick
-    if (g_sf_num_entries == 0)
+    if (g_score_rules.num_entries == 0)
     {
         return 0;
     }
@@ -812,14 +806,14 @@ int sf_score(ArticleNum a)
 
     // parse the header now if there are extra headers
     // (This could save disk accesses.)
-    if (s_sf_has_extra_headers)
+    if (g_score_rules.has_extra_headers)
     {
         parse_header(a);
     }
 
-    for (int i = 0; i < g_sf_num_entries; i++)
+    for (int i = 0; i < g_score_rules.num_entries; i++)
     {
-        const int head_type = s_sf_entries[i].head_type;
+        const int head_type = g_score_rules.entries[i].head_type;
         if (head_type <= 0) // don't use command headers for scoring
         {
             continue;   // the outer for loop
@@ -827,31 +821,31 @@ int sf_score(ArticleNum a)
         const HeaderLineType h = static_cast<HeaderLineType>(head_type);
         // if this head_type has been done before, this entry
         // has already been done
-        if (s_sf_entries[i].flags & 2)          // rule has been applied
+        if (g_score_rules.entries[i].flags & 2) // rule has been applied
         {
-            s_sf_entries[i].flags &= 0xfd; // turn off flag
+            g_score_rules.entries[i].flags &= 0xfd; // turn off flag
             continue;                   // ...with the next rule
         }
 
         const std::string s = sf_get_line(a,h);
         if (s.empty())  // no such line for the article
         {
-            continue;   // with the s_sf_entries.
+            continue; // with the g_score_rules.entries.
         }
 
         // do the matches for this header
-        for (int j = i; j < g_sf_num_entries; j++)
+        for (int j = i; j < g_score_rules.num_entries; j++)
         {
             // see if there is a match
-            if (h == s_sf_entries[j].head_type)
+            if (h == g_score_rules.entries[j].head_type)
             {
                 if (j != i)             // set flag only for future rules
                 {
-                    s_sf_entries[j].flags |= 2; // rule has been applied.
+                    g_score_rules.entries[j].flags |= 2; // rule has been applied.
                 }
                 if (score_match(s, j))
                 {
-                    sum = sum + s_sf_entries[j].score;
+                    sum = sum + g_score_rules.entries[j].score;
                     if (h == FROM_LINE)
                     {
                         g_cache.ptr(a)->m_score_flags |= SFLAG_AUTHOR;
@@ -864,16 +858,16 @@ int sf_score(ArticleNum a)
             }
         }
     }
-    if (s_new_author_active && !(g_cache.ptr(a)->m_score_flags & SFLAG_AUTHOR))
+    if (g_score_rules.new_author_active && !(g_cache.ptr(a)->m_score_flags & SFLAG_AUTHOR))
     {
-        sum = sum + s_new_author; // add new author bonus
+        sum = sum + g_score_rules.new_author; // add new author bonus
         if (g_sf_score_verbose)
         {
-            fmt::print("New Author: {}\n", s_new_author);
+            fmt::print("New Author: {}\n", g_score_rules.new_author);
             // consider: print which file the bonus came from
         }
     }
-    if (s_reply_active)
+    if (g_score_rules.reply_active)
     {
         // should be in cache if a rule above used the subject
         const std::string reply_subject = fetch_cache(a, SUBJ_LINE, true);
@@ -882,10 +876,10 @@ int sf_score(ArticleNum a)
         {
             if (subject_has_re(reply_subject))
             {
-                sum = sum + s_reply_score;
+                sum = sum + g_score_rules.reply_score;
                 if (g_sf_score_verbose)
                 {
-                    fmt::print("Reply: {}\n", s_reply_score);
+                    fmt::print("Reply: {}\n", g_score_rules.reply_score);
                     // consider: print which file the bonus came from
                 }
             }
@@ -1099,7 +1093,7 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     }
     if (h >= HEAD_LAST)
     {
-        if (h - HEAD_LAST < size_cast<int>(s_sf_extra_headers))
+        if (h - HEAD_LAST < size_cast<int>(g_score_rules.extra_headers))
         {
             line = sf_get_extra_header(a, h - HEAD_LAST);
         }
@@ -1135,7 +1129,7 @@ static std::string sf_get_line(ArticleNum a, HeaderLineType h)
     return result;
 }
 
-// given an index into s_sf_entries, print information about that index
+// given an index into g_score_rules.entries, print information about that index
 static void sf_print_match(int indx)
 {
     int  i;
@@ -1143,19 +1137,19 @@ static void sf_print_match(int indx)
 
     for (i = indx; i >= 0; i--)
     {
-        int j = s_sf_entries[i].head_type;
+        int j = g_score_rules.entries[i].head_type;
         if (j == SF_FILE_MARK_START)  // found immediate inclusion.
         {
             break;
         }
         if (j == SF_FILE_MARK_END)      // found included file, skip
         {
-            int tmplevel = s_sf_entries[i].score;
+            int tmplevel = g_score_rules.entries[i].score;
             int k;
             for (k = i; k >= 0; k--)
             {
-                if (s_sf_entries[k].head_type == SF_FILE_MARK_START //
-                    && s_sf_entries[k].score == tmplevel)
+                if (g_score_rules.entries[k].head_type == SF_FILE_MARK_START //
+                    && g_score_rules.entries[k].score == tmplevel)
                 {
                     break;      // inner for loop
                 }
@@ -1165,41 +1159,41 @@ static void sf_print_match(int indx)
     }
     if (i >= 0)
     {
-        level = s_sf_entries[i].score;
+        level = g_score_rules.entries[i].score;
     }
     // print the file markers.
     for (; i >= 0; i--)
     {
-        if (s_sf_entries[i].head_type == SF_FILE_MARK_START //
-            && s_sf_entries[i].score <= level)
+        if (g_score_rules.entries[i].head_type == SF_FILE_MARK_START //
+            && g_score_rules.entries[i].score <= level)
         {
             level--;    // go out...
             for (int k = 0; k < level; k++)
             {
                 fmt::print(".");            // make putchar later?
             }
-            fmt::print("From file: {}\n", s_sf_entries[i].str1);
+            fmt::print("From file: {}\n", g_score_rules.entries[i].str1);
             if (level == 0)             // top level
             {
                 break;          // out of the big for loop
             }
         }
     }
-    const std::string_view pattern = (s_sf_entries[indx].flags & 1) ? "pattern " : "";
+    const std::string_view pattern = (g_score_rules.entries[indx].flags & 1) ? "pattern " : "";
 
     std::string_view head_name;
-    if (s_sf_entries[indx].head_type >= HEAD_LAST)
+    if (g_score_rules.entries[indx].head_type >= HEAD_LAST)
     {
-        head_name = s_sf_extra_headers[s_sf_entries[indx].head_type - HEAD_LAST];
+        head_name = g_score_rules.extra_headers[g_score_rules.entries[indx].head_type - HEAD_LAST];
     }
     else
     {
-        head_name = g_header_rules.type[s_sf_entries[indx].head_type].name;
+        head_name = g_header_rules.type[g_score_rules.entries[indx].head_type].name;
     }
-    fmt::print("{} {}{}: {}", s_sf_entries[indx].score, pattern, head_name, s_sf_entries[indx].str1);
-    if (!s_sf_entries[indx].str2.empty())
+    fmt::print("{} {}{}: {}", g_score_rules.entries[indx].score, pattern, head_name, g_score_rules.entries[indx].str1);
+    if (!g_score_rules.entries[indx].str2.empty())
     {
-        fmt::print("*{}", s_sf_entries[indx].str2);
+        fmt::print("*{}", g_score_rules.entries[indx].str2);
     }
     fmt::print("\n");
 }
@@ -1209,28 +1203,28 @@ static void sf_exclude_file(std::string_view fname)
     int       start;
     int       end;
 
-    for (start = 0; start < g_sf_num_entries; start++)
+    for (start = 0; start < g_score_rules.num_entries; start++)
     {
-        if (s_sf_entries[start].head_type == SF_FILE_MARK_START
-         && std::string_view{s_sf_entries[start].str1} == fname)
+        if (g_score_rules.entries[start].head_type == SF_FILE_MARK_START &&
+            std::string_view{g_score_rules.entries[start].str1} == fname)
         {
             break;
         }
     }
-    if (start == g_sf_num_entries)
+    if (start == g_score_rules.num_entries)
     {
         fmt::print("Exclude: file |{}| was not included\n", fname);
         return;
     }
-    for (end = start+1; end < g_sf_num_entries; end++)
+    for (end = start + 1; end < g_score_rules.num_entries; end++)
     {
-        if (s_sf_entries[end].head_type==SF_FILE_MARK_END
-         && std::string_view{s_sf_entries[end].str1} == fname)
+        if (g_score_rules.entries[end].head_type == SF_FILE_MARK_END &&
+            std::string_view{g_score_rules.entries[end].str1} == fname)
         {
             break;
         }
     }
-    if (end == g_sf_num_entries)
+    if (end == g_score_rules.num_entries)
     {
         fmt::print("Exclude: file |{}| is incomplete at exclusion command\n", fname);
         // insert more explanation later?
@@ -1238,19 +1232,19 @@ static void sf_exclude_file(std::string_view fname)
     }
 
 #ifdef UNDEF
-    int newnum = g_sf_num_entries - (end - start) - 1;
+    int newnum = g_score_rules.num_entries - (end - start) - 1;
     // Deal with exclusion of all scorefile entries.
     // This cannot happen since the exclusion command has to be within a
     // file.  Code kept in case online exclusions allowed later.
     if (newnum==0)
     {
-        g_sf_num_entries = 0;
-        s_sf_entries.clear();
+        g_score_rules.num_entries = 0;
+        g_score_rules.entries.clear();
         return;
     }
 #endif
-    s_sf_entries.erase(s_sf_entries.begin() + start, s_sf_entries.begin() + end + 1);
-    g_sf_num_entries = size_cast<int>(s_sf_entries);
+    g_score_rules.entries.erase(g_score_rules.entries.begin() + start, g_score_rules.entries.begin() + end + 1);
+    g_score_rules.num_entries = size_cast<int>(g_score_rules.entries);
     if (g_sf_verbose)
     {
         fmt::print("Excluded file: {}\n", fname);

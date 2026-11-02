@@ -31,6 +31,20 @@ struct ScoreFileEntry
 };
 // note that negative header #s are used to indicate special entries...
 
+struct ScoreRules
+{
+    std::vector<ScoreFileEntry> entries;       // array of entries
+    int                         num_entries{}; // # of entries
+    std::vector<std::string>    extra_headers;
+    bool                        has_extra_headers{};
+    bool                        new_author_active{}; // if true, new_author is active
+    int                         new_author{};        // bonus score given to a new (unscored) author
+    bool                        reply_active{};      // if true, reply_score is active
+    int                         reply_score{};       // score amount added to an article reply
+};
+
+extern ScoreRules g_score_rules;
+
 // for cached score rules
 struct ScoreFile
 {
@@ -39,7 +53,6 @@ struct ScoreFile
     bool                     exists{};
 };
 
-extern int  g_sf_num_entries;   // # of entries
 extern int  g_sf_score_verbose; // when true, the scoring routine prints lots of info...
 extern bool g_sf_verbose;       // if true print more stuff while loading
 

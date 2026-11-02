@@ -71,7 +71,7 @@ protected:
         head_init();
         g_tmp_dir = TRN_TEST_TMP_DIR;
         g_our_pid = 1357;
-        g_sf_num_entries = 0;
+        g_score_rules.num_entries = 0;
         g_sf_verbose = false;
         g_sf_score_verbose = 0;
         g_cache.article_list.clear();
@@ -95,7 +95,7 @@ protected:
         g_cache.article_list.clear();
         g_cache.article_list = std::move(m_old_article_list);
         head_final();
-        g_sf_num_entries = 0;
+        g_score_rules.num_entries = 0;
         g_tmp_dir = m_old_tmp_dir;
         g_our_pid = m_old_pid;
         g_newsgroup_name = m_old_newsgroup_name;
@@ -141,11 +141,11 @@ TEST_F(ScoreFileTest, extraHeaderLookupIsCaseInsensitive)
 {
     sf_append("!header X-Custom-Score:");
 
-    EXPECT_EQ(0, g_sf_num_entries);
+    EXPECT_EQ(0, g_score_rules.num_entries);
 
     sf_append("!10 X-CUSTOM-SCORE: value");
 
-    EXPECT_EQ(1, g_sf_num_entries);
+    EXPECT_EQ(1, g_score_rules.num_entries);
 }
 
 TEST_F(ScoreFileTest, extraHeaderScoringReadsParsedHeaderBuffer)
@@ -198,14 +198,14 @@ TEST_F(ScoreFileTest, killThresholdCommandAcceptsSpaceSeparator)
 {
     sf_append("!killthreshold -11");
 
-    EXPECT_EQ(1, g_sf_num_entries);
+    EXPECT_EQ(1, g_score_rules.num_entries);
 }
 
 TEST_F(ScoreFileTest, newAuthorCommandAcceptsAssignmentSeparator)
 {
     sf_append("!newauthor=7");
 
-    EXPECT_EQ(1, g_sf_num_entries);
+    EXPECT_EQ(1, g_score_rules.num_entries);
 }
 
 TEST_F(ScoreFileTest, saveScoresOffDisablesScoreSaving)
@@ -239,7 +239,7 @@ TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)
     EXPECT_EQ("http://example.test/scores", g_fetched_url);
     EXPECT_FALSE(g_fetched_outfile.empty());
     EXPECT_FALSE(fs::exists(g_fetched_outfile));
-    EXPECT_EQ(3, g_sf_num_entries);
+    EXPECT_EQ(3, g_score_rules.num_entries);
 }
 
 TEST_F(ScoreFileTest, subjectScoringKeepsLineBufferCap)
@@ -295,7 +295,7 @@ TEST_F(ScoreFileTest, initReadsGlobalAndHierarchicalGroupScoreFiles)
 
     sf_init();
 
-    EXPECT_EQ(12, g_sf_num_entries);
+    EXPECT_EQ(12, g_score_rules.num_entries);
 }
 
 TEST_F(ScoreFileTest, initReadsScorefileLinePastLegacyBufferLimit)
