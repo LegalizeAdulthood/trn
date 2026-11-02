@@ -43,6 +43,31 @@ struct GroupArticleCache
     Article   *nextp(Article *ap);
     void       clear();
 
+    bool exists(ArticleNum an)
+    {
+        return ptr(an)->m_flags & AF_EXISTS;
+    }
+    bool unread(ArticleNum an)
+    {
+        return ptr(an)->m_flags & AF_UNREAD;
+    }
+    bool was_read(ArticleNum an)
+    {
+        return !has_data(an) || !unread(an);
+    }
+    bool is_available(ArticleNum an)
+    {
+        return an <= g_last_art && has_data(an) && exists(an);
+    }
+    bool is_unavailable(ArticleNum an)
+    {
+        return !is_available(an);
+    }
+    bool scored(ArticleNum an)
+    {
+        return ptr(an)->m_score_flags & SFLAG_SCORED;
+    }
+
     std::map<ArticleNum, Article> article_list;
     ArticleNum                    first_cached{};
     ArticleNum                    last_cached{};
@@ -88,31 +113,6 @@ inline Article **article_ptr_list_begin()
 inline Article **article_ptr_list_end()
 {
     return g_art_ptr_list.data() + g_art_ptr_list.size();
-}
-
-inline bool article_exists(ArticleNum an)
-{
-    return g_cache.ptr(an)->m_flags & AF_EXISTS;
-}
-inline bool article_unread(ArticleNum an)
-{
-    return g_cache.ptr(an)->m_flags & AF_UNREAD;
-}
-inline bool was_read(ArticleNum an)
-{
-    return !g_cache.has_data(an) || !article_unread(an);
-}
-inline bool is_available(ArticleNum an)
-{
-    return an <= g_last_art && g_cache.has_data(an) && article_exists(an);
-}
-inline bool is_unavailable(ArticleNum an)
-{
-    return !is_available(an);
-}
-inline bool article_scored(ArticleNum an)
-{
-    return g_cache.ptr(an)->m_score_flags & SFLAG_SCORED;
 }
 
 #endif

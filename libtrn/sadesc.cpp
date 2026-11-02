@@ -44,7 +44,7 @@ std::string sa_get_stat_chars(long a, int line)
         {
             status[1] = '*';
         }
-        if (was_read(g_sa_ents[a].artnum))
+        if (g_cache.was_read(g_sa_ents[a].artnum))
         {
             status[0] = '-';
         }

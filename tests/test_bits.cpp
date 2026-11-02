@@ -99,7 +99,7 @@ protected:
     void expect_unread(long num, bool unread)
     {
         SCOPED_TRACE(num);
-        EXPECT_EQ(unread, article_unread(ArticleNum{num}));
+        EXPECT_EQ(unread, g_cache.unread(ArticleNum{num}));
     }
 
     void set_rc_line(std::string line)

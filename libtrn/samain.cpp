@@ -135,7 +135,7 @@ static bool sa_init_arts()
     // add all available articles to entry list
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
-        if (article_exists(a))
+        if (g_cache.exists(a))
         {
             (void)sa_add_ent(a);
         }

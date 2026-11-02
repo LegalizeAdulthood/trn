@@ -1179,7 +1179,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         set_value({});
                         break;
                     }
-                    const bool unseen = g_nav.target.num <= g_last_art && !was_read(g_nav.target.num);
+                    const bool unseen = g_nav.target.num <= g_last_art && !g_cache.was_read(g_nav.target.num);
                     if (g_sel.selected_only)
                     {
                         const bool selected =
@@ -1198,7 +1198,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     if (g_in_ng)
                     {
                         const bool selected = g_nav.current.art && g_nav.current.art->m_flags & AF_SEL;
-                        const bool unseen = g_nav.target.num <= g_last_art && !was_read(g_nav.target.num);
+                        const bool unseen = g_nav.target.num <= g_last_art && !g_cache.was_read(g_nav.target.num);
                         set_owned_value(std::to_string(g_newsgroup_ptr->m_to_read - g_selected_count -
                                                        (!selected && unseen ? 1 : 0)));
                     }

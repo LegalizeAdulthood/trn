@@ -585,7 +585,7 @@ int perform(std::string_view command_list, int output_level)
                 g_nav.target.art->mark_as_read();
                 g_nav.target.art->change_auto_flags(AUTO_KILL_1);
             }
-            else if (!was_read(g_nav.target.num))
+            else if (!g_cache.was_read(g_nav.target.num))
             {
                 g_nav.target.art->mark_as_read();
                 if (output_level && g_verbose)
@@ -672,7 +672,7 @@ int perform(std::string_view command_list, int output_level)
         }
         else if (ch == 'x')
         {
-            if (!was_read(g_nav.target.num))
+            if (!g_cache.was_read(g_nav.target.num))
             {
                 g_nav.target.art->one_less();
                 if (output_level && g_verbose)

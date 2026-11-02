@@ -795,7 +795,7 @@ static int score_match(const std::string &text, int ind)
 
 int sf_score(ArticleNum a)
 {
-    if (is_unavailable(a))
+    if (g_cache.is_unavailable(a))
     {
         return LOW_SCORE;        // unavailable arts get low negative score.
     }

@@ -102,7 +102,7 @@ void sc_init(bool pend_wait)
         }
         for (i = g_cache.first(i); i <= g_last_art; i = g_cache.next(i))
         {
-            if (!article_scored(i) && (g_sc_fill_read || article_unread(i)))
+            if (!g_cache.scored(i) && (g_sc_fill_read || g_cache.unread(i)))
             {
                 break;
             }
@@ -126,7 +126,7 @@ void sc_init(bool pend_wait)
     ArticleNum i;
     for (i = g_cache.last(g_last_art); i >= g_abs_first; i = g_cache.prev(i))
     {
-        if (article_scored(i))
+        if (g_cache.scored(i))
         {
             break;
         }
@@ -138,7 +138,7 @@ void sc_init(bool pend_wait)
         for (a = g_cache.last(g_last_art); a >= g_abs_first; a = g_cache.prev(a))
         {
             sc_score_art(a,true);       // I want it *now*
-            if (article_scored(a))
+            if (g_cache.scored(a))
             {
                 break;
             }
@@ -229,11 +229,11 @@ void sc_cleanup()
 
 void sc_set_score(ArticleNum a, int score)
 {
-    if (is_unavailable(a))      // newly unavailable
+    if (g_cache.is_unavailable(a)) // newly unavailable
     {
         return;
     }
-    if (g_kill_thresh_active && score <= g_kill_thresh && article_unread(a))
+    if (g_kill_thresh_active && score <= g_kill_thresh && g_cache.unread(a))
     {
         one_less_art_num(a);
     }
@@ -270,7 +270,7 @@ int sc_score_art(ArticleNum a, bool now)
 #endif
         return LOW_SCORE; // definitely unavailable
     }
-    if (is_unavailable(a))
+    if (g_cache.is_unavailable(a))
     {
         return LOW_SCORE;
     }
@@ -283,7 +283,7 @@ int sc_score_art(ArticleNum a, bool now)
         s_sc_sf_force_init = false;
     }
 
-    if (!article_scored(a))
+    if (!g_cache.scored(a))
     {
         if (s_sc_sf_delay)
         {
@@ -292,7 +292,7 @@ int sc_score_art(ArticleNum a, bool now)
         }
         sc_score_art_basic(a);
     }
-    if (is_unavailable(a))
+    if (g_cache.is_unavailable(a))
     {
         return LOW_SCORE;
     }
@@ -368,20 +368,19 @@ void sc_look_ahead(bool flag, bool nowait)
 #endif
         g_sc_fill_max = g_cache.next(g_sc_fill_max);
         // skip over some articles quickly
-        while (g_sc_fill_max < g_last_art
-         && (article_scored(g_sc_fill_max)
-          || (!g_sc_fill_read && !article_unread(g_sc_fill_max))))
+        while (g_sc_fill_max < g_last_art &&
+               (g_cache.scored(g_sc_fill_max) || (!g_sc_fill_read && !g_cache.unread(g_sc_fill_max))))
         {
             g_sc_fill_max = g_cache.next(g_sc_fill_max);
         }
 
-        if (article_scored(g_sc_fill_max))
+        if (g_cache.scored(g_sc_fill_max))
         {
             continue;
         }
         if (!g_sc_fill_read)    // score only unread
         {
-            if (!article_unread(g_sc_fill_max))
+            if (!g_cache.unread(g_sc_fill_max))
             {
                 continue;
             }
@@ -413,16 +412,16 @@ int sc_percent_scored()
     int scored = 0;
     for (ArticleNum art = g_cache.first(i); art <= g_last_art; art = g_cache.next(art))
     {
-        if (!article_exists(art))
+        if (!g_cache.exists(art))
         {
             continue;
         }
-        if (!article_unread(art) && !g_sa_mode_read_elig)
+        if (!g_cache.unread(art) && !g_sa_mode_read_elig)
         {
             continue;
         }
         total++;
-        if (article_scored(art))
+        if (g_cache.scored(art))
         {
             scored++;
         }
@@ -462,7 +461,7 @@ static void sc_rescore_arts()
     s_sc_do_spin = true; // amuse the user
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
-        if (article_exists(a))
+        if (g_cache.exists(a))
         {
             sc_score_art_basic(a); // rescore it then
         }
@@ -650,7 +649,7 @@ void sc_kill_threshold(int thresh)
     for (ArticleNum a = g_cache.first(g_first_art); a <= g_last_art; a = g_cache.next(a))
     {
         if (g_cache.ptr(a)->m_score <= thresh &&
-            article_unread(a)
+            g_cache.unread(a)
             // this is needed for zoom mode
             && sa_basic_elig(sa_artnum_to_ent(a)))
         {

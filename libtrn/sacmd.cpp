@@ -215,7 +215,7 @@ int sa_do_cmd(std::string_view command)
             {
                 continue;
             }
-            if (!sa_marked(i) && !was_read(g_sa_ents[i].artnum))
+            if (!sa_marked(i) && !g_cache.was_read(g_sa_ents[i].artnum))
             {
                 if (g_sa_mode_fold)             // new semantics
                 {

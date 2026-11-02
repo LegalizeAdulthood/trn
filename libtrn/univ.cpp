@@ -1175,7 +1175,7 @@ static void univ_vg_add_group()
     // later: allow was-read articles, etc...
     for (ArticleNum a = g_cache.first(g_first_art); a <= g_last_art; a = g_cache.next(a))
     {
-        if (!article_unread(a))
+        if (!g_cache.unread(a))
         {
             continue;
         }

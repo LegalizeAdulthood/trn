@@ -185,7 +185,7 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
                 score = -parse_int(score_text);
                 line.remove_prefix(score_length);
                 s_loaded++;
-                if (is_available(a) && article_unread(a))
+                if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
                     s_used++;
@@ -212,7 +212,7 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
                 score = parse_int(score_text);
                 line.remove_prefix(score_length);
                 s_loaded++;
-                if (is_available(a) && article_unread(a))
+                if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
                     s_used++;
@@ -239,7 +239,7 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
             for (; repeat_count; repeat_count--)
             {
                 s_loaded++;
-                if (is_available(a) && article_unread(a))
+                if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
                     s_used++;
@@ -284,7 +284,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
     for (ArticleNum art = g_cache.first(a); art <= g_last_art && num_output < 50; art = g_cache.next(art))
     {
         next_start = g_cache.next(art);
-        if (article_unread(art) && article_scored(art))
+        if (g_cache.unread(art) && g_cache.scored(art))
         {
             if (s_last != article_before(art))
             {
@@ -306,7 +306,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
             {
                 int        repeat_count = 1;
                 ArticleNum repeat_art = g_cache.next(art);
-                for (; repeat_art <= g_last_art && article_unread(repeat_art) && article_scored(repeat_art) &&
+                for (; repeat_art <= g_last_art && g_cache.unread(repeat_art) && g_cache.scored(repeat_art) &&
                        g_cache.ptr(repeat_art)->m_score == score;
                      repeat_count++)
                 {
@@ -451,16 +451,16 @@ void sc_load_scores()
     int scored = 0;
     for (ArticleNum art = g_cache.first(a); art <= g_last_art; art = g_cache.next(art))
     {
-        if (!article_exists(art))
+        if (!g_cache.exists(art))
         {
             continue;
         }
-        if (!article_unread(art) && !g_sa_mode_read_elig)
+        if (!g_cache.unread(art) && !g_sa_mode_read_elig)
         {
             continue;
         }
         total++;
-        if (article_scored(art))
+        if (g_cache.scored(art))
         {
             scored++;
         }

@@ -245,7 +245,7 @@ DoArticleResult do_article(std::string &article_command)
                 ArticleNum i;
 
                 int         selected = (g_nav.current.art->m_flags & AF_SEL);
-                int         unseen = article_unread(g_nav.target.num) ? 1 : 0;
+                int         unseen = g_cache.unread(g_nav.target.num) ? 1 : 0;
                 std::string title_line;
                 bool        has_title_suffix = false;
                 title_line.reserve(LINE_BUF_LEN);

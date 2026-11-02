@@ -34,7 +34,7 @@ bool sa_basic_elig(long a)
     TRN_ASSERT(check_article(artnum));
 
     // "run the gauntlet" style (:-)
-    if (!g_sa_mode_read_elig && was_read(artnum))
+    if (!g_sa_mode_read_elig && g_cache.was_read(artnum))
     {
         return false;
     }
@@ -44,15 +44,15 @@ bool sa_basic_elig(long a)
     }
     if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
     {
-        if (!article_scored(artnum))
+        if (!g_cache.scored(artnum))
         {
             return false;
         }
     }
     // now just check availability
-    if (is_unavailable(artnum))
+    if (g_cache.is_unavailable(artnum))
     {
-        if (!was_read(artnum))
+        if (!g_cache.was_read(artnum))
         {
             one_less_art_num(artnum);
         }
@@ -140,11 +140,11 @@ int sa_number_arts()
     for (int i = 1; i < size_cast<int>(g_sa_ents); i++)
     {
         ArticleNum a = g_sa_ents[i].artnum;
-        if (is_unavailable(a))
+        if (g_cache.is_unavailable(a))
         {
             continue;
         }
-        if (!article_unread(a) && !g_sa_mode_read_elig)
+        if (!g_cache.unread(a) && !g_sa_mode_read_elig)
         {
             continue;
         }
@@ -174,9 +174,9 @@ int sa_compare(long a, long b)
         // do not score the articles here--move the articles to
         // the end of the list if unscored.
         //
-        if (!article_scored(g_sa_ents[a].artnum))                         // a unscored
+        if (!g_cache.scored(g_sa_ents[a].artnum)) // a unscored
         {
-            if (!article_scored(g_sa_ents[b].artnum))   // a+b unscored
+            if (!g_cache.scored(g_sa_ents[b].artnum)) // a+b unscored
             {
                 if (a < b)                                        // keep ordering consistent
                 {
@@ -186,7 +186,7 @@ int sa_compare(long a, long b)
             }
             return 1;           // move unscored (a) to end
         }
-        if (!article_scored(g_sa_ents[b].artnum))       // only b unscored
+        if (!g_cache.scored(g_sa_ents[b].artnum)) // only b unscored
         {
             return -1;          // move unscored (b) to end
         }

@@ -171,14 +171,14 @@ TEST_F(ScoreSaveTest, loadScoresReadsEncodedScoreLines)
     sc_load_scores();
 
     EXPECT_EQ(12, g_cache.ptr(ArticleNum{1})->m_score);
-    EXPECT_TRUE(article_scored(ArticleNum{1}));
+    EXPECT_TRUE(g_cache.scored(ArticleNum{1}));
     EXPECT_EQ(12, g_cache.ptr(ArticleNum{2})->m_score);
-    EXPECT_TRUE(article_scored(ArticleNum{2}));
+    EXPECT_TRUE(g_cache.scored(ArticleNum{2}));
     EXPECT_EQ(12, g_cache.ptr(ArticleNum{3})->m_score);
-    EXPECT_TRUE(article_scored(ArticleNum{3}));
-    EXPECT_FALSE(article_scored(ArticleNum{4}));
+    EXPECT_TRUE(g_cache.scored(ArticleNum{3}));
+    EXPECT_FALSE(g_cache.scored(ArticleNum{4}));
     EXPECT_EQ(-3, g_cache.ptr(ArticleNum{5})->m_score);
-    EXPECT_TRUE(article_scored(ArticleNum{5}));
+    EXPECT_TRUE(g_cache.scored(ArticleNum{5}));
     EXPECT_EQ(4, g_sc_loaded_count);
 }
 
@@ -195,10 +195,10 @@ TEST_F(ScoreSaveTest, loadScoresUsesSavedStartingArticleNumber)
     sc_load_scores();
 
     EXPECT_EQ(7, g_cache.ptr(ArticleNum{3})->m_score);
-    EXPECT_TRUE(article_scored(ArticleNum{3}));
-    EXPECT_FALSE(article_scored(ArticleNum{4}));
+    EXPECT_TRUE(g_cache.scored(ArticleNum{3}));
+    EXPECT_FALSE(g_cache.scored(ArticleNum{4}));
     EXPECT_EQ(-2, g_cache.ptr(ArticleNum{5})->m_score);
-    EXPECT_TRUE(article_scored(ArticleNum{5}));
-    EXPECT_FALSE(article_scored(ArticleNum{6}));
+    EXPECT_TRUE(g_cache.scored(ArticleNum{5}));
+    EXPECT_FALSE(g_cache.scored(ArticleNum{6}));
     EXPECT_EQ(2, g_sc_loaded_count);
 }

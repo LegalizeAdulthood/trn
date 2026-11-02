@@ -516,7 +516,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             fmt::print("\n\n");
             term_down(2);
         }
-        else if (!g_reread && (was_read(g_nav.target.num) //
+        else if (!g_reread && (g_cache.was_read(g_nav.target.num) //
                                || (g_sel.selected_only && !(g_nav.target.art->m_flags & AF_SEL))))
         {
             // has this article been read?
@@ -1125,7 +1125,8 @@ not_threaded:
         do
         {
             g_nav.target.prev(g_sel.selected_only, false);
-        } while (g_nav.target.num >= g_first_art && (was_read(g_nav.target.num) || !parse_header(g_nav.target.num)));
+        } while (g_nav.target.num >= g_first_art &&
+                 (g_cache.was_read(g_nav.target.num) || !parse_header(g_nav.target.num)));
         g_search_ahead = ArticleNum{};
         if (g_nav.target.num >= g_first_art)
         {

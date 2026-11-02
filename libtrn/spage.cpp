@@ -121,7 +121,7 @@ bool s_fill_page_backward(long end)
     //
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -223,7 +223,7 @@ bool s_fill_page_forward(long start)
     //
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -331,7 +331,7 @@ bool s_refill_page()
     //
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }
@@ -407,7 +407,7 @@ int s_fill_page()
     // be extra cautious about the article scan pages
     for (i = 0; i <= g_s_bot_ent; i++)
     {
-        if (is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
         {
             break;
         }

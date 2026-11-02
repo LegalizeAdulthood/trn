@@ -111,7 +111,7 @@ void rc_to_bits()
         term_down(2);
         for (ArticleNum i = g_cache.first(g_abs_first); i < g_first_art; i = g_cache.next(i))
         {
-            if (article_unread(i))
+            if (g_cache.unread(i))
             {
                 fmt::print("{} ", i.value_of());
             }
@@ -175,7 +175,7 @@ void rc_to_bits()
             term_down(2);
             for (ArticleNum a = g_abs_first; a <= g_last_art; a++)
             {
-                if (!was_read(a))
+                if (!g_cache.was_read(a))
                 {
                     fmt::print("{} ", a.value_of());
                 }
@@ -250,7 +250,7 @@ void bits_to_rc()
 
     for (i = g_cache.first(g_abs_first); i <= g_last_art; i = g_cache.next(i))
     {
-        if (article_unread(i))
+        if (g_cache.unread(i))
         {
             break;
         }
@@ -258,7 +258,7 @@ void bits_to_rc()
     fmt::format_to(std::back_inserter(rc_line), " 1-{},", i.value_of() - 1);
     for (; i <= g_last_art; ++i) // for each article in newsgroup
     {
-        if (!was_read(i)) // still unread?
+        if (!g_cache.was_read(i)) // still unread?
         {
             ++count; // then count it
         }
@@ -269,7 +269,7 @@ void bits_to_rc()
             do
             {
                 ++i;
-            } while (i <= g_last_art && was_read(i));
+            } while (i <= g_last_art && g_cache.was_read(i));
             // find 1st unread article or end
             --i;           // backup to last read article
             if (i > old_i) // range of more than 1?

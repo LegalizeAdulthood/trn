@@ -655,7 +655,7 @@ void look_ahead()
 #endif
                     break;
                 }
-                if (!was_read(g_srchahead) && //
+                if (!g_cache.was_read(g_srchahead) && //
                     wanted(&s_srchcompex, g_srchahead, 0))
                 {
                     // does the shoe fit?
@@ -783,7 +783,7 @@ bool cache_subjects()
             break;
         }
 
-        if (article_unread(an))
+        if (g_cache.unread(an))
         {
             prefetch_subj(an);
         }
@@ -807,7 +807,7 @@ static bool cache_xrefs()
         {
             break;
         }
-        if (article_unread(an))
+        if (g_cache.unread(an))
         {
             prefetch_xref(an);
         }

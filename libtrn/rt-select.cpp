@@ -320,7 +320,7 @@ sel_restart:
         long i = g_added_articles;
         for (long j = g_last_art.value_of() - i + 1; j <= g_last_art.value_of(); j++)
         {
-            if (!article_unread(ArticleNum{j}))
+            if (!g_cache.unread(ArticleNum{j}))
             {
                 i--;
             }
