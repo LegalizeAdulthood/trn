@@ -60,7 +60,6 @@ struct TreeRenderState
 };
 
 static void     cache_tree(Article *ap, int depth, TreeRenderState &render);
-static Article *find_artp(Article *article, int x);
 static TreeLines render_tree_lines(Article *article, TreeRenderState &render);
 static void     print_tree_line(std::string_view tree_line);
 
@@ -345,16 +344,16 @@ Article *get_tree_artp(int x, int y)
     }
     x = (x - (x == g_tree_view.max_depth)) / 5 + g_tree_view.first_depth;
     g_tree_view.find_artp_y = y + g_tree_view.first_line;
-    ap = find_artp(ap, x);
+    ap = g_tree_view.find_artp(ap, x);
     return ap;
 }
 
 // A recursive routine to find the maximum tree extents and where we are.
-static Article *find_artp(Article *article, int x)
+Article *ThreadTreeView::find_artp(Article *article, int x)
 {
     while (true)
     {
-        if (!x && !g_tree_view.find_artp_y)
+        if (!x && !find_artp_y)
         {
             return article;
         }
@@ -366,7 +365,7 @@ static Article *find_artp(Article *article, int x)
                 return ap;
             }
         }
-        else if (!g_tree_view.find_artp_y--)
+        else if (!find_artp_y--)
         {
             return nullptr;
         }

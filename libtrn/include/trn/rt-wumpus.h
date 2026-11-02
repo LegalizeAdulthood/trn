@@ -32,7 +32,8 @@ struct ThreadTreeView
     int       find_artp_y{};
 
     // TODO: private
-    void find_depth(Article *article, int depth);
+    void     find_depth(Article *article, int depth);
+    Article *find_artp(Article *article, int x);
 };
 
 extern ThreadTreeView g_tree_view;
