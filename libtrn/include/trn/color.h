@@ -50,6 +50,7 @@ struct ColorObj
 
 struct ColorOutputContext
 {
+    void init();
     void deefault();
 
     enum
@@ -70,7 +71,6 @@ struct ColorOutputContext
 
 extern ColorOutputContext g_color;
 
-void color_init();
 void color_rc_attribute(std::string_view object, std::string_view value);
 void color_object(int object, bool push);
 void color_pop();

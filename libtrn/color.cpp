@@ -82,9 +82,9 @@ ColorOutputContext g_color =
 // clang-format on
 
 // Initialize color support after trnrc is read.
-void color_init()
+void ColorOutputContext::init()
 {
-    if (g_color.use_colors)
+    if (use_colors)
     {
         // Get default capabilities.
         std::string_view fg = tc_color_capability("fg default");
@@ -103,7 +103,7 @@ void color_init()
         {
             bg = "";
         }
-        for (ColorObj &obj : g_color.objects)
+        for (ColorObj &obj : objects)
         {
             if (obj.fg.empty())
             {
@@ -116,13 +116,13 @@ void color_init()
         }
     }
 
-    if (g_color.objects[COLOR_DEFAULT].attr == LAST_MARKING)
+    if (objects[COLOR_DEFAULT].attr == LAST_MARKING)
     {
-        g_color.objects[COLOR_DEFAULT].attr = NO_MARKING;
+        objects[COLOR_DEFAULT].attr = NO_MARKING;
     }
 
     // Set color to default.
-    g_color.deefault();
+    deefault();
 }
 
 static bool is_attribute_space(char ch)

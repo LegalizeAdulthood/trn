@@ -220,7 +220,7 @@ void InterpolatorTest::SetUp()
     char trn[]{"trn"};
     char *argv[]{trn};
     opt_init(1, argv, m_tcbuf);
-    color_init();
+    g_color.init();
     interp_init();
     cwd_check();
     term_set(m_tcbuf);

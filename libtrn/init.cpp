@@ -96,7 +96,7 @@ bool initialize(int argc, char *argv[])
 
     opt_init(argc,argv,tcbuf);          // must not do % interps!
                                         // (but may mung environment)
-    color_init();
+    g_color.init();
 
     // init signals, status flags
 

@@ -32,7 +32,7 @@ TEST(ColorAttributeTest, parsesForegroundAndBackgroundCapabilities)
             color_rc_attribute("notice", "n red blue");
 
             testing::internal::CaptureStdout();
-            color_init();
+            g_color.init();
             (void) testing::internal::GetCapturedStdout();
 
             testing::internal::CaptureStdout();
