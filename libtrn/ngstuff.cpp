@@ -354,7 +354,7 @@ NumNumResult num_num(std::string_view command)
             return NN_REREAD;
         }
         for (g_nav.target.num = g_cache.first(min); g_nav.target.num <= max;
-             g_nav.target.num = article_next(g_nav.target.num))
+             g_nav.target.num = g_cache.next(g_nav.target.num))
         {
             g_nav.target.art = g_cache.ptr(g_nav.target.num);
             const int result = perform(cmdlst, output_level && g_page_line == 1);

@@ -92,7 +92,7 @@ protected:
 
     void clear_article_scores(ArticleNum first, ArticleNum last)
     {
-        for (ArticleNum num = first; num <= last; num = article_next(num))
+        for (ArticleNum num = first; num <= last; num = g_cache.next(num))
         {
             Article *article = g_cache.ptr(num);
             article->m_flags = AF_EXISTS | AF_UNREAD;

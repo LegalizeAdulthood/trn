@@ -680,7 +680,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             }
             if (!(g_data_source->m_flags & DF_XHDR_BROKEN))
             {
-                while ((prior_num = article_next(prior_num)) < num)
+                while ((prior_num = g_cache.next(prior_num)) < num)
                 {
                     g_cache.ptr(prior_num)->uncache_article(false);
                 }
@@ -719,7 +719,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
     }
     if (has_header_values && !(g_data_source->m_flags & DF_XHDR_BROKEN))
     {
-        for (prior_num = g_cache.first(prior_num); prior_num < lastnum; prior_num = article_next(prior_num))
+        for (prior_num = g_cache.first(prior_num); prior_num < lastnum; prior_num = g_cache.next(prior_num))
         {
             g_cache.ptr(prior_num)->uncache_article(false);
         }

@@ -433,7 +433,7 @@ void newsgroup_skip()
             pad(g_just_a_sec/3);
             sleep(1);
         }
-        g_nav.target.num = article_next(g_nav.target.num);
+        g_nav.target.num = g_cache.next(g_nav.target.num);
         g_nav.target.art = g_cache.ptr(g_nav.target.num);
         do
         {
@@ -447,7 +447,7 @@ void newsgroup_skip()
                 {
                     return;
                 }
-                g_nav.target.num = article_next(g_nav.target.num);
+                g_nav.target.num = g_cache.next(g_nav.target.num);
                 g_nav.target.art = g_cache.ptr(g_nav.target.num);
             }
         } while (g_nav.target.num <= g_last_art);

@@ -374,7 +374,7 @@ num_inc:
     }
     while (true)
     {
-        num = article_next(num);
+        num = g_cache.next(num);
         if (num > g_last_art)
         {
             num = article_after(g_last_art);
@@ -1571,7 +1571,7 @@ static void build_article_ptrs()
     g_sel_page.next_art = nullptr;
     g_art_ptr_list.clear();
     g_art_ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
-    for (ArticleNum an = g_cache.first(g_abs_first); count; an = article_next(an))
+    for (ArticleNum an = g_cache.first(g_abs_first); count; an = g_cache.next(an))
     {
         Article *ap = g_cache.ptr(an);
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)

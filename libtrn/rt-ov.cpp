@@ -562,7 +562,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
         }
         else if (field_present[OV_XREF])
         {
-            for (ArticleNum an = g_cache.first(g_abs_first); an < artnum; an = article_next(an))
+            for (ArticleNum an = g_cache.first(g_abs_first); an < artnum; an = g_cache.next(an))
             {
                 Article *ap = g_cache.ptr(an);
                 if (!ap->m_xrefs)

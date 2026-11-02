@@ -93,7 +93,7 @@ void rc_to_bits()
         more_ranges = comma != std::string_view::npos;
         numbers = comma == std::string_view::npos ? std::string_view{} : numbers.substr(comma + 1);
         ArticleNum n;
-        for (n = g_cache.first(g_abs_first); n < g_first_art; n = article_next(n))
+        for (n = g_cache.first(g_abs_first); n < g_first_art; n = g_cache.next(n))
         {
             g_cache.ptr(n)->m_flags &= ~AF_UNREAD;
         }
@@ -109,7 +109,7 @@ void rc_to_bits()
     {
         fmt::print(stdout, "\n{}\n", numbers);
         term_down(2);
-        for (ArticleNum i = g_cache.first(g_abs_first); i < g_first_art; i = article_next(i))
+        for (ArticleNum i = g_cache.first(g_abs_first); i < g_first_art; i = g_cache.next(i))
         {
             if (article_unread(i))
             {
@@ -133,7 +133,7 @@ void rc_to_bits()
         {
             min = article_after(g_last_art);
         }
-        for (; n < min; n = article_next(n))
+        for (; n < min; n = g_cache.next(n))
         {
             ap = g_cache.ptr(n);
             if (ap->m_flags & AF_EXISTS)
@@ -164,7 +164,7 @@ void rc_to_bits()
         }
         max = std::min(max, g_last_art);
         // mark all arts in range as read
-        for ( ; n <= max; n = article_next(n))
+        for (; n <= max; n = g_cache.next(n))
         {
             g_cache.ptr(n)->m_flags &= ~AF_UNREAD;
         }
@@ -182,9 +182,9 @@ void rc_to_bits()
             }
         }
 #endif
-        n = article_next(max);
+        n = g_cache.next(max);
     }
-    for (; n <= g_last_art; n = article_next(n))
+    for (; n <= g_last_art; n = g_cache.next(n))
     {
         ap = g_cache.ptr(n);
         if (ap->m_flags & AF_EXISTS)
@@ -248,7 +248,7 @@ void bits_to_rc()
     rc_line = g_newsgroup_ptr->rc_name();         // start with the newsgroup name
     rc_line += g_newsgroup_ptr->m_subscribe_char; // put the requisite : or !
 
-    for (i = g_cache.first(g_abs_first); i <= g_last_art; i = article_next(i))
+    for (i = g_cache.first(g_abs_first); i <= g_last_art; i = g_cache.next(i))
     {
         if (article_unread(i))
         {
@@ -438,7 +438,7 @@ void find_existing_articles()
         if (first > g_abs_first)
         {
             g_newsgroup_ptr->check_expired(first);
-            for (g_abs_first = g_cache.first(g_abs_first); g_abs_first < first; g_abs_first = article_next(g_abs_first))
+            for (g_abs_first = g_cache.first(g_abs_first); g_abs_first < first; g_abs_first = g_cache.next(g_abs_first))
             {
                 g_cache.ptr(g_abs_first)->one_missing();
             }

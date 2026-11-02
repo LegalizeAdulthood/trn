@@ -120,10 +120,10 @@ ArticleNum GroupArticleCache::first(ArticleNum an)
     return it == article_list.end() ? article_after(g_last_art) : it->first;
 }
 
-ArticleNum article_next(ArticleNum an)
+ArticleNum GroupArticleCache::next(ArticleNum an)
 {
-    const auto it = g_cache.article_list.upper_bound(an);
-    return it == g_cache.article_list.end() ? article_after(g_last_art) : it->first;
+    const auto it = article_list.upper_bound(an);
+    return it == article_list.end() ? article_after(g_last_art) : it->first;
 }
 
 ArticleNum article_last(ArticleNum an)
@@ -674,9 +674,9 @@ void look_ahead()
     else
 #endif // ARTSEARCH
     {
-        if (article_next(g_nav.target.num) <= g_last_art) // how about a pre-fetch?
+        if (g_cache.next(g_nav.target.num) <= g_last_art) // how about a pre-fetch?
         {
-            parse_header(article_next(g_nav.target.num)); // look for the next article
+            parse_header(g_cache.next(g_nav.target.num)); // look for the next article
         }
     }
 }
@@ -771,7 +771,7 @@ bool cache_subjects()
         return true;
     }
     set_spin(SPIN_BACKGROUND);
-    for (an = g_cache.first(s_subj_to_get); an <= g_last_art; an = article_next(an))
+    for (an = g_cache.first(s_subj_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
         {
@@ -796,7 +796,7 @@ static bool cache_xrefs()
         return true;
     }
     set_spin(SPIN_BACKGROUND);
-    for (an = g_cache.first(s_xref_to_get); an <= g_last_art; an = article_next(an))
+    for (an = g_cache.first(s_xref_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
         {
@@ -899,7 +899,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
         set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
-    for (i = g_cache.first(first); i <= last; i = article_next(i))
+    for (i = g_cache.first(first); i <= last; i = g_cache.next(i))
     {
         if ((g_cache.ptr(i)->m_flags & cache_mask) ^ cache_mask2)
         {

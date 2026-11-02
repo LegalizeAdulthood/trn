@@ -281,9 +281,9 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
     std::string line{"."};
     int         lastscore = 0;
 
-    for (ArticleNum art = g_cache.first(a); art <= g_last_art && num_output < 50; art = article_next(art))
+    for (ArticleNum art = g_cache.first(a); art <= g_last_art && num_output < 50; art = g_cache.next(art))
     {
-        next_start = article_next(art);
+        next_start = g_cache.next(art);
         if (article_unread(art) && article_scored(art))
         {
             if (s_last != article_before(art))
@@ -305,12 +305,12 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
             if (score == lastscore && lastscore_valid)
             {
                 int        repeat_count = 1;
-                ArticleNum repeat_art = article_next(art);
+                ArticleNum repeat_art = g_cache.next(art);
                 for (; repeat_art <= g_last_art && article_unread(repeat_art) && article_scored(repeat_art) &&
                        g_cache.ptr(repeat_art)->m_score == score;
                      repeat_count++)
                 {
-                    repeat_art = article_next(repeat_art);
+                    repeat_art = g_cache.next(repeat_art);
                 }
                 art = article_prev(repeat_art); // prepare for the for loop increment
                 if (repeat_count == 1)
@@ -349,7 +349,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
             }
             lastscore = score;
             s_last = art;
-            next_start = article_next(art);
+            next_start = g_cache.next(art);
             s_saved++;
         } // if
     } // for
@@ -449,7 +449,7 @@ void sc_load_scores()
     }
     int total = 0;
     int scored = 0;
-    for (ArticleNum art = g_cache.first(a); art <= g_last_art; art = article_next(art))
+    for (ArticleNum art = g_cache.first(a); art <= g_last_art; art = g_cache.next(art))
     {
         if (!article_exists(art))
         {
