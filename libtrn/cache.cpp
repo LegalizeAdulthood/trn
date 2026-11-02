@@ -193,6 +193,15 @@ void SubjectIndex::clear()
     count = 0; // just to be sure
 }
 
+void SubjectIndex::clear_short_hash()
+{
+    if (short_hash)
+    {
+        hash_destroy(short_hash);
+        short_hash = nullptr;
+    }
+}
+
 void cache_init()
 {
 #ifdef PENDING
@@ -303,11 +312,7 @@ void change_join_subject_len(int len)
 {
     if (g_join_subject_len != len)
     {
-        if (g_subj.short_hash)
-        {
-            hash_destroy(g_subj.short_hash);
-            g_subj.short_hash = nullptr;
-        }
+        g_subj.clear_short_hash();
         g_join_subject_len = len;
         if (len && g_subj.first && g_subj.first->m_articles)
         {
