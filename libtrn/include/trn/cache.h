@@ -41,6 +41,7 @@ struct GroupArticleCache
     ArticleNum last(ArticleNum an);
     ArticleNum prev(ArticleNum an);
     Article   *nextp(Article *ap);
+    void       clear();
 
     std::map<ArticleNum, Article> article_list;
     ArticleNum                    first_cached{};

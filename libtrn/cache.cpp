@@ -158,6 +158,19 @@ Article *GroupArticleCache::nextp(Article *ap)
     return it == article_list.end() ? nullptr : &it->second;
 }
 
+void GroupArticleCache::clear()
+{
+    walk(
+        [](Article &article, int)
+        {
+            article.clear_article();
+            return false;
+        },
+        0);
+    article_list.clear();
+    cached_ng = nullptr;
+}
+
 void cache_init()
 {
 #ifdef PENDING
@@ -241,15 +254,7 @@ void close_cache()
     g_sel_page.next_art = nullptr;
     thread_close();
 
-    g_cache.walk(
-        [](Article &article, int)
-        {
-            article.clear_article();
-            return false;
-        },
-        0);
-    g_cache.article_list.clear();
-    g_cache.cached_ng = nullptr;
+    g_cache.clear();
 }
 
 // TODO: decouple this from s_short_subj_hash
