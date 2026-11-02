@@ -148,14 +148,14 @@ ArticleNum GroupArticleCache::prev(ArticleNum an)
     return it->first;
 }
 
-Article *article_nextp(Article *ap)
+Article *GroupArticleCache::nextp(Article *ap)
 {
     if (ap == nullptr)
     {
         return nullptr;
     }
-    const auto it = g_cache.article_list.upper_bound(ap->article_num());
-    return it == g_cache.article_list.end() ? nullptr : &it->second;
+    const auto it = article_list.upper_bound(ap->article_num());
+    return it == article_list.end() ? nullptr : &it->second;
 }
 
 void cache_init()

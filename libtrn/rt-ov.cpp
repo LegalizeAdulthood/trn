@@ -371,7 +371,7 @@ beginning:
     {
         int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
         for (Article *ap = g_cache.ptr(g_cache.first(real_first)); ap && ap->article_num() <= artnum;
-             ap = article_nextp(ap))
+             ap = g_cache.nextp(ap))
         {
             if (!(ap->m_flags & cachemask))
             {

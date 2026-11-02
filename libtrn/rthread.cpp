@@ -143,7 +143,7 @@ void thread_open()
     }
 
     for (ap = g_cache.ptr(g_cache.first(g_first_art)); ap && ap->article_num() <= g_cache.last_cached;
-         ap = article_nextp(ap))
+         ap = g_cache.nextp(ap))
     {
         if ((ap->m_flags & (AF_EXISTS|AF_CACHED)) == AF_EXISTS)
         {
@@ -158,7 +158,7 @@ void thread_open()
         g_newsgroup_ptr->m_ng_max = g_cache.last_cached;
         g_last_art = g_cache.last_cached;
     }
-    for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art; ap = article_nextp(ap))
+    for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art; ap = g_cache.nextp(ap))
     {
         if (ap->m_flags & AF_CACHED)
         {

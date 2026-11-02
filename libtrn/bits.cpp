@@ -320,7 +320,7 @@ void find_existing_articles()
             std::string list_line;
             list_line.reserve(NNTP_STRLEN);
             for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art;
-                 ap = article_nextp(ap))
+                 ap = g_cache.nextp(ap))
             {
                 ap->m_flags &= ~AF_EXISTS;
             }
@@ -353,7 +353,7 @@ void find_existing_articles()
             if (!g_data_source->m_ov_opened || !g_data_source->m_over_dir.empty())
             {
                 for (ap = g_cache.ptr(g_cache.first(g_cache.first_cached));
-                     ap && ap->article_num() <= g_cache.last_cached; ap = article_nextp(ap))
+                     ap && ap->article_num() <= g_cache.last_cached; ap = g_cache.nextp(ap))
                 {
                     if (ap->m_flags & AF_CACHED)
                     {
@@ -405,7 +405,7 @@ void find_existing_articles()
 
         // Scan the directory to find which articles are present.
         for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art;
-             ap = article_nextp(ap))
+             ap = g_cache.nextp(ap))
         {
             ap->m_flags &= ~AF_EXISTS;
         }
@@ -509,7 +509,7 @@ void note_chase_xref()
 void mark_missing_articles()
 {
     for (Article *ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art;
-         ap = article_nextp(ap))
+         ap = g_cache.nextp(ap))
     {
         if (!(ap->m_flags & AF_EXISTS))
         {
