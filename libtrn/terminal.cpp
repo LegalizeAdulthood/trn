@@ -1333,9 +1333,7 @@ static int read_tty(char *addr, int size)
 {
     if (macro_pending())
     {
-        *addr = g_pushback.circle_buf[g_pushback.next_out++];
-        g_pushback.next_out %= PUSH_SIZE;
-        return 1;
+        return g_pushback.take(addr);
     }
     size = g_terminal_input_reader(addr, size);
 #ifdef RAWONLY
@@ -1388,6 +1386,13 @@ void InputPushback::push(char_int c)
         sig_catcher(0);
     }
     circle_buf[next_out] = c;
+}
+
+int InputPushback::take(char *addr)
+{
+    *addr = circle_buf[next_out++];
+    next_out %= PUSH_SIZE;
+    return 1;
 }
 
 // print an underlined string, one way or another

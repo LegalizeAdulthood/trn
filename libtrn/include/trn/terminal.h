@@ -190,6 +190,7 @@ extern TerminalInputReader g_terminal_input_reader;
 struct InputPushback
 {
     void push(char_int c);
+    int  take(char *addr);
 
     char circle_buf[PUSH_SIZE]{};
     int  next_in{};
