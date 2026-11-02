@@ -28,7 +28,6 @@
 
 #include <fmt/format.h>
 
-#include <array>
 #include <cctype>
 #include <charconv>
 #include <cstdio>
@@ -63,11 +62,9 @@ enum
     SF_REPLY = -5
 };
 
-static std::array<std::string, 256> s_sf_abbr; // abbreviations
-static bool            s_sf_pattern_status{}; // should we match by pattern?
-static int             s_sf_file_level{};     // how deep are we?
+ScoreRuleCompiler g_score_compiler;
+
 ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
-static CompiledRegex  *s_sf_compex{};
 
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
@@ -108,13 +105,13 @@ void sf_init()
     g_score_rules.extra_headers.clear();
 
     // initialize abbreviation list
-    s_sf_abbr = {};
+    g_score_compiler.abbr = {};
 
     if (g_sf_verbose)
     {
         fmt::print("\nReading score files...\n");
     }
-    s_sf_file_level = 0;
+    g_score_compiler.file_level = 0;
     // find # of levels
     const std::string group_name = file_exp("%C");
     int               level = 0;
@@ -239,7 +236,7 @@ void ScoreRules::clear_lists()
 void sf_clean()
 {
     g_score_rules.free_patterns();
-    s_sf_abbr = {};
+    g_score_compiler.abbr = {};
     g_score_rules.clear_lists();
 }
 
@@ -519,7 +516,7 @@ static bool sf_do_command(std::string_view cmd, bool check)
             fmt::print("Bad file command (missing parameters)\n");
             return false;
         }
-        s_sf_abbr[static_cast<unsigned char>(abbreviation)] = sf_cmd_fname(argument);
+        g_score_compiler.abbr[static_cast<unsigned char>(abbreviation)] = sf_cmd_fname(argument);
         return true;
     }
     if (command == "newsclip")
@@ -536,7 +533,7 @@ static std::string_view sf_freeform(std::string_view keyword, std::string_view r
 {
     if (keyword == "pattern")
     {
-        s_sf_pattern_status = true;
+        g_score_compiler.pattern_status = true;
         remaining = skip_hor_space(remaining);
         return remaining;
     }
@@ -572,7 +569,7 @@ static bool sf_do_line(std::string_view line, bool check)
     }
 
     // reset any per-line bitflags
-    s_sf_pattern_status = false;
+    g_score_compiler.pattern_status = false;
 
     if (std::isalpha(static_cast<unsigned char>(ch))) // command line
     {
@@ -684,29 +681,29 @@ static bool sf_do_line(std::string_view line, bool check)
     ScoreFileEntry &entry = g_score_rules.entries[g_score_rules.num_entries - 1];
     entry.head_type = j;
     entry.score = score;
-    if (s_sf_pattern_status) // in pattern matching mode
+    if (g_score_compiler.pattern_status) // in pattern matching mode
     {
         entry.flags |= 1;
         entry.str1.assign(pattern);
-        s_sf_compex = new CompiledRegex;
-        s_sf_compex->init_compex();
+        g_score_compiler.compex = new CompiledRegex;
+        g_score_compiler.compex->init_compex();
         // compile arguments:
         // 1st is COMPEX to store compiled regex in
         // 2nd is search string
         // 3rd should be true if the search string is a regex
         // 4th is true for case-insensitivity
-        const std::string_view compile_error = s_sf_compex->compile(entry.str1, true, true);
+        const std::string_view compile_error = g_score_compiler.compex->compile(entry.str1, true, true);
         if (!compile_error.empty())
         {
             fmt::print("Bad pattern : |{}|\n", pattern);
             fmt::print("Compex returns: |{}|\n", compile_error);
-            s_sf_compex->free_compex();
-            delete s_sf_compex;
-            s_sf_compex = nullptr;
+            g_score_compiler.compex->free_compex();
+            delete g_score_compiler.compex;
+            g_score_compiler.compex = nullptr;
             entry.compex = nullptr;
             return false;
         }
-        entry.compex = s_sf_compex;
+        entry.compex = g_score_compiler.compex;
     }
     else
     {
@@ -735,10 +732,10 @@ static void sf_do_file(std::string_view fname)
     {
         return;
     }
-    s_sf_file_level++;
+    g_score_compiler.file_level++;
     if (g_sf_verbose)
     {
-        for (int i = 1; i < s_sf_file_level; i++)
+        for (int i = 1; i < g_score_compiler.file_level; i++)
         {
             fmt::print("."); // maybe later putchar...
         }
@@ -748,7 +745,7 @@ static void sf_do_file(std::string_view fname)
     g_score_rules.grow();
     g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_START;
     // file_level is 1 to n
-    g_score_rules.entries[g_score_rules.num_entries - 1].score = s_sf_file_level;
+    g_score_rules.entries[g_score_rules.num_entries - 1].score = g_score_compiler.file_level;
     g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
     g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
 
@@ -761,10 +758,10 @@ static void sf_do_file(std::string_view fname)
     g_score_rules.grow();
     g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_END;
     // file_level is 1 to n
-    g_score_rules.entries[g_score_rules.num_entries - 1].score = s_sf_file_level;
+    g_score_rules.entries[g_score_rules.num_entries - 1].score = g_score_compiler.file_level;
     g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
     g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
-    s_sf_file_level--;
+    g_score_compiler.file_level--;
 }
 
 //const std::string& text; // string to match on
@@ -932,9 +929,9 @@ void sf_append(std::string_view line)
         fmt::print("List of abbreviation/file pairs\n");
         for (int i = 0; i < 256; i++)
         {
-            if (!s_sf_abbr[i].empty())
+            if (!g_score_compiler.abbr[i].empty())
             {
-                fmt::print("{} {}\n", static_cast<char>(i), s_sf_abbr[i]);
+                fmt::print("{} {}\n", static_cast<char>(i), g_score_compiler.abbr[i]);
             }
         }
         fmt::print("\" [The current newsgroup's score file]\n");
@@ -1058,7 +1055,7 @@ void sf_append(std::string_view line)
     }
     else
     {
-        const std::string &abbreviation = s_sf_abbr[static_cast<unsigned char>(filechar)];
+        const std::string &abbreviation = g_score_compiler.abbr[static_cast<unsigned char>(filechar)];
         if (abbreviation.empty())
         {
             fmt::print("\nBad file abbreviation: {}\n", filechar);
@@ -1279,7 +1276,7 @@ void sf_edit_file(std::string_view filespec)
     }
     else        // abbreviation
     {
-        const std::string &abbreviation = s_sf_abbr[static_cast<unsigned char>(filechar)];
+        const std::string &abbreviation = g_score_compiler.abbr[static_cast<unsigned char>(filechar)];
         if (abbreviation.empty())
         {
             fmt::print("\nBad file abbreviation: {}\n", filechar);

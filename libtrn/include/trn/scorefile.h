@@ -8,6 +8,7 @@
 
 #include <trn/head.h>
 
+#include <array>
 #include <cstddef>
 #include <filesystem>
 #include <string>
@@ -77,6 +78,16 @@ struct ScoreFileCache
 };
 
 extern ScoreFileCache g_score_cache;
+
+struct ScoreRuleCompiler
+{
+    std::array<std::string, 256> abbr;             // abbreviations
+    int                          file_level{};     // how deep are we?
+    bool                         pattern_status{}; // should we match by pattern?
+    CompiledRegex               *compex{};
+};
+
+extern ScoreRuleCompiler g_score_compiler;
 
 extern int  g_sf_score_verbose; // when true, the scoring routine prints lots of info...
 extern bool g_sf_verbose;       // if true print more stuff while loading
