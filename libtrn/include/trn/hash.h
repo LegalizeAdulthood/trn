@@ -8,6 +8,7 @@
 #ifndef TRN_HASH_H
 #define TRN_HASH_H
 
+#include <cstddef>
 #include <string_view>
 
 struct HashDatum
@@ -20,6 +21,16 @@ struct HashTable;
 
 using HashCompareFunc = int (*)(std::string_view key, HashDatum data);
 using HashWalkFunc = int (*)(int key_len, HashDatum *data, int extra);
+
+struct HashLookupCursor
+{
+    HashTable  *table{};
+    std::size_t bucket{};
+    std::size_t index{};
+    int         keylen{};
+};
+
+extern HashLookupCursor g_hash_cursor;
 
 HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);
 void hash_destroy(HashTable *tbl);

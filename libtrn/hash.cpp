@@ -91,10 +91,7 @@ void hash_delete(HashTable *tbl, std::string_view key)
     bucket.erase(bucket.begin() + static_cast<std::ptrdiff_t>(entry_index));
 }
 
-static HashTable  *s_slast_table{};
-static std::size_t s_slast_bucket{};
-static std::size_t s_slast_index{};
-static int         s_slast_keylen{};
+HashLookupCursor g_hash_cursor{};
 
 // data corresponding to key
 HashDatum hash_fetch(HashTable *tbl, std::string_view key)
@@ -104,10 +101,10 @@ HashDatum hash_fetch(HashTable *tbl, std::string_view key)
     const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
     std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
 
-    s_slast_table = tbl;
-    s_slast_bucket = bucket_index;
-    s_slast_index = entry_index;
-    s_slast_keylen = key_len;
+    g_hash_cursor.table = tbl;
+    g_hash_cursor.bucket = bucket_index;
+    g_hash_cursor.index = entry_index;
+    g_hash_cursor.keylen = key_len;
     if (entry_index == bucket.size()) // absent
     {
         return {nullptr, 0};
@@ -117,13 +114,13 @@ HashDatum hash_fetch(HashTable *tbl, std::string_view key)
 
 void hash_store_last(HashDatum data)
 {
-    std::vector<HashEntry> &bucket = s_slast_table->ht_addr[s_slast_bucket];
-    if (s_slast_index == bucket.size()) // absent; allocate an entry
+    std::vector<HashEntry> &bucket = g_hash_cursor.table->ht_addr[g_hash_cursor.bucket];
+    if (g_hash_cursor.index == bucket.size()) // absent; allocate an entry
     {
-        bucket.push_back({data, s_slast_keylen});
+        bucket.push_back({data, g_hash_cursor.keylen});
         return;
     }
-    bucket[s_slast_index].he_data = data; // supersede any old data for this key
+    bucket[g_hash_cursor.index].he_data = data; // supersede any old data for this key
 }
 
 // Visit each entry by calling nodefunc at each, with keylen, data,
@@ -141,10 +138,10 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
         for (std::size_t entry_index = 0; entry_index < bucket.size();)
         {
             HashEntry &entry = bucket[entry_index];
-            s_slast_table = tbl;
-            s_slast_bucket = bucket_index;
-            s_slast_index = entry_index;
-            s_slast_keylen = entry.he_key_len;
+            g_hash_cursor.table = tbl;
+            g_hash_cursor.bucket = bucket_index;
+            g_hash_cursor.index = entry_index;
+            g_hash_cursor.keylen = entry.he_key_len;
             if ((*node_func)(entry.he_key_len, &entry.he_data, extra) < 0)
             {
                 bucket.erase(bucket.begin() + static_cast<std::ptrdiff_t>(entry_index));
