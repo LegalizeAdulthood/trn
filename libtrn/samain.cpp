@@ -133,7 +133,7 @@ static bool sa_init_arts()
 {
     sa_init_ents();
     // add all available articles to entry list
-    for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
+    for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         if (article_exists(a))
         {

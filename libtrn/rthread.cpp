@@ -142,7 +142,7 @@ void thread_open()
         rc_to_bits();
     }
 
-    for (ap = g_cache.ptr(article_first(g_first_art)); ap && ap->article_num() <= g_cache.last_cached;
+    for (ap = g_cache.ptr(g_cache.first(g_first_art)); ap && ap->article_num() <= g_cache.last_cached;
          ap = article_nextp(ap))
     {
         if ((ap->m_flags & (AF_EXISTS|AF_CACHED)) == AF_EXISTS)
@@ -158,7 +158,7 @@ void thread_open()
         g_newsgroup_ptr->m_ng_max = g_cache.last_cached;
         g_last_art = g_cache.last_cached;
     }
-    for (ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art; ap = article_nextp(ap))
+    for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art; ap = article_nextp(ap))
     {
         if (ap->m_flags & AF_CACHED)
         {
@@ -1571,7 +1571,7 @@ static void build_article_ptrs()
     g_sel_page.next_art = nullptr;
     g_art_ptr_list.clear();
     g_art_ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
-    for (ArticleNum an = article_first(g_abs_first); count; an = article_next(an))
+    for (ArticleNum an = g_cache.first(g_abs_first); count; an = article_next(an))
     {
         Article *ap = g_cache.ptr(an);
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)

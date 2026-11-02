@@ -353,7 +353,7 @@ NumNumResult num_num(std::string_view command)
             g_nav.target.num = min;
             return NN_REREAD;
         }
-        for (g_nav.target.num = article_first(min); g_nav.target.num <= max;
+        for (g_nav.target.num = g_cache.first(min); g_nav.target.num <= max;
              g_nav.target.num = article_next(g_nav.target.num))
         {
             g_nav.target.art = g_cache.ptr(g_nav.target.num);

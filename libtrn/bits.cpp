@@ -93,7 +93,7 @@ void rc_to_bits()
         more_ranges = comma != std::string_view::npos;
         numbers = comma == std::string_view::npos ? std::string_view{} : numbers.substr(comma + 1);
         ArticleNum n;
-        for (n = article_first(g_abs_first); n < g_first_art; n = article_next(n))
+        for (n = g_cache.first(g_abs_first); n < g_first_art; n = article_next(n))
         {
             g_cache.ptr(n)->m_flags &= ~AF_UNREAD;
         }
@@ -101,7 +101,7 @@ void rc_to_bits()
     }
     else
     {
-        g_first_art = article_first(g_first_art);
+        g_first_art = g_cache.first(g_first_art);
     }
     unread = ArticleNum{};
 #ifdef DEBUG
@@ -109,7 +109,7 @@ void rc_to_bits()
     {
         fmt::print(stdout, "\n{}\n", numbers);
         term_down(2);
-        for (ArticleNum i = article_first(g_abs_first); i < g_first_art; i = article_next(i))
+        for (ArticleNum i = g_cache.first(g_abs_first); i < g_first_art; i = article_next(i))
         {
             if (article_unread(i))
             {
@@ -248,7 +248,7 @@ void bits_to_rc()
     rc_line = g_newsgroup_ptr->rc_name();         // start with the newsgroup name
     rc_line += g_newsgroup_ptr->m_subscribe_char; // put the requisite : or !
 
-    for (i = article_first(g_abs_first); i <= g_last_art; i = article_next(i))
+    for (i = g_cache.first(g_abs_first); i <= g_last_art; i = article_next(i))
     {
         if (article_unread(i))
         {
@@ -319,7 +319,7 @@ void find_existing_articles()
         {
             std::string list_line;
             list_line.reserve(NNTP_STRLEN);
-            for (ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art;
+            for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art;
                  ap = article_nextp(ap))
             {
                 ap->m_flags &= ~AF_EXISTS;
@@ -352,7 +352,7 @@ void find_existing_articles()
         {
             if (!g_data_source->m_ov_opened || !g_data_source->m_over_dir.empty())
             {
-                for (ap = g_cache.ptr(article_first(g_cache.first_cached));
+                for (ap = g_cache.ptr(g_cache.first(g_cache.first_cached));
                      ap && ap->article_num() <= g_cache.last_cached; ap = article_nextp(ap))
                 {
                     if (ap->m_flags & AF_CACHED)
@@ -404,7 +404,7 @@ void find_existing_articles()
         }
 
         // Scan the directory to find which articles are present.
-        for (ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art;
+        for (ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art;
              ap = article_nextp(ap))
         {
             ap->m_flags &= ~AF_EXISTS;
@@ -438,9 +438,7 @@ void find_existing_articles()
         if (first > g_abs_first)
         {
             g_newsgroup_ptr->check_expired(first);
-            for (g_abs_first = article_first(g_abs_first);
-                 g_abs_first < first;
-                 g_abs_first = article_next(g_abs_first))
+            for (g_abs_first = g_cache.first(g_abs_first); g_abs_first < first; g_abs_first = article_next(g_abs_first))
             {
                 g_cache.ptr(g_abs_first)->one_missing();
             }
@@ -510,7 +508,7 @@ void note_chase_xref()
 
 void mark_missing_articles()
 {
-    for (Article *ap = g_cache.ptr(article_first(g_abs_first)); ap && ap->article_num() <= g_last_art;
+    for (Article *ap = g_cache.ptr(g_cache.first(g_abs_first)); ap && ap->article_num() <= g_last_art;
          ap = article_nextp(ap))
     {
         if (!(ap->m_flags & AF_EXISTS))

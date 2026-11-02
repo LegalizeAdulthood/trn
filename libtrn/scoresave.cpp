@@ -281,7 +281,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
     std::string line{"."};
     int         lastscore = 0;
 
-    for (ArticleNum art = article_first(a); art <= g_last_art && num_output < 50; art = article_next(art))
+    for (ArticleNum art = g_cache.first(a); art <= g_last_art && num_output < 50; art = article_next(art))
     {
         next_start = article_next(art);
         if (article_unread(art) && article_scored(art))
@@ -449,7 +449,7 @@ void sc_load_scores()
     }
     int total = 0;
     int scored = 0;
-    for (ArticleNum art = article_first(a); art <= g_last_art; art = article_next(art))
+    for (ArticleNum art = g_cache.first(a); art <= g_last_art; art = article_next(art))
     {
         if (!article_exists(art))
         {

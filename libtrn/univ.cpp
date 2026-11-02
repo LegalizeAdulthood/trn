@@ -1173,7 +1173,7 @@ static void univ_vg_add_article(ArticleNum a)
 static void univ_vg_add_group()
 {
     // later: allow was-read articles, etc...
-    for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
+    for (ArticleNum a = g_cache.first(g_first_art); a <= g_last_art; a = article_next(a))
     {
         if (!article_unread(a))
         {

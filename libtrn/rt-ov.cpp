@@ -219,7 +219,7 @@ beginning:
     line_cnt = 0;
     while (true)
     {
-        artnum = article_first(first);
+        artnum = g_cache.first(first);
         if (artnum > first || !(g_cache.ptr(artnum)->m_flags & AF_CACHED))
         {
             break;
@@ -370,7 +370,7 @@ beginning:
     if (remote)
     {
         int cachemask = (g_threaded_group? AF_THREADED : AF_CACHED);
-        for (Article *ap = g_cache.ptr(article_first(real_first)); ap && ap->article_num() <= artnum;
+        for (Article *ap = g_cache.ptr(g_cache.first(real_first)); ap && ap->article_num() <= artnum;
              ap = article_nextp(ap))
         {
             if (!(ap->m_flags & cachemask))
@@ -562,7 +562,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
         }
         else if (field_present[OV_XREF])
         {
-            for (ArticleNum an = article_first(g_abs_first); an < artnum; an = article_next(an))
+            for (ArticleNum an = g_cache.first(g_abs_first); an < artnum; an = article_next(an))
             {
                 Article *ap = g_cache.ptr(an);
                 if (!ap->m_xrefs)

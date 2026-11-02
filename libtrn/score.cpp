@@ -100,7 +100,7 @@ void sc_init(bool pend_wait)
         {
             i = article_after(g_last_art); // skip loop
         }
-        for (i = article_first(i); i <= g_last_art; i = article_next(i))
+        for (i = g_cache.first(i); i <= g_last_art; i = article_next(i))
         {
             if (!article_scored(i) && (g_sc_fill_read || article_unread(i)))
             {
@@ -303,7 +303,7 @@ int sc_score_art(ArticleNum a, bool now)
 // CONSIDER: option for scoring only unread articles (obey sc_fill_unread?)
 void sc_fill_score_list(ArticleNum first, ArticleNum last)
 {
-    for (ArticleNum i = article_first(first); i <= last; i = article_next(i))
+    for (ArticleNum i = g_cache.first(first); i <= last; i = article_next(i))
     {
         (void)sc_score_art(i,false);    // will be sorted later...
     }
@@ -347,11 +347,11 @@ void sc_look_ahead(bool flag, bool nowait)
     // prevent needless looping below
     if (g_sc_fill_max < g_first_art && !g_sc_fill_read)
     {
-        g_sc_fill_max = article_before(article_first(g_first_art));
+        g_sc_fill_max = article_before(g_cache.first(g_first_art));
     }
     else
     {
-        g_sc_fill_max = article_first(g_sc_fill_max);
+        g_sc_fill_max = g_cache.first(g_sc_fill_max);
     }
     while (g_sc_fill_max < g_last_art //
 #ifdef PENDING
@@ -411,7 +411,7 @@ int sc_percent_scored()
     }
     int total = 0;
     int scored = 0;
-    for (ArticleNum art = article_first(i); art <= g_last_art; art = article_next(art))
+    for (ArticleNum art = g_cache.first(i); art <= g_last_art; art = article_next(art))
     {
         if (!article_exists(art))
         {
@@ -460,7 +460,7 @@ static void sc_rescore_arts()
     bool old_spin = s_sc_do_spin;
     set_spin(SPIN_FOREGROUND);
     s_sc_do_spin = true; // amuse the user
-    for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
+    for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         if (article_exists(a))
         {
@@ -531,7 +531,7 @@ void sc_rescore()
     s_sc_rescoring = true; // in case routines need to know
     sc_cleanup();        // get rid of the old
     sf_file_clear();
-    for (ArticleNum a = article_first(g_abs_first); a <= g_last_art; a = article_next(a))
+    for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = article_next(a))
     {
         g_cache.ptr(a)->m_score_flags = SFLAG_NONE;
     }
@@ -647,7 +647,7 @@ void sc_score_cmd(std::string_view line)
 //int thresh;           // kill all articles with this score or lower
 void sc_kill_threshold(int thresh)
 {
-    for (ArticleNum a = article_first(g_first_art); a <= g_last_art; a = article_next(a))
+    for (ArticleNum a = g_cache.first(g_first_art); a <= g_last_art; a = article_next(a))
     {
         if (g_cache.ptr(a)->m_score <= thresh &&
             article_unread(a)

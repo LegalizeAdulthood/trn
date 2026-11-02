@@ -114,10 +114,10 @@ bool GroupArticleCache::walk(ArticleWalker *callback, int arg)
     return false;
 }
 
-ArticleNum article_first(ArticleNum an)
+ArticleNum GroupArticleCache::first(ArticleNum an)
 {
-    const auto it = g_cache.article_list.lower_bound(an);
-    return it == g_cache.article_list.end() ? article_after(g_last_art) : it->first;
+    const auto it = article_list.lower_bound(an);
+    return it == article_list.end() ? article_after(g_last_art) : it->first;
 }
 
 ArticleNum article_next(ArticleNum an)
@@ -771,7 +771,7 @@ bool cache_subjects()
         return true;
     }
     set_spin(SPIN_BACKGROUND);
-    for (an = article_first(s_subj_to_get); an <= g_last_art; an = article_next(an))
+    for (an = g_cache.first(s_subj_to_get); an <= g_last_art; an = article_next(an))
     {
         if (input_pending())
         {
@@ -796,7 +796,7 @@ static bool cache_xrefs()
         return true;
     }
     set_spin(SPIN_BACKGROUND);
-    for (an = article_first(s_xref_to_get); an <= g_last_art; an = article_next(an))
+    for (an = g_cache.first(s_xref_to_get); an <= g_last_art; an = article_next(an))
     {
         if (input_pending())
         {
@@ -899,7 +899,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
         set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
-    for (i = article_first(first); i <= last; i = article_next(i))
+    for (i = g_cache.first(first); i <= last; i = article_next(i))
     {
         if ((g_cache.ptr(i)->m_flags & cache_mask) ^ cache_mask2)
         {
