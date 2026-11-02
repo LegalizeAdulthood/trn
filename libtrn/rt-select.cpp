@@ -226,7 +226,6 @@ private:
 static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
 static void                sel_display();
-static void                sel_prompt();
 static bool                select_item(Selection u);
 static bool                delay_return_item(Selection u);
 static bool                deselect_item(Selection u);
@@ -1234,7 +1233,7 @@ char sel_input()
     int range_start = -1; // One-based origin; -1 uses the current cursor.
 reask_selector:
     // Prompt the user
-    sel_prompt();
+    g_sel_session.prompt();
 position_selector:
       int got_dash = 0;
       int got_goto = 0;
@@ -1747,10 +1746,12 @@ reinp_selector:
 /// the items. It also handles drawing the mouse bar and updating the terminal column.
 ///
 /// @globals
+/// - g_sel, g_sel_page, g_in_ng: Read for mode and page progress.
+/// - g_mail_call: Interpolated with existing mail and interpreter side effects.
+/// - Terminal capabilities, mouse-bar state, and g_color: Used for output.
 /// - g_term_col: Updated to the length of the displayed prompt message.
-/// - g_sel_session.removed_prompt: Set to RP_NONE to indicate no removed prompt state.
 ///
-static void sel_prompt()
+void SelectorSession::prompt()
 {
     draw_mouse_bar(g_tc_COLS,false);
     if (g_can_home)
@@ -1761,12 +1762,11 @@ static void sel_prompt()
     set_mail(false);
 #endif
     const std::string page_prompt =
-        g_sel_page.at_end ? fmt::format("{} [{}{}] --", !g_sel_page.prior_obj_cnt ? "All" : "Bot",
-                                        g_sel_session.end_char, g_sel_session.page_char)
+        g_sel_page.at_end ? fmt::format("{} [{}{}] --", !g_sel_page.prior_obj_cnt ? "All" : "Bot", end_char, page_char)
                           : fmt::format("{}{}% [{}{}] --", !g_sel_page.prior_obj_cnt ? "Top " : "",
                                         static_cast<long>((g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt) * 100 /
                                                           g_sel_page.total_obj_cnt),
-                                        g_sel_session.page_char, g_sel_session.end_char);
+                                        page_char, end_char);
     const std::string mail_call = do_interp(g_mail_call);
     const std::string prompt =
         fmt::format("{}-- {} {} ({}{} order) -- {}", mail_call,
@@ -1776,7 +1776,7 @@ static void sel_prompt()
                     g_sel.mode_string, g_sel.direction < 0 ? "reverse " : "", g_sel.sort_string, page_prompt);
     g_color.print(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());
-    g_sel_session.removed_prompt = RP_NONE;
+    removed_prompt = RP_NONE;
 }
 
 /// @brief Selects an item based on the current selection mode and updates its state.
@@ -2081,7 +2081,7 @@ static bool select_option(OptionIndex i)
     {
         up_line();
         erase_line(true);
-        sel_prompt();
+        g_sel_session.prompt();
         goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
         if (changed)
         {

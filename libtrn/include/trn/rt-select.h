@@ -105,6 +105,7 @@ struct SelectorSession
     // TODO: private
     char another_command(char_int ch);
     void status_msg(std::string_view cp);
+    void prompt();
 };
 
 extern SelectorSession   g_sel_session;
