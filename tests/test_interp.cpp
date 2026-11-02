@@ -7343,7 +7343,7 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
         ~CitedTextAttribute()
         {
             color_rc_attribute("cited text", "-");
-            color_default();
+            g_color.deefault();
         }
     } cited_text_attribute;
     PushDir                  output_dir{output_path};

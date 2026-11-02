@@ -122,7 +122,7 @@ void color_init()
     }
 
     // Set color to default.
-    color_default();
+    g_color.deefault();
 }
 
 static bool is_attribute_space(char ch)
@@ -270,7 +270,7 @@ void color_object(int object, bool push)
     {
         // TODO: error reporting?
         g_color.stack_pointer = 0;      // empty stack
-        color_default();                // and set normal colors
+        g_color.deefault();             // and set normal colors
         return;
     }
     g_color.stack[g_color.stack_pointer] = merged;
@@ -322,10 +322,10 @@ void color_string(int object, std::string_view str)
 }
 
 // Turn off color attribute.
-void color_default()
+void ColorOutputContext::deefault()
 {
-    g_color.stack[g_color.stack_pointer] = g_color.objects[COLOR_DEFAULT];
-    g_color.output();
+    stack[stack_pointer] = objects[COLOR_DEFAULT];
+    output();
 }
 
 // Set colors/attribute for an object.

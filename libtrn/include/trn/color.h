@@ -50,6 +50,8 @@ struct ColorObj
 
 struct ColorOutputContext
 {
+    void deefault();
+
     enum
     {
         STACK_SIZE = 16
@@ -73,6 +75,5 @@ void color_rc_attribute(std::string_view object, std::string_view value);
 void color_object(int object, bool push);
 void color_pop();
 void color_string(int object, std::string_view str);
-void color_default();
 
 #endif

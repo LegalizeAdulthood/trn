@@ -103,7 +103,7 @@ void finalize(int status)
 {
     sc_sv_save_file();   // save any scores from memory to disk
     update_thread_kill_file();
-    color_default();
+    g_color.deefault();
     termlib_reset();
     if (g_bizarre)
     {

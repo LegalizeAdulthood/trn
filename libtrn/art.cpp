@@ -839,7 +839,7 @@ recheck_pager:
         }
         if (g_art_input.pos == g_art_size) // did we just now reach EOF?
         {
-            color_default();
+            g_color.deefault();
             set_mode(g_general_mode,old_mode);
             return DA_NORM;     // avoid --MORE--(100%)
         }
@@ -856,7 +856,7 @@ reask_pager:
 
         unflush_output();       // disable any ^O in effect
          maybe_eol();
-        color_default();
+        g_color.deefault();
         {
             const std::string percent =
                 g_art_size < 0 ? "?" : std::to_string(g_art_input.pos.value_of() * 100 / g_art_size.value_of());
@@ -907,7 +907,7 @@ reask_pager:
         erase_line(g_erase_screen && g_erase_each_line);
 
     fake_command:               // used by g_inner_search
-        color_default();
+        g_color.deefault();
         g_output_chase_phrase = true;
 
         // parse and process pager command
@@ -1260,7 +1260,7 @@ refresh_screen:
                     {
                         std::putchar(*line);
                     }
-                    color_default();
+                    g_color.deefault();
                     std::putchar('\n');
                     --g_top_line;
                     g_art_input.pos = g_back_page.vary_read(--g_art_input.line_num);
