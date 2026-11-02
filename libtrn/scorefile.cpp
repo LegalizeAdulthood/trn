@@ -68,7 +68,6 @@ ScoreFileCache                      g_score_cache{{}, sf_default_url_get};
 
 static fs::path sf_get_filename(int level);
 static std::string sf_cmd_fname(std::string_view s);
-static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
 static std::string sf_missing_score(std::string_view line);
 static std::string sf_get_line(ArticleNum a, HeaderLineType h);
@@ -540,7 +539,7 @@ std::string_view ScoreRuleCompiler::free_form(std::string_view keyword, std::str
 }
 
 //bool check;           // if true, just check the line, don't act.
-static bool sf_do_line(std::string_view line, bool check)
+bool ScoreRuleCompiler::do_line(std::string_view line, bool check)
 {
     const std::size_t nul = line.find('\0');
     if (nul != std::string_view::npos)
@@ -567,11 +566,11 @@ static bool sf_do_line(std::string_view line, bool check)
     }
 
     // reset any per-line bitflags
-    g_score_compiler.pattern_status = false;
+    pattern_status = false;
 
     if (std::isalpha(static_cast<unsigned char>(ch))) // command line
     {
-        return g_score_compiler.do_command(line, check);
+        return do_command(line, check);
     }
 
     // skip whitespace
@@ -645,7 +644,7 @@ static bool sf_do_line(std::string_view line, bool check)
         }
         const std::string_view remaining =
             keyword_end == std::string_view::npos ? std::string_view{} : line_rest.substr(keyword_end);
-        line_rest = g_score_compiler.free_form(keyword, remaining);
+        line_rest = free_form(keyword, remaining);
         if (line_rest.empty()) // used up all the line's text, or error
         {
             fmt::print("Scorefile entry error error (freeform parse).  Line was:\n|{}|\n", normalized_text);
@@ -679,29 +678,29 @@ static bool sf_do_line(std::string_view line, bool check)
     ScoreFileEntry &entry = g_score_rules.entries[g_score_rules.num_entries - 1];
     entry.head_type = j;
     entry.score = score;
-    if (g_score_compiler.pattern_status) // in pattern matching mode
+    if (pattern_status) // in pattern matching mode
     {
         entry.flags |= 1;
         entry.str1.assign(pattern);
-        g_score_compiler.compex = new CompiledRegex;
-        g_score_compiler.compex->init_compex();
+        compex = new CompiledRegex;
+        compex->init_compex();
         // compile arguments:
         // 1st is COMPEX to store compiled regex in
         // 2nd is search string
         // 3rd should be true if the search string is a regex
         // 4th is true for case-insensitivity
-        const std::string_view compile_error = g_score_compiler.compex->compile(entry.str1, true, true);
+        const std::string_view compile_error = compex->compile(entry.str1, true, true);
         if (!compile_error.empty())
         {
             fmt::print("Bad pattern : |{}|\n", pattern);
             fmt::print("Compex returns: |{}|\n", compile_error);
-            g_score_compiler.compex->free_compex();
-            delete g_score_compiler.compex;
-            g_score_compiler.compex = nullptr;
+            compex->free_compex();
+            delete compex;
+            compex = nullptr;
             entry.compex = nullptr;
             return false;
         }
-        entry.compex = g_score_compiler.compex;
+        entry.compex = compex;
     }
     else
     {
@@ -750,7 +749,7 @@ static void sf_do_file(std::string_view fname)
     const ScoreFile &file = g_score_cache.files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
     {
-        (void)sf_do_line(s, false);
+        (void) g_score_compiler.do_line(s, false);
     }
     // add end marker to scoring array
     g_score_rules.grow();
@@ -947,7 +946,7 @@ void sf_append(std::string_view line)
     // and is not a valid command, request a score
     if (!std::isdigit(static_cast<unsigned char>(ch)) && ch != '+' && ch != '-' && ch != ':' && ch != '!' && ch != '#')
     {
-        if (!sf_do_line(scoreline, true)) // just checking
+        if (!g_score_compiler.do_line(scoreline, true)) // just checking
         {
             missing_scoreline = sf_missing_score(scoreline);
             if (missing_scoreline.empty()) // no score typed
@@ -1007,7 +1006,7 @@ void sf_append(std::string_view line)
     }
 
     // test the scoring line unless filechar is '!' (meaning do it now)
-    if (!sf_do_line(scoreline, filechar != '!'))
+    if (!g_score_compiler.do_line(scoreline, filechar != '!'))
     {
         fmt::print("Bad score line (ignored)\n");
         return;
