@@ -32,6 +32,7 @@ struct GroupArticleCache
 {
     Article *ptr(ArticleNum an);
     bool     has_data(ArticleNum an);
+    Article *find(ArticleNum an);
 
     std::map<ArticleNum, Article> article_list;
     ArticleNum                    first_cached{};
@@ -80,7 +81,6 @@ inline Article **article_ptr_list_end()
     return g_art_ptr_list.data() + g_art_ptr_list.size();
 }
 
-Article   *article_find(ArticleNum an);
 bool       article_walk(bool (*callback)(Article &, int), int arg);
 ArticleNum article_first(ArticleNum an);
 ArticleNum article_next(ArticleNum an);

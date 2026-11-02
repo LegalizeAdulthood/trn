@@ -77,7 +77,7 @@ void PresentationBuffer::final()
 
 std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
 {
-    Article* ap = article_find(art_num);
+    Article *ap = g_cache.find(art_num);
 
     if (!ap || !art_num.value_of() || (ap->m_flags & (AF_EXISTS | AF_FAKE)) != AF_EXISTS)
     {

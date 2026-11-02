@@ -556,7 +556,7 @@ static void truncate_notes_pattern(std::string &pattern_text, std::size_t text_s
 
 static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 {
-    Article* ap = article_find(art_num);
+    Article *ap = g_cache.find(art_num);
 
     if (!ap || !(ap->m_flags & AF_EXISTS))
     {

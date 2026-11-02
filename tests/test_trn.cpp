@@ -2470,7 +2470,7 @@ void MultircReadingStateTest::SetUp()
             EXPECT_TRUE(g_doing_ng);
             EXPECT_EQ(g_nav.target.num, g_nav.current.num);
             EXPECT_EQ(g_nav.target.art, g_nav.current.art);
-            EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+            EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
         }
         else
         {
@@ -3258,7 +3258,7 @@ void LocalArticleTraversalTest::SetUp()
         EXPECT_EQ(MM_ARTICLE, g_mode);
         EXPECT_EQ(g_nav.target.num, g_nav.current.num);
         EXPECT_EQ(g_nav.target.art, g_nav.current.art);
-        EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+        EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
         m_articles.push_back(static_cast<int>(g_nav.target.num.value_of()));
         m_unread.push_back(g_newsgroup_ptr->m_to_read);
         if (m_input_pos == m_commands.size())
@@ -3461,7 +3461,7 @@ void NewsgroupEndReadingStateTest::SetUp()
             }
             else
             {
-                EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+                EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
             }
         }
         m_states.push_back(std::move(state));
@@ -4673,7 +4673,7 @@ TEST_P(RemoteNewsgroupParentReadingTest, anUnavailableParentShowsADiagnosticAndA
     EXPECT_THAT(m_output, testing::HasSubstr("article is not available."));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
     EXPECT_EQ(ArticleNum{2}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
     expect_saved_range(" 1-3", TR_NONE);
 }
 
@@ -4767,7 +4767,7 @@ void RemoteNewsgroupRefreshReadingTest::expect_arrivals(bool read) const
     EXPECT_FALSE(g_force_grow);
     for (int number = 4; number < 4 + m_arrivals; ++number)
     {
-        const Article *article = article_find(ArticleNum{number});
+        const Article *article = g_cache.find(ArticleNum{number});
         ASSERT_NE(nullptr, article);
         EXPECT_NE(AF_NONE, article->m_flags & AF_EXISTS);
         EXPECT_EQ(read, was_read(ArticleNum{number}));
@@ -4812,7 +4812,7 @@ TEST_P(RemoteNewsgroupRefreshReadingTest, exhaustionRefreshesTheGroupAndContinue
     expect_arrivals(true);
     expect_saved_range(" 1-" + std::to_string(3 + m_arrivals), TR_NONE);
     EXPECT_EQ(ArticleNum{3 + m_arrivals}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(RemoteNewsgroupRefreshReadingTest, aForcedEndJumpRefreshesBoundsAndPreservesSkippedArticles)
@@ -5162,7 +5162,7 @@ void PagedArticleSelectorReadingStateTest::SetUp()
         std::vector<int> read;
         for (int number = 1; number <= 11; ++number)
         {
-            Article *article = article_find(ArticleNum{number});
+            Article *article = g_cache.find(ArticleNum{number});
             if (article && (article->m_flags & (AF_UNREAD | AF_SEL)) == (AF_UNREAD | AF_SEL))
             {
                 selected.push_back(number);
@@ -5338,7 +5338,7 @@ void ArticleSelectorScopeReadingTest::SetUp()
         std::vector<int> marks;
         for (int number = 1; number <= 11; ++number)
         {
-            Article *article = article_find(ArticleNum{number});
+            Article *article = g_cache.find(ArticleNum{number});
             if (article && (article->m_flags & AF_DEL_SEL))
             {
                 marks.push_back(number);
@@ -5620,7 +5620,7 @@ void ArticleSelectorCleanupReadingTest::SetUp()
         SelectorCleanupState state{{}, {}, g_dm_count};
         for (int number = 1; number <= 11; ++number)
         {
-            const Article *article = article_find(ArticleNum{number});
+            const Article *article = g_cache.find(ArticleNum{number});
             if (!article)
             {
                 continue;
@@ -6173,7 +6173,7 @@ DoNewsgroupResult NewsgroupPagerReadingTest::run_reading(std::string_view comman
     EXPECT_EQ(nullptr, g_art_input.fp);
     EXPECT_EQ(g_nav.target.num, g_nav.current.num);
     EXPECT_EQ(g_nav.target.art, g_nav.current.art);
-    EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
     return result;
 }
 
@@ -12241,9 +12241,9 @@ TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticle
         const LocalArticleReadingState &state = m_states[index];
         const ArticleNum                number{index + 1};
         const ArticleNum                recent{index == 0 ? 4 : index};
-        EXPECT_EQ((ArticleLocation{number, article_find(number)}), state.article);
+        EXPECT_EQ((ArticleLocation{number, g_cache.find(number)}), state.article);
         EXPECT_EQ(state.article, state.current);
-        EXPECT_EQ((ArticleLocation{recent, index == 0 ? nullptr : article_find(recent)}), state.recent);
+        EXPECT_EQ((ArticleLocation{recent, index == 0 ? nullptr : g_cache.find(recent)}), state.recent);
         EXPECT_EQ(ArticleUnread{2 - index}, state.unread);
         EXPECT_EQ((std::array<bool, 3>{true, index >= 1, index >= 2}), state.read);
     }
@@ -12265,7 +12265,7 @@ TEST_P(SuccessiveLocalArticlesTest, readingTheLocalSpoolToCompletionKeepsArticle
     EXPECT_EQ(ArticleNum{4}, g_nav.current.num);
     EXPECT_EQ(nullptr, g_nav.current.art);
     EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
-    EXPECT_EQ(article_find(ArticleNum{3}), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(ArticleNum{3}), g_nav.recent.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
     EXPECT_FALSE(g_in_ng);
@@ -12344,7 +12344,7 @@ TEST_P(LocalArticleTraversalTest, previousUnreadAtTheFirstArticleKeepsTheCurrent
     EXPECT_EQ((std::vector<ArticleUnread>{4, 4}), m_unread);
     EXPECT_THAT(m_output, testing::HasSubstr("No previous unread articles"));
     EXPECT_EQ(ArticleNum{1}, g_nav.current.num);
-    EXPECT_EQ(article_find(g_nav.current.num), g_nav.current.art);
+    EXPECT_EQ(g_cache.find(g_nav.current.num), g_nav.current.art);
 }
 
 TEST_P(LocalArticleTraversalTest, firstUnreadReturnsFromAnExplicitReadArticle)
@@ -12355,7 +12355,7 @@ TEST_P(LocalArticleTraversalTest, firstUnreadReturnsFromAnExplicitReadArticle)
     expect_articles({5, 1});
     EXPECT_EQ((std::vector<ArticleUnread>{5, 4}), m_unread);
     EXPECT_EQ(ArticleNum{5}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalArticleTraversalTest, anExplicitReadTargetBypassesSelectedOnlyFiltering)
@@ -12398,7 +12398,7 @@ TEST_P(LocalArticleTraversalTest, previousArticleIncludesReadArticlesInTheChosen
     expect_articles({1, second, previous});
     EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3}), m_unread);
     EXPECT_EQ(ArticleNum{second}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalArticleTraversalTest, nextArticleCanRereadAnAlreadyReadArticle)
@@ -12424,7 +12424,7 @@ TEST_P(LocalArticleTraversalTest, minusRereadsTheMostRecentlyDisplayedArticle)
     expect_articles({1, second, 1});
     EXPECT_EQ((std::vector<ArticleUnread>{4, 3, 3}), m_unread);
     EXPECT_EQ(ArticleNum{second}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalArticleTraversalTest, restartingTheCurrentArticleDoesNotMarkItReadTwice)
@@ -12530,7 +12530,7 @@ TEST_P(NewsgroupEndReadingTest, finishingTheLastUnreadArticleLeavesWithoutAnothe
     EXPECT_EQ(ArticleNum{4}, g_nav.current.num);
     EXPECT_EQ(nullptr, g_nav.current.art);
     EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("What next? [npq]")));
 }
@@ -12552,7 +12552,7 @@ TEST_P(NewsgroupEndReadingTest, anExplicitEndJumpStillPromptsAfterTheLastUnreadA
     expect_end_heading();
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
     EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(NewsgroupEndReadingTest, nextAtAForcedEndPromptReadsTheFirstUnreadArticle)
@@ -14017,7 +14017,7 @@ TEST_P(LocalNewsgroupArrivalTest, reachingTheEndDiscoversAndReadsTheNewLocalArti
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-" + std::to_string(3 + m_arrival_count), g_newsgroup_ptr->rc_numbers());
     EXPECT_EQ(ArticleNum{3 + m_arrival_count}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
 }
 
 TEST_P(LocalNewsgroupArrivalTest, aForcedEndJumpRetainsNewArrivalsAsUnreadAtTheEndPrompt)
@@ -14033,12 +14033,12 @@ TEST_P(LocalNewsgroupArrivalTest, aForcedEndJumpRetainsNewArrivalsAsUnreadAtTheE
     EXPECT_EQ(ArticleNum{3 + m_arrival_count}, m_arrival_states[1].last);
     EXPECT_EQ(ArticleUnread{1 + m_arrival_count}, m_states[1].unread);
     EXPECT_EQ(ArticleNum{3}, g_nav.recent.num);
-    EXPECT_EQ(article_find(g_nav.recent.num), g_nav.recent.art);
+    EXPECT_EQ(g_cache.find(g_nav.recent.num), g_nav.recent.art);
     expect_arrival_bodies(0);
     for (int number = 4; number < 4 + m_arrival_count; ++number)
     {
-        ASSERT_NE(nullptr, article_find(ArticleNum{number}));
-        EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_find(ArticleNum{number})->m_flags & (AF_EXISTS | AF_UNREAD));
+        ASSERT_NE(nullptr, g_cache.find(ArticleNum{number}));
+        EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_cache.find(ArticleNum{number})->m_flags & (AF_EXISTS | AF_UNREAD));
     }
     EXPECT_EQ(" 1-1,3", g_newsgroup_ptr->rc_numbers());
 }
@@ -14076,7 +14076,7 @@ TEST_P(LocalNewsgroupArrivalTest, disablingAutomaticGrowthDefersNewArticlesUntil
     EXPECT_EQ(ArticleNum{3}, g_last_art);
     EXPECT_EQ(ArticleNum{3}, g_newsgroup_ptr->m_ng_max);
     EXPECT_EQ(1, m_arrival_states[1].static_policy);
-    EXPECT_EQ(nullptr, article_find(ArticleNum{4}));
+    EXPECT_EQ(nullptr, g_cache.find(ArticleNum{4}));
     EXPECT_TRUE(fs::exists(m_output_dir / "comp/lang/cpp/4"));
     expect_arrival_bodies(0);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
@@ -14093,7 +14093,7 @@ TEST_P(LocalNewsgroupArrivalTest, overridingTheSelectorItemTemporarilyDefersNewA
     EXPECT_EQ(ArticleNum{3}, m_states[2].article);
     EXPECT_EQ(2, m_arrival_states[2].static_policy);
     EXPECT_EQ(ArticleNum{3}, g_last_art);
-    EXPECT_EQ(nullptr, article_find(ArticleNum{4}));
+    EXPECT_EQ(nullptr, g_cache.find(ArticleNum{4}));
     expect_arrival_bodies(0);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
@@ -14294,8 +14294,8 @@ TEST_P(NewsgroupPagerReadingTest, anArticleExpiringDuringReadingIsSkippedWithout
     EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
     EXPECT_EQ(nullptr, g_nav.target.art);
     EXPECT_EQ(ArticleNum{2}, g_nav.recent.num);
-    EXPECT_EQ(article_find(ArticleNum{2}), g_nav.recent.art);
-    EXPECT_FALSE(article_find(ArticleNum{3})->m_flags & AF_EXISTS);
+    EXPECT_EQ(g_cache.find(ArticleNum{2}), g_nav.recent.art);
+    EXPECT_FALSE(g_cache.find(ArticleNum{3})->m_flags & AF_EXISTS);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
 }
 
@@ -14315,7 +14315,7 @@ TEST_P(NewsgroupPagerReadingTest, localGrowthRetainsAnAvailableNewArticle)
     EXPECT_EQ(NG_ASK, result);
     EXPECT_THAT(m_states, testing::ElementsAre(testing::FieldsAre(MM_PAGER, ArticleNum{2}, false, ArticleUnread{3})));
     EXPECT_EQ(ArticleNum{4}, g_last_art);
-    EXPECT_EQ(AF_EXISTS | AF_UNREAD, article_find(ArticleNum{4})->m_flags & (AF_EXISTS | AF_UNREAD));
+    EXPECT_EQ(AF_EXISTS | AF_UNREAD, g_cache.find(ArticleNum{4})->m_flags & (AF_EXISTS | AF_UNREAD));
     EXPECT_EQ(ArticleUnread{3}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-1", g_newsgroup_ptr->rc_numbers());
 }
@@ -14331,7 +14331,7 @@ TEST_F(LocalArticleFailureReadingTest, aHoleInTheLocalSpoolSkipsToTheNextReadabl
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
     EXPECT_EQ(ArticleNum{3}, g_nav.current.num);
-    EXPECT_EQ(article_find(ArticleNum{3}), g_nav.current.art);
+    EXPECT_EQ(g_cache.find(ArticleNum{3}), g_nav.current.art);
     EXPECT_EQ(TR_NONE, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-3", g_newsgroup_ptr->rc_numbers());
 }
@@ -14352,7 +14352,7 @@ TEST_F(LocalArticleFailureReadingTest, anUnavailableExplicitArticleReportsTheFai
     EXPECT_THAT(m_output, testing::HasSubstr("article is not available"));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
     EXPECT_EQ(ArticleNum{2}, g_nav.current.num);
-    EXPECT_EQ(article_find(ArticleNum{2}), g_nav.current.art);
+    EXPECT_EQ(g_cache.find(ArticleNum{2}), g_nav.current.art);
     EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);
     EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
 }
@@ -14386,7 +14386,7 @@ TEST_P(HeaderlessLocalArticleTest, anArticleWithoutASubjectCanBeReadWithoutLosin
     EXPECT_FALSE(macro_pending());
     EXPECT_THAT(m_output, testing::HasSubstr(body));
     EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Reply body")));
-    EXPECT_EQ("<NONE>", article_find(ArticleNum{2})->get_cached_line_view(SUBJ_LINE, false));
+    EXPECT_EQ("<NONE>", g_cache.find(ArticleNum{2})->get_cached_line_view(SUBJ_LINE, false));
     EXPECT_TRUE(was_read(ArticleNum{2}));
     EXPECT_FALSE(was_read(ArticleNum{3}));
     EXPECT_EQ(ArticleUnread{1}, g_newsgroup_ptr->m_to_read);

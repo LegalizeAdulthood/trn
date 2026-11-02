@@ -417,7 +417,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         }
         if (g_nav.target.num != 0 || (g_nav.target.art && !(g_nav.target.art->m_flags & AF_TMP_MEM)))
         {
-            g_nav.target.art = article_find(g_nav.target.num);
+            g_nav.target.art = g_cache.find(g_nav.target.num);
         }
         if (start_command) // do we have an initial command?
         {
@@ -560,7 +560,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 }
                 if (g_nav.target.num)
                 {
-                    g_nav.target.art = article_find(g_nav.target.num);
+                    g_nav.target.art = g_cache.find(g_nav.target.num);
                 }
             }
             // make sure article is found & open
@@ -1344,7 +1344,7 @@ no_previous_article:
                 return AS_ASK;
 
             case NN_REREAD:
-                g_nav.target.art = article_find(g_nav.target.num);
+                g_nav.target.art = g_cache.find(g_nav.target.num);
                 g_reread = true;
                 if (g_search_ahead)
                 {
@@ -1864,7 +1864,7 @@ normal_search:
             {
             case 'P':
                 --g_nav.target.num;
-                g_nav.target.art = article_find(g_nav.target.num);
+                g_nav.target.art = g_cache.find(g_nav.target.num);
                 goto check_dec_art;
 
             case 'N':
@@ -1876,7 +1876,7 @@ normal_search:
                 {
                     ++g_nav.target.num;
                 }
-                g_nav.target.art = article_find(g_nav.target.num);
+                g_nav.target.art = g_cache.find(g_nav.target.num);
                 if (g_nav.target.num <= g_last_art)
                 {
                     g_reread = true;

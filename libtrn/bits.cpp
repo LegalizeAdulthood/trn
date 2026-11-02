@@ -463,7 +463,7 @@ void find_existing_articles()
 
 void one_less_art_num(ArticleNum art_num)
 {
-    Article* ap = article_find(art_num);
+    Article *ap = g_cache.find(art_num);
     if (ap)
     {
         ap->one_less();

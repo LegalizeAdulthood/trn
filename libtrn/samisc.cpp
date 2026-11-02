@@ -159,7 +159,7 @@ int sa_number_arts()
 void sa_go_art(ArticleNum a)
 {
     g_nav.target.num = a;
-    (void) article_find(g_nav.target.num);
+    (void) g_cache.find(g_nav.target.num);
     if (g_art_input.open_art != g_nav.target.num)
     {
         art_open(g_nav.target.num, (ArticlePosition) 0);

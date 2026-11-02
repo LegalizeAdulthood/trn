@@ -685,7 +685,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
                     g_cache.ptr(prior_num)->uncache_article(false);
                 }
             }
-            ap = article_find(num);
+            ap = g_cache.find(num);
             if (which_line == SUBJ_LINE)
             {
                 ap->set_subj_line(header_line);
@@ -738,7 +738,7 @@ void prefetch_lines(ArticleNum art_num, HeaderLineType which_line)
         {
             return;
         }
-        if (Article *ap = article_find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
+        if (Article *ap = g_cache.find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
         {
             return;
         }
@@ -763,7 +763,7 @@ std::string prefetch_lines_copy(ArticleNum art_num, HeaderLineType which_line)
         {
             return cached_line;
         }
-        if (Article *ap = article_find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
+        if (Article *ap = g_cache.find(art_num); ap == nullptr || !(ap->m_flags & AF_EXISTS))
         {
             return {};
         }

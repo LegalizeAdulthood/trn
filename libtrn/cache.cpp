@@ -92,14 +92,14 @@ bool GroupArticleCache::has_data(ArticleNum an)
     return article_list.find(an) != article_list.end();
 }
 
-Article *article_find(ArticleNum an)
+Article *GroupArticleCache::find(ArticleNum an)
 {
     if (an > g_last_art)
     {
         return nullptr;
     }
-    const auto it = g_cache.article_list.find(an);
-    return it == g_cache.article_list.end() ? nullptr : &it->second;
+    const auto it = article_list.find(an);
+    return it == article_list.end() ? nullptr : &it->second;
 }
 
 bool article_walk(bool (*callback)(Article &, int), int arg)
@@ -377,8 +377,8 @@ std::string fetch_cache(ArticleNum art_num, HeaderLineType which_line, bool fill
     Article *ap;
     bool     cached = (g_header_rules.type[which_line].flags & HT_CACHED);
 
-    // article_find() returns a nullptr if the article number value is invalid
-    if (!(ap = article_find(art_num)) || !(ap->m_flags & AF_EXISTS))
+    // g_cache.find() returns a nullptr if the article number value is invalid
+    if (!(ap = g_cache.find(art_num)) || !(ap->m_flags & AF_EXISTS))
     {
         return {};
     }

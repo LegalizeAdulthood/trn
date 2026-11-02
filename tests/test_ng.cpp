@@ -770,7 +770,7 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
     SCOPED_TRACE(output);
     EXPECT_EQ(AS_NORM, result);
     EXPECT_EQ(ArticleNum{first}, g_nav.target.num);
-    EXPECT_EQ(first <= g_last_art.value_of() ? article_find(ArticleNum{first}) : nullptr, g_nav.target.art);
+    EXPECT_EQ(first <= g_last_art.value_of() ? g_cache.find(ArticleNum{first}) : nullptr, g_nav.target.art);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
@@ -1125,7 +1125,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     for (const auto &[number, expected_flags] : flags)
     {
         SCOPED_TRACE(number.value_of());
-        EXPECT_EQ(expected_flags, article_find(number)->m_flags);
+        EXPECT_EQ(expected_flags, g_cache.find(number)->m_flags);
     }
     EXPECT_TRUE(macro_pending());
     if (macro_pending())
@@ -1139,7 +1139,7 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
 void NumericJumpArticleTest::expect_target(long number)
 {
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
-    EXPECT_EQ(article_find(ArticleNum{number}), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(ArticleNum{number}), g_nav.target.art);
     EXPECT_TRUE(g_reread);
 }
 
@@ -1264,7 +1264,7 @@ void NumericRangeArticleTest::expect_changes(std::initializer_list<std::pair<lon
     for (const auto &[number, flags] : m_before_flags)
     {
         SCOPED_TRACE(number);
-        const Article *entry = article_find(ArticleNum{number});
+        const Article *entry = g_cache.find(ArticleNum{number});
         ASSERT_NE(nullptr, entry);
         EXPECT_EQ(flags, entry->m_flags);
     }
@@ -1442,7 +1442,7 @@ std::string UnsubscribeArticleTest::unsubscribe()
     EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[number, expected] : flags)
     {
-        const Article *entry = article_find(number);
+        const Article *entry = g_cache.find(number);
         EXPECT_NE(nullptr, entry);
         if (entry)
         {
@@ -1838,7 +1838,7 @@ void ScanContinuationArticleTest::set_scan_articles(std::initializer_list<Articl
     set_scope(flags, current);
     g_sel.mode = mode;
     g_nav.recent.num = ArticleNum{6};
-    g_nav.recent.art = article_find(g_nav.recent.num);
+    g_nav.recent.art = g_cache.find(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{3};
     for (const auto &[number, article] : g_cache.article_list)
     {
@@ -1892,7 +1892,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     EXPECT_EQ(expected, result);
     EXPECT_TRUE(output.empty()) << output;
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
-    EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
@@ -1919,7 +1919,7 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     for (const auto &[article_number, expected_flags] : flags)
     {
         SCOPED_TRACE(article_number.value_of());
-        EXPECT_EQ(expected_flags, article_find(article_number)->m_flags);
+        EXPECT_EQ(expected_flags, g_cache.find(article_number)->m_flags);
     }
     for (int index = 0; index < 3; ++index)
     {
@@ -2504,7 +2504,7 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(expected, result);
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
-    EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(first, g_first_art);
@@ -2524,7 +2524,7 @@ std::string SearchAheadArticleTest::dispatch(char command, long number, ArticleS
     for (const auto &[article_number, expected_flags] : flags)
     {
         SCOPED_TRACE(article_number.value_of());
-        EXPECT_EQ(expected_flags, article_find(article_number)->m_flags);
+        EXPECT_EQ(expected_flags, g_cache.find(article_number)->m_flags);
     }
     for (int index = 0; index < 3; ++index)
     {
@@ -3949,7 +3949,7 @@ void DirectNavigationArticleTest::TearDown()
 void DirectNavigationArticleTest::position(long number)
 {
     g_nav.target.num = g_nav.current.num = ArticleNum{number};
-    g_nav.target.art = g_nav.current.art = article_find(g_nav.target.num);
+    g_nav.target.art = g_nav.current.art = g_cache.find(g_nav.target.num);
     g_mode = g_nav.target.num > g_last_art ? MM_ARTICLE_END : MM_ARTICLE;
 }
 
@@ -4012,7 +4012,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     SCOPED_TRACE(output);
     EXPECT_EQ(result, actual);
     EXPECT_EQ(ArticleNum{target}, g_nav.target.num);
-    EXPECT_EQ(article_find(ArticleNum{target}), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(ArticleNum{target}), g_nav.target.art);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_ptr_list);
@@ -4038,7 +4038,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     for (const auto &[number, expected_flags] : flags)
     {
         SCOPED_TRACE(number.value_of());
-        const Article *article = article_find(number);
+        const Article *article = g_cache.find(number);
         EXPECT_NE(nullptr, article);
         if (article)
         {
@@ -5721,7 +5721,7 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     for (const auto &[number, expected] : flags)
     {
         SCOPED_TRACE(number.value_of());
-        EXPECT_EQ(expected, article_find(number)->m_flags);
+        EXPECT_EQ(expected, g_cache.find(number)->m_flags);
     }
     for (std::size_t index = 0; index < subject_flags.size(); ++index)
     {
@@ -8068,7 +8068,7 @@ TEST_P(UnsubscribePositionArticleTest, requestsCleanupWithoutChangingArticlesOrT
     unsubscribe();
 
     EXPECT_EQ(ArticleNum{GetParam()}, g_nav.target.num);
-    EXPECT_EQ(GetParam() == 8 ? nullptr : article_find(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(GetParam() == 8 ? nullptr : g_cache.find(g_nav.target.num), g_nav.target.art);
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
     EXPECT_EQ(1, g_dm_count);
@@ -8093,7 +8093,7 @@ TEST_F(UnsubscribeArticleTest, sortedScanViewStillRequestsGroupCleanupAndRetains
     unsubscribe();
 
     EXPECT_EQ(g_art_ptr_list.data() + 2, g_art_ptr);
-    EXPECT_EQ(article_find(ArticleNum{4}), *g_art_ptr);
+    EXPECT_EQ(g_cache.find(ArticleNum{4}), *g_art_ptr);
 }
 
 TEST_F(UnsubscribeArticleTest, anAlreadyDirtyNewsrcRetainsItsOtherFlags)
@@ -13041,7 +13041,7 @@ TEST_P(ScanEndNavigationArticleTest, advancesFromTheConfiguredReadingBoundary)
 {
     dispatch(std::string{GetParam().command}, GetParam().target, GetParam().result);
 
-    EXPECT_EQ(article_find(ArticleNum{GetParam().target}), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(ArticleNum{GetParam().target}), g_nav.target.art);
     EXPECT_EQ(ArticleNum{GetParam().search_ahead}, g_search_ahead);
     EXPECT_EQ(GetParam().reread, g_reread);
     EXPECT_EQ(GetParam().force_last, g_force_last);
@@ -13832,7 +13832,7 @@ TEST_F(DirectNavigationArticleTest, configuredNavigationAfterANumericStepRepairs
     EXPECT_EQ(AS_NORM, art_switch("N"));
 
     EXPECT_EQ(ArticleNum{7}, g_nav.target.num);
-    EXPECT_EQ(article_find(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
     EXPECT_EQ(article_ptr_list_begin() + 7, g_art_ptr);
     EXPECT_TRUE(g_reread);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
