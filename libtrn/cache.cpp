@@ -429,14 +429,40 @@ void SubjectIndex::rekey(Subject *subj, std::string &new_subj)
     hash_store(hash, subj->stripped_view(), data);
 }
 
+Subject *SubjectIndex::find_or_create(std::string new_subj, std::string_view new_key)
+{
+    HashDatum data;
+    Subject  *sp;
+
+    data = hash_fetch(hash, new_key);
+    if (!(sp = (Subject *) data.dat_ptr))
+    {
+        sp = new Subject{};
+        count++;
+        sp->m_prev = last;
+        if (sp->m_prev != nullptr)
+        {
+            sp->m_prev->m_next = sp;
+        }
+        else
+        {
+            first = sp;
+        }
+        last = sp;
+        sp->m_str = std::move(new_subj);
+        sp->m_thread_link = sp;
+        sp->m_flags = SF_NONE;
+
+        data.dat_ptr = (char *) sp;
+        hash_store_last(data);
+    }
+    return sp;
+}
+
 // subj not yet allocated, so we can tweak it first
-//
-// TODO: decouple from g_subj.hash
 //
 void Article::set_subj_line(std::string_view subj)
 {
-    HashDatum        data;
-    Subject         *sp;
     std::string_view subj_start;
 
     if (subject_has_re(subj, subj_start))
@@ -455,7 +481,7 @@ void Article::set_subj_line(std::string_view subj)
     std::string new_subj{"Re: "};
     new_subj += stripped_subject;
 
-    const std::string_view new_key = std::string_view{new_subj}.substr(4);
+    const std::string_view new_key = stripped_subject;
     if (m_subj && m_subj->stripped_view() == new_key)
     {
         return;
@@ -468,29 +494,7 @@ void Article::set_subj_line(std::string_view subj)
     }
     else
     {
-        data = hash_fetch(g_subj.hash, new_key);
-        if (!(sp = (Subject *) data.dat_ptr))
-        {
-            sp = new Subject{};
-            g_subj.count++;
-            sp->m_prev = g_subj.last;
-            if (sp->m_prev != nullptr)
-            {
-                sp->m_prev->m_next = sp;
-            }
-            else
-            {
-                g_subj.first = sp;
-            }
-            g_subj.last = sp;
-            sp->m_str = std::move(new_subj);
-            sp->m_thread_link = sp;
-            sp->m_flags = SF_NONE;
-
-            data.dat_ptr = (char*)sp;
-            hash_store_last(data);
-        }
-        m_subj = sp;
+        m_subj = g_subj.find_or_create(std::move(new_subj), new_key);
     }
 }
 
