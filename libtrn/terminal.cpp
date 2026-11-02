@@ -236,9 +236,7 @@ enum
     TC_STRINGS = 48 // number of colors we can keep track of
 };
 
-static char        s_circle_buf[PUSH_SIZE]{};
-static int         s_next_in{};
-static int         s_next_out{};
+InputPushback      g_pushback;
 static const char *s_read_err{"rn read error"};
 
 #ifndef USE_BUILTIN_TERMINAL_CAPABILITIES
@@ -889,9 +887,9 @@ void hide_pending()
 
 bool finput_pending(bool check_term)
 {
-    while (s_next_out != s_next_in)
+    while (g_pushback.next_out != g_pushback.next_in)
     {
-        if (s_circle_buf[s_next_out] != '\200')
+        if (g_pushback.circle_buf[g_pushback.next_out] != '\200')
         {
             return true;
         }
@@ -901,13 +899,13 @@ bool finput_pending(bool check_term)
             return true;
 
         case 1:
-            s_next_out++;
-            s_next_out %= PUSH_SIZE;
+            g_pushback.next_out++;
+            g_pushback.next_out %= PUSH_SIZE;
             s_not_echoing = 0;
             break;
 
         default:
-            s_circle_buf[s_next_out] = '\n';
+            g_pushback.circle_buf[g_pushback.next_out] = '\n';
             s_not_echoing = 0;
             return true;
         }
@@ -1290,7 +1288,7 @@ void settle_down()
     dingaling();
     std::fflush(stdout);
     // sleep(1);
-    s_next_out = s_next_in;                       // empty s_circlebuf
+    g_pushback.next_out = g_pushback.next_in; // empty circle_buf
     s_not_echoing = 0;
     eat_typeahead();
 }
@@ -1335,8 +1333,8 @@ static int read_tty(char *addr, int size)
 {
     if (macro_pending())
     {
-        *addr = s_circle_buf[s_next_out++];
-        s_next_out %= PUSH_SIZE;
+        *addr = g_pushback.circle_buf[g_pushback.next_out++];
+        g_pushback.next_out %= PUSH_SIZE;
         return 1;
     }
     size = g_terminal_input_reader(addr, size);
@@ -1361,7 +1359,7 @@ static int circfill()
     int Howmany;
 
     errno = 0;
-    Howmany = read(devtty,s_circlebuf+s_nextin,1);
+    Howmany = read(devtty, g_pushback.circle_buf + g_pushback.next_in, 1);
 
     if (Howmany < 0 && (errno == EAGAIN || errno == EINTR))
     {
@@ -1369,8 +1367,8 @@ static int circfill()
     }
     if (Howmany)
     {
-        s_nextin += Howmany;
-        s_nextin %= PUSHSIZE;
+        g_pushback.next_in += Howmany;
+        g_pushback.next_in %= PUSHSIZE;
     }
     return Howmany;
 }
@@ -1379,17 +1377,17 @@ static int circfill()
 
 void push_char(char_int c)
 {
-    s_next_out--;
-    if (s_next_out < 0)
+    g_pushback.next_out--;
+    if (g_pushback.next_out < 0)
     {
-        s_next_out = PUSH_SIZE - 1;
+        g_pushback.next_out = PUSH_SIZE - 1;
     }
-    if (s_next_out == s_next_in)
+    if (g_pushback.next_out == g_pushback.next_in)
     {
         fmt::print("\npushback buffer overflow\n");
         sig_catcher(0);
     }
-    s_circle_buf[s_next_out] = c;
+    g_pushback.circle_buf[g_pushback.next_out] = c;
 }
 
 // print an underlined string, one way or another
