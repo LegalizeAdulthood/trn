@@ -788,7 +788,7 @@ bool Article::valid_article()
     if (m_msg_id)
     {
         *m_msg_id = fix_msg_id(*m_msg_id);
-        HashDatum data = hash_fetch(g_msg_id_hash, *m_msg_id);
+        HashDatum data = g_hash_cursor.fetch(g_msg_id_hash, *m_msg_id);
         if (data.dat_len)
         {
             const unsigned hash_flags = data.dat_len;

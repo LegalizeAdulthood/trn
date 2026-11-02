@@ -659,7 +659,7 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
 
     // Do a quick, hashed lookup
 
-    HashDatum data = hash_fetch(m_act_sf.m_hp, name);
+    HashDatum data = g_hash_cursor.fetch(m_act_sf.m_hp, name);
     if (data.dat_ptr)
     {
         cached_line = source_file_line(data);
@@ -889,7 +889,7 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
         }
     }
 
-    if (HashDatum data = hash_fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
+    if (HashDatum data = g_hash_cursor.fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
     {
         return std::string_view{*source_file_line(data)}.substr(grouplen + 1);
     }

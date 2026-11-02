@@ -101,7 +101,7 @@ TEST(HashTest, fetchMissingReturnsEmptyDatum)
 {
     HashTableOwner table{};
 
-    const HashDatum data = hash_fetch(table.get(), "missing");
+    const HashDatum data = g_hash_cursor.fetch(table.get(), "missing");
 
     EXPECT_EQ(nullptr, data.dat_ptr);
     EXPECT_EQ(0U, data.dat_len);
@@ -116,8 +116,8 @@ TEST(HashTest, storeAndFetchFindsCollidingEntries)
     hash_store(table.get(), alpha, make_datum(alpha, 11));
     hash_store(table.get(), beta, make_datum(beta, 22));
 
-    const HashDatum alpha_data = hash_fetch(table.get(), alpha);
-    const HashDatum beta_data = hash_fetch(table.get(), beta);
+    const HashDatum alpha_data = g_hash_cursor.fetch(table.get(), alpha);
+    const HashDatum beta_data = g_hash_cursor.fetch(table.get(), beta);
 
     EXPECT_EQ(alpha.data(), alpha_data.dat_ptr);
     EXPECT_EQ(11U, alpha_data.dat_len);
@@ -135,7 +135,7 @@ TEST(HashTest, storeAcceptsBoundedStringViewKeys)
 
     hash_store(table.get(), key_view, make_datum(key, 33));
 
-    const HashDatum data = hash_fetch(table.get(), key);
+    const HashDatum data = g_hash_cursor.fetch(table.get(), key);
 
     EXPECT_EQ(key.data(), data.dat_ptr);
     EXPECT_EQ(33U, data.dat_len);
@@ -149,7 +149,7 @@ TEST(HashTest, storeReplacesExistingDatum)
     hash_store(table.get(), alpha, make_datum(alpha, 1));
     hash_store(table.get(), alpha, make_datum(alpha, 2));
 
-    const HashDatum data = hash_fetch(table.get(), alpha);
+    const HashDatum data = g_hash_cursor.fetch(table.get(), alpha);
 
     EXPECT_EQ(alpha.data(), data.dat_ptr);
     EXPECT_EQ(2U, data.dat_len);
@@ -157,23 +157,23 @@ TEST(HashTest, storeReplacesExistingDatum)
 
 TEST_F(StoreLastHashTest, insertsTheLastMissingFetch)
 {
-    const HashDatum missing = hash_fetch(m_table.get(), m_alpha);
+    const HashDatum missing = g_hash_cursor.fetch(m_table.get(), m_alpha);
     ASSERT_EQ(nullptr, missing.dat_ptr);
 
     g_hash_cursor.store_last(make_datum(m_alpha, 3));
 
-    EXPECT_EQ(3U, hash_fetch(m_table.get(), m_alpha).dat_len);
+    EXPECT_EQ(3U, g_hash_cursor.fetch(m_table.get(), m_alpha).dat_len);
 }
 
 TEST_F(StoreLastHashTest, replacesTheLastExistingFetch)
 {
     hash_store(m_table.get(), m_alpha, make_datum(m_alpha, 3));
-    const HashDatum existing = hash_fetch(m_table.get(), m_alpha);
+    const HashDatum existing = g_hash_cursor.fetch(m_table.get(), m_alpha);
     ASSERT_EQ(3U, existing.dat_len);
 
     g_hash_cursor.store_last(make_datum(m_alpha, 4));
 
-    EXPECT_EQ(4U, hash_fetch(m_table.get(), m_alpha).dat_len);
+    EXPECT_EQ(4U, g_hash_cursor.fetch(m_table.get(), m_alpha).dat_len);
 }
 
 TEST(HashTest, deleteRemovesOnlyMatchingKey)
@@ -187,8 +187,8 @@ TEST(HashTest, deleteRemovesOnlyMatchingKey)
 
     hash_delete(table.get(), alpha);
 
-    EXPECT_EQ(nullptr, hash_fetch(table.get(), alpha).dat_ptr);
-    EXPECT_EQ(20U, hash_fetch(table.get(), beta).dat_len);
+    EXPECT_EQ(nullptr, g_hash_cursor.fetch(table.get(), alpha).dat_ptr);
+    EXPECT_EQ(20U, g_hash_cursor.fetch(table.get(), beta).dat_len);
 }
 
 TEST_F(HashWalkTest, updatesEveryWalkedEntry)
@@ -197,9 +197,9 @@ TEST_F(HashWalkTest, updatesEveryWalkedEntry)
 
     hash_walk(m_table.get(), add_extra_to_datum, 10);
 
-    EXPECT_EQ(11U, hash_fetch(m_table.get(), m_alpha).dat_len);
-    EXPECT_EQ(12U, hash_fetch(m_table.get(), m_beta).dat_len);
-    EXPECT_EQ(13U, hash_fetch(m_table.get(), m_gamma).dat_len);
+    EXPECT_EQ(11U, g_hash_cursor.fetch(m_table.get(), m_alpha).dat_len);
+    EXPECT_EQ(12U, g_hash_cursor.fetch(m_table.get(), m_beta).dat_len);
+    EXPECT_EQ(13U, g_hash_cursor.fetch(m_table.get(), m_gamma).dat_len);
 }
 
 TEST_F(HashWalkTest, removesOnlyTheMatchingWalkedEntry)
@@ -208,9 +208,9 @@ TEST_F(HashWalkTest, removesOnlyTheMatchingWalkedEntry)
 
     hash_walk(m_table.get(), remove_matching_datum, 12);
 
-    EXPECT_EQ(11U, hash_fetch(m_table.get(), m_alpha).dat_len);
-    EXPECT_EQ(nullptr, hash_fetch(m_table.get(), m_beta).dat_ptr);
-    EXPECT_EQ(13U, hash_fetch(m_table.get(), m_gamma).dat_len);
+    EXPECT_EQ(11U, g_hash_cursor.fetch(m_table.get(), m_alpha).dat_len);
+    EXPECT_EQ(nullptr, g_hash_cursor.fetch(m_table.get(), m_beta).dat_ptr);
+    EXPECT_EQ(13U, g_hash_cursor.fetch(m_table.get(), m_gamma).dat_len);
 }
 
 TEST(HashTest, customComparatorIsUsed)
@@ -220,7 +220,7 @@ TEST(HashTest, customComparatorIsUsed)
 
     hash_store(table.get(), alpha, make_datum(alpha, 44));
 
-    const HashDatum data = hash_fetch(table.get(), "alpha");
+    const HashDatum data = g_hash_cursor.fetch(table.get(), "alpha");
 
     EXPECT_EQ(alpha.data(), data.dat_ptr);
     EXPECT_EQ(44U, data.dat_len);

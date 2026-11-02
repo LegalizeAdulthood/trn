@@ -64,7 +64,7 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
     EXPECT_TRUE((article->m_auto_flags & AUTO_SEL_THD) != 0);
     EXPECT_EQ(1, g_kf_change_thread_cnt);
 
-    const HashDatum stored = hash_fetch(g_msg_id_hash, "<case@example.com>");
+    const HashDatum stored = g_hash_cursor.fetch(g_msg_id_hash, "<case@example.com>");
     EXPECT_EQ(0U, stored.dat_len);
     EXPECT_EQ(article, reinterpret_cast<Article *>(stored.dat_ptr));
 

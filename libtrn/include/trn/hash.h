@@ -30,6 +30,7 @@ struct HashLookupCursor
     int         keylen{};
 
     void store_last(HashDatum data);
+    HashDatum fetch(HashTable *tbl, std::string_view key);
 };
 
 extern HashLookupCursor g_hash_cursor;
@@ -38,7 +39,6 @@ HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);
 void hash_destroy(HashTable *tbl);
 void hash_store(HashTable *tbl, std::string_view key, HashDatum data);
 void hash_delete(HashTable *tbl, std::string_view key);
-HashDatum  hash_fetch(HashTable *tbl, std::string_view key);
 void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra);
 
 #endif

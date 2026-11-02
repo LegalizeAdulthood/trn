@@ -296,7 +296,7 @@ void SubjectIndex::check_for_near_subj(Subject *current_subj)
         {
             Subject  *sp2;
             HashDatum data =
-                hash_fetch(short_hash, subject_text.substr(0, static_cast<std::size_t>(g_join_subject_len)));
+                g_hash_cursor.fetch(short_hash, subject_text.substr(0, static_cast<std::size_t>(g_join_subject_len)));
             if (!(sp2 = (Subject *) data.dat_ptr))
             {
                 data.dat_ptr = (char *) sp;
@@ -437,7 +437,7 @@ Subject *SubjectIndex::find_or_create(std::string new_subj, std::string_view new
     HashDatum data;
     Subject  *sp;
 
-    data = hash_fetch(hash, new_key);
+    data = g_hash_cursor.fetch(hash, new_key);
     if (!(sp = (Subject *) data.dat_ptr))
     {
         sp = new Subject{};

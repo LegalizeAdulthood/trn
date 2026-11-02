@@ -94,17 +94,18 @@ void hash_delete(HashTable *tbl, std::string_view key)
 HashLookupCursor g_hash_cursor{};
 
 // data corresponding to key
-HashDatum hash_fetch(HashTable *tbl, std::string_view key)
+// Table validation and comparator callbacks retain their existing side effects.
+HashDatum HashLookupCursor::fetch(HashTable *tbl, std::string_view key)
 {
     const int               key_len = static_cast<int>(key.size());
     const std::size_t       bucket_index = hash_bucket_index(tbl, key);
     const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
     std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
 
-    g_hash_cursor.table = tbl;
-    g_hash_cursor.bucket = bucket_index;
-    g_hash_cursor.index = entry_index;
-    g_hash_cursor.keylen = key_len;
+    table = tbl;
+    this->bucket = bucket_index;
+    index = entry_index;
+    keylen = key_len;
     if (entry_index == bucket.size()) // absent
     {
         return {nullptr, 0};

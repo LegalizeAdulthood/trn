@@ -121,7 +121,7 @@ void kill_file_init()
                     if (thread_cmd != std::string_view::npos)
                     {
                         int       auto_flag = s_thread_cmd_flag[thread_cmd];
-                        HashDatum data = hash_fetch(g_msg_id_hash, message_id);
+                        HashDatum data = g_hash_cursor.fetch(g_msg_id_hash, message_id);
                         if (!data.dat_ptr)
                         {
                             data = make_pending_msg_id(message_id, auto_flag | age);

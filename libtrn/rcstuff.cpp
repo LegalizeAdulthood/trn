@@ -833,7 +833,7 @@ static bool open_newsrc(Newsrc *rp)
             continue;
         }
         parse_rcline(np);
-        HashDatum data = hash_fetch(g_newsrc_hash, np->rc_name());
+        HashDatum data = g_hash_cursor.fetch(g_newsrc_hash, np->rc_name());
         if (data.dat_ptr)
         {
             np->m_to_read = TR_IGNORE;
@@ -1637,7 +1637,7 @@ void list_newsgroups()
 
 NewsgroupData *find_newsgroup(std::string_view ngnam)
 {
-    HashDatum data = hash_fetch(g_newsrc_hash, ngnam);
+    HashDatum data = g_hash_cursor.fetch(g_newsrc_hash, ngnam);
     return (NewsgroupData *) data.dat_ptr;
 }
 

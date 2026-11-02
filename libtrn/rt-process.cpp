@@ -118,7 +118,7 @@ Article *get_article(std::string_view msgid)
     Article* article;
     std::string normalized_msg_id = fix_msg_id(msgid);
 
-    HashDatum data = hash_fetch(g_msg_id_hash, normalized_msg_id);
+    HashDatum data = g_hash_cursor.fetch(g_msg_id_hash, normalized_msg_id);
     if (data.dat_len)
     {
         const unsigned hash_flags = data.dat_len;
