@@ -6,6 +6,7 @@
 #ifndef TRN_COLOR_H
 #define TRN_COLOR_H
 
+#include <string>
 #include <string_view>
 
 //
@@ -36,6 +37,30 @@ enum ObjectNumber
     COLOR_BODY_TEXT,  // regular body text
     MAX_COLORS
 };
+
+struct ColorObj
+{
+    std::string name;
+    std::string fg;
+    std::string bg;
+    int         attr;
+};
+
+struct ColorOutputContext
+{
+    enum
+    {
+        STACK_SIZE = 16
+    };
+
+    bool     use_colors{};
+    ColorObj objects[MAX_COLORS]{};
+    // The attribute stack.  The 0th element is always the "normal" object.
+    ColorObj stack[STACK_SIZE]{};
+    int      stack_pointer{};
+};
+
+extern ColorOutputContext g_color;
 
 void color_init();
 void color_rc_attribute(std::string_view object, std::string_view value);

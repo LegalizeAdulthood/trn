@@ -41,21 +41,6 @@
 #include <string>
 #include <string_view>
 
-struct ColorObj
-{
-    std::string_view name;
-    std::string fg;
-    std::string bg;
-    int attr;
-};
-
-enum
-{
-    STACK_SIZE = 16
-};
-
-static bool s_use_colors{};
-
 static bool             is_attribute_space(char ch);
 static void             skip_attribute_token(std::string_view &text);
 static std::string_view next_attribute_token(std::string_view &text);
@@ -68,40 +53,39 @@ static void             output_color();
 // or just a few, lines in the [attribute] section.
 //
 
-static ColorObj s_objects[MAX_COLORS] =
+ColorOutputContext g_color =
 // clang-format off
 {
-    { "default",          {}, {}, NO_MARKING   },
-    { "ngname",           {}, {}, STANDOUT     },
-    { "plus",             {}, {}, LAST_MARKING },
-    { "minus",            {}, {}, LAST_MARKING },
-    { "star",             {}, {}, LAST_MARKING },
-    { "header",           {}, {}, LAST_MARKING },
-    { "subject",          {}, {}, UNDERLINE    },
-    { "tree",             {}, {}, LAST_MARKING },
-    { "tree marker",      {}, {}, STANDOUT     },
-    { "more",             {}, {}, STANDOUT     },
-    { "heading",          {}, {}, STANDOUT     },
-    { "command",          {}, {}, STANDOUT     },
-    { "mouse bar",        {}, {}, STANDOUT     },
-    { "notice",           {}, {}, STANDOUT     },
-    { "score",            {}, {}, STANDOUT     },
-    { "art heading",      {}, {}, LAST_MARKING },
-    { "mime separator",   {}, {}, STANDOUT     },
-    { "mime description", {}, {}, UNDERLINE    },
-    { "cited text",       {}, {}, LAST_MARKING },
-    { "body text",        {}, {}, NO_MARKING   },
+    false,
+    {
+        { "default",          {}, {}, NO_MARKING   },
+        { "ngname",           {}, {}, STANDOUT     },
+        { "plus",             {}, {}, LAST_MARKING },
+        { "minus",            {}, {}, LAST_MARKING },
+        { "star",             {}, {}, LAST_MARKING },
+        { "header",           {}, {}, LAST_MARKING },
+        { "subject",          {}, {}, UNDERLINE    },
+        { "tree",             {}, {}, LAST_MARKING },
+        { "tree marker",      {}, {}, STANDOUT     },
+        { "more",             {}, {}, STANDOUT     },
+        { "heading",          {}, {}, STANDOUT     },
+        { "command",          {}, {}, STANDOUT     },
+        { "mouse bar",        {}, {}, STANDOUT     },
+        { "notice",           {}, {}, STANDOUT     },
+        { "score",            {}, {}, STANDOUT     },
+        { "art heading",      {}, {}, LAST_MARKING },
+        { "mime separator",   {}, {}, STANDOUT     },
+        { "mime description", {}, {}, UNDERLINE    },
+        { "cited text",       {}, {}, LAST_MARKING },
+        { "body text",        {}, {}, NO_MARKING   },
+    }
 };
 // clang-format on
-
-// The attribute stack.  The 0th element is always the "normal" object.
-static ColorObj s_color_stack[STACK_SIZE];
-static int      s_stack_pointer{};
 
 // Initialize color support after trnrc is read.
 void color_init()
 {
-    if (s_use_colors)
+    if (g_color.use_colors)
     {
         // Get default capabilities.
         std::string_view fg = tc_color_capability("fg default");
@@ -120,7 +104,7 @@ void color_init()
         {
             bg = "";
         }
-        for (ColorObj &obj : s_objects)
+        for (ColorObj &obj : g_color.objects)
         {
             if (obj.fg.empty())
             {
@@ -133,9 +117,9 @@ void color_init()
         }
     }
 
-    if (s_objects[COLOR_DEFAULT].attr == LAST_MARKING)
+    if (g_color.objects[COLOR_DEFAULT].attr == LAST_MARKING)
     {
-        s_objects[COLOR_DEFAULT].attr = NO_MARKING;
+        g_color.objects[COLOR_DEFAULT].attr = NO_MARKING;
     }
 
     // Set color to default.
@@ -170,7 +154,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     int i;
     for (i = 0; i < MAX_COLORS; i++)
     {
-        if (string_case_equal(object, s_objects[i].name))
+        if (string_case_equal(object, g_color.objects[i].name))
         {
             break;
         }
@@ -184,19 +168,19 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     // Parse the video attribute.
     if (!value.empty() && (value.front() == 's' || value.front() == 'S'))
     {
-        s_objects[i].attr = STANDOUT;
+        g_color.objects[i].attr = STANDOUT;
     }
     else if (!value.empty() && (value.front() == 'u' || value.front() == 'U'))
     {
-        s_objects[i].attr = UNDERLINE;
+        g_color.objects[i].attr = UNDERLINE;
     }
     else if (!value.empty() && (value.front() == 'n' || value.front() == 'N'))
     {
-        s_objects[i].attr = NO_MARKING;
+        g_color.objects[i].attr = NO_MARKING;
     }
     else if (!value.empty() && value.front() == '-')
     {
-        s_objects[i].attr = LAST_MARKING;
+        g_color.objects[i].attr = LAST_MARKING;
     }
     else
     {
@@ -210,18 +194,18 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     std::string_view color = next_attribute_token(rest);
     if (color.empty())
     {
-        s_objects[i].fg.clear();
-        s_objects[i].bg.clear();
+        g_color.objects[i].fg.clear();
+        g_color.objects[i].bg.clear();
         return;
     }
 
     // We have both colors and attributes, so turn colors on.
-    s_use_colors = true;
+    g_color.use_colors = true;
 
     // Parse the foreground color.
     if (color.front() == '-')
     {
-        s_objects[i].fg.clear();
+        g_color.objects[i].fg.clear();
     }
     else
     {
@@ -232,7 +216,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
         }
-        s_objects[i].fg = color_capability;
+        g_color.objects[i].fg = color_capability;
     }
 
     // Make sure we have one more parameter.
@@ -246,7 +230,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
     // Parse the background color.
     if (color.front() == '-')
     {
-        s_objects[i].bg.clear();
+        g_color.objects[i].bg.clear();
     }
     else
     {
@@ -257,7 +241,7 @@ void color_rc_attribute(std::string_view object, std::string_view value)
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
             finalize(1);
         }
-        s_objects[i].bg = color_capability;
+        g_color.objects[i].bg = color_capability;
     }
 }
 
@@ -266,31 +250,31 @@ void color_object(int object, bool push)
 {
     // Merge in the colors/attributes that we are not setting
     // from the current object.
-    ColorObj merged = s_color_stack[s_stack_pointer];
+    ColorObj merged = g_color.stack[g_color.stack_pointer];
 
     // Merge in the new colors/attributes.
-    if (!s_objects[object].fg.empty())
+    if (!g_color.objects[object].fg.empty())
     {
-        merged.fg = s_objects[object].fg;
+        merged.fg = g_color.objects[object].fg;
     }
-    if (!s_objects[object].bg.empty())
+    if (!g_color.objects[object].bg.empty())
     {
-        merged.bg = s_objects[object].bg;
+        merged.bg = g_color.objects[object].bg;
     }
-    if (s_objects[object].attr != LAST_MARKING)
+    if (g_color.objects[object].attr != LAST_MARKING)
     {
-        merged.attr = s_objects[object].attr;
+        merged.attr = g_color.objects[object].attr;
     }
 
     // Push onto stack.
-    if (push && ++s_stack_pointer >= STACK_SIZE)
+    if (push && ++g_color.stack_pointer >= ColorOutputContext::STACK_SIZE)
     {
         // TODO: error reporting?
-        s_stack_pointer = 0;            // empty stack
+        g_color.stack_pointer = 0;      // empty stack
         color_default();                // and set normal colors
         return;
     }
-    s_color_stack[s_stack_pointer] = merged;
+    g_color.stack[g_color.stack_pointer] = merged;
 
     // Set colors/attributes.
     output_color();
@@ -300,9 +284,9 @@ void color_object(int object, bool push)
 void color_pop()
 {
     // Trying to pop an empty stack?
-    if (--s_stack_pointer < 0)
+    if (--g_color.stack_pointer < 0)
     {
-        s_stack_pointer = 0;
+        g_color.stack_pointer = 0;
     }
     else
     {
@@ -318,7 +302,7 @@ void color_string(int object, std::string_view str)
     {
         str.remove_suffix(1);
     }
-    if (!s_use_colors && has_underchar_capability() && s_objects[object].attr == UNDERLINE)
+    if (!g_color.use_colors && has_underchar_capability() && g_color.objects[object].attr == UNDERLINE)
     {
         const std::string text{str};
         under_print(text); // hack for stupid terminals
@@ -341,7 +325,7 @@ void color_string(int object, std::string_view str)
 // Turn off color attribute.
 void color_default()
 {
-    s_color_stack[s_stack_pointer] = s_objects[COLOR_DEFAULT];
+    g_color.stack[g_color.stack_pointer] = g_color.objects[COLOR_DEFAULT];
     output_color();
 }
 
@@ -349,7 +333,7 @@ void color_default()
 static void output_color()
 {
     static ColorObj prior{"", {}, {}, NO_MARKING};
-    ColorObj* op = &s_color_stack[s_stack_pointer];
+    ColorObj       *op = &g_color.stack[g_color.stack_pointer];
 
     // If no change, just return.
     if (op->attr == prior.attr && op->fg == prior.fg && op->bg == prior.bg)
@@ -358,13 +342,13 @@ static void output_color()
     }
 
     // Start by turning off any existing colors and/or attributes.
-    if (s_use_colors)
+    if (g_color.use_colors)
     {
-        if (s_objects[COLOR_DEFAULT].fg != prior.fg //
-            || s_objects[COLOR_DEFAULT].bg != prior.bg)
+        if (g_color.objects[COLOR_DEFAULT].fg != prior.fg //
+            || g_color.objects[COLOR_DEFAULT].bg != prior.bg)
         {
-            prior.fg = s_objects[COLOR_DEFAULT].fg;
-            prior.bg = s_objects[COLOR_DEFAULT].bg;
+            prior.fg = g_color.objects[COLOR_DEFAULT].fg;
+            prior.bg = g_color.objects[COLOR_DEFAULT].bg;
             fmt::print("{}", prior.fg);
             fmt::print("{}", prior.bg);
         }
@@ -384,7 +368,7 @@ static void output_color()
     }
 
     // For color terminals we set the foreground and background color.
-    if (s_use_colors)
+    if (g_color.use_colors)
     {
         if (op->fg != prior.fg)
         {
