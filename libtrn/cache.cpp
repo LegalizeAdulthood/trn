@@ -87,9 +87,9 @@ Article *GroupArticleCache::ptr(ArticleNum an)
     return &it->second;
 }
 
-bool article_hasdata(ArticleNum an)
+bool GroupArticleCache::has_data(ArticleNum an)
 {
-    return g_cache.article_list.find(an) != g_cache.article_list.end();
+    return article_list.find(an) != article_list.end();
 }
 
 Article *article_find(ArticleNum an)

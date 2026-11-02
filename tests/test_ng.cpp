@@ -13351,7 +13351,7 @@ TEST_P(NumericJumpMissingArticleTest, retainsTheMissingNumberWithoutCreatingAnAr
     enter_number("5\n");
 
     expect_target(5);
-    EXPECT_EQ(GetParam(), article_hasdata(ArticleNum{5}));
+    EXPECT_EQ(GetParam(), g_cache.has_data(ArticleNum{5}));
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
 }
 
@@ -13503,7 +13503,7 @@ TEST_F(NumericRangeArticleTest, dotThroughDollarIncludesTheLastArticleAndSkipsAb
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     EXPECT_EQ(8, g_perform_count);
-    EXPECT_FALSE(article_hasdata(ArticleNum{8}));
+    EXPECT_FALSE(g_cache.has_data(ArticleNum{8}));
     EXPECT_EQ(AF_CACHED, g_cache.ptr(ArticleNum{5})->m_flags);
     EXPECT_EQ("8 articles matched, 5 killed, 4 deselected.", g_msg);
 }
@@ -13696,7 +13696,7 @@ TEST_P(DirectNumericMissingArticleTest, numericStepRetainsAnAbsentNumberWithoutA
 
     navigate(std::string{'_', direction}, 5, true);
 
-    EXPECT_FALSE(article_hasdata(ArticleNum{5}));
+    EXPECT_FALSE(g_cache.has_data(ArticleNum{5}));
 }
 
 INSTANTIATE_TEST_SUITE_P(AbsentDirection, DirectNumericMissingArticleTest, testing::Values('N', 'P'));

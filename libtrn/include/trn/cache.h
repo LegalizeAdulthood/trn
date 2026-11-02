@@ -31,6 +31,7 @@ enum : bool
 struct GroupArticleCache
 {
     Article *ptr(ArticleNum an);
+    bool     has_data(ArticleNum an);
 
     std::map<ArticleNum, Article> article_list;
     ArticleNum                    first_cached{};
@@ -79,7 +80,6 @@ inline Article **article_ptr_list_end()
     return g_art_ptr_list.data() + g_art_ptr_list.size();
 }
 
-bool       article_hasdata(ArticleNum an);
 Article   *article_find(ArticleNum an);
 bool       article_walk(bool (*callback)(Article &, int), int arg);
 ArticleNum article_first(ArticleNum an);
@@ -98,11 +98,11 @@ inline bool article_unread(ArticleNum an)
 }
 inline bool was_read(ArticleNum an)
 {
-    return !article_hasdata(an) || !article_unread(an);
+    return !g_cache.has_data(an) || !article_unread(an);
 }
 inline bool is_available(ArticleNum an)
 {
-    return an <= g_last_art && article_hasdata(an) && article_exists(an);
+    return an <= g_last_art && g_cache.has_data(an) && article_exists(an);
 }
 inline bool is_unavailable(ArticleNum an)
 {
