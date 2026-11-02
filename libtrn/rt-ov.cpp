@@ -242,7 +242,7 @@ beginning:
     started_request = std::time(nullptr);
     while (true)
     {
-        artnum = article_last(last);
+        artnum = g_cache.last(last);
         if (artnum < last || !(g_cache.ptr(artnum)->m_flags & AF_CACHED))
         {
             break;
