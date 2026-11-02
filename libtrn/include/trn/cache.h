@@ -85,6 +85,7 @@ struct SubjectIndex
     void     check_for_near_subj(Subject *current_subj);
     void     rekey(Subject *subj, std::string &new_subj);
     Subject *find_or_create(std::string new_subj, std::string_view new_key);
+    void     remove_empty(const Subject *subj);
 
     HashTable *hash{};
     HashTable *short_hash{};

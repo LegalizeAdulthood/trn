@@ -324,11 +324,33 @@ void change_join_subject_len(int len)
     }
 }
 
+void SubjectIndex::remove_empty(const Subject *subj)
+{
+    const Subject *sp = subj;
+    if (sp == first)
+    {
+        first = sp->m_next;
+    }
+    else
+    {
+        sp->m_prev->m_next = sp->m_next;
+    }
+    if (sp == last)
+    {
+        last = sp->m_prev;
+    }
+    else
+    {
+        sp->m_next->m_prev = sp->m_prev;
+    }
+    hash_delete(hash, sp->stripped_view());
+    delete sp;
+    count--;
+}
+
 // The article turned out to be a duplicate, so remove it from the cached
 // list and possibly destroy the subject (should only happen if the data
 // was corrupt and the duplicate id got a different subject).
-//
-// TODO: decouple this from g_subj.hash
 //
 void Article::uncache_article(bool remove_empties)
 {
@@ -357,27 +379,8 @@ void Article::uncache_article(bool remove_empties)
         }
         if (remove_empties && !m_subj->m_articles)
         {
-            Subject* sp = m_subj;
-            if (sp == g_subj.first)
-            {
-                g_subj.first = sp->m_next;
-            }
-            else
-            {
-                sp->m_prev->m_next = sp->m_next;
-            }
-            if (sp == g_subj.last)
-            {
-                g_subj.last = sp->m_prev;
-            }
-            else
-            {
-                sp->m_next->m_prev = sp->m_prev;
-            }
-            hash_delete(g_subj.hash, sp->stripped_view());
-            delete sp;
+            g_subj.remove_empty(m_subj);
             m_subj = nullptr;
-            g_subj.count--;
         }
     }
     m_flags2 |= AF2_BOGUS;
