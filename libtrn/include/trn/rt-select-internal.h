@@ -13,18 +13,6 @@
 
 // Internal entry points for testing purposes.
 
-enum DisplayState
-{
-    DS_ASK = 1,
-    DS_UPDATE,
-    DS_DISPLAY,
-    DS_RESTART,
-    DS_STATUS,
-    DS_QUIT,
-    DS_DO_COMMAND,
-    DS_ERROR
-};
-
 DisplayState article_commands(char_int ch);
 DisplayState newsgroup_commands(char_int ch);
 DisplayState sel_command(char_int ch);

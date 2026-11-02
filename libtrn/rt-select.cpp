@@ -71,23 +71,7 @@ std::string       g_option_sel_cmds{"Z>"};
 bool              g_use_sel_num{};
 bool              g_sel_num_goto{};
 
-enum RemovedPrompt
-{
-    RP_NONE = 0,
-    RP_MOUSE_BAR = 1,
-    RP_NEWLINE = 2,
-    RP_ALL = 3,
-};
-DECLARE_FLAGS_ENUM(RemovedPrompt, int);
-
-static char          s_sel_ret{};
-static char          s_page_char{};
-static char          s_end_char{};
-static int           s_disp_status_line{};
-static bool          s_clean_screen{};
-static RemovedPrompt s_removed_prompt{};
-static int           s_force_sel_pos{};
-static DisplayState (*s_extra_commands)(char_int){};
+SelectorSession g_sel_session{};
 
 void set_selector_commands(std::string &commands, std::string_view value)
 {
@@ -194,7 +178,7 @@ private:
     const bool    save_sel_rereading = g_sel.rereading;     \
     const bool    save_sel_exclusive = g_sel.exclusive;   \
     ArticleUnread save_selected_count = g_selected_count;   \
-    DisplayState (*const save_extra_commands)(char_int) = s_extra_commands
+    SelectorCommand *const save_extra_commands = g_sel_session.extra_commands
 
 #define POP_SELECTOR()                                      \
     do                                                      \
@@ -202,7 +186,7 @@ private:
         g_sel.exclusive = save_sel_exclusive;               \
         g_sel.rereading = save_sel_rereading;               \
         g_selected_count = save_selected_count;             \
-        s_extra_commands = save_extra_commands;             \
+        g_sel_session.extra_commands = save_extra_commands; \
         g_bos_on_stop = true;                               \
         if (g_sel.mode != save_sel_mode)                    \
         {                                                   \
@@ -222,7 +206,7 @@ private:
     std::string const        save_univ_label = g_univ.label;                  \
     std::string const        save_univ_title = g_univ.title;                  \
     std::string const        save_univ_tmp_file = g_univ.tmp_file;            \
-    const char               save_sel_ret = s_sel_ret
+    const char               save_sel_ret = g_sel_session.ret
 
 #define POP_UNIV_SELECTOR()                              \
     do                                                   \
@@ -236,7 +220,7 @@ private:
         g_univ.label = save_univ_label;                  \
         g_univ.title = save_univ_title;                  \
         g_univ.tmp_file = save_univ_tmp_file;            \
-        s_sel_ret = save_sel_ret;                        \
+        g_sel_session.ret = save_sel_ret;                \
     } while (false)
 
 static void                sel_do_groups();
@@ -275,7 +259,7 @@ char article_selector(char_int cmd)
     g_sel.rereading = initial_rereading;
 
     g_nav.target.num = article_after(g_last_art);
-    s_extra_commands = article_commands;
+    g_sel_session.extra_commands = article_commands;
     g_keep_the_group_static = (g_keep_the_group_static == 1);
 
     g_sel.mode = SM_ARTICLE;
@@ -283,7 +267,7 @@ char article_selector(char_int cmd)
 
     if (!cache_range(g_sel.rereading ? g_abs_first : g_first_art, g_last_art))
     {
-        s_sel_ret = '+';
+        g_sel_session.ret = '+';
         goto sel_exit;
     }
 
@@ -291,16 +275,16 @@ sel_restart:
     // Setup for selecting articles to read or set unread
     if (g_sel.rereading)
     {
-        s_end_char = 'Z';
-        s_page_char = '>';
+        g_sel_session.end_char = 'Z';
+        g_sel_session.page_char = '>';
         g_sel_page.page_art = nullptr;
         g_sel_page.page_subj = nullptr;
         g_sel.mask = AGF_DEL_SEL;
     }
     else
     {
-        s_end_char = selector_end_command(g_news_sel_cmds);
-        s_page_char = selector_page_command(g_news_sel_cmds);
+        g_sel_session.end_char = selector_end_command(g_news_sel_cmds);
+        g_sel_session.page_char = selector_page_command(g_news_sel_cmds);
         if (g_nav.current.art)
         {
             g_sel_page.last_art = g_nav.current.art;
@@ -333,13 +317,13 @@ sel_restart:
         {
             g_msg = fmt::format("** {} of {} new articles unread **  ", i, g_added_articles);
         }
-        s_disp_status_line = 1;
+        g_sel_session.disp_status_line = 1;
     }
     g_added_articles = 0;
     if (cmd && g_selected_count)
     {
         g_msg += fmt::format("{} article{} selected.", g_selected_count, g_selected_count == 1 ? " is" : "s are");
-        s_disp_status_line = 1;
+        g_sel_session.disp_status_line = 1;
     }
     cmd = 0;
 
@@ -358,13 +342,13 @@ sel_restart:
     }
 
 sel_exit:
-    if (s_sel_ret == '\033')
+    if (g_sel_session.ret == '\033')
     {
-        s_sel_ret = '+';
+        g_sel_session.ret = '+';
     }
-    else if (s_sel_ret == '`')
+    else if (g_sel_session.ret == '`')
     {
-        s_sel_ret = 'Q';
+        g_sel_session.ret = 'Q';
     }
     const bool use_article_order = g_sel.mode == SM_ARTICLE && g_sel.sort != SS_GROUPS && g_sel.sort != SS_STRING;
     const bool rebuild_article_order = g_sel.rereading && use_article_order;
@@ -393,7 +377,7 @@ sel_exit:
         g_search_ahead = ArticleNum{};
     }
     g_sel.selected_only = (g_selected_count != 0);
-    if (s_sel_ret == '+')
+    if (g_sel_session.ret == '+')
     {
         g_sel.selected_only = save_selected_only;
         count_subjects(scope_changed || !subjects_saved ? CS_UNSELECT : CS_RESELECT);
@@ -404,9 +388,9 @@ sel_exit:
     }
     if (rebuild_article_order)
     {
-        sort_articles(s_sel_ret == '+' ? g_nav.current.art : nullptr);
+        sort_articles(g_sel_session.ret == '+' ? g_nav.current.art : nullptr);
     }
-    if (s_sel_ret == '+')
+    if (g_sel_session.ret == '+')
     {
         g_nav.target = g_nav.current;
     }
@@ -414,7 +398,7 @@ sel_exit:
     {
         g_nav.target.first();
     }
-    return s_sel_ret;
+    return g_sel_session.ret;
 }
 
 /// @brief Processes selected newsgroups and performs actions based on their flags.
@@ -455,7 +439,7 @@ do_group:
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
         fmt::print("Entering {}:", g_newsgroup_name);
-        if (s_sel_ret == ';')
+        if (g_sel_session.ret == ';')
         {
             ret = do_newsgroup(std::string{";"});
         }
@@ -519,10 +503,10 @@ loop_break:
 /// - g_sel.rereading: Set to false to indicate no rereading mode.
 /// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
-/// - s_end_char: Set to the end character for the selector.
-/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_session.end_char: Set to the end character for the selector.
+/// - g_sel_session.page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
-/// - s_extra_commands: Set to the command handler for multirc commands.
+/// - g_sel_session.extra_commands: Set to the command handler for multirc commands.
 ///
 char multirc_selector()
 {
@@ -535,10 +519,10 @@ char multirc_selector()
     g_sel.set_selector(SM_MULTIRC, SS_MAGIC_NUMBER);
 
 sel_restart:
-    s_end_char = selector_end_command(g_newsrc_sel_cmds);
-    s_page_char = selector_page_command(g_newsrc_sel_cmds);
+    g_sel_session.end_char = selector_end_command(g_newsrc_sel_cmds);
+    g_sel_session.page_char = selector_page_command(g_newsrc_sel_cmds);
     g_sel.mask = AGF_SEL;
-    s_extra_commands = multirc_commands;
+    g_sel_session.extra_commands = multirc_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
@@ -555,7 +539,7 @@ sel_restart:
         clear_rest();
     }
 
-    if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t')
+    if (g_sel_session.ret == '\r' || g_sel_session.ret == '\n' || g_sel_session.ret == 'Z' || g_sel_session.ret == '\t')
     {
         PUSH_SELECTOR();
         for (Multirc *mp = multirc_low(); mp; mp = multirc_next(mp))
@@ -583,7 +567,7 @@ sel_restart:
         POP_SELECTOR();
         goto sel_restart;
     }
-    return s_sel_ret;
+    return g_sel_session.ret;
 }
 
 /// @brief Displays a selector for managing newsgroups and processes user commands.
@@ -596,10 +580,10 @@ sel_restart:
 /// - g_sel.rereading: Set to false to indicate no rereading mode.
 /// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
-/// - s_end_char: Set to the end character for the selector.
-/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_session.end_char: Set to the end character for the selector.
+/// - g_sel_session.page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
-/// - s_extra_commands: Set to the command handler for newsgroup commands.
+/// - g_sel_session.extra_commands: Set to the command handler for newsgroup commands.
 ///
 char newsgroup_selector()
 {
@@ -631,8 +615,8 @@ sel_restart:
         }
     }
 
-    s_end_char = selector_end_command(g_newsgroup_sel_cmds);
-    s_page_char = selector_page_command(g_newsgroup_sel_cmds);
+    g_sel_session.end_char = selector_end_command(g_newsgroup_sel_cmds);
+    g_sel_session.page_char = selector_page_command(g_newsgroup_sel_cmds);
     if (g_sel.rereading)
     {
         g_sel.mask = AGF_DEL_SEL;
@@ -642,7 +626,7 @@ sel_restart:
     {
         g_sel.mask = AGF_SEL;
     }
-    s_extra_commands = newsgroup_commands;
+    g_sel_session.extra_commands = newsgroup_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
@@ -659,7 +643,8 @@ sel_restart:
         clear_rest();
     }
 
-    if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == ';')
+    if (g_sel_session.ret == '\r' || g_sel_session.ret == '\n' || g_sel_session.ret == 'Z' ||
+        g_sel_session.ret == '\t' || g_sel_session.ret == ';')
     {
         PUSH_SELECTOR();
         for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
@@ -680,11 +665,11 @@ sel_restart:
         {
             goto sel_restart;
         }
-        s_sel_ret = 'q';
+        g_sel_session.ret = 'q';
     }
     sel_cleanup();
     end_only();
-    return s_sel_ret;
+    return g_sel_session.ret;
 }
 
 /// @brief Displays a selector for adding newsgroups and processes user commands.
@@ -697,11 +682,11 @@ sel_restart:
 /// - g_sel.rereading: Set to false to indicate no rereading mode.
 /// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
-/// - s_end_char: Set to the end character for the selector.
-/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_session.end_char: Set to the end character for the selector.
+/// - g_sel_session.page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
 /// - g_sel_page.page_gp: Reset to initialize the page group index.
-/// - s_extra_commands: Set to the command handler for add group commands.
+/// - g_sel_session.extra_commands: Set to the command handler for add group commands.
 ///
 char add_group_selector(GetNewsgroupFlags flags)
 {
@@ -729,8 +714,8 @@ sel_restart:
         }
     }
 
-    s_end_char = g_sel.group_listing ? 'q' : selector_end_command(g_add_sel_cmds);
-    s_page_char = g_sel.group_listing ? '>' : selector_page_command(g_add_sel_cmds);
+    g_sel_session.end_char = g_sel.group_listing ? 'q' : selector_end_command(g_add_sel_cmds);
+    g_sel_session.page_char = g_sel.group_listing ? '>' : selector_page_command(g_add_sel_cmds);
     // Setup for selecting articles to read or set unread
     if (g_sel.rereading)
     {
@@ -741,7 +726,7 @@ sel_restart:
         g_sel.mask = AGF_SEL;
     }
     g_sel_page.page_grp = AddGroupIndex::None;
-    s_extra_commands = g_sel.group_listing ? unsubscribed_group_commands : add_group_commands;
+    g_sel_session.extra_commands = g_sel.group_listing ? unsubscribed_group_commands : add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
@@ -759,7 +744,8 @@ sel_restart:
         clear_rest();
     }
 
-    if (!g_sel.group_listing && (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == 'Z' || s_sel_ret == '\t'))
+    if (!g_sel.group_listing && (g_sel_session.ret == '\r' || g_sel_session.ret == '\n' || g_sel_session.ret == 'Z' ||
+                                 g_sel_session.ret == '\t'))
     {
         g_add_new_by_default = ADDNEW_SUB;
         for (AddGroupIndex index : g_add_groups.indices())
@@ -774,7 +760,7 @@ sel_restart:
         g_add_new_by_default = ADDNEW_ASK;
     }
     sel_cleanup();
-    return s_sel_ret;
+    return g_sel_session.ret;
 }
 
 /// @brief Displays a selector for managing configuration options and processes user commands.
@@ -787,11 +773,11 @@ sel_restart:
 /// - g_sel.rereading: Set to false to indicate no rereading mode.
 /// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
-/// - s_end_char: Set to the end character for the selector.
-/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_session.end_char: Set to the end character for the selector.
+/// - g_sel_session.page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
 /// - g_sel_page.page_op: Set to -1 to initialize the page option pointer.
-/// - s_extra_commands: Set to the command handler for option commands.
+/// - g_sel_session.extra_commands: Set to the command handler for option commands.
 ///
 char option_selector()
 {
@@ -807,8 +793,8 @@ char option_selector()
     g_sel.set_selector(SM_OPTIONS, SS_MAGIC_NUMBER);
 
 sel_restart:
-    s_end_char = selector_end_command(g_option_sel_cmds);
-    s_page_char = selector_page_command(g_option_sel_cmds);
+    g_sel_session.end_char = selector_end_command(g_option_sel_cmds);
+    g_sel_session.page_char = selector_page_command(g_option_sel_cmds);
     if (g_sel.rereading)
     {
         g_sel.mask = AGF_DEL_SEL;
@@ -818,13 +804,13 @@ sel_restart:
         g_sel.mask = AGF_SEL;
     }
     g_sel_page.page_op = -1;
-    s_extra_commands = option_commands;
+    g_sel_session.extra_commands = option_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
 
     sel_display();
-    if (sel_input() == 'R' || s_sel_ret=='\r' || s_sel_ret=='\n')
+    if (sel_input() == 'R' || g_sel_session.ret == '\r' || g_sel_session.ret == '\n')
     {
         goto sel_restart;
     }
@@ -836,16 +822,16 @@ sel_restart:
         clear_rest();
     }
 
-    if (s_sel_ret == 'Z' || s_sel_ret == '\t' || s_sel_ret == 'S')
+    if (g_sel_session.ret == 'Z' || g_sel_session.ret == '\t' || g_sel_session.ret == 'S')
     {
         set_options(draft);
-        if (s_sel_ret == 'S')
+        if (g_sel_session.ret == 'S')
         {
             save_options(g_ini_file);
         }
     }
     g_opt_edit.attach(saved_draft);
-    return s_sel_ret;
+    return g_sel_session.ret;
 }
 
 /// @brief Processes a universal item and performs actions based on its type.
@@ -1016,7 +1002,7 @@ do_group:
         }
         g_threaded_group = (g_use_threads && !(np->m_flags & NF_UNTHREADED));
         fmt::print("Entering {}:", g_newsgroup_name);
-        if (s_sel_ret == ';')
+        if (g_sel_session.ret == ';')
         {
             ret = do_newsgroup(std::string{";"});
         }
@@ -1054,7 +1040,7 @@ do_group:
     {
         if (another_command(univ_key_help(ui->help_location())))
         {
-            g_pushback.push(s_sel_ret | 0200);
+            g_pushback.push(g_sel_session.ret | 0200);
         }
     }
     return exit_code;
@@ -1073,12 +1059,12 @@ do_group:
 /// - g_sel.rereading: Set to false to indicate no rereading mode.
 /// - g_sel.exclusive: Set to false to indicate non-exclusive selection mode.
 /// - g_selected_count: Reset to 0 to track the number of selected items.
-/// - s_end_char: Set to the end character for the selector.
-/// - s_page_char: Set to the page character for the selector.
+/// - g_sel_session.end_char: Set to the end character for the selector.
+/// - g_sel_session.page_char: Set to the page character for the selector.
 /// - g_sel.mask: Set to the selection mask for the selector.
 /// - g_sel_page.page_univ_index: Set to 0 to initialize the universal page position.
-/// - s_extra_commands: Set to the command handler for universal commands.
-/// - s_sel_ret: Updated to store the return character from the universal selector.
+/// - g_sel_session.extra_commands: Set to the command handler for universal commands.
+/// - g_sel_session.ret: Updated to store the return character from the universal selector.
 ///
 char universal_selector()
 {
@@ -1094,8 +1080,8 @@ char universal_selector()
 
 sel_restart:
     // make options
-    s_end_char = 'Z';
-    s_page_char = '>';
+    g_sel_session.end_char = 'Z';
+    g_sel_session.page_char = '>';
 
     // Setup for selecting articles to read or set unread
     if (g_sel.rereading)
@@ -1107,7 +1093,7 @@ sel_restart:
         g_sel.mask = AGF_SEL;
     }
     g_sel_page.page_univ_index = {};
-    s_extra_commands = universal_commands;
+    g_sel_session.extra_commands = universal_commands;
 
     init_pages(FILL_LAST_PAGE);
     g_sel_page.item_index = 0;
@@ -1124,7 +1110,8 @@ sel_restart:
         clear_rest();
     }
 
-    if (s_sel_ret == '\r' || s_sel_ret == '\n' || s_sel_ret == '\t' || s_sel_ret == ';' || s_sel_ret == 'Z')
+    if (g_sel_session.ret == '\r' || g_sel_session.ret == '\n' || g_sel_session.ret == '\t' ||
+        g_sel_session.ret == ';' || g_sel_session.ret == 'Z')
     {
         for (std::size_t i = 0; i < g_univ.items.size(); ++i)
         {
@@ -1142,7 +1129,7 @@ sel_restart:
                 POP_SELECTOR();
                 if (ret == UR_ERROR || ret == UR_BREAK)
                 {
-                    s_sel_ret = ' ';    // don't leave completely.
+                    g_sel_session.ret = ' '; // don't leave completely.
                     break;              // jump out of for loop
                 }
             }
@@ -1151,13 +1138,13 @@ sel_restart:
 // univ_loop_break:
     // restart the selector unless the user explicitly quits.
     // possibly later have an option for 'Z' to quit levels>1.
-    if (s_sel_ret != 'q' && (s_sel_ret != 'Q'))
+    if (g_sel_session.ret != 'q' && (g_sel_session.ret != 'Q'))
     {
         goto sel_restart;
     }
     sel_cleanup();
     univ_close();
-    return s_sel_ret;
+    return g_sel_session.ret;
 }
 
 /// @brief Displays the current page of selectable items and updates the display state.
@@ -1169,7 +1156,7 @@ sel_restart:
 /// @globals
 /// - g_sel_page.item_index: Reset to 0 if it exceeds the number of items on the page.
 /// - g_term_col: Updated to the length of the displayed status message.
-/// - s_disp_status_line: Updated to 2 after displaying the status message.
+/// - g_sel_session.disp_status_line: Updated to 2 after displaying the status message.
 ///
 static void sel_display()
 {
@@ -1185,12 +1172,12 @@ static void sel_display()
         g_sel_page.item_index = 0;
     }
 
-    if (s_disp_status_line == 1)
+    if (g_sel_session.disp_status_line == 1)
     {
         newline();
         fmt::print("{}", g_msg);
         g_term_col = static_cast<int>(g_msg.size());
-        s_disp_status_line = 2;
+        g_sel_session.disp_status_line = 2;
     }
 }
 
@@ -1211,7 +1198,7 @@ static void sel_status_msg(std::string_view cp)
     g_term_col = static_cast<int>(cp.size());
     goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
     std::fflush(stdout);     // otherwise may not be visible
-    s_disp_status_line = 2;
+    g_sel_session.disp_status_line = 2;
 }
 
 /// @brief Handles user input for the selector and processes commands or selections.
@@ -1224,12 +1211,12 @@ static void sel_status_msg(std::string_view cp)
 /// @return The character indicating the user's final action or selection.
 ///
 /// @globals
-/// - s_force_sel_pos: Set to -1 to reset the forced selection position.
-/// - s_removed_prompt: Updated to manage the state of removed prompts.
+/// - g_sel_session.force_pos: Set to -1 to reset the forced selection position.
+/// - g_sel_session.removed_prompt: Updated to manage the state of removed prompts.
 /// - g_spin_char: Updated to display the current spin character.
-/// - s_disp_status_line: Updated to manage the status line display state.
+/// - g_sel_session.disp_status_line: Updated to manage the status line display state.
 /// - g_sel_page.item_index: Updated to track the currently selected item index.
-/// - s_sel_ret: Updated to store the return character from the selector.
+/// - g_sel_session.ret: Updated to store the return character from the selector.
 ///
 char sel_input()
 {
@@ -1251,19 +1238,19 @@ reask_selector:
 position_selector:
       int got_dash = 0;
       int got_goto = 0;
-    s_force_sel_pos = -1;
-    if (s_removed_prompt & RP_MOUSE_BAR)
-    {
-        draw_mouse_bar(g_tc_COLS,false);
-        s_removed_prompt &= ~RP_MOUSE_BAR;
-    }
+      g_sel_session.force_pos = -1;
+      if (g_sel_session.removed_prompt & RP_MOUSE_BAR)
+      {
+          draw_mouse_bar(g_tc_COLS, false);
+          g_sel_session.removed_prompt &= ~RP_MOUSE_BAR;
+      }
     if (g_can_home)
     {
         goto_xy(0, g_sel_page.items[g_sel_page.item_index].line);
     }
 
 reinp_selector:
-    if (s_removed_prompt & RP_MOUSE_BAR)
+    if (g_sel_session.removed_prompt & RP_MOUSE_BAR)
     {
         goto position_selector; // (TRN considered harmful? :-)
     }
@@ -1278,13 +1265,14 @@ reinp_selector:
     {
         g_spin_char = g_sel_page.chars[g_sel_page.item_index];
     }
-    const std::string command = read_selector_command(s_page_char, s_end_char, g_sel_page.at_end);
+    const std::string command =
+        read_selector_command(g_sel_session.page_char, g_sel_session.end_char, g_sel_page.at_end);
     int               ch = command.empty() ? '\0' : command.front();
     if (errno)
     {
         ch = Ctl('l');
     }
-    if (s_disp_status_line == 2)
+    if (g_sel_session.disp_status_line == 2)
     {
         if (g_can_home)
         {
@@ -1292,10 +1280,10 @@ reinp_selector:
             erase_line(false);
             if (g_term_line == g_tc_LINES-1)
             {
-                s_removed_prompt |= RP_MOUSE_BAR;
+                g_sel_session.removed_prompt |= RP_MOUSE_BAR;
             }
         }
-        s_disp_status_line = 0;
+        g_sel_session.disp_status_line = 0;
     }
     if (ch == '-' && g_sel_page.page_item_cnt)
     {
@@ -1330,7 +1318,7 @@ reinp_selector:
         got_dash = 0;
         got_goto = 0;
         // following if statement should be function
-        if (s_disp_status_line == 2)    // status was printed
+        if (g_sel_session.disp_status_line == 2) // status was printed
         {
             if (g_can_home)
             {
@@ -1338,10 +1326,10 @@ reinp_selector:
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
-                    s_removed_prompt |= RP_MOUSE_BAR;
+                    g_sel_session.removed_prompt |= RP_MOUSE_BAR;
                 }
             }
-            s_disp_status_line = 0;
+            g_sel_session.disp_status_line = 0;
         }
         goto position_selector;
     }
@@ -1394,7 +1382,7 @@ reinp_selector:
         // number is a lousy time to delay, however.
         //
         ch = read_selector_numeric_continuation();
-        if (s_disp_status_line == 2) // status was printed
+        if (g_sel_session.disp_status_line == 2) // status was printed
         {
             if (g_can_home)
             {
@@ -1402,10 +1390,10 @@ reinp_selector:
                 erase_line(false);
                 if (g_term_line == g_tc_LINES-1)
                 {
-                    s_removed_prompt |= RP_MOUSE_BAR;
+                    g_sel_session.removed_prompt |= RP_MOUSE_BAR;
                 }
             }
-            s_disp_status_line = 0;
+            g_sel_session.disp_status_line = 0;
         }
         if (ch == g_kill_char)          // kill whole command in progress
         {
@@ -1529,7 +1517,7 @@ reinp_selector:
         }
         if (ch == Ctl('t'))
         {
-            s_force_sel_pos = j;
+            g_sel_session.force_pos = j;
         }
     }
     else if (ch == 'k' || ch == 'j' || ch == ',')
@@ -1576,16 +1564,16 @@ reinp_selector:
     else
     {
         range_start = -1;
-        s_sel_ret = ch;
+        g_sel_session.ret = ch;
         switch (sel_command(ch))
         {
         case DS_ASK:
-            if (!s_clean_screen)
+            if (!g_sel_session.clean_screen)
             {
                 sel_display();
                 goto reask_selector;
             }
-            if (s_removed_prompt & RP_NEWLINE)
+            if (g_sel_session.removed_prompt & RP_NEWLINE)
             {
                 carriage_return();
                 goto reask_selector;
@@ -1597,22 +1585,22 @@ reinp_selector:
             goto reask_selector;
 
         case DS_UPDATE:
-            if (!s_clean_screen)
+            if (!g_sel_session.clean_screen)
             {
                 sel_display();
                 goto reask_selector;
             }
-            if (s_disp_status_line == 1)
+            if (g_sel_session.disp_status_line == 1)
             {
                 newline();
                 fmt::print("{}", g_msg);
                 g_term_col = static_cast<int>(g_msg.size());
-                if (s_removed_prompt & RP_MOUSE_BAR)
+                if (g_sel_session.removed_prompt & RP_MOUSE_BAR)
                 {
                     draw_mouse_bar(g_tc_COLS,false);
-                    s_removed_prompt &= ~RP_MOUSE_BAR;
+                    g_sel_session.removed_prompt &= ~RP_MOUSE_BAR;
                 }
-                s_disp_status_line = 2;
+                g_sel_session.disp_status_line = 2;
             }
             update_page();
             if (g_can_home)
@@ -1628,8 +1616,8 @@ reinp_selector:
             return 'Q'; // Quit
 
         case DS_STATUS:
-            s_disp_status_line = 1;
-            if (!s_clean_screen)
+            g_sel_session.disp_status_line = 1;
+            if (!g_sel_session.clean_screen)
             {
                 sel_display();
                 goto reask_selector;
@@ -1640,7 +1628,7 @@ reinp_selector:
             {
                 newline();
             }
-            if (s_removed_prompt & RP_NEWLINE)
+            if (g_sel_session.removed_prompt & RP_NEWLINE)
             {
                 goto reask_selector;
             }
@@ -1745,9 +1733,9 @@ reinp_selector:
         }
     } while (g_sel_page.item_index != j);
     range_start = g_sel_page.item_index ? g_sel_page.item_index : g_sel_page.page_item_cnt;
-    if (s_force_sel_pos >= 0)
+    if (g_sel_session.force_pos >= 0)
     {
-        g_sel_page.item_index = s_force_sel_pos;
+        g_sel_page.item_index = g_sel_session.force_pos;
     }
     goto position_selector;
 }
@@ -1760,7 +1748,7 @@ reinp_selector:
 ///
 /// @globals
 /// - g_term_col: Updated to the length of the displayed prompt message.
-/// - s_removed_prompt: Set to RP_NONE to indicate no removed prompt state.
+/// - g_sel_session.removed_prompt: Set to RP_NONE to indicate no removed prompt state.
 ///
 static void sel_prompt()
 {
@@ -1773,12 +1761,12 @@ static void sel_prompt()
     set_mail(false);
 #endif
     const std::string page_prompt =
-        g_sel_page.at_end
-            ? fmt::format("{} [{}{}] --", !g_sel_page.prior_obj_cnt ? "All" : "Bot", s_end_char, s_page_char)
-            : fmt::format("{}{}% [{}{}] --", !g_sel_page.prior_obj_cnt ? "Top " : "",
-                          static_cast<long>((g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt) * 100 /
-                                            g_sel_page.total_obj_cnt),
-                          s_page_char, s_end_char);
+        g_sel_page.at_end ? fmt::format("{} [{}{}] --", !g_sel_page.prior_obj_cnt ? "All" : "Bot",
+                                        g_sel_session.end_char, g_sel_session.page_char)
+                          : fmt::format("{}{}% [{}{}] --", !g_sel_page.prior_obj_cnt ? "Top " : "",
+                                        static_cast<long>((g_sel_page.prior_obj_cnt + g_sel_page.page_obj_cnt) * 100 /
+                                                          g_sel_page.total_obj_cnt),
+                                        g_sel_session.page_char, g_sel_session.end_char);
     const std::string mail_call = do_interp(g_mail_call);
     const std::string prompt =
         fmt::format("{}-- {} {} ({}{} order) -- {}", mail_call,
@@ -1788,7 +1776,7 @@ static void sel_prompt()
                     g_sel.mode_string, g_sel.direction < 0 ? "reverse " : "", g_sel.sort_string, page_prompt);
     g_color.print(COLOR_CMD, prompt);
     g_term_col = static_cast<int>(prompt.size());
-    s_removed_prompt = RP_NONE;
+    g_sel_session.removed_prompt = RP_NONE;
 }
 
 /// @brief Selects an item based on the current selection mode and updates its state.
@@ -2037,7 +2025,7 @@ static bool deselect_item(Selection u)
 /// - g_opt_edit.flags: Updated to reflect the selection state of the option.
 /// - g_selected_count: Incremented or decremented based on the selection state of the option.
 /// - g_sel_page.last_line: Used to position the cursor for displaying prompts.
-/// - s_clean_screen: Updated to indicate whether the screen should be cleared after input.
+/// - g_sel_session.clean_screen: Updated to indicate whether the screen should be cleared after input.
 ///
 static bool select_option(OptionIndex i)
 {
@@ -2080,7 +2068,7 @@ static bool select_option(OptionIndex i)
         val = *draft_value;
     }
     const std::string initial_value{val};
-    s_clean_screen = in_choice("> ", val, help, MM_OPTION_EDIT_PROMPT);
+    g_sel_session.clean_screen = in_choice("> ", val, help, MM_OPTION_EDIT_PROMPT);
     if (val != initial_value)
     {
         std::string      parsed_value;
@@ -2089,7 +2077,7 @@ static bool select_option(OptionIndex i)
         changed = true;
         g_selected_count += g_opt_edit.record_edit(option, had_draft, oldval, parsed_value);
     }
-    if (s_clean_screen)
+    if (g_sel_session.clean_screen)
     {
         up_line();
         erase_line(true);
@@ -2257,15 +2245,15 @@ static bool mark_del_as_read(Article &article, int arg)
 ///
 /// @globals
 /// This function directly sets or modifies these global variables:
-/// - `s_clean_screen`
+/// - `g_sel_session.clean_screen`
 /// - `g_term_scrolled`
 /// - `g_page_line`
 /// - `g_newsgroup_ptr` (may be set to `nullptr` when no newsgroup selected)
 /// - `g_output_chase_phrase`
 /// - `g_sel_page.item_index`
-/// - `s_removed_prompt`
+/// - `g_sel_session.removed_prompt`
 /// - `g_one_command`
-/// - `s_sel_ret`
+/// - `g_sel_session.ret`
 /// - `g_msg`
 ///
 DisplayState sel_command(char_int ch)
@@ -2275,7 +2263,7 @@ DisplayState sel_command(char_int ch)
     {
         goto_xy(0, g_sel_page.last_line);
     }
-    s_clean_screen = true;
+    g_sel_session.clean_screen = true;
     g_term_scrolled = 0;
     g_page_line = 1;
     if (g_sel.mode == SM_NEWSGROUP)
@@ -2330,7 +2318,7 @@ do_command:
 
     case Ctl('^'):
         erase_line(false);              // erase the prompt
-        s_removed_prompt |= RP_NEWLINE;
+        g_sel_session.removed_prompt |= RP_NEWLINE;
 #ifdef MAIL_CALL
         set_mail(true);          // force a mail check
 #endif
@@ -2353,7 +2341,7 @@ do_command:
         return DS_QUIT;
 
     case Ctl('Q'):  case '\033':
-        s_sel_ret = '\033';
+        g_sel_session.ret = '\033';
         return DS_QUIT;
 
     case '\b':  case '\177':
@@ -2366,11 +2354,11 @@ do_command:
     case '&':  case '!':
     {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         const std::string command = finish_selector_command(ch, true);
         if (command.empty())      // get rest of command
         {
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 break;
             }
@@ -2383,14 +2371,14 @@ do_command:
             g_one_command = false;
             if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
             {
-                s_clean_screen = false;
+                g_sel_session.clean_screen = false;
             }
             POP_SELECTOR();
             if (!save_sel_mode)
             {
                 return DS_RESTART;
             }
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 erase_line(false);
                 return DS_ASK;
@@ -2416,7 +2404,7 @@ do_command:
 
     case '\\':
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         if (g_sel.mode == SM_NEWSGROUP)
         {
             fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
@@ -2435,7 +2423,7 @@ do_command:
         {
             goto do_command;
         }
-        if (s_clean_screen)
+        if (g_sel_session.clean_screen)
         {
             erase_line(false);
             break;
@@ -2449,14 +2437,14 @@ do_command:
 
 the_default:
     default:
-        ret = s_extra_commands(ch);
+        ret = g_sel_session.extra_commands(ch);
         switch (ret)
         {
         case DS_ERROR:
             break;
 
         case DS_DO_COMMAND:
-            ch = s_sel_ret;
+            ch = g_sel_session.ret;
             goto do_command;
 
         default:
@@ -2464,7 +2452,7 @@ the_default:
         }
         g_msg = "Type ? for help.";
         settle_down();
-        if (s_clean_screen)
+        if (g_sel_session.clean_screen)
         {
             return DS_STATUS;
         }
@@ -2491,8 +2479,8 @@ the_default:
 /// @return true if the selector should move up a line, false otherwise.
 ///
 /// @globals
-/// - s_disp_status_line: Set to 1 or 0 to control status line display.
-/// - s_clean_screen: Set to false if the screen should not be cleared.
+/// - g_sel_session.disp_status_line: Set to 1 or 0 to control status line display.
+/// - g_sel_session.clean_screen: Set to false if the screen should not be cleared.
 /// - g_error_occurred: Set to false after handling an error.
 ///
 static bool sel_perform_change(long cnt, std::string_view obj_type)
@@ -2500,30 +2488,30 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
     carriage_return();
     if (g_page_line == 1)
     {
-        s_disp_status_line = 1;
+        g_sel_session.disp_status_line = 1;
         if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
         {
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
         }
     }
     else
     {
-        s_clean_screen = false;
+        g_sel_session.clean_screen = false;
     }
 
     if (g_error_occurred)
     {
         print_lines(g_msg, NO_MARKING);
-        s_clean_screen = false;
+        g_sel_session.clean_screen = false;
         g_error_occurred = false;
     }
 
     int ret = perform_status_end(cnt, obj_type);
     if (ret)
     {
-        s_disp_status_line = 1;
+        g_sel_session.disp_status_line = 1;
     }
-    if (s_clean_screen)
+    if (g_sel_session.clean_screen)
     {
         if (ret != 2)
         {
@@ -2531,10 +2519,10 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
             return true;
         }
     }
-    else if (s_disp_status_line == 1)
+    else if (g_sel_session.disp_status_line == 1)
     {
         print_lines(g_msg, NO_MARKING);
-        s_disp_status_line = 0;
+        g_sel_session.disp_status_line = 0;
     }
 
     init_pages(PRESERVE_PAGE);
@@ -2664,14 +2652,14 @@ static constexpr std::string_view SPECIAL_CMD_LETTERS{R"(<+>^$!?&:/\hDEJLNOPqQRS
 /// This function reads a single character from the user (or from the input buffer),
 /// determines if it is a special selector command or a selection character, and
 /// processes it accordingly. If the command is recognized as a special command,
-/// it sets `s_sel_ret` and returns the character; otherwise, it pushes the character
+/// it sets `g_sel_session.ret` and returns the character; otherwise, it pushes the character
 /// for later processing and returns '\0'.
 ///
 /// @param ch The initial command character or indicator for input (may be 0 or 1 to trigger input).
 /// @return The processed command character if handled, or '\0' if deferred.
 ///
 /// @globals
-/// - s_sel_ret: Set to the recognized special command character.
+/// - g_sel_session.ret: Set to the recognized special command character.
 ///
 static char another_command(char_int ch)
 {
@@ -2689,7 +2677,7 @@ static char another_command(char_int ch)
             if (g_sel_page.chars.find(static_cast<char>(ch)) == std::string::npos //
                 && (SPECIAL_CMD_LETTERS.find(static_cast<char>(ch)) != std::string_view::npos || ch == Ctl('k')))
             {
-                s_sel_ret = ch;
+                g_sel_session.ret = ch;
                 return ch;
             }
             g_pushback.push(ch | 0200);
@@ -2717,10 +2705,10 @@ static char another_command(char_int ch)
 /// - g_sel_page.item_index: Reset to 0 for some commands.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_msg: Updated with status or help messages.
-/// - s_disp_status_line: Set to 1 or 0 for status line control.
-/// - s_clean_screen: Set to false to prevent screen clearing.
-/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
-/// - s_sel_ret: Set to the quit or special command character.
+/// - g_sel_session.disp_status_line: Set to 1 or 0 for status line control.
+/// - g_sel_session.clean_screen: Set to false to prevent screen clearing.
+/// - g_sel_session.removed_prompt: Set to RP_ALL for prompt erasure.
+/// - g_sel_session.ret: Set to the quit or special command character.
 ///
 DisplayState article_commands(char_int ch)
 {
@@ -2772,7 +2760,7 @@ DisplayState article_commands(char_int ch)
         {
             sel_cleanup();
         }
-        s_disp_status_line = 1;
+        g_sel_session.disp_status_line = 1;
         count_subjects(CS_NORM);
         g_sel_page.page_subj = nullptr;
         g_sel_page.page_art = nullptr;
@@ -2806,7 +2794,7 @@ DisplayState article_commands(char_int ch)
             sel_cleanup();
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
 reask_output:
         const std::string command = read_selector_prompt_command("Selector mode:  Threads, Subjects, Articles?",
                                                                  MM_SELECTOR_ORDER_PROMPT, "tsa");
@@ -2829,7 +2817,7 @@ reask_output:
                            "a selects individual articles.\n"
                            "q does nothing.\n\n");
             }
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
             goto reask_output;
         }
         else if (command_char == 'q')
@@ -2857,7 +2845,7 @@ reask_output:
             sel_cleanup();
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         std::string command;
         if (g_sel.mode == SM_ARTICLE)
@@ -2915,7 +2903,7 @@ reask_sort:
                            "q does nothing.\n"
                            "\n");
             }
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
             goto reask_sort;
         }
         else if (command_char == 'q')
@@ -3064,7 +3052,7 @@ reask_sort:
             break;
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         if (g_sel.mode == SM_ARTICLE)
         {
             g_nav.target.art = g_sel_page.items[g_sel_page.item_index].u.ap;
@@ -3089,17 +3077,17 @@ reask_sort:
             count_subjects(g_sel.rereading ? CS_NORM : CS_UNSELECT);
             init_pages(PRESERVE_PAGE);
             g_msg = "Kill memorized.";
-            s_disp_status_line = 1;
+            g_sel_session.disp_status_line = 1;
             return DS_DISPLAY;
 
         case '+': case '.': case 'S': case 'm':
             g_msg = "Selection memorized.";
-            s_disp_status_line = 1;
+            g_sel_session.disp_status_line = 1;
             return DS_UPDATE;
 
         case 'c':  case 'C':
             g_msg = "Auto-commands cleared.";
-            s_disp_status_line = 1;
+            g_sel_session.disp_status_line = 1;
             return DS_UPDATE;
 
         case 'q':
@@ -3115,7 +3103,7 @@ reask_sort:
         break;
 
     case ';':
-        s_sel_ret = ';';
+        g_sel_session.ret = ';';
         return DS_QUIT;
 
     case ':':
@@ -3148,7 +3136,7 @@ reask_sort:
     case '/':
     {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         std::string search_command;
         bool        command_finished{};
         if (ch == ':')
@@ -3163,7 +3151,7 @@ reask_sort:
         }
         if (!command_finished) // get rest of command
         {
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 break;
             }
@@ -3226,7 +3214,7 @@ reask_sort:
             {
                 return DS_UPDATE;
             }
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 return DS_DISPLAY;
             }
@@ -3240,7 +3228,7 @@ reask_sort:
 
     case 'c':
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
         {
@@ -3252,7 +3240,7 @@ reask_sort:
                 init_pages(FILL_LAST_PAGE);
                 return DS_DISPLAY;
             }
-            s_sel_ret = 'Z';
+            g_sel_session.ret = 'Z';
             return DS_QUIT;
         }
         if (ch != 'N')
@@ -3300,10 +3288,10 @@ reask_sort:
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page.item_index: Reset to 0 for some commands.
 /// - g_msg: Updated with status or help messages.
-/// - s_disp_status_line: Set to 1 for status line control.
-/// - s_clean_screen: Set to false to prevent screen clearing.
-/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
-/// - s_sel_ret: Set to the quit or special command character.
+/// - g_sel_session.disp_status_line: Set to 1 for status line control.
+/// - g_sel_session.clean_screen: Set to false to prevent screen clearing.
+/// - g_sel_session.removed_prompt: Set to RP_ALL for prompt erasure.
+/// - g_sel_session.ret: Set to the quit or special command character.
 /// - g_newsgroup_ptr: Set to nullptr or updated for search/catchup.
 /// - g_recent_newsgroup: Updated when switching newsgroups.
 /// - g_current_newsgroup: Updated when switching newsgroups.
@@ -3405,7 +3393,7 @@ DisplayState newsgroup_commands(char_int ch)
             sel_cleanup();
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         const std::string command =
             read_selector_prompt_command("Order by Newsrc, Group name, or Count?", MM_Q, "ngcNGC");
@@ -3441,7 +3429,7 @@ reask_sort:
                            "Upper case reverses the sort.\n"
                            "q does nothing.\n\n");
             }
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
             goto reask_sort;
 
         default:
@@ -3484,7 +3472,7 @@ reask_sort:
     case '/':
     {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         std::string search_command;
         bool        command_finished{};
         if (ch == ':')
@@ -3499,7 +3487,7 @@ reask_sort:
         }
         if (!command_finished) // get rest of command
         {
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 break;
             }
@@ -3569,7 +3557,7 @@ reask_sort:
                     g_sel_page.item_index = 0;
                 }
             }
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 return DS_DISPLAY;
             }
@@ -3589,7 +3577,7 @@ reask_sort:
         else
         {
             g_msg = "No newsgroup to catchup.";
-            s_disp_status_line = 1;
+            g_sel_session.disp_status_line = 1;
             return DS_UPDATE;
         }
         if (g_newsgroup_ptr != g_current_newsgroup)
@@ -3598,7 +3586,7 @@ reask_sort:
             g_current_newsgroup = g_newsgroup_ptr;
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
         {
@@ -3628,7 +3616,7 @@ reask_sort:
         return DS_DISPLAY;
 
     case ';':
-        s_sel_ret = ';';
+        g_sel_session.ret = ';';
         return DS_QUIT;
 
     default:
@@ -3637,10 +3625,10 @@ reask_sort:
         InputNewsgroupResult ret;
         bool                 was_at_top = !g_sel_page.prior_obj_cnt;
         PUSH_SELECTOR();
-        if (!(s_removed_prompt & RP_NEWLINE))
+        if (!(g_sel_session.removed_prompt & RP_NEWLINE))
         {
             erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-            s_removed_prompt = RP_ALL;
+            g_sel_session.removed_prompt = RP_ALL;
             fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
             std::fflush(stdout);
         }
@@ -3675,14 +3663,14 @@ reask_sort:
             // FALL THROUGH
 
         case ING_QUIT:
-            s_sel_ret = 'q';
+            g_sel_session.ret = 'q';
             return DS_QUIT;
 
         case ING_ERROR:
             return DS_ERROR;
 
         case ING_ERASE:
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 erase_line(false);
                 return DS_ASK;
@@ -3700,7 +3688,7 @@ reask_sort:
             }
             if (g_term_line != g_sel_page.last_line + 1 || g_term_scrolled)
             {
-                s_clean_screen = false;
+                g_sel_session.clean_screen = false;
             }
             break;
         }
@@ -3719,10 +3707,10 @@ reask_sort:
         const bool page_changed = calc_page(u);
         if (ret == ING_MESSAGE)
         {
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
             return DS_STATUS;
         }
-        if ((page_changed || ret == ING_DISPLAY) && s_clean_screen)
+        if ((page_changed || ret == ING_DISPLAY) && g_sel_session.clean_screen)
         {
             return DS_DISPLAY;
         }
@@ -3730,7 +3718,7 @@ reask_sort:
         {
             (void) g_sel_page.first_page();
         }
-        if (s_clean_screen)
+        if (g_sel_session.clean_screen)
         {
             return DS_ASK;
         }
@@ -3762,10 +3750,10 @@ reask_sort:
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page.item_index: Reset to 0 for some commands.
 /// - g_msg: Updated with status or help messages.
-/// - s_disp_status_line: Set to 1 for status line control.
-/// - s_clean_screen: Set to false to prevent screen clearing.
-/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
-/// - s_sel_ret: Set to the quit or special command character.
+/// - g_sel_session.disp_status_line: Set to 1 for status line control.
+/// - g_sel_session.clean_screen: Set to false to prevent screen clearing.
+/// - g_sel_session.removed_prompt: Set to RP_ALL for prompt erasure.
+/// - g_sel_session.ret: Set to the quit or special command character.
 ///
 static DisplayState add_group_commands(char_int ch)
 {
@@ -3778,7 +3766,7 @@ static DisplayState add_group_commands(char_int ch)
             sel_cleanup();
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         const std::string command =
             read_selector_prompt_command("Order by Natural-order, Group name, or Count?", MM_Q, "ngcNGC");
@@ -3814,7 +3802,7 @@ reask_sort:
                            "Upper case reverses the sort.\n"
                            "q does nothing.\n\n");
             }
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
             goto reask_sort;
 
         default:
@@ -3921,7 +3909,7 @@ reask_sort:
     case '/':
     {
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         std::string search_command;
         bool        command_finished{};
         if (ch == ':')
@@ -3936,7 +3924,7 @@ reask_sort:
         }
         if (!command_finished) // get rest of command
         {
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 break;
             }
@@ -3971,7 +3959,7 @@ reask_sort:
             {
                 return DS_UPDATE;
             }
-            if (s_clean_screen)
+            if (g_sel_session.clean_screen)
             {
                 return DS_DISPLAY;
             }
@@ -4013,7 +4001,7 @@ static DisplayState unsubscribed_group_commands(char_int ch)
     case 'l':
     {
         erase_line(g_mouse_bar_cnt > 0);
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         fmt::print("Newsgroup glob: ");
         const std::string command = finish_selector_command(ch, true);
         if (command.empty())
@@ -4127,11 +4115,11 @@ static DisplayState multirc_commands(char_int ch)
 /// - g_sel.rereading: Checked to determine if rereading mode is active.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page.page_op: Set to 1 for page state changes.
-/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
-/// - s_disp_status_line: Set to 1 for status line control.
-/// - s_clean_screen: Set to false to prevent screen clearing.
+/// - g_sel_session.removed_prompt: Set to RP_ALL for prompt erasure.
+/// - g_sel_session.disp_status_line: Set to 1 for status line control.
+/// - g_sel_session.clean_screen: Set to false to prevent screen clearing.
 /// - g_msg: Updated with status or error messages.
-/// - s_sel_ret: Set to the quit or special command character.
+/// - g_sel_session.ret: Set to the quit or special command character.
 ///
 static DisplayState option_commands(char_int ch)
 {
@@ -4160,7 +4148,7 @@ static DisplayState option_commands(char_int ch)
     {
         Selection u;
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
         const std::string search_command = finish_selector_command(ch, true);
         if (search_command.empty()) // get rest of command
         {
@@ -4245,9 +4233,9 @@ static DisplayState option_commands(char_int ch)
 /// - g_sel.rereading: Checked to determine if rereading mode is active.
 /// - g_sel.exclusive: Toggled for exclusive selection mode.
 /// - g_sel_page.page_univ_index: Set to 0 for page state changes.
-/// - s_removed_prompt: Set to RP_ALL for prompt erasure.
-/// - s_clean_screen: Set to false to prevent screen clearing.
-/// - s_sel_ret: Set to the quit or special command character.
+/// - g_sel_session.removed_prompt: Set to RP_ALL for prompt erasure.
+/// - g_sel_session.clean_screen: Set to false to prevent screen clearing.
+/// - g_sel_session.ret: Set to the quit or special command character.
 ///
 static DisplayState universal_commands(char_int ch)
 {
@@ -4270,7 +4258,7 @@ static DisplayState universal_commands(char_int ch)
         return DS_DISPLAY;
 
     case ';':
-        s_sel_ret = ';';
+        g_sel_session.ret = ';';
         return DS_QUIT;
 
     case 'U':
@@ -4306,7 +4294,7 @@ static DisplayState universal_commands(char_int ch)
             sel_cleanup();
         }
         erase_line(g_mouse_bar_cnt > 0); // erase the prompt
-        s_removed_prompt = RP_ALL;
+        g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         const std::string command =
             read_selector_prompt_command("Order by Natural, or score Points?", MM_Q, "npNP");
@@ -4329,7 +4317,7 @@ reask_sort:
                            "Upper case reverses the sort.\n"
                            "q does nothing.\n\n");
             }
-            s_clean_screen = false;
+            g_sel_session.clean_screen = false;
             goto reask_sort;
         }
         else if (command_char == 'q' || (std::tolower(static_cast<unsigned char>(command_char)) != 'n' &&
@@ -4370,7 +4358,7 @@ reask_sort:
 ///
 /// @globals
 /// - g_msg: Updated with the current display style description.
-/// - s_disp_status_line: Set to 1 to indicate the status line should be displayed.
+/// - g_sel_session.disp_status_line: Set to 1 to indicate the status line should be displayed.
 ///
 static void switch_dmode(std::string &dmode, std::size_t &dmode_index)
 {
@@ -4404,7 +4392,7 @@ static void switch_dmode(std::string &dmode, std::size_t &dmode_index)
         break;
     }
     g_msg = fmt::format("({} display style)", s);
-    s_disp_status_line = 1;
+    g_sel_session.disp_status_line = 1;
 }
 
 /// @brief Finds the selector item index corresponding to a given screen line.
@@ -4466,15 +4454,15 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 }
                 else
                 {
-                    s_force_sel_pos = g_sel_page.find_line(y);
+                    g_sel_session.force_pos = g_sel_page.find_line(y);
                     if (g_use_sel_num)
                     {
-                        g_pushback.push(('0' + (s_force_sel_pos + 1) % 10) | 0200);
-                        g_pushback.push(('0' + (s_force_sel_pos + 1) / 10) | 0200);
+                        g_pushback.push(('0' + (g_sel_session.force_pos + 1) % 10) | 0200);
+                        g_pushback.push(('0' + (g_sel_session.force_pos + 1) / 10) | 0200);
                     }
                     else
                     {
-                        g_pushback.push(g_sel_page.chars[s_force_sel_pos] | 0200);
+                        g_pushback.push(g_sel_page.chars[g_sel_session.force_pos] | 0200);
                     }
                     if (btn == 1)
                     {
@@ -4517,7 +4505,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                         g_pushback.push(g_sel_page.chars[i] | 0200);
                     }
                     g_pushback.push('-' | 0200);
-                    s_force_sel_pos = i;
+                    g_sel_session.force_pos = i;
                 }
             }
             break;

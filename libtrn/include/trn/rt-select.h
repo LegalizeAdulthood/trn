@@ -7,6 +7,7 @@
 
 #include <config/config2.h>
 #include <trn/addng.h>
+#include <trn/enum-flags.h>
 #include <trn/help.h>
 #include <trn/rcstuff.h>
 
@@ -41,6 +42,27 @@ enum SelectionSortMode
     SS_SCORE
 };
 
+enum DisplayState
+{
+    DS_ASK = 1,
+    DS_UPDATE,
+    DS_DISPLAY,
+    DS_RESTART,
+    DS_STATUS,
+    DS_QUIT,
+    DS_DO_COMMAND,
+    DS_ERROR
+};
+
+enum RemovedPrompt
+{
+    RP_NONE = 0,
+    RP_MOUSE_BAR = 1,
+    RP_NEWLINE = 2,
+    RP_ALL = 3,
+};
+DECLARE_FLAGS_ENUM(RemovedPrompt, int);
+
 struct SelectorPolicy
 {
     bool              rereading{};
@@ -67,6 +89,21 @@ struct SelectorPolicy
     std::string get_order(SelectionMode smode);
 };
 
+using SelectorCommand = DisplayState(char_int ch);
+
+struct SelectorSession
+{
+    char             ret{};
+    char             page_char{};
+    char             end_char{};
+    int              disp_status_line{};
+    bool             clean_screen{};
+    RemovedPrompt    removed_prompt{};
+    int              force_pos{};
+    SelectorCommand *extra_commands{};
+};
+
+extern SelectorSession   g_sel_session;
 extern SelectorPolicy    g_sel;
 extern ArticleUnread     g_selected_count;
 extern int               g_selected_subj_cnt;
