@@ -77,7 +77,6 @@ static bool        sf_do_command(std::string_view cmd, bool check);
 static std::string_view sf_freeform(std::string_view keyword, std::string_view remaining);
 static bool  sf_do_line(std::string_view line, bool check);
 static void  sf_do_file(std::string_view fname);
-static int   score_match(const std::string &text, int ind);
 static std::string sf_missing_score(std::string_view line);
 static std::string sf_get_line(ArticleNum a, HeaderLineType h);
 static void  sf_print_match(int indx);
@@ -761,15 +760,15 @@ static void sf_do_file(std::string_view fname)
 }
 
 //const std::string& text; // string to match on
-// int ind;                 // index into g_score_rules.entries
-static int score_match(const std::string &text, int ind)
+// int ind;                 // index into entries
+int ScoreRules::match(const std::string &text, int ind)
 {
-    if (g_score_rules.entries[ind].flags & 1) // pattern style match
+    if (entries[ind].flags & 1) // pattern style match
     {
-        if (g_score_rules.entries[ind].compex != nullptr)
+        if (entries[ind].compex != nullptr)
         {
             // we have a good pattern
-            if (g_score_rules.entries[ind].compex->execute(text))
+            if (entries[ind].compex->execute(text))
             {
                 return true;
             }
@@ -777,11 +776,10 @@ static int score_match(const std::string &text, int ind)
         return false;
     }
     // default case
-    const std::string     &s1 = g_score_rules.entries[ind].str1;
-    const std::string     &s2 = g_score_rules.entries[ind].str2;
-    const std::size_t      first = text.find(s1);
-    return first != std::string::npos &&
-           (s2.empty() || text.find(s2, first + s1.size()) != std::string::npos);
+    const std::string &s1 = entries[ind].str1;
+    const std::string &s2 = entries[ind].str2;
+    const std::size_t  first = text.find(s1);
+    return first != std::string::npos && (s2.empty() || text.find(s2, first + s1.size()) != std::string::npos);
 }
 
 int sf_score(ArticleNum a)
@@ -840,7 +838,7 @@ int sf_score(ArticleNum a)
                 {
                     g_score_rules.entries[j].flags |= 2; // rule has been applied.
                 }
-                if (score_match(s, j))
+                if (g_score_rules.match(s, j))
                 {
                     sum = sum + g_score_rules.entries[j].score;
                     if (h == FROM_LINE)
