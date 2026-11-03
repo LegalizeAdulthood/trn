@@ -98,6 +98,9 @@ extern SubjectIndex g_subj;
 
 struct ArticleOrder
 {
+    // TODO: private
+    void build_ptrs();
+
     std::vector<Article *> ptr_list; // the article-selector creates this
     Article              **ptr{};    // ditto -- used for article order
 };

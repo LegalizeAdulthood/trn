@@ -64,7 +64,6 @@ static int      article_order_number(const Article **art1, const Article **art2)
 static int      article_order_groups(const Article **art1, const Article **art2);
 static int      article_order_lines(const Article **art1, const Article **art2);
 static int      article_order_score(const Article **art1, const Article **art2);
-static void     build_article_ptrs();
 static Subject *prev_subject(Subject *sp, int subj_mask);
 
 void thread_init()
@@ -1510,7 +1509,7 @@ void sort_articles(Article *anchor)
 {
     int (*sort_procedure)(const Article **art1, const Article **art2);
 
-    build_article_ptrs();
+    g_art_order.build_ptrs();
     if (anchor && (anchor->m_flags & (AF_EXISTS | AF_FAKE)) == AF_EXISTS &&
         std::find(g_art_order.ptr_list.begin(), g_art_order.ptr_list.end(), anchor) == g_art_order.ptr_list.end())
     {
@@ -1560,22 +1559,22 @@ void sort_articles(Article *anchor)
                reinterpret_cast<int (*)(const void *, const void *)>(sort_procedure));
 }
 
-static void build_article_ptrs()
+void ArticleOrder::build_ptrs()
 {
     ArticleNum count = g_obj_count;
     int        desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
 
-    g_art_order.ptr = nullptr;
+    ptr = nullptr;
     g_sel_page.page_art = nullptr;
     g_sel_page.next_art = nullptr;
-    g_art_order.ptr_list.clear();
-    g_art_order.ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
+    ptr_list.clear();
+    ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
     for (ArticleNum an = g_cache.first(g_abs_first); count; an = g_cache.next(an))
     {
         Article *ap = g_cache.ptr(an);
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
-            g_art_order.ptr_list.push_back(ap);
+            ptr_list.push_back(ap);
             --count;
         }
     }
