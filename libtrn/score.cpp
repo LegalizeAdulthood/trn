@@ -90,7 +90,7 @@ void sc_init(bool pend_wait)
     // now is a good time to load a saved score-list which may exist
     if (!s_sc_rescoring)        // don't load if rescoring
     {
-        sc_load_scores();       // will be quiet if non-existent
+        g_saved_scores.load(); // will be quiet if non-existent
         ArticleNum i = g_first_art;
         if (g_sc_fill_read)
         {

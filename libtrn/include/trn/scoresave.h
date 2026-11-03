@@ -14,6 +14,8 @@
 
 struct SavedScoreStore
 {
+    void load();
+
     // TODO: private
     void add(std::string_view str);
     void del_group(std::string_view gname);
@@ -33,7 +35,6 @@ struct SavedScoreStore
 extern SavedScoreStore g_saved_scores;
 
 void       sc_sv_save_file();
-void       sc_load_scores();
 void       sc_save_scores();
 
 #endif

@@ -347,37 +347,37 @@ ArticleNum SavedScoreStore::make_line(ArticleNum a)
     return next_start;
 }
 
-void sc_load_scores()
+void SavedScoreStore::load()
 {
     // lots of cleanup needed here
     ArticleNum a{};
 
-    g_saved_scores.save_new = -1; // just in case we exit early
-    g_saved_scores.loaded = 0;
-    g_saved_scores.used = 0;
-    g_saved_scores.loaded_count = 0;
+    save_new = -1; // just in case we exit early
+    loaded = 0;
+    used = 0;
+    loaded_count = 0;
 
     // verbosity is only really useful for debugging...
     bool verbose = false;
 
-    if (g_saved_scores.lines.empty())
+    if (lines.empty())
     {
-        g_saved_scores.get_file();
+        get_file();
     }
 
     const std::string gname = file_exp("%C");
 
     std::size_t i;
-    for (i = 0; i < g_saved_scores.lines.size(); i++)
+    for (i = 0; i < lines.size(); i++)
     {
-        const std::string &line = g_saved_scores.lines[i];
+        const std::string &line = lines[i];
         if (!line.empty() && line.front() == '!'
             && std::string_view{line}.substr(1) == gname)
         {
             break;
         }
     }
-    if (i == g_saved_scores.lines.size())
+    if (i == lines.size())
     {
         return;         // no scores loaded
     }
@@ -388,9 +388,9 @@ void sc_load_scores()
         fmt::print("\nLoading scores...");
         std::fflush(stdout);
     }
-    while (i < g_saved_scores.lines.size())
+    while (i < lines.size())
     {
-        std::string &line = g_saved_scores.lines[i++];
+        std::string &line = lines[i++];
         if (line.empty())
         {
             continue;
@@ -408,11 +408,11 @@ void sc_load_scores()
         }
 
         case '.': // longer score line
-            a = g_saved_scores.use_line(std::string_view{line}.substr(1), a);
+            a = use_line(std::string_view{line}.substr(1), a);
             break;
 
         case '!': // group of shared file
-            i = g_saved_scores.lines.size();
+            i = lines.size();
             break;
 
         case 'v':  // version number
@@ -428,7 +428,7 @@ void sc_load_scores()
         } // switch
     } // while
 
-    g_saved_scores.loaded_count = g_saved_scores.loaded;
+    loaded_count = loaded;
     a = g_first_art;
     if (g_sa_mode_read_elig)
     {
@@ -456,11 +456,10 @@ void sc_load_scores()
     // sloppy plurals (:-)
     if (verbose)
     {
-        fmt::print("({}/{}/{} scores loaded/used/unscored)\n", g_saved_scores.loaded, g_saved_scores.used,
-                   total - scored);
+        fmt::print("({}/{}/{} scores loaded/used/unscored)\n", loaded, used, total - scored);
     }
 
-    g_saved_scores.save_new = total - scored;
+    save_new = total - scored;
     if (g_sa_initialized)
     {
         g_s_top_ent = -1;       // reset top of page
