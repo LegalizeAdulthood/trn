@@ -76,6 +76,17 @@ struct MimeParamViews
     std::vector<std::string_view> params;
 };
 
+struct HtmlRenderer
+{
+    HtmlFlags              flags;
+    int                    line_start;
+    std::vector<HtmlBlock> blocks;
+    std::string            tag_word;
+    int                    word_wrap_in_pre{};
+    int                    normal_word_wrap{};
+    int                    word_wrap{};
+};
+
 struct MimeSection
 {
     void mime_clear_struct();
@@ -93,16 +104,13 @@ struct MimeSection
     CharsetDecoder             m_decoder{};
     std::string                m_decoder_pending;
     std::optional<std::string> m_boundary;
-    int                        m_html_line_start;
-    std::vector<HtmlBlock>     m_html_blocks;
-    std::string                m_html_tag_word;
+    HtmlRenderer               html;
     MimeState                  m_type;
     MimeEncoding     m_encoding;
     short            m_part;
     short            m_total;
     short            m_boundary_len;
     MimeSectionFlags m_flags;
-    HtmlFlags        m_html;
 };
 
 struct MimeContext
