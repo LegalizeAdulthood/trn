@@ -9,6 +9,8 @@
 
 struct LastRunState
 {
+    void read();
+
     std::string newsgroup_name; // last newsgroup read
     long        time{};         // time last we ran
     long        active_size{};  // last known size of active file
@@ -22,7 +24,6 @@ extern LastRunState g_last_run;
 
 void last_init();
 void last_final();
-void read_last();
 void write_last();
 
 #endif

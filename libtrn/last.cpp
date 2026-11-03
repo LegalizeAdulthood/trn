@@ -30,7 +30,7 @@ void last_init()
     g_last_run.file = file_exp(LASTNAME);
 
     g_last_run.start_time = (long) std::time(nullptr);
-    read_last();
+    g_last_run.read();
 }
 
 void last_final()
@@ -39,23 +39,23 @@ void last_final()
     g_last_run.newsgroup_name.clear();
 }
 
-void read_last()
+void LastRunState::read()
 {
-    std::ifstream input{g_last_run.file};
+    std::ifstream input{file};
     std::string   last_newsgroup_name;
     if (std::getline(input, last_newsgroup_name))
     {
-        long old_last = g_last_run.time;
+        long old_last = time;
         if (!last_newsgroup_name.empty())
         {
-            g_last_run.newsgroup_name = last_newsgroup_name;
+            newsgroup_name = last_newsgroup_name;
         }
-        input >> g_last_run.time >> g_last_run.active_size >> g_last_run.new_time >> g_last_run.extra_num;
-        if (!g_last_run.new_time)
+        input >> time >> active_size >> new_time >> extra_num;
+        if (!new_time)
         {
-            g_last_run.new_time = g_last_run.start_time;
+            new_time = start_time;
         }
-        g_last_run.time = std::max(old_last, g_last_run.time);
+        time = std::max(old_last, time);
     }
 }
 

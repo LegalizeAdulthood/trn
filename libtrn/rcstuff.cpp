@@ -939,7 +939,7 @@ static bool open_newsrc(Newsrc *rp)
     }
     else
     {
-        read_last();
+        g_last_run.read();
         if (rp->data_source->m_flags & DF_REMOTE)
         {
             rp->data_source->m_act_sf.m_recent_cnt = g_last_run.active_size;
@@ -1869,7 +1869,7 @@ bool write_newsrcs(Multirc *mptr)
         }
         else
         {
-            read_last();
+            g_last_run.read();
             if (rp->data_source->m_flags & DF_REMOTE)
             {
                 g_last_run.active_size = rp->data_source->m_act_sf.m_recent_cnt;

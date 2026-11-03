@@ -130,7 +130,7 @@ TEST_F(LastTest, readLastLoadsCurrentState)
     g_last_run.new_time = 0;
     g_last_run.extra_num = 0;
 
-    read_last();
+    g_last_run.read();
 
     EXPECT_EQ("comp.lang.apl", g_last_run.newsgroup_name);
     EXPECT_EQ(99, g_last_run.time);
