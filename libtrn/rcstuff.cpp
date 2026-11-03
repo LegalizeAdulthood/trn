@@ -468,7 +468,7 @@ void unuse_multirc(Multirc *mptr)
     if (g_newsrc_hash)
     {
         close_cache();
-        hash_destroy(g_newsrc_hash);
+        delete g_newsrc_hash;
         g_newsrc_hash = nullptr;
         for (NewsgroupData &np : g_newsgroup_data)
         {
@@ -798,7 +798,7 @@ static bool open_newsrc(Newsrc *rp)
 
     if (g_newsrc_hash == nullptr)
     {
-        g_newsrc_hash = hash_create(3001, rcline_cmp);
+        g_newsrc_hash = new HashTable(3001, rcline_cmp);
     }
 
     // read in the .newsrc file
@@ -1725,7 +1725,7 @@ reask_bogus:
         {
             while ((np = g_ng_order.last()) != nullptr && np->m_to_read == TR_BOGUS)
             {
-                hash_delete(g_newsrc_hash, np->rc_name());
+                g_newsrc_hash->erase(np->rc_name());
                 clear_newsgroup_item(np);
                 g_ng_order.pop();
                 --g_newsgroup_count;
@@ -1770,7 +1770,7 @@ static void set_hash(NewsgroupData *np)
     HashDatum data;
     data.dat_ptr = (char *) np;
     data.dat_len = np->m_num_offset - 1;
-    hash_store(g_newsrc_hash, np->rc_name(), data);
+    g_newsrc_hash->store(np->rc_name(), data);
 }
 
 static void rebuild_newsgroup_hash()
@@ -1780,8 +1780,8 @@ static void rebuild_newsgroup_hash()
         return;
     }
 
-    hash_destroy(g_newsrc_hash);
-    g_newsrc_hash = hash_create(3001, rcline_cmp);
+    delete g_newsrc_hash;
+    g_newsrc_hash = new HashTable(3001, rcline_cmp);
     for (NewsgroupData &np : g_newsgroup_data)
     {
         if (!np.m_rc_line.empty())

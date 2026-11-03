@@ -23,54 +23,26 @@
 
 #define HASHMAG  ((char)0257)
 
-struct HashEntry
-{
-    HashDatum he_data;
-    int       he_key_len; // to help verify a match
-};
-
-struct HashTable
-{
-    std::vector<std::vector<HashEntry>> ht_addr;
-    char                                ht_magic;
-    HashCompareFunc                    *ht_cmp;
-};
-
-static std::size_t hash_bucket_index(HashTable *tbl, std::string_view key);
-static std::size_t hash_find(HashTable *tbl, std::size_t bucket_index, std::string_view key);
-static unsigned    hash(std::string_view key);
-static int         default_cmp(std::string_view key, HashDatum data);
-
 // size - a crude guide to size
-HashTable *hash_create(unsigned size, HashCompareFunc *cmp_func)
+HashTable::HashTable(unsigned size, HashCompareFunc *cmp_func) :
+    ht_addr(std::max(size, 1U)), // size < 1 is nonsense
+    ht_magic(HASHMAG),
+    ht_cmp(cmp_func == nullptr ? default_cmp : cmp_func)
 {
-    size = std::max(size, 1U); // size < 1 is nonsense
-    HashTable *tbl = new HashTable{};
-    tbl->ht_addr.resize(size);
-    tbl->ht_magic = HASHMAG;
-    tbl->ht_cmp = cmp_func == nullptr ? default_cmp : cmp_func;
-    return tbl;
 }
 
-// Free all the memory associated with tbl, erase the pointers to it, and
-// invalidate tbl to prevent further use via other pointers to it.
-//
-void hash_destroy(HashTable *tbl)
+// Invalidate the table before its entry storage is released.
+HashTable::~HashTable()
 {
-    if (BADTBL(tbl))
-    {
-        return;
-    }
-    tbl->ht_magic = 0; // de-certify this table
-    delete tbl;
+    ht_magic = 0; // de-certify this table
 }
 
-void hash_store(HashTable *tbl, std::string_view key, HashDatum data)
+void HashTable::store(std::string_view key, HashDatum data)
 {
     const int               key_len = static_cast<int>(key.size());
-    const std::size_t       bucket_index = hash_bucket_index(tbl, key);
-    const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
-    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+    const std::size_t       bucket_index = this->bucket_index(key);
+    const std::size_t       entry_index = find(bucket_index, key);
+    std::vector<HashEntry> &bucket = ht_addr[bucket_index];
     if (entry_index == bucket.size()) // absent; allocate an entry
     {
         bucket.push_back({data, key_len});
@@ -79,11 +51,11 @@ void hash_store(HashTable *tbl, std::string_view key, HashDatum data)
     bucket[entry_index].he_data = data; // supersede any old data for this key
 }
 
-void hash_delete(HashTable *tbl, std::string_view key)
+void HashTable::erase(std::string_view key)
 {
-    const std::size_t       bucket_index = hash_bucket_index(tbl, key);
-    const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
-    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+    const std::size_t       bucket_index = this->bucket_index(key);
+    const std::size_t       entry_index = find(bucket_index, key);
+    std::vector<HashEntry> &bucket = ht_addr[bucket_index];
     if (entry_index == bucket.size()) // absent
     {
         return;
@@ -97,9 +69,14 @@ HashLookupCursor g_hash_cursor{};
 // Table validation and comparator callbacks retain their existing side effects.
 HashDatum HashLookupCursor::fetch(HashTable *tbl, std::string_view key)
 {
+    if (tbl == nullptr)
+    {
+        fmt::print(stderr, "Hash table is invalid.");
+        finalize(1);
+    }
     const int               key_len = static_cast<int>(key.size());
-    const std::size_t       bucket_index = hash_bucket_index(tbl, key);
-    const std::size_t       entry_index = hash_find(tbl, bucket_index, key);
+    const std::size_t       bucket_index = tbl->bucket_index(key);
+    const std::size_t       entry_index = tbl->find(bucket_index, key);
     std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
 
     table = tbl;
@@ -157,24 +134,24 @@ void HashLookupCursor::walk(HashTable *tbl, HashWalkFunc *node_func, int extra)
     }
 }
 
-static std::size_t hash_bucket_index(HashTable *tbl, std::string_view key)
+std::size_t HashTable::bucket_index(std::string_view key)
 {
-    if (BADTBL(tbl))
+    if (ht_magic != HASHMAG)
     {
         fmt::print(stderr, "Hash table is invalid.");
         finalize(1);
     }
-    return hash(key) % tbl->ht_addr.size();
+    return hash(key) % ht_addr.size();
 }
 
-static std::size_t hash_find(HashTable *tbl, std::size_t bucket_index, std::string_view key)
+std::size_t HashTable::find(std::size_t bucket_index, std::string_view key)
 {
     const int               key_len = static_cast<int>(key.size());
-    std::vector<HashEntry> &bucket = tbl->ht_addr[bucket_index];
+    std::vector<HashEntry> &bucket = ht_addr[bucket_index];
     for (std::size_t entry_index = 0; entry_index < bucket.size(); ++entry_index)
     {
         HashEntry &entry = bucket[entry_index];
-        if (entry.he_key_len == key_len && !tbl->ht_cmp(key, entry.he_data))
+        if (entry.he_key_len == key_len && !ht_cmp(key, entry.he_data))
         {
             return entry_index;
         }
@@ -183,7 +160,7 @@ static std::size_t hash_find(HashTable *tbl, std::size_t bucket_index, std::stri
 }
 
 // not yet taken modulus table size
-static unsigned hash(std::string_view key)
+unsigned HashTable::hash(std::string_view key)
 {
     unsigned hash_value = 0;
 
@@ -194,7 +171,7 @@ static unsigned hash(std::string_view key)
     return hash_value;
 }
 
-static int default_cmp(std::string_view key, HashDatum data)
+int HashTable::default_cmp(std::string_view key, HashDatum data)
 {
     // We already know that the lengths are equal, just compare the strings
     return key.compare(std::string_view{data.dat_ptr, key.size()});

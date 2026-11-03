@@ -1008,7 +1008,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
 
     close();
 
-    m_hp = hash_create(3001, source_file_cmp);
+    m_hp = new HashTable(3001, source_file_cmp);
     m_fp = fp;
 
     if (!has_filename)
@@ -1103,7 +1103,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
         const std::size_t index = m_lines.size();
         m_line_positions.push_back(pos);
         m_lines.push_back(line);
-        hash_store(m_hp, std::string_view{m_lines.back()}.substr(0, key_len), source_file_hash_datum(this, index));
+        m_hp->store(std::string_view{m_lines.back()}.substr(0, key_len), source_file_hash_datum(this, index));
         pos += static_cast<long>(line.size());
     }
     set_spin(SPIN_OFF);
@@ -1172,7 +1172,7 @@ std::string_view SourceFile::append(std::string_view line, int key_len)
     m_line_positions.push_back(pos);
     m_lines.push_back(std::move(stored_line));
     const std::string &stored = m_lines.back();
-    hash_store(m_hp, std::string_view{stored.data(), static_cast<std::size_t>(key_len)},
+    m_hp->store(std::string_view{stored.data(), static_cast<std::size_t>(key_len)},
                source_file_hash_datum(this, index));
 
     return stored;
@@ -1203,7 +1203,7 @@ void SourceFile::close()
     }
     if (m_hp)
     {
-        hash_destroy(m_hp);
+        delete m_hp;
         m_hp = nullptr;
     }
     m_lines.clear();

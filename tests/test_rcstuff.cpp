@@ -191,7 +191,7 @@ protected:
         m_data_source.close();
         if (g_newsrc_hash != nullptr && g_newsrc_hash != m_old_newsrc_hash)
         {
-            hash_destroy(g_newsrc_hash);
+            delete g_newsrc_hash;
             g_newsrc_hash = nullptr;
         }
         drain_macro_buffer();
@@ -724,7 +724,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupPromptsForMissingNewsrcGroup)
     newsrc.flags = RF_ADD_GROUPS | RF_ACTIVE;
     multirc.m_first = &newsrc;
     g_multirc = &multirc;
-    g_newsrc_hash = hash_create(3001, nullptr);
+    g_newsrc_hash = new HashTable(3001, nullptr);
 
     g_pushback.push('n');
     testing::internal::CaptureStdout();
@@ -747,7 +747,7 @@ TEST_F(NewsrcRotationTest, getNewsgroupAppendsUnsubscribedMissingGroup)
     newsrc.flags = RF_ADD_GROUPS | RF_ACTIVE;
     multirc.m_first = &newsrc;
     g_multirc = &multirc;
-    g_newsrc_hash = hash_create(3001, nullptr);
+    g_newsrc_hash = new HashTable(3001, nullptr);
     g_append_unsub = true;
 
     g_pushback.push('n');

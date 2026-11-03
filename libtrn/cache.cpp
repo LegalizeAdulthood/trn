@@ -174,12 +174,12 @@ void SubjectIndex::clear()
 
     if (hash)
     {
-        hash_destroy(hash);
+        delete hash;
         hash = nullptr;
     }
     if (short_hash)
     {
-        hash_destroy(short_hash);
+        delete short_hash;
         short_hash = nullptr;
     }
     // Free all the subjects.
@@ -197,7 +197,7 @@ void SubjectIndex::clear_short_hash()
 {
     if (short_hash)
     {
-        hash_destroy(short_hash);
+        delete short_hash;
         short_hash = nullptr;
     }
 }
@@ -236,7 +236,7 @@ void build_cache()
     g_cache.cached_ng = g_newsgroup_ptr;
     g_cache.cached_time = std::time(nullptr);
     g_cache.article_list.clear();
-    g_subj.hash = hash_create(991, subject_cmp); // TODO: pick a better size
+    g_subj.hash = new HashTable(991, subject_cmp); // TODO: pick a better size
 
     set_first_art(g_newsgroup_ptr->rc_numbers());
     g_cache.first_cached = g_thread_always ? g_abs_first : g_first_art;
@@ -278,7 +278,7 @@ void SubjectIndex::check_for_near_subj(Subject *current_subj)
     Subject *sp;
     if (!short_hash)
     {
-        short_hash = hash_create(401, subject_cmp); // TODO: pick a better size
+        short_hash = new HashTable(401, subject_cmp); // TODO: pick a better size
         sp = first;
     }
     else
@@ -343,7 +343,7 @@ void SubjectIndex::remove_empty(const Subject *subj)
     {
         sp->m_next->m_prev = sp->m_prev;
     }
-    hash_delete(hash, sp->stripped_view());
+    hash->erase(sp->stripped_view());
     delete sp;
     count--;
 }
@@ -426,10 +426,10 @@ void SubjectIndex::rekey(Subject *subj, std::string &new_subj)
 {
     HashDatum data;
 
-    hash_delete(hash, subj->stripped_view());
+    hash->erase(subj->stripped_view());
     subj->m_str = std::move(new_subj);
     data.dat_ptr = (char *) subj;
-    hash_store(hash, subj->stripped_view(), data);
+    hash->store(subj->stripped_view(), data);
 }
 
 Subject *SubjectIndex::find_or_create(std::string new_subj, std::string_view new_key)

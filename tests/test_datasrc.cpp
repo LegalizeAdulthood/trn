@@ -38,7 +38,7 @@ class SourceFileOwner
 public:
     SourceFileOwner()
     {
-        m_source.m_hp = hash_create(17, nullptr);
+        m_source.m_hp = new HashTable(17, nullptr);
     }
 
     SourceFileOwner(const SourceFileOwner &) = delete;

@@ -92,7 +92,7 @@ void kill_file_init()
         std::FILE *fp = std::fopen(file_exp(kill_threads).c_str(), "r");
         if (fp != nullptr)
         {
-            g_msg_id_hash = hash_create(1999, msg_id_cmp);
+            g_msg_id_hash = new HashTable(1999, msg_id_cmp);
             for (std::string thread_line = get_a_line(fp); !thread_line.empty(); thread_line = get_a_line(fp))
             {
                 const std::string_view line{thread_line};

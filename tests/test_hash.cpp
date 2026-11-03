@@ -15,7 +15,7 @@ class HashTableOwner
 {
 public:
     explicit HashTableOwner(unsigned size = 17, HashCompareFunc cmp_func = nullptr) :
-        m_table{hash_create(size, cmp_func)}
+        m_table{new HashTable(size, cmp_func)}
     {
     }
 
@@ -24,7 +24,7 @@ public:
 
     ~HashTableOwner()
     {
-        hash_destroy(m_table);
+        delete m_table;
     }
 
     HashTable *get() const
@@ -90,9 +90,9 @@ protected:
 
 void HashWalkTest::store_values(unsigned alpha_length, unsigned beta_length, unsigned gamma_length)
 {
-    hash_store(m_table.get(), m_alpha, make_datum(m_alpha, alpha_length));
-    hash_store(m_table.get(), m_beta, make_datum(m_beta, beta_length));
-    hash_store(m_table.get(), m_gamma, make_datum(m_gamma, gamma_length));
+    m_table.get()->store(m_alpha, make_datum(m_alpha, alpha_length));
+    m_table.get()->store(m_beta, make_datum(m_beta, beta_length));
+    m_table.get()->store(m_gamma, make_datum(m_gamma, gamma_length));
 }
 
 } // namespace
@@ -113,8 +113,8 @@ TEST(HashTest, storeAndFetchFindsCollidingEntries)
     std::string    alpha{"alpha"};
     std::string    beta{"beta"};
 
-    hash_store(table.get(), alpha, make_datum(alpha, 11));
-    hash_store(table.get(), beta, make_datum(beta, 22));
+    table.get()->store(alpha, make_datum(alpha, 11));
+    table.get()->store(beta, make_datum(beta, 22));
 
     const HashDatum alpha_data = g_hash_cursor.fetch(table.get(), alpha);
     const HashDatum beta_data = g_hash_cursor.fetch(table.get(), beta);
@@ -133,7 +133,7 @@ TEST(HashTest, storeAcceptsBoundedStringViewKeys)
     const std::size_t      key_pos = buffer.find(key);
     const std::string_view key_view{buffer.data() + key_pos, key.size()};
 
-    hash_store(table.get(), key_view, make_datum(key, 33));
+    table.get()->store(key_view, make_datum(key, 33));
 
     const HashDatum data = g_hash_cursor.fetch(table.get(), key);
 
@@ -146,8 +146,8 @@ TEST(HashTest, storeReplacesExistingDatum)
     HashTableOwner table{};
     std::string    alpha{"alpha"};
 
-    hash_store(table.get(), alpha, make_datum(alpha, 1));
-    hash_store(table.get(), alpha, make_datum(alpha, 2));
+    table.get()->store(alpha, make_datum(alpha, 1));
+    table.get()->store(alpha, make_datum(alpha, 2));
 
     const HashDatum data = g_hash_cursor.fetch(table.get(), alpha);
 
@@ -167,7 +167,7 @@ TEST_F(StoreLastHashTest, insertsTheLastMissingFetch)
 
 TEST_F(StoreLastHashTest, replacesTheLastExistingFetch)
 {
-    hash_store(m_table.get(), m_alpha, make_datum(m_alpha, 3));
+    m_table.get()->store(m_alpha, make_datum(m_alpha, 3));
     const HashDatum existing = g_hash_cursor.fetch(m_table.get(), m_alpha);
     ASSERT_EQ(3U, existing.dat_len);
 
@@ -182,10 +182,10 @@ TEST(HashTest, deleteRemovesOnlyMatchingKey)
     std::string    alpha{"alpha"};
     std::string    beta{"beta"};
 
-    hash_store(table.get(), alpha, make_datum(alpha, 10));
-    hash_store(table.get(), beta, make_datum(beta, 20));
+    table.get()->store(alpha, make_datum(alpha, 10));
+    table.get()->store(beta, make_datum(beta, 20));
 
-    hash_delete(table.get(), alpha);
+    table.get()->erase(alpha);
 
     EXPECT_EQ(nullptr, g_hash_cursor.fetch(table.get(), alpha).dat_ptr);
     EXPECT_EQ(20U, g_hash_cursor.fetch(table.get(), beta).dat_len);
@@ -218,7 +218,7 @@ TEST(HashTest, customComparatorIsUsed)
     HashTableOwner table{1, case_insensitive_cmp};
     std::string    alpha{"Alpha"};
 
-    hash_store(table.get(), alpha, make_datum(alpha, 44));
+    table.get()->store(alpha, make_datum(alpha, 44));
 
     const HashDatum data = g_hash_cursor.fetch(table.get(), "alpha");
 

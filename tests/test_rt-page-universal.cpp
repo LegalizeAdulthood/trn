@@ -44,13 +44,13 @@ void UniversalPageDisplayState::SetUp()
     g_sel_page.next_univ_index = {};
     g_univ.title = "Reading menu";
     g_univ.level = 2;
-    g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
+    g_newsrc_hash = new HashTable(17, [](std::string_view key, HashDatum data)
                                 { return key.compare(reinterpret_cast<NewsgroupData *>(data.dat_ptr)->rc_name()); });
 }
 
 void UniversalPageDisplayState::TearDown()
 {
-    hash_destroy(g_newsrc_hash);
+    delete g_newsrc_hash;
     g_newsrc_hash = m_old_hash;
     g_univ.items = std::move(m_old_items);
     g_sel_page.page_univ_index = m_old_page;
@@ -77,7 +77,7 @@ NewsgroupData &UniversalPageDisplayState::add_news(std::string_view name, Articl
     group.m_rc = &m_newsrc;
     group.m_ng_max = ArticleNum{10};
     group.m_rc_line.append("1-5");
-    hash_store(g_newsrc_hash, name, HashDatum{reinterpret_cast<char *>(&group), static_cast<unsigned>(name.size())});
+    g_newsrc_hash->store(name, HashDatum{reinterpret_cast<char *>(&group), static_cast<unsigned>(name.size())});
     return group;
 }
 

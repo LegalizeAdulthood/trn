@@ -25,14 +25,14 @@ protected:
         m_old_abs_first = g_abs_first;
         m_old_change_thread_count = g_kf_change_thread_cnt;
 
-        g_msg_id_hash = hash_create(17, msg_id_cmp);
+        g_msg_id_hash = new HashTable(17, msg_id_cmp);
         g_abs_first = ArticleNum{1};
         g_kf_change_thread_cnt = 0;
     }
 
     void TearDown() override
     {
-        hash_destroy(g_msg_id_hash);
+        delete g_msg_id_hash;
         g_msg_id_hash = m_old_hash;
         g_abs_first = m_old_abs_first;
         g_kf_change_thread_cnt = m_old_change_thread_count;
@@ -49,7 +49,7 @@ private:
 TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
 {
     HashDatum data = make_pending_msg_id("<case@example.com>", AUTO_SEL_THD | 1);
-    hash_store(g_msg_id_hash, "<case@example.com>", data);
+    g_msg_id_hash->store("<case@example.com>", data);
 
     constexpr std::string_view lookup{"<case@EXAMPLE.COM>"};
 
@@ -75,7 +75,7 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
 TEST_F(MessageIdHashTest, getArticleUsesOnlyTheProvidedView)
 {
     HashDatum data = make_pending_msg_id("<case@example.com>", AUTO_SEL_THD | 1);
-    hash_store(g_msg_id_hash, "<case@example.com>", data);
+    g_msg_id_hash->store("<case@example.com>", data);
 
     constexpr std::string_view message_id{"<case@EXAMPLE.COM>"};
     std::string                lookup = std::string{message_id} + " trailing";

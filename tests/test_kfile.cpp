@@ -81,7 +81,7 @@ protected:
         g_kfs_thread_change_set = KFS_NONE;
         g_kf_change_thread_cnt = 0;
         g_local_kfp = nullptr;
-        g_msg_id_hash = hash_create(17, msg_id_cmp);
+        g_msg_id_hash = new HashTable(17, msg_id_cmp);
         g_cache.article_list.clear();
         g_newsgroup_ptr = nullptr;
         g_priv_dir.clear();
@@ -111,7 +111,7 @@ protected:
         }
         if (g_msg_id_hash != nullptr && g_msg_id_hash != m_old_msg_id_hash)
         {
-            hash_destroy(g_msg_id_hash);
+            delete g_msg_id_hash;
         }
 
         g_in_ng = m_old_in_ng;
@@ -288,7 +288,7 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     article->m_msg_id = "<case@example.com>";
     article->m_flags = AF_EXISTS;
     article->m_auto_flags = AUTO_SEL_THD;
-    hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
+    g_msg_id_hash->store(article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
 
     m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
 
@@ -340,7 +340,7 @@ TEST_F(KillFileEditTest, editLocalKillFileAppliesThreadCommand)
     g_in_ng = true;
     Article *article = g_cache.ptr(ArticleNum{1});
     article->m_msg_id = "<case@example.com>";
-    hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
+    g_msg_id_hash->store(article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
 
     m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
     expect_editor();
@@ -386,7 +386,7 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
     fs::create_directories(kill_file.parent_path());
     std::ofstream{kill_file} << "<case@example.com> + " << day_num << "\n";
 
-    hash_destroy(g_msg_id_hash);
+    delete g_msg_id_hash;
     g_msg_id_hash = nullptr;
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
@@ -415,7 +415,7 @@ TEST_F(KillFileEditTest, defaultThreadKillFileUsesTrnDirectory)
     article->m_msg_id = "<case@example.com>";
     article->m_flags = AF_EXISTS;
     article->m_auto_flags = AUTO_SEL_THD;
-    hash_store(g_msg_id_hash, article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
+    g_msg_id_hash->store(article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
     g_kf_change_thread_cnt = 1;
     g_kf_state |= KFS_THREAD_CHANGES;
 
@@ -433,7 +433,7 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileAllowsTrailingAgeText)
     fs::create_directories(kill_file.parent_path());
     std::ofstream{kill_file} << "<case@example.com> + " << day_num << "junk\n";
 
-    hash_destroy(g_msg_id_hash);
+    delete g_msg_id_hash;
     g_msg_id_hash = nullptr;
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());

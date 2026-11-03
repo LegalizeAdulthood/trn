@@ -305,7 +305,7 @@ protected:
         g_nav.target.art = nullptr;
         g_nav.recent.art = nullptr;
         g_nav.current.art = nullptr;
-        g_newsrc_hash = hash_create(17, compare_newsgroup_name);
+        g_newsrc_hash = new HashTable(17, compare_newsgroup_name);
         g_multirc = &m_multirc;
         g_data_source = &m_data_source;
         init_nntp();
@@ -407,7 +407,7 @@ protected:
         m_data_source.close();
         if (g_newsrc_hash != nullptr && g_newsrc_hash != m_old_newsrc_hash)
         {
-            hash_destroy(g_newsrc_hash);
+            delete g_newsrc_hash;
             g_newsrc_hash = nullptr;
         }
 
@@ -535,7 +535,7 @@ protected:
         HashDatum data{};
         data.dat_ptr = reinterpret_cast<char *>(&group);
         data.dat_len = static_cast<unsigned>(group.rc_name().size());
-        hash_store(g_newsrc_hash, group.rc_name(), data);
+        g_newsrc_hash->store(group.rc_name(), data);
     }
 
     static std::vector<std::string> test_article_header()
@@ -2252,7 +2252,7 @@ void LocalSpoolArticleTest::SetUp()
 void LocalSpoolArticleTest::TearDown()
 {
     close_cache();
-    hash_destroy(g_msg_id_hash);
+    delete g_msg_id_hash;
     g_msg_id_hash = m_old_msg_id_hash;
     g_subj.first = m_old_first_subject;
     g_subj.last = m_old_last_subject;

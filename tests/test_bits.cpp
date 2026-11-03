@@ -256,7 +256,7 @@ protected:
         m_old_output_chase_phrase = g_output_chase_phrase;
 
         g_cache.article_list.clear();
-        g_newsrc_hash = hash_create(17, compare_newsgroup_name);
+        g_newsrc_hash = new HashTable(17, compare_newsgroup_name);
         g_data_source = &m_data_source;
         g_newsgroup_name = "comp.lang.apl";
         g_newsgroup_ptr = &m_current_group;
@@ -277,7 +277,7 @@ protected:
     void TearDown() override
     {
         chase_xrefs(false);
-        hash_destroy(g_newsrc_hash);
+        delete g_newsrc_hash;
         g_cache.article_list = std::move(m_old_article_list);
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_data_source = m_old_data_source;
@@ -310,7 +310,7 @@ protected:
         HashDatum data{};
         data.dat_ptr = reinterpret_cast<char *>(&group);
         data.dat_len = static_cast<unsigned>(group.rc_name().size());
-        hash_store(g_newsrc_hash, group.rc_name(), data);
+        g_newsrc_hash->store(group.rc_name(), data);
     }
 
     Article *add_xref_article()

@@ -304,7 +304,7 @@ protected:
         g_data_sources.clear();
         g_data_sources.reserve(4);
         g_data_source = nullptr;
-        g_newsrc_hash = hash_create(17, nullptr);
+        g_newsrc_hash = new HashTable(17, nullptr);
         g_nntp.gets_clear_buffer();
         m_connection = std::make_shared<testing::StrictMock<MockNNTPConnection>>();
         g_quick_start = false;
@@ -342,7 +342,7 @@ protected:
 
         if (g_newsrc_hash != nullptr && g_newsrc_hash != m_old_newsrc_hash)
         {
-            hash_destroy(g_newsrc_hash);
+            delete g_newsrc_hash;
         }
         g_newsrc_hash = m_old_newsrc_hash;
         g_nntp.gets_clear_buffer();
@@ -1062,8 +1062,8 @@ TEST_F(SelectorGroupListingTest, mergesDuplicateGroupsFromMultipleSources)
 TEST_F(SelectorGroupListingTest, includesUnsubscribedNewsrcEntriesAndOmitsSubscribedGroups)
 {
     add_active_source("comp.subscribed 7 1 y\ncomp.unsubscribed 4 1 y\nnews.test 3 1 y\n");
-    hash_destroy(g_newsrc_hash);
-    g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
+    delete g_newsrc_hash;
+    g_newsrc_hash = new HashTable(17, [](std::string_view key, HashDatum data)
                                 { return key.compare(reinterpret_cast<NewsgroupData *>(data.dat_ptr)->m_rc_line); });
     NewsgroupData subscribed{};
     subscribed.m_rc_line = "comp.subscribed";
@@ -1071,8 +1071,8 @@ TEST_F(SelectorGroupListingTest, includesUnsubscribedNewsrcEntriesAndOmitsSubscr
     NewsgroupData unsubscribed{};
     unsubscribed.m_rc_line = "comp.unsubscribed";
     unsubscribed.m_to_read = TR_UNSUB;
-    hash_store(g_newsrc_hash, subscribed.m_rc_line, {reinterpret_cast<char *>(&subscribed), 0});
-    hash_store(g_newsrc_hash, unsubscribed.m_rc_line, {reinterpret_cast<char *>(&unsubscribed), 0});
+    g_newsrc_hash->store(subscribed.m_rc_line, {reinterpret_cast<char *>(&subscribed), 0});
+    g_newsrc_hash->store(unsubscribed.m_rc_line, {reinterpret_cast<char *>(&unsubscribed), 0});
 
     const std::string output = last_display(run_listing("Ogq"));
 

@@ -119,7 +119,7 @@ void SelectorPagingStateTest::SetUp()
     g_univ.level = 1;
     g_selected_count = TR_NONE;
     g_selected_subj_cnt = 0;
-    g_newsrc_hash = hash_create(17, [](std::string_view key, HashDatum data)
+    g_newsrc_hash = new HashTable(17, [](std::string_view key, HashDatum data)
                                 { return key.compare(reinterpret_cast<NewsgroupData *>(data.dat_ptr)->rc_name()); });
 }
 
@@ -161,7 +161,7 @@ void SelectorPagingStateTest::TearDown()
     g_sel_page.next_univ_index = m_old_menu_next;
     g_univ.title = m_old_title;
     g_univ.level = m_old_level;
-    hash_destroy(g_newsrc_hash);
+    delete g_newsrc_hash;
     g_newsrc_hash = m_old_hash;
     NewsgroupPageDisplayState::TearDown();
 }
@@ -260,8 +260,8 @@ void SelectorPagingStateTest::prepare_menu(int count)
         group.m_rc = &m_newsrc;
         group.m_ng_max = ArticleNum{count};
         group.m_rc_line += g_sel.rereading ? "1-6" : "0";
-        hash_store(g_newsrc_hash, group.rc_name(),
-                   HashDatum{reinterpret_cast<char *>(&group), static_cast<unsigned>(group.rc_name().size())});
+        g_newsrc_hash->store(group.rc_name(), HashDatum{reinterpret_cast<char *>(&group),
+                                                        static_cast<unsigned>(group.rc_name().size())});
     }
     g_selected_count = count ? ArticleUnread{2} : TR_NONE;
     for (int index = 0; index < count; ++index)

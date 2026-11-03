@@ -139,7 +139,7 @@ protected:
     void SetUp() override
     {
         m_old_newsrc_hash = g_newsrc_hash;
-        g_newsrc_hash = hash_create(17, compare_newsgroup_name);
+        g_newsrc_hash = new HashTable(17, compare_newsgroup_name);
 
         m_newsrc.flags = RF_NONE;
         m_newsrc.data_source = &m_data_source;
@@ -152,7 +152,7 @@ protected:
 
     void TearDown() override
     {
-        hash_destroy(g_newsrc_hash);
+        delete g_newsrc_hash;
         g_newsrc_hash = m_old_newsrc_hash;
     }
 
@@ -165,7 +165,7 @@ protected:
         HashDatum data{};
         data.dat_ptr = reinterpret_cast<char *>(&m_group);
         data.dat_len = static_cast<unsigned>(m_group.rc_name().size());
-        hash_store(g_newsrc_hash, m_group.rc_name(), data);
+        g_newsrc_hash->store(m_group.rc_name(), data);
     }
 
     void add_article(ArticleNum art_num)
@@ -199,7 +199,7 @@ protected:
     void SetUp() override
     {
         m_old_newsrc_hash = g_newsrc_hash;
-        g_newsrc_hash = hash_create(17, compare_newsgroup_name);
+        g_newsrc_hash = new HashTable(17, compare_newsgroup_name);
 
         m_newsrc.flags = RF_NONE;
         m_group.m_rc = &m_newsrc;
@@ -210,7 +210,7 @@ protected:
 
     void TearDown() override
     {
-        hash_destroy(g_newsrc_hash);
+        delete g_newsrc_hash;
         g_newsrc_hash = m_old_newsrc_hash;
     }
 
@@ -234,7 +234,7 @@ protected:
         HashDatum data{};
         data.dat_ptr = reinterpret_cast<char *>(&m_group);
         data.dat_len = static_cast<unsigned>(m_group.rc_name().size());
-        hash_store(g_newsrc_hash, m_group.rc_name(), data);
+        g_newsrc_hash->store(m_group.rc_name(), data);
     }
 
     HashTable    *m_old_newsrc_hash{};

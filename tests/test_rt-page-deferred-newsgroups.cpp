@@ -224,7 +224,7 @@ void DeferredNewsgroupCleanupTest::SetUp()
     {
         (void) read_tty_char();
     }
-    g_newsrc_hash = hash_create(17, nullptr);
+    g_newsrc_hash = new HashTable(17, nullptr);
     g_current_newsgroup = nullptr;
     g_recent_newsgroup = nullptr;
     g_start_here = nullptr;
@@ -239,7 +239,7 @@ void DeferredNewsgroupCleanupTest::TearDown()
     {
         (void) read_tty_char();
     }
-    hash_destroy(g_newsrc_hash);
+    delete g_newsrc_hash;
     g_newsrc_hash = m_old_hash;
     g_current_newsgroup = m_old_current;
     g_recent_newsgroup = m_old_recent;

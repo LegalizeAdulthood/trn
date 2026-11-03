@@ -81,7 +81,7 @@ void thread_open()
 
     if (!g_msg_id_hash)
     {
-        g_msg_id_hash = hash_create(1999, msg_id_cmp); // TODO: pick a better size
+        g_msg_id_hash = new HashTable(1999, msg_id_cmp); // TODO: pick a better size
     }
     if (g_threaded_group)
     {
