@@ -282,13 +282,13 @@ beginning:
     {
         if (cheating)
         {
-            set_spin(SPIN_BACKGROUND);
+            g_progress.set_spin(SPIN_BACKGROUND);
         }
         else
         {
             int lots2do = ((g_data_source->m_flags & DF_REMOTE)? g_net_speed : 20) * 100;
             g_progress.estimate = std::min(g_progress.estimate, g_progress.todo);
-            set_spin(g_progress.estimate > lots2do ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+            g_progress.set_spin(g_progress.estimate > lots2do ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
         }
         g_data_source->m_ov_opened = started_request;
     }
@@ -429,7 +429,7 @@ exit:
         g_cache.first_cached = real_first;
         g_cache.cached_all_in_range = true;
     }
-    set_spin(SPIN_POP);
+    g_progress.set_spin(SPIN_POP);
     return success;
 }
 

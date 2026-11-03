@@ -1004,7 +1004,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
         term_down(1);
         return 0;
     }
-    set_spin(g_progress.todo > 0 ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+    g_progress.set_spin(g_progress.todo > 0 ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
 
     close();
 
@@ -1013,7 +1013,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
 
     if (!has_filename)
     {
-        set_spin(SPIN_OFF);
+        g_progress.set_spin(SPIN_OFF);
         return 1;
     }
 
@@ -1035,7 +1035,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 fmt::print("\nError getting {} file.\n", fetch_cmd);
                 term_down(2);
                 close();
-                set_spin(SPIN_OFF);
+                g_progress.set_spin(SPIN_OFF);
                 return 0;
             }
             if (g_nntp.link.at_list_end(remote_line))
@@ -1106,7 +1106,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
         m_hp->store(std::string_view{m_lines.back()}.substr(0, key_len), source_file_hash_datum(this, index));
         pos += static_cast<long>(line.size());
     }
-    set_spin(SPIN_OFF);
+    g_progress.set_spin(SPIN_OFF);
 
     if (use_server)
     {

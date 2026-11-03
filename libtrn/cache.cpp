@@ -782,7 +782,7 @@ void cache_until_key()
         sc_look_ahead(true, true);
     }
 
-    set_spin(SPIN_OFF);
+    g_progress.set_spin(SPIN_OFF);
     g_untrim_cache = false;
 #endif
     check_data_sources();
@@ -797,7 +797,7 @@ bool cache_subjects()
     {
         return true;
     }
-    set_spin(SPIN_BACKGROUND);
+    g_progress.set_spin(SPIN_BACKGROUND);
     for (an = g_cache.first(s_subj_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
@@ -822,7 +822,7 @@ static bool cache_xrefs()
     {
         return true;
     }
-    set_spin(SPIN_BACKGROUND);
+    g_progress.set_spin(SPIN_BACKGROUND);
     for (an = g_cache.first(s_xref_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
@@ -851,7 +851,7 @@ static bool cache_all_arts()
     }
 
     // turn it on as late as possible to avoid fseek()ing open art
-    set_spin(SPIN_BACKGROUND);
+    g_progress.set_spin(SPIN_BACKGROUND);
     if (g_cache.last_cached < g_last_art)
     {
         if (g_data_source->m_ov_opened)
@@ -902,7 +902,7 @@ static bool cache_unread_arts()
     {
         return true;
     }
-    set_spin(SPIN_BACKGROUND);
+    g_progress.set_spin(SPIN_BACKGROUND);
     return art_data(article_after(g_cache.last_cached), g_last_art, true, false);
 }
 #endif
@@ -918,12 +918,12 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
 
     if (cheating)
     {
-        set_spin(SPIN_BACKGROUND);
+        g_progress.set_spin(SPIN_BACKGROUND);
     }
     else
     {
         int lots_to_do = ((g_data_source->m_flags & DF_REMOTE)? g_net_speed : 20) * 25;
-        set_spin(g_progress.estimate > lots_to_do ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+        g_progress.set_spin(g_progress.estimate > lots_to_do ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
     for (i = g_cache.first(first); i <= last; i = g_cache.next(i))
@@ -958,7 +958,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
             }
         }
     }
-    set_spin(SPIN_POP);
+    g_progress.set_spin(SPIN_POP);
     i = std::min(i, last);
     g_cache.last_cached = std::max(i, g_cache.last_cached);
     if (i == last)
@@ -1014,7 +1014,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
                plural(count.value_of()));
     term_down(1);
 
-    set_spin(SPIN_FOREGROUND);
+    g_progress.set_spin(SPIN_FOREGROUND);
 
     if (first < g_cache.first_cached)
     {
@@ -1038,7 +1038,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
         success = art_data(article_after(g_cache.last_cached), last, false, all_arts);
         g_cache.cached_all_in_range = (all_arts && success);
     }
-    set_spin(SPIN_POP);
+    g_progress.set_spin(SPIN_POP);
     return success;
 }
 

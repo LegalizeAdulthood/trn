@@ -178,14 +178,14 @@ void sc_init(bool pend_wait)
         }
         if (waitflag)
         {
-            set_spin(SPIN_FOREGROUND);
+            g_progress.set_spin(SPIN_FOREGROUND);
             s_sc_do_spin = true;                // really do it
         }
         sc_look_ahead(true,waitflag);    // jump in *now*
         if (waitflag)
         {
             s_sc_do_spin = false;
-            set_spin(SPIN_POP);
+            g_progress.set_spin(SPIN_POP);
         }
     }
     if (g_sf_verbose)
@@ -457,7 +457,7 @@ static void sc_rescore_arts()
     }
     // I think s_sc_do_spin will always be false, but why take chances?
     bool old_spin = s_sc_do_spin;
-    set_spin(SPIN_FOREGROUND);
+    g_progress.set_spin(SPIN_FOREGROUND);
     s_sc_do_spin = true; // amuse the user
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
@@ -467,7 +467,7 @@ static void sc_rescore_arts()
         }
     }
     s_sc_do_spin = old_spin;
-    set_spin(SPIN_POP);
+    g_progress.set_spin(SPIN_POP);
     if (g_sa_in)
     {
         g_s_ref_all = true;
@@ -589,11 +589,11 @@ void sc_score_cmd(std::string_view line)
     case 'f': // fill (useful when PENDING is unavailable)
         fmt::print("Scoring more articles...");
         std::fflush(stdout); // print it now
-        set_spin(SPIN_FOREGROUND);
+        g_progress.set_spin(SPIN_FOREGROUND);
         s_sc_do_spin = true;
         sc_look_ahead(true, false);
         s_sc_do_spin = false;
-        set_spin(SPIN_POP);
+        g_progress.set_spin(SPIN_POP);
         // consider a "done" message later,
         // *if* lookahead did all the arts
         std::putchar('\n');

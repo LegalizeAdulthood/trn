@@ -78,7 +78,7 @@ bool s_fill_page_backward(long end)
 // later make it shorten the descript.
 
 // CONSIDER: make setspin conditional on context?
-    set_spin(SPIN_BACKGROUND);   // turn on spin on cache misses
+    g_progress.set_spin(SPIN_BACKGROUND); // turn on spin on cache misses
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
         i = s_ent_lines(a);
@@ -91,7 +91,7 @@ bool s_fill_page_backward(long end)
         }
     }
 // what if none on page? (desc. too long) Fix later
-    set_spin(SPIN_POP);  // turn off spin on cache misses
+    g_progress.set_spin(SPIN_POP); // turn off spin on cache misses
     if (g_page_ents.empty())
     {
         return false;
@@ -188,7 +188,7 @@ bool s_fill_page_forward(long start)
 // what if the first entry for the page has a description too long?
 // later make it shorten the descript.
 
-    set_spin(SPIN_BACKGROUND);   // turn on spin on cache misses
+    g_progress.set_spin(SPIN_BACKGROUND); // turn on spin on cache misses
 // ?  later do paranoia check for g_s_bot_ent
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
@@ -201,7 +201,7 @@ bool s_fill_page_forward(long start)
             break;      // get out of loop and finish up...
         }
     }
-    set_spin(SPIN_POP);  // turn off spin on cache misses
+    g_progress.set_spin(SPIN_POP); // turn off spin on cache misses
     if (g_page_ents.empty())
     {
         return false;
@@ -300,7 +300,7 @@ bool s_refill_page()
         g_page_ents.reserve(page_lines);
     }
 
-    set_spin(SPIN_BACKGROUND);
+    g_progress.set_spin(SPIN_BACKGROUND);
     while (a && line_on + s_ent_lines(a) <= page_lines)
     {
         i = s_ent_lines(a);
@@ -308,7 +308,7 @@ bool s_refill_page()
         line_on = line_on+i;
         a = s_next_elig(a);
     }
-    set_spin(SPIN_POP);
+    g_progress.set_spin(SPIN_POP);
     g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
 
     // there are fairly good reasons to refresh the last good entry, such

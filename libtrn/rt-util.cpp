@@ -729,77 +729,77 @@ std::string compress_subj(const Article *ap, int max)
 
 // Modified version of a spinner originally found in Clifford Adams' strn.
 
-void set_spin(SpinMode mode)
+void ProgressDisplay::set_spin(SpinMode mode)
 {
     switch (mode)
     {
     case SPIN_FOREGROUND:
     case SPIN_BACKGROUND:
     case SPIN_BAR_GRAPH:
-        if (!g_progress.level++)
+        if (!level++)
         {
-            g_progress.art = g_art_input.open_art;
-            if (g_progress.art != 0 && g_art_input.fp)
+            art = g_art_input.open_art;
+            if (art != 0 && g_art_input.fp)
             {
-                g_progress.tell = tell_art();
+                tell = tell_art();
             }
-            g_progress.count = 0;
-            g_progress.place = 0;
+            count = 0;
+            place = 0;
         }
-        if (g_progress.mode == SPIN_BAR_GRAPH)
+        if (this->mode == SPIN_BAR_GRAPH)
         {
             mode = SPIN_BAR_GRAPH;
         }
         if (mode == SPIN_BAR_GRAPH)
         {
-            if (g_progress.mode != SPIN_BAR_GRAPH)
+            if (this->mode != SPIN_BAR_GRAPH)
             {
-                g_progress.marks = (g_verbose ? 25 : 10);
-                fmt::print(" [{:>{}}]", "", g_progress.marks);
-                for (int i = g_progress.marks + 1; i--;)
+                marks = (g_verbose ? 25 : 10);
+                fmt::print(" [{:>{}}]", "", marks);
+                for (int i = marks + 1; i--;)
                 {
                     backspace();
                 }
                 std::fflush(stdout);
             }
-            g_progress.pos = 0;
+            pos = 0;
         }
-        g_progress.chars = "|/-\\";
-        g_progress.mode = mode;
+        chars = "|/-\\";
+        this->mode = mode;
         break;
 
     case SPIN_POP:
     case SPIN_OFF:
-        if (g_progress.mode == SPIN_BAR_GRAPH)
+        if (this->mode == SPIN_BAR_GRAPH)
         {
-            g_progress.level = 1;
+            level = 1;
             spin(10000);
-            if (g_progress.count >= g_progress.todo)
+            if (count >= todo)
             {
-                g_progress.mark = ']';
+                mark = ']';
             }
-            g_progress.count--;
-            g_progress.mode = SPIN_FOREGROUND;
+            count--;
+            this->mode = SPIN_FOREGROUND;
         }
-        if (mode == SPIN_POP && --g_progress.level > 0)
+        if (mode == SPIN_POP && --level > 0)
         {
             break;
         }
-        g_progress.level = 0;
-        if (g_progress.place) // we have spun at least once
+        level = 0;
+        if (place) // we have spun at least once
         {
-            std::putchar(g_progress.mark); // get rid of spin character
+            std::putchar(mark); // get rid of spin character
             backspace();
             std::fflush(stdout);
-            g_progress.place = 0;
+            place = 0;
         }
-        if (g_progress.art)
+        if (art)
         {
-            art_open(g_progress.art, g_progress.tell); // do not screw up the pager
-            g_progress.art = ArticleNum{};
+            art_open(art, tell); // do not screw up the pager
+            art = ArticleNum{};
         }
-        g_progress.mode = SPIN_OFF;
-        g_progress.mark = ' ';
+        this->mode = SPIN_OFF;
+        mark = ' ';
         break;
     }
 }

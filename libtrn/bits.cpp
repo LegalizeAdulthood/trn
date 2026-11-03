@@ -573,7 +573,7 @@ bool chase_xrefs(bool until_key)
     }
     if (until_key)
     {
-        set_spin(SPIN_BACKGROUND);
+        g_progress.set_spin(SPIN_BACKGROUND);
     }
 
     g_cache.walk(check_chase, until_key);
