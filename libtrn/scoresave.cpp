@@ -35,7 +35,6 @@ namespace fs = std::filesystem;
 
 SavedScoreStore g_saved_scores{};
 
-static void       sc_sv_get_file();
 static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a);
 static ArticleNum sc_sv_make_line(ArticleNum a);
 
@@ -73,9 +72,9 @@ void SavedScoreStore::del_group(std::string_view gname)
 }
 
 // get the file containing scores into memory
-static void sc_sv_get_file()
+void SavedScoreStore::get_file()
 {
-    g_saved_scores.lines.clear();
+    lines.clear();
 
     std::ifstream input{file_exp(get_env_var("SAVESCOREFILE", "%+/savedscores"))};
     if (!input)
@@ -89,7 +88,7 @@ static void sc_sv_get_file()
     std::string line;
     while (std::getline(input, line))
     {
-        g_saved_scores.add(line);
+        add(line);
     }
 }
 
@@ -366,7 +365,7 @@ void sc_load_scores()
 
     if (g_saved_scores.lines.empty())
     {
-        sc_sv_get_file();
+        g_saved_scores.get_file();
     }
 
     const std::string gname = file_exp("%C");

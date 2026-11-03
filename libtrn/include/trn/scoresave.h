@@ -17,6 +17,7 @@ struct SavedScoreStore
     // TODO: private
     void add(std::string_view str);
     void del_group(std::string_view gname);
+    void get_file();
 
     std::vector<std::string> lines;
     int                      loaded{};
