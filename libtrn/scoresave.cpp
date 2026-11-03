@@ -466,31 +466,31 @@ void SavedScoreStore::load()
     }
 }
 
-void sc_save_scores()
+void SavedScoreStore::save()
 {
-    g_saved_scores.saved = 0;
-    g_saved_scores.last = ArticleNum{};
+    saved = 0;
+    last = ArticleNum{};
 
     g_waiting = true;   // DON'T interrupt
     const std::string gname = file_exp("%C");
     // not being able to open is OK
-    if (!g_saved_scores.lines.empty())
+    if (!lines.empty())
     {
-        g_saved_scores.del_group(gname); // delete old group
+        del_group(gname); // delete old group
     }
     else                // there was no old file
     {
-        g_saved_scores.add("#STRN saved score file.");
-        g_saved_scores.add("v1.0");
+        add("#STRN saved score file.");
+        add("v1.0");
     }
-    g_saved_scores.add(fmt::format("!{}", gname)); // add the header
+    add(fmt::format("!{}", gname)); // add the header
 
     ArticleNum a = g_first_art;
-    g_saved_scores.add(fmt::format(":{}", a.value_of()));
-    g_saved_scores.last = article_before(a);
+    add(fmt::format(":{}", a.value_of()));
+    last = article_before(a);
     while (a <= g_last_art)
     {
-        a = g_saved_scores.make_line(a);
+        a = make_line(a);
     }
     g_waiting = false;
 }

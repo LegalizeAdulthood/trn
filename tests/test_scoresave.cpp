@@ -118,7 +118,7 @@ protected:
 
 TEST_F(ScoreSaveTest, saveFileRewritesConfiguredFile)
 {
-    sc_save_scores();
+    g_saved_scores.save();
 
     m_env.expect_env("SAVESCOREFILE", m_score_file_name.c_str());
     sc_sv_save_file();
@@ -142,7 +142,7 @@ TEST_F(ScoreSaveTest, saveFileWritesEncodedScoreLines)
     add_scored_article(ArticleNum{3}, 12);
     add_scored_article(ArticleNum{5}, -3);
 
-    sc_save_scores();
+    g_saved_scores.save();
 
     m_env.expect_env("SAVESCOREFILE", m_score_file_name.c_str());
     sc_sv_save_file();
@@ -165,7 +165,7 @@ TEST_F(ScoreSaveTest, loadScoresReadsEncodedScoreLines)
     add_scored_article(ArticleNum{2}, 12);
     add_scored_article(ArticleNum{3}, 12);
     add_scored_article(ArticleNum{5}, -3);
-    sc_save_scores();
+    g_saved_scores.save();
     clear_article_scores(g_first_art, g_last_art);
 
     g_saved_scores.load();
@@ -189,7 +189,7 @@ TEST_F(ScoreSaveTest, loadScoresUsesSavedStartingArticleNumber)
     g_last_art = ArticleNum{6};
     add_scored_article(ArticleNum{3}, 7);
     add_scored_article(ArticleNum{5}, -2);
-    sc_save_scores();
+    g_saved_scores.save();
     clear_article_scores(g_first_art, g_last_art);
 
     g_saved_scores.load();

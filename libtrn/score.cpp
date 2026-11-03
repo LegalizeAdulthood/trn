@@ -205,7 +205,7 @@ void sc_cleanup()
 
     if (g_sc_saves_cores)
     {
-        sc_save_scores();
+        g_saved_scores.save();
     }
     g_saved_scores.loaded_count = 0;
 
