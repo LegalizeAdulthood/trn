@@ -61,18 +61,17 @@ void LastRunState::read()
 
 // Put out certain values for next run of trn
 
-void write_last()
+void LastRunState::write()
 {
-    fs::path temp_file{fmt::format("{}.{}", g_last_run.file, g_our_pid)};
+    fs::path temp_file{fmt::format("{}.{}", file, g_our_pid)};
     if (std::FILE *fp = std::fopen(temp_file.string().c_str(), "w"))
     {
-        g_last_run.time = std::max(g_last_run.time, g_last_run.start_time);
-        fmt::print(fp, "{}\n{}\n{}\n{}\n{}\n", g_newsgroup_name, g_last_run.time, g_last_run.active_size,
-                   g_last_run.new_time, g_last_run.extra_num);
+        time = std::max(time, start_time);
+        fmt::print(fp, "{}\n{}\n{}\n{}\n{}\n", g_newsgroup_name, time, active_size, new_time, extra_num);
         std::fclose(fp);
         std::error_code error;
-        fs::remove(g_last_run.file, error);
-        fs::rename(temp_file, g_last_run.file, error);
+        fs::remove(file, error);
+        fs::rename(temp_file, file, error);
     }
     else
     {

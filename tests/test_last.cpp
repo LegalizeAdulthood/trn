@@ -108,7 +108,7 @@ TEST_F(LastTest, writeLastRecordsCurrentState)
     g_last_run.new_time = 5678;
     g_last_run.extra_num = 9;
 
-    write_last();
+    g_last_run.write();
 
     EXPECT_EQ((std::vector<std::string>{
                   g_newsgroup_name,

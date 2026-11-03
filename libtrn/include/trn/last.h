@@ -10,6 +10,7 @@
 struct LastRunState
 {
     void read();
+    void write();
 
     std::string newsgroup_name; // last newsgroup read
     long        time{};         // time last we ran
@@ -24,6 +25,5 @@ extern LastRunState g_last_run;
 
 void last_init();
 void last_final();
-void write_last();
 
 #endif

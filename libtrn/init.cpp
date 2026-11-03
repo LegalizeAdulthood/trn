@@ -171,7 +171,7 @@ bool initialize(int argc, char *argv[])
     util_init();
     xmouse_init(argv[0]);
 
-    write_last();        // remember last runtime in .rnlast
+    g_last_run.write(); // remember last runtime in .rnlast
 
     if (g_only.max_to_do) // patterns on command line?
     {

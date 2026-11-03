@@ -1880,7 +1880,7 @@ bool write_newsrcs(Multirc *mptr)
                 g_last_run.extra_num = rp->data_source->m_act_sf.m_recent_cnt;
             }
             g_last_run.new_time = rp->data_source->m_last_new_group;
-            write_last();
+            g_last_run.write();
         }
 
         if (!(rp->flags & RF_RC_CHANGED))
