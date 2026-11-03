@@ -224,7 +224,7 @@ beginning:
         {
             break;
         }
-        g_spin_todo--;
+        g_progress.todo--;
         ++first;
     }
     if (first > last)
@@ -247,7 +247,7 @@ beginning:
         {
             break;
         }
-        g_spin_todo--;
+        g_progress.todo--;
         --last;
     }
 
@@ -287,8 +287,8 @@ beginning:
         else
         {
             int lots2do = ((g_data_source->m_flags & DF_REMOTE)? g_net_speed : 20) * 100;
-            g_spin_estimate = std::min(g_spin_estimate, g_spin_todo);
-            set_spin(g_spin_estimate > lots2do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+            g_progress.estimate = std::min(g_progress.estimate, g_progress.todo);
+            set_spin(g_progress.estimate > lots2do ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
         }
         g_data_source->m_ov_opened = started_request;
     }
@@ -331,7 +331,7 @@ beginning:
             }
             break;
         }
-        g_spin_todo -= (an - artnum).value_of() - 1;
+        g_progress.todo -= (an - artnum).value_of() - 1;
         ov_parse(line, artnum = an, remote);
         if (g_int_count)
         {
@@ -363,7 +363,7 @@ beginning:
         if (an.value_of() > 0)
         {
             last = article_before(an);
-            g_spin_todo -= (last - artnum).value_of();
+            g_progress.todo -= (last - artnum).value_of();
             artnum = last;
         }
     }
@@ -378,7 +378,7 @@ beginning:
                 ap->one_missing();
             }
         }
-        g_spin_todo -= (last - artnum).value_of();
+        g_progress.todo -= (last - artnum).value_of();
     }
     if (artnum > g_cache.last_cached && artnum >= first)
     {
@@ -443,7 +443,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
     Article *article = g_cache.ptr(artnum);
     if (article->m_flags & AF_THREADED)
     {
-        g_spin_todo--;
+        g_progress.todo--;
         return;
     }
 

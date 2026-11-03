@@ -172,10 +172,10 @@ private:
     int                      m_old_columns{g_tc_COLS};
     int                      m_old_mouse_width{g_mouse_bar_width};
     char                     m_old_interrupts{g_int_count};
-    long                     m_old_spin_estimate{g_spin_estimate};
-    long                     m_old_spin_todo{g_spin_todo};
-    int                      m_old_spin_count{g_spin_count};
-    char                     m_old_spin_char{g_spin_char};
+    long                           m_old_spin_estimate{g_progress.estimate};
+    long                           m_old_spin_todo{g_progress.todo};
+    int                            m_old_spin_count{g_progress.count};
+    char                           m_old_spin_char{g_progress.mark};
     int                      m_old_term_line{g_term_line};
 };
 
@@ -278,10 +278,10 @@ void ArticleSelectorCommandTest::TearDown()
     g_tc_COLS = m_old_columns;
     g_mouse_bar_width = m_old_mouse_width;
     g_int_count = m_old_interrupts;
-    g_spin_estimate = m_old_spin_estimate;
-    g_spin_todo = m_old_spin_todo;
-    g_spin_count = m_old_spin_count;
-    g_spin_char = m_old_spin_char;
+    g_progress.estimate = m_old_spin_estimate;
+    g_progress.todo = m_old_spin_todo;
+    g_progress.count = m_old_spin_count;
+    g_progress.mark = m_old_spin_char;
     g_term_line = m_old_term_line;
 }
 

@@ -107,8 +107,8 @@ void thread_open()
     {
         if (g_thread_always)
         {
-            g_spin_todo = (g_last_art - g_abs_first).value_of() + 1;
-            g_spin_estimate = (g_last_art - g_abs_first).value_of() + 1;
+            g_progress.todo = (g_last_art - g_abs_first).value_of() + 1;
+            g_progress.estimate = (g_last_art - g_abs_first).value_of() + 1;
             (void) ov_data(g_abs_first, g_last_art, false);
             if (g_data_source->m_ov_opened && find_existing && g_data_source->m_over_dir.empty())
             {
@@ -119,8 +119,8 @@ void thread_open()
         }
         else
         {
-            g_spin_todo = (g_last_art - g_first_art).value_of() + 1;
-            g_spin_estimate = g_newsgroup_ptr->m_to_read;
+            g_progress.todo = (g_last_art - g_first_art).value_of() + 1;
+            g_progress.estimate = g_newsgroup_ptr->m_to_read;
             if (g_first_art > g_last_art)
             {
                 // If no unread articles, see if ov. exists as fast as possible

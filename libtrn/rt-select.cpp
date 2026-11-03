@@ -1217,7 +1217,7 @@ void SelectorSession::status_msg(std::string_view cp)
 ///   reads, writes, and output side effects.
 /// - g_use_sel_num, g_sel_num_goto, g_in_ng: Read for input interpretation.
 /// - g_msg: Read for status output.
-/// - g_spin_char: Updated to display the current spin character.
+/// - g_progress.mark: Updated to display the current spin character.
 /// - g_sel_page.item_index: Updated to track the currently selected item index.
 ///
 char SelectorSession::input()
@@ -1261,11 +1261,11 @@ reinp_selector:
     eat_typeahead();
     if (g_use_sel_num)
     {
-        g_spin_char = '0' + (g_sel_page.item_index + 1) / 10; // first digit
+        g_progress.mark = '0' + (g_sel_page.item_index + 1) / 10; // first digit
     }
     else
     {
-        g_spin_char = g_sel_page.chars[g_sel_page.item_index];
+        g_progress.mark = g_sel_page.chars[g_sel_page.item_index];
     }
     const std::string command = read_selector_command(page_char, end_char, g_sel_page.at_end);
     int               ch = command.empty() ? '\0' : command.front();

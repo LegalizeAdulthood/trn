@@ -923,7 +923,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
     else
     {
         int lots_to_do = ((g_data_source->m_flags & DF_REMOTE)? g_net_speed : 20) * 25;
-        set_spin(g_spin_estimate > lots_to_do? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+        set_spin(g_progress.estimate > lots_to_do ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
     }
     // TRN_ASSERT(first >= g_abs_first && last <= g_last_art);
     for (i = g_cache.first(first); i <= last; i = g_cache.next(i))
@@ -933,7 +933,7 @@ static bool art_data(ArticleNum first, ArticleNum last, bool cheating, bool all_
             continue;
         }
 
-        g_spin_todo -= value_of(i - expected_i);
+        g_progress.todo -= value_of(i - expected_i);
         expected_i = article_after(i);
 
         // This parses the header which will cache/thread the article
@@ -992,7 +992,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
     {
         return true;
     }
-    g_spin_todo = count.value_of();
+    g_progress.todo = count.value_of();
 
     if (g_cache.first_cached > g_cache.last_cached)
     {
@@ -1008,7 +1008,7 @@ bool cache_range(ArticleNum first, ArticleNum last)
             count = ArticleNum{g_newsgroup_ptr->m_to_read};
         }
     }
-    g_spin_estimate = count.value_of();
+    g_progress.estimate = count.value_of();
 
     fmt::print("\n{}ing {} article{}.", g_threaded_group ? "Thread" : "Cach", count.value_of(),
                plural(count.value_of()));

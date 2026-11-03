@@ -58,8 +58,8 @@ protected:
         m_old_verbose = g_verbose;
         m_old_threaded_group = g_threaded_group;
         m_old_thread_always = g_thread_always;
-        m_old_spin_todo = g_spin_todo;
-        m_old_spin_estimate = g_spin_estimate;
+        m_old_spin_todo = g_progress.todo;
+        m_old_spin_estimate = g_progress.estimate;
         m_old_int_count = g_int_count;
         m_old_curr_artp = g_nav.current.art;
         m_old_sentinel_art_ptr = g_sentinel_art_ptr;
@@ -98,8 +98,8 @@ protected:
         g_verbose = false;
         g_threaded_group = false;
         g_thread_always = false;
-        g_spin_todo = 1;
-        g_spin_estimate = 1;
+        g_progress.todo = 1;
+        g_progress.estimate = 1;
         g_int_count = 0;
         g_nav.current.art = nullptr;
         g_sentinel_art_ptr = nullptr;
@@ -139,8 +139,8 @@ protected:
         g_verbose = m_old_verbose;
         g_threaded_group = m_old_threaded_group;
         g_thread_always = m_old_thread_always;
-        g_spin_todo = m_old_spin_todo;
-        g_spin_estimate = m_old_spin_estimate;
+        g_progress.todo = m_old_spin_todo;
+        g_progress.estimate = m_old_spin_estimate;
         g_int_count = m_old_int_count;
         g_nav.current.art = m_old_curr_artp;
         g_sentinel_art_ptr = m_old_sentinel_art_ptr;
@@ -309,7 +309,7 @@ TEST_F(OverviewTest, remoteOverviewFetchesSeveralArticlesInOneOverRequest)
     m_group.m_ng_max = g_last_art;
     g_cache.ptr(ArticleNum{2})->m_flags = AF_EXISTS;
     g_cache.ptr(ArticleNum{3})->m_flags = AF_EXISTS;
-    g_spin_todo = 3;
+    g_progress.todo = 3;
 
     EXPECT_CALL(*connection, write_line(testing::StrEq("OVER 1-3"), testing::_));
     EXPECT_CALL(*connection, read_line(testing::_))

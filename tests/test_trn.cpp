@@ -2110,7 +2110,7 @@ private:
     std::optional<std::string> m_old_subj_line{g_subj_line};
     int                        m_old_page_line{g_page_line};
     bool                       m_old_performed_article_loop{g_performed_article_loop};
-    int                        m_old_spin_count{g_spin_count};
+    int                        m_old_spin_count{g_progress.count};
 };
 
 void InputNewsgroupSearchTest::SetUp()
@@ -2134,7 +2134,7 @@ void InputNewsgroupSearchTest::TearDown()
     g_subj_line = m_old_subj_line;
     g_page_line = m_old_page_line;
     g_performed_article_loop = m_old_performed_article_loop;
-    g_spin_count = m_old_spin_count;
+    g_progress.count = m_old_spin_count;
     InputNewsgroupNavigationTest::TearDown();
 }
 

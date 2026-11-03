@@ -429,7 +429,7 @@ protected:
         m_old_selected_count = g_selected_count;
         m_old_missing_count = g_missing_count;
         m_old_sel_mode = g_sel.mode;
-        m_old_spin_count = g_spin_count;
+        m_old_spin_count = g_progress.count;
         m_old_tc_BC = g_tc_BC;
     }
 
@@ -444,7 +444,7 @@ protected:
         g_selected_count = m_old_selected_count;
         g_missing_count = m_old_missing_count;
         g_sel.mode = m_old_sel_mode;
-        g_spin_count = m_old_spin_count;
+        g_progress.count = m_old_spin_count;
         g_tc_BC = m_old_tc_BC;
     }
 

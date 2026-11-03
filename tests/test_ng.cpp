@@ -1032,7 +1032,7 @@ private:
     decltype(g_subj_line) m_old_subj_line{g_subj_line};
     int                   m_old_page_line{g_page_line};
     bool                  m_old_performed_article_loop{g_performed_article_loop};
-    int                   m_old_spin_count{g_spin_count};
+    int                   m_old_spin_count{g_progress.count};
 };
 
 void NumericJumpArticleTest::SetUp()
@@ -1072,7 +1072,7 @@ void NumericJumpArticleTest::TearDown()
     g_subj_line = m_old_subj_line;
     g_page_line = m_old_page_line;
     g_performed_article_loop = m_old_performed_article_loop;
-    g_spin_count = m_old_spin_count;
+    g_progress.count = m_old_spin_count;
     UnreadScopeArticleTest::TearDown();
 }
 
@@ -2049,7 +2049,7 @@ private:
     decltype(g_subj_line) m_old_subj_line{g_subj_line};
     bool                  m_old_error_occurred{g_error_occurred};
     bool                  m_old_performed_article_loop{g_performed_article_loop};
-    int                   m_old_spin_count{g_spin_count};
+    int                   m_old_spin_count{g_progress.count};
     bool                  m_old_mouse_is_down{g_mouse_is_down};
     char                  m_old_erase_char{g_erase_char};
     char                  m_old_kill_char{g_kill_char};
@@ -2097,7 +2097,7 @@ void SearchCommandArticleTest::TearDown()
     g_subj_line = m_old_subj_line;
     g_error_occurred = m_old_error_occurred;
     g_performed_article_loop = m_old_performed_article_loop;
-    g_spin_count = m_old_spin_count;
+    g_progress.count = m_old_spin_count;
     g_mouse_is_down = m_old_mouse_is_down;
     g_erase_char = m_old_erase_char;
     g_kill_char = m_old_kill_char;

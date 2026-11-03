@@ -635,11 +635,11 @@ bool DataSource::active_file_hash(std::string_view first_line)
     {
         DataSource *save_datasrc = g_data_source;
         set_data_source(this);
-        g_spin_todo = m_act_sf.m_recent_cnt;
+        g_progress.todo = m_act_sf.m_recent_cnt;
         ret = m_act_sf.open(m_extra_name, "active", m_news_id, first_line);
-        if (g_spin_count > 0)
+        if (g_progress.count > 0)
         {
-            m_act_sf.m_recent_cnt = g_spin_count;
+            m_act_sf.m_recent_cnt = g_progress.count;
         }
         set_data_source(save_datasrc);
     }
@@ -861,11 +861,11 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
                 (void) m_desc_sf.open({}, "", "");
                 goto try_group_description;
             }
-            g_spin_todo = m_desc_sf.m_recent_cnt;
+            g_progress.todo = m_desc_sf.m_recent_cnt;
             ret = m_desc_sf.open(m_group_desc, "newsgroups", m_news_id);
-            if (g_spin_count > 0)
+            if (g_progress.count > 0)
             {
-                m_desc_sf.m_recent_cnt = g_spin_count;
+                m_desc_sf.m_recent_cnt = g_progress.count;
             }
         }
         else
@@ -948,7 +948,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
         {
             use_server = false;
             fp = std::fopen(filename.string().c_str(), "r");
-            g_spin_todo = 0;
+            g_progress.todo = 0;
         }
         else if (now - m_last_fetch > m_refetch_secs && (m_refetch_secs != 2 || !m_last_fetch))
         {
@@ -972,7 +972,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 m_last_fetch = now;
                 if (g_net_speed > 8)
                 {
-                    g_spin_todo = 0;
+                    g_progress.todo = 0;
                 }
             }
         }
@@ -985,7 +985,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 m_refetch_secs = 0;
                 fp = std::fopen(filename.string().c_str(), "r");
             }
-            g_spin_todo = 0;
+            g_progress.todo = 0;
         }
         if (m_refetch_secs & 3)
         {
@@ -995,7 +995,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
     else
     {
         fp = std::fopen(filename.string().c_str(), "r");
-        g_spin_todo = 0;
+        g_progress.todo = 0;
     }
 
     if (has_filename && fp == nullptr)
@@ -1004,7 +1004,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
         term_down(1);
         return 0;
     }
-    set_spin(g_spin_todo > 0? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
+    set_spin(g_progress.todo > 0 ? SPIN_BAR_GRAPH : SPIN_FOREGROUND);
 
     close();
 

@@ -28,15 +28,11 @@
 #include <ctime>
 #include <string>
 
-char g_spin_char{' '};           // char to put back when we're done spinning
-long g_spin_estimate{};          // best guess of how much work there is
-long g_spin_todo{};              // the max word to do (might decrease)
-int  g_spin_count{};             // counter for when to spin
+ProgressDisplay g_progress{};
+
 bool g_performed_article_loop{}; //
 bool g_bkgnd_spinner{};          // -B
 bool g_unbroken_subjects{};      // -u
-
-static int s_spin_marks{25}; // how many bargraph marks we want
 
 static std::string compress_address(std::string_view name, int max);
 static std::string compress_name_text(std::string_view name, int max);
@@ -733,14 +729,6 @@ std::string compress_subj(const Article *ap, int max)
 
 // Modified version of a spinner originally found in Clifford Adams' strn.
 
-static std::string_view s_spin_chars;
-static int             s_spin_level{}; // used to allow non-interfering nested spins
-static SpinMode        s_spin_mode{};
-static int             s_spin_place{}; // represents place in s_spinchars array
-static int             s_spin_pos{};   // the last spinbar position we drew
-static ArticleNum      s_spin_art{};
-static ArticlePosition s_spin_tell{};
-
 void set_spin(SpinMode mode)
 {
     switch (mode)
@@ -748,70 +736,70 @@ void set_spin(SpinMode mode)
     case SPIN_FOREGROUND:
     case SPIN_BACKGROUND:
     case SPIN_BAR_GRAPH:
-        if (!s_spin_level++)
+        if (!g_progress.level++)
         {
-            s_spin_art = g_art_input.open_art;
-            if (s_spin_art != 0 && g_art_input.fp)
+            g_progress.art = g_art_input.open_art;
+            if (g_progress.art != 0 && g_art_input.fp)
             {
-                s_spin_tell = tell_art();
+                g_progress.tell = tell_art();
             }
-            g_spin_count = 0;
-            s_spin_place = 0;
+            g_progress.count = 0;
+            g_progress.place = 0;
         }
-        if (s_spin_mode == SPIN_BAR_GRAPH)
+        if (g_progress.mode == SPIN_BAR_GRAPH)
         {
             mode = SPIN_BAR_GRAPH;
         }
         if (mode == SPIN_BAR_GRAPH)
         {
-            if (s_spin_mode != SPIN_BAR_GRAPH)
+            if (g_progress.mode != SPIN_BAR_GRAPH)
             {
-                s_spin_marks = (g_verbose ? 25 : 10);
-                fmt::print(" [{:>{}}]", "", s_spin_marks);
-                for (int i = s_spin_marks + 1; i--;)
+                g_progress.marks = (g_verbose ? 25 : 10);
+                fmt::print(" [{:>{}}]", "", g_progress.marks);
+                for (int i = g_progress.marks + 1; i--;)
                 {
                     backspace();
                 }
                 std::fflush(stdout);
             }
-            s_spin_pos = 0;
+            g_progress.pos = 0;
         }
-        s_spin_chars = "|/-\\";
-        s_spin_mode = mode;
+        g_progress.chars = "|/-\\";
+        g_progress.mode = mode;
         break;
 
     case SPIN_POP:
     case SPIN_OFF:
-        if (s_spin_mode == SPIN_BAR_GRAPH)
+        if (g_progress.mode == SPIN_BAR_GRAPH)
         {
-            s_spin_level = 1;
+            g_progress.level = 1;
             spin(10000);
-            if (g_spin_count >= g_spin_todo)
+            if (g_progress.count >= g_progress.todo)
             {
-                g_spin_char = ']';
+                g_progress.mark = ']';
             }
-            g_spin_count--;
-            s_spin_mode = SPIN_FOREGROUND;
+            g_progress.count--;
+            g_progress.mode = SPIN_FOREGROUND;
         }
-        if (mode == SPIN_POP && --s_spin_level > 0)
+        if (mode == SPIN_POP && --g_progress.level > 0)
         {
             break;
         }
-        s_spin_level = 0;
-        if (s_spin_place)       // we have spun at least once
+        g_progress.level = 0;
+        if (g_progress.place) // we have spun at least once
         {
-            std::putchar(g_spin_char); // get rid of spin character
+            std::putchar(g_progress.mark); // get rid of spin character
             backspace();
             std::fflush(stdout);
-            s_spin_place = 0;
+            g_progress.place = 0;
         }
-        if (s_spin_art)
+        if (g_progress.art)
         {
-            art_open(s_spin_art,s_spin_tell);   // do not screw up the pager
-            s_spin_art = ArticleNum{};
+            art_open(g_progress.art, g_progress.tell); // do not screw up the pager
+            g_progress.art = ArticleNum{};
         }
-        s_spin_mode = SPIN_OFF;
-        g_spin_char = ' ';
+        g_progress.mode = SPIN_OFF;
+        g_progress.mark = ' ';
         break;
     }
 }
@@ -819,27 +807,27 @@ void set_spin(SpinMode mode)
 // modulus for the spin...
 void spin(int count)
 {
-    if (!s_spin_level)
+    if (!g_progress.level)
     {
         return;
     }
-    switch (s_spin_mode)
+    switch (g_progress.mode)
     {
     case SPIN_BACKGROUND:
         if (!g_bkgnd_spinner)
         {
             return;
         }
-        if (!(++g_spin_count % count))
+        if (!(++g_progress.count % count))
         {
-            std::putchar(s_spin_chars[++s_spin_place % s_spin_chars.size()]);
+            std::putchar(g_progress.chars[++g_progress.place % g_progress.chars.size()]);
             backspace();
             std::fflush(stdout);
         }
         break;
 
     case SPIN_FOREGROUND:
-        if (!(++g_spin_count % count))
+        if (!(++g_progress.count % count))
         {
             std::putchar('.');
             std::fflush(stdout);
@@ -848,23 +836,23 @@ void spin(int count)
 
     case SPIN_BAR_GRAPH:
     {
-        if (g_spin_todo == 0)
+        if (g_progress.todo == 0)
         {
             break;              // bail out rather than crash
         }
-        int new_pos = (int)((long)s_spin_marks * ++g_spin_count / g_spin_todo);
-        if (s_spin_pos < new_pos && g_spin_count <= g_spin_todo+1)
+        int new_pos = (int) ((long) g_progress.marks * ++g_progress.count / g_progress.todo);
+        if (g_progress.pos < new_pos && g_progress.count <= g_progress.todo + 1)
         {
             do
             {
                 std::putchar('*');
-            } while (++s_spin_pos < new_pos);
-            s_spin_place = 0;
+            } while (++g_progress.pos < new_pos);
+            g_progress.place = 0;
             std::fflush(stdout);
         }
-        else if (!(g_spin_count % count))
+        else if (!(g_progress.count % count))
         {
-            std::putchar(s_spin_chars[++s_spin_place % s_spin_chars.size()]);
+            std::putchar(g_progress.chars[++g_progress.place % g_progress.chars.size()]);
             backspace();
             std::fflush(stdout);
         }
@@ -875,7 +863,7 @@ void spin(int count)
 
 bool in_background()
 {
-    return s_spin_mode == SPIN_BACKGROUND;
+    return g_progress.mode == SPIN_BACKGROUND;
 }
 
 static int         s_prior_perform_cnt{};
@@ -898,16 +886,16 @@ void perform_status_init(int cnt)
     s_ps_cnt = cnt;
     s_ps_missing = g_missing_count;
 
-    g_spin_count = 0;
-    s_spin_place = 0;
-    s_spin_chars = "v>^<";
+    g_progress.count = 0;
+    g_progress.place = 0;
+    g_progress.chars = "v>^<";
 }
 
 void perform_status(int cnt, int spin)
 {
-    if (!(++g_spin_count % spin))
+    if (!(++g_progress.count % spin))
     {
-        std::putchar(s_spin_chars[++s_spin_place % s_spin_chars.size()]);
+        std::putchar(g_progress.chars[++g_progress.place % g_progress.chars.size()]);
         backspace();
         std::fflush(stdout);
     }

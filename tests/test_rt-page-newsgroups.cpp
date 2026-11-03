@@ -1111,7 +1111,7 @@ private:
     std::string                m_old_name{g_newsgroup_name};
     int                        m_old_page_line{g_page_line};
     int                        m_old_perform_count{g_perform_count};
-    int                        m_old_spin_count{g_spin_count};
+    int                        m_old_spin_count{g_progress.count};
     bool                       m_old_performed_loop{g_performed_article_loop};
     bool                       m_old_error{g_error_occurred};
     bool                       m_old_one_command{g_one_command};
@@ -1144,7 +1144,7 @@ void NewsgroupSelectorInlineStateTest::TearDown()
     g_newsgroup_name = m_old_name;
     g_page_line = m_old_page_line;
     g_perform_count = m_old_perform_count;
-    g_spin_count = m_old_spin_count;
+    g_progress.count = m_old_spin_count;
     g_performed_article_loop = m_old_performed_loop;
     g_error_occurred = m_old_error;
     g_one_command = m_old_one_command;
