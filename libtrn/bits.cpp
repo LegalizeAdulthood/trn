@@ -620,7 +620,7 @@ static int chase_xref(ArticleNum art_num, bool mark_read)
         return 0;
     }
 
-    if (in_background())
+    if (g_progress.in_background())
     {
         spin(10);
     }

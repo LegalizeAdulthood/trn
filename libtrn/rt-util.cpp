@@ -861,9 +861,9 @@ void spin(int count)
     }
 }
 
-bool in_background()
+bool ProgressDisplay::in_background()
 {
-    return g_progress.mode == SPIN_BACKGROUND;
+    return mode == SPIN_BACKGROUND;
 }
 
 static int         s_prior_perform_cnt{};
