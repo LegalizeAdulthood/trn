@@ -443,7 +443,7 @@ int thread_perform(std::string_view command)
             && (((cmdstr[0] == '+' || cmdstr[0] == '-') && cmdstr[0] == cmdstr[1]) //
                 || cmdstr[0] == 'T' || cmdstr[0] == 'A')))
     {
-        g_performed_article_loop = false;
+        g_report.performed_article_loop = false;
         if (one_thread)
         {
             sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
@@ -570,7 +570,7 @@ int perform(std::string_view command_list, int output_level)
         std::fflush(stdout);
     }
 
-    g_perform_count++;
+    g_report.perform_count++;
     for (std::size_t command_pos{}; command_pos < command_list.size(); ++command_pos)
     {
         const char ch = command_list[command_pos];
@@ -750,7 +750,7 @@ int perform(std::string_view command_list, int output_level)
                 expanded_command = do_interp(command_text.substr(0, command_size));
                 command_pos += command_size - 1;
             }
-            g_perform_count--;
+            g_report.perform_count--;
             const int result = perform(expanded_command, output_level ? 2 : 0);
             if (result < 0)
             {
@@ -938,7 +938,7 @@ int newsgroup_perform(std::string_view cmdlst, int output_level)
         std::fflush(stdout);
     }
 
-    g_perform_count++;
+    g_report.perform_count++;
     for (; !cmdlst.empty(); cmdlst.remove_prefix(1))
     {
         const int ch = cmdlst.front();
@@ -1077,7 +1077,7 @@ int AddGroup::add_group_perform(std::string_view cmdlst, int output_level)
         std::fflush(stdout);
     }
 
-    g_perform_count++;
+    g_report.perform_count++;
     for (; !cmdlst.empty(); cmdlst.remove_prefix(1))
     {
         const int ch = cmdlst.front();

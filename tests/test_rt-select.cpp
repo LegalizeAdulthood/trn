@@ -784,8 +784,8 @@ private:
     bool           m_old_novice_delays{g_novice_delays};
     bool           m_old_error{g_error_occurred};
     bool           m_old_mouse_down{g_mouse_is_down};
-    int            m_old_perform_count{g_perform_count};
-    bool           m_old_performed_loop{g_performed_article_loop};
+    int            m_old_perform_count{g_report.perform_count};
+    bool           m_old_performed_loop{g_report.performed_article_loop};
 };
 
 void SelectorCallbackSearchTest::SetUp()
@@ -797,7 +797,7 @@ void SelectorCallbackSearchTest::SetUp()
     g_art_search.do_read = false;
     g_novice_delays = false;
     g_error_occurred = false;
-    g_perform_count = 0;
+    g_report.perform_count = 0;
     search_init();
     g_art_search.init();
 }
@@ -812,8 +812,8 @@ void SelectorCallbackSearchTest::TearDown()
     g_novice_delays = m_old_novice_delays;
     g_error_occurred = m_old_error;
     g_mouse_is_down = m_old_mouse_down;
-    g_perform_count = m_old_perform_count;
-    g_performed_article_loop = m_old_performed_loop;
+    g_report.perform_count = m_old_perform_count;
+    g_report.performed_article_loop = m_old_performed_loop;
     SelectorCallbackTest::TearDown();
 }
 
@@ -1298,7 +1298,7 @@ private:
     bool                                       m_old_one_command{g_one_command};
     bool                                       m_old_mouse_down{g_mouse_is_down};
     std::string_view                           m_old_backspace{g_tc_BC};
-    int                                        m_old_perform_count{g_perform_count};
+    int                                        m_old_perform_count{g_report.perform_count};
     int                                        m_old_mail_count{g_mail_count};
     std::array<ArticleFlags, 2>                m_flags{};
     Article                                  **m_page{};
@@ -1324,7 +1324,7 @@ void SelectorShellTest::SetUp()
     g_priv_dir = m_private.generic_string();
     g_check_flag = false;
     g_waiting = g_no_wait_fork = g_one_command = false;
-    g_perform_count = 0;
+    g_report.perform_count = 0;
     for (const int number : {
              SIGINT,
 #ifdef SIGQUIT
@@ -1370,7 +1370,7 @@ void SelectorShellTest::TearDown()
     g_one_command = m_old_one_command;
     g_mouse_is_down = m_old_mouse_down;
     g_tc_BC = m_old_backspace;
-    g_perform_count = m_old_perform_count;
+    g_report.perform_count = m_old_perform_count;
     g_mail_count = m_old_mail_count;
     std::error_code error;
     std::filesystem::current_path(m_old_directory, error);
@@ -1440,7 +1440,7 @@ void SelectorShellTest::expect_one_shell()
     const std::string invocation = std::string(role) + '\n';
     EXPECT_EQ(0, log.find(invocation));
     EXPECT_EQ(std::string::npos, log.find(invocation, invocation.size()));
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
 }
 
 class SelectorShellCancelTest : public SelectorShellTest, public testing::WithParamInterface<char>
@@ -1452,7 +1452,7 @@ TEST_P(SelectorShellCancelTest, erasingTheEscapeReturnsToThePromptWithoutStartin
     const DisplayState result = dispatch('!', std::string(1, GetParam()));
 
     EXPECT_EQ(DS_ASK, result);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_FALSE(std::filesystem::exists(m_root / "tools.log"));
     EXPECT_FALSE(std::filesystem::exists(m_private / "shell-cwd"));
     EXPECT_TRUE(std::filesystem::equivalent(m_start, std::filesystem::current_path()));
@@ -1728,7 +1728,7 @@ private:
     bool                        m_old_one_command{g_one_command};
     bool                        m_old_mouse_down{g_mouse_is_down};
     bool                        m_old_novice_delays{g_novice_delays};
-    int                         m_old_perform_count{g_perform_count};
+    int                         m_old_perform_count{g_report.perform_count};
     SelectionMode               m_old_thread_mode{g_sel.thread_mode};
     SelectionSortMode           m_old_thread_sort{g_sel.thread_sort};
     std::string                 m_old_commands{g_option_sel_cmds};
@@ -1751,7 +1751,7 @@ void SelectorOptionTest::SetUp()
     g_option_sel_cmds = "Z>";
     g_one_command = false;
     g_novice_delays = false;
-    g_perform_count = 0;
+    g_report.perform_count = 0;
     g_tc_BC = "\b";
     g_tc_CD = "";
     g_term_line = g_sel_page.last_line;
@@ -1775,7 +1775,7 @@ void SelectorOptionTest::TearDown()
     g_one_command = m_old_one_command;
     g_mouse_is_down = m_old_mouse_down;
     g_novice_delays = m_old_novice_delays;
-    g_perform_count = m_old_perform_count;
+    g_report.perform_count = m_old_perform_count;
     g_sel.thread_mode = m_old_thread_mode;
     g_sel.thread_sort = m_old_thread_sort;
     g_option_sel_cmds = m_old_commands;
@@ -1823,7 +1823,7 @@ TEST_P(SelectorInlineOptionTest, appliesTheOptionAndReturnsToTheArticlePrompt)
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_FALSE(g_verbose);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     EXPECT_EQ(page, g_sel_page.page_art);
     EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_EQ(2, g_sel_page.page_item_cnt);
@@ -1843,7 +1843,7 @@ TEST_P(SelectorOptionCancelTest, erasedOptionCommandLeavesSettingsAndArticleCont
 
     EXPECT_EQ(DS_ASK, result);
     EXPECT_TRUE(g_verbose);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     expect_article_context();
     expect_next_command('q');
 }
@@ -1860,7 +1860,7 @@ TEST_P(SelectorModeOptionTest, changingTheRequestedModeRestoresTheCallerAndReque
 
     EXPECT_EQ(DS_RESTART, result);
     EXPECT_EQ(SM_SUBJECT, g_sel.default_mode);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     expect_article_context();
     expect_next_command('q');
 }
@@ -1877,7 +1877,7 @@ TEST_F(SelectorOptionTest, scrolledOptionInputDispatchesTheFollowupThroughTheArt
     EXPECT_EQ(DS_STATUS, result);
     EXPECT_FALSE(g_verbose);
     EXPECT_EQ("No marked articles to yank back.", g_msg);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     expect_article_context();
     expect_next_command('q');
 }
@@ -1896,7 +1896,7 @@ TEST_P(SelectorNestedOptionTest, returningFromTheOptionSelectorAppliesOrAbandons
 
     EXPECT_EQ(DS_RESTART, result);
     EXPECT_EQ(!accepted, g_verbose);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     EXPECT_NE(std::string::npos, m_output.find("Options"));
     EXPECT_NE(std::string::npos, m_output.find("Change `Terse Output'"));
     expect_article_context();
@@ -2009,7 +2009,7 @@ TEST_P(SelectorOptionSessionTest, nestedOptionsReturnToArticleRowsAndRestoreTheA
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
     EXPECT_FALSE(g_one_command);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     SelectorSessionInputState::expect_next_command('q');
 }
 
@@ -5347,8 +5347,8 @@ private:
     ArticleLocation            m_old_location{g_nav.target};
     SelectionItem              m_old_item{g_sel_page.items[0]};
     int                        m_old_page_line{g_page_line};
-    int                        m_old_perform_count{g_perform_count};
-    bool                       m_old_performed_loop{g_performed_article_loop};
+    int                        m_old_perform_count{g_report.perform_count};
+    bool                       m_old_performed_loop{g_report.performed_article_loop};
     bool                       m_old_error{g_error_occurred};
     bool                       m_old_breadth_first{g_breadth_first};
     char                       m_old_erase{g_erase_char};
@@ -5366,7 +5366,7 @@ void ArticleSelectorInlineStateTest::SetUp()
     g_nav.target.art = nullptr;
     g_nav.target.num = ArticleNum{};
     g_page_line = 1;
-    g_perform_count = 0;
+    g_report.perform_count = 0;
     g_error_occurred = false;
     g_breadth_first = false;
     g_erase_char = '\b';
@@ -5383,8 +5383,8 @@ void ArticleSelectorInlineStateTest::TearDown()
     g_nav.target = m_old_location;
     g_sel_page.items[0] = m_old_item;
     g_page_line = m_old_page_line;
-    g_perform_count = m_old_perform_count;
-    g_performed_article_loop = m_old_performed_loop;
+    g_report.perform_count = m_old_perform_count;
+    g_report.performed_article_loop = m_old_performed_loop;
     g_error_occurred = m_old_error;
     g_breadth_first = m_old_breadth_first;
     g_erase_char = m_old_erase;
@@ -6322,7 +6322,7 @@ TEST_P(ArticleSelectorInlineModeTest, junkCommandAppliesToSelectedArticlesAcross
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({2, 3}, {});
-    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(2, g_report.perform_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
     EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(GetParam(), g_sel.mode);
@@ -6336,7 +6336,7 @@ TEST_P(ArticleSelectorInlineModeTest, doubledColonJunksUnselectedArticlesAndReta
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({1, 4}, {1, 4});
-    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(2, g_report.perform_count);
     EXPECT_EQ(1, g_selected_subj_cnt);
 }
 
@@ -6348,7 +6348,7 @@ TEST_P(ArticleSelectorInlineModeTest, deselectCommandKeepsArticlesUnread)
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({1, 2, 3, 4}, {});
-    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(2, g_report.perform_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
 }
 
@@ -6360,7 +6360,7 @@ TEST_P(ArticleSelectorInlineModeTest, doubledColonSelectsPreviouslyUnselectedArt
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({1, 2, 3, 4}, {1, 2, 3, 4});
-    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(2, g_report.perform_count);
     EXPECT_EQ(3, g_selected_subj_cnt);
 }
 
@@ -6372,7 +6372,7 @@ TEST_P(ArticleSelectorInlineModeTest, selectedCommandWithNoSelectionLeavesArticl
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({1, 2, 3, 4}, {});
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_EQ("No articles affected.", g_msg);
 }
 
@@ -6384,7 +6384,7 @@ TEST_P(ArticleSelectorInlineModeTest, readModeJunkCommandClearsSelectedReadArtic
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({}, {});
-    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(2, g_report.perform_count);
     EXPECT_TRUE(g_sel.rereading);
     EXPECT_EQ(AGF_DEL_SEL, g_sel.mask);
 }
@@ -6397,7 +6397,7 @@ TEST_P(ArticleSelectorInlineModeTest, emptyCommandRetainsSelection)
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(false);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
 }
 
 TEST_P(ArticleSelectorInlineModeTest, selectedUnreadCommandSkipsAlreadyReadArticles)
@@ -6412,7 +6412,7 @@ TEST_P(ArticleSelectorInlineModeTest, selectedUnreadCommandSkipsAlreadyReadArtic
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({2, 3}, {});
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
 }
 
 TEST_P(ArticleSelectorInlineCancelTest, erasedCommandRetainsSelection)
@@ -6424,7 +6424,7 @@ TEST_P(ArticleSelectorInlineCancelTest, erasedCommandRetainsSelection)
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(false);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_EQ(g_cache.ptr(ArticleNum{1}), g_nav.target.art);
     EXPECT_EQ(ArticleNum{1}, g_nav.target.num);
 }
@@ -6484,7 +6484,7 @@ TEST_F(ArticleSelectorInlineStateTest, threadCommandFindsTheFirstSubjectWithUnre
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({2}, {});
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
 }
 
 TEST_F(ArticleSelectorInlineStateTest, currentSubjectSelectionDoesNotSelectItsThreadRoot)
@@ -6500,7 +6500,7 @@ TEST_F(ArticleSelectorInlineStateTest, currentSubjectSelectionDoesNotSelectItsTh
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({1, 2, 3, 4}, {1, 3, 4});
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     EXPECT_EQ(2, g_selected_subj_cnt);
 }
 
@@ -6555,7 +6555,7 @@ TEST_P(ArticleSelectorSearchReadTest, matchingSearchAddsSelectionsStartingAtTheB
     EXPECT_EQ(DS_DISPLAY, result);
     expect_search_selection({1, 2, 4}, rereading);
     EXPECT_EQ(2, g_selected_subj_cnt);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     EXPECT_EQ("Bravo", g_art_search.last_pat);
     EXPECT_EQ(0, g_sel_page.item_index);
     EXPECT_EQ(mode, g_sel.mode);
@@ -6570,7 +6570,7 @@ TEST_P(ArticleSelectorSearchReadTest, noMatchesRetainSelectionAndReportNoArticle
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(rereading);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_EQ("No articles affected.", g_msg);
     EXPECT_NE(std::string::npos, m_output.find("No articles affected."));
 }
@@ -6584,7 +6584,7 @@ TEST_P(ArticleSelectorSearchReadTest, malformedPatternReportsAnErrorAndRetainsSe
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(rereading);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_NE(std::string::npos, m_output.find("Missing ]"));
     EXPECT_FALSE(g_error_occurred);
 }
@@ -6599,7 +6599,7 @@ TEST_P(ArticleSelectorSearchReadTest, blankSearchReusesThePreviousPattern)
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_search_selection({1, 2, 4}, rereading);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     EXPECT_EQ("Bravo", g_art_search.last_pat);
 }
 
@@ -6627,7 +6627,7 @@ TEST_P(ArticleSelectorSearchModeTest, authorMatchesSelectTheScopeChosenByTheSele
     {
         expect_search_selection({1, 2, 3, 4});
     }
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
     EXPECT_EQ(ARTSCOPE_FROM, g_art_search.how_much);
 }
 
@@ -6639,7 +6639,7 @@ TEST_P(ArticleSelectorSearchModeTest, explicitJunkCommandVisitsEveryMatchAcrossT
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({2, 3}, {});
-    EXPECT_EQ(2, g_perform_count);
+    EXPECT_EQ(2, g_report.perform_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
 }
 
@@ -6653,7 +6653,7 @@ TEST_P(ArticleSelectorSearchModeTest, unreadSearchSkipsMatchingReadArticles)
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_articles({1, 3, 4}, {1, 4});
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_EQ("No articles affected.", g_msg);
 }
 
@@ -6692,7 +6692,7 @@ TEST_P(ArticleSelectorSearchModeTest, blankSearchWithoutAPreviousPatternReportsA
 
     EXPECT_EQ(DS_DISPLAY, result);
     expect_selection_preserved(false);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
     EXPECT_NE(std::string::npos, m_output.find("Null search string"));
 }
 
@@ -6711,7 +6711,7 @@ TEST_P(ArticleSelectorSearchCancelTest, cancellingSearchRetainsThePreviousPatter
     EXPECT_EQ("Bravo", g_art_search.last_pat);
     EXPECT_EQ(ArticleNum{4}, g_nav.target.num);
     EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_nav.target.art);
-    EXPECT_EQ(0, g_perform_count);
+    EXPECT_EQ(0, g_report.perform_count);
 }
 
 INSTANTIATE_TEST_SUITE_P(ArticleSubjectAndThread, ArticleSelectorSearchModeTest,

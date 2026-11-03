@@ -54,7 +54,6 @@ namespace fs = std::filesystem;
 std::string g_orig_dir;    // cwd when rn invoked
 std::string g_host_name;   // host name to match local postings
 std::string g_head_name;
-int         g_perform_count{};
 
 #ifdef HAS_NEWS_ADMIN
 const std::string g_news_admin{NEWS_ADMIN}; // news administrator
@@ -700,7 +699,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     else
                     {
-                        set_owned_value(std::to_string(g_perform_count));
+                        set_owned_value(std::to_string(g_report.perform_count));
                     }
                     break;
 

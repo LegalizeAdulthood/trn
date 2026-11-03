@@ -421,11 +421,11 @@ protected:
     void SetUp() override
     {
         m_old_msg = g_msg;
-        m_old_perform_count = g_perform_count;
+        m_old_perform_count = g_report.perform_count;
         m_old_error_occurred = g_error_occurred;
         m_old_subj_line = g_subj_line;
         m_old_page_line = g_page_line;
-        m_old_performed_article_loop = g_performed_article_loop;
+        m_old_performed_article_loop = g_report.performed_article_loop;
         m_old_selected_count = g_selected_count;
         m_old_missing_count = g_missing_count;
         m_old_sel_mode = g_sel.mode;
@@ -436,11 +436,11 @@ protected:
     void TearDown() override
     {
         g_msg = m_old_msg;
-        g_perform_count = m_old_perform_count;
+        g_report.perform_count = m_old_perform_count;
         g_error_occurred = m_old_error_occurred;
         g_subj_line = m_old_subj_line;
         g_page_line = m_old_page_line;
-        g_performed_article_loop = m_old_performed_article_loop;
+        g_report.performed_article_loop = m_old_performed_article_loop;
         g_selected_count = m_old_selected_count;
         g_missing_count = m_old_missing_count;
         g_sel.mode = m_old_sel_mode;
@@ -482,9 +482,9 @@ TEST_F(PerformStatusEndTest, reportsNoArticlesAffected)
 TEST_F(PerformStatusEndTest, reportsThreadMatchesWithoutArticleLoop)
 {
     begin_status(0);
-    g_performed_article_loop = false;
+    g_report.performed_article_loop = false;
     g_sel.mode = SM_THREAD;
-    g_perform_count = 1;
+    g_report.perform_count = 1;
 
     const int result = perform_status_end(0, "article");
 
@@ -495,7 +495,7 @@ TEST_F(PerformStatusEndTest, reportsThreadMatchesWithoutArticleLoop)
 TEST_F(PerformStatusEndTest, reportsKilledArticles)
 {
     begin_status(5);
-    g_perform_count = 2;
+    g_report.perform_count = 2;
 
     const int result = perform_status_end(3, "article");
 
@@ -507,7 +507,7 @@ TEST_F(PerformStatusEndTest, reportsDeselectedArticles)
 {
     begin_status(3, ArticleUnread{3});
     g_selected_count = ArticleUnread{1};
-    g_perform_count = -2;
+    g_report.perform_count = -2;
 
     const int result = perform_status_end(3, "article");
 
@@ -519,7 +519,7 @@ TEST_F(PerformStatusEndTest, reportsMissingArticlesWithPluralModifier)
 {
     begin_status(5);
     g_missing_count = ArticleUnread{2};
-    g_perform_count = 2;
+    g_report.perform_count = 2;
 
     const int result = perform_status_end(1, "article");
 

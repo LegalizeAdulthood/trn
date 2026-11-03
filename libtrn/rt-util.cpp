@@ -29,8 +29,8 @@
 #include <string>
 
 ProgressDisplay g_progress{};
+PerformReport   g_report{};
 
-bool g_performed_article_loop{}; //
 bool g_bkgnd_spinner{};          // -B
 bool g_unbroken_subjects{};      // -u
 
@@ -866,25 +866,19 @@ bool ProgressDisplay::in_background()
     return mode == SPIN_BACKGROUND;
 }
 
-static int         s_prior_perform_cnt{};
-static std::time_t s_prior_now{};
-static long        s_ps_sel{};
-static long        s_ps_cnt{};
-static long        s_ps_missing{};
-
 void perform_status_init(int cnt)
 {
-    g_perform_count = 0;
+    g_report.perform_count = 0;
     g_error_occurred = false;
     g_subj_line = std::nullopt;
     g_page_line = 1;
-    g_performed_article_loop = true;
+    g_report.performed_article_loop = true;
 
-    s_prior_perform_cnt = 0;
-    s_prior_now = 0;
-    s_ps_sel = g_selected_count;
-    s_ps_cnt = cnt;
-    s_ps_missing = g_missing_count;
+    g_report.prior_count = 0;
+    g_report.prior_now = 0;
+    g_report.sel = g_selected_count;
+    g_report.start_count = cnt;
+    g_report.missing = g_missing_count;
 
     g_progress.count = 0;
     g_progress.place = 0;
@@ -900,23 +894,23 @@ void perform_status(int cnt, int spin)
         std::fflush(stdout);
     }
 
-    if (g_perform_count == s_prior_perform_cnt)
+    if (g_report.perform_count == g_report.prior_count)
     {
         return;
     }
 
     std::time_t now = std::time(nullptr);
-    if (now - s_prior_now < 2)
+    if (now - g_report.prior_now < 2)
     {
         return;
     }
 
-    s_prior_now = now;
-    s_prior_perform_cnt = g_perform_count;
+    g_report.prior_now = now;
+    g_report.prior_count = g_report.perform_count;
 
-    long missing = g_missing_count - s_ps_missing;
-    long kills = s_ps_cnt - cnt - missing;
-    long sels = g_selected_count - s_ps_sel;
+    long missing = g_missing_count - g_report.missing;
+    long kills = g_report.start_count - cnt - missing;
+    long sels = g_selected_count - g_report.sel;
 
     if (!(kills | sels))
     {
@@ -924,9 +918,10 @@ void perform_status(int cnt, int spin)
     }
 
     carriage_return();
-    if (g_perform_count != sels && g_perform_count != -sels && g_perform_count != kills && g_perform_count != -kills)
+    if (g_report.perform_count != sels && g_report.perform_count != -sels && g_report.perform_count != kills &&
+        g_report.perform_count != -kills)
     {
-        fmt::print("M:{} ", g_perform_count);
+        fmt::print("M:{} ", g_report.perform_count);
     }
     if (kills)
     {
@@ -1019,7 +1014,7 @@ int perform_status_end(long cnt, std::string_view obj_type)
     bool article_status = !obj_type.empty() && obj_type.front() == 'a';
 
     g_msg.clear();
-    if (g_perform_count == 0)
+    if (g_report.perform_count == 0)
     {
         g_msg = "No ";
         g_msg += obj_type;
@@ -1027,20 +1022,19 @@ int perform_status_end(long cnt, std::string_view obj_type)
         return 0;
     }
 
-    long missing = g_missing_count - s_ps_missing;
-    long kills = s_ps_cnt - cnt - missing;
-    long sels = g_selected_count - s_ps_sel;
+    long missing = g_missing_count - g_report.missing;
+    long kills = g_report.start_count - cnt - missing;
+    long sels = g_selected_count - g_report.sel;
 
-    if (!g_performed_article_loop)
+    if (!g_report.performed_article_loop)
     {
-        output_change(g_msg, (long) g_perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {},
+        output_change(g_msg, (long) g_report.perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {},
                       "ERR|match|ed");
     }
-    else if (g_perform_count != sels && g_perform_count != -sels //
-             && g_perform_count != kills && g_perform_count != -kills)
+    else if (g_report.perform_count != sels && g_report.perform_count != -sels //
+             && g_report.perform_count != kills && g_report.perform_count != -kills)
     {
-        output_change(g_msg, (long)g_perform_count, obj_type, {},
-                           "ERR|match|ed");
+        output_change(g_msg, (long) g_report.perform_count, obj_type, {}, "ERR|match|ed");
         obj_type = {};
     }
     if (kills)

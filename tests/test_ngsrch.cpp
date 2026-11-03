@@ -10,6 +10,7 @@
 #include <trn/ngdata.h>
 #include <trn/rt-page.h>
 #include <trn/rt-select.h>
+#include <trn/rt-util.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 
@@ -34,7 +35,7 @@ protected:
         m_old_general_mode = g_general_mode;
         m_old_use_threads = g_use_threads;
         m_old_page_line = g_page_line;
-        m_old_perform_count = g_perform_count;
+        m_old_perform_count = g_report.perform_count;
         m_old_selected_count = g_selected_count;
         m_old_sel_mask = g_sel.mask;
         m_old_int_count = g_int_count;
@@ -47,7 +48,7 @@ protected:
         g_general_mode = GM_READ;
         g_use_threads = false;
         g_page_line = 0;
-        g_perform_count = 0;
+        g_report.perform_count = 0;
         g_selected_count = ArticleUnread{};
         g_sel.mask = AGF_SEL;
         g_int_count = 0;
@@ -65,7 +66,7 @@ protected:
         g_general_mode = m_old_general_mode;
         g_use_threads = m_old_use_threads;
         g_page_line = m_old_page_line;
-        g_perform_count = m_old_perform_count;
+        g_report.perform_count = m_old_perform_count;
         g_selected_count = m_old_selected_count;
         g_sel.mask = m_old_sel_mask;
         g_int_count = m_old_int_count;
@@ -93,7 +94,7 @@ TEST_F(NewsgroupSearchTest, selectsAddGroupWithEscapedDelimiterAndCommand)
     EXPECT_EQ(NGS_DONE, newsgroup_search("/comp\\/lang/:+", false));
     EXPECT_EQ(AGF_SEL, g_add_groups[m_group].m_flags & AGF_SEL);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(1, g_perform_count);
+    EXPECT_EQ(1, g_report.perform_count);
 }
 
 TEST_F(NewsgroupSearchTest, emptyPatternReusesPreviousSearch)

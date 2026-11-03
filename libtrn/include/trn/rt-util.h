@@ -7,12 +7,12 @@
 
 #include <config/typedef.h>
 
+#include <ctime>
 #include <string>
 #include <string_view>
 
 struct Article;
 
-extern bool g_performed_article_loop; //
 extern bool g_bkgnd_spinner;          // -B
 extern bool g_unbroken_subjects;      // -u
 
@@ -46,6 +46,19 @@ struct ProgressDisplay
 };
 
 extern ProgressDisplay g_progress;
+
+struct PerformReport
+{
+    int         prior_count{};
+    std::time_t prior_now{};
+    long        sel{};
+    long        start_count{};
+    long        missing{};
+    int         perform_count{};
+    bool        performed_article_loop{};
+};
+
+extern PerformReport g_report;
 
 std::string_view extract_name(std::string_view name);
 std::string compress_name(std::string_view name, int max);

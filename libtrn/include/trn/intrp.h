@@ -12,7 +12,6 @@
 extern std::string g_orig_dir;  // cwd when rn invoked
 extern std::string g_host_name; // host name to match local postings
 extern std::string g_head_name;
-extern int         g_perform_count;
 
 #ifdef HAS_NEWS_ADMIN
 extern const std::string g_news_admin; // news administrator

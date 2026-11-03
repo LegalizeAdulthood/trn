@@ -10,6 +10,7 @@
 #include <trn/ngdata.h>
 #include <trn/rcstuff.h>
 #include <trn/respond.h>
+#include <trn/rt-util.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
 
@@ -153,18 +154,18 @@ protected:
     void SetUp() override
     {
         m_old_one_command = g_one_command;
-        m_old_perform_count = g_perform_count;
+        m_old_perform_count = g_report.perform_count;
         m_old_msg = g_msg;
         drain_macro_buffer();
 
         g_one_command = false;
-        g_perform_count = 0;
+        g_report.perform_count = 0;
     }
 
     void TearDown() override
     {
         g_one_command = m_old_one_command;
-        g_perform_count = m_old_perform_count;
+        g_report.perform_count = m_old_perform_count;
         g_msg = m_old_msg;
         drain_macro_buffer();
     }
