@@ -595,7 +595,7 @@ static void ov_parse(std::string_view line, ArticleNum artnum, bool remote)
     {
         article->check_poster();
     }
-    spin(100);
+    g_progress.spin(100);
 }
 
 // Change a newsgroup name into the name of the overview data file.  We

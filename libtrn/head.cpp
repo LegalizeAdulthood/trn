@@ -427,7 +427,7 @@ bool parse_header(ArticleNum art_num)
     {
         return false;
     }
-    spin(20);
+    g_progress.spin(20);
     if (g_data_source->m_flags & DF_REMOTE)
     {
         if (!nntp_art_name(art_num, false).empty())
@@ -623,7 +623,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
         owned_result->clear();
     }
 
-    spin(20);
+    g_progress.spin(20);
     ArticleNum prior_num{article_before(art_num)};
     bool       cached = (g_header_rules.type[which_line].flags & HT_CACHED);
     int        status;

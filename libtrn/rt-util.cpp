@@ -805,29 +805,29 @@ void ProgressDisplay::set_spin(SpinMode mode)
 }
 
 // modulus for the spin...
-void spin(int count)
+void ProgressDisplay::spin(int count)
 {
-    if (!g_progress.level)
+    if (!level)
     {
         return;
     }
-    switch (g_progress.mode)
+    switch (mode)
     {
     case SPIN_BACKGROUND:
         if (!g_bkgnd_spinner)
         {
             return;
         }
-        if (!(++g_progress.count % count))
+        if (!(++this->count % count))
         {
-            std::putchar(g_progress.chars[++g_progress.place % g_progress.chars.size()]);
+            std::putchar(chars[++place % chars.size()]);
             backspace();
             std::fflush(stdout);
         }
         break;
 
     case SPIN_FOREGROUND:
-        if (!(++g_progress.count % count))
+        if (!(++this->count % count))
         {
             std::putchar('.');
             std::fflush(stdout);
@@ -836,23 +836,23 @@ void spin(int count)
 
     case SPIN_BAR_GRAPH:
     {
-        if (g_progress.todo == 0)
+        if (todo == 0)
         {
             break;              // bail out rather than crash
         }
-        int new_pos = (int) ((long) g_progress.marks * ++g_progress.count / g_progress.todo);
-        if (g_progress.pos < new_pos && g_progress.count <= g_progress.todo + 1)
+        int new_pos = (int) ((long) marks * ++this->count / todo);
+        if (pos < new_pos && this->count <= todo + 1)
         {
             do
             {
                 std::putchar('*');
-            } while (++g_progress.pos < new_pos);
-            g_progress.place = 0;
+            } while (++pos < new_pos);
+            place = 0;
             std::fflush(stdout);
         }
-        else if (!(g_progress.count % count))
+        else if (!(this->count % count))
         {
-            std::putchar(g_progress.chars[++g_progress.place % g_progress.chars.size()]);
+            std::putchar(chars[++place % chars.size()]);
             backspace();
             std::fflush(stdout);
         }

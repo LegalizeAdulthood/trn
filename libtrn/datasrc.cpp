@@ -1045,7 +1045,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
             line = remote_line;
             line += '\n';
             fmt::print(fp, "{}", line);
-            spin(200 * g_net_speed);
+            g_progress.spin(200 * g_net_speed);
         }
         else
         {

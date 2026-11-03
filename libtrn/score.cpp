@@ -253,7 +253,7 @@ static void sc_score_art_basic(ArticleNum a)
 
     if (s_sc_do_spin)           // appropriate to spin
     {
-        spin(20);               // keep the user amused
+        g_progress.spin(20); // keep the user amused
     }
     sc_set_score(a,score);      // set the score
 }
