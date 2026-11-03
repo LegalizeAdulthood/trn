@@ -266,7 +266,7 @@ void InterpolatorTest::TearDown()
     g_art_buf.final();
     rcstuff_final();
     data_source_finalize();
-    last_final();
+    g_last_run.final();
     interp_final();
     opt_final();
     head_final();

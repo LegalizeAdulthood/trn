@@ -49,7 +49,7 @@ protected:
 
     void TearDown() override
     {
-        last_final();
+        g_last_run.final();
 
         g_dot_dir = m_old_dot_dir;
         g_newsgroup_name = m_old_newsgroup_name;

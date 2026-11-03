@@ -33,10 +33,10 @@ void LastRunState::init()
     read();
 }
 
-void last_final()
+void LastRunState::final()
 {
-    g_last_run.file.clear();
-    g_last_run.newsgroup_name.clear();
+    file.clear();
+    newsgroup_name.clear();
 }
 
 void LastRunState::read()
