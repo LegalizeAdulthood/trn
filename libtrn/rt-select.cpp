@@ -2964,7 +2964,7 @@ reask_sort:
                 }
                 else
                 {
-                    app = article_ptr_list_begin();
+                    app = g_art_order.begin();
                 }
                 while (app < limit)
                 {

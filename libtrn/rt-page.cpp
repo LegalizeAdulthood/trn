@@ -882,7 +882,7 @@ try_again:
             else
             {
                 limit = article_ptr_list_end();
-                for (app = article_ptr_list_begin(); app < limit; app++)
+                for (app = g_art_order.begin(); app < limit; app++)
                 {
                     if (*app == ap)
                     {
@@ -903,7 +903,7 @@ try_again:
         }
         // The g_artptr_list contains only unread or read articles, never both
         limit = article_ptr_list_end();
-        for (app = article_ptr_list_begin(); app < limit; app++)
+        for (app = g_art_order.begin(); app < limit; app++)
         {
             ap = *app;
             if (g_sel.rereading && !(ap->m_flags & g_sel.mask))
@@ -1145,7 +1145,7 @@ bool SelectorPage::first_page()
     case SM_ARTICLE:
     {
         Article **limit = article_ptr_list_end();
-        for (Article **app = article_ptr_list_begin(); app < limit; app++)
+        for (Article **app = g_art_order.begin(); app < limit; app++)
         {
             if ((*app)->m_flags & AF_INCLUDED)
             {
@@ -1596,7 +1596,7 @@ bool SelectorPage::prev_page()
     {
         Article **page_app = page_art;
 
-        for (Article **app = page_art; app > article_ptr_list_begin();)
+        for (Article **app = page_art; app > g_art_order.begin();)
         {
             --app;
             if ((*app)->m_flags & AF_INCLUDED)

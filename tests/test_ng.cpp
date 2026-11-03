@@ -3116,7 +3116,7 @@ void SortedArticleNavigationTest::set_position_after_navigation(long number, lon
 {
     g_nav.target.num = ArticleNum{number};
     g_nav.target.art = g_nav.target.num <= g_last_art ? g_cache.ptr(g_nav.target.num) : nullptr;
-    g_art_order.ptr = article_ptr_list_begin() + index;
+    g_art_order.ptr = g_art_order.begin() + index;
     g_s_follow_temp = true;
     g_univ_follow_temp = true;
 }
@@ -3174,7 +3174,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
 
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
     EXPECT_EQ(number <= g_last_art.value_of() ? g_cache.ptr(ArticleNum{number}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(article_ptr_list_begin() + index, g_art_order.ptr);
+    EXPECT_EQ(g_art_order.begin() + index, g_art_order.ptr);
     EXPECT_EQ(order, g_art_order.ptr_list);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
@@ -3226,7 +3226,7 @@ protected:
 void SortedPreviousCursorRepairArticleNavigationTest::SetUp()
 {
     SortedPreviousArticleNavigationTest::SetUp();
-    g_art_order.ptr = article_ptr_list_begin() + 2;
+    g_art_order.ptr = g_art_order.begin() + 2;
     g_search_ahead = ArticleNum{};
     g_s_follow_temp = true;
     g_univ_follow_temp = true;
@@ -3316,7 +3316,7 @@ void SortedRestartArticleNavigationTest::SetUp()
     set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS}, 4);
     set_order({3, 1, 2});
     g_sel.selected_only = true;
-    g_art_order.ptr = article_ptr_list_begin() + 1;
+    g_art_order.ptr = g_art_order.begin() + 1;
     if (GetParam())
     {
         set_position_after_navigation(3, 0);
@@ -4017,7 +4017,7 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(order, g_art_order.ptr_list);
-    EXPECT_EQ(order_index < 0 ? cursor : article_ptr_list_begin() + order_index, g_art_order.ptr);
+    EXPECT_EQ(order_index < 0 ? cursor : g_art_order.begin() + order_index, g_art_order.ptr);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -8273,7 +8273,7 @@ TEST_F(SortedArticleNavigationTest, nextUnreadFromGroupEndRestartsAtTheFirstElig
 {
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 5);
     set_order({2, 4, 1, 3});
-    g_art_order.ptr = article_ptr_list_begin() + 3;
+    g_art_order.ptr = g_art_order.begin() + 3;
 
     expect_next_unread(4, 1);
 }
@@ -8327,7 +8327,7 @@ TEST_P(SortedExplicitForwardArticleNavigationTest, nextArticleStopsAfterTheSorte
 {
     g_nav.target.num = ArticleNum{3};
     g_nav.target.art = g_cache.ptr(g_nav.target.num);
-    g_art_order.ptr = article_ptr_list_begin() + 3;
+    g_art_order.ptr = g_art_order.begin() + 3;
 
     expect_next_article(5, 0);
 }
@@ -9207,7 +9207,7 @@ TEST_F(SortedArticleNavigationTest, previousUnreadFromGroupEndFindsTheLastEligib
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 5);
     set_order({2, 1, 4, 3});
     g_sel.selected_only = true;
-    g_art_order.ptr = article_ptr_list_begin() + 2;
+    g_art_order.ptr = g_art_order.begin() + 2;
 
     EXPECT_TRUE(expect_previous('p', 2, 0).empty());
 }
@@ -13369,7 +13369,7 @@ TEST_P(NumericJumpNavigationArticleTest, continuesFromTheJumpTargetInTheConfigur
         {
             g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
         }
-        g_art_order.ptr = article_ptr_list_begin();
+        g_art_order.ptr = g_art_order.begin();
     }
     enter_number("2\n");
     expect_target(2);
@@ -13442,7 +13442,7 @@ TEST_F(NumericRangeArticleTest, commaSeparatedOverlappingRangesRetainNumericScop
     {
         g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_order.ptr = article_ptr_list_begin() + 3;
+    g_art_order.ptr = g_art_order.begin() + 3;
 
     const std::string output = apply_range("3,1-3:j\n");
 
@@ -13834,7 +13834,7 @@ TEST_F(DirectNavigationArticleTest, configuredNavigationAfterANumericStepRepairs
 
     EXPECT_EQ(ArticleNum{7}, g_nav.target.num);
     EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
-    EXPECT_EQ(article_ptr_list_begin() + 7, g_art_order.ptr);
+    EXPECT_EQ(g_art_order.begin() + 7, g_art_order.ptr);
     EXPECT_TRUE(g_reread);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
 }

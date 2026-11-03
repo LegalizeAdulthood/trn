@@ -291,7 +291,7 @@ void ArticleSelectorCommandTest::prepare_page(SelectionMode mode, bool rereading
     g_sel.rereading = rereading;
     rebuild_page();
     // Both cursor forms can survive a prior selector mode change.
-    g_sel_page.page_art = article_ptr_list_begin();
+    g_sel_page.page_art = g_art_order.begin();
     g_sel_page.page_subj = &m_subject;
 }
 
@@ -5177,7 +5177,7 @@ void ArticleSelectorExclusiveStateTest::expect_first_page(int total) const
     EXPECT_EQ(1, g_sel.direction);
     if (g_sel.mode == SM_ARTICLE)
     {
-        EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+        EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
     }
     else
     {
@@ -5712,7 +5712,7 @@ TEST_P(ArticleSelectorToggleTest, rebuildsThePageWithTheOtherPopulation)
         ASSERT_EQ(2U, g_art_order.ptr_list.size());
         EXPECT_EQ(ArticleNum{rereading ? 3 : 1}, g_art_order.ptr_list[0]->article_num());
         EXPECT_EQ(ArticleNum{rereading ? 4 : 2}, g_art_order.ptr_list[1]->article_num());
-        EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+        EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
     }
     else
     {
@@ -5820,7 +5820,7 @@ TEST_P(ArticleSelectorSortCommandTest, ordersThePopulationWithoutChangingSelecti
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     if (mode == SM_ARTICLE)
     {
-        EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+        EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
     }
     else
     {

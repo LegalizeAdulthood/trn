@@ -265,11 +265,11 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
         Article** limit = article_ptr_list_end();
         if (!ap)
         {
-            g_art_order.ptr = article_ptr_list_begin() - 1;
+            g_art_order.ptr = g_art_order.begin() - 1;
         }
         else if (!g_art_order.ptr || *g_art_order.ptr != ap)
         {
-            for (g_art_order.ptr = article_ptr_list_begin(); g_art_order.ptr < limit; g_art_order.ptr++)
+            for (g_art_order.ptr = g_art_order.begin(); g_art_order.ptr < limit; g_art_order.ptr++)
             {
                 if (*g_art_order.ptr == ap)
                 {
@@ -295,7 +295,7 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
         {
             num = article_after(g_last_art);
             art = nullptr;
-            g_art_order.ptr = article_ptr_list_begin();
+            g_art_order.ptr = g_art_order.begin();
         }
         return;
     }
@@ -412,7 +412,7 @@ void ArticleLocation::prev(bool sel_flag, bool rereading)
         }
         else if (!g_art_order.ptr || *g_art_order.ptr != ap)
         {
-            for (g_art_order.ptr = article_ptr_list_begin(); g_art_order.ptr < limit; g_art_order.ptr++)
+            for (g_art_order.ptr = g_art_order.begin(); g_art_order.ptr < limit; g_art_order.ptr++)
             {
                 if (*g_art_order.ptr == ap)
                 {
@@ -421,7 +421,7 @@ void ArticleLocation::prev(bool sel_flag, bool rereading)
             }
         }
         Article **previous = g_art_order.ptr;
-        while (previous != article_ptr_list_begin())
+        while (previous != g_art_order.begin())
         {
             ap = *--previous;
             if ((rereading || (ap->m_flags & AF_UNREAD)) && (!sel_flag || (ap->m_flags & AF_SEL)))

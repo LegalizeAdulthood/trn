@@ -892,7 +892,7 @@ TEST_P(ArticlePageEligibilityTest, selectionDoesNotOverrideExistenceOrReadScope)
     EXPECT_EQ(static_cast<int>(expected.size()), g_sel_page.total_obj_cnt);
     EXPECT_EQ(ArticleNum{static_cast<long>(expected.size())}, g_obj_count);
     EXPECT_EQ(selected && test_case.included ? 1 : 0, g_selected_count);
-    EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+    EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
 }
 
 TEST_P(ArticlePageReadScopeTest, mixedPopulationListsOnlyExistingArticlesInTheCurrentReadScope)
@@ -1118,14 +1118,14 @@ TEST_P(SelectorPageAnchorTest, reversingSortKeepsTheSameArticleAtThePageAnchor)
     const bool rereading = GetParam();
     prepare_groups(SM_ARTICLE, rereading);
     initialize_page();
-    g_sel_page.page_art = article_ptr_list_begin() + 1;
+    g_sel_page.page_art = g_art_order.begin() + 1;
     Article *anchor = *g_sel_page.page_art;
     g_sel.direction = -1;
 
     initialize_page();
 
     EXPECT_EQ((rereading ? std::vector<long>{9, 8, 6, 2} : std::vector<long>{7, 5, 4, 1}), article_numbers());
-    ASSERT_EQ(article_ptr_list_begin() + 2, g_sel_page.page_art);
+    ASSERT_EQ(g_art_order.begin() + 2, g_sel_page.page_art);
     EXPECT_EQ(anchor, *g_sel_page.page_art);
     EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(2, g_sel_page.page_obj_cnt);
@@ -1137,14 +1137,14 @@ TEST_P(SelectorPageAnchorTest, removingTheAnchorAdvancesToTheNextEligibleArticle
     const bool rereading = GetParam();
     prepare_groups(SM_ARTICLE, rereading);
     initialize_page();
-    g_sel_page.page_art = article_ptr_list_begin() + 1;
+    g_sel_page.page_art = g_art_order.begin() + 1;
     (*g_sel_page.page_art)->m_flags &= ~AF_EXISTS;
     count_subjects(CS_UNSEL_STORE);
 
     initialize_page();
 
     EXPECT_EQ((rereading ? std::vector<long>{2, 8, 9} : std::vector<long>{1, 5, 7}), article_numbers());
-    ASSERT_EQ(article_ptr_list_begin() + 1, g_sel_page.page_art);
+    ASSERT_EQ(g_art_order.begin() + 1, g_sel_page.page_art);
     EXPECT_EQ(ArticleNum{rereading ? 8 : 5}, (*g_sel_page.page_art)->article_num());
     EXPECT_EQ(1, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(2, g_sel_page.page_obj_cnt);
@@ -1156,13 +1156,13 @@ TEST_P(SelectorPageAnchorTest, removingEarlierArticlesKeepsTheAnchorAndRecountsI
     const bool rereading = GetParam();
     prepare_groups(SM_ARTICLE, rereading);
     initialize_page();
-    g_sel_page.page_art = article_ptr_list_begin() + 1;
+    g_sel_page.page_art = g_art_order.begin() + 1;
     Article *anchor = *g_sel_page.page_art;
     exclude_subject(m_subject);
 
     initialize_page();
 
-    ASSERT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+    ASSERT_EQ(g_art_order.begin(), g_sel_page.page_art);
     EXPECT_EQ(anchor, *g_sel_page.page_art);
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(3, g_sel_page.page_obj_cnt);
@@ -1179,7 +1179,7 @@ TEST_P(SelectorPageAnchorTest, switchingFromSubjectsStartsWithTheAnchoredSubject
 
     initialize_page();
 
-    ASSERT_EQ(article_ptr_list_begin() + 1, g_sel_page.page_art);
+    ASSERT_EQ(g_art_order.begin() + 1, g_sel_page.page_art);
     EXPECT_EQ(ArticleNum{rereading ? 6 : 4}, (*g_sel_page.page_art)->article_num());
     EXPECT_EQ(1, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(3, g_sel_page.page_obj_cnt);
@@ -1244,11 +1244,11 @@ TEST_P(SelectorPageAnchorTest, fillingAnArticlePageBeforeTheEndKeepsItsAnchor)
     prepare_groups(SM_ARTICLE, GetParam());
     g_tc_LINES = 7;
     initialize_page();
-    g_sel_page.page_art = article_ptr_list_begin() + 1;
+    g_sel_page.page_art = g_art_order.begin() + 1;
 
     initialize_page(FILL_LAST_PAGE);
 
-    EXPECT_EQ(article_ptr_list_begin() + 1, g_sel_page.page_art);
+    EXPECT_EQ(g_art_order.begin() + 1, g_sel_page.page_art);
     EXPECT_EQ(1, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(2, g_sel_page.page_item_cnt);
     EXPECT_EQ(2, g_sel_page.page_obj_cnt);
@@ -1385,8 +1385,8 @@ TEST_P(ArticlePageDisplayTest, displaysArticleRowsWithoutChangingTheirReadingSta
         EXPECT_EQ(index + 2, g_sel_page.items[index].line);
         EXPECT_EQ(index == 0 ? 1 : index == 1 ? 0 : index, g_sel_page.items[index].sel);
     }
-    EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
-    ASSERT_EQ(article_ptr_list_begin() + 4, g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
+    ASSERT_EQ(g_art_order.begin() + 4, g_sel_page.next_art);
     EXPECT_EQ(g_cache.ptr(ArticleNum{7}), *g_sel_page.next_art);
     EXPECT_EQ(2, g_sel_page.item_index);
     EXPECT_EQ(7, g_sel_page.last_line);
@@ -1422,7 +1422,7 @@ TEST_P(ExclusiveArticlePageDisplayTest, skipsUnselectedArticlesWithoutAssigningT
     EXPECT_EQ(3, g_sel_page.items[1].line);
     EXPECT_EQ(1, g_sel_page.items[0].sel);
     EXPECT_EQ(3, g_sel_page.items[1].sel);
-    EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+    EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
     EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
     EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_EQ(5, g_sel_page.last_line);
@@ -1502,7 +1502,7 @@ TEST_P(RemovedArticlePageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleAr
     {
         EXPECT_EQ(g_cache.ptr(ArticleNum{index + 1}), g_sel_page.items[index].u.ap);
     }
-    EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
+    EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
     EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_TRUE(g_sel_page.at_end);

@@ -495,7 +495,7 @@ int thread_perform(std::string_view command)
             {
                 sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
             }
-            for (Article **app = article_ptr_list_begin(); app < limit; app++)
+            for (Article **app = g_art_order.begin(); app < limit; app++)
             {
                 ap = *app;
                 if (one_thread && ap->m_subj->m_thread != sp->m_thread)

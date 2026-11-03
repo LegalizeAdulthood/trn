@@ -98,6 +98,11 @@ extern SubjectIndex g_subj;
 
 struct ArticleOrder
 {
+    Article **begin()
+    {
+        return ptr_list.data();
+    }
+
     // TODO: private
     void build_ptrs();
 
@@ -129,11 +134,6 @@ void cache_until_key();
 bool cache_subjects();
 #endif
 bool cache_range(ArticleNum first, ArticleNum last);
-
-inline Article **article_ptr_list_begin()
-{
-    return g_art_order.ptr_list.data();
-}
 
 inline Article **article_ptr_list_end()
 {
