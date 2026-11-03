@@ -80,7 +80,6 @@ static std::string mime_parse_entry_value(std::string_view text);
 static int         mime_getc(std::FILE *fp);
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static void        tag_action(std::string &output, std::string_view word, bool opening_tag);
-static void        wrap_html_output(std::string &output);
 static std::string_view find_attr(std::string_view str, std::string_view attr);
 
 void mime_set_executor(MimeExecutor executor)
@@ -1826,7 +1825,7 @@ static void filter_html_into(std::string &output, std::string_view input)
             g_mime.section->html.flags |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
 
-        wrap_html_output(output);
+        g_mime.section->html.wrap_output(output);
     }
 }
 
@@ -2265,48 +2264,48 @@ void HtmlRenderer::do_newline(std::string &output, HtmlFlags flag)
     }
 }
 
-static void wrap_html_output(std::string &output)
+void HtmlRenderer::wrap_output(std::string &output)
 {
-    if (!g_mime.section->html.word_wrap)
+    if (!word_wrap)
     {
         return;
     }
 
-    const std::size_t line_start = static_cast<std::size_t>(g_mime.section->html.line_start);
+    const std::size_t line_start = static_cast<std::size_t>(this->line_start);
     const std::size_t cols = static_cast<std::size_t>(g_tc_COLS);
     if (line_start >= output.size() || output.size() - line_start <= cols)
     {
         return;
     }
 
-    std::size_t wrap_pos = line_start + static_cast<std::size_t>(g_mime.section->html.word_wrap);
+    std::size_t wrap_pos = line_start + static_cast<std::size_t>(word_wrap);
     while (wrap_pos > line_start && !is_hor_space(output[wrap_pos]))
     {
         wrap_pos--;
     }
     if (wrap_pos == line_start)
     {
-        wrap_pos = line_start + static_cast<std::size_t>(g_mime.section->html.word_wrap);
+        wrap_pos = line_start + static_cast<std::size_t>(word_wrap);
         while (wrap_pos - line_start <= cols && wrap_pos < output.size() && !is_hor_space(output[wrap_pos]))
         {
             wrap_pos++;
         }
         if (wrap_pos - line_start > cols || wrap_pos >= output.size())
         {
-            g_mime.section->html.line_start += g_tc_COLS;
+            this->line_start += g_tc_COLS;
             return;
         }
     }
 
-    const HtmlFlags flag_save = g_mime.section->html.flags;
-    g_mime.section->html.flags &= ~HF_SPACE_OK;
+    const HtmlFlags flag_save = flags;
+    flags &= ~HF_SPACE_OK;
     output[wrap_pos] = '\n';
     const std::size_t new_line_start = wrap_pos + 1;
-    g_mime.section->html.line_start = static_cast<int>(new_line_start);
-    g_mime.section->html.flags |= HF_NEED_INDENT;
+    this->line_start = static_cast<int>(new_line_start);
+    flags |= HF_NEED_INDENT;
 
     std::string indent;
-    g_mime.section->html.append_indent(indent);
+    append_indent(indent);
 
     std::size_t content_pos = new_line_start;
     while (content_pos < output.size() && is_hor_space(output[content_pos]))
@@ -2314,7 +2313,7 @@ static void wrap_html_output(std::string &output)
         content_pos++;
     }
     output.replace(new_line_start, content_pos - new_line_start, indent);
-    g_mime.section->html.flags = flag_save;
+    flags = flag_save;
 }
 
 int HtmlRenderer::append_indent(std::string &output)
