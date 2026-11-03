@@ -35,7 +35,6 @@ namespace fs = std::filesystem;
 
 SavedScoreStore g_saved_scores{};
 
-static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a);
 static ArticleNum sc_sv_make_line(ArticleNum a);
 
 void SavedScoreStore::add(std::string_view str)
@@ -138,7 +137,7 @@ void sc_sv_save_file()
 
 // returns the next article number (after the last one used)
 // ART_NUM a;    // art number to start with
-static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
+ArticleNum SavedScoreStore::use_line(std::string_view line, ArticleNum a)
 {
     int        score = 0; // get rid of warning
     const auto digit_count = [](std::string_view text)
@@ -174,11 +173,11 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
                 score_text.front() = static_cast<char>('0' + ('J' - command)); // convert to first digit
                 score = -parse_int(score_text);
                 line.remove_prefix(score_length);
-                g_saved_scores.loaded++;
+                loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
-                    g_saved_scores.used++;
+                    used++;
                 }
                 ++a;
                 break;
@@ -201,11 +200,11 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
                 score_text.front() = static_cast<char>('0' + (command - 'J')); // convert to first digit
                 score = parse_int(score_text);
                 line.remove_prefix(score_length);
-                g_saved_scores.loaded++;
+                loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
-                    g_saved_scores.used++;
+                    used++;
                 }
                 ++a;
                 break;
@@ -228,11 +227,11 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
             }
             for (; repeat_count; repeat_count--)
             {
-                g_saved_scores.loaded++;
+                loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
-                    g_saved_scores.used++;
+                    used++;
                 }
                 ++a;
             }
@@ -411,7 +410,7 @@ void sc_load_scores()
         }
 
         case '.': // longer score line
-            a = sc_sv_use_line(std::string_view{line}.substr(1), a);
+            a = g_saved_scores.use_line(std::string_view{line}.substr(1), a);
             break;
 
         case '!': // group of shared file
