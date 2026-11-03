@@ -83,6 +83,7 @@ struct HtmlRenderer
     void do_newline(std::string &output, HtmlFlags flag);
     void output_prep(std::string &output);
     void wrap_output(std::string &output);
+    void tag_action(std::string &output, std::string_view word, bool opening_tag);
 
     HtmlFlags              flags;
     int                    line_start;

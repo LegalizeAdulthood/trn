@@ -79,7 +79,6 @@ static std::string mime_parse_entry_arg(std::string_view &text);
 static std::string mime_parse_entry_value(std::string_view text);
 static int         mime_getc(std::FILE *fp);
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
-static void        tag_action(std::string &output, std::string_view word, bool opening_tag);
 static std::string_view find_attr(std::string_view str, std::string_view attr);
 
 void mime_set_executor(MimeExecutor executor)
@@ -1658,11 +1657,11 @@ static void filter_html_into(std::string &output, std::string_view input)
                 g_mime.section->html.flags &= ~(HF_IN_TAG | HF_IN_COMMENT);
                 if (!tag_word.empty() && tag_word.front() == '/')
                 {
-                    tag_action(output, std::string_view{tag_word}.substr(1), CLOSING_TAG);
+                    g_mime.section->html.tag_action(output, std::string_view{tag_word}.substr(1), CLOSING_TAG);
                 }
                 else
                 {
-                    tag_action(output, tag_word, OPENING_TAG);
+                    g_mime.section->html.tag_action(output, tag_word, OPENING_TAG);
                 }
                 tag_word.clear();
             }
@@ -1878,7 +1877,7 @@ static std::string roman_numeral(int count, std::string_view letters)
     return result;
 }
 
-static void tag_action(std::string &output, std::string_view word, bool opening_tag)
+void HtmlRenderer::tag_action(std::string &output, std::string_view word, bool opening_tag)
 {
     int                     j;
     int                     tnum;
@@ -1887,7 +1886,7 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
     int                     num;
     char                    ch;
     bool                    match = false;
-    std::vector<HtmlBlock> &blks = g_mime.section->html.blocks;
+    std::vector<HtmlBlock> &blks = blocks;
 
     const std::size_t      tag_end = word.find(' ');
     const std::string_view tag_name = word.substr(0, tag_end);
@@ -1918,42 +1917,42 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         return;
     }
 
-    if (g_mime.section->html.flags & HF_IN_HIDING && (opening_tag || blks.empty() || tnum != blks.back().tag_num))
+    if (flags & HF_IN_HIDING && (opening_tag || blks.empty() || tnum != blks.back().tag_num))
     {
         return;
     }
 
     if (s_tag_attr[tnum].flags & TF_BR)
     {
-        g_mime.section->html.flags |= HF_NL_OK;
+        flags |= HF_NL_OK;
     }
 
     if (opening_tag)
     {
         if (s_tag_attr[tnum].flags & TF_NL)
         {
-            g_mime.section->html.output_prep(output);
-            g_mime.section->html.do_newline(output, HF_NL_OK);
+            output_prep(output);
+            do_newline(output, HF_NL_OK);
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
-            || (num == (TF_P | TF_LIST) && !(g_mime.section->html.flags & HF_COMPACT)))
+            || (num == (TF_P | TF_LIST) && !(flags & HF_COMPACT)))
         {
-            g_mime.section->html.output_prep(output);
-            g_mime.section->html.do_newline(output, HF_P_OK);
+            output_prep(output);
+            do_newline(output, HF_P_OK);
         }
         if (s_tag_attr[tnum].flags & TF_SPACE)
         {
-            if (g_mime.section->html.flags & HF_SPACE_OK)
+            if (flags & HF_SPACE_OK)
             {
-                g_mime.section->html.flags &= ~HF_SPACE_OK;
+                flags &= ~HF_SPACE_OK;
                 output.push_back(' ');
             }
         }
         if (s_tag_attr[tnum].flags & TF_TAB)
         {
-            if (g_mime.section->html.flags & HF_NL_OK)
+            if (flags & HF_NL_OK)
             {
-                g_mime.section->html.flags &= ~HF_SPACE_OK;
+                flags &= ~HF_SPACE_OK;
                 output.push_back('\t');
             }
         }
@@ -1965,11 +1964,11 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
 
             if (s_tag_attr[tnum].flags & TF_LIST)
             {
-                g_mime.section->html.flags |= HF_COMPACT;
+                flags |= HF_COMPACT;
             }
             else
             {
-                g_mime.section->html.flags &= ~HF_COMPACT;
+                flags &= ~HF_COMPACT;
             }
         }
         else
@@ -1979,7 +1978,7 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
 
         if ((s_tag_attr[tnum].flags & (TF_BLOCK | TF_HIDE)) == (TF_BLOCK | TF_HIDE))
         {
-            g_mime.section->html.flags |= HF_IN_HIDING;
+            flags |= HF_IN_HIDING;
         }
 
         switch (tnum)
@@ -2001,20 +2000,20 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         }
 
         case TAG_HR:
-            g_mime.section->html.output_prep(output);
+            output_prep(output);
             output += "--";
-            g_mime.section->html.flags |= HF_NL_OK;
-            g_mime.section->html.do_newline(output, HF_NL_OK);
+            flags |= HF_NL_OK;
+            do_newline(output, HF_NL_OK);
             break;
 
         case TAG_IMG:
-            g_mime.section->html.output_prep(output);
-            if (g_mime.section->html.flags & HF_SPACE_OK)
+            output_prep(output);
+            if (flags & HF_SPACE_OK)
             {
                 output.push_back(' ');
             }
             output += "[Image] ";
-            g_mime.section->html.flags &= ~HF_SPACE_OK;
+            flags &= ~HF_SPACE_OK;
             break;
 
         case TAG_OL:
@@ -2086,7 +2085,7 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         }
 
         case TAG_LI:
-            g_mime.section->html.output_prep(output);
+            output_prep(output);
             ch = j < 0 ? ' ' : blks[j].indent;
             switch (ch)
             {
@@ -2133,12 +2132,12 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
                 output += "* ";
                 break;
             }
-            g_mime.section->html.flags |= HF_NL_OK | HF_P_OK;
+            flags |= HF_NL_OK | HF_P_OK;
             break;
 
         case TAG_PRE:
-            g_mime.section->html.flags |= HF_IN_PRE;
-            g_mime.section->html.word_wrap = g_mime.section->html.word_wrap_in_pre;
+            flags |= HF_IN_PRE;
+            word_wrap = word_wrap_in_pre;
             break;
         }
     }
@@ -2158,12 +2157,12 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
                     break;
                 }
             }
-            g_mime.section->html.flags &= ~HF_IN_HIDING;
+            flags &= ~HF_IN_HIDING;
             while (j-- > 0)
             {
                 if (s_tag_attr[blks[j].tag_num].flags & TF_HIDE)
                 {
-                    g_mime.section->html.flags |= HF_IN_HIDING;
+                    flags |= HF_IN_HIDING;
                     break;
                 }
             }
@@ -2172,66 +2171,66 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         j = size_cast<int>(blks) - 1;
         if (j >= 0 && s_tag_attr[blks[j].tag_num].flags & TF_LIST)
         {
-            g_mime.section->html.flags |= HF_COMPACT;
+            flags |= HF_COMPACT;
         }
         else
         {
-            g_mime.section->html.flags &= ~HF_COMPACT;
+            flags &= ~HF_COMPACT;
         }
 
-        if (s_tag_attr[tnum].flags & TF_NL && g_mime.section->html.flags & HF_NL_OK)
+        if (s_tag_attr[tnum].flags & TF_NL && flags & HF_NL_OK)
         {
-            g_mime.section->html.flags |= HF_QUEUED_NL;
-            g_mime.section->html.flags &= ~HF_SPACE_OK;
+            flags |= HF_QUEUED_NL;
+            flags &= ~HF_SPACE_OK;
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
-            || (num == (TF_P | TF_LIST) && !(g_mime.section->html.flags & HF_COMPACT)))
+            || (num == (TF_P | TF_LIST) && !(flags & HF_COMPACT)))
         {
-            if (g_mime.section->html.flags & HF_P_OK)
+            if (flags & HF_P_OK)
             {
-                g_mime.section->html.flags |= HF_QUEUED_P;
-                g_mime.section->html.flags &= ~HF_SPACE_OK;
+                flags |= HF_QUEUED_P;
+                flags &= ~HF_SPACE_OK;
             }
         }
 
         switch (tnum)
         {
         case TAG_PRE:
-            g_mime.section->html.flags &= ~HF_IN_PRE;
-            g_mime.section->html.word_wrap = g_mime.section->html.normal_word_wrap;
+            flags &= ~HF_IN_PRE;
+            word_wrap = normal_word_wrap;
             break;
         }
     }
 
 #ifdef DEBUGGING
     fmt::print("{:>{}} % -> ", "", 4 + 25);
-    if (g_mime.section->html.flags == 0)
+    if (flags == 0)
         fmt::print("0 ");
-    if (g_mime.section->html.flags & HF_IN_TAG)
+    if (flags & HF_IN_TAG)
         fmt::print("HF_IN_TAG ");
-    if (g_mime.section->html.flags & HF_IN_COMMENT)
+    if (flags & HF_IN_COMMENT)
         fmt::print("HF_IN_COMMENT ");
-    if (g_mime.section->html.flags & HF_IN_HIDING)
+    if (flags & HF_IN_HIDING)
         fmt::print("HF_IN_HIDING ");
-    if (g_mime.section->html.flags & HF_IN_PRE)
+    if (flags & HF_IN_PRE)
         fmt::print("HF_IN_PRE ");
-    if (g_mime.section->html.flags & HF_IN_DQUOTE)
+    if (flags & HF_IN_DQUOTE)
         fmt::print("HF_IN_DQUOTE ");
-    if (g_mime.section->html.flags & HF_IN_SQUOTE)
+    if (flags & HF_IN_SQUOTE)
         fmt::print("HF_IN_SQUOTE ");
-    if (g_mime.section->html.flags & HF_QUEUED_P)
+    if (flags & HF_QUEUED_P)
         fmt::print("HF_QUEUED_P ");
-    if (g_mime.section->html.flags & HF_P_OK)
+    if (flags & HF_P_OK)
         fmt::print("HF_P_OK ");
-    if (g_mime.section->html.flags & HF_QUEUED_NL)
+    if (flags & HF_QUEUED_NL)
         fmt::print("HF_QUEUED_NL ");
-    if (g_mime.section->html.flags & HF_NL_OK)
+    if (flags & HF_NL_OK)
         fmt::print("HF_NL_OK ");
-    if (g_mime.section->html.flags & HF_NEED_INDENT)
+    if (flags & HF_NEED_INDENT)
         fmt::print("HF_NEED_INDENT ");
-    if (g_mime.section->html.flags & HF_SPACE_OK)
+    if (flags & HF_SPACE_OK)
         fmt::print("HF_SPACE_OK ");
-    if (g_mime.section->html.flags & HF_COMPACT)
+    if (flags & HF_COMPACT)
         fmt::print("HF_COMPACT ");
     fmt::print("\n");
 #endif
