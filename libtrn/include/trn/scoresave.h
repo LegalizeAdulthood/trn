@@ -19,6 +19,7 @@ struct SavedScoreStore
     void del_group(std::string_view gname);
     void get_file();
     ArticleNum use_line(std::string_view line, ArticleNum a);
+    ArticleNum make_line(ArticleNum a);
 
     std::vector<std::string> lines;
     int                      loaded{};

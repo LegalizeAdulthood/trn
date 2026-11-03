@@ -35,8 +35,6 @@ namespace fs = std::filesystem;
 
 SavedScoreStore g_saved_scores{};
 
-static ArticleNum sc_sv_make_line(ArticleNum a);
-
 void SavedScoreStore::add(std::string_view str)
 {
     lines.emplace_back(str);
@@ -262,7 +260,7 @@ ArticleNum SavedScoreStore::use_line(std::string_view line, ArticleNum a)
     return a;
 }
 
-static ArticleNum sc_sv_make_line(ArticleNum a)
+ArticleNum SavedScoreStore::make_line(ArticleNum a)
 {
     bool        lastscore_valid = false;
     int         num_output = 0;
@@ -275,16 +273,16 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
         next_start = g_cache.next(art);
         if (g_cache.unread(art) && g_cache.scored(art))
         {
-            if (g_saved_scores.last != article_before(art))
+            if (last != article_before(art))
             {
-                if (g_saved_scores.last == article_before(art, 2))
+                if (last == article_before(art, 2))
                 {
                     line += 's';
                     num_output++;
                 }
                 else
                 {
-                    line += fmt::format("s{}", (art.value_of() - g_saved_scores.last.value_of()) - 1);
+                    line += fmt::format("s{}", (art.value_of() - last.value_of()) - 1);
                     num_output++;
                 }
             }
@@ -312,7 +310,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
                     line += fmt::format("r{}", repeat_count); // repeat >one
                     num_output++;
                 }
-                g_saved_scores.saved += repeat_count - 1;
+                saved += repeat_count - 1;
             }
             else // not a repeat
             {
@@ -337,14 +335,14 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
                 lastscore_valid = true;
             }
             lastscore = score;
-            g_saved_scores.last = art;
+            last = art;
             next_start = g_cache.next(art);
-            g_saved_scores.saved++;
+            saved++;
         } // if
     } // for
     if (num_output != 0)
     {
-        g_saved_scores.add(line);
+        add(line);
     }
     return next_start;
 }
@@ -493,7 +491,7 @@ void sc_save_scores()
     g_saved_scores.last = article_before(a);
     while (a <= g_last_art)
     {
-        a = sc_sv_make_line(a);
+        a = g_saved_scores.make_line(a);
     }
     g_waiting = false;
 }
