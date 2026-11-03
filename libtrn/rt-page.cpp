@@ -863,7 +863,7 @@ try_again:
         if (g_sel_page.page_art)
         {
             int desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
-            limit = article_ptr_list_end();
+            limit = g_art_order.end();
             ap = nullptr;
             for (app = g_sel_page.page_art; app < limit; app++)
             {
@@ -877,11 +877,11 @@ try_again:
             sort_articles();
             if (ap == nullptr)
             {
-                g_sel_page.page_art = article_ptr_list_end();
+                g_sel_page.page_art = g_art_order.end();
             }
             else
             {
-                limit = article_ptr_list_end();
+                limit = g_art_order.end();
                 for (app = g_art_order.begin(); app < limit; app++)
                 {
                     if (*app == ap)
@@ -902,7 +902,7 @@ try_again:
             g_sel_page.page_subj = g_sel_page.page_subj->m_next;
         }
         // The g_artptr_list contains only unread or read articles, never both
-        limit = article_ptr_list_end();
+        limit = g_art_order.end();
         for (app = g_art_order.begin(); app < limit; app++)
         {
             ap = *app;
@@ -1144,7 +1144,7 @@ bool SelectorPage::first_page()
 
     case SM_ARTICLE:
     {
-        Article **limit = article_ptr_list_end();
+        Article **limit = g_art_order.end();
         for (Article **app = g_art_order.begin(); app < limit; app++)
         {
             if ((*app)->m_flags & AF_INCLUDED)
@@ -1278,7 +1278,7 @@ bool SelectorPage::last_page()
     case SM_ARTICLE:
     {
         Article **app = page_art;
-        page_art = article_ptr_list_end();
+        page_art = g_art_order.end();
         if (!prev_page())
         {
             page_art = app;
@@ -1319,7 +1319,7 @@ bool SelectorPage::last_page()
 /// @globals
 /// - g_sel.mode: Selects the population whose next anchor is used.
 /// - g_obj_count: Bounds the next option page.
-/// - g_art_order.ptr_list: Bounds the next article page via article_ptr_list_end().
+/// - g_art_order.ptr_list: Bounds the next article page via g_art_order.end().
 ///
 bool SelectorPage::next_page()
 {
@@ -1386,7 +1386,7 @@ bool SelectorPage::next_page()
 
     case SM_ARTICLE:
     {
-        if (next_art < article_ptr_list_end())
+        if (next_art < g_art_order.end())
         {
             page_art = next_art;
             prior_obj_cnt += page_obj_cnt;
@@ -1813,7 +1813,7 @@ try_again:
     case SM_ARTICLE:
     {
         Article **app = g_sel_page.page_art;
-        Article** limit = article_ptr_list_end();
+        Article **limit = g_art_order.end();
         for (; app < limit && g_sel_page.page_item_cnt < g_sel_page.max_per_page; app++)
         {
             if (*app == u.ap)
@@ -2337,7 +2337,7 @@ start_of_loop:
     }
     else if (g_sel.mode == SM_ARTICLE)
     {
-        Article **limit = article_ptr_list_end();
+        Article **limit = g_art_order.end();
         Article **app = g_sel_page.page_art;
         for (; app < limit && g_sel_page.page_item_cnt < g_sel_page.max_per_page; app++)
         {

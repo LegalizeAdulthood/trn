@@ -1253,7 +1253,7 @@ TEST_P(SelectorPageAnchorTest, fillingAnArticlePageBeforeTheEndKeepsItsAnchor)
     EXPECT_EQ(2, g_sel_page.page_item_cnt);
     EXPECT_EQ(2, g_sel_page.page_obj_cnt);
     EXPECT_EQ(4, g_sel_page.total_obj_cnt);
-    EXPECT_EQ(article_ptr_list_end() - 1, g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.end() - 1, g_sel_page.next_art);
 }
 
 TEST_P(SelectorPageAnchorTest, fillingASubjectPageBeforeTheEndKeepsItsAnchor)
@@ -1280,16 +1280,16 @@ TEST_P(ArticlePageFillTest, theFillPolicyControlsWhetherTheFinalArticlePagePulls
     prepare_groups(SM_ARTICLE, rereading);
     g_tc_LINES = 7;
     initialize_page();
-    g_sel_page.page_art = article_ptr_list_end() - 1;
+    g_sel_page.page_art = g_art_order.end() - 1;
 
     initialize_page(fill_last_page);
 
-    EXPECT_EQ(article_ptr_list_end() - (fill_last_page ? 2 : 1), g_sel_page.page_art);
+    EXPECT_EQ(g_art_order.end() - (fill_last_page ? 2 : 1), g_sel_page.page_art);
     EXPECT_EQ(fill_last_page ? 2 : 3, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(fill_last_page ? 2 : 1, g_sel_page.page_item_cnt);
     EXPECT_EQ(fill_last_page ? 2 : 1, g_sel_page.page_obj_cnt);
     EXPECT_EQ(4, g_sel_page.total_obj_cnt);
-    EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.end(), g_sel_page.next_art);
 }
 
 TEST_P(SubjectPageAnchorTest, reversingSortKeepsTheSameGroupAtThePageAnchor)
@@ -1423,7 +1423,7 @@ TEST_P(ExclusiveArticlePageDisplayTest, skipsUnselectedArticlesWithoutAssigningT
     EXPECT_EQ(1, g_sel_page.items[0].sel);
     EXPECT_EQ(3, g_sel_page.items[1].sel);
     EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
-    EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.end(), g_sel_page.next_art);
     EXPECT_EQ(1, g_sel_page.item_index);
     EXPECT_EQ(5, g_sel_page.last_line);
     EXPECT_EQ(nullptr, g_sel_page.last_art);
@@ -1468,8 +1468,8 @@ TEST_P(FinalArticlePageDisplayTest, endsAtTheLastArticleWithoutInventingAnotherP
         EXPECT_EQ(g_cache.ptr(ArticleNum{numbers[5 - count + index]}), g_sel_page.items[index].u.ap);
         EXPECT_EQ(index + 2, g_sel_page.items[index].line);
     }
-    EXPECT_EQ(article_ptr_list_end() - count, g_sel_page.page_art);
-    EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.end() - count, g_sel_page.page_art);
+    EXPECT_EQ(g_art_order.end(), g_sel_page.next_art);
     EXPECT_EQ(count + 3, g_sel_page.last_line);
     EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(g_sel_page.next_page());
@@ -1503,7 +1503,7 @@ TEST_P(RemovedArticlePageDisplayTest, recoversAnEarlierPageAfterTheLastVisibleAr
         EXPECT_EQ(g_cache.ptr(ArticleNum{index + 1}), g_sel_page.items[index].u.ap);
     }
     EXPECT_EQ(g_art_order.begin(), g_sel_page.page_art);
-    EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.end(), g_sel_page.next_art);
     EXPECT_EQ(2, g_selected_count);
     EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(g_sel_page.next_page());
@@ -2171,7 +2171,7 @@ TEST_P(ArticlePageResizeTest, enlargingTheTerminalShowsTheRemainingArticlesOnThe
     EXPECT_EQ(6, g_sel_page.items[4].line);
     EXPECT_EQ(5, g_sel_page.page_obj_cnt);
     EXPECT_EQ(1, g_sel_page.item_index);
-    EXPECT_EQ(article_ptr_list_end(), g_sel_page.next_art);
+    EXPECT_EQ(g_art_order.end(), g_sel_page.next_art);
     EXPECT_TRUE(g_sel_page.at_end);
     expect_article_state();
 }

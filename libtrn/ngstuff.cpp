@@ -490,7 +490,7 @@ int thread_perform(std::string_view command)
         // Use the explicit article-order if it exists
         if (!g_art_order.ptr_list.empty())
         {
-            Article **limit = article_ptr_list_end();
+            Article **limit = g_art_order.end();
             if (one_thread)
             {
                 sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);

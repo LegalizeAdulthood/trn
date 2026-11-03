@@ -5720,7 +5720,7 @@ void ArticleSelectorRecoveryReadingStateTest::SetUp()
     {
         const std::size_t index = m_states.size();
         const bool        empty_anchor = g_sel.mode == SM_ARTICLE
-                                             ? !g_sel_page.page_art || g_sel_page.page_art == article_ptr_list_end()
+                                             ? !g_sel_page.page_art || g_sel_page.page_art == g_art_order.end()
                                              : !g_sel_page.page_subj || g_sel_page.page_subj->m_misc == 0;
         m_cache.push_back({g_cache.last_cached, g_cache.cached_all_in_range, g_sel_page.page_item_cnt,
                            g_sel_page.page_obj_cnt, g_sel_page.total_obj_cnt, g_sel_page.prior_obj_cnt,

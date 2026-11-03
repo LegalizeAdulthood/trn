@@ -2957,7 +2957,7 @@ reask_sort:
             if (g_sel.mode == SM_ARTICLE)
             {
                 Article** app;
-                Article **limit = article_ptr_list_end();
+                Article **limit = g_art_order.end();
                 if (ch == 'D')
                 {
                     app = g_sel_page.page_art;

@@ -5121,7 +5121,7 @@ void ArticleSelectorExclusiveStateTest::prepare_exclusive(SelectionMode mode, bo
     rebuild_page();
     if (mode == SM_ARTICLE)
     {
-        g_sel_page.page_art = article_ptr_list_end() - 1;
+        g_sel_page.page_art = g_art_order.end() - 1;
     }
     else if (!exclusive)
     {

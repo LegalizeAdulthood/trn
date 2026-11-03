@@ -103,6 +103,11 @@ struct ArticleOrder
         return ptr_list.data();
     }
 
+    Article **end()
+    {
+        return ptr_list.data() + ptr_list.size();
+    }
+
     // TODO: private
     void build_ptrs();
 
@@ -134,10 +139,5 @@ void cache_until_key();
 bool cache_subjects();
 #endif
 bool cache_range(ArticleNum first, ArticleNum last);
-
-inline Article **article_ptr_list_end()
-{
-    return g_art_order.ptr_list.data() + g_art_order.ptr_list.size();
-}
 
 #endif

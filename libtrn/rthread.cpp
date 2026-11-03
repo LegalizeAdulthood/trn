@@ -262,7 +262,7 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
     // Use the explicit article-order if it exists
     if (!g_art_order.ptr_list.empty())
     {
-        Article** limit = article_ptr_list_end();
+        Article **limit = g_art_order.end();
         if (!ap)
         {
             g_art_order.ptr = g_art_order.begin() - 1;
@@ -405,7 +405,7 @@ void ArticleLocation::prev(bool sel_flag, bool rereading)
     // Use the explicit article-order if it exists
     if (!g_art_order.ptr_list.empty())
     {
-        Article** limit = article_ptr_list_end();
+        Article **limit = g_art_order.end();
         if (!ap)
         {
             g_art_order.ptr = limit;
