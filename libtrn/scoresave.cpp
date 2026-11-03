@@ -35,7 +35,6 @@ namespace fs = std::filesystem;
 
 SavedScoreStore g_saved_scores{};
 
-static void       sc_sv_del_group(std::string_view gname);
 static void       sc_sv_get_file();
 static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a);
 static ArticleNum sc_sv_make_line(ArticleNum a);
@@ -45,10 +44,10 @@ void SavedScoreStore::add(std::string_view str)
     lines.emplace_back(str);
 }
 
-static void sc_sv_del_group(std::string_view gname)
+void SavedScoreStore::del_group(std::string_view gname)
 {
-    auto group = g_saved_scores.lines.begin();
-    while (group != g_saved_scores.lines.end())
+    auto group = lines.begin();
+    while (group != lines.end())
     {
         if (!group->empty() && group->front() == '!'
             && std::string_view{*group}.substr(1) == gname)
@@ -57,12 +56,12 @@ static void sc_sv_del_group(std::string_view gname)
         }
         ++group;
     }
-    if (group == g_saved_scores.lines.end())
+    if (group == lines.end())
     {
         return;         // group not found
     }
     auto next_group = group + 1;
-    while (next_group != g_saved_scores.lines.end())
+    while (next_group != lines.end())
     {
         if (!next_group->empty() && next_group->front() == '!')
         {
@@ -70,7 +69,7 @@ static void sc_sv_del_group(std::string_view gname)
         }
         ++next_group;
     }
-    g_saved_scores.lines.erase(group, next_group);
+    lines.erase(group, next_group);
 }
 
 // get the file containing scores into memory
@@ -482,7 +481,7 @@ void sc_save_scores()
     // not being able to open is OK
     if (!g_saved_scores.lines.empty())
     {
-        sc_sv_del_group(gname);  // delete old group
+        g_saved_scores.del_group(gname); // delete old group
     }
     else                // there was no old file
     {
