@@ -1590,37 +1590,35 @@ static bool at_utf8_grey_space(std::string_view text)
     return scalar <= 0x20 || (scalar >= 0x7F && scalar < 0xA0) || scalar == 0x2028 || scalar == 0x2029;
 }
 
-static void filter_html_into(std::string &output, std::string_view input)
+void HtmlRenderer::filter_into(std::string &output, std::string_view input)
 {
     const std::size_t      terminator = input.find('\0');
     const std::string      text{input.substr(0, terminator)};
     const std::string_view text_view{text};
-    std::string           &tag_word = g_mime.section->html.tag_word;
 
     if (g_word_wrap_offset < 0)
     {
-        g_mime.section->html.normal_word_wrap = g_tc_COLS - 8;
-        g_mime.section->html.word_wrap_in_pre = 0;
+        normal_word_wrap = g_tc_COLS - 8;
+        word_wrap_in_pre = 0;
     }
     else
     {
-        g_mime.section->html.normal_word_wrap = g_tc_COLS - g_word_wrap_offset;
-        g_mime.section->html.word_wrap_in_pre = g_mime.section->html.normal_word_wrap;
+        normal_word_wrap = g_tc_COLS - g_word_wrap_offset;
+        word_wrap_in_pre = normal_word_wrap;
     }
 
-    if (g_mime.section->html.normal_word_wrap <= 20)
+    if (normal_word_wrap <= 20)
     {
-        g_mime.section->html.normal_word_wrap = 0;
+        normal_word_wrap = 0;
     }
-    if (g_mime.section->html.word_wrap_in_pre <= 20)
+    if (word_wrap_in_pre <= 20)
     {
-        g_mime.section->html.word_wrap_in_pre = 0;
+        word_wrap_in_pre = 0;
     }
-    g_mime.section->html.word_wrap = g_mime.section->html.flags & HF_IN_PRE ? g_mime.section->html.word_wrap_in_pre
-                                                                            : g_mime.section->html.normal_word_wrap;
-    if (!g_mime.section->html.line_start)
+    word_wrap = flags & HF_IN_PRE ? word_wrap_in_pre : normal_word_wrap;
+    if (!line_start)
     {
-        g_mime.section->html.line_start = static_cast<int>(output.size());
+        line_start = static_cast<int>(output.size());
     }
 
     for (std::size_t pos = 0; pos < text.size(); pos++)
@@ -1628,76 +1626,76 @@ static void filter_html_into(std::string &output, std::string_view input)
         const std::string_view cursor_text = text_view.substr(pos);
         const char            *cursor = cursor_text.data();
         const char             current = cursor_text.front();
-        if (g_mime.section->html.flags & HF_IN_DQUOTE)
+        if (flags & HF_IN_DQUOTE)
         {
             if (current == '"')
             {
-                g_mime.section->html.flags &= ~HF_IN_DQUOTE;
+                flags &= ~HF_IN_DQUOTE;
             }
             else
             {
                 tag_word += current;
             }
         }
-        else if (g_mime.section->html.flags & HF_IN_SQUOTE)
+        else if (flags & HF_IN_SQUOTE)
         {
             if (current == '\'')
             {
-                g_mime.section->html.flags &= ~HF_IN_SQUOTE;
+                flags &= ~HF_IN_SQUOTE;
             }
             else
             {
                 tag_word += current;
             }
         }
-        else if (g_mime.section->html.flags & HF_IN_TAG)
+        else if (flags & HF_IN_TAG)
         {
             if (current == '>')
             {
-                g_mime.section->html.flags &= ~(HF_IN_TAG | HF_IN_COMMENT);
+                flags &= ~(HF_IN_TAG | HF_IN_COMMENT);
                 if (!tag_word.empty() && tag_word.front() == '/')
                 {
-                    g_mime.section->html.tag_action(output, std::string_view{tag_word}.substr(1), CLOSING_TAG);
+                    tag_action(output, std::string_view{tag_word}.substr(1), CLOSING_TAG);
                 }
                 else
                 {
-                    g_mime.section->html.tag_action(output, tag_word, OPENING_TAG);
+                    tag_action(output, tag_word, OPENING_TAG);
                 }
                 tag_word.clear();
             }
             else if (current == '-' && cursor[1] == '-')
             {
                 pos++;
-                g_mime.section->html.flags |= HF_IN_COMMENT;
+                flags |= HF_IN_COMMENT;
             }
             else if (current == '"')
             {
-                g_mime.section->html.flags |= HF_IN_DQUOTE;
+                flags |= HF_IN_DQUOTE;
             }
             else if (current == '\'')
             {
-                g_mime.section->html.flags |= HF_IN_SQUOTE;
+                flags |= HF_IN_SQUOTE;
             }
             else
             {
                 tag_word += at_utf8_grey_space(cursor_text) ? ' ' : current;
             }
         }
-        else if (g_mime.section->html.flags & HF_IN_COMMENT)
+        else if (flags & HF_IN_COMMENT)
         {
             if (current == '-' && cursor[1] == '-')
             {
                 pos++;
-                g_mime.section->html.flags &= ~HF_IN_COMMENT;
+                flags &= ~HF_IN_COMMENT;
             }
         }
         else if (current == '<')
         {
             tag_word.clear();
             tag_word.reserve(32);
-            g_mime.section->html.flags |= HF_IN_TAG;
+            flags |= HF_IN_TAG;
         }
-        else if (g_mime.section->html.flags & HF_IN_HIDING)
+        else if (flags & HF_IN_HIDING)
         {
         }
         else if (current == '&' && cursor[1] == '#')
@@ -1747,7 +1745,7 @@ static void filter_html_into(std::string &output, std::string_view input)
         {
             int              entity_found = 0;
             std::string_view entity_replacement;
-            g_mime.section->html.output_prep(output);
+            output_prep(output);
             for (const NamedEntity &entity : s_named_entities)
             {
                 const int n = static_cast<int>(entity.name.size());
@@ -1778,14 +1776,14 @@ static void filter_html_into(std::string &output, std::string_view input)
             {
                 output.push_back(current);
             }
-            g_mime.section->html.flags |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
+            flags |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
-        else if (at_utf8_grey_space(cursor_text) && !(g_mime.section->html.flags & HF_IN_PRE))
+        else if (at_utf8_grey_space(cursor_text) && !(flags & HF_IN_PRE))
         {
             // We don't want to call output_prep() here.
-            if (current == ' ' || (g_mime.section->html.flags & HF_SPACE_OK))
+            if (current == ' ' || (flags & HF_SPACE_OK))
             {
-                g_mime.section->html.flags &= ~HF_SPACE_OK;
+                flags &= ~HF_SPACE_OK;
                 output.push_back(' ');
             }
             // In non-PRE mode spaces should be collapsed
@@ -1811,20 +1809,20 @@ static void filter_html_into(std::string &output, std::string_view input)
         }
         else if (current == '\n') // Handle the HF_IN_PRE case
         {
-            g_mime.section->html.output_prep(output);
-            g_mime.section->html.flags |= HF_NL_OK;
-            g_mime.section->html.do_newline(output, HF_NL_OK);
+            output_prep(output);
+            flags |= HF_NL_OK;
+            do_newline(output, HF_NL_OK);
         }
         else
         {
             const int w = static_cast<int>(decode_utf8_scalar(cursor_text).byte_count);
-            g_mime.section->html.output_prep(output);
+            output_prep(output);
             output.append(cursor, static_cast<std::size_t>(w));
             pos += static_cast<std::size_t>(w - 1);
-            g_mime.section->html.flags |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
+            flags |= HF_NL_OK | HF_P_OK | HF_SPACE_OK;
         }
 
-        g_mime.section->html.wrap_output(output);
+        wrap_output(output);
     }
 }
 
@@ -1842,7 +1840,7 @@ std::string filter_html(std::string_view f, std::string_view prefix, int base_of
         g_mime.section->html.line_start = 0;
     }
 
-    filter_html_into(output, f);
+    g_mime.section->html.filter_into(output, f);
     g_mime.section->html.line_start += base_offset;
     return output;
 }
