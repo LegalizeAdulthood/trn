@@ -384,7 +384,7 @@ sel_exit:
     }
     if (rebuild_article_order)
     {
-        sort_articles(g_sel_session.ret == '+' ? g_nav.current.art : nullptr);
+        g_art_order.sort(g_sel_session.ret == '+' ? g_nav.current.art : nullptr);
     }
     if (g_sel_session.ret == '+')
     {
@@ -3026,7 +3026,7 @@ reask_sort:
             }
             if (!g_art_order.ptr_list.empty() && g_obj_count)
             {
-                sort_articles();
+                g_art_order.sort();
             }
         }
         else if (ch == 'J')

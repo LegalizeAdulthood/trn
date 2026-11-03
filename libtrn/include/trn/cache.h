@@ -98,6 +98,8 @@ extern SubjectIndex g_subj;
 
 struct ArticleOrder
 {
+    void sort(Article *anchor = nullptr);
+
     Article **begin()
     {
         return ptr_list.data();

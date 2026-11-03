@@ -185,7 +185,7 @@ void thread_grow()
     count_subjects(CS_NORM);
     if (!g_art_order.ptr_list.empty())
     {
-        sort_articles();
+        g_art_order.sort();
     }
     else
     {
@@ -1505,20 +1505,20 @@ static int article_order_score(const Article **art1, const Article **art2)
 
 // Sort the articles according to the chosen order.
 //
-void sort_articles(Article *anchor)
+void ArticleOrder::sort(Article *anchor)
 {
     int (*sort_procedure)(const Article **art1, const Article **art2);
 
-    g_art_order.build_ptrs();
+    build_ptrs();
     if (anchor && (anchor->m_flags & (AF_EXISTS | AF_FAKE)) == AF_EXISTS &&
-        std::find(g_art_order.ptr_list.begin(), g_art_order.ptr_list.end(), anchor) == g_art_order.ptr_list.end())
+        std::find(ptr_list.begin(), ptr_list.end(), anchor) == ptr_list.end())
     {
         // Preserve the current position even when the anchor is already read.
-        g_art_order.ptr_list.push_back(anchor);
+        ptr_list.push_back(anchor);
     }
 
     // If we don't have at least two articles, we're done!
-    if (g_art_order.ptr_list.size() < 2)
+    if (ptr_list.size() < 2)
     {
         return;
     }
@@ -1555,7 +1555,7 @@ void sort_articles(Article *anchor)
         break;
     }
     g_sel_page.page_art = nullptr;
-    std::qsort(g_art_order.ptr_list.data(), g_art_order.ptr_list.size(), sizeof(Article *),
+    std::qsort(ptr_list.data(), ptr_list.size(), sizeof(Article *),
                reinterpret_cast<int (*)(const void *, const void *)>(sort_procedure));
 }
 

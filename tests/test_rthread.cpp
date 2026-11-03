@@ -91,7 +91,7 @@ TEST_F(ArticlePointerListTest, sortArticlesBuildsDateOrderedPointerList)
     add_article(ArticleNum{2}, 10);
     add_article(ArticleNum{3}, 20);
 
-    sort_articles();
+    g_art_order.sort();
 
     ASSERT_EQ(3U, g_art_order.ptr_list.size());
     EXPECT_EQ(ArticleNum{2}, g_art_order.ptr_list[0]->article_num());

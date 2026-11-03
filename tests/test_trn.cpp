@@ -3249,7 +3249,7 @@ void LocalArticleTraversalTest::SetUp()
     ASSERT_EQ(1, access_newsgroup());
     if (GetParam() == LocalReadingOrder::Date)
     {
-        sort_articles();
+        g_art_order.sort();
     }
     g_in_ng = false;
     g_mode = MM_NEWSGROUP_LIST;

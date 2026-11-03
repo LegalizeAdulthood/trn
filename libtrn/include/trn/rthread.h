@@ -45,6 +45,5 @@ bool     find_next_sib();
 bool     find_prev_sib();
 void     count_subjects(CountSubjectMode cmode);
 void     sort_subjects();
-void     sort_articles(Article *anchor = nullptr);
 
 #endif

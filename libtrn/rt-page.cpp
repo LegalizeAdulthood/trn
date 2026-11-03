@@ -874,7 +874,7 @@ try_again:
                     break;
                 }
             }
-            sort_articles();
+            g_art_order.sort();
             if (ap == nullptr)
             {
                 g_sel_page.page_art = g_art_order.end();
@@ -894,7 +894,7 @@ try_again:
         }
         else
         {
-            sort_articles();
+            g_art_order.sort();
         }
 
         while (g_sel_page.page_subj && g_sel_page.page_subj->m_misc == 0)
