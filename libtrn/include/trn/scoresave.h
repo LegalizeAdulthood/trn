@@ -9,10 +9,14 @@
 #include <config/typedef.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 struct SavedScoreStore
 {
+    // TODO: private
+    void add(std::string_view str);
+
     std::vector<std::string> lines;
     int                      loaded{};
     int                      used{};

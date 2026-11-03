@@ -35,15 +35,14 @@ namespace fs = std::filesystem;
 
 SavedScoreStore g_saved_scores{};
 
-static void       sc_sv_add(std::string_view str);
 static void       sc_sv_del_group(std::string_view gname);
 static void       sc_sv_get_file();
 static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a);
 static ArticleNum sc_sv_make_line(ArticleNum a);
 
-static void sc_sv_add(std::string_view str)
+void SavedScoreStore::add(std::string_view str)
 {
-    g_saved_scores.lines.emplace_back(str);
+    lines.emplace_back(str);
 }
 
 static void sc_sv_del_group(std::string_view gname)
@@ -91,7 +90,7 @@ static void sc_sv_get_file()
     std::string line;
     while (std::getline(input, line))
     {
-        sc_sv_add(line);
+        g_saved_scores.add(line);
     }
 }
 
@@ -348,7 +347,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
     } // for
     if (num_output != 0)
     {
-        sc_sv_add(line);
+        g_saved_scores.add(line);
     }
     return next_start;
 }
@@ -487,13 +486,13 @@ void sc_save_scores()
     }
     else                // there was no old file
     {
-        sc_sv_add("#STRN saved score file.");
-        sc_sv_add("v1.0");
+        g_saved_scores.add("#STRN saved score file.");
+        g_saved_scores.add("v1.0");
     }
-    sc_sv_add(fmt::format("!{}", gname));  // add the header
+    g_saved_scores.add(fmt::format("!{}", gname)); // add the header
 
     ArticleNum a = g_first_art;
-    sc_sv_add(fmt::format(":{}", a.value_of()));
+    g_saved_scores.add(fmt::format(":{}", a.value_of()));
     g_saved_scores.last = article_before(a);
     while (a <= g_last_art)
     {
