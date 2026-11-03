@@ -184,7 +184,7 @@ void thread_grow()
         cache_range(article_after(g_cache.last_cached), g_last_art);
     }
     count_subjects(CS_NORM);
-    if (!g_art_ptr_list.empty())
+    if (!g_art_order.ptr_list.empty())
     {
         sort_articles();
     }
@@ -261,18 +261,18 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
-    if (!g_art_ptr_list.empty())
+    if (!g_art_order.ptr_list.empty())
     {
         Article** limit = article_ptr_list_end();
         if (!ap)
         {
-            g_art_ptr = article_ptr_list_begin() - 1;
+            g_art_order.ptr = article_ptr_list_begin() - 1;
         }
-        else if (!g_art_ptr || *g_art_ptr != ap)
+        else if (!g_art_order.ptr || *g_art_order.ptr != ap)
         {
-            for (g_art_ptr = article_ptr_list_begin(); g_art_ptr < limit; g_art_ptr++)
+            for (g_art_order.ptr = article_ptr_list_begin(); g_art_order.ptr < limit; g_art_order.ptr++)
             {
-                if (*g_art_ptr == ap)
+                if (*g_art_order.ptr == ap)
                 {
                     break;
                 }
@@ -280,23 +280,23 @@ void ArticleLocation::next(bool sel_flag, bool rereading)
         }
         do
         {
-            if (++g_art_ptr >= limit)
+            if (++g_art_order.ptr >= limit)
             {
                 break;
             }
-            ap = *g_art_ptr;
+            ap = *g_art_order.ptr;
         } while ((!rereading && !(ap->m_flags & AF_UNREAD))
               || (sel_flag && !(ap->m_flags & AF_SEL)));
-        if (g_art_ptr < limit)
+        if (g_art_order.ptr < limit)
         {
-            num = (*g_art_ptr)->article_num();
-            art = *g_art_ptr;
+            num = (*g_art_order.ptr)->article_num();
+            art = *g_art_order.ptr;
         }
         else
         {
             num = article_after(g_last_art);
             art = nullptr;
-            g_art_ptr = article_ptr_list_begin();
+            g_art_order.ptr = article_ptr_list_begin();
         }
         return;
     }
@@ -404,30 +404,30 @@ void ArticleLocation::prev(bool sel_flag, bool rereading)
     int subj_mask = (rereading? 0 : SF_VISIT);
 
     // Use the explicit article-order if it exists
-    if (!g_art_ptr_list.empty())
+    if (!g_art_order.ptr_list.empty())
     {
         Article** limit = article_ptr_list_end();
         if (!ap)
         {
-            g_art_ptr = limit;
+            g_art_order.ptr = limit;
         }
-        else if (!g_art_ptr || *g_art_ptr != ap)
+        else if (!g_art_order.ptr || *g_art_order.ptr != ap)
         {
-            for (g_art_ptr = article_ptr_list_begin(); g_art_ptr < limit; g_art_ptr++)
+            for (g_art_order.ptr = article_ptr_list_begin(); g_art_order.ptr < limit; g_art_order.ptr++)
             {
-                if (*g_art_ptr == ap)
+                if (*g_art_order.ptr == ap)
                 {
                     break;
                 }
             }
         }
-        Article **previous = g_art_ptr;
+        Article **previous = g_art_order.ptr;
         while (previous != article_ptr_list_begin())
         {
             ap = *--previous;
             if ((rereading || (ap->m_flags & AF_UNREAD)) && (!sel_flag || (ap->m_flags & AF_SEL)))
             {
-                g_art_ptr = previous;
+                g_art_order.ptr = previous;
                 num = ap->article_num();
                 art = ap;
                 return;
@@ -1512,14 +1512,14 @@ void sort_articles(Article *anchor)
 
     build_article_ptrs();
     if (anchor && (anchor->m_flags & (AF_EXISTS | AF_FAKE)) == AF_EXISTS &&
-        std::find(g_art_ptr_list.begin(), g_art_ptr_list.end(), anchor) == g_art_ptr_list.end())
+        std::find(g_art_order.ptr_list.begin(), g_art_order.ptr_list.end(), anchor) == g_art_order.ptr_list.end())
     {
         // Preserve the current position even when the anchor is already read.
-        g_art_ptr_list.push_back(anchor);
+        g_art_order.ptr_list.push_back(anchor);
     }
 
     // If we don't have at least two articles, we're done!
-    if (g_art_ptr_list.size() < 2)
+    if (g_art_order.ptr_list.size() < 2)
     {
         return;
     }
@@ -1556,7 +1556,7 @@ void sort_articles(Article *anchor)
         break;
     }
     g_sel_page.page_art = nullptr;
-    std::qsort(g_art_ptr_list.data(), g_art_ptr_list.size(), sizeof(Article *),
+    std::qsort(g_art_order.ptr_list.data(), g_art_order.ptr_list.size(), sizeof(Article *),
                reinterpret_cast<int (*)(const void *, const void *)>(sort_procedure));
 }
 
@@ -1565,17 +1565,17 @@ static void build_article_ptrs()
     ArticleNum count = g_obj_count;
     int        desired_flags = (g_sel.rereading ? AF_EXISTS : (AF_EXISTS | AF_UNREAD));
 
-    g_art_ptr = nullptr;
+    g_art_order.ptr = nullptr;
     g_sel_page.page_art = nullptr;
     g_sel_page.next_art = nullptr;
-    g_art_ptr_list.clear();
-    g_art_ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr_list.reserve(static_cast<std::size_t>(count.value_of()));
     for (ArticleNum an = g_cache.first(g_abs_first); count; an = g_cache.next(an))
     {
         Article *ap = g_cache.ptr(an);
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
-            g_art_ptr_list.push_back(ap);
+            g_art_order.ptr_list.push_back(ap);
             --count;
         }
     }

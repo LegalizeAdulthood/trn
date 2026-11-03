@@ -96,8 +96,14 @@ struct SubjectIndex
 
 extern SubjectIndex g_subj;
 
-extern std::vector<Article *>        g_art_ptr_list; // the article-selector creates this
-extern Article                     **g_art_ptr;      // ditto -- used for article order
+struct ArticleOrder
+{
+    std::vector<Article *> ptr_list; // the article-selector creates this
+    Article              **ptr{};    // ditto -- used for article order
+};
+
+extern ArticleOrder g_art_order;
+
 extern ArticleNum                    g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
 extern Article                      *g_sentinel_art_ptr;
 extern bool                          g_untrim_cache;
@@ -123,12 +129,12 @@ bool cache_range(ArticleNum first, ArticleNum last);
 
 inline Article **article_ptr_list_begin()
 {
-    return g_art_ptr_list.data();
+    return g_art_order.ptr_list.data();
 }
 
 inline Article **article_ptr_list_end()
 {
-    return g_art_ptr_list.data() + g_art_ptr_list.size();
+    return g_art_order.ptr_list.data() + g_art_order.ptr_list.size();
 }
 
 #endif

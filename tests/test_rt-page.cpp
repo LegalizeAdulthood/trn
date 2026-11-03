@@ -40,8 +40,8 @@ protected:
 
 private:
     decltype(g_cache.article_list) m_old_articles{std::move(g_cache.article_list)};
-    decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
-    Article                **m_old_art_ptr{g_art_ptr};
+    decltype(g_art_order.ptr_list) m_old_article_ptrs{std::move(g_art_order.ptr_list)};
+    Article                      **m_old_art_ptr{g_art_order.ptr};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
@@ -76,8 +76,8 @@ private:
 void ArticlePageStateTest::SetUp()
 {
     g_cache.article_list.clear();
-    g_art_ptr_list.clear();
-    g_art_ptr = nullptr;
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr = nullptr;
     g_abs_first = ArticleNum{1};
     g_first_art = g_abs_first;
     g_subj.first = &m_subject;
@@ -102,8 +102,8 @@ void ArticlePageStateTest::SetUp()
 void ArticlePageStateTest::TearDown()
 {
     g_cache.article_list = std::move(m_old_articles);
-    g_art_ptr_list = std::move(m_old_article_ptrs);
-    g_art_ptr = m_old_art_ptr;
+    g_art_order.ptr_list = std::move(m_old_article_ptrs);
+    g_art_order.ptr = m_old_art_ptr;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
@@ -166,7 +166,7 @@ void ArticlePageStateTest::prepare_articles(bool rereading, std::initializer_lis
 std::vector<long> ArticlePageStateTest::article_numbers() const
 {
     std::vector<long> result;
-    for (const Article *article : g_art_ptr_list)
+    for (const Article *article : g_art_order.ptr_list)
     {
         result.push_back(article->article_num().value_of());
     }
@@ -407,7 +407,7 @@ void ArticlePageBoundaryState::prepare_empty(bool rereading, bool populated)
 
 void ArticlePageBoundaryState::leave_read_scope()
 {
-    for (Article *article : g_art_ptr_list)
+    for (Article *article : g_art_order.ptr_list)
     {
         article->m_flags ^= AF_UNREAD;
         article->m_flags &= ~(AF_SEL | AF_DEL_SEL);
@@ -952,7 +952,7 @@ TEST_P(ArticlePageReadScopeTest, noEligibleArticlesProducesAnEmptyPage)
 
     init_pages(PRESERVE_PAGE);
 
-    EXPECT_TRUE(g_art_ptr_list.empty());
+    EXPECT_TRUE(g_art_order.ptr_list.empty());
     EXPECT_TRUE(articles_with_flag(AF_INCLUDED).empty());
     EXPECT_EQ(0, g_sel_page.total_obj_cnt);
     EXPECT_EQ(0, g_sel_page.prior_obj_cnt);

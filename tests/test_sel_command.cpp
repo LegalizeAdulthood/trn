@@ -54,8 +54,8 @@ private:
     ArticleUnread            m_selected{};
     int                      m_selected_subjects{};
     decltype(g_cache.article_list) m_old_articles{std::move(g_cache.article_list)};
-    decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
-    Article                **m_old_art_ptr{g_art_ptr};
+    decltype(g_art_order.ptr_list) m_old_article_ptrs{std::move(g_art_order.ptr_list)};
+    Article                      **m_old_art_ptr{g_art_order.ptr};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first{g_first_art};
     ArticleNum               m_old_last{g_last_art};
@@ -96,8 +96,8 @@ void SelectorPagingStateTest::SetUp()
 {
     NewsgroupPageDisplayState::SetUp();
     g_cache.article_list.clear();
-    g_art_ptr_list.clear();
-    g_art_ptr = nullptr;
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr = nullptr;
     g_sel_page.page_art = g_sel_page.next_art = nullptr;
     g_sel_page.page_subj = g_sel_page.next_subj = nullptr;
     g_univ.items.clear();
@@ -126,8 +126,8 @@ void SelectorPagingStateTest::SetUp()
 void SelectorPagingStateTest::TearDown()
 {
     g_cache.article_list = std::move(m_old_articles);
-    g_art_ptr_list = std::move(m_old_article_ptrs);
-    g_art_ptr = m_old_art_ptr;
+    g_art_order.ptr_list = std::move(m_old_article_ptrs);
+    g_art_order.ptr = m_old_art_ptr;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first;
     g_last_art = m_old_last;

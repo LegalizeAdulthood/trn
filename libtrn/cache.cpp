@@ -50,9 +50,8 @@
 
 GroupArticleCache g_cache;
 SubjectIndex      g_subj;
+ArticleOrder      g_art_order;
 
-std::vector<Article *>        g_art_ptr_list;        // the article-selector creates this
-Article                     **g_art_ptr{};           // ditto -- used for article order
 ArticleNum                    g_search_ahead{};      // are we in subject scan mode? (if so, contains art # found or -1)
 Article                      *g_sentinel_art_ptr{};     //
 bool                          g_untrim_cache{};         //
@@ -259,8 +258,8 @@ void close_cache()
     g_subj.clear();
     g_parsed_header.parsed_art = ArticleNum{};
 
-    g_art_ptr_list.clear();
-    g_art_ptr = nullptr;
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr = nullptr;
     g_sel_page.page_art = nullptr;
     g_sel_page.next_art = nullptr;
     thread_close();

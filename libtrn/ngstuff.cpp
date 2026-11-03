@@ -488,7 +488,7 @@ int thread_perform(std::string_view command)
     {
         // The rest loop through the articles.
         // Use the explicit article-order if it exists
-        if (!g_art_ptr_list.empty())
+        if (!g_art_order.ptr_list.empty())
         {
             Article **limit = article_ptr_list_end();
             if (one_thread)

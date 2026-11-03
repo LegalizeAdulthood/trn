@@ -355,14 +355,14 @@ sel_exit:
     }
     if (!use_article_order)
     {
-        if (!g_art_ptr_list.empty())
+        if (!g_art_order.ptr_list.empty())
         {
-            g_art_ptr_list.clear();
+            g_art_order.ptr_list.clear();
             g_sel_page.page_art = nullptr;
             g_sel_page.next_art = nullptr;
             sort_subjects();
         }
-        g_art_ptr = nullptr;
+        g_art_order.ptr = nullptr;
         if (!g_threaded_group)
         {
             g_search_ahead = ArticleNum{-1};
@@ -3024,7 +3024,7 @@ reask_sort:
                 g_sel_page.item_index = 0;
                 return DS_DISPLAY;
             }
-            if (!g_art_ptr_list.empty() && g_obj_count)
+            if (!g_art_order.ptr_list.empty() && g_obj_count)
             {
                 sort_articles();
             }

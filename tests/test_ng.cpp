@@ -73,8 +73,8 @@ protected:
 private:
     Subject                  m_subject{};
     decltype(g_cache.article_list) m_old_article_list{std::move(g_cache.article_list)};
-    decltype(g_art_ptr_list) m_old_art_ptr_list{std::move(g_art_ptr_list)};
-    Article                **m_old_art_ptr{g_art_ptr};
+    decltype(g_art_order.ptr_list) m_old_art_ptr_list{std::move(g_art_order.ptr_list)};
+    Article                      **m_old_art_ptr{g_art_order.ptr};
     ArticleLocation          m_old_target{g_nav.target};
     ArticleLocation          m_old_current{g_nav.current};
     ArticleLocation          m_old_recent{g_nav.recent};
@@ -112,8 +112,8 @@ private:
 void ArticleStateTest::SetUp()
 {
     g_cache.article_list.clear();
-    g_art_ptr_list.clear();
-    g_art_ptr = nullptr;
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr = nullptr;
     g_abs_first = ArticleNum{1};
     g_first_art = ArticleNum{1};
     g_cache.first_cached = ArticleNum{1};
@@ -148,8 +148,8 @@ void ArticleStateTest::SetUp()
 void ArticleStateTest::TearDown()
 {
     g_cache.article_list = std::move(m_old_article_list);
-    g_art_ptr_list = std::move(m_old_art_ptr_list);
-    g_art_ptr = m_old_art_ptr;
+    g_art_order.ptr_list = std::move(m_old_art_ptr_list);
+    g_art_order.ptr = m_old_art_ptr;
     g_nav.target = m_old_target;
     g_nav.current = m_old_current;
     g_nav.recent = m_old_recent;
@@ -663,8 +663,8 @@ std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult 
     const ArticleLocation                  article = g_nav.target;
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
-    Article **const                        cursor = g_art_ptr;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
+    Article **const                        cursor = g_art_order.ptr;
     const bool          threaded = g_threaded_group;
     const bool          breadth_first = g_breadth_first;
     const SelectionMode                    mode = g_sel.mode;
@@ -684,8 +684,8 @@ std::string DelayScopeArticleTest::delay_scope(char action, ArticleSwitchResult 
     EXPECT_EQ(article, g_nav.target);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(cursor, g_art_order.ptr);
     EXPECT_EQ(threaded, g_threaded_group);
     EXPECT_EQ(breadth_first, g_breadth_first);
     EXPECT_EQ(mode, g_sel.mode);
@@ -749,7 +749,7 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
 {
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
     const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const ArticleNum    search_ahead = g_search_ahead;
     const bool                             selected_only = g_sel.selected_only;
@@ -773,7 +773,7 @@ std::string RestoreDelayedArticleTest::restore_delayed(long first)
     EXPECT_EQ(first <= g_last_art.value_of() ? g_cache.find(ArticleNum{first}) : nullptr, g_nav.target.art);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(order, g_art_order.ptr_list);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(search_ahead, g_search_ahead);
     EXPECT_EQ(selected_only, g_sel.selected_only);
@@ -905,8 +905,8 @@ std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchRe
 {
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
-    Article **const                        cursor = g_art_ptr;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
+    Article **const                        cursor = g_art_order.ptr;
     const bool threaded = g_threaded_group;
     const bool breadth_first = g_breadth_first;
     const bool scan = g_sa_in;
@@ -926,8 +926,8 @@ std::string CatchupArticleTest::catch_up(std::string_view input, ArticleSwitchRe
               output.find(g_verbose ? "Mark everything in comp.test.catchup as read?" : "Catchup comp.test.catchup?"));
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(cursor, g_art_order.ptr);
     EXPECT_EQ(threaded, g_threaded_group);
     EXPECT_EQ(breadth_first, g_breadth_first);
     EXPECT_EQ(scan, g_sa_in);
@@ -1080,8 +1080,8 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
 {
     const ArticleLocation                            current = g_nav.current;
     const ArticleLocation                            recent = g_nav.recent;
-    const std::vector<Article *>                     order = g_art_ptr_list;
-    Article **const                                  cursor = g_art_ptr;
+    const std::vector<Article *>                     order = g_art_order.ptr_list;
+    Article **const                                  cursor = g_art_order.ptr;
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
@@ -1108,8 +1108,8 @@ std::string NumericJumpArticleTest::enter_number(std::string_view input, Article
     EXPECT_EQ(expected, result);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(cursor, g_art_order.ptr);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -1204,8 +1204,8 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     const ArticleLocation                  article = g_nav.target;
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
-    Article **const                        cursor = g_art_ptr;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
+    Article **const                        cursor = g_art_order.ptr;
     const ArticleNum                       parsed = g_parsed_header.parsed_art;
     const bool reread = g_reread;
     m_before_flags.clear();
@@ -1229,8 +1229,8 @@ std::string NumericRangeArticleTest::apply_range(std::string_view input, Article
     EXPECT_EQ(article, g_nav.target);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(cursor, g_art_order.ptr);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(ArticleNum{search_ahead}, g_search_ahead);
@@ -1381,8 +1381,8 @@ std::string UnsubscribeArticleTest::unsubscribe()
     const ArticleLocation                  article = g_nav.target;
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
-    Article **const                        cursor = g_art_ptr;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
+    Article **const                        cursor = g_art_order.ptr;
     const ArticleNum    first = g_first_art;
     const ArticleUnread unread = m_newsgroup.m_to_read;
     const ArticleUnread selected = g_selected_count;
@@ -1417,8 +1417,8 @@ std::string UnsubscribeArticleTest::unsubscribe()
     EXPECT_EQ(article, g_nav.target);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(cursor, g_art_order.ptr);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
     EXPECT_EQ(selected, g_selected_count);
@@ -1913,8 +1913,8 @@ void ScanContinuationArticleTest::dispatch(std::string command, long number, Art
     EXPECT_EQ(exit_code, g_newsgroup_exit_code);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_TRUE(g_art_ptr_list.empty());
-    EXPECT_EQ(nullptr, g_art_ptr);
+    EXPECT_TRUE(g_art_order.ptr_list.empty());
+    EXPECT_EQ(nullptr, g_art_order.ptr);
     EXPECT_EQ(flags.size(), g_cache.article_list.size());
     for (const auto &[article_number, expected_flags] : flags)
     {
@@ -2766,8 +2766,8 @@ std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, Article
     const ArticleLocation                  article = g_nav.target;
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
-    Article **const                        cursor = g_art_ptr;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
+    Article **const                        cursor = g_art_order.ptr;
     g_pushback.push('n');
     for (auto it = input.rbegin(); it != input.rend(); ++it)
     {
@@ -2783,8 +2783,8 @@ std::string BulkSelectionArticleTest::apply_bulk(std::string_view input, Article
     EXPECT_EQ(article, g_nav.target);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(cursor, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(cursor, g_art_order.ptr);
     EXPECT_EQ(ArticleNum{3}, g_parsed_header.parsed_art);
     EXPECT_EQ(ArticleNum{4}, g_search_ahead);
     EXPECT_TRUE(g_reread);
@@ -2822,9 +2822,9 @@ void BulkArticleOrderTest::SetUp()
     {
         for (const long number : {6, 3, 5, 2, 4, 1, 7})
         {
-            g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+            g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
         }
-        g_art_ptr = g_art_ptr_list.data() + 4;
+        g_art_order.ptr = g_art_order.ptr_list.data() + 4;
     }
 }
 
@@ -3102,9 +3102,9 @@ void SortedArticleNavigationTest::set_order(std::initializer_list<long> order)
 {
     for (const long number : order)
     {
-        g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+        g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_ptr = nullptr;
+    g_art_order.ptr = nullptr;
     g_nav.recent.num = g_last_art;
     g_nav.recent.art = g_cache.ptr(g_nav.recent.num);
     g_parsed_header.parsed_art = ArticleNum{1};
@@ -3116,7 +3116,7 @@ void SortedArticleNavigationTest::set_position_after_navigation(long number, lon
 {
     g_nav.target.num = ArticleNum{number};
     g_nav.target.art = g_nav.target.num <= g_last_art ? g_cache.ptr(g_nav.target.num) : nullptr;
-    g_art_ptr = article_ptr_list_begin() + index;
+    g_art_order.ptr = article_ptr_list_begin() + index;
     g_s_follow_temp = true;
     g_univ_follow_temp = true;
 }
@@ -3150,7 +3150,7 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
 {
     const ArticleLocation                  current = g_nav.current;
     const ArticleLocation                  recent = g_nav.recent;
-    const std::vector<Article *>           order = g_art_ptr_list;
+    const std::vector<Article *>           order = g_art_order.ptr_list;
     const ArticleUnread                    unread = m_newsgroup.m_to_read;
     const ArticleUnread                    selected = g_selected_count;
     const ArticleNum                       first = g_first_art;
@@ -3174,8 +3174,8 @@ std::string SortedArticleNavigationTest::expect_navigation(char command, long nu
 
     EXPECT_EQ(ArticleNum{number}, g_nav.target.num);
     EXPECT_EQ(number <= g_last_art.value_of() ? g_cache.ptr(ArticleNum{number}) : nullptr, g_nav.target.art);
-    EXPECT_EQ(article_ptr_list_begin() + index, g_art_ptr);
-    EXPECT_EQ(order, g_art_ptr_list);
+    EXPECT_EQ(article_ptr_list_begin() + index, g_art_order.ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -3226,7 +3226,7 @@ protected:
 void SortedPreviousCursorRepairArticleNavigationTest::SetUp()
 {
     SortedPreviousArticleNavigationTest::SetUp();
-    g_art_ptr = article_ptr_list_begin() + 2;
+    g_art_order.ptr = article_ptr_list_begin() + 2;
     g_search_ahead = ArticleNum{};
     g_s_follow_temp = true;
     g_univ_follow_temp = true;
@@ -3316,7 +3316,7 @@ void SortedRestartArticleNavigationTest::SetUp()
     set_articles({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS}, 4);
     set_order({3, 1, 2});
     g_sel.selected_only = true;
-    g_art_ptr = article_ptr_list_begin() + 1;
+    g_art_order.ptr = article_ptr_list_begin() + 1;
     if (GetParam())
     {
         set_position_after_navigation(3, 0);
@@ -3504,8 +3504,8 @@ std::string ArticleTraversalTest::expect_navigation(char command, long number, s
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_TRUE(g_s_follow_temp);
     EXPECT_TRUE(g_univ_follow_temp);
-    EXPECT_TRUE(g_art_ptr_list.empty());
-    EXPECT_EQ(nullptr, g_art_ptr);
+    EXPECT_TRUE(g_art_order.ptr_list.empty());
+    EXPECT_EQ(nullptr, g_art_order.ptr);
     for (long article = 1; article <= 12; ++article)
     {
         SCOPED_TRACE(article);
@@ -3965,9 +3965,10 @@ void DirectNavigationArticleTest::set_order(std::initializer_list<long> order)
 {
     for (const long number : order)
     {
-        g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+        g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_ptr = std::find(g_art_ptr_list.data(), g_art_ptr_list.data() + g_art_ptr_list.size(), g_nav.target.art);
+    g_art_order.ptr = std::find(g_art_order.ptr_list.data(), g_art_order.ptr_list.data() + g_art_order.ptr_list.size(),
+                                g_nav.target.art);
 }
 
 std::string DirectNavigationArticleTest::navigate(std::string command, long target, bool reread,
@@ -3976,8 +3977,8 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
 {
     const ArticleLocation                            current = g_nav.current;
     const ArticleLocation                            recent = g_nav.recent;
-    const std::vector<Article *>                     order = g_art_ptr_list;
-    Article **const                                  cursor = g_art_ptr;
+    const std::vector<Article *>                     order = g_art_order.ptr_list;
+    Article **const                                  cursor = g_art_order.ptr;
     const ArticleNum                                 first = g_first_art;
     const ArticleNum                                 parsed = g_parsed_header.parsed_art;
     const ArticleUnread                              unread = m_newsgroup.m_to_read;
@@ -4015,8 +4016,8 @@ std::string DirectNavigationArticleTest::navigate(std::string command, long targ
     EXPECT_EQ(g_cache.find(ArticleNum{target}), g_nav.target.art);
     EXPECT_EQ(current, g_nav.current);
     EXPECT_EQ(recent, g_nav.recent);
-    EXPECT_EQ(order, g_art_ptr_list);
-    EXPECT_EQ(order_index < 0 ? cursor : article_ptr_list_begin() + order_index, g_art_ptr);
+    EXPECT_EQ(order, g_art_order.ptr_list);
+    EXPECT_EQ(order_index < 0 ? cursor : article_ptr_list_begin() + order_index, g_art_order.ptr);
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(parsed, g_parsed_header.parsed_art);
     EXPECT_EQ(unread, m_newsgroup.m_to_read);
@@ -7592,9 +7593,9 @@ TEST_P(DelayScopeCommandArticleTest, lastThreadStopsAtNullAndContinuesReadingFro
     g_s_follow_temp = false;
     for (const long number : {5, 1, 6, 2, 4, 3, 7})
     {
-        g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+        g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_ptr = g_art_ptr_list.data() + 2;
+    g_art_order.ptr = g_art_order.ptr_list.data() + 2;
 
     delay_scope(GetParam());
 
@@ -7736,9 +7737,9 @@ TEST_P(RestoreOrderArticleTest, restartsAtTheFirstEligibleArticleInReadingOrderI
     {
         for (const long number : {3, 2, 6, 5, 1, 4, 7})
         {
-            g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+            g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
         }
-        g_art_ptr = g_art_ptr_list.data() + 6;
+        g_art_order.ptr = g_art_order.ptr_list.data() + 6;
     }
     const long first = GetParam() == RestoreOrder::Sorted ? 6 : GetParam() == RestoreOrder::BreadthFirst ? 5 : 4;
 
@@ -7753,7 +7754,7 @@ TEST_P(RestoreOrderArticleTest, restartsAtTheFirstEligibleArticleInReadingOrderI
     EXPECT_EQ(SF_VISIT, m_subjects[0].m_flags);
     EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[1].m_flags);
     EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
-    EXPECT_EQ(GetParam() == RestoreOrder::Sorted ? g_art_ptr_list.data() + 2 : nullptr, g_art_ptr);
+    EXPECT_EQ(GetParam() == RestoreOrder::Sorted ? g_art_order.ptr_list.data() + 2 : nullptr, g_art_order.ptr);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadingOrder, RestoreOrderArticleTest,
@@ -7825,9 +7826,9 @@ TEST_F(RestoreDelayedArticleTest, missingMarkedArticlesInExplicitOrderNeverBecom
     g_first_art = ArticleNum{3};
     for (const long number : {1, 2, 3, 4, 5, 6, 7})
     {
-        g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+        g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_ptr = g_art_ptr_list.data() + 6;
+    g_art_order.ptr = g_art_order.ptr_list.data() + 6;
 
     EXPECT_EQ("\nReturning 2 Marked articles...\n", restore_delayed(2));
 
@@ -7836,7 +7837,7 @@ TEST_F(RestoreDelayedArticleTest, missingMarkedArticlesInExplicitOrderNeverBecom
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
     EXPECT_EQ(0, g_selected_subj_cnt);
     EXPECT_EQ(ArticleNum{2}, g_first_art);
-    EXPECT_EQ(g_art_ptr_list.data() + 1, g_art_ptr);
+    EXPECT_EQ(g_art_order.ptr_list.data() + 1, g_art_order.ptr);
 }
 
 TEST_F(RestoreDelayedArticleTest, expirationAfterMLeavesNoArticleToRestoreAndClearsThePendingCount)
@@ -8086,14 +8087,14 @@ TEST_F(UnsubscribeArticleTest, sortedScanViewStillRequestsGroupCleanupAndRetains
     g_s_follow_temp = true;
     for (const long number : {6, 3, 4, 1, 7, 2, 5})
     {
-        g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+        g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_ptr = g_art_ptr_list.data() + 2;
+    g_art_order.ptr = g_art_order.ptr_list.data() + 2;
 
     unsubscribe();
 
-    EXPECT_EQ(g_art_ptr_list.data() + 2, g_art_ptr);
-    EXPECT_EQ(g_cache.find(ArticleNum{4}), *g_art_ptr);
+    EXPECT_EQ(g_art_order.ptr_list.data() + 2, g_art_order.ptr);
+    EXPECT_EQ(g_cache.find(ArticleNum{4}), *g_art_order.ptr);
 }
 
 TEST_F(UnsubscribeArticleTest, anAlreadyDirtyNewsrcRetainsItsOtherFlags)
@@ -8272,7 +8273,7 @@ TEST_F(SortedArticleNavigationTest, nextUnreadFromGroupEndRestartsAtTheFirstElig
 {
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL}, 5);
     set_order({2, 4, 1, 3});
-    g_art_ptr = article_ptr_list_begin() + 3;
+    g_art_order.ptr = article_ptr_list_begin() + 3;
 
     expect_next_unread(4, 1);
 }
@@ -8326,7 +8327,7 @@ TEST_P(SortedExplicitForwardArticleNavigationTest, nextArticleStopsAfterTheSorte
 {
     g_nav.target.num = ArticleNum{3};
     g_nav.target.art = g_cache.ptr(g_nav.target.num);
-    g_art_ptr = article_ptr_list_begin() + 3;
+    g_art_order.ptr = article_ptr_list_begin() + 3;
 
     expect_next_article(5, 0);
 }
@@ -9206,7 +9207,7 @@ TEST_F(SortedArticleNavigationTest, previousUnreadFromGroupEndFindsTheLastEligib
     set_articles({AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD}, 5);
     set_order({2, 1, 4, 3});
     g_sel.selected_only = true;
-    g_art_ptr = article_ptr_list_begin() + 2;
+    g_art_order.ptr = article_ptr_list_begin() + 2;
 
     EXPECT_TRUE(expect_previous('p', 2, 0).empty());
 }
@@ -13366,9 +13367,9 @@ TEST_P(NumericJumpNavigationArticleTest, continuesFromTheJumpTargetInTheConfigur
     {
         for (const long number : {4, 11, 2, 3, 6, 1, 12, 7, 8, 9, 10})
         {
-            g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+            g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
         }
-        g_art_ptr = article_ptr_list_begin();
+        g_art_order.ptr = article_ptr_list_begin();
     }
     enter_number("2\n");
     expect_target(2);
@@ -13382,8 +13383,8 @@ TEST_P(NumericJumpNavigationArticleTest, continuesFromTheJumpTargetInTheConfigur
     EXPECT_TRUE(g_sel.selected_only);
     if (test_case.sorted)
     {
-        ASSERT_NE(nullptr, g_art_ptr);
-        EXPECT_EQ(g_nav.target.art, *g_art_ptr);
+        ASSERT_NE(nullptr, g_art_order.ptr);
+        EXPECT_EQ(g_nav.target.art, *g_art_order.ptr);
     }
 }
 
@@ -13439,9 +13440,9 @@ TEST_F(NumericRangeArticleTest, commaSeparatedOverlappingRangesRetainNumericScop
 {
     for (const long number : {12, 6, 1, 4, 3, 2, 11})
     {
-        g_art_ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
+        g_art_order.ptr_list.push_back(g_cache.ptr(ArticleNum{number}));
     }
-    g_art_ptr = article_ptr_list_begin() + 3;
+    g_art_order.ptr = article_ptr_list_begin() + 3;
 
     const std::string output = apply_range("3,1-3:j\n");
 
@@ -13833,7 +13834,7 @@ TEST_F(DirectNavigationArticleTest, configuredNavigationAfterANumericStepRepairs
 
     EXPECT_EQ(ArticleNum{7}, g_nav.target.num);
     EXPECT_EQ(g_cache.find(g_nav.target.num), g_nav.target.art);
-    EXPECT_EQ(article_ptr_list_begin() + 7, g_art_ptr);
+    EXPECT_EQ(article_ptr_list_begin() + 7, g_art_order.ptr);
     EXPECT_TRUE(g_reread);
     EXPECT_EQ(ArticleNum{}, g_search_ahead);
 }

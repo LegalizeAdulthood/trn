@@ -131,8 +131,8 @@ protected:
 private:
     DataSource               m_data_source{};
     decltype(g_cache.article_list) m_old_articles{std::move(g_cache.article_list)};
-    decltype(g_art_ptr_list) m_old_article_ptrs{std::move(g_art_ptr_list)};
-    Article                **m_old_art_ptr{g_art_ptr};
+    decltype(g_art_order.ptr_list) m_old_article_ptrs{std::move(g_art_order.ptr_list)};
+    Article                      **m_old_art_ptr{g_art_order.ptr};
     ArticleNum               m_old_abs_first{g_abs_first};
     ArticleNum               m_old_first_art{g_first_art};
     ArticleNum               m_old_last_art{g_last_art};
@@ -182,8 +182,8 @@ private:
 void ArticleSelectorCommandTest::SetUp()
 {
     g_cache.article_list.clear();
-    g_art_ptr_list.clear();
-    g_art_ptr = nullptr;
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr = nullptr;
     g_abs_first = ArticleNum{1};
     g_first_art = ArticleNum{3};
     g_last_art = ArticleNum{4};
@@ -237,8 +237,8 @@ void ArticleSelectorCommandTest::SetUp()
 void ArticleSelectorCommandTest::TearDown()
 {
     g_cache.article_list = std::move(m_old_articles);
-    g_art_ptr_list = std::move(m_old_article_ptrs);
-    g_art_ptr = m_old_art_ptr;
+    g_art_order.ptr_list = std::move(m_old_article_ptrs);
+    g_art_order.ptr = m_old_art_ptr;
     g_abs_first = m_old_abs_first;
     g_first_art = m_old_first_art;
     g_last_art = m_old_last_art;
@@ -676,9 +676,9 @@ TEST_F(SelectorCallbackTest, reverseOrderRequestsRedisplayAndReversesOnlyOnce)
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ(-1, g_sel.direction);
-    ASSERT_EQ(2, g_art_ptr_list.size());
-    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_art_ptr_list.front());
-    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_art_ptr_list.back());
+    ASSERT_EQ(2, g_art_order.ptr_list.size());
+    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_art_order.ptr_list.front());
+    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_art_order.ptr_list.back());
     EXPECT_EQ(0, g_selected_count);
     expect_next_command('q');
 }
@@ -728,9 +728,9 @@ TEST_F(SelectorCallbackTest, helpFollowupReversesOrderOnceWithoutConsumingTheNex
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ(-1, g_sel.direction);
-    ASSERT_EQ(2, g_art_ptr_list.size());
-    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_art_ptr_list.front());
-    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_art_ptr_list.back());
+    ASSERT_EQ(2, g_art_order.ptr_list.size());
+    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_art_order.ptr_list.front());
+    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_art_order.ptr_list.back());
     EXPECT_NE(std::string::npos, m_output.find("Selector Commands:"));
     expect_next_command('q');
 }
@@ -982,9 +982,9 @@ TEST_F(SelectorEscapedArticleTest, escapeOverridesASelectionLetterAndRunsTheComm
 
     EXPECT_EQ('Q', result);
     EXPECT_EQ(-1, g_sel.direction);
-    ASSERT_EQ(2, g_art_ptr_list.size());
-    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_art_ptr_list.front());
-    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_art_ptr_list.back());
+    ASSERT_EQ(2, g_art_order.ptr_list.size());
+    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_art_order.ptr_list.front());
+    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_art_order.ptr_list.back());
     EXPECT_EQ(1, g_selected_count);
     EXPECT_TRUE(g_cache.ptr(ArticleNum{3})->m_flags & AF_SEL);
     EXPECT_FALSE(g_cache.ptr(ArticleNum{4})->m_flags & AF_SEL);
@@ -3520,8 +3520,8 @@ void SelectorNumericInputState::prepare_numeric(bool rereading, int page_size)
     g_erase_char = '\b';
     g_kill_char = Ctl('u');
     g_cache.article_list.clear();
-    g_art_ptr_list.clear();
-    g_art_ptr = nullptr;
+    g_art_order.ptr_list.clear();
+    g_art_order.ptr = nullptr;
     g_abs_first = ArticleNum{100};
     g_last_art = ArticleNum{100 + MAX_SEL};
     g_first_art = rereading ? article_after(g_last_art) : g_abs_first;
@@ -5033,7 +5033,7 @@ std::vector<long> ArticleSelectorSortTest::displayed_order() const
     std::vector<long> result;
     if (g_sel.mode == SM_ARTICLE)
     {
-        for (const Article *article : g_art_ptr_list)
+        for (const Article *article : g_art_order.ptr_list)
         {
             result.push_back(article->article_num().value_of());
         }
@@ -5147,7 +5147,7 @@ std::vector<long> ArticleSelectorExclusiveStateTest::included_items() const
     std::vector<long> result;
     if (g_sel.mode == SM_ARTICLE)
     {
-        for (const Article *article : g_art_ptr_list)
+        for (const Article *article : g_art_order.ptr_list)
         {
             if (article->m_flags & AF_INCLUDED)
             {
@@ -5709,9 +5709,9 @@ TEST_P(ArticleSelectorToggleTest, rebuildsThePageWithTheOtherPopulation)
     EXPECT_EQ(ArticleNum{rereading ? 3 : 1}, g_first_art);
     if (mode == SM_ARTICLE)
     {
-        ASSERT_EQ(2U, g_art_ptr_list.size());
-        EXPECT_EQ(ArticleNum{rereading ? 3 : 1}, g_art_ptr_list[0]->article_num());
-        EXPECT_EQ(ArticleNum{rereading ? 4 : 2}, g_art_ptr_list[1]->article_num());
+        ASSERT_EQ(2U, g_art_order.ptr_list.size());
+        EXPECT_EQ(ArticleNum{rereading ? 3 : 1}, g_art_order.ptr_list[0]->article_num());
+        EXPECT_EQ(ArticleNum{rereading ? 4 : 2}, g_art_order.ptr_list[1]->article_num());
         EXPECT_EQ(article_ptr_list_begin(), g_sel_page.page_art);
     }
     else

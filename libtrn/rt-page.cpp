@@ -1056,7 +1056,7 @@ try_again:
 /// @globals
 /// - g_sel.mode: Read to select the active population.
 /// - g_multircs, g_ng_order.order, g_add_groups, g_univ.items: Read through catalog helpers.
-/// - g_art_ptr_list, g_subj.first: Read for article and subject traversal.
+/// - g_art_order.ptr_list, g_subj.first: Read for article and subject traversal.
 ///
 bool SelectorPage::first_page()
 {
@@ -1191,7 +1191,7 @@ bool SelectorPage::first_page()
 ///
 /// @globals
 /// - g_sel, g_obj_count: Read for selector mode, policy, and option count.
-/// - g_art_ptr_list: Read to locate the end of article order.
+/// - g_art_order.ptr_list: Read to locate the end of article order.
 /// @note prev_page retains its catalog, inclusion, and display-policy dependencies.
 ///
 bool SelectorPage::last_page()
@@ -1319,7 +1319,7 @@ bool SelectorPage::last_page()
 /// @globals
 /// - g_sel.mode: Selects the population whose next anchor is used.
 /// - g_obj_count: Bounds the next option page.
-/// - g_art_ptr_list: Bounds the next article page via article_ptr_list_end().
+/// - g_art_order.ptr_list: Bounds the next article page via article_ptr_list_end().
 ///
 bool SelectorPage::next_page()
 {
@@ -1420,7 +1420,7 @@ bool SelectorPage::next_page()
 /// @globals
 /// - g_sel: Read for the active mode and selection policy.
 /// - g_multircs, g_ng_order.order, g_add_groups, g_univ.items: Read through catalog helpers.
-/// - g_opt_edit.flags, g_art_ptr_list, g_subj.first, g_subj.last: Read for included entries and
+/// - g_opt_edit.flags, g_art_order.ptr_list, g_subj.first, g_subj.last: Read for included entries and
 /// traversal.
 /// - g_tc_COLS, g_sel_art_display_mode, g_sel_art_display_mode_index: Read by line-count helpers.
 ///

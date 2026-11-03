@@ -31,8 +31,8 @@ protected:
         m_old_sel_sort = g_sel.sort;
         m_old_sel_direction = g_sel.direction;
         m_old_sel_page_app = g_sel_page.page_art;
-        m_old_art_ptr_list = std::move(g_art_ptr_list);
-        m_old_art_ptr = g_art_ptr;
+        m_old_art_ptr_list = std::move(g_art_order.ptr_list);
+        m_old_art_ptr = g_art_order.ptr;
 
         g_cache.article_list.clear();
         g_abs_first = ArticleNum{1};
@@ -43,14 +43,14 @@ protected:
         g_sel.sort = SS_DATE;
         g_sel.direction = 1;
         g_sel_page.page_art = reinterpret_cast<Article **>(1);
-        g_art_ptr_list.clear();
-        g_art_ptr = nullptr;
+        g_art_order.ptr_list.clear();
+        g_art_order.ptr = nullptr;
     }
 
     void TearDown() override
     {
-        g_art_ptr_list = std::move(m_old_art_ptr_list);
-        g_art_ptr = m_old_art_ptr;
+        g_art_order.ptr_list = std::move(m_old_art_ptr_list);
+        g_art_order.ptr = m_old_art_ptr;
         g_sel_page.page_art = m_old_sel_page_app;
         g_sel.direction = m_old_sel_direction;
         g_sel.sort = m_old_sel_sort;
@@ -93,9 +93,9 @@ TEST_F(ArticlePointerListTest, sortArticlesBuildsDateOrderedPointerList)
 
     sort_articles();
 
-    ASSERT_EQ(3U, g_art_ptr_list.size());
-    EXPECT_EQ(ArticleNum{2}, g_art_ptr_list[0]->article_num());
-    EXPECT_EQ(ArticleNum{3}, g_art_ptr_list[1]->article_num());
-    EXPECT_EQ(ArticleNum{1}, g_art_ptr_list[2]->article_num());
+    ASSERT_EQ(3U, g_art_order.ptr_list.size());
+    EXPECT_EQ(ArticleNum{2}, g_art_order.ptr_list[0]->article_num());
+    EXPECT_EQ(ArticleNum{3}, g_art_order.ptr_list[1]->article_num());
+    EXPECT_EQ(ArticleNum{1}, g_art_order.ptr_list[2]->article_num());
     EXPECT_EQ(nullptr, g_sel_page.page_art);
 }

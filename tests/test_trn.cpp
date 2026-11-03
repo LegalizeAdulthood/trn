@@ -188,8 +188,8 @@ protected:
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_current_newsgroup = g_current_newsgroup;
         m_old_article_list = std::move(g_cache.article_list);
-        m_old_art_ptr_list = std::move(g_art_ptr_list);
-        m_old_art_ptr = g_art_ptr;
+        m_old_art_ptr_list = std::move(g_art_order.ptr_list);
+        m_old_art_ptr = g_art_order.ptr;
         m_old_first_cached = g_cache.first_cached;
         m_old_last_cached = g_cache.last_cached;
         m_old_cached_all_in_range = g_cache.cached_all_in_range;
@@ -294,8 +294,8 @@ protected:
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_cache.article_list.clear();
-        g_art_ptr_list.clear();
-        g_art_ptr = nullptr;
+        g_art_order.ptr_list.clear();
+        g_art_order.ptr = nullptr;
         g_cache.first_cached = ArticleNum{};
         g_cache.last_cached = ArticleNum{};
         g_cache.cached_all_in_range = false;
@@ -425,8 +425,8 @@ protected:
         g_current_newsgroup = m_old_current_newsgroup;
         g_cache.article_list.clear();
         g_cache.article_list = std::move(m_old_article_list);
-        g_art_ptr_list = std::move(m_old_art_ptr_list);
-        g_art_ptr = m_old_art_ptr;
+        g_art_order.ptr_list = std::move(m_old_art_ptr_list);
+        g_art_order.ptr = m_old_art_ptr;
         g_cache.first_cached = m_old_first_cached;
         g_cache.last_cached = m_old_last_cached;
         g_cache.cached_all_in_range = m_old_cached_all_in_range;

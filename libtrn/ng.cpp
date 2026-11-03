@@ -1285,7 +1285,7 @@ no_previous_article:
         }
         if (g_nav.target.num > g_last_art)
         {
-            if (!g_art_ptr_list.empty())
+            if (!g_art_order.ptr_list.empty())
             {
                 g_nav.target.art = nullptr;
                 g_nav.target.next(false, true);
