@@ -1826,22 +1826,22 @@ void HtmlRenderer::filter_into(std::string &output, std::string_view input)
     }
 }
 
-std::string filter_html(std::string_view f, std::string_view prefix, int base_offset)
+std::string HtmlRenderer::filter(std::string_view f, std::string_view prefix, int base_offset)
 {
     std::string output{prefix};
     output.reserve(prefix.size() + f.size() + LINE_BUF_LEN);
 
-    if (g_mime.section->html.line_start >= base_offset)
+    if (line_start >= base_offset)
     {
-        g_mime.section->html.line_start -= base_offset;
+        line_start -= base_offset;
     }
     else
     {
-        g_mime.section->html.line_start = 0;
+        line_start = 0;
     }
 
-    g_mime.section->html.filter_into(output, f);
-    g_mime.section->html.line_start += base_offset;
+    filter_into(output, f);
+    line_start += base_offset;
     return output;
 }
 #undef XX

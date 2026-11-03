@@ -78,6 +78,8 @@ struct MimeParamViews
 
 struct HtmlRenderer
 {
+    std::string filter(std::string_view f, std::string_view prefix = {}, int base_offset = 0);
+
     // TODO: private
     int append_indent(std::string &output);
     void do_newline(std::string &output, HtmlFlags flag);
@@ -222,6 +224,5 @@ DecodeState   qp_decode(std::FILE *ifp, DecodeState state);
 std::string    b64_decode_string(std::string_view f);
 DecodeState   b64_decode(std::FILE *ifp, DecodeState state);
 DecodeState   cat_decode(std::FILE *ifp, DecodeState state);
-std::string    filter_html(std::string_view f, std::string_view prefix = {}, int base_offset = 0);
 
 #endif

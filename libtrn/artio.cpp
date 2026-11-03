@@ -483,8 +483,8 @@ read_more:
             const std::string decoded = g_mime.section->decode_text_chunk(
                 {bp + source, static_cast<std::size_t>(line_offset - converted_offset)}, true);
             std::string tail = g_mime.state == HTML_TEXT_MIME
-                                   ? filter_html(decoded, {bp, static_cast<std::size_t>(filter_offset)},
-                                                 static_cast<int>(g_art_buf.pos().value_of()))
+                                   ? g_mime.section->html.filter(decoded, {bp, static_cast<std::size_t>(filter_offset)},
+                                                                 static_cast<int>(g_art_buf.pos().value_of()))
                                    : std::string{bp, static_cast<std::size_t>(converted_offset)} + decoded;
             tail += '\n';
             tail = substitute_art_text(tail);
@@ -586,8 +586,9 @@ mime_switch:
         }
         o = filter_offset + extra_offset;
         {
-            std::string filtered = filter_html(bp + o, std::string_view{bp, static_cast<std::size_t>(filter_offset)},
-                                               static_cast<int>(g_art_buf.pos().value_of()));
+            std::string filtered =
+                g_mime.section->html.filter(bp + o, std::string_view{bp, static_cast<std::size_t>(filter_offset)},
+                                            static_cast<int>(g_art_buf.pos().value_of()));
             filtered.copy(bp, filtered.size());
             bp[filtered.size()] = '\0';
             len = static_cast<int>(filtered.size());

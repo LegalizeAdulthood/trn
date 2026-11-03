@@ -747,13 +747,13 @@ protected:
 
     std::string filter(std::string_view text)
     {
-        return filter_html(text);
+        return g_mime.section->html.filter(text);
     }
 
     std::string filter(std::string_view first, std::string_view second)
     {
-        std::string output = filter_html(first);
-        return filter_html(second, output);
+        std::string output = g_mime.section->html.filter(first);
+        return g_mime.section->html.filter(second, output);
     }
 
     MimeSection                    m_mime_section{};
