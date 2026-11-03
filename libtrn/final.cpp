@@ -101,7 +101,7 @@ void final_init()
 [[noreturn]] //
 void finalize(int status)
 {
-    sc_sv_save_file();   // save any scores from memory to disk
+    g_saved_scores.save_file(); // save any scores from memory to disk
     update_thread_kill_file();
     g_color.deefault();
     termlib_reset();

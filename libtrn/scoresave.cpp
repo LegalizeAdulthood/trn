@@ -90,9 +90,9 @@ void SavedScoreStore::get_file()
 }
 
 // save the memory into the score file
-void sc_sv_save_file()
+void SavedScoreStore::save_file()
 {
-    if (g_saved_scores.lines.empty())
+    if (lines.empty())
     {
         return;
     }
@@ -111,7 +111,7 @@ void sc_sv_save_file()
         g_waiting = false;
         return;
     }
-    for (const std::string &line : g_saved_scores.lines)
+    for (const std::string &line : lines)
     {
         fmt::print(tmpfp, "{}\n", line);
         if (std::ferror(tmpfp))

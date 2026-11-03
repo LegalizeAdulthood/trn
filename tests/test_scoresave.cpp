@@ -121,7 +121,7 @@ TEST_F(ScoreSaveTest, saveFileRewritesConfiguredFile)
     g_saved_scores.save();
 
     m_env.expect_env("SAVESCOREFILE", m_score_file_name.c_str());
-    sc_sv_save_file();
+    g_saved_scores.save_file();
 
     ASSERT_TRUE(fs::exists(m_score_file));
     EXPECT_EQ((std::vector<std::string>{
@@ -145,7 +145,7 @@ TEST_F(ScoreSaveTest, saveFileWritesEncodedScoreLines)
     g_saved_scores.save();
 
     m_env.expect_env("SAVESCOREFILE", m_score_file_name.c_str());
-    sc_sv_save_file();
+    g_saved_scores.save_file();
 
     ASSERT_TRUE(fs::exists(m_score_file));
     EXPECT_EQ((std::vector<std::string>{
