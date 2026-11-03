@@ -195,7 +195,7 @@ TEST_F(HashWalkTest, updatesEveryWalkedEntry)
 {
     store_values(1, 2, 3);
 
-    hash_walk(m_table.get(), add_extra_to_datum, 10);
+    g_hash_cursor.walk(m_table.get(), &add_extra_to_datum, 10);
 
     EXPECT_EQ(11U, g_hash_cursor.fetch(m_table.get(), m_alpha).dat_len);
     EXPECT_EQ(12U, g_hash_cursor.fetch(m_table.get(), m_beta).dat_len);
@@ -206,7 +206,7 @@ TEST_F(HashWalkTest, removesOnlyTheMatchingWalkedEntry)
 {
     store_values(11, 12, 13);
 
-    hash_walk(m_table.get(), remove_matching_datum, 12);
+    g_hash_cursor.walk(m_table.get(), &remove_matching_datum, 12);
 
     EXPECT_EQ(11U, g_hash_cursor.fetch(m_table.get(), m_alpha).dat_len);
     EXPECT_EQ(nullptr, g_hash_cursor.fetch(m_table.get(), m_beta).dat_ptr);

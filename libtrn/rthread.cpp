@@ -203,7 +203,7 @@ void thread_close()
     update_thread_kill_file();
     if (g_msg_id_hash)
     {
-        hash_walk(g_msg_id_hash, cleanup_msg_id_hash, 0);
+        g_hash_cursor.walk(g_msg_id_hash, &cleanup_msg_id_hash, 0);
     }
     g_sel_page.page_subj = nullptr;
     g_sel_page.page_art = nullptr;

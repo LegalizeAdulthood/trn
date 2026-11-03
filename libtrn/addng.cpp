@@ -434,7 +434,7 @@ static void collect_active_groups()
         set_data_source(dp);
         if (dp->m_act_sf.m_fp)
         {
-            hash_walk(dp->m_act_sf.m_hp, list_groups, 0);
+            g_hash_cursor.walk(dp->m_act_sf.m_hp, &list_groups, 0);
         }
         else
         {

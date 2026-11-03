@@ -19,8 +19,8 @@ struct HashDatum
 
 struct HashTable;
 
-using HashCompareFunc = int (*)(std::string_view key, HashDatum data);
-using HashWalkFunc = int (*)(int key_len, HashDatum *data, int extra);
+using HashCompareFunc = int(std::string_view key, HashDatum data);
+using HashWalkFunc = int(int key_len, HashDatum *data, int extra);
 
 struct HashLookupCursor
 {
@@ -31,14 +31,14 @@ struct HashLookupCursor
 
     void store_last(HashDatum data);
     HashDatum fetch(HashTable *tbl, std::string_view key);
+    void      walk(HashTable *tbl, HashWalkFunc *node_func, int extra);
 };
 
 extern HashLookupCursor g_hash_cursor;
 
-HashTable *hash_create(unsigned size, HashCompareFunc cmp_func);
+HashTable *hash_create(unsigned size, HashCompareFunc *cmp_func);
 void hash_destroy(HashTable *tbl);
 void hash_store(HashTable *tbl, std::string_view key, HashDatum data);
 void hash_delete(HashTable *tbl, std::string_view key);
-void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra);
 
 #endif

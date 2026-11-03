@@ -627,7 +627,7 @@ void rewrite_kill_file(ArticleNum thru)
         if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
         {
             // Append all the still-valid thread commands
-            hash_walk(g_msg_id_hash, write_local_thread_commands, 0);
+            g_hash_cursor.walk(g_msg_id_hash, &write_local_thread_commands, 0);
         }
         std::fclose(s_new_kill_file_fp);
         if (!has_content)
@@ -723,7 +723,7 @@ void update_thread_kill_file()
     int elapsed_days = kill_file_day_num(s_kill_file_day_num);
     if (elapsed_days)
     {
-        hash_walk(g_msg_id_hash, age_thread_commands, elapsed_days);
+        g_hash_cursor.walk(g_msg_id_hash, &age_thread_commands, elapsed_days);
         s_kill_file_day_num += elapsed_days;
     }
 
@@ -745,7 +745,7 @@ void update_thread_kill_file()
         }
         s_kill_file_thread_cnt = 0;
         g_kf_change_thread_cnt = 0;
-        hash_walk(g_msg_id_hash, write_global_thread_commands, 0); // Rewrite
+        g_hash_cursor.walk(g_msg_id_hash, &write_global_thread_commands, 0); // Rewrite
     }
     else
     {
@@ -754,7 +754,7 @@ void update_thread_kill_file()
         {
             return; // Yikes!
         }
-        hash_walk(g_msg_id_hash, write_global_thread_commands, 1); // Append
+        g_hash_cursor.walk(g_msg_id_hash, &write_global_thread_commands, 1); // Append
     }
     std::fclose(s_new_kill_file_fp);
 

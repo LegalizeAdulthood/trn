@@ -33,7 +33,7 @@ struct HashTable
 {
     std::vector<std::vector<HashEntry>> ht_addr;
     char                                ht_magic;
-    HashCompareFunc                     ht_cmp;
+    HashCompareFunc                    *ht_cmp;
 };
 
 static std::size_t hash_bucket_index(HashTable *tbl, std::string_view key);
@@ -42,7 +42,7 @@ static unsigned    hash(std::string_view key);
 static int         default_cmp(std::string_view key, HashDatum data);
 
 // size - a crude guide to size
-HashTable *hash_create(unsigned size, HashCompareFunc cmp_func)
+HashTable *hash_create(unsigned size, HashCompareFunc *cmp_func)
 {
     size = std::max(size, 1U); // size < 1 is nonsense
     HashTable *tbl = new HashTable{};
@@ -128,7 +128,8 @@ void HashLookupCursor::store_last(HashDatum data)
 // Visit each entry by calling nodefunc at each, with keylen, data,
 // and extra as arguments.
 //
-void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
+// Callbacks retain their payload mutations, cleanup, I/O, and global effects.
+void HashLookupCursor::walk(HashTable *tbl, HashWalkFunc *node_func, int extra)
 {
     if (BADTBL(tbl))
     {
@@ -140,11 +141,11 @@ void hash_walk(HashTable *tbl, HashWalkFunc node_func, int extra)
         for (std::size_t entry_index = 0; entry_index < bucket.size();)
         {
             HashEntry &entry = bucket[entry_index];
-            g_hash_cursor.table = tbl;
-            g_hash_cursor.bucket = bucket_index;
-            g_hash_cursor.index = entry_index;
-            g_hash_cursor.keylen = entry.he_key_len;
-            if ((*node_func)(entry.he_key_len, &entry.he_data, extra) < 0)
+            table = tbl;
+            this->bucket = bucket_index;
+            index = entry_index;
+            keylen = entry.he_key_len;
+            if (node_func(entry.he_key_len, &entry.he_data, extra) < 0)
             {
                 bucket.erase(bucket.begin() + static_cast<std::ptrdiff_t>(entry_index));
             }
@@ -173,7 +174,7 @@ static std::size_t hash_find(HashTable *tbl, std::size_t bucket_index, std::stri
     for (std::size_t entry_index = 0; entry_index < bucket.size(); ++entry_index)
     {
         HashEntry &entry = bucket[entry_index];
-        if (entry.he_key_len == key_len && !(*tbl->ht_cmp)(key, entry.he_data))
+        if (entry.he_key_len == key_len && !tbl->ht_cmp(key, entry.he_data))
         {
             return entry_index;
         }
