@@ -179,7 +179,7 @@ TEST_F(ScoreSaveTest, loadScoresReadsEncodedScoreLines)
     EXPECT_FALSE(g_cache.scored(ArticleNum{4}));
     EXPECT_EQ(-3, g_cache.ptr(ArticleNum{5})->m_score);
     EXPECT_TRUE(g_cache.scored(ArticleNum{5}));
-    EXPECT_EQ(4, g_sc_loaded_count);
+    EXPECT_EQ(4, g_saved_scores.loaded_count);
 }
 
 TEST_F(ScoreSaveTest, loadScoresUsesSavedStartingArticleNumber)
@@ -200,5 +200,5 @@ TEST_F(ScoreSaveTest, loadScoresUsesSavedStartingArticleNumber)
     EXPECT_EQ(-2, g_cache.ptr(ArticleNum{5})->m_score);
     EXPECT_TRUE(g_cache.scored(ArticleNum{5}));
     EXPECT_FALSE(g_cache.scored(ArticleNum{6}));
-    EXPECT_EQ(2, g_sc_loaded_count);
+    EXPECT_EQ(2, g_saved_scores.loaded_count);
 }

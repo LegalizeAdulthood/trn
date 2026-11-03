@@ -33,14 +33,7 @@
 
 namespace fs = std::filesystem;
 
-int g_sc_loaded_count{}; // how many articles were loaded?
-
-static long                     s_sc_save_new{}; // new articles (unloaded)
-static std::vector<std::string> s_lines;
-static int                      s_loaded{};
-static int                      s_used{};
-static int                      s_saved{};
-static ArticleNum               s_last{};
+SavedScoreStore g_saved_scores{};
 
 static void       sc_sv_add(std::string_view str);
 static void       sc_sv_del_group(std::string_view gname);
@@ -50,13 +43,13 @@ static ArticleNum sc_sv_make_line(ArticleNum a);
 
 static void sc_sv_add(std::string_view str)
 {
-    s_lines.emplace_back(str);
+    g_saved_scores.lines.emplace_back(str);
 }
 
 static void sc_sv_del_group(std::string_view gname)
 {
-    auto group = s_lines.begin();
-    while (group != s_lines.end())
+    auto group = g_saved_scores.lines.begin();
+    while (group != g_saved_scores.lines.end())
     {
         if (!group->empty() && group->front() == '!'
             && std::string_view{*group}.substr(1) == gname)
@@ -65,12 +58,12 @@ static void sc_sv_del_group(std::string_view gname)
         }
         ++group;
     }
-    if (group == s_lines.end())
+    if (group == g_saved_scores.lines.end())
     {
         return;         // group not found
     }
     auto next_group = group + 1;
-    while (next_group != s_lines.end())
+    while (next_group != g_saved_scores.lines.end())
     {
         if (!next_group->empty() && next_group->front() == '!')
         {
@@ -78,13 +71,13 @@ static void sc_sv_del_group(std::string_view gname)
         }
         ++next_group;
     }
-    s_lines.erase(group, next_group);
+    g_saved_scores.lines.erase(group, next_group);
 }
 
 // get the file containing scores into memory
 static void sc_sv_get_file()
 {
-    s_lines.clear();
+    g_saved_scores.lines.clear();
 
     std::ifstream input{file_exp(get_env_var("SAVESCOREFILE", "%+/savedscores"))};
     if (!input)
@@ -105,7 +98,7 @@ static void sc_sv_get_file()
 // save the memory into the score file
 void sc_sv_save_file()
 {
-    if (s_lines.empty())
+    if (g_saved_scores.lines.empty())
     {
         return;
     }
@@ -124,7 +117,7 @@ void sc_sv_save_file()
         g_waiting = false;
         return;
     }
-    for (const std::string &line : s_lines)
+    for (const std::string &line : g_saved_scores.lines)
     {
         fmt::print(tmpfp, "{}\n", line);
         if (std::ferror(tmpfp))
@@ -184,11 +177,11 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
                 score_text.front() = static_cast<char>('0' + ('J' - command)); // convert to first digit
                 score = -parse_int(score_text);
                 line.remove_prefix(score_length);
-                s_loaded++;
+                g_saved_scores.loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
-                    s_used++;
+                    g_saved_scores.used++;
                 }
                 ++a;
                 break;
@@ -211,11 +204,11 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
                 score_text.front() = static_cast<char>('0' + (command - 'J')); // convert to first digit
                 score = parse_int(score_text);
                 line.remove_prefix(score_length);
-                s_loaded++;
+                g_saved_scores.loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
-                    s_used++;
+                    g_saved_scores.used++;
                 }
                 ++a;
                 break;
@@ -238,11 +231,11 @@ static ArticleNum sc_sv_use_line(std::string_view line, ArticleNum a)
             }
             for (; repeat_count; repeat_count--)
             {
-                s_loaded++;
+                g_saved_scores.loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
                     sc_set_score(a, score);
-                    s_used++;
+                    g_saved_scores.used++;
                 }
                 ++a;
             }
@@ -286,16 +279,16 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
         next_start = g_cache.next(art);
         if (g_cache.unread(art) && g_cache.scored(art))
         {
-            if (s_last != article_before(art))
+            if (g_saved_scores.last != article_before(art))
             {
-                if (s_last == article_before(art, 2))
+                if (g_saved_scores.last == article_before(art, 2))
                 {
                     line += 's';
                     num_output++;
                 }
                 else
                 {
-                    line += fmt::format("s{}", (art.value_of() - s_last.value_of()) - 1);
+                    line += fmt::format("s{}", (art.value_of() - g_saved_scores.last.value_of()) - 1);
                     num_output++;
                 }
             }
@@ -323,7 +316,7 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
                     line += fmt::format("r{}", repeat_count); // repeat >one
                     num_output++;
                 }
-                s_saved += repeat_count - 1;
+                g_saved_scores.saved += repeat_count - 1;
             }
             else // not a repeat
             {
@@ -348,9 +341,9 @@ static ArticleNum sc_sv_make_line(ArticleNum a)
                 lastscore_valid = true;
             }
             lastscore = score;
-            s_last = art;
+            g_saved_scores.last = art;
             next_start = g_cache.next(art);
-            s_saved++;
+            g_saved_scores.saved++;
         } // if
     } // for
     if (num_output != 0)
@@ -365,15 +358,15 @@ void sc_load_scores()
     // lots of cleanup needed here
     ArticleNum a{};
 
-    s_sc_save_new = -1;         // just in case we exit early
-    s_loaded = 0;
-    s_used = 0;
-    g_sc_loaded_count = 0;
+    g_saved_scores.save_new = -1; // just in case we exit early
+    g_saved_scores.loaded = 0;
+    g_saved_scores.used = 0;
+    g_saved_scores.loaded_count = 0;
 
     // verbosity is only really useful for debugging...
     bool verbose = false;
 
-    if (s_lines.empty())
+    if (g_saved_scores.lines.empty())
     {
         sc_sv_get_file();
     }
@@ -381,16 +374,16 @@ void sc_load_scores()
     const std::string gname = file_exp("%C");
 
     std::size_t i;
-    for (i = 0; i < s_lines.size(); i++)
+    for (i = 0; i < g_saved_scores.lines.size(); i++)
     {
-        const std::string &line = s_lines[i];
+        const std::string &line = g_saved_scores.lines[i];
         if (!line.empty() && line.front() == '!'
             && std::string_view{line}.substr(1) == gname)
         {
             break;
         }
     }
-    if (i == s_lines.size())
+    if (i == g_saved_scores.lines.size())
     {
         return;         // no scores loaded
     }
@@ -401,9 +394,9 @@ void sc_load_scores()
         fmt::print("\nLoading scores...");
         std::fflush(stdout);
     }
-    while (i < s_lines.size())
+    while (i < g_saved_scores.lines.size())
     {
-        std::string &line = s_lines[i++];
+        std::string &line = g_saved_scores.lines[i++];
         if (line.empty())
         {
             continue;
@@ -425,7 +418,7 @@ void sc_load_scores()
             break;
 
         case '!': // group of shared file
-            i = s_lines.size();
+            i = g_saved_scores.lines.size();
             break;
 
         case 'v':  // version number
@@ -441,7 +434,7 @@ void sc_load_scores()
         } // switch
     } // while
 
-    g_sc_loaded_count = s_loaded;
+    g_saved_scores.loaded_count = g_saved_scores.loaded;
     a = g_first_art;
     if (g_sa_mode_read_elig)
     {
@@ -469,10 +462,11 @@ void sc_load_scores()
     // sloppy plurals (:-)
     if (verbose)
     {
-        fmt::print("({}/{}/{} scores loaded/used/unscored)\n", s_loaded, s_used, total - scored);
+        fmt::print("({}/{}/{} scores loaded/used/unscored)\n", g_saved_scores.loaded, g_saved_scores.used,
+                   total - scored);
     }
 
-    s_sc_save_new = total - scored;
+    g_saved_scores.save_new = total - scored;
     if (g_sa_initialized)
     {
         g_s_top_ent = -1;       // reset top of page
@@ -481,13 +475,13 @@ void sc_load_scores()
 
 void sc_save_scores()
 {
-    s_saved = 0;
-    s_last = ArticleNum{};
+    g_saved_scores.saved = 0;
+    g_saved_scores.last = ArticleNum{};
 
     g_waiting = true;   // DON'T interrupt
     const std::string gname = file_exp("%C");
     // not being able to open is OK
-    if (!s_lines.empty())
+    if (!g_saved_scores.lines.empty())
     {
         sc_sv_del_group(gname);  // delete old group
     }
@@ -500,7 +494,7 @@ void sc_save_scores()
 
     ArticleNum a = g_first_art;
     sc_sv_add(fmt::format(":{}", a.value_of()));
-    s_last = article_before(a);
+    g_saved_scores.last = article_before(a);
     while (a <= g_last_art)
     {
         a = sc_sv_make_line(a);

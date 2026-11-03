@@ -207,7 +207,7 @@ void sc_cleanup()
     {
         sc_save_scores();
     }
-    g_sc_loaded_count = 0;
+    g_saved_scores.loaded_count = 0;
 
     if (g_sf_verbose)
     {

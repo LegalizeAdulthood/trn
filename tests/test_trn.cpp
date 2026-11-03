@@ -8363,7 +8363,7 @@ private:
     bool       m_old_sc_saves_cores{g_sc_saves_cores};
     ArticleNum m_old_sc_fill_max{g_sc_fill_max};
     bool       m_old_sc_fill_read{g_sc_fill_read};
-    int        m_old_sc_loaded_count{g_sc_loaded_count};
+    int        m_old_sc_loaded_count{g_saved_scores.loaded_count};
     bool       m_old_sf_verbose{g_sf_verbose};
     int        m_old_sf_score_verbose{g_sf_score_verbose};
     bool       m_old_kill_thresh_active{g_kill_thresh_active};
@@ -8407,7 +8407,7 @@ void ScoreArticleTest::TearDown()
     g_sc_saves_cores = m_old_sc_saves_cores;
     g_sc_fill_max = m_old_sc_fill_max;
     g_sc_fill_read = m_old_sc_fill_read;
-    g_sc_loaded_count = m_old_sc_loaded_count;
+    g_saved_scores.loaded_count = m_old_sc_loaded_count;
     g_sf_verbose = m_old_sf_verbose;
     g_sf_score_verbose = m_old_sf_score_verbose;
     g_kill_thresh_active = m_old_kill_thresh_active;

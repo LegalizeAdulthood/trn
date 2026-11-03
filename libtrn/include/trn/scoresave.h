@@ -8,7 +8,21 @@
 
 #include <config/typedef.h>
 
-extern int g_sc_loaded_count; // how many articles were loaded?
+#include <string>
+#include <vector>
+
+struct SavedScoreStore
+{
+    std::vector<std::string> lines;
+    int                      loaded{};
+    int                      used{};
+    int                      saved{};
+    ArticleNum               last{};
+    long                     save_new{};     // new articles (unloaded)
+    int                      loaded_count{}; // how many articles were loaded?
+};
+
+extern SavedScoreStore g_saved_scores;
 
 void       sc_sv_save_file();
 void       sc_load_scores();
