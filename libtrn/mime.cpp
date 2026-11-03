@@ -83,7 +83,6 @@ static void        tag_action(std::string &output, std::string_view word, bool o
 static void        output_prep(std::string &output);
 static void        do_newline(std::string &output, HtmlFlags flag);
 static void        wrap_html_output(std::string &output);
-static int         append_indent(std::string &output);
 static std::string_view find_attr(std::string_view str, std::string_view attr);
 
 void mime_set_executor(MimeExecutor executor)
@@ -2253,7 +2252,7 @@ static void output_prep(std::string &output)
         g_mime.section->html.flags &= ~HF_QUEUED_NL;
         do_newline(output, HF_NL_OK);
     }
-    append_indent(output);
+    g_mime.section->html.append_indent(output);
 }
 
 static void do_newline(std::string &output, HtmlFlags flag)
@@ -2261,7 +2260,7 @@ static void do_newline(std::string &output, HtmlFlags flag)
     if (g_mime.section->html.flags & flag)
     {
         g_mime.section->html.flags &= ~(flag | HF_SPACE_OK);
-        append_indent(output);
+        g_mime.section->html.append_indent(output);
         output.push_back('\n');
         g_mime.section->html.line_start = static_cast<int>(output.size());
         g_mime.section->html.flags |= HF_NEED_INDENT;
@@ -2309,7 +2308,7 @@ static void wrap_html_output(std::string &output)
     g_mime.section->html.flags |= HF_NEED_INDENT;
 
     std::string indent;
-    append_indent(indent);
+    g_mime.section->html.append_indent(indent);
 
     std::size_t content_pos = new_line_start;
     while (content_pos < output.size() && is_hor_space(output[content_pos]))
@@ -2320,19 +2319,19 @@ static void wrap_html_output(std::string &output)
     g_mime.section->html.flags = flag_save;
 }
 
-static int append_indent(std::string &output)
+int HtmlRenderer::append_indent(std::string &output)
 {
     int spaces;
     int len = 0;
 
-    if (!(g_mime.section->html.flags & HF_NEED_INDENT))
+    if (!(flags & HF_NEED_INDENT))
     {
         return len;
     }
 
-    g_mime.section->html.flags &= ~HF_NEED_INDENT;
+    flags &= ~HF_NEED_INDENT;
 
-    const std::vector<HtmlBlock> &blks = g_mime.section->html.blocks;
+    const std::vector<HtmlBlock> &blks = blocks;
     for (const HtmlBlock &block : blks)
     {
         int ch = block.indent;

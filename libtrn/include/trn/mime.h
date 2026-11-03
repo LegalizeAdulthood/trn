@@ -78,6 +78,9 @@ struct MimeParamViews
 
 struct HtmlRenderer
 {
+    // TODO: private
+    int append_indent(std::string &output);
+
     HtmlFlags              flags;
     int                    line_start;
     std::vector<HtmlBlock> blocks;
