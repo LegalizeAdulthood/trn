@@ -127,7 +127,7 @@ bool initialize(int argc, char *argv[])
 
     // get info on last trn run, if any
 
-    last_init();
+    g_last_run.init();
 
     univ_init();
 

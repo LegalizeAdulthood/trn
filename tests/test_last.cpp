@@ -44,7 +44,7 @@ protected:
         fs::remove_all(m_dot_dir, error);
         fs::create_directories(m_dot_dir);
         g_dot_dir = m_dot_dir.string();
-        last_init();
+        g_last_run.init();
     }
 
     void TearDown() override

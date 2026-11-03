@@ -25,12 +25,12 @@ namespace fs = std::filesystem;
 
 LastRunState g_last_run{};
 
-void last_init()
+void LastRunState::init()
 {
-    g_last_run.file = file_exp(LASTNAME);
+    file = file_exp(LASTNAME);
 
-    g_last_run.start_time = (long) std::time(nullptr);
-    g_last_run.read();
+    start_time = (long) std::time(nullptr);
+    read();
 }
 
 void last_final()

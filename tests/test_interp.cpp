@@ -224,7 +224,7 @@ void InterpolatorTest::SetUp()
     interp_init();
     cwd_check();
     term_set(m_tcbuf);
-    last_init();
+    g_last_run.init();
     univ_init();
     data_source_init();
     rcstuff_init();
