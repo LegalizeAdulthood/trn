@@ -288,7 +288,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                     newline();
                 }
             }
-            perform_status_init(g_newsgroup_ptr->m_to_read);
+            g_report.init(g_newsgroup_ptr->m_to_read);
             last_kill_type = '/';
             mention(command);
             s_kill_mentioned = true;
@@ -342,7 +342,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                         newline();
                     }
                 }
-                perform_status_init(g_newsgroup_ptr->m_to_read);
+                g_report.init(g_newsgroup_ptr->m_to_read);
                 last_kill_type = '<';
             }
             const std::string_view command_text{command};

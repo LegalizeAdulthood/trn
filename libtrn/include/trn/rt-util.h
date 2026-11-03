@@ -49,6 +49,8 @@ extern ProgressDisplay g_progress;
 
 struct PerformReport
 {
+    void init(int cnt);
+
     int         prior_count{};
     std::time_t prior_now{};
     long        sel{};
@@ -67,7 +69,6 @@ bool        strip_one_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject);
 std::string compress_subj(const Article *ap, int max);
-void perform_status_init(int cnt);
 void perform_status(int cnt, int spin);
 int perform_status_end(long cnt, std::string_view obj_type);
 

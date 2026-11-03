@@ -453,7 +453,7 @@ protected:
     {
         g_selected_count = selected_count;
         g_missing_count = missing_count;
-        perform_status_init(count);
+        g_report.init(count);
     }
 
     std::string                m_old_msg;

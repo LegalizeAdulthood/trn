@@ -866,19 +866,19 @@ bool ProgressDisplay::in_background()
     return mode == SPIN_BACKGROUND;
 }
 
-void perform_status_init(int cnt)
+void PerformReport::init(int cnt)
 {
-    g_report.perform_count = 0;
+    perform_count = 0;
     g_error_occurred = false;
     g_subj_line = std::nullopt;
     g_page_line = 1;
-    g_report.performed_article_loop = true;
+    performed_article_loop = true;
 
-    g_report.prior_count = 0;
-    g_report.prior_now = 0;
-    g_report.sel = g_selected_count;
-    g_report.start_count = cnt;
-    g_report.missing = g_missing_count;
+    prior_count = 0;
+    prior_now = 0;
+    sel = g_selected_count;
+    start_count = cnt;
+    missing = g_missing_count;
 
     g_progress.count = 0;
     g_progress.place = 0;

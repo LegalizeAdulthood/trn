@@ -266,7 +266,7 @@ NumNumResult num_num(std::string_view command)
         g_search_ahead = ArticleNum{-1};
     }
 
-    perform_status_init(g_newsgroup_ptr->m_to_read);
+    g_report.init(g_newsgroup_ptr->m_to_read);
 
     std::size_t range_end{};
     for (; range_end < command.size() && (std::isdigit(static_cast<unsigned char>(command[range_end])) ||
@@ -429,7 +429,7 @@ int thread_perform(std::string_view command)
     }
     bool want_unread = !g_sel.rereading && cmdstr[0] != 'm';
 
-    perform_status_init(g_newsgroup_ptr->m_to_read);
+    g_report.init(g_newsgroup_ptr->m_to_read);
     len = static_cast<int>(cmdstr.size());
 
     if (!output_level && !one_thread)
@@ -864,7 +864,7 @@ int newsgroup_sel_perform(std::string_view command)
     bool                 dot_scope = false;
     NewsgroupData *const current_group = g_newsgroup_ptr;
 
-    perform_status_init(g_newsgroup_to_read.value_of());
+    g_report.init(g_newsgroup_to_read.value_of());
     if (command.size() <= 1)
     {
         return -1;
@@ -1045,7 +1045,7 @@ int add_group_sel_perform(std::string_view command)
     }
     std::string cmdstr{command.substr(static_cast<std::size_t>(len))};
 
-    perform_status_init(g_newsgroup_to_read.value_of());
+    g_report.init(g_newsgroup_to_read.value_of());
 
     if (one_group)
     {
