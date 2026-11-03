@@ -130,6 +130,10 @@ struct MimeContext
     {
         return section->end_of_section(bp, boundary_section);
     }
+    std::string filter(std::string_view f, std::string_view prefix = {}, int base_offset = 0)
+    {
+        return section->html.filter(f, prefix, base_offset);
+    }
 
     // TODO: private
     bool pop_section();
