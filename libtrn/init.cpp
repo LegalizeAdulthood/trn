@@ -186,7 +186,7 @@ static void news_news_check()
     const std::string newsnewsname = file_exp(NEWSNEWSNAME);
     stat_t            news_news_stat{};
     if (stat(newsnewsname.c_str(), &news_news_stat) == 0 &&
-        news_news_stat.st_mtime > static_cast<std::time_t>(g_last_time))
+        news_news_stat.st_mtime > static_cast<std::time_t>(g_last_run.time))
     {
         fmt::print("{}", file_contents(newsnewsname));
         get_anything();

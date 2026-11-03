@@ -35,10 +35,10 @@ protected:
         m_old_dot_dir = g_dot_dir;
         m_old_newsgroup_name = g_newsgroup_name;
         m_old_pid = g_our_pid;
-        m_old_last_time = g_last_time;
-        m_old_last_active_size = g_last_active_size;
-        m_old_last_new_time = g_last_new_time;
-        m_old_last_extra_num = g_last_extra_num;
+        m_old_last_time = g_last_run.time;
+        m_old_last_active_size = g_last_run.active_size;
+        m_old_last_new_time = g_last_run.new_time;
+        m_old_last_extra_num = g_last_run.extra_num;
 
         std::error_code error;
         fs::remove_all(m_dot_dir, error);
@@ -54,10 +54,10 @@ protected:
         g_dot_dir = m_old_dot_dir;
         g_newsgroup_name = m_old_newsgroup_name;
         g_our_pid = m_old_pid;
-        g_last_time = m_old_last_time;
-        g_last_active_size = m_old_last_active_size;
-        g_last_new_time = m_old_last_new_time;
-        g_last_extra_num = m_old_last_extra_num;
+        g_last_run.time = m_old_last_time;
+        g_last_run.active_size = m_old_last_active_size;
+        g_last_run.new_time = m_old_last_new_time;
+        g_last_run.extra_num = m_old_last_extra_num;
 
         std::error_code error;
         fs::remove_all(m_dot_dir, error);
@@ -103,19 +103,19 @@ TEST_F(LastTest, writeLastRecordsCurrentState)
 {
     g_our_pid = 2468;
     g_newsgroup_name = "comp.lang.apl";
-    g_last_time = std::numeric_limits<long>::max();
-    g_last_active_size = 1234;
-    g_last_new_time = 5678;
-    g_last_extra_num = 9;
+    g_last_run.time = std::numeric_limits<long>::max();
+    g_last_run.active_size = 1234;
+    g_last_run.new_time = 5678;
+    g_last_run.extra_num = 9;
 
     write_last();
 
     EXPECT_EQ((std::vector<std::string>{
                   g_newsgroup_name,
-                  std::to_string(g_last_time),
-                  std::to_string(g_last_active_size),
-                  std::to_string(g_last_new_time),
-                  std::to_string(g_last_extra_num),
+                  std::to_string(g_last_run.time),
+                  std::to_string(g_last_run.active_size),
+                  std::to_string(g_last_run.new_time),
+                  std::to_string(g_last_run.extra_num),
               }),
               read_lines(last_file()));
     EXPECT_FALSE(fs::exists(temp_file()));
@@ -124,17 +124,17 @@ TEST_F(LastTest, writeLastRecordsCurrentState)
 TEST_F(LastTest, readLastLoadsCurrentState)
 {
     std::ofstream{last_file()} << "comp.lang.apl\n10\n20\n30\n40\n";
-    g_last_newsgroup_name = "comp.lang.c++";
-    g_last_time = 99;
-    g_last_active_size = 0;
-    g_last_new_time = 0;
-    g_last_extra_num = 0;
+    g_last_run.newsgroup_name = "comp.lang.c++";
+    g_last_run.time = 99;
+    g_last_run.active_size = 0;
+    g_last_run.new_time = 0;
+    g_last_run.extra_num = 0;
 
     read_last();
 
-    EXPECT_EQ("comp.lang.apl", g_last_newsgroup_name);
-    EXPECT_EQ(99, g_last_time);
-    EXPECT_EQ(20, g_last_active_size);
-    EXPECT_EQ(30, g_last_new_time);
-    EXPECT_EQ(40, g_last_extra_num);
+    EXPECT_EQ("comp.lang.apl", g_last_run.newsgroup_name);
+    EXPECT_EQ(99, g_last_run.time);
+    EXPECT_EQ(20, g_last_run.active_size);
+    EXPECT_EQ(30, g_last_run.new_time);
+    EXPECT_EQ(40, g_last_run.extra_num);
 }

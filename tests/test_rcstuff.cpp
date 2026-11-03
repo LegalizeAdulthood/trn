@@ -109,11 +109,11 @@ protected:
         m_old_verify = g_verify;
         m_old_pid = g_our_pid;
         m_old_local_host = g_local_host;
-        m_old_last_newsgroup_name = g_last_newsgroup_name;
+        m_old_last_newsgroup_name = g_last_run.newsgroup_name;
         m_old_lib = g_lib;
-        m_old_last_new_time = g_last_new_time;
-        m_old_last_active_size = g_last_active_size;
-        m_old_last_extra_num = g_last_extra_num;
+        m_old_last_new_time = g_last_run.new_time;
+        m_old_last_active_size = g_last_run.active_size;
+        m_old_last_extra_num = g_last_run.extra_num;
         m_old_general_mode = g_general_mode;
         m_old_mode = g_mode;
         m_old_check_flag = g_check_flag;
@@ -167,10 +167,10 @@ protected:
         g_verify = false;
         g_our_pid = 2468;
         g_local_host = "test-host";
-        g_last_newsgroup_name.clear();
-        g_last_new_time = 0;
-        g_last_active_size = 0;
-        g_last_extra_num = 0;
+        g_last_run.newsgroup_name.clear();
+        g_last_run.new_time = 0;
+        g_last_run.active_size = 0;
+        g_last_run.extra_num = 0;
         g_general_mode = GM_READ;
         g_mode = MM_NONE;
         g_int_count = 0;
@@ -234,11 +234,11 @@ protected:
         g_verify = m_old_verify;
         g_our_pid = m_old_pid;
         g_local_host = m_old_local_host;
-        g_last_newsgroup_name = m_old_last_newsgroup_name;
+        g_last_run.newsgroup_name = m_old_last_newsgroup_name;
         g_lib = m_old_lib;
-        g_last_new_time = m_old_last_new_time;
-        g_last_active_size = m_old_last_active_size;
-        g_last_extra_num = m_old_last_extra_num;
+        g_last_run.new_time = m_old_last_new_time;
+        g_last_run.active_size = m_old_last_active_size;
+        g_last_run.extra_num = m_old_last_extra_num;
         g_general_mode = m_old_general_mode;
         g_mode = m_old_mode;
         g_check_flag = m_old_check_flag;
@@ -536,7 +536,7 @@ TEST_F(NewsrcRotationTest, useMultircRestoresStateFromInfoFile)
 
     ASSERT_TRUE(multirc.use_multirc());
 
-    EXPECT_EQ("comp.lang.apl", g_last_newsgroup_name);
+    EXPECT_EQ("comp.lang.apl", g_last_run.newsgroup_name);
     EXPECT_EQ(111L, m_data_source.m_last_new_group);
     EXPECT_EQ(222L, m_data_source.m_act_sf.m_recent_cnt);
     EXPECT_EQ(333L, m_data_source.m_desc_sf.m_recent_cnt);

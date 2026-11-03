@@ -664,15 +664,15 @@ static bool lock_newsrc(Newsrc *rp)
             {
                 fmt::print("\nProcess crashed.\n");
             }
-            if (!g_last_newsgroup_name.empty())
+            if (!g_last_run.newsgroup_name.empty())
             {
                 if (g_verbose)
                 {
-                    fmt::print("(The last newsgroup accessed was {}.)\n\n", g_last_newsgroup_name);
+                    fmt::print("(The last newsgroup accessed was {}.)\n\n", g_last_run.newsgroup_name);
                 }
                 else
                 {
-                    fmt::print("(In {}.)\n\n", g_last_newsgroup_name);
+                    fmt::print("(In {}.)\n\n", g_last_run.newsgroup_name);
                 }
             }
             term_down(2);
@@ -925,10 +925,10 @@ static bool open_newsrc(Newsrc *rp)
                 if (separator != std::string_view::npos && separator + 2 < last_group_line.size() &&
                     last_group_line[separator + 1] == ' ')
                 {
-                    g_last_newsgroup_name = last_group_line.substr(separator + 2);
+                    g_last_run.newsgroup_name = last_group_line.substr(separator + 2);
                 }
                 if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
-                                &g_last_new_time, &actnum, &descnum) == 3)
+                                &g_last_run.new_time, &actnum, &descnum) == 3)
                 {
                     rp->data_source->m_act_sf.m_recent_cnt = actnum;
                     rp->data_source->m_desc_sf.m_recent_cnt = descnum;
@@ -942,16 +942,16 @@ static bool open_newsrc(Newsrc *rp)
         read_last();
         if (rp->data_source->m_flags & DF_REMOTE)
         {
-            rp->data_source->m_act_sf.m_recent_cnt = g_last_active_size;
-            rp->data_source->m_desc_sf.m_recent_cnt = g_last_extra_num;
+            rp->data_source->m_act_sf.m_recent_cnt = g_last_run.active_size;
+            rp->data_source->m_desc_sf.m_recent_cnt = g_last_run.extra_num;
         }
         else
         {
-            rp->data_source->m_act_sf.m_recent_cnt = g_last_extra_num;
+            rp->data_source->m_act_sf.m_recent_cnt = g_last_run.extra_num;
             rp->data_source->m_desc_sf.m_recent_cnt = 0;
         }
     }
-    rp->data_source->m_last_new_group = g_last_new_time;
+    rp->data_source->m_last_new_group = g_last_run.new_time;
 
     if (g_paranoid && !g_check_flag)
     {
@@ -1872,14 +1872,14 @@ bool write_newsrcs(Multirc *mptr)
             read_last();
             if (rp->data_source->m_flags & DF_REMOTE)
             {
-                g_last_active_size = rp->data_source->m_act_sf.m_recent_cnt;
-                g_last_extra_num = rp->data_source->m_desc_sf.m_recent_cnt;
+                g_last_run.active_size = rp->data_source->m_act_sf.m_recent_cnt;
+                g_last_run.extra_num = rp->data_source->m_desc_sf.m_recent_cnt;
             }
             else
             {
-                g_last_extra_num = rp->data_source->m_act_sf.m_recent_cnt;
+                g_last_run.extra_num = rp->data_source->m_act_sf.m_recent_cnt;
             }
-            g_last_new_time = rp->data_source->m_last_new_group;
+            g_last_run.new_time = rp->data_source->m_last_new_group;
             write_last();
         }
 

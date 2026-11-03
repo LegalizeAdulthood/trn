@@ -1356,18 +1356,18 @@ protected:
     void set_group_state(int index, std::string_view read_ranges, char subscription = ':');
 
 private:
-    std::string m_old_last_group{g_last_newsgroup_name};
+    std::string m_old_last_group{g_last_run.newsgroup_name};
 };
 
 void MultircStartupStateTest::SetUp()
 {
     MultircTraversalStateTest::SetUp();
-    g_last_newsgroup_name.clear();
+    g_last_run.newsgroup_name.clear();
 }
 
 void MultircStartupStateTest::TearDown()
 {
-    g_last_newsgroup_name = std::move(m_old_last_group);
+    g_last_run.newsgroup_name = std::move(m_old_last_group);
     MultircTraversalStateTest::TearDown();
 }
 
@@ -1464,7 +1464,7 @@ void MultircResumeTest::SetUp()
     const MultircResumePosition &position = std::get<0>(GetParam());
     g_verbose = std::get<1>(GetParam());
     set_group_state(1, position.middle_read_ranges, position.middle_subscription);
-    g_last_newsgroup_name = position.last_group;
+    g_last_run.newsgroup_name = position.last_group;
     g_find_last = 1;
     g_start_here = &g_newsgroup_data[0];
 }
@@ -1522,7 +1522,7 @@ TEST_P(MultircStartupTest, restartingAfterAnExplicitStartReturnsToEarlierUnreadN
 TEST_P(MultircStartupTest, restartingAfterResumingReturnsToEarlierUnreadNews)
 {
     g_find_last = 1;
-    g_last_newsgroup_name = "comp.middle";
+    g_last_run.newsgroup_name = "comp.middle";
     g_start_here = &g_newsgroup_data[0];
 
     run_groups("nnnq");
@@ -4235,8 +4235,8 @@ private:
     TerminalInputReader               m_parent_reader;
     bool                              m_old_check{g_check_flag};
     bool                              m_old_suppress{g_suppress_cn};
-    std::string                       m_old_last_group{g_last_newsgroup_name};
-    long                              m_old_last_new_time{g_last_new_time};
+    std::string                       m_old_last_group{g_last_run.newsgroup_name};
+    long                              m_old_last_new_time{g_last_run.new_time};
 };
 
 void MultircServerLossTest::SetUp()
@@ -4331,8 +4331,8 @@ void MultircServerLossTest::TearDown()
     g_terminal_input_reader = m_parent_reader;
     g_check_flag = m_old_check;
     g_suppress_cn = m_old_suppress;
-    g_last_newsgroup_name = m_old_last_group;
-    g_last_new_time = m_old_last_new_time;
+    g_last_run.newsgroup_name = m_old_last_group;
+    g_last_run.new_time = m_old_last_new_time;
     m_loop_context.reset();
     RemoteNewsgroupReadingStateTest::TearDown();
 }
@@ -6606,11 +6606,11 @@ private:
     bool                              m_old_typeahead{g_allow_typeahead};
     bool                              m_old_check{g_check_flag};
     bool                              m_old_suppress{g_suppress_cn};
-    std::string                       m_old_last_group{g_last_newsgroup_name};
-    long                              m_old_last_time{g_last_time};
-    long                              m_old_last_new_time{g_last_new_time};
-    long                              m_old_last_active{g_last_active_size};
-    long                              m_old_last_extra{g_last_extra_num};
+    std::string                       m_old_last_group{g_last_run.newsgroup_name};
+    long                              m_old_last_time{g_last_run.time};
+    long                              m_old_last_new_time{g_last_run.new_time};
+    long                              m_old_last_active{g_last_run.active_size};
+    long                              m_old_last_extra{g_last_run.extra_num};
     std::vector<Multirc>              m_old_multircs;
     bool                              m_sources_prepared{};
     std::string                       m_commands;
@@ -6686,11 +6686,11 @@ void MultircSelectorStateTest::TearDown()
     g_allow_typeahead = m_old_typeahead;
     g_check_flag = m_old_check;
     g_suppress_cn = m_old_suppress;
-    g_last_newsgroup_name = m_old_last_group;
-    g_last_time = m_old_last_time;
-    g_last_new_time = m_old_last_new_time;
-    g_last_active_size = m_old_last_active;
-    g_last_extra_num = m_old_last_extra;
+    g_last_run.newsgroup_name = m_old_last_group;
+    g_last_run.time = m_old_last_time;
+    g_last_run.new_time = m_old_last_new_time;
+    g_last_run.active_size = m_old_last_active;
+    g_last_run.extra_num = m_old_last_extra;
     m_loop_context.reset();
     NewsgroupSelectorDelegationStateTest::TearDown();
 }
@@ -7754,8 +7754,8 @@ private:
     std::string    m_original_remaining_text;
     std::string    m_old_server_line{g_nntp.ser_line};
     std::string    m_old_last_command{g_nntp.last_command};
-    std::string    m_old_last_group{g_last_newsgroup_name};
-    long           m_old_last_new_time{g_last_new_time};
+    std::string    m_old_last_group{g_last_run.newsgroup_name};
+    long           m_old_last_new_time{g_last_run.new_time};
     bool           m_old_allow_timeout{g_nntp.allow_timeout};
     bool           m_old_check{g_check_flag};
     bool           m_old_suppress{g_suppress_cn};
@@ -7840,8 +7840,8 @@ void NewsgroupSelectorDelegatedServerLossTest::TearDown()
     m_remaining_source.close();
     g_nntp.ser_line = m_old_server_line;
     g_nntp.last_command = m_old_last_command;
-    g_last_newsgroup_name = m_old_last_group;
-    g_last_new_time = m_old_last_new_time;
+    g_last_run.newsgroup_name = m_old_last_group;
+    g_last_run.new_time = m_old_last_new_time;
     g_nntp.allow_timeout = m_old_allow_timeout;
     g_check_flag = m_old_check;
     g_suppress_cn = m_old_suppress;

@@ -217,16 +217,16 @@ restart:
             g_find_last = -1;
             g_start_here = nullptr;
             g_newsgroup_ptr = g_ng_order.first();
-            if (!g_last_newsgroup_name.empty())
+            if (!g_last_run.newsgroup_name.empty())
             {
-                g_newsgroup_ptr = find_newsgroup(g_last_newsgroup_name);
+                g_newsgroup_ptr = find_newsgroup(g_last_run.newsgroup_name);
                 if (g_newsgroup_ptr == nullptr)
                 {
                     g_newsgroup_ptr = g_ng_order.first();
                 }
                 else
                 {
-                    set_newsgroup_name(g_last_newsgroup_name);
+                    set_newsgroup_name(g_last_run.newsgroup_name);
                     g_newsgroup_ptr->set_to_read(ST_LAX);
                     if (g_newsgroup_ptr->m_to_read <= TR_NONE)
                     {
