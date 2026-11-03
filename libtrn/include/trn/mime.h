@@ -80,6 +80,7 @@ struct HtmlRenderer
 {
     // TODO: private
     int append_indent(std::string &output);
+    void do_newline(std::string &output, HtmlFlags flag);
 
     HtmlFlags              flags;
     int                    line_start;

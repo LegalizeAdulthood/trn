@@ -81,7 +81,6 @@ static int         mime_getc(std::FILE *fp);
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static void        tag_action(std::string &output, std::string_view word, bool opening_tag);
 static void        output_prep(std::string &output);
-static void        do_newline(std::string &output, HtmlFlags flag);
 static void        wrap_html_output(std::string &output);
 static std::string_view find_attr(std::string_view str, std::string_view attr);
 
@@ -1817,7 +1816,7 @@ static void filter_html_into(std::string &output, std::string_view input)
         {
             output_prep(output);
             g_mime.section->html.flags |= HF_NL_OK;
-            do_newline(output, HF_NL_OK);
+            g_mime.section->html.do_newline(output, HF_NL_OK);
         }
         else
         {
@@ -1936,13 +1935,13 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
         if (s_tag_attr[tnum].flags & TF_NL)
         {
             output_prep(output);
-            do_newline(output, HF_NL_OK);
+            g_mime.section->html.do_newline(output, HF_NL_OK);
         }
         if ((num = s_tag_attr[tnum].flags & (TF_P | TF_LIST)) == TF_P //
             || (num == (TF_P | TF_LIST) && !(g_mime.section->html.flags & HF_COMPACT)))
         {
             output_prep(output);
-            do_newline(output, HF_P_OK);
+            g_mime.section->html.do_newline(output, HF_P_OK);
         }
         if (s_tag_attr[tnum].flags & TF_SPACE)
         {
@@ -2007,7 +2006,7 @@ static void tag_action(std::string &output, std::string_view word, bool opening_
             output_prep(output);
             output += "--";
             g_mime.section->html.flags |= HF_NL_OK;
-            do_newline(output, HF_NL_OK);
+            g_mime.section->html.do_newline(output, HF_NL_OK);
             break;
 
         case TAG_IMG:
@@ -2245,25 +2244,25 @@ static void output_prep(std::string &output)
     if (g_mime.section->html.flags & HF_QUEUED_P)
     {
         g_mime.section->html.flags &= ~HF_QUEUED_P;
-        do_newline(output, HF_P_OK);
+        g_mime.section->html.do_newline(output, HF_P_OK);
     }
     if (g_mime.section->html.flags & HF_QUEUED_NL)
     {
         g_mime.section->html.flags &= ~HF_QUEUED_NL;
-        do_newline(output, HF_NL_OK);
+        g_mime.section->html.do_newline(output, HF_NL_OK);
     }
     g_mime.section->html.append_indent(output);
 }
 
-static void do_newline(std::string &output, HtmlFlags flag)
+void HtmlRenderer::do_newline(std::string &output, HtmlFlags flag)
 {
-    if (g_mime.section->html.flags & flag)
+    if (flags & flag)
     {
-        g_mime.section->html.flags &= ~(flag | HF_SPACE_OK);
-        g_mime.section->html.append_indent(output);
+        flags &= ~(flag | HF_SPACE_OK);
+        append_indent(output);
         output.push_back('\n');
-        g_mime.section->html.line_start = static_cast<int>(output.size());
-        g_mime.section->html.flags |= HF_NEED_INDENT;
+        line_start = static_cast<int>(output.size());
+        flags |= HF_NEED_INDENT;
     }
 }
 
