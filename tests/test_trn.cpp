@@ -9126,7 +9126,7 @@ void ViewArticleTest::mailcap(std::string_view entries)
     output << entries;
     output.close();
     ASSERT_FALSE(output.fail());
-    mime_init();
+    g_mimecap.init();
 }
 
 std::string ViewArticleTest::view()

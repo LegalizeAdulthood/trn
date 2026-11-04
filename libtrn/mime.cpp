@@ -85,10 +85,10 @@ void MimeCapRegistry::set_executor(MimeExecutor executor)
     this->executor = std::move(executor);
 }
 
-void mime_init()
+void MimeCapRegistry::init()
 {
-    g_mimecap.executor = do_shell;
-    g_mimecap.entries.clear();
+    executor = do_shell;
+    entries.clear();
 
     std::string mcname = get_env_var("MIMECAPS");
     if (mcname.empty())
@@ -97,7 +97,7 @@ void mime_init()
     }
     for (std::string_view item : split_path_list(mcname))
     {
-        g_mimecap.read_mimecap(item);
+        read_mimecap(item);
     }
 }
 

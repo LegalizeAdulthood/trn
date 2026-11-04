@@ -158,7 +158,7 @@ bool initialize(int argc, char *argv[])
     cache_init();
     help_init();
     kill_file_init();
-    mime_init();
+    g_mimecap.init();
     ng_init();
     newsgroup_search_init();
     newsgroup_stuff_init();
