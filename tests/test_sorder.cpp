@@ -25,7 +25,7 @@ protected:
 
 void ScanOrderTest::SetUp()
 {
-    m_first_context = g_browse.new_context(S_GROUP);
+    m_first_context = g_art_scan.new_context(S_GROUP);
     s_change_context(m_first_context);
     s_order_add(3);
     s_order_add(1);
@@ -44,8 +44,8 @@ void ScanOrderTest::TearDown()
         s_change_context(m_first_context);
         s_delete_context(m_first_context);
     }
-    g_browse.cur_type = S_NONE;
-    g_browse.order_changed = false;
+    g_art_scan.cur_type = S_NONE;
+    g_art_scan.order_changed = false;
 }
 
 std::vector<long> ScanOrderTest::current_entries()
@@ -90,7 +90,7 @@ void IndependentScanContextsTest::SetUp()
 {
     SortedScanOrderTest::SetUp();
     s_save_context();
-    m_second_context = g_browse.new_context(S_GROUP);
+    m_second_context = g_art_scan.new_context(S_GROUP);
     s_change_context(m_second_context);
     s_order_add(20);
     s_order_add(10);
@@ -119,8 +119,8 @@ TEST_F(ScanOrderTest, sortsEntriesAndDiscardsDuplicates)
 {
     s_sort();
 
-    EXPECT_EQ((std::vector<long>{1, 2, 3}), g_browse.contexts[m_first_context].ent_sort);
-    EXPECT_EQ(2, g_browse.ent_sorted_max);
+    EXPECT_EQ((std::vector<long>{1, 2, 3}), g_art_scan.contexts[m_first_context].ent_sort);
+    EXPECT_EQ(2, g_art_scan.ent_sorted_max);
 }
 
 TEST_P(ScanOrderEndpointTest, returnsTheRequestedEndOfTheOrder)
@@ -149,7 +149,7 @@ TEST_F(IndependentScanContextsTest, newContextUsesAnIndependentOrder)
     const std::vector<long> entries = current_entries();
 
     EXPECT_EQ((std::vector<long>{10, 20}), entries);
-    EXPECT_EQ((std::vector<long>{1, 2, 3}), g_browse.contexts[m_first_context].ent_sort);
+    EXPECT_EQ((std::vector<long>{1, 2, 3}), g_art_scan.contexts[m_first_context].ent_sort);
 }
 
 TEST_P(RestoredScanContextTest, restoresTheSavedOrderWhenReturningToAContext)

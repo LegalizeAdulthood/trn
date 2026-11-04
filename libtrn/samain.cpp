@@ -123,7 +123,7 @@ static void sa_init_context()
 
     if (g_sa_scan_context == -1)
     {
-        g_sa_scan_context = g_browse.new_context(S_ART);
+        g_sa_scan_context = g_art_scan.new_context(S_ART);
     }
     s_change_context(g_sa_scan_context);
     s_sa_context_init = true;
@@ -172,10 +172,10 @@ SaMainResult sa_main_loop()
         }
     }
     // redraw it *all*
-    g_browse.ref_all = true;
-    if (g_browse.top_ent < 1)
+    g_art_scan.ref_all = true;
+    if (g_art_scan.top_ent < 1)
     {
-        g_browse.top_ent = s_first();
+        g_art_scan.top_ent = s_first();
     }
     int i = s_fill_page();
     if (i == -1 || i == 0)

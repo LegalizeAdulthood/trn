@@ -462,7 +462,7 @@ void SavedScoreStore::load()
     save_new = total - scored;
     if (g_sa_initialized)
     {
-        g_browse.top_ent = -1; // reset top of page
+        g_art_scan.top_ent = -1; // reset top of page
     }
 }
 

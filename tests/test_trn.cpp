@@ -8369,7 +8369,7 @@ private:
     int        m_old_sf_score_verbose{g_sf_score_verbose};
     bool       m_old_kill_thresh_active{g_kill_thresh_active};
     int        m_old_kill_thresh{g_kill_thresh};
-    bool       m_old_s_order_changed{g_browse.order_changed};
+    bool       m_old_s_order_changed{g_art_scan.order_changed};
 };
 
 void ScoreArticleTest::SetUp()
@@ -8394,7 +8394,7 @@ void ScoreArticleTest::SetUp()
     ASSERT_TRUE(parse_header(g_nav.target.num));
     ASSERT_NE(nullptr, art_open(g_nav.target.num, position));
     g_art_input.pos = position;
-    g_browse.order_changed = false;
+    g_art_scan.order_changed = false;
     expect_scores({10, 10, 0});
 }
 
@@ -8413,7 +8413,7 @@ void ScoreArticleTest::TearDown()
     g_sf_score_verbose = m_old_sf_score_verbose;
     g_kill_thresh_active = m_old_kill_thresh_active;
     g_kill_thresh = m_old_kill_thresh;
-    g_browse.order_changed = m_old_s_order_changed;
+    g_art_scan.order_changed = m_old_s_order_changed;
     SaveArticleTest::TearDown();
 }
 
@@ -8563,7 +8563,7 @@ void EditScoreArticleTest::expect_edited(const fs::path &file, std::string_view 
     EXPECT_EQ(std::string{before} + std::string{EDITED_RULE},
               (std::string{std::istreambuf_iterator<char>{edited}, std::istreambuf_iterator<char>{}}));
     expect_scores({10, 10, 0});
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
 }
 
 struct EditScoreCase
@@ -10140,7 +10140,7 @@ TEST_P(AppendScoreArticleTest, appendsTheRequestedRuleWithoutChangingCurrentScor
     const std::string prefix = std::string_view{GetParam().filename} == "global" ? std::string{GLOBAL_RULES} : "";
     EXPECT_EQ(prefix + GetParam().line + '\n', score_file(GetParam().filename));
     expect_scores({10, 10, 0});
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
     EXPECT_THAT(output, testing::HasSubstr("type RETURN for a menu"));
 }
 
@@ -10164,7 +10164,7 @@ TEST_P(UnchangedScoreArticleTest, returnsToReadingWithoutChangingRulesOrScores)
     EXPECT_FALSE(fs::exists(m_scores / "comp.lang.cpp"));
     EXPECT_EQ(GLOBAL_RULES, score_file("global"));
     expect_scores({10, 10, 0});
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -10185,7 +10185,7 @@ TEST_P(TemporaryScoreArticleTest, immediatelyAppliesTheRuleWithoutPersistingIt)
     const std::string output = score('"', GetParam());
 
     expect_scores({50, 50, 0});
-    EXPECT_TRUE(g_browse.order_changed);
+    EXPECT_TRUE(g_art_scan.order_changed);
     EXPECT_FALSE(fs::exists(m_scores / "comp.lang.cpp"));
     EXPECT_EQ(GLOBAL_RULES, score_file("global"));
     EXPECT_THAT(output, testing::HasSubstr("Rescoring articles..."));
@@ -10203,7 +10203,7 @@ TEST_P(ExecuteScoreArticleTest, explainsTheCurrentArticlesMatchingRulesAndTotal)
     EXPECT_THAT(output, testing::HasSubstr("Total score is 10\n"));
     EXPECT_THAT(output, testing::Not(testing::HasSubstr("Other scoring total:")));
     expect_scores({10, 10, 0});
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
 }
 
 TEST_P(ExecuteScoreArticleTest, rescoringAppliesChangesToPersistedRules)
@@ -10213,7 +10213,7 @@ TEST_P(ExecuteScoreArticleTest, rescoringAppliesChangesToPersistedRules)
     const std::string output = score('\'', GetParam() ? "\n2" : "r\n", false);
 
     expect_scores({35, 35, 0});
-    EXPECT_TRUE(g_browse.order_changed);
+    EXPECT_TRUE(g_art_scan.order_changed);
     EXPECT_THAT(output, testing::HasSubstr("Rescoring articles..."));
     EXPECT_EQ("25 subject: topic\n", score_file());
 }
@@ -10227,7 +10227,7 @@ TEST_P(ExecuteScoreArticleTest, continuesScoringUnscoredArticles)
     const std::string output = score('\'', GetParam() ? "\n5" : "f\n", false);
 
     expect_scores({10, 10, 0});
-    EXPECT_TRUE(g_browse.order_changed);
+    EXPECT_TRUE(g_art_scan.order_changed);
     EXPECT_EQ(ArticleNum{3}, g_sc_fill_max);
     EXPECT_THAT(output, testing::HasSubstr("Scoring more articles..."));
 }
@@ -10250,7 +10250,7 @@ TEST_F(ScoreArticleTest, queuedInputDefersFurtherScoringAndRemainsAvailableToRea
     EXPECT_FALSE(g_cache.scored(ArticleNum{2}));
     EXPECT_FALSE(g_cache.scored(ArticleNum{3}));
     EXPECT_EQ(ArticleNum{1}, g_sc_fill_max);
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
     EXPECT_THAT(output, testing::HasSubstr("Scoring more articles..."));
 }
 
@@ -10263,7 +10263,7 @@ TEST_F(ScoreArticleTest, anUnwritableScoreFileReturnsToReadingWithoutApplyingThe
     EXPECT_THAT(output, testing::HasSubstr("Could not open (for append) file " +
                                            (m_scores / "comp.lang.cpp").generic_string()));
     expect_scores({10, 10, 0});
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
     EXPECT_EQ(GLOBAL_RULES, score_file("global"));
 }
 
@@ -10354,7 +10354,7 @@ TEST_F(EditScoreArticleTest, rescoringUsesTheEditorsChangedRules)
     score('\'', "r\n", false);
 
     expect_scores({35, 35, 0});
-    EXPECT_TRUE(g_browse.order_changed);
+    EXPECT_TRUE(g_art_scan.order_changed);
     EXPECT_EQ(EDITED_RULE, score_file());
 }
 
@@ -10364,7 +10364,7 @@ TEST_P(FailedEditScoreArticleTest, aFailedEditorLeavesTheRulesAndScoresUnchanged
 
     EXPECT_EQ("# Keep these rules\n", score_file());
     expect_scores({10, 10, 0});
-    EXPECT_FALSE(g_browse.order_changed);
+    EXPECT_FALSE(g_art_scan.order_changed);
     EXPECT_EQ("score-editor\n" + (m_scores / "comp.lang.cpp").generic_string() + '\n', editor_text("tools.log"));
 }
 

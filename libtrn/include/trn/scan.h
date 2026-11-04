@@ -70,7 +70,7 @@ struct ScanContext
     long  flags;
 };
 
-struct ArticleBrowseSession
+struct ArticleScanSession
 {
     int new_context(ScanContextType type);
 
@@ -114,7 +114,7 @@ struct ArticleBrowseSession
     long  flags{};         // misc. flags
 };
 
-extern ArticleBrowseSession g_browse;
+extern ArticleScanSession g_art_scan;
 
 // options
 extern int g_s_item_num; // show item numbers by default

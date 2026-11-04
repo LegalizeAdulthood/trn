@@ -43,10 +43,10 @@ static void             s_jump_num(char_int firstchar);
 
 void s_go_bot()
 {
-    g_browse.ref_bot = true;                    // help uses whole screen
-    s_goxy(0, g_tc_LINES - g_browse.bot_lines); // go to bottom bar
+    g_art_scan.ref_bot = true;                    // help uses whole screen
+    s_goxy(0, g_tc_LINES - g_art_scan.bot_lines); // go to bottom bar
     erase_eol();                        // erase to end of line
-    s_goxy(0, g_tc_LINES - g_browse.bot_lines); // go (back?) to bottom bar
+    s_goxy(0, g_tc_LINES - g_art_scan.bot_lines); // go (back?) to bottom bar
 }
 
 // finishes a command on the bottom line...
@@ -72,7 +72,7 @@ int s_cmd_loop()
     int i;
 
     // initialization stuff for entry into s_cmdloop
-    g_browse.ref_all = true;
+    g_art_scan.ref_all = true;
     eat_typeahead();    // no typeahead before entry
     while (true)
     {
@@ -99,7 +99,7 @@ int s_cmd_loop()
         i = s_do_cmd(command);
         if (i == S_NOT_FOUND)    // command not in common set
         {
-            switch (g_browse.cur_type)
+            switch (g_art_scan.cur_type)
             {
             case S_ART:
                 i = sa_do_cmd(command);
@@ -114,7 +114,7 @@ int s_cmd_loop()
         {
             return i;
         }
-        if (g_browse.refill)
+        if (g_art_scan.refill)
         {
             i = s_fill_page();
             if (i == -1 || i == 0)      // can't fillpage
@@ -128,7 +128,7 @@ int s_cmd_loop()
 
 static void s_look_ahead()
 {
-    switch (g_browse.cur_type)
+    switch (g_art_scan.cur_type)
     {
     case S_ART:
         sa_lookahead();
@@ -148,7 +148,7 @@ static int s_do_cmd(std::string_view command)
 {
     bool flag; // misc
 
-    long a = g_browse.page_ents[g_browse.ptr_page_line].ent_num;
+    long a = g_art_scan.page_ents[g_art_scan.ptr_page_line].ent_num;
     char command_ch = s_command_char(command);
     if (command_ch == '\f') // map form feed to ^l
     {
@@ -166,16 +166,16 @@ static int s_do_cmd(std::string_view command)
     case 'n':         // next art
     case ']':
         s_rub_ptr();
-        if (g_browse.ptr_page_line < g_browse.bot_ent) // more on page...
+        if (g_art_scan.ptr_page_line < g_art_scan.bot_ent) // more on page...
         {
-            g_browse.ptr_page_line += 1;
+            g_art_scan.ptr_page_line += 1;
         }
         else
         {
-            if (!s_next_elig(g_browse.page_ents[g_browse.bot_ent].ent_num))
+            if (!s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
             {
                 s_beep();
-                g_browse.refill = true;
+                g_art_scan.refill = true;
                 break;
             }
             s_go_next_page();   // will jump to top too...
@@ -192,20 +192,20 @@ static int s_do_cmd(std::string_view command)
     case 'p': // previous art
     case '[':
         s_rub_ptr();
-        if (g_browse.ptr_page_line > 0) // more on page...
+        if (g_art_scan.ptr_page_line > 0) // more on page...
         {
-            g_browse.ptr_page_line = g_browse.ptr_page_line - 1;
+            g_art_scan.ptr_page_line = g_art_scan.ptr_page_line - 1;
         }
         else
         {
-            if (s_prev_elig(g_browse.page_ents[0].ent_num))
+            if (s_prev_elig(g_art_scan.page_ents[0].ent_num))
             {
                 s_go_prev_page();
-                g_browse.ptr_page_line = g_browse.bot_ent; // go to page bot.
+                g_art_scan.ptr_page_line = g_art_scan.bot_ent; // go to page bot.
             }
             else
             {
-                g_browse.refill = true;
+                g_art_scan.refill = true;
                 s_beep();
             }
         }
@@ -223,7 +223,7 @@ static int s_do_cmd(std::string_view command)
 
     case '>': // next page
         s_rub_ptr();
-        a = s_next_elig(g_browse.page_ents[g_browse.bot_ent].ent_num);
+        a = s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
         if (!a)                 // at end of articles
         {
             s_beep();
@@ -234,7 +234,7 @@ static int s_do_cmd(std::string_view command)
 
     case '<': // previous page
         s_rub_ptr();
-        if (!s_prev_elig(g_browse.page_ents[0].ent_num))
+        if (!s_prev_elig(g_art_scan.page_ents[0].ent_num))
         {
             s_beep();
             break;
@@ -264,28 +264,28 @@ static int s_do_cmd(std::string_view command)
 
     case Ctl('r'):    // refresh screen
     case Ctl('l'):
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
         break;
 
     case Ctl('f'):    // refresh (mail) display
 #ifdef MAIL_CALL
         set_mail(true);
 #endif
-        g_browse.ref_bot = true;
+        g_art_scan.ref_bot = true;
         break;
 
     case 'h': // universal help
         s_go_bot();
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
         univ_help(UHELP_SCANART);
         eat_typeahead();
         break;
 
     case 'H': // help
         s_go_bot();
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
         // any commands typed during help are unused. (might change)
-        switch (g_browse.cur_type)
+        switch (g_art_scan.cur_type)
         {
         case S_ART:
             (void)help_scan_article();
@@ -302,7 +302,7 @@ static int s_do_cmd(std::string_view command)
 
     case '!': // shell command
         s_go_bot();
-        g_browse.ref_all = true; // will need refresh
+        g_art_scan.ref_all = true; // will need refresh
         if (!escapade(command))
         {
             (void) get_anything();
@@ -325,18 +325,18 @@ static int s_do_cmd(std::string_view command)
         if (g_s_item_num)
         {
             // turn off item numbers
-            g_browse.desc_cols += g_browse.item_num_cols;
-            g_browse.item_num_cols = 0;
+            g_art_scan.desc_cols += g_art_scan.item_num_cols;
+            g_art_scan.item_num_cols = 0;
             g_s_item_num = 0;
         }
         else
         {
             // turn on item numbers
-            g_browse.item_num_cols = 3;
-            g_browse.desc_cols -= g_browse.item_num_cols;
+            g_art_scan.item_num_cols = 3;
+            g_art_scan.desc_cols -= g_art_scan.item_num_cols;
             g_s_item_num = 1;
         }
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
         break;
 
     default:
@@ -505,13 +505,13 @@ static void s_search(std::string_view command)
         s_beep();
         fmt::print("\nNo previous search string.\n");
         (void)get_anything();
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
         return;
     }
     s_go_bot();
     fmt::print("Searching for {}", s_search_text);
     std::fflush(stdout);
-    const long current_ent = g_browse.page_ents[g_browse.ptr_page_line].ent_num;
+    const long current_ent = g_art_scan.page_ents[g_art_scan.ptr_page_line].ent_num;
     long       ent = current_ent;
     switch (command_ch)
     {
@@ -553,14 +553,14 @@ static void s_search(std::string_view command)
         s_beep();
         fmt::print("\n{}\n", error_msg);
         (void)get_anything();
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
         return;
     }
-    for (int i = 0; i <= g_browse.bot_ent; i++)
+    for (int i = 0; i <= g_art_scan.bot_ent; i++)
     {
-        if (g_browse.page_ents[i].ent_num == ent) // entry is on same page
+        if (g_art_scan.page_ents[i].ent_num == ent) // entry is on same page
         {
-            g_browse.ptr_page_line = i;
+            g_art_scan.ptr_page_line = i;
             return;
         }
     }
@@ -569,14 +569,14 @@ static void s_search(std::string_view command)
     {
         (void)s_fill_page_backward(ent);
         s_go_bot_page();
-        g_browse.refill = true;
-        g_browse.ref_all = true;
+        g_art_scan.refill = true;
+        g_art_scan.ref_all = true;
     }
     else
     {
         (void)s_fill_page_forward(ent);
         s_go_top_page();
-        g_browse.ref_all = true;
+        g_art_scan.ref_all = true;
     }
 }
 
@@ -589,7 +589,7 @@ static void s_jump_num(char_int firstchar)
     if (jump_verbose)
     {
         s_go_bot();
-        g_browse.ref_bot = true;
+        g_art_scan.ref_bot = true;
         fmt::print("Jump to item: {}", static_cast<char>(firstchar));
         std::fflush(stdout);
     }
@@ -615,10 +615,10 @@ static void s_jump_num(char_int firstchar)
         g_pushback.push(command_char);
         break;
     }
-    if (value == 0 || value > g_browse.bot_ent + 1)
+    if (value == 0 || value > g_art_scan.bot_ent + 1)
     {
         s_beep();
         return;
     }
-    g_browse.ptr_page_line = value - 1;
+    g_art_scan.ptr_page_line = value - 1;
 }
