@@ -109,7 +109,7 @@ long sa_subj_thread_next(long a)
     int j;
 
     int i = sa_subj_thread(a);
-    while ((a = s_next(a)) != 0)
+    while ((a = g_art_scan.current_context().next(a)) != 0)
     {
         if (!sa_basic_elig(a))
         {

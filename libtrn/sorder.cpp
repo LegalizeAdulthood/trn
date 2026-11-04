@@ -199,18 +199,15 @@ long ScanContext::prev(long ent)
     return ent_sort[tmp-1];
 }
 
-long s_next(long ent)
+long ScanContext::next(long ent)
 {
-    std::vector<long> &ent_sort = g_art_scan.ent_sort();
-    std::vector<long> &ent_index = g_art_scan.ent_index();
-
     if (ent < 0 || ent > g_art_scan.ent_index_max || g_art_scan.ent_sorted_max < 0)
     {
         return 0;
     }
     if (g_art_scan.order_changed)
     {
-        g_art_scan.current_context().sort();
+        sort();
     }
     long tmp = ent_index[ent];
     if (tmp < 0 || tmp == g_art_scan.ent_sorted_max)
@@ -238,7 +235,7 @@ long s_prev_elig(long a)
 // returns 0 if no next eligible entry
 long s_next_elig(long a)
 {
-    while ((a = s_next(a)) != 0)
+    while ((a = g_art_scan.current_context().next(a)) != 0)
     {
         if (s_eligible(a))
         {

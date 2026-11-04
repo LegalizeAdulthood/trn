@@ -202,13 +202,13 @@ int sa_do_cmd(std::string_view command)
         }
         if (!sa_basic_elig(i))
         {
-            while ((i = s_next(i)) != 0 && !sa_basic_elig(i))
+            while ((i = g_art_scan.current_context().next(i)) != 0 && !sa_basic_elig(i))
             {
             }
         }
         // New action: if in fold mode, will not delete an article which
         // has a thread-prior marked article.
-        for (; i; i = s_next(i))
+        for (; i; i = g_art_scan.current_context().next(i))
         {
             if (!sa_basic_elig(i))
             {

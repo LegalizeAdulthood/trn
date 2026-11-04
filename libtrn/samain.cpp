@@ -215,7 +215,7 @@ long sa_read_marked_elig()
     {
         return 0L;
     }
-    for (; e; e = s_next(e))
+    for (; e; e = g_art_scan.current_context().next(e))
     {
         if (!sa_basic_elig(e))
         {
