@@ -81,7 +81,6 @@ static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view 
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
-static bool  univ_include_file(std::string_view fname);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
@@ -237,8 +236,8 @@ void univ_startup()
         g_univ.fname = "%+/univ/usertop";
 
         // read in trn default top file
-        (void)univ_include_file("%X/sitetop");          // pure local
-        bool sys_top_load = univ_include_file("%X/trn4top");
+        (void) g_univ_loader.include_file("%X/sitetop"); // pure local
+        bool sys_top_load = g_univ_loader.include_file("%X/trn4top");
         bool user_top_load = g_univ_loader.use_file("%+/univ/usertop", {});
 
         if (!(sys_top_load || user_top_load))
@@ -667,11 +666,11 @@ bool UniversalMenuLoader::use_file(std::string_view fname, std::string_view labe
     return true;
 }
 
-static bool univ_include_file(std::string_view fname)
+bool UniversalMenuLoader::include_file(std::string_view fname)
 {
     const std::string old_univ_fname = g_univ.fname;
     g_univ.fname = fname;
-    bool retval = g_univ_loader.use_file(g_univ.fname, {});
+    bool retval = use_file(g_univ.fname, {});
     g_univ.fname = old_univ_fname;
     return retval;
 }
@@ -1490,7 +1489,7 @@ void univ_help_main(HelpLocation where)
     // later, do other mode sensitive stuff
 
     // site-specific help
-    univ_include_file("%X/sitehelp/top");
+    g_univ_loader.include_file("%X/sitehelp/top");
 
     // read in main help file
     g_univ.fname = "%X/HelpFiles/top";

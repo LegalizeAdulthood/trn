@@ -212,6 +212,7 @@ struct UniversalMenuLoader
     void do_line_ext1(std::string_view desc, std::string_view line);
     bool do_line(std::string_view line);
     bool use_file(std::string_view fname, std::string_view label);
+    bool include_file(std::string_view fname);
 
     bool        begin_found{};
     std::string begin_label; // label to start working with
