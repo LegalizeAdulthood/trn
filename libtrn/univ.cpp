@@ -80,7 +80,6 @@ static void           univ_add_file(std::string_view desc, std::string_view fnam
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
-static void           univ_use_pattern(std::string_view pattern, int type);
 static void           univ_use_group_line(std::string_view line, int type);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
@@ -500,7 +499,7 @@ static bool univ_do_match(std::string_view text, std::string_view pattern)
 }
 
 // type: 0=newsgroup, 1=virtual (more in future?)
-static void univ_use_pattern(std::string_view pattern, int type)
+void UniversalMenuLoader::use_pattern(std::string_view pattern, int type)
 {
     NewsgroupData *np;
 
@@ -596,10 +595,10 @@ static void univ_use_group_line(std::string_view line, int type)
         const std::size_t pattern_end = line.find_first_of(" ,");
         if (pattern_end == std::string_view::npos)
         {
-            univ_use_pattern(line, type);
+            g_univ_loader.use_pattern(line, type);
             break;
         }
-        univ_use_pattern(line.substr(0, pattern_end), type);
+        g_univ_loader.use_pattern(line.substr(0, pattern_end), type);
         line.remove_prefix(pattern_end);
     }
 }

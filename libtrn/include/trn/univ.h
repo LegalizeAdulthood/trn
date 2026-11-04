@@ -206,6 +206,9 @@ extern UniversalMenuContext g_univ;
 
 struct UniversalMenuLoader
 {
+    // TODO: private
+    void use_pattern(std::string_view pattern, int type);
+
     bool        begin_found{};
     std::string begin_label; // label to start working with
     std::string line_desc;   // description (printing name) of the entry
