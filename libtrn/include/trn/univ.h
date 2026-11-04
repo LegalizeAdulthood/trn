@@ -225,6 +225,7 @@ struct VirtualGroupBuilder
 {
     // TODO: private
     void add_virtual_group(std::string_view grpname);
+    void vg_add_article(ArticleNum a);
 
     bool               virt_pass_needed{};
     UniversalItemIndex current_vg_ui_index{};

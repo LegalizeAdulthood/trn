@@ -78,7 +78,6 @@ static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view 
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static std::string univ_edit_new_user_file();
-static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
 
 void univ_init()
@@ -1128,10 +1127,10 @@ void univ_newsgroup_virtual()
     // also do things like check scores, add newsgroups, etc.
 }
 
-static void univ_vg_add_article(ArticleNum a)
+void VirtualGroupBuilder::vg_add_article(ArticleNum a)
 {
     int score = sc_score_art(a, false);
-    if (g_vg_builder.use_min_score && (score < g_vg_builder.min_score))
+    if (use_min_score && (score < min_score))
     {
         return;
     }
@@ -1167,7 +1166,7 @@ static void univ_vg_add_group()
             continue;
         }
         // minimum score check
-        univ_vg_add_article(a);
+        g_vg_builder.vg_add_article(a);
     }
 }
 
