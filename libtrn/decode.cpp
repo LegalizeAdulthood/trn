@@ -566,7 +566,7 @@ bool decode_piece(MimeCapEntry *mcp, std::string_view first_line)
 
     if (mcp)
     {
-        mime_exec(mcp->command);
+        g_mimecap.exec(mcp->command);
         remove_path(g_decode_filename);
         change_dir("..");
     }
@@ -792,7 +792,7 @@ static bool decode_yenc_piece(MimeCapEntry *mcp, std::string_view first_line)
     fmt::print("Decoded {}\n", g_decode_filename);
     if (mcp)
     {
-        mime_exec(mcp->command);
+        g_mimecap.exec(mcp->command);
         std::error_code error;
         fs::remove(output, error);
     }

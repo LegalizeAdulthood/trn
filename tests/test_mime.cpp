@@ -595,21 +595,21 @@ TEST_F(MimeExecTest, rejectsUnsupportedNameEscape)
 {
     EXPECT_CALL(m_exec, Call(_, _)).Times(0);
 
-    EXPECT_EQ(-1, mime_exec("viewer %n"));
+    EXPECT_EQ(-1, g_mimecap.exec("viewer %n"));
 }
 
 TEST_F(MimeExecTest, rejectsUnsupportedFileEscape)
 {
     EXPECT_CALL(m_exec, Call(_, _)).Times(0);
 
-    EXPECT_EQ(-1, mime_exec("viewer %F"));
+    EXPECT_EQ(-1, g_mimecap.exec("viewer %F"));
 }
 
 TEST_F(MimeExecTest, rejectsUnterminatedParameterEscape)
 {
     EXPECT_CALL(m_exec, Call(_, _)).Times(0);
 
-    EXPECT_EQ(-1, mime_exec("viewer %{name"));
+    EXPECT_EQ(-1, g_mimecap.exec("viewer %{name"));
 }
 
 namespace

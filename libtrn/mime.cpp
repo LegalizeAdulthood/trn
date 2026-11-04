@@ -285,7 +285,7 @@ MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags
             {
                 return &mcp;
             }
-            if (mime_exec(mcp.test_command) == 0)
+            if (g_mimecap.exec(mcp.test_command) == 0)
             {
                 return &mcp;
             }
@@ -396,7 +396,7 @@ static std::string mime_find_param(const Params &params, std::string_view param)
     return {};
 }
 
-int mime_exec(std::string_view cmd)
+int MimeCapRegistry::exec(std::string_view cmd)
 {
     std::string command;
     command.reserve(CMD_BUF_LEN);
@@ -453,7 +453,7 @@ int mime_exec(std::string_view cmd)
         }
     }
 
-    return g_mimecap.executor(SH, command);
+    return executor(SH, command);
 }
 
 void MimeContext::init_sections()

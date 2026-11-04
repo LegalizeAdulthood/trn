@@ -219,6 +219,7 @@ struct MimeCapRegistry
 {
     void set_executor(MimeExecutor executor);
     void read_mimecap(std::string_view mcname);
+    int  exec(std::string_view cmd);
 
     std::vector<MimeCapEntry> entries;
     MimeExecutor              executor;
@@ -230,7 +231,6 @@ void          mime_init();
 void          mime_final();
 MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags);
 bool          mime_types_match(std::string_view ct, std::string_view pat);
-int            mime_exec(std::string_view cmd);
 void          mime_set_article();
 void           mime_parse_sub_header(std::FILE *ifp, std::string_view first_line);
 bool           mime_set_state(std::string_view bp);
