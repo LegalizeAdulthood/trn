@@ -97,7 +97,7 @@ void sa_clean_main()
 
     g_sa_mode_zoom = false;     // doesn't survive across groups
     // remove the now-unused scan-context
-    s_delete_context(g_sa_scan_context);
+    g_art_scan.delete_context(g_sa_scan_context);
     s_sa_context_init = false;
     g_sa_scan_context = -1;
     // no longer "in" article scan mode

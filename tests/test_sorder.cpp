@@ -37,12 +37,12 @@ void ScanOrderTest::TearDown()
 {
     if (m_second_context >= 0)
     {
-        s_delete_context(m_second_context);
+        g_art_scan.delete_context(m_second_context);
     }
     if (m_first_context >= 0)
     {
         g_art_scan.change_context(m_first_context);
-        s_delete_context(m_first_context);
+        g_art_scan.delete_context(m_first_context);
     }
     g_art_scan.cur_type = S_NONE;
     g_art_scan.order_changed = false;

@@ -159,26 +159,26 @@ static void s_clean_contexts()
 }
 
 // int cnum;             // context number to delete
-void s_delete_context(int cnum)
+void ArticleScanSession::delete_context(int cnum)
 {
-    if (cnum < 0 || cnum >= size_cast<int>(g_art_scan.contexts))
+    if (cnum < 0 || cnum >= size_cast<int>(contexts))
     {
         fmt::print("s_delete_context: illegal context number {}!\n", cnum);
         TRN_ASSERT(false);
     }
-    if (cnum == g_art_scan.cur_context)
+    if (cnum == cur_context)
     {
         s_order_clean();
     }
     else
     {
-        g_art_scan.contexts[cnum].ent_sort.clear();
-        g_art_scan.contexts[cnum].ent_sort_max = -1;
-        g_art_scan.contexts[cnum].ent_sorted_max = -1;
-        g_art_scan.contexts[cnum].ent_index.clear();
-        g_art_scan.contexts[cnum].ent_index_max = -1;
-        g_art_scan.contexts[cnum].page_ents.clear();
+        contexts[cnum].ent_sort.clear();
+        contexts[cnum].ent_sort_max = -1;
+        contexts[cnum].ent_sorted_max = -1;
+        contexts[cnum].ent_index.clear();
+        contexts[cnum].ent_index_max = -1;
+        contexts[cnum].page_ents.clear();
     }
     // mark the context as empty
-    g_art_scan.contexts[cnum].type = S_NONE;
+    contexts[cnum].type = S_NONE;
 }
