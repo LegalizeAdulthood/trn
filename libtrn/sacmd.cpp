@@ -339,7 +339,7 @@ int sa_do_cmd(std::string_view command)
 // maybe later use the flag to not do this more than once per newsgroup
         for (int j = 1; j < size_cast<int>(g_sa_ents); j++)
         {
-            s_order_add(j);             // duplicates ignored
+            g_art_scan.current_context().order_add(j); // duplicates ignored
         }
         if (sa_eligible(s_first()) || s_next_elig(s_first()))
         {

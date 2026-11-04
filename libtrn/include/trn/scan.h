@@ -39,6 +39,7 @@ struct ScanContext
 {
     void sort();
     void order_clean();
+    void order_add(long ent);
 
     // TODO: private
     void save_order_bounds();

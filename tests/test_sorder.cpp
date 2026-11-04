@@ -27,10 +27,10 @@ void ScanOrderTest::SetUp()
 {
     m_first_context = g_art_scan.new_context(S_GROUP);
     g_art_scan.change_context(m_first_context);
-    s_order_add(3);
-    s_order_add(1);
-    s_order_add(2);
-    s_order_add(2);
+    g_art_scan.current_context().order_add(3);
+    g_art_scan.current_context().order_add(1);
+    g_art_scan.current_context().order_add(2);
+    g_art_scan.current_context().order_add(2);
 }
 
 void ScanOrderTest::TearDown()
@@ -92,8 +92,8 @@ void IndependentScanContextsTest::SetUp()
     g_art_scan.save_context();
     m_second_context = g_art_scan.new_context(S_GROUP);
     g_art_scan.change_context(m_second_context);
-    s_order_add(20);
-    s_order_add(10);
+    g_art_scan.current_context().order_add(20);
+    g_art_scan.current_context().order_add(10);
     g_art_scan.current_context().sort();
     g_art_scan.save_context();
 }

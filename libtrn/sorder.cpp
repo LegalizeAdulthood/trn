@@ -158,11 +158,8 @@ void ScanContext::order_clean()
 }
 
 // adds the entry number to the current context
-void s_order_add(long ent)
+void ScanContext::order_add(long ent)
 {
-    std::vector<long> &ent_sort = g_art_scan.ent_sort();
-    std::vector<long> &ent_index = g_art_scan.ent_index();
-
     if (ent >= 0 && ent < size_cast<long>(ent_index) && ent_index[ent] >= 0)
     {
         return;         // entry is already in the list
@@ -181,7 +178,7 @@ void s_order_add(long ent)
     }
     ent_index[ent] = g_art_scan.ent_sort_max;
     g_art_scan.order_changed = true;
-    g_art_scan.current_context().save_order_bounds();
+    save_order_bounds();
 }
 
 long s_prev(long ent)
