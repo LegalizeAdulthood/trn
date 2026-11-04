@@ -22,6 +22,8 @@ enum DoArticleResult
 
 struct ArticlePager
 {
+    void init();
+
     ArticleLine     highlight{-1};     // next line to be highlighted
     int             goto_line{};       // TODO: ArticleLine?
     ArticlePosition inner_search{};    // g_art_input.pos of end of line we want to visit
@@ -51,7 +53,6 @@ extern std::string     g_art_line;          // place for article lines
 
 extern bool g_dont_filter_control; // -j
 
-void art_init();
 DoArticleResult do_article();
 DoArticleResult do_article(std::string &article_command);
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);

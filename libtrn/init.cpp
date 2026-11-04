@@ -150,7 +150,7 @@ bool initialize(int argc, char *argv[])
     // it looks like we will actually read something, so init everything
 
     add_ng_init();
-    art_init();
+    g_pager.init();
     g_art_buf.init();
     g_art_search.init();
     g_back_page.init();

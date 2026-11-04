@@ -92,9 +92,9 @@ static bool        maybe_set_color(std::string_view line, std::size_t pos, bool 
 static bool        inner_more();
 static bool        pager_command_needs_completion(std::string_view command);
 
-void art_init()
+void ArticlePager::init()
 {
-    g_pager.gcompex.init_compex();
+    gcompex.init_compex();
 }
 
 DoArticleResult do_article()

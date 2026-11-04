@@ -35,7 +35,7 @@ protected:
     void SetUp() override
     {
         search_init();
-        art_init();
+        g_pager.init();
         drain_macro_buffer();
     }
 

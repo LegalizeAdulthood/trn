@@ -229,7 +229,7 @@ void InterpolatorTest::SetUp()
     data_source_init();
     rcstuff_init();
     add_ng_init();
-    art_init();
+    g_pager.init();
     g_art_buf.init();
     g_art_search.init();
     g_back_page.init();
