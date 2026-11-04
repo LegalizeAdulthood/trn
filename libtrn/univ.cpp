@@ -80,7 +80,6 @@ static void           univ_add_file(std::string_view desc, std::string_view fnam
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
-static void           univ_use_group_line(std::string_view line, int type);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
@@ -576,7 +575,7 @@ void UniversalMenuLoader::use_pattern(std::string_view pattern, int type)
 
 // interprets a line of newsgroups, adding or subtracting each pattern
 // Newsgroup patterns are separated by spaces and/or commas
-static void univ_use_group_line(std::string_view line, int type)
+void UniversalMenuLoader::use_group_line(std::string_view line, int type)
 {
     if (line.empty())
     {
@@ -595,10 +594,10 @@ static void univ_use_group_line(std::string_view line, int type)
         const std::size_t pattern_end = line.find_first_of(" ,");
         if (pattern_end == std::string_view::npos)
         {
-            g_univ_loader.use_pattern(line, type);
+            use_pattern(line, type);
             break;
         }
-        g_univ_loader.use_pattern(line.substr(0, pattern_end), type);
+        use_pattern(line.substr(0, pattern_end), type);
         line.remove_prefix(pattern_end);
     }
 }
@@ -771,7 +770,7 @@ static void univ_do_line_ext1(std::string_view desc, std::string_view line)
                 s_univ_use_min_score = true;
                 line.remove_prefix(score_end + 1);
             }
-            univ_use_group_line(line, 1);
+            g_univ_loader.use_group_line(line, 1);
             s_univ_use_min_score = false;
             break;
         }
@@ -952,7 +951,7 @@ static bool univ_do_line(std::string_view line)
                 break;
             }
             // one or more newsgroups instead
-            univ_use_group_line(line, 0);
+            g_univ_loader.use_group_line(line, 0);
             break;
         }
     }
@@ -1002,7 +1001,7 @@ void univ_mask_load(std::string_view mask, std::string_view title)
 {
     univ_open();
 
-    univ_use_group_line(mask, 0);
+    g_univ_loader.use_group_line(mask, 0);
     g_univ.title = title;
     if (g_int_count)
     {
