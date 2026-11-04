@@ -199,9 +199,19 @@ struct UniversalMenuContext
     std::string       title;    // title of current level
     std::string       tmp_file; // temp. file (may be empty)
     int               level{};  // How deep are we in the tree?
+    int               item_counter{1};
 };
 
 extern UniversalMenuContext g_univ;
+
+struct UniversalMenuLoader
+{
+    bool        begin_found{};
+    std::string begin_label; // label to start working with
+    std::string line_desc;   // description (printing name) of the entry
+};
+
+extern UniversalMenuLoader g_univ_loader;
 
 void           univ_init();
 void           univ_startup();

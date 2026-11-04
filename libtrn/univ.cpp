@@ -64,15 +64,12 @@ bool g_univ_follow{true};
 bool g_univ_follow_temp{};
 
 UniversalMenuContext g_univ;
+UniversalMenuLoader  g_univ_loader;
 
 static bool           s_univ_virt_pass_needed{}; //
-static int            s_univ_item_counter{1};    //
 static bool           s_univ_done_startup{};     //
 static int            s_univ_min_score{};        // this score is part of the line format, so it is not ifdefed
 static bool           s_univ_use_min_score{};    //
-static bool           s_univ_begin_found{};      //
-static std::string    s_univ_begin_label;        // label to start working with
-static std::string    s_univ_line_desc;          // description (printing name) of the entry
 static UniversalItemIndex s_current_vg_ui_index{};   //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
@@ -310,7 +307,7 @@ UniversalItem *UniversalMenuContext::add(UniversalData data, std::string_view de
     node.m_flags = UF_NONE;
     node.m_desc.assign(desc);
     node.m_state = UIS_NORMAL;
-    node.m_num = s_univ_item_counter++;
+    node.m_num = item_counter++;
     node.m_score = 0; // consider other default scores?
     node.m_data = std::move(data);
 
@@ -636,11 +633,11 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     {
         return false;
     }
-    s_univ_begin_found = begin_top;
-    s_univ_begin_label.clear();
+    g_univ_loader.begin_found = begin_top;
+    g_univ_loader.begin_label.clear();
     if (!label.empty())
     {
-        s_univ_begin_label = label;
+        g_univ_loader.begin_label = label;
     }
     std::ifstream input{file_exp(open_name)};
     if (!input)
@@ -659,13 +656,13 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
             break; // end of useful file
         }
     }
-    if (!s_univ_begin_found)
+    if (!g_univ_loader.begin_found)
     {
         fmt::print("\"begin group\" not found.\n");
     }
-    if (!s_univ_begin_label.empty())
+    if (!g_univ_loader.begin_label.empty())
     {
-        fmt::print("label not found: {}\n", s_univ_begin_label);
+        fmt::print("label not found: {}\n", g_univ_loader.begin_label);
     }
     if (s_univ_virt_pass_needed)
     {
@@ -820,23 +817,23 @@ static bool univ_do_line(std::string_view line)
     }
     line.remove_prefix(line_start);
 
-    if (!s_univ_begin_found)
+    if (!g_univ_loader.begin_found)
     {
         if (!string_case_equal(line.substr(0, 11), "begin group"))
         {
             return true; // wait until "begin group" is found
         }
-        s_univ_begin_found = true;
+        g_univ_loader.begin_found = true;
     }
-    if (!s_univ_begin_label.empty())
+    if (!g_univ_loader.begin_label.empty())
     {
-        if (line.size() >= 2 && line[0] == '>' && line[1] == ':' && line.substr(2) == s_univ_begin_label)
+        if (line.size() >= 2 && line[0] == '>' && line[1] == ':' && line.substr(2) == g_univ_loader.begin_label)
         {
-            s_univ_begin_label.clear(); // interpret starting at next line
+            g_univ_loader.begin_label.clear(); // interpret starting at next line
         }
         return true;
     }
-    s_univ_line_desc.clear();
+    g_univ_loader.line_desc.clear();
     if (line.front() == '"') // description name
     {
         std::string_view description_text = line.substr(1);
@@ -862,12 +859,12 @@ static bool univ_do_line(std::string_view line)
             fmt::print("univ: unmatched quote in string:\n\"{}\"\n", description);
             return true;
         }
-        s_univ_line_desc = description;
+        g_univ_loader.line_desc = description;
         line.remove_prefix(description_size + 2);
     }
     const std::size_t text_start = line.find_first_not_of(" \f\n\r\t\v");
     line = text_start == std::string_view::npos ? std::string_view{} : line.substr(text_start);
-    const std::string_view line_desc{s_univ_line_desc};
+    const std::string_view line_desc{g_univ_loader.line_desc};
     if (string_case_equal(line.substr(0, 9), "end group"))
     {
         return false;
