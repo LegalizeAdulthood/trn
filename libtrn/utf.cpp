@@ -104,6 +104,7 @@ static const CharsetDesc s_charset_descs[] = {
 struct GraphicState
 {
     CharsetType init(std::string_view from, std::string_view to);
+    std::string_view input_charset_name();
 
     CharsetType      in;
     CharsetType      out;
@@ -189,7 +190,12 @@ CharsetType GraphicState::init(std::string_view from, std::string_view to)
 
 std::string_view input_charset_name()
 {
-    return find_charset_desc(s_gs.in)->name;
+    return s_gs.input_charset_name();
+}
+
+std::string_view GraphicState::input_charset_name()
+{
+    return find_charset_desc(in)->name;
 }
 
 std::string_view output_charset_name()
