@@ -10,6 +10,7 @@
 #include <trn/cache.h>
 #include <trn/sadesc.h> // sa_desc_subject()
 #include <trn/samisc.h>
+#include <trn/scan.h>
 #include <trn/sorder.h>
 
 #include <string>
@@ -85,7 +86,7 @@ long sa_subj_thread_prev(long a)
     int j;
 
     int i = sa_subj_thread(a);
-    while ((a = s_prev(a)) != 0)
+    while ((a = g_art_scan.current_context().prev(a)) != 0)
     {
         if (!sa_basic_elig(a))
         {
