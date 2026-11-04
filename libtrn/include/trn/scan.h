@@ -39,6 +39,7 @@ struct ScanContext
 {
     // TODO: private
     void save_order_bounds();
+    void sort_basic();
 
     ScanContextType type; // context type
 

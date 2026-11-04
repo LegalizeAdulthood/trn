@@ -13,8 +13,6 @@
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
 
-static void               s_sort_basic();
-
 ScanContext &ArticleScanSession::current_context()
 {
     return contexts[cur_context];
@@ -71,9 +69,8 @@ int s_compare(long a, long b)
 #define SOFF(a) ((a)-1)
 
 // Uses a heapsort algorithm with the heap readjustment inlined.
-static void s_sort_basic()
+void ScanContext::sort_basic()
 {
-    std::vector<long> &ent_sort = g_art_scan.ent_sort();
     int t1;
     int j;
 
@@ -141,7 +138,7 @@ void s_sort()
 #ifdef UNDEF
     std::qsort((void *) ent_sort.data(), (g_art_scan.ent_sort_max) + 1, sizeof(long), s_compare);
 #endif
-    s_sort_basic();
+    g_art_scan.current_context().sort_basic();
     g_art_scan.ent_sorted_max = g_art_scan.ent_sort_max; // whole array is now sorted
     g_art_scan.order_changed = false;
     // rebuild the indexes
