@@ -125,7 +125,7 @@ static void sa_init_context()
     {
         g_sa_scan_context = g_art_scan.new_context(S_ART);
     }
-    s_change_context(g_sa_scan_context);
+    g_art_scan.change_context(g_sa_scan_context);
     s_sa_context_init = true;
 }
 

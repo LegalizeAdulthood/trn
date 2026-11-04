@@ -84,7 +84,7 @@ SaMainResult sa_main()
     }
     else
     {
-        s_change_context(g_sa_scan_context);
+        g_art_scan.change_context(g_sa_scan_context);
     }
 
     // unless "explicit" entry, read any marked articles

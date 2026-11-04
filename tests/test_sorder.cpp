@@ -26,7 +26,7 @@ protected:
 void ScanOrderTest::SetUp()
 {
     m_first_context = g_art_scan.new_context(S_GROUP);
-    s_change_context(m_first_context);
+    g_art_scan.change_context(m_first_context);
     s_order_add(3);
     s_order_add(1);
     s_order_add(2);
@@ -41,7 +41,7 @@ void ScanOrderTest::TearDown()
     }
     if (m_first_context >= 0)
     {
-        s_change_context(m_first_context);
+        g_art_scan.change_context(m_first_context);
         s_delete_context(m_first_context);
     }
     g_art_scan.cur_type = S_NONE;
@@ -91,7 +91,7 @@ void IndependentScanContextsTest::SetUp()
     SortedScanOrderTest::SetUp();
     g_art_scan.save_context();
     m_second_context = g_art_scan.new_context(S_GROUP);
-    s_change_context(m_second_context);
+    g_art_scan.change_context(m_second_context);
     s_order_add(20);
     s_order_add(10);
     s_sort();
@@ -109,7 +109,7 @@ void RestoredScanContextTest::SetUp()
     IndependentScanContextsTest::SetUp();
     if (GetParam())
     {
-        s_change_context(m_first_context);
+        g_art_scan.change_context(m_first_context);
     }
 }
 
@@ -154,7 +154,7 @@ TEST_F(IndependentScanContextsTest, newContextUsesAnIndependentOrder)
 
 TEST_P(RestoredScanContextTest, restoresTheSavedOrderWhenReturningToAContext)
 {
-    s_change_context(GetParam() ? m_second_context : m_first_context);
+    g_art_scan.change_context(GetParam() ? m_second_context : m_first_context);
     const std::vector<long> entries = current_entries();
 
     EXPECT_EQ((GetParam() ? std::vector<long>{10, 20} : std::vector<long>{1, 2, 3}), entries);

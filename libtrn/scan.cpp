@@ -118,39 +118,39 @@ void ArticleScanSession::save_context()
 }
 
 // int newcontext;                      // context number to activate
-void s_change_context(int newcontext)
+void ArticleScanSession::change_context(int newcontext)
 {
-    if (newcontext < 0 || newcontext >= size_cast<int>(g_art_scan.contexts))
+    if (newcontext < 0 || newcontext >= size_cast<int>(contexts))
     {
         fmt::print("s_change_context: bad context number {}!\n", newcontext);
         TRN_ASSERT(false);
     }
-    g_art_scan.cur_context = newcontext;
-    ScanContext *p = &g_art_scan.contexts[newcontext];
-    g_art_scan.cur_type = p->type;
-    g_art_scan.page_ents = p->page_ents;
+    cur_context = newcontext;
+    ScanContext *p = &contexts[newcontext];
+    cur_type = p->type;
+    page_ents = p->page_ents;
 
-    g_art_scan.ent_sort_max = p->ent_sort_max;
-    g_art_scan.ent_sorted_max = p->ent_sorted_max;
-    g_art_scan.ent_index_max = p->ent_index_max;
+    ent_sort_max = p->ent_sort_max;
+    ent_sorted_max = p->ent_sorted_max;
+    ent_index_max = p->ent_index_max;
 
-    g_art_scan.top_ent = p->top_ent;
-    g_art_scan.bot_ent = p->bot_ent;
-    g_art_scan.refill = p->refill;
-    g_art_scan.ref_all = p->ref_all;
-    g_art_scan.ref_top = p->ref_top;
-    g_art_scan.ref_bot = p->ref_bot;
-    g_art_scan.ref_status = p->ref_status;
-    g_art_scan.ref_desc = p->ref_desc;
+    top_ent = p->top_ent;
+    bot_ent = p->bot_ent;
+    refill = p->refill;
+    ref_all = p->ref_all;
+    ref_top = p->ref_top;
+    ref_bot = p->ref_bot;
+    ref_status = p->ref_status;
+    ref_desc = p->ref_desc;
     // next ones should be reset later
-    g_art_scan.top_lines = p->top_lines;
-    g_art_scan.bot_lines = p->bot_lines;
-    g_art_scan.status_cols = p->status_cols;
-    g_art_scan.cursor_cols = p->cursor_cols;
-    g_art_scan.desc_cols = p->desc_cols;
-    g_art_scan.item_num_cols = p->item_num_cols;
-    g_art_scan.ptr_page_line = p->ptr_page_line;
-    g_art_scan.flags = p->flags;
+    top_lines = p->top_lines;
+    bot_lines = p->bot_lines;
+    status_cols = p->status_cols;
+    cursor_cols = p->cursor_cols;
+    desc_cols = p->desc_cols;
+    item_num_cols = p->item_num_cols;
+    ptr_page_line = p->ptr_page_line;
+    flags = p->flags;
 }
 
 // implement later?
