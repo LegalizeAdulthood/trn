@@ -747,7 +747,7 @@ TEST_F(NNTPGetStringTest, retriesEncryptionRequiredCommandAfterStartTls)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 1 1 1 comp.lang.apl"));
 
-    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     EXPECT_EQ(1, nntp_check());
     EXPECT_EQ("211 1 1 1 comp.lang.apl", g_nntp.ser_line);
 }
@@ -796,7 +796,7 @@ TEST_P(CleartextTlsCommandTest, blocksTheCommandBeforeWriting)
 {
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
-    const int result = nntp_command(GetParam());
+    const int result = g_nntp.command(GetParam());
 
     EXPECT_LT(result, 0);
 }
@@ -828,11 +828,11 @@ TEST_F(NNTPGetStringTest, restoresSelectedGroupAndArticleAfterStartTls)
     EXPECT_CALL(*m_connection, write_line(StrEq("BODY"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("222 2 <two@example.test>"));
 
-    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, nntp_check());
-    ASSERT_EQ(1, nntp_command("STAT 2"));
+    ASSERT_EQ(1, g_nntp.command("STAT 2"));
     ASSERT_EQ(1, nntp_check());
-    ASSERT_EQ(1, nntp_command("BODY"));
+    ASSERT_EQ(1, g_nntp.command("BODY"));
     EXPECT_EQ(1, nntp_check());
     EXPECT_EQ(222, nntp_response_code(g_nntp.ser_line));
 }
@@ -853,7 +853,7 @@ TEST_F(NNTPGetStringTest, protectsPostingWithStartTlsBeforeSendingPost)
         .WillOnce(Return("."));
     EXPECT_CALL(*m_connection, write_line(StrEq("POST"), _));
 
-    EXPECT_EQ(1, nntp_command("POST"));
+    EXPECT_EQ(1, g_nntp.command("POST"));
     EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
 }
 
@@ -869,7 +869,7 @@ TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("480 authentication required"));
 
-    const int sent = nntp_command("GROUP comp.lang.apl");
+    const int sent = g_nntp.command("GROUP comp.lang.apl");
     const int result = nntp_check();
     g_data_source = saved_source;
 
@@ -882,7 +882,7 @@ TEST_P(ImplicitTlsCommandTest, sendsTheCommandThroughImplicitTls)
 {
     EXPECT_CALL(*m_connection, write_line(StrEq(GetParam()), _));
 
-    const int result = nntp_command(GetParam());
+    const int result = g_nntp.command(GetParam());
 
     EXPECT_EQ(1, result);
 }
@@ -1116,7 +1116,7 @@ TEST_F(NntpAuthTest, doesNotRepeatAuthenticationForAnotherChallenge)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
     expect_reply("GROUP comp.lang.apl", {"480 still denied"});
 
-    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     EXPECT_LE(nntp_check(), 0);
     EXPECT_EQ(480, nntp_response_code(g_nntp.ser_line));
 }
@@ -1276,9 +1276,9 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
 
     ASSERT_EQ(1, nntp_connect("localhost", false));
     EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
-    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, nntp_check());
-    ASSERT_EQ(1, nntp_command("BODY 1"));
+    ASSERT_EQ(1, g_nntp.command("BODY 1"));
     ASSERT_EQ(1, nntp_check());
     std::string line;
     ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
@@ -1332,9 +1332,9 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
 
     ASSERT_EQ(1, nntp_connect("localhost", false));
     EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
-    ASSERT_EQ(1, nntp_command("GROUP comp.lang.apl"));
+    ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, nntp_check());
-    ASSERT_EQ(1, nntp_command("BODY 1"));
+    ASSERT_EQ(1, g_nntp.command("BODY 1"));
     ASSERT_EQ(1, nntp_check());
     std::string line;
     ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
@@ -1647,7 +1647,7 @@ TEST_F(NNTPGetStringTest, capabilitiesConsumeCompleteListBeforeNextCommand)
     EXPECT_TRUE(g_nntp.link.capabilities.has("OVER", "MSGID"));
     EXPECT_FALSE(g_nntp.link.capabilities.has("HDR"));
     EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
-    EXPECT_EQ(1, nntp_command("DATE"));
+    EXPECT_EQ(1, g_nntp.command("DATE"));
     EXPECT_EQ(1, nntp_check());
     EXPECT_EQ("111 20261019010000", g_nntp.ser_line);
 }

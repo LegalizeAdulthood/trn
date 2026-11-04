@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
             }
             new_connection = true;
         }
-        if (nntp_command("POST") <= 0 || nntp_check() <= 0)
+        if (g_nntp.command("POST") <= 0 || nntp_check() <= 0)
         {
             if (new_connection)
             {
@@ -446,7 +446,7 @@ int nntp_handle_timeout()
         {
             std::exit(1);
         }
-        if (nntp_command(last_command_save) <= 0)
+        if (g_nntp.command(last_command_save) <= 0)
         {
             return -1;
         }

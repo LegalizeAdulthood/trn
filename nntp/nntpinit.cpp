@@ -236,7 +236,7 @@ int server_init(std::string_view machine)
         }
         // Legacy servers may require reader mode without advertising it.
         int reader_status{};
-        if (nntp_command("MODE READER") <= 0)
+        if (g_nntp.command("MODE READER") <= 0)
         {
             g_nntp.ser_line = fmt::format("{} failed to send MODE READER\n", static_cast<int>(NNTP_ACCESS_VAL));
         }

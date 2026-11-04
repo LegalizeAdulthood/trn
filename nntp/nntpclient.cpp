@@ -216,7 +216,7 @@ std::string nntp_server_name(std::string_view name)
     return result;
 }
 
-int nntp_command(std::string_view bp)
+int NntpSession::command(std::string_view bp)
 {
     const std::string command{bp};
     std::time_t       now;
@@ -226,26 +226,26 @@ int nntp_command(std::string_view bp)
         fmt::print(">{}\n", command);
     }
 #endif
-    g_nntp.last_command = command;
-    if (!g_nntp.link.connection)
+    last_command = command;
+    if (!link.connection)
     {
         return nntp_handle_timeout();
     }
     const std::string_view verb = bp.substr(0, bp.find(' '));
-    if (((g_nntp.link.require_tls_for_auth && string_case_equal(verb, "AUTHINFO")) ||
-         (g_nntp.link.require_tls_for_posting && string_case_equal(verb, "POST"))) &&
+    if (((link.require_tls_for_auth && string_case_equal(verb, "AUTHINFO")) ||
+         (link.require_tls_for_posting && string_case_equal(verb, "POST"))) &&
         nntp_require_tls() < 0)
     {
         return -2;
     }
-    g_nntp.last_command = command;
+    last_command = command;
     const bool setup_command = command == "CAPABILITIES" || command == "MODE READER" || command == "STARTTLS";
-    if ((g_nntp.link.flags & NNTP_FORCE_AUTH_NOW) && !setup_command)
+    if ((link.flags & NNTP_FORCE_AUTH_NOW) && !setup_command)
     {
-        g_nntp.link.flags &= ~NNTP_FORCE_AUTH_NOW;
+        link.flags &= ~NNTP_FORCE_AUTH_NOW;
         return nntp_handle_auth_err();
     }
-    if (!(g_nntp.link.flags & NNTP_NEW_CMD_OK))
+    if (!(link.flags & NNTP_NEW_CMD_OK))
     {
         int ret = nntp_handle_nested_lists();
         if (ret <= 0)
@@ -254,14 +254,14 @@ int nntp_command(std::string_view bp)
         }
     }
     error_code_t ec;
-    g_nntp.link.connection->write_line(command, ec);
+    link.connection->write_line(command, ec);
     if (ec)
     {
         return nntp_handle_timeout();
     }
     now = std::time((std::time_t*)nullptr);
-    g_nntp.last_command_diff = now - g_nntp.link.last_command;
-    g_nntp.link.last_command = now;
+    last_command_diff = now - link.last_command;
+    link.last_command = now;
     return 1;
 }
 
@@ -279,7 +279,7 @@ static int cached_command(std::string_view command, std::string_view arguments, 
     {
         return g_nntp.unsupported_command(command);
     }
-    if (nntp_command(arguments.empty() ? name : fmt::format("{} {}", command, arguments)) <= 0)
+    if (g_nntp.command(arguments.empty() ? name : fmt::format("{} {}", command, arguments)) <= 0)
     {
         return -2;
     }
@@ -389,7 +389,8 @@ int nntp_start_tls()
     g_nntp.link.tls_attempted = true;
     const NNTPFlags force_auth = g_nntp.link.flags & NNTP_FORCE_AUTH_NOW;
     g_nntp.link.flags &= ~NNTP_FORCE_AUTH_NOW;
-    if (nntp_command("STARTTLS") <= 0 || nntp_check() <= 0 || nntp_response_code(g_nntp.ser_line) != NNTP_STARTTLS_VAL)
+    if (g_nntp.command("STARTTLS") <= 0 || nntp_check() <= 0 ||
+        nntp_response_code(g_nntp.ser_line) != NNTP_STARTTLS_VAL)
     {
         nntp_close(false);
         return -1;
@@ -413,8 +414,9 @@ int nntp_start_tls()
         return -1;
     }
     if (!selected_group.empty() &&
-        (nntp_command(fmt::format("GROUP {}", selected_group)) <= 0 || nntp_check() <= 0 ||
-         (selected_article > 0 && (nntp_command(fmt::format("STAT {}", selected_article)) <= 0 || nntp_check() <= 0))))
+        (g_nntp.command(fmt::format("GROUP {}", selected_group)) <= 0 || nntp_check() <= 0 ||
+         (selected_article > 0 &&
+          (g_nntp.command(fmt::format("STAT {}", selected_article)) <= 0 || nntp_check() <= 0))))
     {
         nntp_close(false);
         return -1;
@@ -527,7 +529,7 @@ read_it:
         g_nntp.link.allow_starttls && !g_nntp.link.tls_attempted)
     {
         const std::string command = g_nntp.last_command;
-        if (nntp_start_tls() < 0 || nntp_command(command) <= 0)
+        if (nntp_start_tls() < 0 || g_nntp.command(command) <= 0)
         {
             return -2;
         }
@@ -556,7 +558,7 @@ int nntp_refresh_capabilities()
 {
     g_nntp.link.capabilities = {};
     g_nntp.link.unsupported_commands.clear();
-    if (nntp_command("CAPABILITIES") <= 0)
+    if (g_nntp.command("CAPABILITIES") <= 0)
     {
         return -1;
     }
@@ -665,7 +667,7 @@ void nntp_close(bool send_quit)
 {
     if (send_quit && g_nntp.link.connection)
     {
-        if (nntp_command("QUIT") > 0)
+        if (g_nntp.command("QUIT") > 0)
         {
             nntp_check();
         }

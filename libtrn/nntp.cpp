@@ -70,7 +70,7 @@ int nntp_list(std::string_view type, std::string_view arg, std::string &first_li
         {
             fmt::format_to(std::back_inserter(command), " {}", type_name);
         }
-        if (nntp_command(command) <= 0)
+        if (g_nntp.command(command) <= 0)
         {
             return -2;
         }
@@ -129,7 +129,7 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
 {
     const std::string group_name{group};
     const std::string command{fmt::format("GROUP {}", group_name)};
-    if (nntp_command(command) <= 0)
+    if (g_nntp.command(command) <= 0)
     {
         return -2;
     }
@@ -213,7 +213,7 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
 
 int nntp_stat(ArticleNum art_num)
 {
-    if (nntp_command(fmt::format("STAT {}", art_num.value_of())) <= 0)
+    if (g_nntp.command(fmt::format("STAT {}", art_num.value_of())) <= 0)
     {
         return -2;
     }
@@ -224,7 +224,7 @@ int nntp_stat(ArticleNum art_num)
 
 ArticleNum nntp_stat_id(std::string_view msg_id)
 {
-    if (nntp_command(fmt::format("STAT {}", msg_id)) <= 0)
+    if (g_nntp.command(fmt::format("STAT {}", msg_id)) <= 0)
     {
         return ArticleNum{-2};
     }
@@ -243,7 +243,7 @@ static ArticleNum nntp_next_art()
 {
     long artnum;
 
-    if (nntp_command("NEXT") <= 0)
+    if (g_nntp.command("NEXT") <= 0)
     {
         return ArticleNum{-2};
     }
@@ -262,7 +262,7 @@ static ArticleNum nntp_next_art()
 
 int nntp_header(ArticleNum art_num)
 {
-    if (nntp_command(fmt::format("HEAD {}", art_num.value_of())) <= 0)
+    if (g_nntp.command(fmt::format("HEAD {}", art_num.value_of())) <= 0)
     {
         return -2;
     }
@@ -298,7 +298,7 @@ void nntp_body(ArticleNum art_num)
 #ifdef SET_ARTICLE_TEMP_FILE_PERMISSIONS
     chmod(artname.c_str(), 0600);
 #endif
-    if (nntp_command(
+    if (g_nntp.command(
             fmt::format("{} {}", g_parsed_header.parsed_art == art_num ? "BODY" : "ARTICLE", art_num.value_of())) <= 0)
     {
         finalize(1);
@@ -523,7 +523,7 @@ static int s_maxdays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 std::time_t nntp_time()
 {
-    if (nntp_command("DATE") <= 0)
+    if (g_nntp.command("DATE") <= 0)
     {
         return -2;
     }
@@ -585,8 +585,8 @@ std::time_t nntp_time()
 int nntp_new_groups(std::time_t t)
 {
     std::tm *ts = std::gmtime(&t);
-    if (nntp_command(fmt::format("NEWGROUPS {:02}{:02}{:02} {:02}{:02}{:02} GMT", ts->tm_year % 100, ts->tm_mon + 1,
-                                 ts->tm_mday, ts->tm_hour, ts->tm_min, ts->tm_sec)) <= 0)
+    if (g_nntp.command(fmt::format("NEWGROUPS {:02}{:02}{:02} {:02}{:02}{:02} GMT", ts->tm_year % 100, ts->tm_mon + 1,
+                                   ts->tm_mday, ts->tm_hour, ts->tm_min, ts->tm_sec)) <= 0)
     {
         return -2;
     }
@@ -599,7 +599,7 @@ int nntp_art_nums()
     {
         return 0;
     }
-    if (nntp_command("LISTGROUP") <= 0)
+    if (g_nntp.command("LISTGROUP") <= 0)
     {
         return -2;
     }
@@ -727,7 +727,7 @@ int nntp_handle_timeout()
     {
         return -2;
     }
-    if (nntp_command(last_command_save) <= 0)
+    if (g_nntp.command(last_command_save) <= 0)
     {
         return -1;
     }

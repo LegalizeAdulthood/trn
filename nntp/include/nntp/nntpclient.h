@@ -119,6 +119,7 @@ struct NntpSession
 {
     NNTPGetsResult gets(std::string &line, int len);
     void           gets_clear_buffer();
+    int            command(std::string_view bp);
 
     // TODO: private
     std::string_view response_text();
@@ -182,7 +183,6 @@ inline std::string nntp_get_a_line()
 void        set_nntp_connection_factory(ConnectionFactory factory);
 int         nntp_connect(std::string_view machine, bool verbose);
 std::string nntp_server_name(std::string_view name);
-int         nntp_command(std::string_view bp);
 // These read the status response; callers consume successful multiline data.
 int         nntp_overview(std::string_view range);
 int         nntp_overview_format();

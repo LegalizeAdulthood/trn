@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
             command += ' ';
             command += wildarg;
         }
-        if (nntp_command(command) <= 0)
+        if (g_nntp.command(command) <= 0)
         {
             std::exit(1);
         }

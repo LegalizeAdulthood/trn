@@ -949,7 +949,7 @@ done:
 
 static int nntp_date()
 {
-    return nntp_command("DATE");
+    return g_nntp.command("DATE");
 }
 
 static std::string draft_field(std::string_view text, std::string_view field)

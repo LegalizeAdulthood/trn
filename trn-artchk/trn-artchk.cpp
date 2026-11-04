@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
                 ArticleNewsgroup &newsgroup = newsgroups[i];
                 if (listactive_works)
                 {
-                    if (nntp_command(fmt::format("list active {}", newsgroup.name)) <= 0)
+                    if (g_nntp.command(fmt::format("list active {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }
@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    if (nntp_command(fmt::format("GROUP {}", newsgroup.name)) <= 0)
+                    if (g_nntp.command(fmt::format("GROUP {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
                 for (const ArticleNewsgroup &newsgroup : newsgroups)
                 {
                     // issue a description list command
-                    if (nntp_command(fmt::format("XGTITLE {}", newsgroup.name)) <= 0)
+                    if (g_nntp.command(fmt::format("XGTITLE {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }

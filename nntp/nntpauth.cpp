@@ -40,7 +40,7 @@ namespace
 bool authenticate_user_pass()
 {
     const std::string auth_user = get_auth_user();
-    if (auth_user.empty() || nntp_command(fmt::format("AUTHINFO USER {}", auth_user)) <= 0 || nntp_check() <= 0)
+    if (auth_user.empty() || g_nntp.command(fmt::format("AUTHINFO USER {}", auth_user)) <= 0 || nntp_check() <= 0)
     {
         return false;
     }
@@ -53,7 +53,7 @@ bool authenticate_user_pass()
         return false;
     }
     const std::string auth_pass = get_auth_pass();
-    return !auth_pass.empty() && nntp_command(fmt::format("AUTHINFO PASS {}", auth_pass)) > 0 && nntp_check() > 0 &&
+    return !auth_pass.empty() && g_nntp.command(fmt::format("AUTHINFO PASS {}", auth_pass)) > 0 && nntp_check() > 0 &&
            nntp_response_code(g_nntp.ser_line) == AUTH_ACCEPTED;
 }
 
@@ -120,5 +120,5 @@ int nntp_handle_auth_err()
         g_nntp.ser_line = auth_line;
         return 1;
     }
-    return nntp_command(last_command_save) > 0 ? 1 : -2;
+    return g_nntp.command(last_command_save) > 0 ? 1 : -2;
 }
