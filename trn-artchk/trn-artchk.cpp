@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
                 ArticleNewsgroup &newsgroup = newsgroups[i];
                 if (listactive_works)
                 {
-                    if (g_nntp.command(fmt::format("list active {}", newsgroup.name)) <= 0)
+                    if (g_nntp.command(fmt::format("LIST ACTIVE {}", newsgroup.name)) <= 0)
                     {
                         break;
                     }
