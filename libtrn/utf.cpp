@@ -103,6 +103,8 @@ static const CharsetDesc s_charset_descs[] = {
 
 struct GraphicState
 {
+    CharsetType init(std::string_view from, std::string_view to);
+
     CharsetType      in;
     CharsetType      out;
     const CodePoint *himap_in;
@@ -157,27 +159,32 @@ static const CharsetDesc *find_charset_desc(int id)
 
 CharsetType utf_init(std::string_view from, std::string_view to)
 {
-    CharsetType in = find_charset(from);
-    CharsetType out = find_charset(to);
-    if (in != CHARSET_UNKNOWN)
+    return s_gs.init(from, to);
+}
+
+CharsetType GraphicState::init(std::string_view from, std::string_view to)
+{
+    CharsetType input = find_charset(from);
+    CharsetType output = find_charset(to);
+    if (input != CHARSET_UNKNOWN)
     {
-        s_gs.in = in;
-        const CharsetDesc *node = find_charset_desc(in);
+        in = input;
+        const CharsetDesc *node = find_charset_desc(input);
         if (node)
         {
-            s_gs.himap_in = node->himap;
+            himap_in = node->himap;
         }
     }
-    if (out != CHARSET_UNKNOWN)
+    if (output != CHARSET_UNKNOWN)
     {
-        s_gs.out = out;
-        const CharsetDesc *node = find_charset_desc(out);
+        out = output;
+        const CharsetDesc *node = find_charset_desc(output);
         if (node)
         {
-            s_gs.himap_out = node->himap;
+            himap_out = node->himap;
         }
     }
-    return in;
+    return input;
 }
 
 std::string_view input_charset_name()
