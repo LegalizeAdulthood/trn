@@ -29,18 +29,19 @@ DECLARE_FLAGS_ENUM(NewsgroupFlags, std::uint8_t);
 
 struct NewsgroupData
 {
-    ArticleNum get_newsgroup_size();
-    bool       newsgroup_wanted();
-    void       catch_up(int leave_count, int output_level);
-    void       set_to_read(bool lax_high_check);
-    void       check_expired(ArticleNum first);
-    void       abandon_newsgroup();
+    ArticleNum       get_newsgroup_size();
+    bool             newsgroup_wanted();
+    void             catch_up(int leave_count, int output_level);
+    void             set_to_read(bool lax_high_check);
+    bool             has_full_active_list() const;
+    void             check_expired(ArticleNum first);
+    void             abandon_newsgroup();
     bool             relocate_newsgroup(NewsgroupNum newnum);
     std::string_view rc_line() const;
     std::string_view rc_numbers() const;
     std::string_view rc_name() const;
-    void hide_subscribe_char();
-    void show_subscribe_char();
+    void             hide_subscribe_char();
+    void             show_subscribe_char();
 
     NewsgroupData *m_prev;
     NewsgroupData *m_next;

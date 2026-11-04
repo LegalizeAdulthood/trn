@@ -476,6 +476,11 @@ void newsgroup_skip()
     }
 }
 
+bool NewsgroupData::has_full_active_list() const
+{
+    return m_rc->data_source->has_full_active_list();
+}
+
 // find the maximum article number of a newsgroup
 //
 ArticleNum NewsgroupData::get_newsgroup_size()

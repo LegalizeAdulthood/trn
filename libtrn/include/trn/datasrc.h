@@ -84,6 +84,10 @@ struct DataSource
     bool             open();
     void             close();
     bool             active_file_hash(std::string_view first_line = {});
+    bool             has_full_active_list() const
+    {
+        return m_act_sf.m_fp != nullptr;
+    }
     std::string      find_active_group(std::string_view name, ArticleNum high);
     std::string_view find_group_desc(std::string_view group_name);
     void             prepare_group_descriptions(DescriptionLookup lookup);

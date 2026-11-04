@@ -571,7 +571,7 @@ try_again:
                 // g_ngptr = np; ??
                 // set_ngname(np->rcline);
                 np->set_to_read(ST_LAX);
-                if (!np->m_rc->data_source->m_act_sf.m_fp)
+                if (!np->has_full_active_list())
                 {
                     save_the_rest = (g_sel.rereading ^ (np->m_to_read > TR_NONE));
                 }
