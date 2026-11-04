@@ -37,6 +37,9 @@ struct PageEntry
 
 struct ScanContext
 {
+    // TODO: private
+    void save_order_bounds();
+
     ScanContextType type; // context type
 
     // ordering information

@@ -13,7 +13,6 @@
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
 
-static void               s_save_order_bounds();
 static void               s_sort_basic();
 
 ScanContext &ArticleScanSession::current_context()
@@ -31,13 +30,11 @@ std::vector<long> &ArticleScanSession::ent_index()
     return current_context().ent_index;
 }
 
-static void s_save_order_bounds()
+void ScanContext::save_order_bounds()
 {
-    ScanContext &context = g_art_scan.current_context();
-
-    context.ent_sort_max = g_art_scan.ent_sort_max;
-    context.ent_sorted_max = g_art_scan.ent_sorted_max;
-    context.ent_index_max = g_art_scan.ent_index_max;
+    ent_sort_max = g_art_scan.ent_sort_max;
+    ent_sorted_max = g_art_scan.ent_sorted_max;
+    ent_index_max = g_art_scan.ent_index_max;
 }
 
 #ifdef UNDEF
@@ -152,7 +149,7 @@ void s_sort()
     {
         ent_index[ent_sort[i]] = i;
     }
-    s_save_order_bounds();
+    g_art_scan.current_context().save_order_bounds();
 }
 
 void s_order_clean()
@@ -163,7 +160,7 @@ void s_order_clean()
     g_art_scan.ent_sort_max = -1;
     g_art_scan.ent_sorted_max = -1;
     g_art_scan.ent_index_max = -1;
-    s_save_order_bounds();
+    g_art_scan.current_context().save_order_bounds();
 }
 
 // adds the entry number to the current context
@@ -190,7 +187,7 @@ void s_order_add(long ent)
     }
     ent_index[ent] = g_art_scan.ent_sort_max;
     g_art_scan.order_changed = true;
-    s_save_order_bounds();
+    g_art_scan.current_context().save_order_bounds();
 }
 
 long s_prev(long ent)
