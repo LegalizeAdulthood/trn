@@ -164,7 +164,7 @@ bool s_fill_page_forward(long start)
 
     if (start < 0)      // fill from top
     {
-        start = s_first();
+        start = g_art_scan.current_context().first();
     }
     if (start == 0)     // no entries
     {
@@ -356,7 +356,7 @@ int s_fill_page()
     g_art_scan.refill = false;  // we don't need one now
     if (g_art_scan.top_ent < 1) // set top to first entry
     {
-        g_art_scan.top_ent = s_first();
+        g_art_scan.top_ent = g_art_scan.current_context().first();
     }
     if (g_art_scan.top_ent == 0) // no entries
     {
@@ -434,7 +434,7 @@ void s_go_bot_page()
 
 bool s_go_top_ents()
 {
-    g_art_scan.top_ent = s_first();
+    g_art_scan.top_ent = g_art_scan.current_context().first();
     if (!g_art_scan.top_ent)
     {
         fmt::print("s_go_top_ents(): no first entry\n");

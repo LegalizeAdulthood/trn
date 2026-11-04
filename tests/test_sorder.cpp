@@ -51,7 +51,8 @@ void ScanOrderTest::TearDown()
 std::vector<long> ScanOrderTest::current_entries()
 {
     std::vector<long> result;
-    for (long entry = s_first(); entry != 0; entry = g_art_scan.current_context().next(entry))
+    for (long entry = g_art_scan.current_context().first(); entry != 0;
+         entry = g_art_scan.current_context().next(entry))
     {
         result.push_back(entry);
     }
@@ -125,7 +126,7 @@ TEST_F(ScanOrderTest, sortsEntriesAndDiscardsDuplicates)
 
 TEST_P(ScanOrderEndpointTest, returnsTheRequestedEndOfTheOrder)
 {
-    const long entry = GetParam() ? s_last() : s_first();
+    const long entry = GetParam() ? s_last() : g_art_scan.current_context().first();
 
     EXPECT_EQ(GetParam() ? 3 : 1, entry);
 }

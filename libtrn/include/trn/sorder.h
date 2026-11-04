@@ -8,7 +8,6 @@
 #define TRN_SORDER_H
 
 int s_compare(long a, long b);
-long s_first();
 long s_last();
 
 #endif

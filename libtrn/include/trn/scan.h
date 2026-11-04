@@ -44,6 +44,7 @@ struct ScanContext
     long next(long ent);
     long prev_elig(long a);
     long next_elig(long a);
+    long first();
 
     // TODO: private
     void save_order_bounds();

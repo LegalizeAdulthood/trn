@@ -195,7 +195,7 @@ int sa_do_cmd(std::string_view command)
         {
             break;
         }
-        i = s_first();
+        i = g_art_scan.current_context().first();
         if (!i)
         {
             break;
@@ -341,7 +341,8 @@ int sa_do_cmd(std::string_view command)
         {
             g_art_scan.current_context().order_add(j); // duplicates ignored
         }
-        if (sa_eligible(s_first()) || g_art_scan.current_context().next_elig(s_first()))
+        if (sa_eligible(g_art_scan.current_context().first()) ||
+            g_art_scan.current_context().next_elig(g_art_scan.current_context().first()))
         {
 #ifdef PENDING
             if (g_sa_mode_read_elig)
@@ -397,7 +398,8 @@ int sa_do_cmd(std::string_view command)
             g_sa_mode_fold = true;
         }
         // toggle mode again if no elibible articles left
-        if (sa_eligible(s_first()) || g_art_scan.current_context().next_elig(s_first()))
+        if (sa_eligible(g_art_scan.current_context().first()) ||
+            g_art_scan.current_context().next_elig(g_art_scan.current_context().first()))
         {
             g_art_scan.ref_top = true;
             s_go_top_ents();
@@ -765,7 +767,7 @@ static long sa_wrap_next_author(long a)
         }
     }
 
-    long b = s_first();
+    long b = g_art_scan.current_context().first();
     if (!sa_eligible(b))
     {
         b = g_art_scan.current_context().next_elig(b);

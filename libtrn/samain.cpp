@@ -175,7 +175,7 @@ SaMainResult sa_main_loop()
     g_art_scan.ref_all = true;
     if (g_art_scan.top_ent < 1)
     {
-        g_art_scan.top_ent = s_first();
+        g_art_scan.top_ent = g_art_scan.current_context().first();
     }
     int i = s_fill_page();
     if (i == -1 || i == 0)
@@ -210,7 +210,7 @@ void sa_lookahead()
 // Returns first marked entry number, or 0 if no articles are marked.
 long sa_read_marked_elig()
 {
-    long e = s_first();
+    long e = g_art_scan.current_context().first();
     if (!e)
     {
         return 0L;

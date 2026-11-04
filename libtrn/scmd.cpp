@@ -438,7 +438,7 @@ static long s_forward_search(long ent)
     }
     else
     {
-        ent = s_first();
+        ent = g_art_scan.current_context().first();
     }
     for (; ent; ent = g_art_scan.current_context().next_elig(ent))
     {
