@@ -76,6 +76,7 @@ struct ArticleBrowseSession
     ScanContext       &current_context();
     std::vector<long> &ent_sort();
     std::vector<long> &ent_index();
+    void               init_context(int cnum, ScanContextType type);
 
     std::vector<ScanContext> contexts;      // context structures
     int                      cur_context{}; // current context number

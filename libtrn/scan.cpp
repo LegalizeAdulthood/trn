@@ -23,17 +23,16 @@ ArticleBrowseSession g_browse{};
 int g_s_item_num{true}; // show item numbers by default
 int g_s_mode_vi{};
 
-static void s_init_context(int cnum, ScanContextType type);
 static void s_clean_contexts();
 
-static void s_init_context(int cnum, ScanContextType type)
+void ArticleBrowseSession::init_context(int cnum, ScanContextType type)
 {
-    if (cnum < 0 || cnum >= size_cast<int>(g_browse.contexts))
+    if (cnum < 0 || cnum >= size_cast<int>(contexts))
     {
         fmt::print("s_init_context: illegal context number {}!\n", cnum);
         TRN_ASSERT(false);
     }
-    ScanContext *p = &g_browse.contexts[cnum];
+    ScanContext *p = &contexts[cnum];
     p->type = type;
     p->ent_sort.clear();
     p->ent_sort_max = -1;
@@ -77,13 +76,13 @@ int s_new_context(ScanContextType type)
     }
     if (i < size_cast<int>(g_browse.contexts)) // a deleted one was found
     {
-        s_init_context(i,type);
+        g_browse.init_context(i, type);
         return i;
     }
     // none deleted, so allocate a new one
     g_browse.contexts.emplace_back();
     i = size_cast<int>(g_browse.contexts) - 1;
-    s_init_context(i,type);
+    g_browse.init_context(i, type);
     return i;
 }
 
