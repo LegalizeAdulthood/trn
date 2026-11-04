@@ -108,6 +108,11 @@ void HashLookupCursor::store_last(HashDatum data)
 // Callbacks retain their payload mutations, cleanup, I/O, and global effects.
 void HashLookupCursor::walk(HashTable *tbl, HashWalkFunc *node_func, int extra)
 {
+    walk(tbl, [node_func, extra](int key_len, HashDatum *data) { return node_func(key_len, data, extra); });
+}
+
+void HashLookupCursor::walk(HashTable *tbl, const std::function<HashVisitFunc> &node_func)
+{
     if (BADTBL(tbl))
     {
         return;
@@ -122,7 +127,7 @@ void HashLookupCursor::walk(HashTable *tbl, HashWalkFunc *node_func, int extra)
             this->bucket = bucket_index;
             index = entry_index;
             keylen = entry.he_key_len;
-            if (node_func(entry.he_key_len, &entry.he_data, extra) < 0)
+            if (node_func(entry.he_key_len, &entry.he_data) < 0)
             {
                 bucket.erase(bucket.begin() + static_cast<std::ptrdiff_t>(entry_index));
             }

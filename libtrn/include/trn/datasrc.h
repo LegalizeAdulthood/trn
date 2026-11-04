@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -25,13 +26,24 @@ enum
 
 struct HashTable;
 
+using SourceLineVisitor = void(std::string_view line);
+
 struct SourceFile
 {
+    // Borrows line storage until open(), close(), or an append reallocates it.
+    struct Line
+    {
+        std::string *text{};
+        long         position{};
+    };
+
     int              open(const std::filesystem::path &filename, std::string_view fetch_cmd, std::string_view server,
                           std::string_view first_line = {});
     std::string_view append(std::string_view line, int key_len);
     void             end_append(const std::filesystem::path &filename);
     void             close();
+    Line             lookup(std::string_view key);
+    void             visit_lines(const std::function<SourceLineVisitor> &visitor);
 
     bool refetch_due(std::time_t now, bool force) const
     {
@@ -90,6 +102,10 @@ struct DataSource
     void             close();
     bool             active_file_hash(std::string_view first_line = {});
     void             refetch_active(std::time_t now, bool force);
+    void             visit_active_groups(const std::function<SourceLineVisitor> &visitor)
+    {
+        m_act_sf.visit_lines(visitor);
+    }
     bool             has_full_active_list() const
     {
         return m_act_sf.m_fp != nullptr;

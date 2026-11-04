@@ -27,6 +27,7 @@
 #include <string_view>
 #include <system_error>
 #include <tuple>
+#include <vector>
 
 namespace
 {
@@ -415,6 +416,45 @@ TEST(SourceFileAppendTest, normalizesGreySpaceInDescription)
     ASSERT_EQ(1U, source_file.m_lines.size());
     EXPECT_EQ("comp.lang.apl APL discussion\n", stored_line);
     EXPECT_EQ("comp.lang.apl APL discussion\n", source_file.m_lines.back());
+}
+
+TEST_F(DataSourceFindActiveGroupTest, cachedLookupReturnsBorrowedLineAndFilePosition)
+{
+    const std::string first_line = m_data_source.m_act_sf.m_lines.front();
+    const long        second_position = static_cast<long>(first_line.size());
+    m_data_source.m_act_sf.close();
+    std::ofstream{m_source_path, std::ios::binary} << first_line << "comp.lang.c++ 0000000002 0000000001 y\n";
+    ASSERT_EQ(1, m_data_source.m_act_sf.open(m_source_path, "", ""));
+
+    const SourceFile::Line line = m_data_source.m_act_sf.lookup("comp.lang.c++");
+
+    ASSERT_NE(nullptr, line.text);
+    ASSERT_EQ(2U, m_data_source.m_act_sf.m_lines.size());
+    EXPECT_EQ(&m_data_source.m_act_sf.m_lines[1], line.text);
+    EXPECT_EQ("comp.lang.c++ 0000000002 0000000001 y\n", *line.text);
+    EXPECT_EQ(second_position, line.position);
+}
+
+TEST_F(DataSourceFindActiveGroupTest, cachedLookupReturnsNoLineForAnAbsentGroup)
+{
+    const SourceFile::Line line = m_data_source.m_act_sf.lookup("comp.missing");
+
+    EXPECT_EQ(nullptr, line.text);
+}
+
+TEST_F(DataSourceFindActiveGroupTest, cachedVisitationPreservesHashAndCollisionOrder)
+{
+    (void) m_data_source.m_act_sf.append("bc 1 1 y\n", 2);
+    (void) m_data_source.m_act_sf.append("ad 1 1 y\n", 2);
+    (void) m_data_source.m_act_sf.append("a 1 1 y\n", 1);
+    (void) m_data_source.m_act_sf.append("zzzz 1 1 y\n", 4);
+    std::vector<std::string> lines;
+
+    m_data_source.visit_active_groups([&lines](std::string_view line) { lines.emplace_back(line); });
+
+    EXPECT_EQ((std::vector<std::string>{"a 1 1 y\n", "bc 1 1 y\n", "ad 1 1 y\n", "zzzz 1 1 y\n",
+                                        "comp.lang.apl 0000000001 0000000001 y\n"}),
+              lines);
 }
 
 TEST_F(SourceFileTest, openReadsLinesFromLocalFile)

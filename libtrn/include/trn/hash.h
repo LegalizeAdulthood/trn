@@ -9,6 +9,7 @@
 #define TRN_HASH_H
 
 #include <cstddef>
+#include <functional>
 #include <string_view>
 #include <vector>
 
@@ -26,6 +27,7 @@ struct HashEntry
 
 using HashCompareFunc = int(std::string_view key, HashDatum data);
 using HashWalkFunc = int(int key_len, HashDatum *data, int extra);
+using HashVisitFunc = int(int key_len, HashDatum *data);
 
 struct HashTable
 {
@@ -56,6 +58,7 @@ struct HashLookupCursor
     void store_last(HashDatum data);
     HashDatum fetch(HashTable *tbl, std::string_view key);
     void      walk(HashTable *tbl, HashWalkFunc *node_func, int extra);
+    void      walk(HashTable *tbl, const std::function<HashVisitFunc> &node_func);
 };
 
 extern HashLookupCursor g_hash_cursor;

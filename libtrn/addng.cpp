@@ -10,7 +10,6 @@
 #include <nntp/nntpclient.h>
 #include <trn/autosub.h>
 #include <trn/datasrc.h>
-#include <trn/hash.h>
 #include <trn/ngdata.h>
 #include <trn/ngsrch.h>
 #include <trn/nntp.h>
@@ -55,7 +54,6 @@ bool      g_use_add_selector{true}; //
 
 static void process_list(GetNewsgroupFlags flag);
 static ActiveLineFields parse_active_line_fields(std::string_view fields);
-static int  list_groups(int key_len, HashDatum *data, int add_matching);
 static void             scan_active_line(std::string_view active_line);
 static int  add_group_order_number(const AddGroup *left, const AddGroup *right);
 static int  add_group_order_group_name(const AddGroup *left, const AddGroup *right);
@@ -432,9 +430,9 @@ static void collect_active_groups()
             continue;
         }
         set_data_source(dp);
-        if (dp->m_act_sf.m_fp)
+        if (dp->has_full_active_list())
         {
-            g_hash_cursor.walk(dp->m_act_sf.m_hp, &list_groups, 0);
+            dp->visit_active_groups(scan_active_line);
         }
         else
         {
@@ -491,16 +489,6 @@ bool scan_active(bool add_matching)
     }
 
     return old_count != g_newsgroup_count;
-}
-
-static int list_groups(int key_len, HashDatum *data, int add_matching)
-{
-    (void) key_len;
-    (void) add_matching;
-    SourceFile        *source_file = reinterpret_cast<SourceFile *>(data->dat_ptr);
-    const std::string &line = source_file->m_lines[data->dat_len];
-    scan_active_line(line);
-    return 0;
 }
 
 static void scan_active_line(std::string_view active_line)

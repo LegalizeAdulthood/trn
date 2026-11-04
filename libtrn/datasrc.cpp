@@ -672,11 +672,11 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
 
     // Do a quick, hashed lookup
 
-    HashDatum data = g_hash_cursor.fetch(m_act_sf.m_hp, name);
-    if (data.dat_ptr)
+    const SourceFile::Line data = m_act_sf.lookup(name);
+    if (data.text)
     {
-        cached_line = source_file_line(data);
-        act_pos = ActivePosition{source_file_position(data)};
+        cached_line = data.text;
+        act_pos = ActivePosition{data.position};
     }
     std::string active_line;
     if (m_flags & DF_USE_LIST_ACTIVE //
@@ -922,9 +922,9 @@ std::string_view DataSource::find_group_desc(std::string_view group_name)
         }
     }
 
-    if (HashDatum data = g_hash_cursor.fetch(m_desc_sf.m_hp, group_name); data.dat_ptr)
+    if (const SourceFile::Line data = m_desc_sf.lookup(group_name); data.text)
     {
-        return std::string_view{*source_file_line(data)}.substr(grouplen + 1);
+        return std::string_view{*data.text}.substr(grouplen + 1);
     }
 
 try_group_description:
@@ -1225,6 +1225,26 @@ void SourceFile::end_append(const fs::path &filename)
             (void) utime(filename.string().c_str(), &ut);
         }
     }
+}
+
+SourceFile::Line SourceFile::lookup(std::string_view key)
+{
+    const HashDatum data = g_hash_cursor.fetch(m_hp, key);
+    if (!data.dat_ptr)
+    {
+        return {};
+    }
+    return {source_file_line(data), source_file_position(data)};
+}
+
+void SourceFile::visit_lines(const std::function<SourceLineVisitor> &visitor)
+{
+    g_hash_cursor.walk(m_hp,
+                       [&visitor](int, HashDatum *data)
+                       {
+                           visitor(*source_file_line(*data));
+                           return 0;
+                       });
 }
 
 void SourceFile::close()
