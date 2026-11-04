@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 #ifdef HAS_SIGHOLD
         sighold(SIGINT);
 #endif
-        if (nntp_check() <= 0)
+        if (g_nntp.check() <= 0)
         {
             fmt::print(stderr, "nntplist: Can't get {} file from server.\n",
                        action.empty() ? std::string_view{"active"} : action);

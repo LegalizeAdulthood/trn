@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
                     {
                         break;
                     }
-                    if (nntp_check() > 0)
+                    if (g_nntp.check() > 0)
                     {
                         while (g_nntp.gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
                     {
                         break;
                     }
-                    if (nntp_check() > 0)
+                    if (g_nntp.check() > 0)
                     {
                         newsgroup.found_active = true;
                     }
@@ -353,7 +353,7 @@ int main(int argc, char *argv[])
                         break;
                     }
                     // TODO: use list newsgroups if this fails...?
-                    if (nntp_check() > 0)
+                    if (g_nntp.check() > 0)
                     {
                         while (g_nntp.gets(line, NNTP_STRLEN) != NGSR_ERROR)
                         {

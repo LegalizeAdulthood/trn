@@ -748,7 +748,7 @@ TEST_F(NNTPGetStringTest, retriesEncryptionRequiredCommandAfterStartTls)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("211 1 1 1 comp.lang.apl"));
 
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
-    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ(1, g_nntp.check());
     EXPECT_EQ("211 1 1 1 comp.lang.apl", g_nntp.ser_line);
 }
 
@@ -829,11 +829,11 @@ TEST_F(NNTPGetStringTest, restoresSelectedGroupAndArticleAfterStartTls)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("222 2 <two@example.test>"));
 
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     ASSERT_EQ(1, g_nntp.command("STAT 2"));
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     ASSERT_EQ(1, g_nntp.command("BODY"));
-    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ(1, g_nntp.check());
     EXPECT_EQ(222, nntp_response_code(g_nntp.ser_line));
 }
 
@@ -870,7 +870,7 @@ TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("480 authentication required"));
 
     const int sent = g_nntp.command("GROUP comp.lang.apl");
-    const int result = nntp_check();
+    const int result = g_nntp.check();
     g_data_source = saved_source;
 
     EXPECT_EQ(1, sent);
@@ -1117,7 +1117,7 @@ TEST_F(NntpAuthTest, doesNotRepeatAuthenticationForAnotherChallenge)
     expect_reply("GROUP comp.lang.apl", {"480 still denied"});
 
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
-    EXPECT_LE(nntp_check(), 0);
+    EXPECT_LE(g_nntp.check(), 0);
     EXPECT_EQ(480, nntp_response_code(g_nntp.ser_line));
 }
 
@@ -1277,9 +1277,9 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
     ASSERT_EQ(1, nntp_connect("localhost", false));
     EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     ASSERT_EQ(1, g_nntp.command("BODY 1"));
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     std::string line;
     ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("encrypted article", line);
@@ -1333,9 +1333,9 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
     ASSERT_EQ(1, nntp_connect("localhost", false));
     EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     ASSERT_EQ(1, g_nntp.command("BODY 1"));
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     std::string line;
     ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("encrypted article", line);
@@ -1648,7 +1648,7 @@ TEST_F(NNTPGetStringTest, capabilitiesConsumeCompleteListBeforeNextCommand)
     EXPECT_FALSE(g_nntp.link.capabilities.has("HDR"));
     EXPECT_TRUE(g_nntp.link.flags & NNTP_NEW_CMD_OK);
     EXPECT_EQ(1, g_nntp.command("DATE"));
-    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ(1, g_nntp.check());
     EXPECT_EQ("111 20261019010000", g_nntp.ser_line);
 }
 
@@ -1726,7 +1726,7 @@ TEST_P(NNTPTransportFailureTest, checkReportsAReadFailureAsServerLoss)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(DoAll(SetArgReferee<0>(GetParam()), Return("")));
 
-    const int result = nntp_check();
+    const int result = g_nntp.check();
 
     EXPECT_EQ(-2, result);
     EXPECT_EQ("503 Server closed connection.", g_nntp.ser_line);
@@ -1740,7 +1740,7 @@ TEST_F(NNTPGetStringTest, checkKeepsAServerErrorDistinctFromTransportLoss)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("503 Server cannot perform this command."));
 
-    const int result = nntp_check();
+    const int result = g_nntp.check();
 
     EXPECT_EQ(-1, result);
     EXPECT_EQ("503 Server cannot perform this command.", g_nntp.ser_line);
@@ -1750,7 +1750,7 @@ TEST_F(NNTPGetStringTest, checkStoresStatusLineWithoutCrlf)
 {
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("200 ready\r\n"));
 
-    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ(1, g_nntp.check());
 
     EXPECT_EQ("200 ready", g_nntp.ser_line);
 }
@@ -1761,7 +1761,7 @@ TEST_F(NNTPGetStringTest, checkStoresFullStatusLine)
     const std::string status_line{"200 " + detail};
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return(status_line));
 
-    EXPECT_EQ(1, nntp_check());
+    EXPECT_EQ(1, g_nntp.check());
 
     EXPECT_EQ(status_line, g_nntp.ser_line);
 }

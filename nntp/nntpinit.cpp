@@ -210,7 +210,7 @@ int server_init(std::string_view machine)
     }
 
     // Now get the server's signon message
-    nntp_check();
+    g_nntp.check();
 
     if (!g_nntp.ser_line.empty() && g_nntp.ser_line.front() == NNTP_CLASS_OK)
     {
@@ -240,8 +240,9 @@ int server_init(std::string_view machine)
         {
             g_nntp.ser_line = fmt::format("{} failed to send MODE READER\n", static_cast<int>(NNTP_ACCESS_VAL));
         }
-        else if ((reader_status = nntp_check()) <= 0 && (nntp_response_code(g_nntp.ser_line) == NNTP_BAD_COMMAND_VAL ||
-                                                         nntp_response_code(g_nntp.ser_line) == NNTP_SYNTAX_VAL))
+        else if ((reader_status = g_nntp.check()) <= 0 &&
+                 (nntp_response_code(g_nntp.ser_line) == NNTP_BAD_COMMAND_VAL ||
+                  nntp_response_code(g_nntp.ser_line) == NNTP_SYNTAX_VAL))
         {
             g_nntp.ser_line = save_line;
         }

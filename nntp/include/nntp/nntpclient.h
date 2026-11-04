@@ -120,6 +120,7 @@ struct NntpSession
     NNTPGetsResult gets(std::string &line, int len);
     void           gets_clear_buffer();
     int            command(std::string_view bp);
+    int            check();
 
     // TODO: private
     std::string_view response_text();
@@ -189,7 +190,6 @@ int         nntp_overview_format();
 int         nntp_header_values(std::string_view header, std::string_view range);
 int         nntp_group_description(std::string_view group);
 int         nntp_group_descriptions(std::string_view pattern);
-int         nntp_check();
 int         nntp_start_tls();
 int         nntp_require_tls();
 // Returns 1 for a complete list, 0 for legacy servers, and -1 on failure.

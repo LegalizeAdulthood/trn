@@ -1128,7 +1128,7 @@ void RemoteMultipartArticleTest::expect_next_command()
 {
     EXPECT_NE(NNTP_NONE, g_nntp.link.flags & NNTP_NEW_CMD_OK);
     ASSERT_GT(g_nntp.command("GROUP example.next"), 0);
-    ASSERT_EQ(1, nntp_check());
+    ASSERT_EQ(1, g_nntp.check());
     EXPECT_EQ("211 3 8 10 example.next", g_nntp.ser_line);
 }
 

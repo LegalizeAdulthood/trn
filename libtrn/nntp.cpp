@@ -74,7 +74,7 @@ int nntp_list(std::string_view type, std::string_view arg, std::string &first_li
         {
             return -2;
         }
-        ret = nntp_check();
+        ret = g_nntp.check();
     }
     if (ret <= 0)
     {
@@ -133,7 +133,7 @@ int nntp_group(std::string_view group, NewsgroupData *gp)
     {
         return -2;
     }
-    switch (nntp_check())
+    switch (g_nntp.check())
     {
     case -2:
         return -2;
@@ -217,7 +217,7 @@ int nntp_stat(ArticleNum art_num)
     {
         return -2;
     }
-    return nntp_check();
+    return g_nntp.check();
 }
 
 // check on an article's existence by its message id
@@ -228,7 +228,7 @@ ArticleNum nntp_stat_id(std::string_view msg_id)
     {
         return ArticleNum{-2};
     }
-    long art_num{nntp_check()};
+    long art_num{g_nntp.check()};
     if (art_num > 0)
     {
         std::istringstream response{g_nntp.ser_line};
@@ -247,7 +247,7 @@ static ArticleNum nntp_next_art()
     {
         return ArticleNum{-2};
     }
-    artnum = nntp_check();
+    artnum = g_nntp.check();
     if (artnum > 0)
     {
         std::istringstream response{g_nntp.ser_line};
@@ -266,7 +266,7 @@ int nntp_header(ArticleNum art_num)
     {
         return -2;
     }
-    return nntp_check();
+    return g_nntp.check();
 }
 
 // copy the body of an article to a temporary file
@@ -303,7 +303,7 @@ void nntp_body(ArticleNum art_num)
     {
         finalize(1);
     }
-    switch (nntp_check())
+    switch (g_nntp.check())
     {
     case -2:
     case -1:
@@ -527,7 +527,7 @@ std::time_t nntp_time()
     {
         return -2;
     }
-    if (nntp_check() <= 0)
+    if (g_nntp.check() <= 0)
     {
         return std::time(nullptr);
     }
@@ -590,7 +590,7 @@ int nntp_new_groups(std::time_t t)
     {
         return -2;
     }
-    return nntp_check();
+    return g_nntp.check();
 }
 
 int nntp_art_nums()
@@ -603,7 +603,7 @@ int nntp_art_nums()
     {
         return -2;
     }
-    if (nntp_check() <= 0)
+    if (g_nntp.check() <= 0)
     {
         g_data_source->m_flags |= DF_NO_LIST_GROUP;
         return 0;

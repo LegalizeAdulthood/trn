@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
             }
             new_connection = true;
         }
-        if (g_nntp.command("POST") <= 0 || nntp_check() <= 0)
+        if (g_nntp.command("POST") <= 0 || g_nntp.check() <= 0)
         {
             if (new_connection)
             {
