@@ -73,6 +73,12 @@ enum FieldFlags : std::uint8_t
 };
 DECLARE_FLAGS_ENUM(FieldFlags, std::uint8_t)
 
+enum class DescriptionLookup
+{
+    CACHED_ONLY,
+    ALLOW_REMOTE
+};
+
 struct DataSource
 {
     bool             open();
@@ -80,6 +86,7 @@ struct DataSource
     bool             active_file_hash(std::string_view first_line = {});
     std::string      find_active_group(std::string_view name, ArticleNum high);
     std::string_view find_group_desc(std::string_view group_name);
+    void             prepare_group_descriptions(DescriptionLookup lookup);
     std::string      find_moderator(std::string_view group_name);
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();

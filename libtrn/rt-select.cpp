@@ -596,17 +596,9 @@ sel_restart:
     {
         for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
-            if ((rp->flags & RF_ACTIVE) && !rp->data_source->m_desc_sf.m_hp)
+            if (rp->flags & RF_ACTIVE)
             {
-                rp->data_source->find_group_desc("control");
-                if (rp->data_source->m_desc_sf.m_fp)
-                {
-                    rp->data_source->m_flags |= DF_NO_XGTITLE; // TODO: ok?
-                }
-                else
-                {
-                    rp->data_source->m_desc_sf.m_refetch_secs = 0;
-                }
+                rp->data_source->prepare_group_descriptions(DescriptionLookup::CACHED_ONLY);
             }
         }
     }
@@ -699,13 +691,9 @@ sel_restart:
     {
         for (Newsrc *rp = g_multirc->m_first; rp; rp = rp->next)
         {
-            if ((rp->flags & RF_ACTIVE) && !rp->data_source->m_desc_sf.m_hp)
+            if (rp->flags & RF_ACTIVE)
             {
-                rp->data_source->find_group_desc("control");
-                if (!rp->data_source->m_desc_sf.m_fp)
-                {
-                    rp->data_source->m_desc_sf.m_refetch_secs = 0;
-                }
+                rp->data_source->prepare_group_descriptions(DescriptionLookup::ALLOW_REMOTE);
             }
         }
     }

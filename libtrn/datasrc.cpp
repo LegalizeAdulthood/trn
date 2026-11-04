@@ -840,6 +840,26 @@ std::string DataSource::find_moderator(std::string_view group_name)
     return moderator_address(group_name, rules);
 }
 
+void DataSource::prepare_group_descriptions(DescriptionLookup lookup)
+{
+    if (m_desc_sf.m_hp)
+    {
+        return;
+    }
+    find_group_desc("control");
+    if (m_desc_sf.m_fp)
+    {
+        if (lookup == DescriptionLookup::CACHED_ONLY)
+        {
+            m_flags |= DF_NO_XGTITLE; // TODO: ok?
+        }
+    }
+    else
+    {
+        m_desc_sf.m_refetch_secs = 0;
+    }
+}
+
 std::string_view DataSource::find_group_desc(std::string_view group_name)
 {
     const int grouplen = static_cast<int>(group_name.size());
