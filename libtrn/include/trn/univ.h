@@ -221,6 +221,16 @@ struct UniversalMenuLoader
 
 extern UniversalMenuLoader g_univ_loader;
 
+struct VirtualGroupBuilder
+{
+    bool               virt_pass_needed{};
+    UniversalItemIndex current_vg_ui_index{};
+    int                min_score{}; // this score is part of the line format, so it is not ifdefed
+    bool               use_min_score{};
+};
+
+extern VirtualGroupBuilder g_vg_builder;
+
 void           univ_init();
 void           univ_startup();
 void           univ_close();

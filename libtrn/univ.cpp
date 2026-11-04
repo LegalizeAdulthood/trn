@@ -65,12 +65,9 @@ bool g_univ_follow_temp{};
 
 UniversalMenuContext g_univ;
 UniversalMenuLoader  g_univ_loader;
+VirtualGroupBuilder  g_vg_builder;
 
-static bool           s_univ_virt_pass_needed{}; //
 static bool           s_univ_done_startup{};     //
-static int            s_univ_min_score{};        // this score is part of the line format, so it is not ifdefed
-static bool           s_univ_use_min_score{};    //
-static UniversalItemIndex s_current_vg_ui_index{};   //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
 static void           univ_open();
@@ -269,8 +266,8 @@ static void univ_open()
     g_univ.title.clear();
     g_univ.label.clear();
     g_univ.tmp_file.clear();
-    s_univ_virt_pass_needed = false;
-    s_current_vg_ui_index = {};
+    g_vg_builder.virt_pass_needed = false;
+    g_vg_builder.current_vg_ui_index = {};
     g_univ.level++;
 }
 
@@ -290,7 +287,7 @@ void univ_close()
     g_univ.vg_names.clear();
     g_sel_page.page_univ_index = {};
     g_sel_page.next_univ_index = {};
-    s_current_vg_ui_index = {};
+    g_vg_builder.current_vg_ui_index = {};
     g_univ.level--;
 }
 
@@ -417,7 +414,7 @@ static void univ_add_virtual_group(std::string_view grpname)
     // later check grpname for bad things?
 
     // perhaps leave if group has no unread, or other factor
-    s_univ_virt_pass_needed = true;
+    g_vg_builder.virt_pass_needed = true;
     const std::string group_name{grpname};
     if (g_univ.vg_names.find(group_name) != g_univ.vg_names.end())
     {
@@ -444,10 +441,10 @@ static void univ_add_virtual_group(std::string_view grpname)
     vgroup.flags = UF_VG_NONE;
     vgroup.min_score = 0;
     vgroup.max_score = 0;
-    if (s_univ_use_min_score)
+    if (g_vg_builder.use_min_score)
     {
         vgroup.flags |= UF_VG_MIN_SCORE;
-        vgroup.min_score = s_univ_min_score;
+        vgroup.min_score = g_vg_builder.min_score;
     }
     vgroup.ng = group_name;
 }
@@ -658,7 +655,7 @@ bool UniversalMenuLoader::use_file(std::string_view fname, std::string_view labe
     {
         fmt::print("label not found: {}\n", begin_label);
     }
-    if (s_univ_virt_pass_needed)
+    if (g_vg_builder.virt_pass_needed)
     {
         univ_virt_pass();
     }
@@ -762,12 +759,12 @@ void UniversalMenuLoader::do_line_ext1(std::string_view desc, std::string_view l
                 {
                     (void) std::from_chars(score_text.data(), score_text.data() + score_text.size(), score);
                 }
-                s_univ_min_score = negative ? -score : score;
-                s_univ_use_min_score = true;
+                g_vg_builder.min_score = negative ? -score : score;
+                g_vg_builder.use_min_score = true;
                 line.remove_prefix(score_end + 1);
             }
             use_group_line(line, 1);
-            s_univ_use_min_score = false;
+            g_vg_builder.use_min_score = false;
             break;
         }
         }
@@ -1113,7 +1110,7 @@ void univ_page_file(const fs::path &fname)
 // called from within newsgroup
 void univ_newsgroup_virtual()
 {
-    UniversalItem *current_vg_ui = g_univ.item(s_current_vg_ui_index);
+    UniversalItem *current_vg_ui = g_univ.item(g_vg_builder.current_vg_ui_index);
     if (current_vg_ui == nullptr)
     {
         return;
@@ -1135,7 +1132,7 @@ void univ_newsgroup_virtual()
 static void univ_vg_add_article(ArticleNum a)
 {
     int score = sc_score_art(a, false);
-    if (s_univ_use_min_score && (score<s_univ_min_score))
+    if (g_vg_builder.use_min_score && (score < g_vg_builder.min_score))
     {
         return;
     }
@@ -1227,7 +1224,7 @@ void univ_virt_pass(UniversalGroupVisitor visit_group)
 void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending)
 {
     g_univ_ng_virt_flag = true;
-    s_univ_virt_pass_needed = false;
+    g_vg_builder.virt_pass_needed = false;
 
     for (std::size_t position = 0; position < g_univ.items.size();)
     {
@@ -1252,15 +1249,15 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
             }
             const UniversalItemIndex current_index = univ_index(ui);
             const std::string        group_name = vgroup->ng;
-            s_current_vg_ui_index = current_index;
+            g_vg_builder.current_vg_ui_index = current_index;
             if (vgroup->flags & UF_VG_MIN_SCORE)
             {
-                s_univ_use_min_score = true;
-                s_univ_min_score = vgroup->min_score;
+                g_vg_builder.use_min_score = true;
+                g_vg_builder.min_score = vgroup->min_score;
             }
             (void)visit_group(group_name);
-            s_univ_use_min_score = false;
-            s_current_vg_ui_index = {};
+            g_vg_builder.use_min_score = false;
+            g_vg_builder.current_vg_ui_index = {};
             // later do something with return value
             const std::size_t expanded_position = g_univ.position(current_index);
             if (expanded_position < g_univ.items.size())
@@ -1290,14 +1287,14 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
                 continue;
             }
             const std::string group_name = article->ng;
-            s_current_vg_ui_index = univ_index(ui);
+            g_vg_builder.current_vg_ui_index = univ_index(ui);
             (void)visit_group(group_name);
-            s_current_vg_ui_index = {};
+            g_vg_builder.current_vg_ui_index = {};
             // later do something with return value
         }
         ++position;
     }
-    s_current_vg_ui_index = {};
+    g_vg_builder.current_vg_ui_index = {};
     g_univ_ng_virt_flag = false;
 }
 
