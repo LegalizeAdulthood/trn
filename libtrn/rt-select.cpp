@@ -4340,7 +4340,7 @@ reask_sort:
     }
 
     case '~':
-        univ_virt_pass();
+        g_vg_builder.virt_pass();
         sel_cleanup();
         g_sel_page.page_univ_index = {};
         return DS_RESTART;

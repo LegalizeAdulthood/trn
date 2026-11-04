@@ -225,6 +225,7 @@ struct VirtualGroupBuilder
 {
     void virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending);
     void virt_pass(UniversalGroupVisitor visit_group);
+    void virt_pass();
 
     // TODO: private
     void add_virtual_group(std::string_view grpname);
@@ -249,7 +250,6 @@ void           univ_edit();
 void           univ_page_file(const std::filesystem::path &fname);
 void           univ_newsgroup_virtual();
 int            univ_visit_group_main(std::string_view gname);
-void           univ_virt_pass();
 UniversalItems univ_items();
 UniversalItems     univ_items(UniversalItemIndex first);
 UniversalItems     univ_items(UniversalItem *first);

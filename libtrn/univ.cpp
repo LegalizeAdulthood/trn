@@ -654,7 +654,7 @@ bool UniversalMenuLoader::use_file(std::string_view fname, std::string_view labe
     }
     if (g_vg_builder.virt_pass_needed)
     {
-        univ_virt_pass();
+        g_vg_builder.virt_pass();
     }
     g_univ.sort();
     return true;
@@ -1206,9 +1206,9 @@ int univ_visit_group_main(std::string_view gname)
 }
 
 // LATER: allow the loop to be interrupted
-void univ_virt_pass()
+void VirtualGroupBuilder::virt_pass()
 {
-    g_vg_builder.virt_pass(univ_visit_group);
+    virt_pass(univ_visit_group);
 }
 
 // LATER: allow the loop to be interrupted
