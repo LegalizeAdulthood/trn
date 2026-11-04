@@ -495,7 +495,7 @@ int sa_do_cmd(std::string_view command)
 
     case Ctl('p'):    // follow subject backwards
           i = sa_subj_thread(a);
-        for (b = s_prev_elig(a); b; b = s_prev_elig(b))
+        for (b = g_art_scan.current_context().prev_elig(a); b; b = g_art_scan.current_context().prev_elig(b))
         {
             if (i == sa_subj_thread(b))
             {

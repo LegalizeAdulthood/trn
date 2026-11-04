@@ -42,6 +42,7 @@ struct ScanContext
     void order_add(long ent);
     long prev(long ent);
     long next(long ent);
+    long prev_elig(long a);
 
     // TODO: private
     void save_order_bounds();

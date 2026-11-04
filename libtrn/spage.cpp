@@ -66,7 +66,7 @@ bool s_fill_page_backward(long end)
     }
     else
     {
-        a = s_prev_elig(end);
+        a = g_art_scan.current_context().prev_elig(end);
     }
     if (!a)     // no eligible entries
     {
@@ -84,7 +84,7 @@ bool s_fill_page_backward(long end)
         i = s_ent_lines(a);
         g_art_scan.page_ents.push_back({a, static_cast<short>(i), 0, (char) 0});
         line_on = line_on+i;
-        a = s_prev_elig(a);
+        a = g_art_scan.current_context().prev_elig(a);
         if (!a)         // no more eligible
         {
             break;      // get out of loop and finish up...
@@ -487,7 +487,7 @@ void s_go_next_page()
 
 void s_go_prev_page()
 {
-    long a = s_prev_elig(g_art_scan.page_ents[0].ent_num);
+    long a = g_art_scan.current_context().prev_elig(g_art_scan.page_ents[0].ent_num);
     if (!a)
     {
         return;         // no prev. page (we shouldn't have been called)
