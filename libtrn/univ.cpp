@@ -81,7 +81,6 @@ static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view 
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static void           univ_add_virtual_group(std::string_view grpname);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
-static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
@@ -240,7 +239,7 @@ void univ_startup()
         // read in trn default top file
         (void)univ_include_file("%X/sitetop");          // pure local
         bool sys_top_load = univ_include_file("%X/trn4top");
-        bool user_top_load = univ_use_file("%+/univ/usertop", {});
+        bool user_top_load = g_univ_loader.use_file("%+/univ/usertop", {});
 
         if (!(sys_top_load || user_top_load))
         {
@@ -601,7 +600,7 @@ void UniversalMenuLoader::use_group_line(std::string_view line, int type)
 }
 
 // returns true on success, false otherwise
-static bool univ_use_file(std::string_view fname, std::string_view label)
+bool UniversalMenuLoader::use_file(std::string_view fname, std::string_view label)
 {
     bool begin_top = true; // default assumption (might be changed later)
 
@@ -629,11 +628,11 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     {
         return false;
     }
-    g_univ_loader.begin_found = begin_top;
-    g_univ_loader.begin_label.clear();
+    begin_found = begin_top;
+    begin_label.clear();
     if (!label.empty())
     {
-        g_univ_loader.begin_label = label;
+        begin_label = label;
     }
     std::ifstream input{file_exp(open_name)};
     if (!input)
@@ -647,18 +646,18 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     std::string line;
     while (std::getline(input, line))
     {
-        if (!g_univ_loader.do_line(line))
+        if (!do_line(line))
         {
             break; // end of useful file
         }
     }
-    if (!g_univ_loader.begin_found)
+    if (!begin_found)
     {
         fmt::print("\"begin group\" not found.\n");
     }
-    if (!g_univ_loader.begin_label.empty())
+    if (!begin_label.empty())
     {
-        fmt::print("label not found: {}\n", g_univ_loader.begin_label);
+        fmt::print("label not found: {}\n", begin_label);
     }
     if (s_univ_virt_pass_needed)
     {
@@ -672,7 +671,7 @@ static bool univ_include_file(std::string_view fname)
 {
     const std::string old_univ_fname = g_univ.fname;
     g_univ.fname = fname;
-    bool retval = univ_use_file(g_univ.fname, {});
+    bool retval = g_univ_loader.use_file(g_univ.fname, {});
     g_univ.fname = old_univ_fname;
     return retval;
 }
@@ -978,7 +977,7 @@ bool univ_file_load(std::string_view fname, std::string_view title, std::string_
     {
         g_univ.label = label;
     }
-    bool flag = !fname.empty() && univ_use_file(fname, label);
+    bool flag = !fname.empty() && g_univ_loader.use_file(fname, label);
     if (!flag)
     {
         univ_close();
@@ -1495,7 +1494,7 @@ void univ_help_main(HelpLocation where)
 
     // read in main help file
     g_univ.fname = "%X/HelpFiles/top";
-    bool flag = univ_use_file(g_univ.fname, g_univ.label);
+    bool flag = g_univ_loader.use_file(g_univ.fname, g_univ.label);
 
     // later: if flag is not true, then add message?
 }
