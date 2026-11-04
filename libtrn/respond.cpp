@@ -765,7 +765,7 @@ SaveResult view_article()
             }
             if (uue_prescan(g_art_line, filename, &part, &total))
             {
-                MimeCapEntry *mc = mime_find_mimecap_entry("image/jpeg", MCF_NONE); // TODO: refine this
+                MimeCapEntry *mc = g_mimecap.find("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_input.pos;
                 seek_art(g_save_from);
                 g_mime.section->m_type = UNHANDLED_MIME;

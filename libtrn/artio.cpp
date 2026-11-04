@@ -615,7 +615,7 @@ mime_switch:
     case DECODE_MIME:
     {
         MimeCapEntry* mcp;
-        mcp = mime_find_mimecap_entry(*g_mime.section->m_type_name, MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT);
+        mcp = g_mimecap.find(*g_mime.section->m_type_name, MCF_NEEDS_TERMINAL | MCF_COPIOUS_OUTPUT);
         if (mcp)
         {
             int save_term_line = g_term_line;

@@ -60,7 +60,7 @@ void MimeTest::SetUp()
 
 TEST_F(MimeTest, imageGif)
 {
-    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_EQ(TRN_TEST_MIME_IMAGE_GIF_CONTENT_TYPE, cap->content_type);
@@ -72,7 +72,7 @@ TEST_F(MimeTest, imageGif)
 
 TEST_F(MimeTest, escapedPercentBecomesInterpolatorLiteralPercent)
 {
-    MimeCapEntry *cap = mime_find_mimecap_entry("application/x-percent", MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find("application/x-percent", MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_EQ("percent %%s", cap->command);
@@ -86,7 +86,7 @@ TEST_F(MimeTest, preservesAQuotedTestExecutableAndItsArguments)
     constexpr std::string_view command = "\"/mailcap probe/viewer\" --probe";
     EXPECT_CALL(m_exec, Call(_, StrEq(command))).WillOnce(Return(0));
 
-    MimeCapEntry *cap = mime_find_mimecap_entry("application/x-quoted-probe", MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find("application/x-quoted-probe", MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     EXPECT_EQ(command, cap->test_command);
@@ -94,7 +94,7 @@ TEST_F(MimeTest, preservesAQuotedTestExecutableAndItsArguments)
 
 TEST_F(MimeTest, imageWildcardWithLabel)
 {
-    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_EQ(TRN_TEST_MIME_IMAGE_ANY_CONTENT_TYPE, cap->content_type);
@@ -106,7 +106,7 @@ TEST_F(MimeTest, imageWildcardWithLabel)
 
 TEST_F(MimeTest, appleFileIgnoredParams)
 {
-    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_EQ(TRN_TEST_MIME_APPLEFILE_CONTENT_TYPE, cap->content_type);
@@ -118,7 +118,7 @@ TEST_F(MimeTest, appleFileIgnoredParams)
 
 TEST_F(MimeTest, textPlainHasFlags)
 {
-    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_EQ(TRN_TEST_MIME_TEXT_PLAIN_CONTENT_TYPE, cap->content_type);
@@ -572,7 +572,7 @@ TEST_F(MimeExecTest, applicationPdfSuccessfulTestCommand)
 {
     EXPECT_CALL(m_exec, Call(_, StrEq(TRN_TEST_MIME_PDF_TEST_EXEC_COMMAND))).WillOnce(Return(0));
 
-    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_NE(nullptr, cap);
     ASSERT_EQ(TRN_TEST_MIME_PDF_CONTENT_TYPE, cap->content_type);
@@ -586,7 +586,7 @@ TEST_F(MimeExecTest, applicationPdfFailedTestCommand)
 {
     EXPECT_CALL(m_exec, Call(_, _)).WillOnce(Return(1));
 
-    MimeCapEntry *cap = mime_find_mimecap_entry(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
+    MimeCapEntry *cap = g_mimecap.find(TRN_TEST_MIME_PDF_CONTENT_TYPE, MCF_NONE);
 
     ASSERT_EQ(nullptr, cap);
 }

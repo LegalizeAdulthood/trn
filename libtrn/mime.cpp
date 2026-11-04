@@ -274,9 +274,9 @@ static std::string mime_parse_entry_value(std::string_view text)
     return result;
 }
 
-MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags)
+MimeCapEntry *MimeCapRegistry::find(std::string_view contenttype, MimeCapFlags skip_flags)
 {
-    for (MimeCapEntry &mcp : g_mimecap.entries)
+    for (MimeCapEntry &mcp : entries)
     {
         if (!(mcp.flags & skip_flags) //
             && mime_types_match(contenttype, mcp.content_type))
@@ -285,7 +285,7 @@ MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags
             {
                 return &mcp;
             }
-            if (g_mimecap.exec(mcp.test_command) == 0)
+            if (exec(mcp.test_command) == 0)
             {
                 return &mcp;
             }
@@ -1080,7 +1080,7 @@ void mime_decode_article(bool view)
         default:
             if (view)
             {
-                mcp = mime_find_mimecap_entry(*g_mime.section->m_type_name, MCF_NONE);
+                mcp = g_mimecap.find(*g_mime.section->m_type_name, MCF_NONE);
                 if (!mcp)
                 {
                     fmt::print("No view method for {} -- skipping.\n", *g_mime.section->m_type_name);
