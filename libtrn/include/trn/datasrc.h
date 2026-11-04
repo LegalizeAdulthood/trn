@@ -33,6 +33,11 @@ struct SourceFile
     void             end_append(const std::filesystem::path &filename);
     void             close();
 
+    bool refetch_due(std::time_t now, bool force) const
+    {
+        return m_fp && m_refetch_secs && (force || now - m_last_fetch > m_refetch_secs);
+    }
+
     std::FILE               *m_fp; // the file pointer to read the data
     HashTable               *m_hp; // the hash table for the data
     std::vector<std::string> m_lines;
@@ -84,6 +89,7 @@ struct DataSource
     bool             open();
     void             close();
     bool             active_file_hash(std::string_view first_line = {});
+    void             refetch_active(std::time_t now, bool force);
     bool             has_full_active_list() const
     {
         return m_act_sf.m_fp != nullptr;

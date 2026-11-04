@@ -1084,19 +1084,7 @@ void check_active_refetch(bool force)
 
     for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {
-        if (!all_bits(dp->m_flags, DF_OPEN | DF_ACTIVE))
-        {
-            continue;
-        }
-        if (dp->m_act_sf.m_fp && dp->m_act_sf.m_refetch_secs &&
-            (force || now - dp->m_act_sf.m_last_fetch > dp->m_act_sf.m_refetch_secs))
-        {
-            if (force && (dp->m_flags & DF_REMOTE))
-            {
-                dp->m_act_sf.m_last_fetch = 0;
-            }
-            dp->active_file_hash();
-        }
+        dp->refetch_active(now, force);
     }
 }
 

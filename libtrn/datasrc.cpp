@@ -628,6 +628,19 @@ void DataSource ::close()
     }
 }
 
+void DataSource::refetch_active(std::time_t now, bool force)
+{
+    if (!all_bits(m_flags, DF_OPEN | DF_ACTIVE) || !m_act_sf.refetch_due(now, force))
+    {
+        return;
+    }
+    if (force && (m_flags & DF_REMOTE))
+    {
+        m_act_sf.m_last_fetch = 0;
+    }
+    active_file_hash();
+}
+
 bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;
