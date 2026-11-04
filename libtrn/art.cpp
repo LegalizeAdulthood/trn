@@ -53,23 +53,16 @@
 #include <string>
 #include <string_view>
 
-ArticleLine     g_highlight{-1};          // next line to be highlighted
+ArticlePager    g_pager;                  //
 ArticleLine     g_first_view{};           //
 ArticlePosition g_raw_art_size{};         // size in bytes of raw article
 ArticlePosition g_art_size{};             // size in bytes of article
 std::string     g_art_line;               // place for article lines
-int             g_g_line{};               // TODO: ArticleLine?
-ArticlePosition g_inner_search{};         // g_art_input.pos of end of line we want to visit
-ArticleLine     g_inner_light{};          // highlight position for g_inner_search or 0
-char            g_hide_everything{};      // if set, do not write page now, ...but execute char when done with page
 bool            g_reread{};               // consider current art temporarily unread?
-bool            g_do_fseek{};             // should we back up in article file?
 bool            g_old_subject{};          // not 1st art in subject thread
-ArticleLine     g_top_line{-1};           // top line of current screen
 bool            g_do_hiding{true};        // hide header lines with -h?
 bool            g_rotate{};               // has rotation been requested?
-std::string     g_prompt;                 // current prompt
-std::string     g_first_line;             // s_special first line?
+std::string     g_first_line;             // g_pager.special first line?
 SearchPattern   g_hide_line;              // custom line hiding?
 SearchPattern   g_page_stop;              // custom page terminator?
 bool            g_dont_filter_control{};  // -j
@@ -93,16 +86,6 @@ inline std::string_view line_view(ArticlePosition pos)
     return art_buf_view(pos);
 }
 
-static bool            s_special{};         // is next page special length?
-static int             s_special_lines{};   // how long to make page when special
-static ArticlePosition s_restart{};         // if nonzero, the place where last line left off on line split
-static ArticlePosition s_a_line_begin{};    // where in file current line began
-static int             s_more_prompt_col{}; // non-zero when the more prompt is indented
-static ArticleLine     s_i_search_line{};   // last line to display
-static CompiledRegex   s_gcompex{};         // in article search pattern
-static bool            s_first_page{};      // is this the 1st page of article?
-static bool            s_continuation{};    // this line/header is being continued
-
 static std::string finish_pager_command(std::string_view command, bool donewline);
 static std::string finish_pager_dbl_command(std::string_view command);
 static bool        maybe_set_color(std::string_view line, std::size_t pos, bool back_search);
@@ -111,7 +94,7 @@ static bool        pager_command_needs_completion(std::string_view command);
 
 void art_init()
 {
-    s_gcompex.init_compex();
+    g_pager.gcompex.init_compex();
 }
 
 DoArticleResult do_article()
@@ -175,16 +158,17 @@ DoArticleResult do_article(std::string &article_command)
     }
     if (g_mouse_bar_cnt > 3)
     {
-        g_prompt = fmt::format("%sEnd of art {} (of {}) %s[%s]", g_nav.target.num.value_of(), g_last_art.value_of());
+        g_pager.prompt =
+            fmt::format("%sEnd of art {} (of {}) %s[%s]", g_nav.target.num.value_of(), g_last_art.value_of());
     }
     else
     {
-        g_prompt = fmt::format("%sEnd of article {} (of {}) %s-- what next? [%s]", g_nav.target.num.value_of(),
+        g_pager.prompt = fmt::format("%sEnd of article {} (of {}) %s-- what next? [%s]", g_nav.target.num.value_of(),
                                g_last_art.value_of());
     }
     g_int_count = 0;            // interrupt count is 0
-    s_first_page = g_top_line < 0;
-    if (s_first_page != 0)
+    g_pager.first_page = g_pager.top_line < 0;
+    if (g_pager.first_page != 0)
     {
         parse_header(g_nav.target.num);
         mime_set_article();
@@ -201,7 +185,7 @@ DoArticleResult do_article(std::string &article_command)
             g_tree_view.init(); // init tree display
         }
         TRN_ASSERT(g_nav.target.num == g_art_input.open_art);
-        if (g_do_fseek)
+        if (g_pager.do_fseek)
         {
             parse_header(g_nav.target.num); // make sure header is ours
             if (g_art_buf.empty())
@@ -214,7 +198,7 @@ DoArticleResult do_article(std::string &article_command)
             {
                 g_art_input.pos = -g_art_input.pos; // labs(), anyone?
             }
-            if (s_first_page)
+            if (g_pager.first_page)
             {
                 g_art_input.pos = ArticlePosition{};
             }
@@ -229,16 +213,16 @@ DoArticleResult do_article(std::string &article_command)
                 seek_art(g_art_buf.seek());
                 seek_art_buf(g_art_input.pos);
             }
-            g_do_fseek = false;
-            s_restart = ArticlePosition{};
+            g_pager.do_fseek = false;
+            g_pager.restart = ArticlePosition{};
         }
         ArticleLine line_num{1};
-        if (s_first_page)
+        if (g_pager.first_page)
         {
             if (!g_first_line.empty())
             {
                 const std::string first_line = do_interp(g_first_line);
-                line_num += tree_puts(first_line, line_num + g_top_line, 0);
+                line_num += tree_puts(first_line, line_num + g_pager.top_line, 0);
             }
             else
             {
@@ -274,19 +258,19 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     title_line += ')';
                 }
-                line_num += tree_puts(title_line, line_num + g_top_line, 0);
+                line_num += tree_puts(title_line, line_num + g_pager.top_line, 0);
             }
             g_parsed_header.restart_header(g_nav.target.num);
             g_force_last = false;        // we will have our day in court
-            s_restart = ArticlePosition{};
+            g_pager.restart = ArticlePosition{};
             g_art_input.line_num = ArticleLine{}; // start counting lines
             g_art_input.pos = ArticlePosition{};
             g_back_page.vary_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         }
         for (bool restart_color = true; // line_num already set
-             g_inner_search                                 ? (g_parsed_header.in_header || inner_more())
-             : s_special                      ? (line_num.value_of() < s_special_lines)
-             : (s_first_page && !g_parsed_header.in_header) ? (line_num < g_init_lines)
+             g_pager.inner_search                                 ? (g_parsed_header.in_header || inner_more())
+             : g_pager.special                                    ? (line_num.value_of() < g_pager.special_lines)
+             : (g_pager.first_page && !g_parsed_header.in_header) ? (line_num < g_init_lines)
                                               : (line_num.value_of() < g_tc_LINES);
              ++line_num)
         {                               // for each line on page
@@ -295,14 +279,14 @@ DoArticleResult do_article(std::string &article_command)
                 newline();              // get to left margin
                 g_int_count = 0;        // reset interrupt count
                 set_mode(g_general_mode,old_mode);
-                s_special = false;
+                g_pager.special = false;
                 return DA_NORM;         // skip out of loops
             }
-            if (s_restart)              // did not finish last line?
+            if (g_pager.restart) // did not finish last line?
             {
-                set_line(body_line, static_cast<std::size_t>((s_restart - body_line_begin).value_of()));
-                s_restart = ArticlePosition{}; // and reset the flag
-                s_continuation = true;
+                set_line(body_line, static_cast<std::size_t>((g_pager.restart - body_line_begin).value_of()));
+                g_pager.restart = ArticlePosition{}; // and reset the flag
+                g_pager.continuation = true;
                 if (restart_color && g_do_hiding && !g_parsed_header.in_header)
                 {
                     maybe_set_color(line_text, line_pos, true);
@@ -313,15 +297,15 @@ DoArticleResult do_article(std::string &article_command)
                      g_parsed_header.head_buf[head_pos] != '\0')
             {
                 set_line(std::string_view{g_parsed_header.head_buf}.substr(head_pos));
-                s_continuation = is_hor_space(current_char());
+                g_pager.continuation = is_hor_space(current_char());
             }
             else
             {
                 body_line_begin = g_art_input.pos;
                 if (!read_art_buf(body_line, g_auto_view_inline))
                 {
-                    s_special = false;
-                    if (g_inner_search)
+                    g_pager.special = false;
+                    if (g_pager.inner_search)
                     {
                         (void) inner_more();
                     }
@@ -331,32 +315,32 @@ DoArticleResult do_article(std::string &article_command)
                 if (g_do_hiding && !g_parsed_header.in_header)
                 {
                     const ArticlePosition body_start = g_parsed_header.positions[PAST_HEADER].min_pos;
-                    s_continuation = maybe_set_color(
+                    g_pager.continuation = maybe_set_color(
                         art_buf_view(body_start), static_cast<std::size_t>((g_art_input.pos - body_start).value_of()),
                         restart_color);
                 }
                 else
                 {
-                    s_continuation = false;
+                    g_pager.continuation = false;
                 }
             }
-            if (!g_parsed_header.in_header && !s_continuation)
+            if (!g_parsed_header.in_header && !g_pager.continuation)
             {
                 hide_this_line = false;
             }
-            s_a_line_begin = g_art_input.pos; // remember where we began
+            g_pager.a_line_begin = g_art_input.pos; // remember where we began
             restart_color = false;
             if (g_parsed_header.in_header)
             {
                 hide_this_line = g_parsed_header.parse_line(line_tail(), g_do_hiding, hide_this_line);
                 if (!g_parsed_header.in_header)
                 {
-                    line_num += finish_tree(line_num+g_top_line);
+                    line_num += finish_tree(line_num + g_pager.top_line);
                     end_header();
                     seek_art(g_art_buf.seek());
                 }
             }
-            else if (notes_files && g_do_hiding && !s_continuation                                    //
+            else if (notes_files && g_do_hiding && !g_pager.continuation                              //
                      && current_char() == '#' && std::isupper(static_cast<unsigned char>(char_at(1))) //
                      && char_at(2) == ':')
             {
@@ -379,7 +363,7 @@ DoArticleResult do_article(std::string &article_command)
                 hide_this_line = true;  // and do not print either
                 notes_files = false;
             }
-            if (!s_continuation && g_hide_line.matches(line_tail()))
+            if (!g_pager.continuation && g_hide_line.matches(line_tail()))
             {
                 hide_this_line = true;
             }
@@ -390,7 +374,7 @@ DoArticleResult do_article(std::string &article_command)
                 {
                 case NEWSGROUPS_LINE:
                 {
-                    if (!s_continuation)
+                    if (!g_pager.continuation)
                     {
                         const std::string      value = decode_header(fetch_lines(g_nav.target.num, NEWSGROUPS_LINE));
                         const std::string_view newsgroups = skip_hor_space(value);
@@ -417,7 +401,7 @@ DoArticleResult do_article(std::string &article_command)
                     const std::string name{extract_name(decode_header(fetch_lines(g_nav.target.num, FROM_LINE)))};
                     if (!name.empty())
                     {
-                        if (s_continuation)
+                        if (g_pager.continuation)
                         {
                             hide_this_line = true;
                         }
@@ -433,7 +417,7 @@ DoArticleResult do_article(std::string &article_command)
                 case DATE_LINE:
                     if (g_nav.current.art->m_date != -1)
                     {
-                        if (s_continuation)
+                        if (g_pager.continuation)
                         {
                             hide_this_line = true;
                             break;
@@ -456,7 +440,7 @@ DoArticleResult do_article(std::string &article_command)
                 && (g_header_rules.type[SUBJ_LINE].flags & HT_MAGIC)) // handle the subject
             {
                 const std::string_view cached_subj = g_nav.target.art->get_cached_line_view(SUBJ_LINE, false);
-                if (!cached_subj.empty() && s_continuation)
+                if (!cached_subj.empty() && g_pager.continuation)
                 {
                     // continuation lines were already output
                     --line_num;
@@ -469,14 +453,14 @@ DoArticleResult do_article(std::string &article_command)
                     ++g_art_input.line_num;
                     if (cached_subj.empty())
                     {
-                        subject_text.remove_prefix(s_continuation ? 0 : 9);
+                        subject_text.remove_prefix(g_pager.continuation ? 0 : 9);
                     }
                     else
                     {
                         subject_text = cached_subj;
                     }
                     // tree_puts(, ,1) underlines subject
-                    line_num += line_before(tree_puts(subject_text, line_num + g_top_line, 1));
+                    line_num += line_before(tree_puts(subject_text, line_num + g_pager.top_line, 1));
                 }
             }
             else if (hide_this_line && g_do_hiding)     // do not print line?
@@ -486,7 +470,7 @@ DoArticleResult do_article(std::string &article_command)
             else if (g_parsed_header.in_header)
             {
                 ++g_art_input.line_num;
-                line_num += line_before(tree_puts(line_tail(), line_num + g_top_line, 0));
+                line_num += line_before(tree_puts(line_tail(), line_num + g_pager.top_line, 0));
             }
             else                          // just a normal line
             {
@@ -494,7 +478,7 @@ DoArticleResult do_article(std::string &article_command)
                 {
                     erase_line(false);
                 }
-                if (g_highlight == g_art_input.line_num) // this line to be highlight?
+                if (g_pager.highlight == g_art_input.line_num) // this line to be highlight?
                 {
                     if (g_marking == STANDOUT)
                     {
@@ -522,8 +506,8 @@ DoArticleResult do_article(std::string &article_command)
                         std::putchar(' ');
                     }
                 }
-                output_ok = !g_hide_everything;
-                if (!s_continuation && g_page_stop.matches(line_tail()))
+                output_ok = !g_pager.hide_everything;
+                if (!g_pager.continuation && g_page_stop.matches(line_tail()))
                 {
                     line_num = ArticleLine{32700};
                 }
@@ -537,7 +521,7 @@ DoArticleResult do_article(std::string &article_command)
                     {
                         if (current_char() == '_' && char_at(1) == '\b')
                         {
-                            if (output_ok && !under_lining && g_highlight != g_art_input.line_num)
+                            if (output_ok && !under_lining && g_pager.highlight != g_art_input.line_num)
                             {
                                 under_lining = true;
                                 if (g_tc_UG)
@@ -610,7 +594,7 @@ DoArticleResult do_article(std::string &article_command)
                             out_pos += i;
                         }
                         if (has_underchar_capability() &&
-                            ((g_highlight == g_art_input.line_num && g_marking == STANDOUT) || under_lining))
+                            ((g_pager.highlight == g_art_input.line_num && g_marking == STANDOUT) || under_lining))
                         {
                             backspace();
                             underchar();
@@ -635,7 +619,7 @@ DoArticleResult do_article(std::string &article_command)
                         {
                             newline();
                         }
-                        s_restart = ArticlePosition{};
+                        g_pager.restart = ArticlePosition{};
                         out_pos = 1000;  // signal normal \n
                     }
                     else if (current_char() == '\t')   // tab?
@@ -668,7 +652,7 @@ DoArticleResult do_article(std::string &article_command)
                         {
                             fmt::print("^L");
                         }
-                        if (line_pos == 0 && g_highlight != g_art_input.line_num)
+                        if (line_pos == 0 && g_pager.highlight != g_art_input.line_num)
                         {
                             line_num = ArticleLine{32700};
                             // how is that for a magic number?
@@ -695,7 +679,7 @@ DoArticleResult do_article(std::string &article_command)
                             if (output_ok)
                             {
                                 std::putchar('^');
-                                if (g_highlight == g_art_input.line_num && has_underchar_capability() &&
+                                if (g_pager.highlight == g_art_input.line_num && has_underchar_capability() &&
                                     g_marking == STANDOUT)
                                 {
                                     backspace();
@@ -722,7 +706,7 @@ DoArticleResult do_article(std::string &article_command)
                 }
                 if (out_pos < 1000)      // did line overflow?
                 {
-                    s_restart = current_article_pos(); // restart here next time
+                    g_pager.restart = current_article_pos(); // restart here next time
                     if (output_ok)
                     {
                         if (!g_tc_AM || g_tc_XN || out_pos < g_tc_COLS)
@@ -736,13 +720,13 @@ DoArticleResult do_article(std::string &article_command)
                     }
                     if (at_nl(current_char()))         // skip the newline
                     {
-                        s_restart = ArticlePosition{};
+                        g_pager.restart = ArticlePosition{};
                     }
                 }
 
                 // handle normal end of output line formalities
 
-                if (g_highlight == g_art_input.line_num)
+                if (g_pager.highlight == g_art_input.line_num)
                 {
                     if (g_marking == STANDOUT)  // were we highlighting line?
                     {
@@ -753,7 +737,7 @@ DoArticleResult do_article(std::string &article_command)
                         un_underline();
                     }
                     carriage_return();
-                    g_highlight = ArticleLine{-1};   // no more we are
+                    g_pager.highlight = ArticleLine{-1}; // no more we are
                     // in case terminal highlighted rest of line earlier
                     // when we did an eol with highlight turned on:
                     if (g_erase_each_line)
@@ -764,14 +748,15 @@ DoArticleResult do_article(std::string &article_command)
                 ++g_art_input.line_num; // count the line just printed
                                         // did we just scroll top line off?
                                         // then recompute top line #
-                g_top_line = std::max(line_after(g_art_input.line_num) - ArticleLine{g_tc_LINES}, g_top_line);
+                g_pager.top_line =
+                    std::max(line_after(g_art_input.line_num) - ArticleLine{g_tc_LINES}, g_pager.top_line);
             }
 
             // determine actual position in file
 
-            if (s_restart)      // stranded somewhere in the buffer?
+            if (g_pager.restart) // stranded somewhere in the buffer?
             {
-                g_art_input.pos += s_restart - s_a_line_begin;
+                g_art_input.pos += g_pager.restart - g_pager.a_line_begin;
             }
             else if (g_parsed_header.in_header)
             {
@@ -786,11 +771,11 @@ DoArticleResult do_article(std::string &article_command)
             g_back_page.vary_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         } // end of line loop
 
-        g_inner_search = ArticlePosition{};
-        if (g_hide_everything)
+        g_pager.inner_search = ArticlePosition{};
+        if (g_pager.hide_everything)
         {
-            pager_command = g_hide_everything;
-            g_hide_everything = 0;
+            pager_command = g_pager.hide_everything;
+            g_pager.hide_everything = 0;
             goto fake_command;
         }
         if (line_num >= 32700)   // did last line have form feed?
@@ -800,9 +785,9 @@ DoArticleResult do_article(std::string &article_command)
                                    -g_back_page.vary_read(line_before(g_art_input.line_num)));
         }
 
-        s_special = false;      // end of page, so reset page length
-        s_first_page = false;    // and say it is not 1st time thru
-        g_highlight = ArticleLine{-1};
+        g_pager.special = false;    // end of page, so reset page length
+        g_pager.first_page = false; // and say it is not 1st time thru
+        g_pager.highlight = ArticleLine{-1};
 
         // extra loop bombout
 
@@ -812,7 +797,7 @@ DoArticleResult do_article(std::string &article_command)
         }
 recheck_pager:
         if (const bool can_hide_tail =
-                !g_parsed_header.in_header && !s_restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
+                !g_parsed_header.in_header && !g_pager.restart && (body_line.empty() || body_line.back() != WRAPPED_NL);
             g_do_hiding && !g_parsed_header.in_header &&
             (g_art_buf.at_end() || (can_hide_tail && !g_hide_line.text.empty())))
         {
@@ -852,7 +837,7 @@ reask_pager:
             g_term_scrolled += g_term_line - g_tc_LINES + 1;
             g_term_line = g_tc_LINES-1;
         }
-        s_more_prompt_col = g_term_col;
+        g_pager.more_prompt_col = g_term_col;
 
         unflush_output();       // disable any ^O in effect
          maybe_eol();
@@ -889,7 +874,7 @@ reask_pager:
         if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
         {
             g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
-            goto_xy(s_more_prompt_col,g_term_line);
+            goto_xy(g_pager.more_prompt_col, g_term_line);
             goto recheck_pager;
         }
         pager_command = get_cmd();
@@ -906,7 +891,7 @@ reask_pager:
         }
         erase_line(g_erase_screen && g_erase_each_line);
 
-    fake_command:               // used by g_inner_search
+fake_command: // used by g_pager.inner_search
         g_color.deefault();
         g_output_chase_phrase = true;
 
@@ -1028,9 +1013,9 @@ PageSwitchResult page_switch(std::string_view command)
     case Ctl('i'):
     {
         ArticleLine i = g_art_input.line_num;
-        g_g_line = 3;
-        pager_line = line_view(s_a_line_begin);
-        while (!pager_line.empty() && at_nl(pager_line.front()) && i >= g_top_line)
+        g_pager.goto_line = 3;
+        pager_line = line_view(g_pager.a_line_begin);
+        while (!pager_line.empty() && at_nl(pager_line.front()) && i >= g_pager.top_line)
         {
             ArticlePosition pos = g_back_page.vary_read(--i);
             if (pos < 0)
@@ -1044,20 +1029,20 @@ PageSwitchResult page_switch(std::string_view command)
             seek_art_buf(pos);
             if (!read_art_buf(pager_line_storage, false))
             {
-                pager_line = line_view(s_a_line_begin);
+                pager_line = line_view(g_pager.a_line_begin);
                 break;
             }
             pager_line = pager_line_storage;
         }
         const char        search_char = pager_line.empty() ? '\0' : pager_line.front();
         const std::string search_pattern = fmt::format("^[^{}\n]", search_char);
-        s_gcompex.compile(search_pattern, true, true);
+        g_pager.gcompex.compile(search_pattern, true, true);
         goto caseG;
     }
 
     case Ctl('g'):
-        g_g_line = 3;
-        s_gcompex.compile("^Subject:", true, true);
+        g_pager.goto_line = 3;
+        g_pager.gcompex.compile("^Subject:", true, true);
         goto caseG;
 
     case 'g':         // in-article search
@@ -1073,7 +1058,7 @@ PageSwitchResult page_switch(std::string_view command)
         {
             pattern.remove_prefix(1);
         }
-        const std::string_view compile_error = s_gcompex.compile(pattern, true, true);
+        const std::string_view compile_error = g_pager.gcompex.compile(pattern, true, true);
         if (!compile_error.empty())
         {
                             // compile regular expression
@@ -1090,26 +1075,26 @@ caseG:
     {
         ArticlePosition start_where;
 
-        if (g_g_line < 0 || g_g_line > g_tc_LINES-2)
+        if (g_pager.goto_line < 0 || g_pager.goto_line > g_tc_LINES - 2)
         {
-            g_g_line = g_tc_LINES - 2;
+            g_pager.goto_line = g_tc_LINES - 2;
         }
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("Start here? {}  >=? {}\n", g_top_line.value_of() + g_g_line + 1,
+            fmt::print("Start here? {}  >=? {}\n", g_pager.top_line.value_of() + g_pager.goto_line + 1,
                        g_art_input.line_num.value_of());
             term_down(1);
         }
 #endif
-        if (command_char == Ctl('i') || g_top_line + ArticleLine{g_g_line + 1} >= g_art_input.line_num)
+        if (command_char == Ctl('i') || g_pager.top_line + ArticleLine{g_pager.goto_line + 1} >= g_art_input.line_num)
         {
             start_where = g_art_input.pos;
             // in case we had a line wrap
         }
         else
         {
-            start_where = g_back_page.vary_read(g_top_line + ArticleLine{g_g_line + 1});
+            start_where = g_back_page.vary_read(g_pager.top_line + ArticleLine{g_pager.goto_line + 1});
             if (start_where < 0)
             {
                 start_where = -start_where;
@@ -1117,8 +1102,8 @@ caseG:
         }
         start_where = std::max(start_where, g_parsed_header.positions[PAST_HEADER].min_pos);
         seek_art_buf(start_where);
-        g_inner_light = ArticleLine{};
-        g_inner_search = ArticlePosition{}; // assume not found
+        g_pager.inner_light = ArticleLine{};
+        g_pager.inner_search = ArticlePosition{}; // assume not found
         while (read_art_buf(pager_line_storage, false))
         {
             const std::string::size_type newline = pager_line_storage.find('\n');
@@ -1130,17 +1115,17 @@ caseG:
                 fmt::print("Test {}\n", search_line);
             }
 #endif
-            const std::size_t match = s_gcompex.find(search_line);
+            const std::size_t match = g_pager.gcompex.find(search_line);
             if (match != std::string_view::npos)
             {
                 const ArticlePosition line_start =
                     g_art_buf.article_pos() - ArticlePosition{static_cast<long>(pager_line_storage.size())};
                 // The first byte after the match start identifies its display row.
-                g_inner_search = line_start + ArticlePosition{static_cast<long>(match) + 1};
+                g_pager.inner_search = line_start + ArticlePosition{static_cast<long>(match) + 1};
                 break;
             }
         }
-        if (!g_inner_search)
+        if (!g_pager.inner_search)
         {
             seek_art_buf(g_art_input.pos);
             fmt::print("(Not found)");
@@ -1150,42 +1135,42 @@ caseG:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("On page? {} <=? {}\n", g_inner_search.value_of(), g_art_input.pos.value_of());
+            fmt::print("On page? {} <=? {}\n", g_pager.inner_search.value_of(), g_art_input.pos.value_of());
             term_down(1);
         }
 #endif
-        if (g_inner_search <= g_art_input.pos) // already on page?
+        if (g_pager.inner_search <= g_art_input.pos) // already on page?
         {
-            if (g_inner_search < g_art_input.pos)
+            if (g_pager.inner_search < g_art_input.pos)
             {
-                g_art_input.line_num = line_after(g_top_line);
-                while (g_back_page.vary_read(g_art_input.line_num) < g_inner_search)
+                g_art_input.line_num = line_after(g_pager.top_line);
+                while (g_back_page.vary_read(g_art_input.line_num) < g_pager.inner_search)
                 {
                     ++g_art_input.line_num;
                 }
             }
-            g_highlight = line_before(g_art_input.line_num);
+            g_pager.highlight = line_before(g_art_input.line_num);
 #ifdef DEBUG
             if (g_debug & DEB_INNERSRCH)
             {
-                fmt::print("@ {}\n", g_highlight.value_of());
+                fmt::print("@ {}\n", g_pager.highlight.value_of());
                 term_down(1);
             }
 #endif
-            g_top_line = g_highlight - ArticleLine{g_g_line};
-            g_top_line = std::max(g_top_line, ArticleLine{-1});
-            g_inner_search = ArticlePosition{};
+            g_pager.top_line = g_pager.highlight - ArticleLine{g_pager.goto_line};
+            g_pager.top_line = std::max(g_pager.top_line, ArticleLine{-1});
+            g_pager.inner_search = ArticlePosition{};
             return page_switch("\f");
         }
-        g_do_fseek = true;              // who knows how many lines it is?
-        g_hide_everything = '\f';
+        g_pager.do_fseek = true; // who knows how many lines it is?
+        g_pager.hide_everything = '\f';
         return PS_NORM;
     }
 
     case '\n':                        // one line down
     case '\r':
-        s_special = true;
-        s_special_lines = 2;
+        g_pager.special = true;
+        g_pager.special_lines = 2;
         return PS_NORM;
 
     case 'X':
@@ -1198,16 +1183,16 @@ refresh_screen:
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("Topline = {}", g_top_line.value_of());
+            fmt::print("Topline = {}", g_pager.top_line.value_of());
             std::string debug_pause;
             std::getline(std::cin, debug_pause);
         }
 #endif
         clear();
-        g_do_fseek = true;
-        g_art_input.line_num = g_top_line;
+        g_pager.do_fseek = true;
+        g_art_input.line_num = g_pager.top_line;
         g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
-        s_first_page = g_top_line < 0;
+        g_pager.first_page = g_pager.top_line < 0;
         return PS_NORM;
 
     case Ctl('e'):
@@ -1222,15 +1207,15 @@ refresh_screen:
             seek_art_buf(g_art_size);
             seek_art_buf(g_art_input.pos);
         }
-        g_top_line = g_art_input.line_num;
-        g_inner_light = line_before(g_art_input.line_num);
-        g_inner_search = g_art_size;
-        g_g_line = 0;
-        g_hide_everything = 'b';
+        g_pager.top_line = g_art_input.line_num;
+        g_pager.inner_light = line_before(g_art_input.line_num);
+        g_pager.inner_search = g_art_size;
+        g_pager.goto_line = 0;
+        g_pager.hide_everything = 'b';
         return PS_NORM;
 
     case 'B':         // one line up
-        if (g_top_line < 0)
+        if (g_pager.top_line < 0)
         {
             break;
         }
@@ -1239,7 +1224,7 @@ refresh_screen:
             home_cursor();
             insert_line();
             carriage_return();
-            ArticlePosition pos = g_back_page.vary_read(line_before(g_top_line));
+            ArticlePosition pos = g_back_page.vary_read(line_before(g_pager.top_line));
             if (pos < 0)
             {
                 pos = -pos;
@@ -1249,7 +1234,7 @@ refresh_screen:
                 seek_art_buf(pos);
                 if (read_art_buf(pager_line_storage, false))
                 {
-                    g_art_input.pos = g_back_page.vary_read(g_top_line);
+                    g_art_input.pos = g_back_page.vary_read(g_pager.top_line);
                     if (g_art_input.pos < 0)
                     {
                         g_art_input.pos = -g_art_input.pos;
@@ -1262,19 +1247,19 @@ refresh_screen:
                     }
                     g_color.deefault();
                     std::putchar('\n');
-                    --g_top_line;
+                    --g_pager.top_line;
                     g_art_input.pos = g_back_page.vary_read(--g_art_input.line_num);
                     if (g_art_input.pos < 0)
                     {
                         g_art_input.pos = -g_art_input.pos;
                     }
                     seek_art_buf(g_art_input.pos);
-                    s_a_line_begin = g_back_page.vary_read(line_before(g_art_input.line_num));
-                    if (s_a_line_begin < 0)
+                    g_pager.a_line_begin = g_back_page.vary_read(line_before(g_art_input.line_num));
+                    if (g_pager.a_line_begin < 0)
                     {
-                        s_a_line_begin = -s_a_line_begin;
+                        g_pager.a_line_begin = -g_pager.a_line_begin;
                     }
-                    goto_xy(0, (g_art_input.line_num - g_top_line).value_of());
+                    goto_xy(0, (g_art_input.line_num - g_pager.top_line).value_of());
                     erase_line(false);
                     return PS_ASK;
                 }
@@ -1296,20 +1281,20 @@ refresh_screen:
             clear();
         }
 
-        g_do_fseek = true;      // reposition article file
+        g_pager.do_fseek = true; // reposition article file
         if (command_char == 'B')
         {
-            target = line_before(g_top_line);
+            target = line_before(g_pager.top_line);
         }
         else
         {
-            target = g_top_line - ArticleLine{g_tc_LINES - 2};
+            target = g_pager.top_line - ArticleLine{g_tc_LINES - 2};
             if (g_marking && (g_marking_areas & BACK_PAGE_MARKING))
             {
-                g_highlight = g_top_line;
+                g_pager.highlight = g_pager.top_line;
             }
         }
-        g_art_input.line_num = g_top_line;
+        g_art_input.line_num = g_pager.top_line;
         if (g_art_input.line_num >= 0)
         {
             do
@@ -1318,10 +1303,10 @@ refresh_screen:
             } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
                      g_back_page.vary_read(line_before(g_art_input.line_num)) >= 0);
         }
-        g_top_line = g_art_input.line_num; // remember top line of screen
+        g_pager.top_line = g_art_input.line_num; // remember top line of screen
                                            // (line # within article file)
         g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
-        s_first_page = g_top_line < 0;
+        g_pager.first_page = g_pager.top_line < 0;
         return PS_NORM;
       }
 
@@ -1348,7 +1333,7 @@ refresh_screen:
         case 'C':
             g_subst.next_mode();
             g_art_buf.clear_art_buf();
-            g_top_line = ArticleLine{-1};
+            g_pager.top_line = ArticleLine{-1};
             goto refresh_screen;
 
         default:
@@ -1418,7 +1403,7 @@ leave_pager:
             set_default_cmd();
             g_color.object(COLOR_CMD, true);
             const std::string mail_call = interp_search(g_mail_call, command);
-            fmt::printf(g_prompt, mail_call, g_subst.current_char_subst(),
+            fmt::printf(g_pager.prompt, mail_call, g_subst.current_char_subst(),
                         g_default_cmd);         // print prompt, whatever it is
             g_color.pop();                      // of COLOR_CMD
             std::putchar(' ');
@@ -1428,13 +1413,13 @@ leave_pager:
 
     case 'd':         // half page
     case Ctl('d'):
-        s_special = true;
-        s_special_lines = g_tc_LINES / 2 + 1;
+        g_pager.special = true;
+        g_pager.special_lines = g_tc_LINES / 2 + 1;
         // no divide-by-zero, thank you
         if (g_tc_LINES > 2 && (g_tc_LINES & 1) &&
             g_art_input.line_num % ArticleLine{g_tc_LINES - 2} >= ArticleLine{g_tc_LINES / 2 - 1})
         {
-                s_special_lines++;
+            g_pager.special_lines++;
         }
         goto go_forward;
 
@@ -1454,36 +1439,37 @@ leave_pager:
         }
         else
         {
-            s_special = true;
-            s_special_lines = g_tc_LINES;
+            g_pager.special = true;
+            g_pager.special_lines = g_tc_LINES;
         }
 go_forward:
-        pager_line = line_view(s_a_line_begin);
-        if ((pager_line.empty() || pager_line.front() != '\f') && (s_continuation || !g_page_stop.matches(pager_line)))
+        pager_line = line_view(g_pager.a_line_begin);
+        if ((pager_line.empty() || pager_line.front() != '\f') &&
+            (g_pager.continuation || !g_page_stop.matches(pager_line)))
         {
-            if (!s_special //
+            if (!g_pager.special //
                 || (g_marking &&
                     ((command_char != 'd' && command_char != Ctl('d')) || (g_marking_areas & HALF_PAGE_MARKING))))
             {
-                s_restart = s_a_line_begin;
+                g_pager.restart = g_pager.a_line_begin;
                 --g_art_input.line_num; // restart this line
-                g_art_input.pos = s_a_line_begin;
-                if (s_special)
+                g_art_input.pos = g_pager.a_line_begin;
+                if (g_pager.special)
                 {
                     up_line();
                 }
                 else
                 {
-                    g_top_line = g_art_input.line_num;
+                    g_pager.top_line = g_art_input.line_num;
                 }
                 if (g_marking)
                 {
-                    g_highlight = g_art_input.line_num;
+                    g_pager.highlight = g_art_input.line_num;
                 }
               }
               else
               {
-                  s_special_lines--;
+                  g_pager.special_lines--;
               }
         }
         return PS_NORM;
@@ -1512,50 +1498,50 @@ go_forward:
 
 static bool inner_more()
 {
-    if (g_art_input.pos < g_inner_search) // not even on page yet?
+    if (g_art_input.pos < g_pager.inner_search) // not even on page yet?
     {
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("Not on page {} < {}\n", g_art_input.pos.value_of(), g_inner_search.value_of());
+            fmt::print("Not on page {} < {}\n", g_art_input.pos.value_of(), g_pager.inner_search.value_of());
         }
 #endif
         return true;
     }
-    if (g_art_input.pos == g_inner_search || g_hide_everything) // just got onto page?
+    if (g_art_input.pos == g_pager.inner_search || g_pager.hide_everything) // just got onto page?
     {
-        s_i_search_line = g_art_input.line_num; // remember first line after
-        if (g_inner_light)
+        g_pager.i_search_line = g_art_input.line_num; // remember first line after
+        if (g_pager.inner_light)
         {
-            g_highlight = g_inner_light;
+            g_pager.highlight = g_pager.inner_light;
         }
         else
         {
-            g_highlight = line_before(g_art_input.line_num);
+            g_pager.highlight = line_before(g_art_input.line_num);
         }
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("There it is {} = {}, {} @ {}\n", g_art_input.pos.value_of(), g_inner_search.value_of(),
-                       g_hide_everything, g_highlight.value_of());
+            fmt::print("There it is {} = {}, {} @ {}\n", g_art_input.pos.value_of(), g_pager.inner_search.value_of(),
+                       g_pager.hide_everything, g_pager.highlight.value_of());
             term_down(1);
         }
 #endif
-        if (g_hide_everything)          // forced refresh?
+        if (g_pager.hide_everything) // forced refresh?
         {
-            g_top_line = std::max(g_art_input.line_num - ArticleLine{g_g_line + 1}, ArticleLine{-1});
+            g_pager.top_line = std::max(g_art_input.line_num - ArticleLine{g_pager.goto_line + 1}, ArticleLine{-1});
             return false;               // let refresh do it all
         }
     }
 #ifdef DEBUG
     if (g_debug & DEB_INNERSRCH)
     {
-        fmt::print("Not far enough? {} <? {} + {}\n", g_art_input.line_num.value_of(), s_i_search_line.value_of(),
-                   g_g_line);
+        fmt::print("Not far enough? {} <? {} + {}\n", g_art_input.line_num.value_of(), g_pager.i_search_line.value_of(),
+                   g_pager.goto_line);
         term_down(1);
     }
 #endif
-    if (g_art_input.line_num < s_i_search_line + ArticleLine{g_g_line})
+    if (g_art_input.line_num < g_pager.i_search_line + ArticleLine{g_pager.goto_line})
     {
         return true;
     }
@@ -1582,8 +1568,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         return;
     }
 
-    Article *ap = g_tree_view.get_artp(x_clk, y_clk + g_top_line.value_of() + 1 + g_term_scrolled);
-    if (ap && ap != g_tree_view.get_artp(x, y + g_top_line.value_of() + 1 + g_term_scrolled))
+    Article *ap = g_tree_view.get_artp(x_clk, y_clk + g_pager.top_line.value_of() + 1 + g_term_scrolled);
+    if (ap && ap != g_tree_view.get_artp(x, y + g_pager.top_line.value_of() + 1 + g_term_scrolled))
     {
         return;
     }
@@ -1605,7 +1591,7 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         {
             g_pushback.push(' ');
         }
-        else if (g_top_line != -1)
+        else if (g_pager.top_line != -1)
         {
             g_pushback.push('b');
         }
@@ -1615,15 +1601,15 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         if (ap)
         {
             select_sub_thread(ap, AUTO_KILL_NONE);
-            s_special = true;
-            s_special_lines = 1;
+            g_pager.special = true;
+            g_pager.special_lines = 1;
             g_pushback.push(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)
         {
             g_pushback.push('\n');
         }
-        else if (g_top_line != -1)
+        else if (g_pager.top_line != -1)
         {
             g_pushback.push('B');
         }
@@ -1633,8 +1619,8 @@ void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
         if (ap)
         {
             kill_sub_thread(ap, AUTO_KILL_NONE);
-            s_special = true;
-            s_special_lines = 1;
+            g_pager.special = true;
+            g_pager.special_lines = 1;
             g_pushback.push(Ctl('r'));
         }
         else if (y > g_tc_LINES/2)

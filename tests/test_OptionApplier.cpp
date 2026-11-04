@@ -47,7 +47,7 @@ struct NumericOptionRestorer
 
     ~NumericOptionRestorer()
     {
-        g_g_line = goto_line;
+        g_pager.goto_line = goto_line;
         g_word_wrap_offset = word_wrap_offset;
     }
 };
@@ -143,17 +143,17 @@ TEST_F(OptionApplierTest, clearsSavedValueWhenDraftRestoresSavedValue)
 
 TEST_F(OptionApplierTest, appliesNumericOptionWithinStringViewExtent)
 {
-    NumericOptionRestorer restore{g_g_line, g_word_wrap_offset};
+    NumericOptionRestorer restore{g_pager.goto_line, g_word_wrap_offset};
     const std::string     text{"42ignored"};
 
     OptionApplier{}.apply(OI_GOTO_LINE_NUM, std::string_view{text.data(), 2});
 
-    EXPECT_EQ(41, g_g_line);
+    EXPECT_EQ(41, g_pager.goto_line);
 }
 
 TEST_F(OptionApplierTest, appliesEmptyWordWrapMarginAsDisabled)
 {
-    NumericOptionRestorer restore{g_g_line, g_word_wrap_offset};
+    NumericOptionRestorer restore{g_pager.goto_line, g_word_wrap_offset};
     g_word_wrap_offset = 8;
 
     OptionApplier{}.apply(OI_WORD_WRAP_MARGIN, "");

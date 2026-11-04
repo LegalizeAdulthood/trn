@@ -1667,7 +1667,7 @@ protected:
 private:
     int                                      m_old_mouse_bar_count{g_mouse_bar_cnt};
     decltype(g_header_rules.type[FROM_LINE].flags) m_old_from_flags{g_header_rules.type[FROM_LINE].flags};
-    ArticleLine                              m_old_top_line{g_top_line};
+    ArticleLine                                    m_old_top_line{g_pager.top_line};
     ArticleLine                              m_old_init_lines{g_init_lines};
     int                                      m_old_lines{g_tc_LINES};
     int                                      m_old_columns{g_tc_COLS};
@@ -1675,7 +1675,7 @@ private:
     std::string_view                         m_old_output{output_charset_name()};
     std::string                              m_old_charsets{g_subst.charsets};
     char                                     m_old_subst{g_subst.current_mode()};
-    std::string                              m_old_prompt{g_prompt};
+    std::string                                    m_old_prompt{g_pager.prompt};
     Article                                 *m_old_current_article{g_nav.current.art};
     Article                                 *m_old_article{g_nav.target.art};
     bool                                     m_capturing{};
@@ -1687,7 +1687,7 @@ void ArticleHeaderPresentationTest::SetUp()
     ASSERT_FALSE(HasFatalFailure());
     g_mouse_bar_cnt = 0;
     g_header_rules.type[FROM_LINE].flags |= HT_MAGIC;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -1708,14 +1708,14 @@ void ArticleHeaderPresentationTest::TearDown()
     InterpolatorNewsgroupTest::TearDown();
     g_mouse_bar_cnt = m_old_mouse_bar_count;
     g_header_rules.type[FROM_LINE].flags = m_old_from_flags;
-    g_top_line = m_old_top_line;
+    g_pager.top_line = m_old_top_line;
     g_init_lines = m_old_init_lines;
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
     utf_init(m_old_input, m_old_output);
     g_subst.charsets = m_old_charsets;
     g_subst.set_mode(m_old_subst);
-    g_prompt = m_old_prompt;
+    g_pager.prompt = m_old_prompt;
     g_nav.current.art = m_old_current_article;
     g_nav.target.art = m_old_article;
 }
@@ -1840,18 +1840,18 @@ private:
     ValueSaver<ArticleLine>      m_line{g_art_input.line_num, g_art_input.line_num};
     ValueSaver<ArticlePosition>  m_position{g_art_input.pos, g_art_input.pos};
     ValueSaver<HeaderLineType>   m_in_header{g_parsed_header.in_header, g_parsed_header.in_header};
-    ValueSaver<bool>             m_do_fseek{g_do_fseek, g_do_fseek};
+    ValueSaver<bool>             m_do_fseek{g_pager.do_fseek, g_pager.do_fseek};
     ValueSaver<bool>             m_erase_screen{g_erase_screen, g_erase_screen};
     ValueSaver<bool>             m_erase_each_line{g_erase_each_line, g_erase_each_line};
     ValueSaver<MarkingMode>      m_marking{g_marking, g_marking};
     ValueSaver<MarkingAreas>     m_marking_areas{g_marking_areas, g_marking_areas};
-    ValueSaver<ArticleLine>      m_highlight{g_highlight, g_highlight};
-    ValueSaver<ArticlePosition>  m_inner_search{g_inner_search, g_inner_search};
-    ValueSaver<ArticleLine>      m_inner_light{g_inner_light, g_inner_light};
-    ValueSaver<char>             m_hide_everything{g_hide_everything, g_hide_everything};
+    ValueSaver<ArticleLine>      m_highlight{g_pager.highlight, g_pager.highlight};
+    ValueSaver<ArticlePosition>  m_inner_search{g_pager.inner_search, g_pager.inner_search};
+    ValueSaver<ArticleLine>      m_inner_light{g_pager.inner_light, g_pager.inner_light};
+    ValueSaver<char>             m_hide_everything{g_pager.hide_everything, g_pager.hide_everything};
     ValueSaver<std::string>      m_page_stop{g_page_stop.text, g_page_stop.text};
     ValueSaver<int>              m_check_count{g_check_count, g_check_count};
-    ValueSaver<int>              m_search_context{g_g_line, g_g_line};
+    ValueSaver<int>              m_search_context{g_pager.goto_line, g_pager.goto_line};
     ValueSaver<char>             m_erase_char{g_erase_char, g_erase_char};
     ValueSaver<bool>             m_rotate{g_rotate, g_rotate};
     ValueSaver<GeneralMode>      m_general_mode{g_general_mode, g_general_mode};
@@ -1875,13 +1875,13 @@ void PagerArticleTest::SetUp()
     fs::current_path(m_output.path());
     g_newsgroup_dir = ".";
     g_art_input.line_num = ArticleLine{};
-    g_top_line = ArticleLine{};
+    g_pager.top_line = ArticleLine{};
     g_parsed_header.in_header = PAST_HEADER;
-    g_do_fseek = false;
-    g_highlight = ArticleLine{-1};
-    g_inner_search = ArticlePosition{};
-    g_inner_light = ArticleLine{};
-    g_hide_everything = 0;
+    g_pager.do_fseek = false;
+    g_pager.highlight = ArticleLine{-1};
+    g_pager.inner_search = ArticlePosition{};
+    g_pager.inner_light = ArticleLine{};
+    g_pager.hide_everything = 0;
     g_page_stop.text.clear();
     g_check_count = 0;
     g_erase_char = '\b';
@@ -2128,9 +2128,9 @@ void ArticleCacheLifecycleTest::open_number(ArticleNum number)
     g_nav.target.art->m_flags |= AF_EXISTS;
     g_last_art = std::max(g_last_art, number);
     ASSERT_NE(nullptr, art_open(number, ArticlePosition{}));
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_art_input.line_num = ArticleLine{};
-    g_do_fseek = false;
+    g_pager.do_fseek = false;
 }
 
 std::vector<std::string> ArticleCacheLifecycleTest::cached_rows()
@@ -2162,7 +2162,7 @@ TEST_P(ArticleCacheLifecycleTest, conversionRebuildsTheCachedArticleFromItsFirst
     const PageSwitchResult command = pager_command("_C");
     ASSERT_EQ(PS_NORM, command);
     ASSERT_TRUE(g_art_buf.empty());
-    ASSERT_EQ(ArticleLine{-1}, g_top_line);
+    ASSERT_EQ(ArticleLine{-1}, g_pager.top_line);
 
     render_article();
 
@@ -2437,7 +2437,7 @@ void RemotePagerArticleTest::expect_complete_article()
     EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_TRUE(m_article_command.empty());
     ASSERT_TRUE(macro_pending());
     EXPECT_EQ('n', read_tty_char());
@@ -2672,7 +2672,7 @@ void InterruptedPagerRenderingTest::interrupt_and_refresh()
     m_interrupted_result = m_result;
     m_interrupted_position = g_art_input.pos;
     m_interrupted_line = g_art_input.line_num;
-    m_interrupted_top = g_top_line;
+    m_interrupted_top = g_pager.top_line;
     m_pending_interrupts = g_int_count;
     m_return_column = g_term_col;
     m_return_mode = g_mode;
@@ -2715,7 +2715,7 @@ void PagerMovementArticleTest::SetUp()
         body << "Body " << std::setw(3) << std::setfill('0') << line << '\n';
     }
     load_body(body.str());
-    g_g_line = scenario.search_context;
+    g_pager.goto_line = scenario.search_context;
     g_tc_LINES = scenario.screen_lines;
     g_init_lines = ArticleLine{g_tc_LINES};
     g_erase_screen = scenario.erase_screen;
@@ -3000,7 +3000,7 @@ void PagerFilteringArticleTest::expect_position(long displayed_lines, std::strin
     EXPECT_EQ(position_of(next_line), g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, g_back_page.vary_read(g_art_input.line_num));
     EXPECT_EQ(ArticleLine{displayed_lines}, g_art_input.line_num);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -3124,7 +3124,7 @@ void PagerHiddenHeaderArticleTest::SetUp()
     g_init_lines = ArticleLine{g_tc_LINES};
     load_filtered_body(numbered_pager_body(), scenario.header);
     m_headers = g_parsed_header.head_buf;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
 }
 
 struct PagerFormattedHeaderCase
@@ -3221,7 +3221,7 @@ void PagerFormattedHeaderArticleTest::SetUp()
     g_nav.target.art->set_subj_line(fetch_lines(g_nav.target.num, SUBJ_LINE));
     g_nav.target.art->set_cached_line(FROM_LINE, fetch_lines(g_nav.target.num, FROM_LINE));
     g_nav.target.art->m_date = scenario.known_date ? 1070514367 : -1;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     m_headers = g_parsed_header.head_buf;
     m_subject = g_nav.target.art->get_cached_line_view(SUBJ_LINE, false);
     m_from = g_nav.target.art->get_cached_line_view(FROM_LINE, false);
@@ -3399,7 +3399,7 @@ void PagerResumeArticleTest::SetUp()
     load_body(body, "Content-Type: text/plain; charset=UTF-8\n");
     if (scenario.starts_in_header)
     {
-        g_top_line = ArticleLine{-1};
+        g_pager.top_line = ArticleLine{-1};
     }
     std::ifstream source{std::to_string(g_nav.target.num.value_of()), std::ios::binary};
     ASSERT_TRUE(source.is_open());
@@ -3499,11 +3499,11 @@ void PagerPresentationArticleTest::read_session()
         const ArticleSwitchResult result = art_switch(m_article_command);
         output += testing::internal::GetCapturedStdout();
         ASSERT_EQ(AS_NORM, result);
-        if (!g_do_fseek)
+        if (!g_pager.do_fseek)
         {
             // Resume the article as the reading loop does after AS_NORM.
             g_art_input.line_num = ArticleLine{};
-            g_top_line = ArticleLine{-1};
+            g_pager.top_line = ArticleLine{-1};
         }
         ASSERT_NE(nullptr, art_open(g_nav.target.num, ArticlePosition{}));
         render_article();
@@ -3576,7 +3576,7 @@ void PagerSearchArticleTest::SetUp()
     g_tc_LINES = 6;
     g_init_lines = ArticleLine{g_tc_LINES};
     g_tc_COLS = 32;
-    g_g_line = 1;
+    g_pager.goto_line = 1;
     g_marking = std::get<2>(GetParam());
     g_tc_US = "<mark>";
     g_tc_UE = "</mark>";
@@ -3687,7 +3687,7 @@ void PagerExitArticleTest::SetUp()
     const PagerExitCase &scenario = GetParam();
     if (scenario.pages.empty())
     {
-        g_top_line = ArticleLine{-1};
+        g_pager.top_line = ArticleLine{-1};
         g_init_lines = ArticleLine{2};
         g_tc_LINES = 4;
     }
@@ -3834,9 +3834,9 @@ void PagerGroupArticleTest::load_group(bool threaded, bool quoted_printable, lon
     ASSERT_EQ(0, seek_art(m_body_start));
     g_art_input.pos = m_body_start;
     g_art_input.line_num = ArticleLine{};
-    g_top_line = ArticleLine{};
+    g_pager.top_line = ArticleLine{};
     g_parsed_header.in_header = PAST_HEADER;
-    g_do_fseek = false;
+    g_pager.do_fseek = false;
     g_tc_LINES = 10;
     g_init_lines = ArticleLine{10};
     g_tc_SO = "<mark>";
@@ -3980,7 +3980,7 @@ void PagerCheckpointArticleTest::SetUp()
     g_marking = static_cast<MarkingMode>(0);
     if (scenario.partial_page)
     {
-        g_top_line = ArticleLine{-1};
+        g_pager.top_line = ArticleLine{-1};
     }
     g_terminal_input_reader = [this](char *address, int size) { return read_input(address, size); };
 }
@@ -4147,8 +4147,8 @@ void PagerTitleArticleTest::open_for_reading(ArticleNum number)
     g_nav.target.num = g_nav.current.num = number;
     g_nav.target.art = g_nav.current.art = g_cache.ptr(number);
     g_art_input.line_num = ArticleLine{};
-    g_top_line = ArticleLine{-1};
-    g_do_fseek = false;
+    g_pager.top_line = ArticleLine{-1};
+    g_pager.do_fseek = false;
     ASSERT_NE(nullptr, art_open(number, ArticlePosition{}));
 }
 
@@ -4960,7 +4960,7 @@ TEST_F(ArticleHeaderPresentationTest, constructsTheEndOfArticlePrompt)
     EXPECT_EQ(DA_NORM, m_result);
     EXPECT_EQ("%sEnd of article " + std::to_string(TRN_TEST_ARTICLE_NUM) + " (of " +
                   std::to_string(TRN_TEST_NEWSGROUP_HIGH) + ") %s-- what next? [%s]",
-              g_prompt);
+              g_pager.prompt);
 }
 
 TEST_P(PagerEndArticleTest, completesAfterTheLastDisplayedPageWithoutConsumingTheNextCommand)
@@ -4983,7 +4983,7 @@ TEST_P(PagerEndArticleTest, completesAfterTheLastDisplayedPageWithoutConsumingTh
     EXPECT_THAT(m_rendered, Not(HasSubstr("--MORE--(100%)")));
     EXPECT_EQ(g_art_size, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, g_back_page.vary_read(g_art_input.line_num));
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -5157,7 +5157,7 @@ TEST_P(PagerFormattedHeaderArticleTest, pagesThroughFormattedHeadersWithoutChang
         EXPECT_EQ(expected, g_back_page.vary_read(ArticleLine{m_header_rows + row})) << "Body row " << row;
     }
     EXPECT_EQ(g_back_page.vary_read(g_art_input.line_num), g_art_input.pos);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -5510,10 +5510,10 @@ TEST_P(PagerSearchArticleTest, displaysTheMatchingRowAndClearsItsHighlightBefore
     EXPECT_EQ(ArticleLine{scenario.next_row}, g_art_input.line_num);
     EXPECT_EQ(m_body_start + ArticlePosition{m_offsets[static_cast<std::size_t>(scenario.next_row)]}, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, g_back_page.vary_read(g_art_input.line_num));
-    EXPECT_EQ(ArticleLine{-1}, g_highlight);
-    EXPECT_EQ(ArticlePosition{}, g_inner_search);
-    EXPECT_FALSE(g_hide_everything);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.highlight);
+    EXPECT_EQ(ArticlePosition{}, g_pager.inner_search);
+    EXPECT_FALSE(g_pager.hide_everything);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_TRUE(m_article_command.empty());
 }
 
@@ -5591,7 +5591,7 @@ TEST_P(PagerResumeArticleTest, redisplaysSavedRowsAndContinuesForward)
     EXPECT_EQ(ArticleLine{header_lines + scenario.next_row}, g_art_input.line_num);
     EXPECT_EQ(m_body_start + ArticlePosition{m_offsets[static_cast<std::size_t>(scenario.next_row)]}, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, g_back_page.vary_read(g_art_input.line_num));
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -5755,7 +5755,7 @@ TEST_P(PagerPresentationArticleTest, restartsAndResumesWithTheRequestedPresentat
     EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_FALSE(macro_pending());
     EXPECT_TRUE(m_article_command.empty());
@@ -5963,7 +5963,7 @@ TEST_P(PagerTerminalArticleTest, preservesColumnsStopsAndAttributesAcrossThePage
     EXPECT_EQ(m_body_start + ArticlePosition{8 + scenario.offsets.back()}, g_art_input.pos);
     EXPECT_EQ(g_art_input.pos, g_back_page.vary_read(g_art_input.line_num));
     EXPECT_GE(g_art_buf.article_pos(), g_art_input.pos);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
@@ -6117,7 +6117,7 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
     }
     EXPECT_EQ(scenario.not_found_count, not_found_count);
     EXPECT_EQ(ArticleLine{scenario.next_line + scenario.header_lines}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{scenario.top_line}, g_top_line);
+    EXPECT_EQ(ArticleLine{scenario.top_line}, g_pager.top_line);
     const long form_feeds = scenario.page_break_line >= 0 && scenario.page_break_line < scenario.next_line ? 1 : 0;
     long       prefix_bytes = 0;
     for (const PagerBodyPrefix &prefix : scenario.line_prefixes)
@@ -6137,10 +6137,10 @@ TEST_P(PagerMovementArticleTest, displaysTheExpectedBodyLinesAndPosition)
     EXPECT_EQ(g_nav.target.art, g_nav.current.art);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
-    EXPECT_EQ(ArticlePosition{}, g_inner_search);
-    EXPECT_EQ(0, g_hide_everything);
+    EXPECT_EQ(ArticlePosition{}, g_pager.inner_search);
+    EXPECT_EQ(0, g_pager.hide_everything);
     EXPECT_EQ(at_end, macro_pending());
 }
 
@@ -6730,14 +6730,14 @@ TEST_P(PagerExitArticleTest, returnsTheCommandAndItsReadStateToTheArticleLoop)
         }
         EXPECT_EQ(scenario.pages.size() - (scenario.result == DA_NORM ? 1 : 0), prompts);
         EXPECT_EQ(ArticleLine{scenario.next_row}, g_art_input.line_num);
-        EXPECT_EQ(ArticleLine{std::max(0L, scenario.next_row - 4)}, g_top_line);
+        EXPECT_EQ(ArticleLine{std::max(0L, scenario.next_row - 4)}, g_pager.top_line);
         for (long row = 0; row <= scenario.next_row; ++row)
         {
             EXPECT_EQ(m_body_start + ArticlePosition{row * 9}, g_back_page.vary_read(ArticleLine{row}))
                 << "Row " << row;
         }
         EXPECT_EQ(g_back_page.vary_read(g_art_input.line_num), g_art_input.pos);
-        EXPECT_FALSE(g_do_fseek);
+        EXPECT_FALSE(g_pager.do_fseek);
         EXPECT_FALSE(g_parsed_header.in_header);
     }
 }
@@ -6844,7 +6844,7 @@ TEST_P(InterruptedPagerInputTest, retainsTheReadingContextAcrossInterruptedInput
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(0, g_term_col);
     EXPECT_TRUE(g_fire_is_out & STANDOUT);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(macro_pending());
     EXPECT_TRUE(m_article_command.empty());
 }
@@ -6909,7 +6909,7 @@ TEST_P(InterruptedPagerRenderingTest, refreshesAndContinuesAfterRenderingIsInter
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(0, g_int_count);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(macro_pending());
     EXPECT_TRUE(m_article_command.empty());
 }
@@ -7167,7 +7167,7 @@ TEST_P(PagerTitleArticleTest, updatesTheTitleWhenReturningAfterReadingAReply)
     }
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_FALSE(macro_pending());
     EXPECT_TRUE(m_article_command.empty());
@@ -7257,7 +7257,7 @@ TEST_P(PagerTreeArticleTest, displaysTheThreadAndResumesTheSameArticleBody)
     EXPECT_TRUE(g_mime.section->m_decoder_pending.empty());
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_parsed_header.in_header);
     EXPECT_FALSE(macro_pending());
 }
@@ -7277,7 +7277,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
     ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
     g_header_rules.type[DATE_LINE].flags |= HT_MAGIC;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -7301,7 +7301,7 @@ TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
     ValueSaver<std::string> newsgroup_name(g_newsgroup_name, TRN_TEST_NEWSGROUP);
     g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
     g_header_rules.type[NEWSGROUPS_LINE].flags |= HT_MAGIC;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -7351,7 +7351,7 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
     ValueSaver<std::string_view> standout_start(g_tc_SO, "<so>");
     ValueSaver<std::string_view> standout_end(g_tc_SE, "<se>");
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -7378,7 +7378,7 @@ TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
     ValueSaver<bool>        rotate(g_rotate, true);
     ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -7408,7 +7408,7 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     ValueSaver<bool>         underline_glitch(g_tc_UG, false);
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
     ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -7430,7 +7430,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
 {
     ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
     ValueSaver<std::string> first_line(g_first_line, std::string{"X-First: article %a"});
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
     g_tc_COLS = 80;
@@ -7469,7 +7469,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     g_art_search.last_pat = "needle";
     g_art_search.do_read = false;
     g_art_search.how_much = ARTSCOPE_SUBJECT;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{2};
     g_tc_LINES = 4;
     g_tc_COLS = 80;
@@ -7498,7 +7498,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
     g_art_search.last_pat = "needle";
     g_art_search.do_read = false;
     g_art_search.how_much = ARTSCOPE_SUBJECT;
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{2};
     g_tc_LINES = 4;
     g_tc_COLS = 80;

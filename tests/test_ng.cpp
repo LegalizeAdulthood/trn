@@ -4991,9 +4991,9 @@ protected:
 private:
     bool             m_old_do_hiding{g_do_hiding};
     bool             m_old_rotate{g_rotate};
-    bool             m_old_do_fseek{g_do_fseek};
+    bool             m_old_do_fseek{g_pager.do_fseek};
     ArticleLine      m_old_art_line_num{g_art_input.line_num};
-    ArticleLine      m_old_top_line{g_top_line};
+    ArticleLine      m_old_top_line{g_pager.top_line};
     int              m_old_fire_is_out{g_fire_is_out};
     int              m_old_tc_lines{g_tc_LINES};
     std::string_view m_old_tc_cd{g_tc_CD};
@@ -5006,9 +5006,9 @@ void RereadArticleTest::SetUp()
     UnreadScopeArticleTest::SetUp();
     g_do_hiding = true;
     g_rotate = false;
-    g_do_fseek = false;
+    g_pager.do_fseek = false;
     g_art_input.line_num = ArticleLine{41};
-    g_top_line = ArticleLine{15};
+    g_pager.top_line = ArticleLine{15};
     g_term_line = 12;
     g_term_col = 9;
     g_fire_is_out = STANDOUT | UNDERLINE;
@@ -5022,9 +5022,9 @@ void RereadArticleTest::TearDown()
 {
     g_do_hiding = m_old_do_hiding;
     g_rotate = m_old_rotate;
-    g_do_fseek = m_old_do_fseek;
+    g_pager.do_fseek = m_old_do_fseek;
     g_art_input.line_num = m_old_art_line_num;
-    g_top_line = m_old_top_line;
+    g_pager.top_line = m_old_top_line;
     g_fire_is_out = m_old_fire_is_out;
     g_tc_LINES = m_old_tc_lines;
     g_tc_CD = m_old_tc_cd;
@@ -5109,9 +5109,9 @@ std::string RereadArticleTest::display(std::string command, std::string_view inp
 
 void RereadArticleTest::expect_unmoved_view()
 {
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(ArticleLine{15}, g_pager.top_line);
     EXPECT_EQ(12, g_term_line);
     EXPECT_EQ(9, g_term_col);
     EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
@@ -5152,10 +5152,10 @@ std::string InlineViewingArticleTest::toggle_viewing()
 
     EXPECT_EQ(ArticlePosition{123}, g_art_input.pos);
     EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(ArticleLine{15}, g_pager.top_line);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_FALSE(g_rotate);
     EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
@@ -5294,7 +5294,7 @@ void CachedDisplayArticleTest::cache_article(std::string_view expected)
 void CachedDisplayArticleTest::expect_redraw(ArticleLine line)
 {
     EXPECT_TRUE(g_reread);
-    EXPECT_TRUE(g_do_fseek);
+    EXPECT_TRUE(g_pager.do_fseek);
     EXPECT_FALSE(g_force_last);
     EXPECT_EQ(line, g_art_input.line_num);
     EXPECT_EQ(0, g_term_line);
@@ -5335,7 +5335,7 @@ private:
     std::filesystem::path m_vary_file;
     MarkingMode           m_old_marking{g_marking};
     MarkingAreas          m_old_marking_areas{g_marking_areas};
-    ArticleLine           m_old_highlight{g_highlight};
+    ArticleLine           m_old_highlight{g_pager.highlight};
 };
 
 void BackwardPagingArticleTest::SetUp()
@@ -5347,7 +5347,7 @@ void BackwardPagingArticleTest::SetUp()
     g_tc_LINES = 10;
     g_marking = NO_MARKING;
     g_marking_areas = BACK_PAGE_MARKING;
-    g_highlight = ArticleLine{7};
+    g_pager.highlight = ArticleLine{7};
 }
 
 void BackwardPagingArticleTest::TearDown()
@@ -5358,7 +5358,7 @@ void BackwardPagingArticleTest::TearDown()
     g_tmp_dir = m_old_tmp_dir;
     g_marking = m_old_marking;
     g_marking_areas = m_old_marking_areas;
-    g_highlight = m_old_highlight;
+    g_pager.highlight = m_old_highlight;
     CachedDisplayArticleTest::TearDown();
 }
 
@@ -5429,27 +5429,27 @@ protected:
                     int column = 9);
 
 private:
-    ArticlePosition m_old_inner_search{g_inner_search};
-    ArticleLine     m_old_inner_light{g_inner_light};
-    int             m_old_g_line{g_g_line};
-    char            m_old_hide_everything{g_hide_everything};
+    ArticlePosition m_old_inner_search{g_pager.inner_search};
+    ArticleLine     m_old_inner_light{g_pager.inner_light};
+    int             m_old_g_line{g_pager.goto_line};
+    char            m_old_hide_everything{g_pager.hide_everything};
 };
 
 void JumpToEndArticleTest::SetUp()
 {
     CachedDisplayArticleTest::SetUp();
-    g_inner_search = ArticlePosition{29};
-    g_inner_light = ArticleLine{13};
-    g_g_line = 6;
-    g_hide_everything = '\f';
+    g_pager.inner_search = ArticlePosition{29};
+    g_pager.inner_light = ArticleLine{13};
+    g_pager.goto_line = 6;
+    g_pager.hide_everything = '\f';
 }
 
 void JumpToEndArticleTest::TearDown()
 {
-    g_inner_search = m_old_inner_search;
-    g_inner_light = m_old_inner_light;
-    g_g_line = m_old_g_line;
-    g_hide_everything = m_old_hide_everything;
+    g_pager.inner_search = m_old_inner_search;
+    g_pager.inner_light = m_old_inner_light;
+    g_pager.goto_line = m_old_g_line;
+    g_pager.hide_everything = m_old_hide_everything;
     CachedDisplayArticleTest::TearDown();
 }
 
@@ -5464,14 +5464,14 @@ void JumpToEndArticleTest::read_prefix(std::string_view expected)
 void JumpToEndArticleTest::expect_end(ArticlePosition end, ArticleLine line, ArticleLine light, int column)
 {
     EXPECT_TRUE(g_reread);
-    EXPECT_TRUE(g_do_fseek);
+    EXPECT_TRUE(g_pager.do_fseek);
     EXPECT_FALSE(g_force_last);
     EXPECT_EQ(line, g_art_input.line_num);
-    EXPECT_EQ(line, g_top_line);
-    EXPECT_EQ(light, g_inner_light);
-    EXPECT_EQ(end, g_inner_search);
-    EXPECT_EQ(0, g_g_line);
-    EXPECT_EQ('b', g_hide_everything);
+    EXPECT_EQ(line, g_pager.top_line);
+    EXPECT_EQ(light, g_pager.inner_light);
+    EXPECT_EQ(end, g_pager.inner_search);
+    EXPECT_EQ(0, g_pager.goto_line);
+    EXPECT_EQ('b', g_pager.hide_everything);
     EXPECT_EQ(12, g_term_line);
     EXPECT_EQ(column, g_term_col);
     EXPECT_EQ(STANDOUT | UNDERLINE, g_fire_is_out);
@@ -5712,8 +5712,8 @@ std::string SubjectListingArticleTest::list_subjects(std::string_view input)
     EXPECT_EQ(reread, g_reread);
     EXPECT_EQ(force_last, g_force_last);
     EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{15}, g_top_line);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_EQ(ArticleLine{15}, g_pager.top_line);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_FALSE(g_rotate);
     EXPECT_EQ(0, g_int_count);
@@ -12056,9 +12056,9 @@ TEST_P(ToggleRotationArticleTest, uppercaseRotationTogglesTheModeAndRedrawsFromT
     EXPECT_FALSE(g_do_hiding);
     EXPECT_TRUE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_TRUE(g_do_fseek);
+    EXPECT_TRUE(g_pager.do_fseek);
     EXPECT_EQ(ArticleLine{15}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(ArticleLine{15}, g_pager.top_line);
     EXPECT_EQ(0, g_term_line);
     EXPECT_EQ(0, g_term_col);
     EXPECT_EQ(0, g_fire_is_out);
@@ -12086,7 +12086,7 @@ INSTANTIATE_TEST_SUITE_P(RotationInitiallyOffOrOn, ToggleRotationArticleTest, te
 TEST_F(RereadArticleTest, uppercaseRotationClampsAnUnsetTopLineAtTheArticleStart)
 {
     set_reading_position(4);
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
 
     const std::string output = display('X');
 
@@ -12095,9 +12095,9 @@ TEST_F(RereadArticleTest, uppercaseRotationClampsAnUnsetTopLineAtTheArticleStart
     EXPECT_TRUE(g_do_hiding);
     EXPECT_TRUE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_TRUE(g_do_fseek);
+    EXPECT_TRUE(g_pager.do_fseek);
     EXPECT_EQ(ArticleLine{}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
     EXPECT_EQ(0, g_term_line);
     EXPECT_EQ(0, g_term_col);
     EXPECT_EQ(0, g_fire_is_out);
@@ -12117,7 +12117,7 @@ TEST_P(RefreshArticleTest, refreshRedrawsTheCurrentScreenWithoutChangingDisplayO
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{15});
-    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(ArticleLine{15}, g_pager.top_line);
     EXPECT_EQ(hiding, g_do_hiding);
     EXPECT_TRUE(g_rotate);
     EXPECT_EQ('p', g_subst.current_mode());
@@ -12135,13 +12135,13 @@ TEST_P(RefreshBoundaryArticleTest, refreshClampsAnUnsetTopLineWithoutInvalidatin
 {
     set_reading_position(4);
     cache_article();
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
 
     const std::string output = display(GetParam());
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_FALSE(g_rotate);
     EXPECT_EQ('p', g_subst.current_mode());
@@ -12183,7 +12183,7 @@ TEST_P(SubstitutionArticleTest, changingSubstitutionDiscardsCachedTextAndRestart
     EXPECT_EQ('a', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
     EXPECT_TRUE(g_do_hiding);
     EXPECT_TRUE(g_rotate);
     ASSERT_EQ(0, seek_art(ArticlePosition{}));
@@ -12204,7 +12204,7 @@ TEST_F(CachedDisplayArticleTest, substitutionWrapsToTheFirstModeAndRegeneratesTh
     EXPECT_EQ('p', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
     ASSERT_EQ(0, seek_art(ArticlePosition{}));
     cache_article();
 }
@@ -12221,7 +12221,7 @@ TEST_F(CachedDisplayArticleTest, substitutionEnablesTheFirstConfiguredModeWhenIn
     EXPECT_EQ('p', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
 }
 
 TEST_F(CachedDisplayArticleTest, substitutionAtGroupEndChangesModeAndDiscardsCacheWithoutRequestingRedraw)
@@ -12235,9 +12235,9 @@ TEST_F(CachedDisplayArticleTest, substitutionAtGroupEndChangesModeAndDiscardsCac
     EXPECT_TRUE(output.empty());
     EXPECT_EQ('a', g_subst.current_mode());
     expect_cleared_cache();
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
     EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
     EXPECT_EQ(nullptr, g_nav.target.art);
@@ -12259,22 +12259,22 @@ TEST_F(CachedDisplayArticleTest, completingTheSubstitutionPrefixConsumesOnlyItsS
     EXPECT_EQ('a', g_subst.current_mode());
     expect_cleared_cache();
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
 }
 
 TEST_F(BackwardPagingArticleTest, uppercaseBMovesBackOneLineWithoutAddingPageHighlighting)
 {
     set_reading_position(4);
     load_article();
-    g_top_line = ArticleLine{28};
+    g_pager.top_line = ArticleLine{28};
     g_marking = STANDOUT;
 
     const std::string output = display('B');
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{27});
-    EXPECT_EQ(ArticleLine{27}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{27}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(27, "Line 27\n");
 }
 
@@ -12285,15 +12285,15 @@ TEST_P(BackwardPageArticleTest, pageBackUsesTheScreenHeightAndRecordedArticleOff
     const long target = std::get<2>(GetParam());
     set_reading_position(2);
     load_article();
-    g_top_line = ArticleLine{28};
+    g_pager.top_line = ArticleLine{28};
     g_tc_LINES = height;
 
     const std::string output = display(command);
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{target});
-    EXPECT_EQ(ArticleLine{target}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{target}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(target, "Line " + std::to_string(target) + '\n');
 }
 
@@ -12305,14 +12305,14 @@ TEST_P(BackwardPageBoundaryArticleTest, pageBackClampsAtTheArticleStartWhenLessT
 {
     set_reading_position(4);
     load_article();
-    g_top_line = ArticleLine{3};
+    g_pager.top_line = ArticleLine{3};
 
     const std::string output = display(GetParam());
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(0, "Line 0\n");
 }
 
@@ -12320,14 +12320,14 @@ TEST_F(BackwardPagingArticleTest, lineBackAtTheArticleStartKeepsTheStartSentinel
 {
     set_reading_position(4);
     load_article();
-    g_top_line = ArticleLine{};
+    g_pager.top_line = ArticleLine{};
 
     const std::string output = display('B');
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(0, "Line 0\n");
 }
 
@@ -12338,7 +12338,7 @@ TEST_P(BackwardPageMarkingArticleTest, pageBackHighlightsTheOldTopLineOnlyWhenBa
     const long         highlight = std::get<2>(GetParam());
     set_reading_position(4);
     load_article();
-    g_top_line = ArticleLine{28};
+    g_pager.top_line = ArticleLine{28};
     g_marking = marking;
     g_marking_areas = areas;
 
@@ -12346,8 +12346,8 @@ TEST_P(BackwardPageMarkingArticleTest, pageBackHighlightsTheOldTopLineOnlyWhenBa
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{20});
-    EXPECT_EQ(ArticleLine{20}, g_top_line);
-    EXPECT_EQ(ArticleLine{highlight}, g_highlight);
+    EXPECT_EQ(ArticleLine{20}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{highlight}, g_pager.highlight);
     EXPECT_EQ(marking, g_marking);
     EXPECT_EQ(areas, g_marking_areas);
     expect_target(20, "Line 20\n");
@@ -12363,15 +12363,15 @@ TEST_P(BackwardPageBoundaryArticleTest, pageBackStopsAfterThePreviousFormFeedBou
 {
     set_reading_position(4);
     load_article(40, 12);
-    g_top_line = ArticleLine{20};
+    g_pager.top_line = ArticleLine{20};
     ASSERT_LT(g_back_page.vary_read(ArticleLine{12}), ArticlePosition{});
 
     const std::string output = display(GetParam());
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{13});
-    EXPECT_EQ(ArticleLine{13}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{13}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(13, "Line 13\n");
 }
 
@@ -12381,15 +12381,15 @@ TEST_F(BackwardPagingArticleTest, singleLineBackCanReachTheLineBeforeAFormFeedBo
 {
     set_reading_position(4);
     load_article(40, 12);
-    g_top_line = ArticleLine{13};
+    g_pager.top_line = ArticleLine{13};
     ASSERT_LT(g_back_page.vary_read(ArticleLine{12}), ArticlePosition{});
 
     const std::string output = display('B');
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{12});
-    EXPECT_EQ(ArticleLine{12}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{12}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(12, "Line 12\f\n");
 }
 
@@ -12397,14 +12397,14 @@ TEST_P(BackwardCommandArticleTest, unsetTopLineRequestsRereadingFromTheArticleSt
 {
     set_reading_position(4);
     load_article();
-    g_top_line = ArticleLine{-1};
+    g_pager.top_line = ArticleLine{-1};
 
     const std::string output = display(GetParam());
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{});
-    EXPECT_EQ(ArticleLine{-1}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{-1}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(0, "Line 0\n");
 }
 
@@ -12422,7 +12422,7 @@ TEST_P(BackwardCommandArticleTest, groupEndDoesNotSeekRedrawOrChangeHighlighting
     EXPECT_EQ(nullptr, g_nav.target.art);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     EXPECT_EQ(STANDOUT, g_marking);
     EXPECT_EQ(cached_position, g_art_buf.pos());
     EXPECT_EQ(cached_length, g_art_buf.len());
@@ -12435,19 +12435,19 @@ TEST_F(BackwardPagingArticleTest, repeatedPageBackUsesTheUpdatedTopLineAndHighli
 {
     set_reading_position(4);
     load_article();
-    g_top_line = ArticleLine{28};
+    g_pager.top_line = ArticleLine{28};
     g_marking = STANDOUT;
 
     const std::string first_output = display('b');
-    const ArticleLine first_top = g_top_line;
+    const ArticleLine first_top = g_pager.top_line;
     const std::string second_output = display('b');
 
     EXPECT_FALSE(first_output.empty());
     EXPECT_FALSE(second_output.empty());
     EXPECT_EQ(ArticleLine{20}, first_top);
     expect_redraw(ArticleLine{12});
-    EXPECT_EQ(ArticleLine{12}, g_top_line);
-    EXPECT_EQ(ArticleLine{20}, g_highlight);
+    EXPECT_EQ(ArticleLine{12}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{20}, g_pager.highlight);
     expect_target(12, "Line 12\n");
 }
 
@@ -12455,14 +12455,14 @@ TEST_F(BackwardPagingArticleTest, longArticlePagingCrossesTheVirtualArrayWindowU
 {
     set_reading_position(4);
     load_article(300);
-    g_top_line = ArticleLine{260};
+    g_pager.top_line = ArticleLine{260};
 
     const std::string output = display('b');
 
     EXPECT_FALSE(output.empty());
     expect_redraw(ArticleLine{252});
-    EXPECT_EQ(ArticleLine{252}, g_top_line);
-    EXPECT_EQ(ArticleLine{7}, g_highlight);
+    EXPECT_EQ(ArticleLine{252}, g_pager.top_line);
+    EXPECT_EQ(ArticleLine{7}, g_pager.highlight);
     expect_target(252, "Line 252\n");
 }
 
@@ -12586,10 +12586,10 @@ TEST_F(JumpToEndArticleTest, groupEndLeavesPagerStateUntouchedWithoutAnOpenArtic
     EXPECT_EQ(ArticlePosition{-1}, g_raw_art_size);
     EXPECT_EQ(ArticlePosition{-1}, g_art_size);
     EXPECT_EQ(ArticlePosition{17}, g_art_input.pos);
-    EXPECT_EQ(ArticlePosition{29}, g_inner_search);
-    EXPECT_EQ(ArticleLine{13}, g_inner_light);
-    EXPECT_EQ(6, g_g_line);
-    EXPECT_EQ('\f', g_hide_everything);
+    EXPECT_EQ(ArticlePosition{29}, g_pager.inner_search);
+    EXPECT_EQ(ArticleLine{13}, g_pager.inner_light);
+    EXPECT_EQ(6, g_pager.goto_line);
+    EXPECT_EQ('\f', g_pager.hide_everything);
     expect_cleared_cache();
 }
 

@@ -2201,8 +2201,8 @@ private:
     KillFileStateFlags m_old_kf_state{g_kf_state};
     bool               m_old_reread{g_reread};
     bool               m_old_force_last{g_force_last};
-    bool               m_old_do_fseek{g_do_fseek};
-    ArticleLine        m_old_top_line{g_top_line};
+    bool               m_old_do_fseek{g_pager.do_fseek};
+    ArticleLine        m_old_top_line{g_pager.top_line};
     int                m_old_page_line{g_page_line};
     bool               m_old_erase_each_line{g_erase_each_line};
     bool               m_old_s_default_cmd{g_s_default_cmd};
@@ -2224,10 +2224,10 @@ void LocalSpoolArticleTest::SetUp()
     g_kf_state = KFS_NONE;
     g_in_ng = true;
     g_mode = MM_ARTICLE;
-    g_reread = g_force_last = g_do_fseek = false;
+    g_reread = g_force_last = g_pager.do_fseek = false;
     g_erase_each_line = false;
     g_art_input.line_num = ArticleLine{6};
-    g_top_line = ArticleLine{};
+    g_pager.top_line = ArticleLine{};
     g_tc_LINES = 24;
     g_tc_COLS = 80;
     g_tc_SO = "<so>";
@@ -2273,8 +2273,8 @@ void LocalSpoolArticleTest::TearDown()
     g_kf_state = m_old_kf_state;
     g_reread = m_old_reread;
     g_force_last = m_old_force_last;
-    g_do_fseek = m_old_do_fseek;
-    g_top_line = m_old_top_line;
+    g_pager.do_fseek = m_old_do_fseek;
+    g_pager.top_line = m_old_top_line;
     g_page_line = m_old_page_line;
     g_erase_each_line = m_old_erase_each_line;
     g_s_default_cmd = m_old_s_default_cmd;
@@ -8182,10 +8182,10 @@ std::string OnDemandThreadArticleTest::display_tree()
     EXPECT_EQ(header_end, g_parsed_header.positions[PAST_HEADER].min_pos);
     EXPECT_EQ(header, g_parsed_header.head_buf);
     EXPECT_EQ(ArticleLine{6}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{}, g_top_line);
+    EXPECT_EQ(ArticleLine{}, g_pager.top_line);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(0, g_int_count);
@@ -8289,7 +8289,7 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     const ArticleLocation                  recent = g_nav.recent;
     const ArticlePosition                  position = g_art_input.pos;
     const ArticleLine                      line = g_art_input.line_num;
-    const ArticleLine                      top = g_top_line;
+    const ArticleLine                      top = g_pager.top_line;
     const ArticleNum                       first = g_first_art;
     const SubjectFlags                     subject_flags = g_nav.current.art->m_subj->m_flags;
     const ArticleUnread                    unread = g_newsgroup_ptr->m_to_read;
@@ -8318,7 +8318,7 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     EXPECT_EQ(first, g_first_art);
     EXPECT_EQ(position, g_art_input.pos);
     EXPECT_EQ(line, g_art_input.line_num);
-    EXPECT_EQ(top, g_top_line);
+    EXPECT_EQ(top, g_pager.top_line);
     EXPECT_EQ(g_nav.current.num, g_parsed_header.parsed_art);
     EXPECT_EQ(g_nav.current.num, g_art_input.open_art);
     EXPECT_EQ(subject_flags, g_nav.current.art->m_subj->m_flags);
@@ -8328,7 +8328,7 @@ std::string SaveArticleTest::save(char command, std::string_view input, ArticleS
     EXPECT_TRUE(g_sel.selected_only);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_ARTICLE, g_mode);
     EXPECT_EQ(m_spool, fs::current_path());

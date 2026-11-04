@@ -3,6 +3,7 @@
 
 #include <trn/rt-wumpus.h>
 
+#include <trn/art.h>
 #include <trn/Article.h>
 #include <trn/artio.h>
 #include <trn/artstate.h>
@@ -261,11 +262,11 @@ private:
     int               m_old_selected_subj_cnt{g_selected_subj_cnt};
     bool              m_old_reread{g_reread};
     bool              m_old_force_last{g_force_last};
-    bool              m_old_do_fseek{g_do_fseek};
+    bool              m_old_do_fseek{g_pager.do_fseek};
     bool              m_old_rotate{g_rotate};
     ArticlePosition   m_old_art_pos{g_art_input.pos};
     ArticleLine       m_old_art_line_num{g_art_input.line_num};
-    ArticleLine       m_old_top_line{g_top_line};
+    ArticleLine       m_old_top_line{g_pager.top_line};
     GeneralMode       m_old_general_mode{g_general_mode};
     MinorMode         m_old_mode{g_mode};
     int               m_old_tc_lines{g_tc_LINES};
@@ -318,10 +319,10 @@ void ThreadTreeArticleTest::SetUp()
     g_nav.current.num = ArticleNum{1};
     g_last_art = ArticleNum{3};
     g_threaded_group = true;
-    g_reread = g_force_last = g_do_fseek = g_rotate = false;
+    g_reread = g_force_last = g_pager.do_fseek = g_rotate = false;
     g_art_input.pos = ArticlePosition{123};
     g_art_input.line_num = ArticleLine{41};
-    g_top_line = ArticleLine{15};
+    g_pager.top_line = ArticleLine{15};
     g_general_mode = GM_READ;
     g_mode = MM_ARTICLE;
     g_tc_LINES = 24;
@@ -363,11 +364,11 @@ void ThreadTreeArticleTest::TearDown()
     g_selected_subj_cnt = m_old_selected_subj_cnt;
     g_reread = m_old_reread;
     g_force_last = m_old_force_last;
-    g_do_fseek = m_old_do_fseek;
+    g_pager.do_fseek = m_old_do_fseek;
     g_rotate = m_old_rotate;
     g_art_input.pos = m_old_art_pos;
     g_art_input.line_num = m_old_art_line_num;
-    g_top_line = m_old_top_line;
+    g_pager.top_line = m_old_top_line;
     g_general_mode = m_old_general_mode;
     g_mode = m_old_mode;
     g_tc_LINES = m_old_tc_lines;
@@ -431,10 +432,10 @@ std::string ThreadTreeArticleTest::display_tree(std::string_view input)
     EXPECT_EQ(NG_NORM, g_newsgroup_exit_code);
     EXPECT_EQ(ArticlePosition{123}, g_art_input.pos);
     EXPECT_EQ(ArticleLine{41}, g_art_input.line_num);
-    EXPECT_EQ(ArticleLine{15}, g_top_line);
+    EXPECT_EQ(ArticleLine{15}, g_pager.top_line);
     EXPECT_FALSE(g_reread);
     EXPECT_FALSE(g_force_last);
-    EXPECT_FALSE(g_do_fseek);
+    EXPECT_FALSE(g_pager.do_fseek);
     EXPECT_FALSE(g_do_hiding);
     EXPECT_FALSE(g_rotate);
     EXPECT_TRUE(g_threaded_group);

@@ -321,7 +321,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     g_force_last = true;                 // if 0 unread, do not bomb out
     g_nav.current = g_nav.recent = {article_after(g_last_art), nullptr};
-    g_prompt = whatnext;
+    g_pager.prompt = whatnext;
     g_subst.reset_mode();
 
     // see if there are any special searches to do
@@ -378,7 +378,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     {
         g_check_count = 0;               // do not checkpoint for a while
     }
-    g_do_fseek = false;                 // start 1st article at top
+    g_pager.do_fseek = false;                             // start 1st article at top
     while (g_nav.target.num <= article_after(g_last_art)) // for each article
     {
         std::string article_command;
@@ -511,7 +511,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 goto cleanup; // actually exit newsgroup
             }
             set_mode(g_general_mode, MM_ARTICLE_END);
-            g_prompt = whatnext;
+            g_pager.prompt = whatnext;
             g_search_ahead = ArticleNum{}; // no more subject search mode
             fmt::print("\n\n");
             term_down(2);
@@ -539,10 +539,10 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 g_do_hiding = true;
                 g_rotate = false;
             }
-            if (!g_do_fseek)            // starting at top of article?
+            if (!g_pager.do_fseek) // starting at top of article?
             {
                 g_art_input.line_num = ArticleLine{}; // start at the beginning
-                g_top_line = ArticleLine{-1};   // and remember top line of screen
+                g_pager.top_line = ArticleLine{-1};   // and remember top line of screen
                                         // (line # within article file)
             }
             clear();                    // clear screen
@@ -582,7 +582,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
                 ArticleLine linenum = tree_puts(message, ArticleLine{}, 0);
                 g_back_page.vary_write(g_art_input.line_num, ArticlePosition{});
                 finish_tree(linenum);
-                g_prompt = whatnext;
+                g_pager.prompt = whatnext;
                 g_search_ahead = ArticleNum{};
             }
             else                        // found it, so print it
@@ -628,8 +628,8 @@ reask_article:
         // print prompt, whatever it is
         {
             const std::string mail_call = do_interp(g_mail_call);
-            const std::string prompt_text =
-                fmt::sprintf(g_prompt, mail_call.c_str(), g_subst.current_char_subst().c_str(), g_default_cmd.c_str());
+            const std::string prompt_text = fmt::sprintf(g_pager.prompt, mail_call.c_str(),
+                                                         g_subst.current_char_subst().c_str(), g_default_cmd.c_str());
             draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? static_cast<int>(prompt_text.size()) + 5 : 0),
                            true);
             g_color.print(COLOR_CMD, prompt_text);
@@ -1709,8 +1709,8 @@ normal_search:
             {
                 g_reread = true;
                 clear();
-                g_do_fseek = true;
-                g_art_input.line_num = g_top_line;
+                g_pager.do_fseek = true;
+                g_art_input.line_num = g_pager.top_line;
                 g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
             }
             return AS_NORM;
@@ -1737,12 +1737,12 @@ normal_search:
                     seek_art_buf(g_art_input.pos);
                 }
                 g_reread = true;
-                g_do_fseek = true;
-                g_top_line = g_art_input.line_num;
-                g_inner_light = line_before(g_art_input.line_num);
-                g_inner_search = g_art_size;
-                g_g_line = 0;
-                g_hide_everything = 'b';
+                g_pager.do_fseek = true;
+                g_pager.top_line = g_art_input.line_num;
+                g_pager.inner_light = line_before(g_art_input.line_num);
+                g_pager.inner_search = g_art_size;
+                g_pager.goto_line = 0;
+                g_pager.hide_everything = 'b';
             }
             return AS_NORM;
 
@@ -1755,20 +1755,20 @@ normal_search:
 
                 g_reread = true;
                 clear();
-                g_do_fseek = true;
+                g_pager.do_fseek = true;
                 if (command_ch == 'B')
                 {
-                    target = line_before(g_top_line);
+                    target = line_before(g_pager.top_line);
                 }
                 else
                 {
-                    target = g_top_line - ArticleLine{g_tc_LINES - 2};
+                    target = g_pager.top_line - ArticleLine{g_tc_LINES - 2};
                     if (g_marking && (g_marking_areas & BACK_PAGE_MARKING))
                     {
-                        g_highlight = g_top_line;
+                        g_pager.highlight = g_pager.top_line;
                     }
                 }
-                g_art_input.line_num = g_top_line;
+                g_art_input.line_num = g_pager.top_line;
                 if (g_art_input.line_num >= 0)
                 {
                     do
@@ -1777,7 +1777,7 @@ normal_search:
                     } while (g_art_input.line_num >= 0 && g_art_input.line_num > target &&
                              g_back_page.vary_read(line_before(g_art_input.line_num)) >= 0);
                 }
-                g_top_line = g_art_input.line_num;
+                g_pager.top_line = g_art_input.line_num;
                 g_art_input.line_num = std::max(g_art_input.line_num, ArticleLine{});
             }
             return AS_NORM;
@@ -1937,7 +1937,7 @@ normal_search:
             case 'C':
                 g_subst.next_mode();
                 g_art_buf.clear_art_buf();
-                g_top_line = ArticleLine{-1};
+                g_pager.top_line = ArticleLine{-1};
                 goto refresh_screen;
 
             case 'a':

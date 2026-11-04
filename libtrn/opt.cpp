@@ -550,7 +550,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_GOTO_LINE_NUM:
-        g_g_line = parse_int(value) - 1;
+        g_pager.goto_line = parse_int(value) - 1;
         break;
 
     case OI_FUZZY_NEWSGROUP_NAMES:
@@ -1140,7 +1140,7 @@ std::string option_value(OptionIndex num)
         return g_indent_string.c_str();
 
     case OI_GOTO_LINE_NUM:
-        return fmt::format("{}", g_g_line + 1);
+        return fmt::format("{}", g_pager.goto_line + 1);
 
     case OI_FUZZY_NEWSGROUP_NAMES:
         return yes_or_no(g_fuzzy_get);
