@@ -106,6 +106,7 @@ struct GraphicState
     CharsetType init(std::string_view from, std::string_view to);
     std::string_view input_charset_name();
     std::string_view output_charset_name();
+    int              byte_length_at(std::string_view text);
 
     CharsetType      in;
     CharsetType      out;
@@ -226,11 +227,16 @@ static CodePoint utf8_next(std::string_view text, std::size_t index, int bits)
 
 int byte_length_at(std::string_view text)
 {
+    return s_gs.byte_length_at(text);
+}
+
+int GraphicState::byte_length_at(std::string_view text)
+{
     int it = !text.empty(); // correct for ASCII
     if (!it)
     {
     }
-    else if (IS_UTF8(s_gs.in))
+    else if (IS_UTF8(in))
     {
         const Uchar first = U(text.front());
         if ((first & 0x80) == 0)
@@ -264,10 +270,10 @@ int byte_length_at(std::string_view text)
             // FIXME - invalid UTF-8
         }
     }
-    else if (IS_SINGLE_BYTE(s_gs.in))
+    else if (IS_SINGLE_BYTE(in))
     {
     }
-    else if (IS_DOUBLE_BYTE(s_gs.in))
+    else if (IS_DOUBLE_BYTE(in))
     {
         if ((U(text.front()) & 0x80) != 0 && text.size() > 1)
         {
@@ -329,7 +335,7 @@ int visual_length_of(std::string_view text)
     int it = 0;
     while (!text.empty())
     {
-        int w = byte_length_at(text);
+        int w = s_gs.byte_length_at(text);
         int v = visual_width_at(text);
         if (w <= 0)
         {
@@ -642,7 +648,7 @@ int put_char_adv(std::string_view &text, bool outputok)
         const char ch = text.front();
         if (s_gs.in == CHARSET_UTF8 || (ch >= ' ' && ch < 0x7F))
         {
-            const int w = byte_length_at(text);
+            const int w = s_gs.byte_length_at(text);
             it = visual_width_at(text);
             if (outputok)
             {
@@ -675,7 +681,7 @@ std::string create_utf8_copy(std::string_view text)
     std::size_t tlen = 0;
     for (std::string_view remaining = text; !remaining.empty();)
     {
-        const int sw = byte_length_at(remaining);
+        const int sw = s_gs.byte_length_at(remaining);
         if (sw <= 0)
         {
             break;
@@ -690,7 +696,7 @@ std::string create_utf8_copy(std::string_view text)
     // Create the actual copy
     for (std::string_view remaining = text; !remaining.empty();)
     {
-        const int sw = byte_length_at(remaining);
+        const int sw = s_gs.byte_length_at(remaining);
         if (sw <= 0)
         {
             break;
