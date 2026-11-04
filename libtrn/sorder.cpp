@@ -146,15 +146,15 @@ void ScanContext::sort()
     save_order_bounds();
 }
 
-void s_order_clean()
+void ScanContext::order_clean()
 {
-    g_art_scan.ent_sort().clear();
-    g_art_scan.ent_index().clear();
+    ent_sort.clear();
+    ent_index.clear();
 
     g_art_scan.ent_sort_max = -1;
     g_art_scan.ent_sorted_max = -1;
     g_art_scan.ent_index_max = -1;
-    g_art_scan.current_context().save_order_bounds();
+    save_order_bounds();
 }
 
 // adds the entry number to the current context

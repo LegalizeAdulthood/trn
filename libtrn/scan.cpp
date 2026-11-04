@@ -168,7 +168,7 @@ void ArticleScanSession::delete_context(int cnum)
     }
     if (cnum == cur_context)
     {
-        s_order_clean();
+        current_context().order_clean();
     }
     else
     {
