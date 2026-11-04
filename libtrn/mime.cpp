@@ -508,6 +508,22 @@ void MimeSection::mime_clear_struct()
     html.line_start = 0;
 }
 
+void MimeSection::set_attachment(MimeState type, std::string_view filename, MimeEncoding encoding, int part, int total)
+{
+    m_type = type;
+    if (!filename.empty())
+    {
+        m_filename = filename;
+    }
+    else
+    {
+        m_filename.reset();
+    }
+    m_encoding = encoding;
+    m_part = part;
+    m_total = total;
+}
+
 // Setup g_mime.article structure based on article's headers
 void mime_set_article()
 {

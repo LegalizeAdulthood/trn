@@ -431,18 +431,7 @@ SaveResult save_article(std::string_view command)
                 fmt::print("Extracting {} file into {}:\n", decode_type == 3 ? "yEnc" : "uuencoded",
                            fs::current_path().generic_string());
                 term_down(1);
-                g_mime.section->m_type = IMAGE_MIME;
-                if (!filename.empty())
-                {
-                    g_mime.section->m_filename = filename;
-                }
-                else
-                {
-                    g_mime.section->m_filename.reset();
-                }
-                g_mime.section->m_encoding = decode_type == 3 ? MENCODE_YENC : MENCODE_UUE;
-                g_mime.section->m_part = part;
-                g_mime.section->m_total = total;
+                g_mime.set_attachment(IMAGE_MIME, filename, decode_type == 3 ? MENCODE_YENC : MENCODE_UUE, part, total);
                 if (!decode_piece(nullptr, {}) && !g_msg.empty())
                 {
                     newline();
@@ -768,18 +757,7 @@ SaveResult view_article()
                 MimeCapEntry *mc = g_mimecap.find("image/jpeg", MCF_NONE); // TODO: refine this
                 g_save_from = g_art_input.pos;
                 seek_art(g_save_from);
-                g_mime.section->m_type = UNHANDLED_MIME;
-                if (!filename.empty())
-                {
-                    g_mime.section->m_filename = filename;
-                }
-                else
-                {
-                    g_mime.section->m_filename.reset();
-                }
-                g_mime.section->m_encoding = MENCODE_UUE;
-                g_mime.section->m_part = part;
-                g_mime.section->m_total = total;
+                g_mime.set_attachment(UNHANDLED_MIME, filename, MENCODE_UUE, part, total);
                 if (mc && !decode_piece(mc, {}) && !g_msg.empty())
                 {
                     newline();

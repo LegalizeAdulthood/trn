@@ -101,6 +101,7 @@ struct HtmlRenderer
 struct MimeSection
 {
     void mime_clear_struct();
+    void        set_attachment(MimeState type, std::string_view filename, MimeEncoding encoding, int part, int total);
     void mime_parse_type(std::string_view text);
     void mime_parse_disposition(std::string_view text);
     void mime_parse_encoding(std::string_view text);
@@ -150,6 +151,10 @@ struct MimeContext
     std::string description() const
     {
         return section->mime_description();
+    }
+    void set_attachment(MimeState type, std::string_view filename, MimeEncoding encoding, int part, int total)
+    {
+        section->set_attachment(type, filename, encoding, part, total);
     }
 
     // TODO: private
