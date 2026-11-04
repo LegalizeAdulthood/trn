@@ -223,6 +223,8 @@ extern UniversalMenuLoader g_univ_loader;
 
 struct VirtualGroupBuilder
 {
+    void virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending);
+
     // TODO: private
     void add_virtual_group(std::string_view grpname);
     void vg_add_article(ArticleNum a);
@@ -246,7 +248,6 @@ void           univ_edit();
 void           univ_page_file(const std::filesystem::path &fname);
 void           univ_newsgroup_virtual();
 int            univ_visit_group_main(std::string_view gname);
-void           univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending);
 void           univ_virt_pass(UniversalGroupVisitor visit_group);
 void           univ_virt_pass();
 UniversalItems univ_items();

@@ -448,7 +448,7 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     UniversalItem           *kept_article = append_universal_item(make_numbered_article("alt.article"));
     const UniversalItemIndex kept_article_index = univ_index(kept_article);
 
-    univ_virt_pass(fake_visit_group, no_input_pending);
+    g_vg_builder.virt_pass(fake_visit_group, no_input_pending);
 
     kept_group = g_univ.item(kept_group_index);
     kept_article = g_univ.item(kept_article_index);
@@ -467,7 +467,7 @@ TEST_F(UnivTest, virtualPassUsesInjectedVisitor)
     EXPECT_EQ(ArticleNum{1}, kept_article->article().num);
     EXPECT_FALSE(g_univ_ng_virt_flag);
 
-    univ_virt_pass(fake_visit_group, no_input_pending);
+    g_vg_builder.virt_pass(fake_visit_group, no_input_pending);
 
     EXPECT_EQ(1, g_visit_count);
     EXPECT_FALSE(g_univ_ng_virt_flag);
@@ -478,7 +478,7 @@ TEST_F(UnivTest, virtualPassExpandsNumberedArticleWithoutDescription)
     univ_mask_load("", "Virtual");
     append_universal_item(make_undescribed_numbered_article("alt.article"));
 
-    univ_virt_pass(fake_visit_group, no_input_pending);
+    g_vg_builder.virt_pass(fake_visit_group, no_input_pending);
 
     EXPECT_EQ(1, g_visit_count);
     EXPECT_EQ("alt.article", g_visited_group);

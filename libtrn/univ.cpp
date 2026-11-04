@@ -1214,14 +1214,14 @@ void univ_virt_pass()
 // LATER: allow the loop to be interrupted
 void univ_virt_pass(UniversalGroupVisitor visit_group)
 {
-    univ_virt_pass(visit_group, input_pending);
+    g_vg_builder.virt_pass(visit_group, input_pending);
 }
 
 // LATER: allow the loop to be interrupted
-void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending)
+void VirtualGroupBuilder::virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending input_is_pending)
 {
     g_univ_ng_virt_flag = true;
-    g_vg_builder.virt_pass_needed = false;
+    virt_pass_needed = false;
 
     for (std::size_t position = 0; position < g_univ.items.size();)
     {
@@ -1246,15 +1246,15 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
             }
             const UniversalItemIndex current_index = univ_index(ui);
             const std::string        group_name = vgroup->ng;
-            g_vg_builder.current_vg_ui_index = current_index;
+            current_vg_ui_index = current_index;
             if (vgroup->flags & UF_VG_MIN_SCORE)
             {
-                g_vg_builder.use_min_score = true;
-                g_vg_builder.min_score = vgroup->min_score;
+                use_min_score = true;
+                min_score = vgroup->min_score;
             }
             (void)visit_group(group_name);
-            g_vg_builder.use_min_score = false;
-            g_vg_builder.current_vg_ui_index = {};
+            use_min_score = false;
+            current_vg_ui_index = {};
             // later do something with return value
             const std::size_t expanded_position = g_univ.position(current_index);
             if (expanded_position < g_univ.items.size())
@@ -1284,14 +1284,14 @@ void univ_virt_pass(UniversalGroupVisitor visit_group, UniversalInputPending inp
                 continue;
             }
             const std::string group_name = article->ng;
-            g_vg_builder.current_vg_ui_index = univ_index(ui);
+            current_vg_ui_index = univ_index(ui);
             (void)visit_group(group_name);
-            g_vg_builder.current_vg_ui_index = {};
+            current_vg_ui_index = {};
             // later do something with return value
         }
         ++position;
     }
-    g_vg_builder.current_vg_ui_index = {};
+    current_vg_ui_index = {};
     g_univ_ng_virt_flag = false;
 }
 
