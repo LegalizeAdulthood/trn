@@ -223,6 +223,9 @@ extern UniversalMenuLoader g_univ_loader;
 
 struct VirtualGroupBuilder
 {
+    // TODO: private
+    void add_virtual_group(std::string_view grpname);
+
     bool               virt_pass_needed{};
     UniversalItemIndex current_vg_ui_index{};
     int                min_score{}; // this score is part of the line format, so it is not ifdefed

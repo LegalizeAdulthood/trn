@@ -76,7 +76,6 @@ static void           univ_add_mask(std::string_view desc, std::string_view mask
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
-static void           univ_add_virtual_group(std::string_view grpname);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
@@ -402,7 +401,7 @@ static void univ_add_text_file(std::string_view desc, std::string_view name)
 }
 
 // mostly the same as the newsgroup stuff
-static void univ_add_virtual_group(std::string_view grpname)
+void VirtualGroupBuilder::add_virtual_group(std::string_view grpname)
 {
     UniversalItem *ui;
 
@@ -414,7 +413,7 @@ static void univ_add_virtual_group(std::string_view grpname)
     // later check grpname for bad things?
 
     // perhaps leave if group has no unread, or other factor
-    g_vg_builder.virt_pass_needed = true;
+    virt_pass_needed = true;
     const std::string group_name{grpname};
     if (g_univ.vg_names.find(group_name) != g_univ.vg_names.end())
     {
@@ -441,10 +440,10 @@ static void univ_add_virtual_group(std::string_view grpname)
     vgroup.flags = UF_VG_NONE;
     vgroup.min_score = 0;
     vgroup.max_score = 0;
-    if (g_vg_builder.use_min_score)
+    if (use_min_score)
     {
         vgroup.flags |= UF_VG_MIN_SCORE;
-        vgroup.min_score = g_vg_builder.min_score;
+        vgroup.min_score = min_score;
     }
     vgroup.ng = group_name;
 }
@@ -558,7 +557,7 @@ void UniversalMenuLoader::use_pattern(std::string_view pattern, int type)
             {
                 if (univ_do_match(np->rc_line(), pattern))
                 {
-                    univ_add_virtual_group(np->rc_line());
+                    g_vg_builder.add_virtual_group(np->rc_line());
                 }
             }
             break;
