@@ -128,6 +128,7 @@ struct MimeSection
 struct MimeContext
 {
     void push_section();
+    void unwind_sections(const MimeSection *boundary, const MimeSection *other_boundary);
     int  end_of_section(std::string_view bp, MimeSection **boundary_section = nullptr)
     {
         return section->end_of_section(bp, boundary_section);

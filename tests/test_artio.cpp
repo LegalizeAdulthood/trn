@@ -34,6 +34,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -44,6 +45,38 @@ namespace
 {
 
 namespace fs = std::filesystem;
+
+class MimeSectionGuard
+{
+public:
+    MimeSectionGuard(MimeContext &context, MimeSection &borrowed);
+    ~MimeSectionGuard();
+    MimeSectionGuard(const MimeSectionGuard &) = delete;
+    MimeSectionGuard &operator=(const MimeSectionGuard &) = delete;
+
+    void unwind()
+    {
+        m_context.unwind_sections(m_saved, &m_borrowed);
+    }
+
+private:
+    MimeContext &m_context;
+    MimeSection *m_saved;
+    MimeSection &m_borrowed;
+};
+
+MimeSectionGuard::MimeSectionGuard(MimeContext &context, MimeSection &borrowed) :
+    m_context(context),
+    m_saved(context.section),
+    m_borrowed(borrowed)
+{
+}
+
+MimeSectionGuard::~MimeSectionGuard()
+{
+    unwind();
+    m_context.section = m_saved;
+}
 
 class ArticleIoTest : public testing::Test
 {
@@ -56,7 +89,7 @@ protected:
         m_old_do_hiding = g_do_hiding;
         m_old_is_mime = g_mime.is_mime;
         m_old_mime_state = g_mime.state;
-        m_old_mime_section = g_mime.section;
+        m_mime_guard.emplace(g_mime, m_mime_section);
         m_old_multipart_separator = g_multipart_separator;
         m_old_data_source = g_data_source;
         m_old_past_header = g_header_rules.type[PAST_HEADER];
@@ -82,7 +115,6 @@ protected:
         g_do_hiding = true;
         g_mime.is_mime = false;
         g_mime.state = NOT_MIME;
-        g_mime.section = m_old_mime_section;
         g_parsed_header.positions[PAST_HEADER].min_pos = ArticlePosition{};
         g_tc_COLS = 30;
         g_word_wrap_offset = 8;
@@ -105,7 +137,7 @@ protected:
         g_do_hiding = m_old_do_hiding;
         g_mime.is_mime = m_old_is_mime;
         g_mime.state = m_old_mime_state;
-        g_mime.section = m_old_mime_section;
+        m_mime_guard.reset();
         g_multipart_separator = m_old_multipart_separator;
         g_data_source = m_old_data_source;
         g_header_rules.type[PAST_HEADER] = m_old_past_header;
@@ -139,13 +171,7 @@ protected:
 
     void reset_mime_section()
     {
-        while (g_mime.section != nullptr && g_mime.section != m_old_mime_section && g_mime.section != &m_mime_section)
-        {
-            MimeSection *previous = g_mime.section->m_prev;
-            g_mime.section->mime_clear_struct();
-            delete g_mime.section;
-            g_mime.section = previous;
-        }
+        m_mime_guard->unwind();
         m_parent_mime_section.mime_clear_struct();
         m_mime_section.mime_clear_struct();
     }
@@ -160,7 +186,7 @@ protected:
     bool            m_old_do_hiding{};
     bool            m_old_is_mime{};
     MimeState       m_old_mime_state{};
-    MimeSection    *m_old_mime_section{};
+    std::optional<MimeSectionGuard> m_mime_guard;
     std::string     m_old_multipart_separator;
     DataSource     *m_old_data_source{};
     HeaderType      m_old_past_header{};

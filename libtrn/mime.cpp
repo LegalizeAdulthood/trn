@@ -472,6 +472,17 @@ void MimeContext::push_section()
     section = mp;
 }
 
+void MimeContext::unwind_sections(const MimeSection *boundary, const MimeSection *other_boundary)
+{
+    while (section != nullptr && section != boundary && section != other_boundary)
+    {
+        MimeSection *previous = section->m_prev;
+        section->mime_clear_struct();
+        delete section;
+        section = previous;
+    }
+}
+
 bool MimeContext::pop_section()
 {
     MimeSection *mp = section->m_prev;
