@@ -62,27 +62,27 @@ void ArticleBrowseSession::init_context(int cnum, ScanContextType type)
 // allocate a new context number and initialize it
 // returns context number
 //int type;                     // context type
-int s_new_context(ScanContextType type)
+int ArticleBrowseSession::new_context(ScanContextType type)
 {
     int i;
 
     // check for deleted contexts
-    for (i = 0; i < size_cast<int>(g_browse.contexts); i++)
+    for (i = 0; i < size_cast<int>(contexts); i++)
     {
-        if (g_browse.contexts[i].type == S_NONE) // deleted context
+        if (contexts[i].type == S_NONE) // deleted context
         {
             break;
         }
     }
-    if (i < size_cast<int>(g_browse.contexts)) // a deleted one was found
+    if (i < size_cast<int>(contexts)) // a deleted one was found
     {
-        g_browse.init_context(i, type);
+        init_context(i, type);
         return i;
     }
     // none deleted, so allocate a new one
-    g_browse.contexts.emplace_back();
-    i = size_cast<int>(g_browse.contexts) - 1;
-    g_browse.init_context(i, type);
+    contexts.emplace_back();
+    i = size_cast<int>(contexts) - 1;
+    init_context(i, type);
     return i;
 }
 

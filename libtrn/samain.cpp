@@ -123,7 +123,7 @@ static void sa_init_context()
 
     if (g_sa_scan_context == -1)
     {
-        g_sa_scan_context = s_new_context(S_ART);
+        g_sa_scan_context = g_browse.new_context(S_ART);
     }
     s_change_context(g_sa_scan_context);
     s_sa_context_init = true;

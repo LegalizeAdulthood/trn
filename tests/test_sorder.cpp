@@ -25,7 +25,7 @@ protected:
 
 void ScanOrderTest::SetUp()
 {
-    m_first_context = s_new_context(S_GROUP);
+    m_first_context = g_browse.new_context(S_GROUP);
     s_change_context(m_first_context);
     s_order_add(3);
     s_order_add(1);
@@ -90,7 +90,7 @@ void IndependentScanContextsTest::SetUp()
 {
     SortedScanOrderTest::SetUp();
     s_save_context();
-    m_second_context = s_new_context(S_GROUP);
+    m_second_context = g_browse.new_context(S_GROUP);
     s_change_context(m_second_context);
     s_order_add(20);
     s_order_add(10);

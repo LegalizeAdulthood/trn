@@ -72,6 +72,8 @@ struct ScanContext
 
 struct ArticleBrowseSession
 {
+    int new_context(ScanContextType type);
+
     // TODO: private
     ScanContext       &current_context();
     std::vector<long> &ent_sort();
@@ -118,7 +120,6 @@ extern ArticleBrowseSession g_browse;
 extern int g_s_item_num; // show item numbers by default
 extern int g_s_mode_vi;
 
-int  s_new_context(ScanContextType type);
 void s_save_context();
 void s_change_context(int newcontext);
 void s_delete_context(int cnum);
