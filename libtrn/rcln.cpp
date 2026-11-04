@@ -80,7 +80,7 @@ void NewsgroupData::catch_up(int leave_count, int output_level)
         }
         m_to_read = TR_NONE;
     }
-    m_rc->flags |= RF_RC_CHANGED;
+    mark_changed();
     if (!write_newsrcs(g_multirc))
     {
         get_anything();
@@ -567,7 +567,7 @@ void NewsgroupData::set_to_read(bool lax_high_check)
         const std::size_t numbers_offset = std::min(static_cast<std::size_t>(m_num_offset), m_rc_line.size());
         m_rc_line.erase(numbers_offset);
         g_paranoid = true; // enough to make a guy paranoid
-        m_rc->flags |= RF_RC_CHANGED;
+        mark_changed();
     }
     if (m_subscribe_char == UNSUBSCRIBED_CHAR)
     {
@@ -649,7 +649,7 @@ void NewsgroupData::check_expired(ArticleNum first)
         if (lastnum != 1)
         {
             m_rc_line = fmt::format("{} 1-{}", prefix, remainder);
-            m_rc->flags |= RF_RC_CHANGED;
+            mark_changed();
         }
     }
     else
@@ -658,7 +658,7 @@ void NewsgroupData::check_expired(ArticleNum first)
         m_rc_line =
             fmt::format("{} 1-{}{}{}", prefix, first.value_of() - (lastnum != first),
                         !remainder.empty() ? "," : "", remainder);
-        m_rc->flags |= RF_RC_CHANGED;
+        mark_changed();
     }
 
 #ifdef DEBUG

@@ -42,6 +42,10 @@ struct NewsgroupData
     std::string_view rc_name() const;
     void             hide_subscribe_char();
     void             show_subscribe_char();
+    void             mark_changed();
+    void             subscribe();
+    void             unsubscribe();
+    void             set_rc_line(std::string line, ArticleUnread unread);
 
     NewsgroupData *m_prev;
     NewsgroupData *m_next;

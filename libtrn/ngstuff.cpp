@@ -984,9 +984,8 @@ deselect:
             {
                 --g_newsgroup_to_read;
             }
-            g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
+            g_newsgroup_ptr->unsubscribe();
             g_newsgroup_ptr->m_to_read = TR_UNSUB;
-            g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
             goto deselect;
 
         default:

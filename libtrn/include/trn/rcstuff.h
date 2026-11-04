@@ -56,6 +56,11 @@ DECLARE_FLAGS_ENUM(NewsrcFlags, int);
 
 struct Newsrc
 {
+    void mark_changed()
+    {
+        flags |= RF_RC_CHANGED;
+    }
+
     Newsrc     *next;
     DataSource *data_source;
     std::filesystem::path name;      // the associated newsrc

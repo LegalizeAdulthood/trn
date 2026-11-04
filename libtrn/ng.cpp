@@ -373,7 +373,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     }
 
     g_doing_ng = true;                  // enter the twilight zone
-    g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
+    g_newsgroup_ptr->mark_changed();
     if (!g_unsafe_rc_saves)
     {
         g_check_count = 0;               // do not checkpoint for a while
@@ -1491,8 +1491,7 @@ normal_search:
         newline();
         fmt::print("Unsubscribed to newsgroup {}\n", g_newsgroup_name);
         term_down(1);
-        g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
-        g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
+        g_newsgroup_ptr->unsubscribe();
         --g_newsgroup_to_read;
         return AS_CLEAN;
 
@@ -2135,8 +2134,7 @@ reask_catchup:
     }
     if (ch == 'u')
     {
-        g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR;
-        g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
+        g_newsgroup_ptr->unsubscribe();
         if (g_in_ng || g_newsgroup_ptr->m_to_read > TR_NONE || g_newsgroup_min_to_read <= TR_NONE)
         {
             --g_newsgroup_to_read;

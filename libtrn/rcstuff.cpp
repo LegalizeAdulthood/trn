@@ -1034,7 +1034,7 @@ void NewsgroupData::abandon_newsgroup()
     {
         m_subscribe_char = ':';
     }
-    m_rc->flags |= RF_RC_CHANGED;
+    mark_changed();
     set_to_read(ST_LAX);
 }
 
@@ -1263,8 +1263,7 @@ reask_unsub:
             const std::string_view numbers = g_newsgroup_ptr->rc_numbers();
             g_newsgroup_ptr->m_flags =
                 (numbers.size() > 1 && numbers[0] != '\0' && numbers[1] == '0' ? NF_UNTHREADED : NF_NONE);
-            g_newsgroup_ptr->m_subscribe_char = ':';
-            g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
+            g_newsgroup_ptr->subscribe();
             flags &= ~GNG_RELOC;
         }
         else
@@ -1309,7 +1308,7 @@ static NewsgroupData *add_newsgroup(Newsrc *rp, std::string_view ngn, char_int c
     }
     np->m_to_read = TR_NONE; // just for prettiness
     set_hash(np);            // so we can find it again
-    rp->flags |= RF_RC_CHANGED;
+    rp->mark_changed();
     return np;
 }
 
@@ -1437,7 +1436,7 @@ bool NewsgroupData::relocate_newsgroup(NewsgroupNum newnum)
     {
         return false;
     }
-    m_rc->flags |= RF_RC_CHANGED;
+    mark_changed();
 
     if (newnum < 0)
     {
@@ -1696,7 +1695,7 @@ void cleanup_newsrc(Newsrc *rp)
             }
             np = prev_np;
         }
-        rp->flags |= RF_RC_CHANGED;
+        rp->mark_changed();
 reask_bogus:
         const std::string command =
             read_newsrc_prompt_command("Delete bogus newsgroups?", MM_DELETE_BOGUS_NEWSGROUPS_PROMPT, "ny");
@@ -1730,7 +1729,7 @@ reask_bogus:
                 g_ng_order.pop();
                 --g_newsgroup_count;
             }
-            rp->flags |= RF_RC_CHANGED; // TODO: needed?
+            rp->mark_changed(); // TODO: needed?
             if (g_current_newsgroup && g_current_newsgroup->m_rc_line.empty())
             {
                 g_current_newsgroup = g_ng_order.first();

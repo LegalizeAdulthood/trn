@@ -294,17 +294,7 @@ void bits_to_rc()
         term_down(2);
     }
 #endif
-    g_newsgroup_ptr->m_rc_line = std::move(rc_line);
-    g_newsgroup_ptr->hide_subscribe_char();
-    if (g_newsgroup_ptr->m_subscribe_char == UNSUBSCRIBED_CHAR) // did they unsubscribe?
-    {
-        g_newsgroup_ptr->m_to_read = TR_UNSUB; // make line invisible
-    }
-    else
-    {
-        g_newsgroup_ptr->m_to_read = (ArticleUnread) count.value_of(); // otherwise, remember the count
-    }
-    g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
+    g_newsgroup_ptr->set_rc_line(std::move(rc_line), static_cast<ArticleUnread>(count.value_of()));
 }
 
 void find_existing_articles()

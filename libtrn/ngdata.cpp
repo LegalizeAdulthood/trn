@@ -41,6 +41,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 struct ActiveLineFields
@@ -114,6 +115,38 @@ void NewsgroupData::show_subscribe_char()
     {
         m_rc_line[m_num_offset - 1] = m_subscribe_char;
     }
+}
+
+void NewsgroupData::mark_changed()
+{
+    m_rc->mark_changed();
+}
+
+void NewsgroupData::subscribe()
+{
+    m_subscribe_char = ':';
+    mark_changed();
+}
+
+void NewsgroupData::unsubscribe()
+{
+    m_subscribe_char = UNSUBSCRIBED_CHAR;
+    mark_changed();
+}
+
+void NewsgroupData::set_rc_line(std::string line, ArticleUnread unread)
+{
+    m_rc_line = std::move(line);
+    hide_subscribe_char();
+    if (m_subscribe_char == UNSUBSCRIBED_CHAR) // did they unsubscribe?
+    {
+        m_to_read = TR_UNSUB; // make line invisible
+    }
+    else
+    {
+        m_to_read = unread; // otherwise, remember the count
+    }
+    mark_changed();
 }
 
 NewsgroupData *NewsgroupOrder::first()
@@ -497,8 +530,7 @@ ArticleNum NewsgroupData::get_newsgroup_size()
     {
         if (m_subscribe_char == ':')
         {
-            m_subscribe_char = UNSUBSCRIBED_CHAR;
-            m_rc->flags |= RF_RC_CHANGED;
+            unsubscribe();
             --g_newsgroup_to_read;
         }
         return ArticleNum{TR_BOGUS};

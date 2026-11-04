@@ -838,9 +838,8 @@ display_multirc:
             {
                 --g_newsgroup_to_read;
             }
-            g_newsgroup_ptr->m_subscribe_char = UNSUBSCRIBED_CHAR; // unsubscribe it
+            g_newsgroup_ptr->unsubscribe();                        // unsubscribe it
             g_newsgroup_ptr->m_to_read = TR_UNSUB;                 // and make line invisible
-            g_newsgroup_ptr->m_rc->flags |= RF_RC_CHANGED;
             g_newsgroup_ptr = newsgroup_next(g_newsgroup_ptr); // do an automatic 'n'
         }
         break;
