@@ -108,6 +108,7 @@ struct GraphicState
     std::string_view output_charset_name();
     int              byte_length_at(std::string_view text);
     CodePoint        code_point_at(std::string_view text);
+    int              visual_width_at(std::string_view text);
 
     CharsetType      in;
     CharsetType      out;
@@ -315,16 +316,21 @@ static int scalar_visual_width(CodePoint c)
 
 int visual_width_at(std::string_view text)
 {
-    const CodePoint scalar = s_gs.code_point_at(text);
+    return s_gs.visual_width_at(text);
+}
+
+int GraphicState::visual_width_at(std::string_view text)
+{
+    const CodePoint scalar = code_point_at(text);
     if (scalar == INVALID_CODE_POINT)
     {
         return 0;
     }
-    if (IS_SINGLE_BYTE(s_gs.in))
+    if (IS_SINGLE_BYTE(in))
     {
         return 1;
     }
-    if (IS_DOUBLE_BYTE(s_gs.in))
+    if (IS_DOUBLE_BYTE(in))
     {
         return (scalar & 0x80) ? 2 : 1;
     }
@@ -337,7 +343,7 @@ int visual_length_of(std::string_view text)
     while (!text.empty())
     {
         int w = s_gs.byte_length_at(text);
-        int v = visual_width_at(text);
+        int v = s_gs.visual_width_at(text);
         if (w <= 0)
         {
             break;
@@ -655,7 +661,7 @@ int put_char_adv(std::string_view &text, bool outputok)
         if (s_gs.in == CHARSET_UTF8 || (ch >= ' ' && ch < 0x7F))
         {
             const int w = s_gs.byte_length_at(text);
-            it = visual_width_at(text);
+            it = s_gs.visual_width_at(text);
             if (outputok)
             {
                 for (int i = 0; i < w; i += 1)
