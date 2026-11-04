@@ -7,8 +7,6 @@
 #ifndef TRN_SORDER_H
 #define TRN_SORDER_H
 
-extern bool g_s_order_changed; // If true, resort next time order is considered
-
 int s_compare(long a, long b);
 void s_sort();
 void s_order_clean();

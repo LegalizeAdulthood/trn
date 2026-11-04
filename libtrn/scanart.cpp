@@ -112,7 +112,7 @@ SaMainResult sa_main()
         sa_sel_threads();
         g_sa_do_sel_threads = false;
         g_sa_mode_zoom = true;          // zoom in by default
-        g_s_top_ent = -1;               // go to top of arts...
+        g_browse.top_ent = -1;          // go to top of arts...
     }
 
     MinorMode sa_oldmode = g_mode; // save mode

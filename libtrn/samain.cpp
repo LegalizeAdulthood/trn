@@ -172,10 +172,10 @@ SaMainResult sa_main_loop()
         }
     }
     // redraw it *all*
-    g_s_ref_all = true;
-    if (g_s_top_ent < 1)
+    g_browse.ref_all = true;
+    if (g_browse.top_ent < 1)
     {
-        g_s_top_ent = s_first();
+        g_browse.top_ent = s_first();
     }
     int i = s_fill_page();
     if (i == -1 || i == 0)

@@ -21,7 +21,7 @@ bool g_s_follow_temp{}; // explicitly follow until end of thread
 
 bool s_eligible(long ent)
 {
-    switch (g_s_cur_type)
+    switch (g_browse.cur_type)
     {
     case S_ART:
         return sa_eligible(ent);
@@ -40,11 +40,11 @@ void s_beep()
 
 std::string s_get_statchars(long ent, int line)
 {
-    if (g_s_status_cols == 0)
+    if (g_browse.status_cols == 0)
     {
         return {};
     }
-    switch (g_s_cur_type)
+    switch (g_browse.cur_type)
     {
     case S_ART:
         return sa_get_stat_chars(ent, line);
@@ -56,7 +56,7 @@ std::string s_get_statchars(long ent, int line)
 
 std::string s_get_desc(long ent, int line, bool trunc)
 {
-    switch (g_s_cur_type)
+    switch (g_browse.cur_type)
     {
     case S_ART:
         return sa_get_desc(ent, line, trunc);
@@ -68,7 +68,7 @@ std::string s_get_desc(long ent, int line, bool trunc)
 
 int s_ent_lines(long ent)
 {
-    switch (g_s_cur_type)
+    switch (g_browse.cur_type)
     {
     case S_ART:
         return sa_ent_lines(ent);

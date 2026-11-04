@@ -241,7 +241,7 @@ void sc_set_score(ArticleNum a, int score)
     Article *ap = g_cache.ptr(a);
     ap->m_score = score;  // update the score
     ap->m_score_flags |= SFLAG_SCORED;
-    g_s_order_changed = true;   // resort
+    g_browse.order_changed = true; // resort
 }
 
 // Hopefully people will write more scoring routines later
@@ -470,9 +470,9 @@ static void sc_rescore_arts()
     g_progress.set_spin(SPIN_POP);
     if (g_sa_in)
     {
-        g_s_ref_all = true;
-        g_s_refill = true;
-        g_s_top_ent = 0; // make sure the refill starts from top
+        g_browse.ref_all = true;
+        g_browse.refill = true;
+        g_browse.top_ent = 0; // make sure the refill starts from top
     }
 }
 
@@ -520,7 +520,7 @@ void sc_append(std::string_view line)
         fmt::print("Done.\n");
         if (g_sa_initialized)
         {
-            g_s_top_ent = -1;           // reset top of page
+            g_browse.top_ent = -1; // reset top of page
         }
     }
 }
@@ -537,8 +537,8 @@ void sc_rescore()
     sc_init(true);       // enter the new... (wait for rescore)
     if (g_sa_initialized)
     {
-        g_s_top_ent = -1;       // reset top of page
-        g_s_refill = true;      // make sure a refill is done
+        g_browse.top_ent = -1;  // reset top of page
+        g_browse.refill = true; // make sure a refill is done
     }
     s_sc_rescoring = false;
 }

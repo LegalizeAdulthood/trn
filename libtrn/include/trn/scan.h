@@ -70,35 +70,44 @@ struct ScanContext
     long  flags;
 };
 
-// the current values
-extern long                   g_s_ent_sort_max;   // maximum index of sorted array
-extern long                   g_s_ent_sorted_max; // maximum index *that is sorted*
-extern long                   g_s_ent_index_max;  // maximum entry number added
-extern std::vector<PageEntry> g_page_ents;        // entries on page
-// -1 means not initialized for top and bottom entry
-extern long g_s_top_ent; // top entry on page
-extern long g_s_bot_ent; // bottom entry (note change)
-extern bool g_s_refill;  // does the page need refilling?
-// refresh entries
-extern bool g_s_ref_all; // refresh all on page
-extern bool g_s_ref_top; // top status bar
-extern bool g_s_ref_bot; // bottom status bar
-// -1 for the next two entries means don't refresh
-extern short g_s_ref_status; // line to start refreshing status from
-extern short g_s_ref_desc;   // line to start refreshing descript. from
-// screen sizes
-extern short g_s_top_lines;     // lines for top status bar
-extern short g_s_bot_lines;     // lines for bottom status bar
-extern short g_s_status_cols;   // characters for status column
-extern short g_s_cursor_cols;   // characters for cursor column
-extern short g_s_item_num_cols; // characters for item number column
-extern short g_s_desc_cols;     // characters for description column
-// pointer info
-extern short           g_s_ptr_page_line; // page_ent index
-extern long            g_s_flags;         // misc. flags
-extern std::vector<ScanContext> g_s_contexts;    // context structures
-extern int             g_s_cur_context; // current context number
-extern ScanContextType g_s_cur_type;    // current context type (for fast switching)
+struct ArticleBrowseSession
+{
+    std::vector<ScanContext> contexts;      // context structures
+    int                      cur_context{}; // current context number
+    ScanContextType          cur_type{};    // current context type (for fast switching)
+
+    // ordering information
+    long ent_sort_max{};   // maximum index of sorted array
+    long ent_sorted_max{}; // maximum index *that is sorted*
+    long ent_index_max{};  // maximum entry number added
+    bool order_changed{};  // If true, resort next time order is considered
+
+    std::vector<PageEntry> page_ents; // entries on page
+    // -1 means not initialized for top and bottom entry
+    long top_ent{}; // top entry on page
+    long bot_ent{}; // bottom entry (note change)
+    bool refill{};  // does the page need refilling?
+    // refresh entries
+    bool ref_all{}; // refresh all on page
+    bool ref_top{}; // top status bar
+    bool ref_bot{}; // bottom status bar
+    // -1 for the next two entries means don't refresh
+    short ref_status{}; // line to start refreshing status from
+    short ref_desc{};   // line to start refreshing descript. from
+    // screen sizes
+    short top_lines{};     // lines for top status bar
+    short bot_lines{};     // lines for bottom status bar
+    short status_cols{};   // characters for status column
+    short cursor_cols{};   // characters for cursor column
+    short item_num_cols{}; // characters for item number column
+    short desc_cols{};     // characters for description column
+    // pointer info
+    short ptr_page_line{}; // page_ent index
+    long  flags{};         // misc. flags
+};
+
+extern ArticleBrowseSession g_browse;
+
 // options
 extern int g_s_item_num; // show item numbers by default
 extern int g_s_mode_vi;

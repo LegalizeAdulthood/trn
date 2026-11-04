@@ -17,33 +17,8 @@
 
 // TODO: make a scontext file for the scan context stuff.
 
-// the current values
-long                   g_s_ent_sort_max{};   // maximum index of sorted array
-long                   g_s_ent_sorted_max{}; // maximum index *that is sorted*
-long                   g_s_ent_index_max{};  // maximum entry number added
-std::vector<PageEntry> g_page_ents{};        // entries on page
-long                   g_s_top_ent{};        // top entry on page
-long                   g_s_bot_ent{};        // bottom entry (note change)
-bool                   g_s_refill{};         // does the page need refilling?
-// refresh entries
-bool  g_s_ref_all{};    // refresh all on page
-bool  g_s_ref_top{};    // top status bar
-bool  g_s_ref_bot{};    // bottom status bar
-short g_s_ref_status{}; // line to start refreshing status from; -1 means don't refresh
-short g_s_ref_desc{};   // line to start refreshing descript. from; -1 means don't refresh
-// screen sizes
-short g_s_top_lines{};     // lines for top status bar
-short g_s_bot_lines{};     // lines for bottom status bar
-short g_s_status_cols{};   // characters for status column
-short g_s_cursor_cols{};   // characters for cursor column
-short g_s_item_num_cols{}; // characters for item number column
-short g_s_desc_cols{};     // characters for description column
-// pointer info
-short           g_s_ptr_page_line{}; // page_ent index
-long            g_s_flags{};         // misc. flags
-std::vector<ScanContext> g_s_contexts{};      // context structures
-int             g_s_cur_context{};   // current context number
-ScanContextType g_s_cur_type{};      // current context type (for fast switching)
+ArticleBrowseSession g_browse{};
+
 // options
 int g_s_item_num{true}; // show item numbers by default
 int g_s_mode_vi{};
@@ -53,12 +28,12 @@ static void s_clean_contexts();
 
 static void s_init_context(int cnum, ScanContextType type)
 {
-    if (cnum < 0 || cnum >= size_cast<int>(g_s_contexts))
+    if (cnum < 0 || cnum >= size_cast<int>(g_browse.contexts))
     {
         fmt::print("s_init_context: illegal context number {}!\n", cnum);
         TRN_ASSERT(false);
     }
-    ScanContext *p = &g_s_contexts[cnum];
+    ScanContext *p = &g_browse.contexts[cnum];
     p->type = type;
     p->ent_sort.clear();
     p->ent_sort_max = -1;
@@ -93,21 +68,21 @@ int s_new_context(ScanContextType type)
     int i;
 
     // check for deleted contexts
-    for (i = 0; i < size_cast<int>(g_s_contexts); i++)
+    for (i = 0; i < size_cast<int>(g_browse.contexts); i++)
     {
-        if (g_s_contexts[i].type == S_NONE)     // deleted context
+        if (g_browse.contexts[i].type == S_NONE) // deleted context
         {
             break;
         }
     }
-    if (i < size_cast<int>(g_s_contexts))   // a deleted one was found
+    if (i < size_cast<int>(g_browse.contexts)) // a deleted one was found
     {
         s_init_context(i,type);
         return i;
     }
     // none deleted, so allocate a new one
-    g_s_contexts.emplace_back();
-    i = size_cast<int>(g_s_contexts) - 1;
+    g_browse.contexts.emplace_back();
+    i = size_cast<int>(g_browse.contexts) - 1;
     s_init_context(i,type);
     return i;
 }
@@ -115,68 +90,68 @@ int s_new_context(ScanContextType type)
 // saves the current context
 void s_save_context()
 {
-    ScanContext *p = &g_s_contexts[g_s_cur_context];
+    ScanContext *p = &g_browse.contexts[g_browse.cur_context];
 
-    p->type = g_s_cur_type;
-    p->page_ents = g_page_ents;
+    p->type = g_browse.cur_type;
+    p->page_ents = g_browse.page_ents;
 
-    p->ent_sort_max = g_s_ent_sort_max;
-    p->ent_sorted_max = g_s_ent_sorted_max;
-    p->ent_index_max = g_s_ent_index_max;
+    p->ent_sort_max = g_browse.ent_sort_max;
+    p->ent_sorted_max = g_browse.ent_sorted_max;
+    p->ent_index_max = g_browse.ent_index_max;
 
-    p->top_ent = g_s_top_ent;
-    p->bot_ent = g_s_bot_ent;
-    p->refill = g_s_refill;
-    p->ref_all = g_s_ref_all;
-    p->ref_top = g_s_ref_top;
-    p->ref_bot = g_s_ref_bot;
-    p->ref_status = g_s_ref_status;
-    p->ref_desc = g_s_ref_desc;
+    p->top_ent = g_browse.top_ent;
+    p->bot_ent = g_browse.bot_ent;
+    p->refill = g_browse.refill;
+    p->ref_all = g_browse.ref_all;
+    p->ref_top = g_browse.ref_top;
+    p->ref_bot = g_browse.ref_bot;
+    p->ref_status = g_browse.ref_status;
+    p->ref_desc = g_browse.ref_desc;
 
-    p->top_lines = g_s_top_lines;
-    p->bot_lines = g_s_bot_lines;
-    p->status_cols = g_s_status_cols;
-    p->cursor_cols = g_s_cursor_cols;
-    p->desc_cols = g_s_desc_cols;
-    p->item_num_cols = g_s_item_num_cols;
-    p->ptr_page_line = g_s_ptr_page_line;
-    p->flags = g_s_flags;
+    p->top_lines = g_browse.top_lines;
+    p->bot_lines = g_browse.bot_lines;
+    p->status_cols = g_browse.status_cols;
+    p->cursor_cols = g_browse.cursor_cols;
+    p->desc_cols = g_browse.desc_cols;
+    p->item_num_cols = g_browse.item_num_cols;
+    p->ptr_page_line = g_browse.ptr_page_line;
+    p->flags = g_browse.flags;
 }
 
 // int newcontext;                      // context number to activate
 void s_change_context(int newcontext)
 {
-    if (newcontext < 0 || newcontext >= size_cast<int>(g_s_contexts))
+    if (newcontext < 0 || newcontext >= size_cast<int>(g_browse.contexts))
     {
         fmt::print("s_change_context: bad context number {}!\n", newcontext);
         TRN_ASSERT(false);
     }
-    g_s_cur_context = newcontext;
-    ScanContext *p = &g_s_contexts[newcontext];
-    g_s_cur_type = p->type;
-    g_page_ents = p->page_ents;
+    g_browse.cur_context = newcontext;
+    ScanContext *p = &g_browse.contexts[newcontext];
+    g_browse.cur_type = p->type;
+    g_browse.page_ents = p->page_ents;
 
-    g_s_ent_sort_max = p->ent_sort_max;
-    g_s_ent_sorted_max = p->ent_sorted_max;
-    g_s_ent_index_max = p->ent_index_max;
+    g_browse.ent_sort_max = p->ent_sort_max;
+    g_browse.ent_sorted_max = p->ent_sorted_max;
+    g_browse.ent_index_max = p->ent_index_max;
 
-    g_s_top_ent = p->top_ent;
-    g_s_bot_ent = p->bot_ent;
-    g_s_refill = p->refill;
-    g_s_ref_all = p->ref_all;
-    g_s_ref_top = p->ref_top;
-    g_s_ref_bot = p->ref_bot;
-    g_s_ref_status = p->ref_status;
-    g_s_ref_desc = p->ref_desc;
+    g_browse.top_ent = p->top_ent;
+    g_browse.bot_ent = p->bot_ent;
+    g_browse.refill = p->refill;
+    g_browse.ref_all = p->ref_all;
+    g_browse.ref_top = p->ref_top;
+    g_browse.ref_bot = p->ref_bot;
+    g_browse.ref_status = p->ref_status;
+    g_browse.ref_desc = p->ref_desc;
     // next ones should be reset later
-    g_s_top_lines = p->top_lines;
-    g_s_bot_lines = p->bot_lines;
-    g_s_status_cols = p->status_cols;
-    g_s_cursor_cols = p->cursor_cols;
-    g_s_desc_cols = p->desc_cols;
-    g_s_item_num_cols = p->item_num_cols;
-    g_s_ptr_page_line = p->ptr_page_line;
-    g_s_flags = p->flags;
+    g_browse.top_lines = p->top_lines;
+    g_browse.bot_lines = p->bot_lines;
+    g_browse.status_cols = p->status_cols;
+    g_browse.cursor_cols = p->cursor_cols;
+    g_browse.desc_cols = p->desc_cols;
+    g_browse.item_num_cols = p->item_num_cols;
+    g_browse.ptr_page_line = p->ptr_page_line;
+    g_browse.flags = p->flags;
 }
 
 // implement later?
@@ -187,24 +162,24 @@ static void s_clean_contexts()
 // int cnum;             // context number to delete
 void s_delete_context(int cnum)
 {
-    if (cnum < 0 || cnum >= size_cast<int>(g_s_contexts))
+    if (cnum < 0 || cnum >= size_cast<int>(g_browse.contexts))
     {
         fmt::print("s_delete_context: illegal context number {}!\n", cnum);
         TRN_ASSERT(false);
     }
-    if (cnum == g_s_cur_context)
+    if (cnum == g_browse.cur_context)
     {
         s_order_clean();
     }
     else
     {
-        g_s_contexts[cnum].ent_sort.clear();
-        g_s_contexts[cnum].ent_sort_max = -1;
-        g_s_contexts[cnum].ent_sorted_max = -1;
-        g_s_contexts[cnum].ent_index.clear();
-        g_s_contexts[cnum].ent_index_max = -1;
-        g_s_contexts[cnum].page_ents.clear();
+        g_browse.contexts[cnum].ent_sort.clear();
+        g_browse.contexts[cnum].ent_sort_max = -1;
+        g_browse.contexts[cnum].ent_sorted_max = -1;
+        g_browse.contexts[cnum].ent_index.clear();
+        g_browse.contexts[cnum].ent_index_max = -1;
+        g_browse.contexts[cnum].page_ents.clear();
     }
     // mark the context as empty
-    g_s_contexts[cnum].type = S_NONE;
+    g_browse.contexts[cnum].type = S_NONE;
 }

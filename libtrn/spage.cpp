@@ -39,18 +39,18 @@ bool s_fill_page_backward(long end)
     fmt::print("entry: s_fillpage_backward({})\n", end);
 #endif
 
-    page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
-    g_page_ents.clear();
+    page_lines = g_scr_height - g_browse.top_lines - g_browse.bot_lines;
+    g_browse.page_ents.clear();
     if (page_lines > 0)
     {
-        g_page_ents.reserve(page_lines);
+        g_browse.page_ents.reserve(page_lines);
     }
-    g_s_bot_ent = -1;   // none yet
+    g_browse.bot_ent = -1; // none yet
     line_on = 0;
 
     // whatever happens, the entry display will need a full refresh...
-    g_s_ref_status = 0;
-    g_s_ref_desc = 0;   // refresh from top entry
+    g_browse.ref_status = 0;
+    g_browse.ref_desc = 0; // refresh from top entry
 
     if (end < 1)                // start from end
     {
@@ -82,7 +82,7 @@ bool s_fill_page_backward(long end)
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_page_ents.push_back({a, static_cast<short>(i), 0, (char)0});
+        g_browse.page_ents.push_back({a, static_cast<short>(i), 0, (char) 0});
         line_on = line_on+i;
         a = s_prev_elig(a);
         if (!a)         // no more eligible
@@ -92,26 +92,26 @@ bool s_fill_page_backward(long end)
     }
 // what if none on page? (desc. too long) Fix later
     g_progress.set_spin(SPIN_POP); // turn off spin on cache misses
-    if (g_page_ents.empty())
+    if (g_browse.page_ents.empty())
     {
         return false;
     }
-    std::reverse(g_page_ents.begin(), g_page_ents.end());
+    std::reverse(g_browse.page_ents.begin(), g_browse.page_ents.end());
     line_on = 0;
-    for (PageEntry &entry : g_page_ents)
+    for (PageEntry &entry : g_browse.page_ents)
     {
         entry.page_flags = (char)0;
         entry.start_line = static_cast<short>(line_on);
         line_on = line_on + entry.lines;
     }
-    g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
-    // set new g_s_top_ent
-    g_s_top_ent = g_page_ents[0].ent_num;
+    g_browse.bot_ent = size_cast<long>(g_browse.page_ents) - 1;
+    // set new g_browse.top_ent
+    g_browse.top_ent = g_browse.page_ents[0].ent_num;
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
-    g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
-    if (g_s_cur_type != S_ART)
+    g_browse.ptr_page_line = std::min<long>(g_browse.ptr_page_line, g_browse.bot_ent);
+    if (g_browse.cur_type != S_ART)
     {
         return true;
     }
@@ -119,14 +119,14 @@ bool s_fill_page_backward(long end)
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (i = 0; i <= g_s_bot_ent; i++)
+    for (i = 0; i <= g_browse.bot_ent; i++)
     {
-        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_browse.page_ents[i].ent_num].artnum))
         {
             break;
         }
     }
-    if (i <= g_s_bot_ent)
+    if (i <= g_browse.bot_ent)
     {
         return s_fill_page_backward(end);
     }
@@ -149,18 +149,18 @@ bool s_fill_page_forward(long start)
     fmt::print("entry: s_fillpage_forward({})\n", start);
 #endif
 
-    page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
-    g_page_ents.clear();
+    page_lines = g_scr_height - g_browse.top_lines - g_browse.bot_lines;
+    g_browse.page_ents.clear();
     if (page_lines > 0)
     {
-        g_page_ents.reserve(page_lines);
+        g_browse.page_ents.reserve(page_lines);
     }
-    g_s_bot_ent = -1;
+    g_browse.bot_ent = -1;
     line_on = 0;
 
     // whatever happens, the entry zone will need a full refresh...
-    g_s_ref_status = 0;
-    g_s_ref_desc = 0;
+    g_browse.ref_status = 0;
+    g_browse.ref_desc = 0;
 
     if (start < 0)      // fill from top
     {
@@ -189,11 +189,11 @@ bool s_fill_page_forward(long start)
 // later make it shorten the descript.
 
     g_progress.set_spin(SPIN_BACKGROUND); // turn on spin on cache misses
-// ?  later do paranoia check for g_s_bot_ent
+                                          // ?  later do paranoia check for g_browse.bot_ent
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char)0});
+        g_browse.page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
         line_on = line_on+i;
         a = s_next_elig(a);
         if (!a)         // no more eligible
@@ -202,18 +202,18 @@ bool s_fill_page_forward(long start)
         }
     }
     g_progress.set_spin(SPIN_POP); // turn off spin on cache misses
-    if (g_page_ents.empty())
+    if (g_browse.page_ents.empty())
     {
         return false;
     }
-    g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
+    g_browse.bot_ent = size_cast<long>(g_browse.page_ents) - 1;
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
-    // set new g_s_top_ent
-    g_s_top_ent = g_page_ents[0].ent_num;
-    g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
-    if (g_s_cur_type != S_ART)
+    // set new g_browse.top_ent
+    g_browse.top_ent = g_browse.page_ents[0].ent_num;
+    g_browse.ptr_page_line = std::min<long>(g_browse.ptr_page_line, g_browse.bot_ent);
+    if (g_browse.cur_type != S_ART)
     {
         return true;
     }
@@ -221,14 +221,14 @@ bool s_fill_page_forward(long start)
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (i = 0; i <= g_s_bot_ent; i++)
+    for (i = 0; i <= g_browse.bot_ent; i++)
     {
-        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_browse.page_ents[i].ent_num].artnum))
         {
             break;
         }
     }
-    if (i <= g_s_bot_ent)
+    if (i <= g_browse.bot_ent)
     {
         return s_fill_page_forward(start);
     }
@@ -255,73 +255,72 @@ bool s_refill_page()
     fmt::print("entry: s_refillpage\n");
 #endif
 
-    page_lines = g_scr_height - g_s_top_lines - g_s_bot_lines;
-    // if the top entry is not the g_s_top_ent,
+    page_lines = g_scr_height - g_browse.top_lines - g_browse.bot_lines;
+    // if the top entry is not the g_browse.top_ent,
     //    or the top entry is not eligible,
     //    or the top entry is not on the first line,
     //    or the top entry has a different # of lines now,
     // just refill the whole page.
     //
-    if (g_s_bot_ent < 1 || g_s_top_ent < 1
-     || g_s_top_ent != g_page_ents[0].ent_num || !s_eligible(g_page_ents[0].ent_num)
-     || g_page_ents[0].start_line != 0
-     || g_page_ents[0].lines != s_ent_lines(g_page_ents[0].ent_num))
+    if (g_browse.bot_ent < 1 || g_browse.top_ent < 1 || g_browse.top_ent != g_browse.page_ents[0].ent_num ||
+        !s_eligible(g_browse.page_ents[0].ent_num) || g_browse.page_ents[0].start_line != 0 ||
+        g_browse.page_ents[0].lines != s_ent_lines(g_browse.page_ents[0].ent_num))
     {
-        return s_fill_page_forward(g_s_top_ent);
+        return s_fill_page_forward(g_browse.top_ent);
     }
 
     i = 1;
     // misc note: I used to have
-    // a = g_page_ents[1];
+    // a = g_browse.page_ents[1];
     // ...at this point.  This caused a truly difficult to track bug...
-    // (briefly, occasionally the entry in g_page_ents[1] would be
-    //  *before* (by display order) the entry in g_page_ents[0].  In
-    //  this case the start_line entry of g_page_ents[0] could be overwritten
+    // (briefly, occasionally the entry in g_browse.page_ents[1] would be
+    //  *before* (by display order) the entry in g_browse.page_ents[0].  In
+    //  this case the start_line entry of g_browse.page_ents[0] could be overwritten
     //  causing big problems...)
     //
-    a = s_next_elig(g_page_ents[0].ent_num);
+    a = s_next_elig(g_browse.page_ents[0].ent_num);
 
     // similar to the tests in the last loop...
-    while (i <= g_s_bot_ent && s_eligible(g_page_ents[i].ent_num) //
-           && g_page_ents[i].ent_num == a                         //
-           && g_page_ents[i].lines == s_ent_lines(g_page_ents[i].ent_num))
+    while (i <= g_browse.bot_ent && s_eligible(g_browse.page_ents[i].ent_num) //
+           && g_browse.page_ents[i].ent_num == a                              //
+           && g_browse.page_ents[i].lines == s_ent_lines(g_browse.page_ents[i].ent_num))
     {
         i++;
         a = s_next_elig(a);
     }
     j = i-1;    // j is the last "good" entry
 
-    g_s_bot_ent = j;
-    g_page_ents.resize(j + 1);
-    line_on = g_page_ents[j].start_line + s_ent_lines(g_page_ents[j].ent_num);
-    a = s_next_elig(g_page_ents[j].ent_num);
+    g_browse.bot_ent = j;
+    g_browse.page_ents.resize(j + 1);
+    line_on = g_browse.page_ents[j].start_line + s_ent_lines(g_browse.page_ents[j].ent_num);
+    a = s_next_elig(g_browse.page_ents[j].ent_num);
     if (page_lines > 0)
     {
-        g_page_ents.reserve(page_lines);
+        g_browse.page_ents.reserve(page_lines);
     }
 
     g_progress.set_spin(SPIN_BACKGROUND);
     while (a && line_on + s_ent_lines(a) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char)0});
+        g_browse.page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
         line_on = line_on+i;
         a = s_next_elig(a);
     }
     g_progress.set_spin(SPIN_POP);
-    g_s_bot_ent = size_cast<long>(g_page_ents) - 1;
+    g_browse.bot_ent = size_cast<long>(g_browse.page_ents) - 1;
 
     // there are fairly good reasons to refresh the last good entry, such
     // as clearing the rest of the screen...
     //
-    g_s_ref_status = j;
-    g_s_ref_desc = j;
+    g_browse.ref_status = j;
+    g_browse.ref_desc = j;
 
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
-    g_s_ptr_page_line = std::min<long>(g_s_ptr_page_line, g_s_bot_ent);
-    if (g_s_cur_type != S_ART)
+    g_browse.ptr_page_line = std::min<long>(g_browse.ptr_page_line, g_browse.bot_ent);
+    if (g_browse.cur_type != S_ART)
     {
         return true;
     }
@@ -329,14 +328,14 @@ bool s_refill_page()
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (i = 0; i <= g_s_bot_ent; i++)
+    for (i = 0; i <= g_browse.bot_ent; i++)
     {
-        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_browse.page_ents[i].ent_num].artnum))
         {
             break;
         }
     }
-    if (i <= g_s_bot_ent)
+    if (i <= g_browse.bot_ent)
     {
         return s_refill_page();  // next time the unavail won't be chosen
     }
@@ -354,26 +353,26 @@ int s_fill_page()
 {
     int i;
 
-    g_s_refill = false; // we don't need one now
-    if (g_s_top_ent < 1)        // set top to first entry
+    g_browse.refill = false;  // we don't need one now
+    if (g_browse.top_ent < 1) // set top to first entry
     {
-        g_s_top_ent = s_first();
+        g_browse.top_ent = s_first();
     }
-    if (g_s_top_ent == 0)       // no entries
+    if (g_browse.top_ent == 0) // no entries
     {
         return 0;       // failure
     }
     if (!s_refill_page())        // try for efficient refill
     {
-        if (!s_fill_page_backward(g_s_top_ent))
+        if (!s_fill_page_backward(g_browse.top_ent))
         {
             // downgrade eligibility standards
-            switch (g_s_cur_type)
+            switch (g_browse.cur_type)
             {
             case S_ART:               // article context
                 if (g_sa_mode_zoom)             // we were zoomed in
                 {
-                    g_s_ref_top = true; // for "FOLD" display
+                    g_browse.ref_top = true;    // for "FOLD" display
                     g_sa_mode_zoom = false;     // zoom out
                     if (g_sa_unzoom_refold)
                     {
@@ -393,26 +392,26 @@ int s_fill_page()
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (int j = 0; j <= g_s_bot_ent; j++)
+    for (int j = 0; j <= g_browse.bot_ent; j++)
     {
-        if (!s_eligible(g_page_ents[j].ent_num))
+        if (!s_eligible(g_browse.page_ents[j].ent_num))
         {
             return s_fill_page();  // ineligible won't be chosen again
         }
     }
-    if (g_s_cur_type != S_ART)
+    if (g_browse.cur_type != S_ART)
     {
         return 1;
     }
     // be extra cautious about the article scan pages
-    for (i = 0; i <= g_s_bot_ent; i++)
+    for (i = 0; i <= g_browse.bot_ent; i++)
     {
-        if (g_cache.is_unavailable(g_sa_ents[g_page_ents[i].ent_num].artnum))
+        if (g_cache.is_unavailable(g_sa_ents[g_browse.page_ents[i].ent_num].artnum))
         {
             break;
         }
     }
-    if (i <= g_s_bot_ent)
+    if (i <= g_browse.bot_ent)
     {
         return s_fill_page();    // next time the unavail won't be chosen
     }
@@ -425,39 +424,39 @@ static void s_clean_page()
 
 void s_go_top_page()
 {
-    g_s_ptr_page_line = 0;
+    g_browse.ptr_page_line = 0;
 }
 
 void s_go_bot_page()
 {
-    g_s_ptr_page_line = g_s_bot_ent;
+    g_browse.ptr_page_line = g_browse.bot_ent;
 }
 
 bool s_go_top_ents()
 {
-    g_s_top_ent = s_first();
-    if (!g_s_top_ent)
+    g_browse.top_ent = s_first();
+    if (!g_browse.top_ent)
     {
         fmt::print("s_go_top_ents(): no first entry\n");
     }
-    TRN_ASSERT(g_s_top_ent);    // be nicer later
-    if (!s_eligible(g_s_top_ent))       // this may save a redraw...
+    TRN_ASSERT(g_browse.top_ent);      // be nicer later
+    if (!s_eligible(g_browse.top_ent)) // this may save a redraw...
     {
-        g_s_top_ent = s_next_elig(g_s_top_ent);
+        g_browse.top_ent = s_next_elig(g_browse.top_ent);
     }
-    if (!g_s_top_ent)   // none eligible
+    if (!g_browse.top_ent) // none eligible
     {
         // just go to the top of all the entries
-        if (g_s_cur_type == S_ART)
+        if (g_browse.cur_type == S_ART)
         {
-            g_s_top_ent = g_abs_first.value_of();
+            g_browse.top_ent = g_abs_first.value_of();
         }
         else
         {
-            g_s_top_ent = 1;    // not very nice coding
+            g_browse.top_ent = 1; // not very nice coding
         }
     }
-    g_s_refill = true;
+    g_browse.refill = true;
     s_go_top_page();
     return true;        // successful
 }
@@ -475,7 +474,7 @@ bool s_go_bot_ents()
 
 void s_go_next_page()
 {
-    long a = s_next_elig(g_page_ents[g_s_bot_ent].ent_num);
+    long a = s_next_elig(g_browse.page_ents[g_browse.bot_ent].ent_num);
     if (!a)
     {
         return;         // no next page (we shouldn't have been called)
@@ -483,12 +482,12 @@ void s_go_next_page()
     // the fill-page will set the refresh for the screen
     bool flag = s_fill_page_forward(a);
     TRN_ASSERT(flag);           // I *must* be able to fill a page
-    g_s_ptr_page_line = 0;      // top of page
+    g_browse.ptr_page_line = 0; // top of page
 }
 
 void s_go_prev_page()
 {
-    long a = s_prev_elig(g_page_ents[0].ent_num);
+    long a = s_prev_elig(g_browse.page_ents[0].ent_num);
     if (!a)
     {
         return;         // no prev. page (we shouldn't have been called)
@@ -499,7 +498,7 @@ void s_go_prev_page()
     // take care of partially filled previous pages
     flag = s_refill_page();
     TRN_ASSERT(flag);           // be nicer later...
-    g_s_ref_status = 0;
-    g_s_ref_desc = 0;      // refresh from top
-    g_s_ptr_page_line = 0; // top of page
+    g_browse.ref_status = 0;
+    g_browse.ref_desc = 0;      // refresh from top
+    g_browse.ptr_page_line = 0; // top of page
 }

@@ -33,12 +33,12 @@ protected:
         g_cache.article_list.clear();
         g_subst.reset_mode();
         g_last_art = ArticleNum{1};
-        g_s_cur_type = S_ART;
-        g_s_status_cols = 3;
-        m_old_s_ptr_page_line = g_s_ptr_page_line;
-        m_old_s_bot_ent = g_s_bot_ent;
-        m_old_s_ref_bot = g_s_ref_bot;
-        m_old_s_bot_lines = g_s_bot_lines;
+        g_browse.cur_type = S_ART;
+        g_browse.status_cols = 3;
+        m_old_s_ptr_page_line = g_browse.ptr_page_line;
+        m_old_s_bot_ent = g_browse.bot_ent;
+        m_old_s_ref_bot = g_browse.ref_bot;
+        m_old_s_bot_lines = g_browse.bot_lines;
         m_old_tc_lines = g_tc_LINES;
         m_old_tc_bc = g_tc_BC;
         m_old_tc_ce = g_tc_CE;
@@ -60,10 +60,10 @@ protected:
         g_sa_mode_desc_summary = false;
         g_sa_mode_desc_keyw = false;
 
-        g_s_ptr_page_line = 0;
-        g_s_bot_ent = 11;
-        g_s_ref_bot = false;
-        g_s_bot_lines = 1;
+        g_browse.ptr_page_line = 0;
+        g_browse.bot_ent = 11;
+        g_browse.ref_bot = false;
+        g_browse.bot_lines = 1;
         g_tc_LINES = 24;
         g_tc_BC = "\b";
         g_tc_CE = "";
@@ -73,10 +73,10 @@ protected:
 
     void TearDown() override
     {
-        g_s_ptr_page_line = m_old_s_ptr_page_line;
-        g_s_bot_ent = m_old_s_bot_ent;
-        g_s_ref_bot = m_old_s_ref_bot;
-        g_s_bot_lines = m_old_s_bot_lines;
+        g_browse.ptr_page_line = m_old_s_ptr_page_line;
+        g_browse.bot_ent = m_old_s_bot_ent;
+        g_browse.ref_bot = m_old_s_ref_bot;
+        g_browse.bot_lines = m_old_s_bot_lines;
         g_tc_LINES = m_old_tc_lines;
         g_tc_BC = m_old_tc_bc;
         g_tc_CE = m_old_tc_ce;
@@ -86,8 +86,8 @@ protected:
         g_sa_ents.clear();
         g_subst.set_mode('\0');
         g_last_art = ArticleNum{};
-        g_s_cur_type = S_NONE;
-        g_s_status_cols = 0;
+        g_browse.cur_type = S_NONE;
+        g_browse.status_cols = 0;
     }
 
     std::string          m_author{"Casey Mixed <case@example.com>"};
@@ -136,7 +136,7 @@ TEST_F(ScanCommandTest, jumpNumberReadsSecondDigit)
     scmd_jump_num_for_test('1');
     testing::internal::GetCapturedStdout();
 
-    EXPECT_EQ(11, g_s_ptr_page_line);
+    EXPECT_EQ(11, g_browse.ptr_page_line);
 }
 
 TEST_F(ScanCommandTest, jumpNumberPushesBackCommandAfterFirstDigit)
@@ -147,7 +147,7 @@ TEST_F(ScanCommandTest, jumpNumberPushesBackCommandAfterFirstDigit)
     scmd_jump_num_for_test('1');
     testing::internal::GetCapturedStdout();
 
-    EXPECT_EQ(0, g_s_ptr_page_line);
+    EXPECT_EQ(0, g_browse.ptr_page_line);
     const std::string command = get_cmd();
     ASSERT_FALSE(command.empty());
     EXPECT_EQ('x', command.front());
@@ -209,7 +209,7 @@ TEST_F(ScanCommandTest, articleStatusUsesBlanksForUnknownStatusLine)
 
 TEST_F(ScanCommandTest, scanStatusHidesStatusWhenColumnWidthIsZero)
 {
-    g_s_status_cols = 0;
+    g_browse.status_cols = 0;
 
     EXPECT_EQ("", s_get_statchars(1, 1));
 }

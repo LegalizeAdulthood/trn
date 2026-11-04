@@ -190,9 +190,9 @@ std::string sa_get_desc(long e, int line, bool trunc)
         desc = fmt::format("Entry {}: Nonimplemented Description LINE", e);
         break;
     } // switch (line)
-    if (trunc && desc.size() > static_cast<std::size_t>(g_s_desc_cols))
+    if (trunc && desc.size() > static_cast<std::size_t>(g_browse.desc_cols))
     {
-        desc.resize(static_cast<std::size_t>(g_s_desc_cols)); // make sure it's not too long
+        desc.resize(static_cast<std::size_t>(g_browse.desc_cols)); // make sure it's not too long
     }
 #ifdef HAS_TERMLIB
     if (use_standout)

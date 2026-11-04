@@ -13,8 +13,6 @@
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
 
-bool g_s_order_changed{}; // If true, resort next time order is considered
-
 static ScanContext       &s_current_context();
 static std::vector<long> &s_ent_sort();
 static std::vector<long> &s_ent_index();
@@ -23,7 +21,7 @@ static void               s_sort_basic();
 
 static ScanContext &s_current_context()
 {
-    return g_s_contexts[g_s_cur_context];
+    return g_browse.contexts[g_browse.cur_context];
 }
 
 static std::vector<long> &s_ent_sort()
@@ -40,16 +38,16 @@ static void s_save_order_bounds()
 {
     ScanContext &context = s_current_context();
 
-    context.ent_sort_max = g_s_ent_sort_max;
-    context.ent_sorted_max = g_s_ent_sorted_max;
-    context.ent_index_max = g_s_ent_index_max;
+    context.ent_sort_max = g_browse.ent_sort_max;
+    context.ent_sorted_max = g_browse.ent_sorted_max;
+    context.ent_index_max = g_browse.ent_index_max;
 }
 
 #ifdef UNDEF
 // pointers to the two entries to be compared
 int s_compare(long *a, long *b)
 {
-    switch (g_s_cur_type)
+    switch (g_browse.cur_type)
     {
     case S_ART:
         return sa_compare(*a,*b);
@@ -63,7 +61,7 @@ int s_compare(long *a, long *b)
 // the two entry numbers to be compared
 int s_compare(long a, long b)
 {
-    switch (g_s_cur_type)
+    switch (g_browse.cur_type)
     {
     case S_ART:
         return sa_compare(a,b);
@@ -85,7 +83,7 @@ static void s_sort_basic()
     int t1;
     int j;
 
-    int n = g_s_ent_sort_max + 1;
+    int n = g_browse.ent_sort_max + 1;
     if (n < 1)
     {
         return;         // nothing to sort
@@ -147,13 +145,13 @@ void s_sort()
     std::vector<long> &ent_index = s_ent_index();
 
 #ifdef UNDEF
-    std::qsort((void*)ent_sort.data(),(g_s_ent_sort_max)+1,sizeof(long),s_compare);
+    std::qsort((void *) ent_sort.data(), (g_browse.ent_sort_max) + 1, sizeof(long), s_compare);
 #endif
     s_sort_basic();
-    g_s_ent_sorted_max = g_s_ent_sort_max;  // whole array is now sorted
-    g_s_order_changed = false;
+    g_browse.ent_sorted_max = g_browse.ent_sort_max; // whole array is now sorted
+    g_browse.order_changed = false;
     // rebuild the indexes
-    for (long i = 0; i <= g_s_ent_sort_max; i++)
+    for (long i = 0; i <= g_browse.ent_sort_max; i++)
     {
         ent_index[ent_sort[i]] = i;
     }
@@ -165,9 +163,9 @@ void s_order_clean()
     s_ent_sort().clear();
     s_ent_index().clear();
 
-    g_s_ent_sort_max = -1;
-    g_s_ent_sorted_max = -1;
-    g_s_ent_index_max = -1;
+    g_browse.ent_sort_max = -1;
+    g_browse.ent_sorted_max = -1;
+    g_browse.ent_index_max = -1;
     s_save_order_bounds();
 }
 
@@ -184,17 +182,17 @@ void s_order_add(long ent)
 
     // add entry to end of sorted list
     ent_sort.push_back(ent);
-    g_s_ent_sort_max = size_cast<long>(ent_sort) - 1;
+    g_browse.ent_sort_max = size_cast<long>(ent_sort) - 1;
 
     // grow index list if needed
     if (ent >= size_cast<long>(ent_index))
     {
         const long new_size = (ent/100+1) * 100 + 1; // round up
         ent_index.resize(new_size, -1);              // -1 == not a legal entry
-        g_s_ent_index_max = size_cast<long>(ent_index) - 1;
+        g_browse.ent_index_max = size_cast<long>(ent_index) - 1;
     }
-    ent_index[ent] = g_s_ent_sort_max;
-    g_s_order_changed = true;
+    ent_index[ent] = g_browse.ent_sort_max;
+    g_browse.order_changed = true;
     s_save_order_bounds();
 }
 
@@ -203,11 +201,11 @@ long s_prev(long ent)
     std::vector<long> &ent_sort = s_ent_sort();
     std::vector<long> &ent_index = s_ent_index();
 
-    if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
+    if (ent < 0 || ent > g_browse.ent_index_max || g_browse.ent_sorted_max < 0)
     {
         return 0;
     }
-    if (g_s_order_changed)
+    if (g_browse.order_changed)
     {
         s_sort();
     }
@@ -224,16 +222,16 @@ long s_next(long ent)
     std::vector<long> &ent_sort = s_ent_sort();
     std::vector<long> &ent_index = s_ent_index();
 
-    if (ent < 0 || ent > g_s_ent_index_max || g_s_ent_sorted_max < 0)
+    if (ent < 0 || ent > g_browse.ent_index_max || g_browse.ent_sorted_max < 0)
     {
         return 0;
     }
-    if (g_s_order_changed)
+    if (g_browse.order_changed)
     {
         s_sort();
     }
     long tmp = ent_index[ent];
-    if (tmp < 0 || tmp == g_s_ent_sorted_max)
+    if (tmp < 0 || tmp == g_browse.ent_sorted_max)
     {
         return 0;
     }
@@ -272,11 +270,11 @@ long s_first()
 {
     std::vector<long> &ent_sort = s_ent_sort();
 
-    if (g_s_order_changed)
+    if (g_browse.order_changed)
     {
         s_sort();
     }
-    if (g_s_ent_sorted_max < 0)
+    if (g_browse.ent_sorted_max < 0)
     {
         return 0;
     }
@@ -287,13 +285,13 @@ long s_last()
 {
     std::vector<long> &ent_sort = s_ent_sort();
 
-    if (g_s_order_changed)
+    if (g_browse.order_changed)
     {
         s_sort();
     }
-    if (g_s_ent_sorted_max < 0)
+    if (g_browse.ent_sorted_max < 0)
     {
         return 0;
     }
-    return ent_sort[g_s_ent_sorted_max];
+    return ent_sort[g_browse.ent_sorted_max];
 }

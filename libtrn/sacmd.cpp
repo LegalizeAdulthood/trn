@@ -96,7 +96,7 @@ int sa_do_cmd(std::string_view command)
     long    b; // misc. artnum
     int     i; // for misc. purposes
 
-    long    a = (long)g_page_ents[g_s_ptr_page_line].ent_num;
+    long       a = (long) g_browse.page_ents[g_browse.ptr_page_line].ent_num;
     ArticleNum artnum = g_sa_ents[a].artnum;
     const char command_ch = sa_command_char(command);
 
@@ -133,21 +133,20 @@ int sa_do_cmd(std::string_view command)
             }
         }
         sc_kill_threshold(i);
-        g_s_refill = true;
-        g_s_ref_top = true;     // refresh # of articles
+        g_browse.refill = true;
+        g_browse.ref_top = true; // refresh # of articles
         break;
     }
 
     case 'D': // kill unmarked "on" page
-        for (int j = 0; j <= g_s_bot_ent; j++)
+        for (int j = 0; j <= g_browse.bot_ent; j++)
         {
             // This is a difficult decision, with no obviously good behavior.
             // Do not kill threads with the first article marked, as it is probably
             // not what the user wanted.
-            if (!sa_marked(g_page_ents[j].ent_num) || !g_sa_mode_fold)
+            if (!sa_marked(g_browse.page_ents[j].ent_num) || !g_sa_mode_fold)
             {
-                (void)sa_art_cmd(g_sa_mode_fold,SA_KILL_UNMARKED,
-                                 g_page_ents[j].ent_num);
+                (void) sa_art_cmd(g_sa_mode_fold, SA_KILL_UNMARKED, g_browse.page_ents[j].ent_num);
             }
         }
         // consider: should it start reading?
@@ -157,31 +156,31 @@ int sa_do_cmd(std::string_view command)
             sa_clear_mark(b);
             return b;
         }
-        g_s_ref_top = true;     // refresh # of articles
-        g_s_refill = true;
+        g_browse.ref_top = true; // refresh # of articles
+        g_browse.refill = true;
         break;
 
     case 'J': // kill marked "on" page
         // If in "fold" mode, kill threads with the first article marked
         if (g_sa_mode_fold)
         {
-            for (int j = 0; j <= g_s_bot_ent; j++)
+            for (int j = 0; j <= g_browse.bot_ent; j++)
             {
-                if (sa_marked(g_page_ents[j].ent_num))
+                if (sa_marked(g_browse.page_ents[j].ent_num))
                 {
-                    (void) sa_art_cmd(true, SA_KILL, g_page_ents[j].ent_num);
+                    (void) sa_art_cmd(true, SA_KILL, g_browse.page_ents[j].ent_num);
                 }
             }
         }
         else
         {
-            for (int j = 0; j <= g_s_bot_ent; j++)
+            for (int j = 0; j <= g_browse.bot_ent; j++)
             {
-                (void) sa_art_cmd(false, SA_KILL_MARKED, g_page_ents[j].ent_num);
+                (void) sa_art_cmd(false, SA_KILL_MARKED, g_browse.page_ents[j].ent_num);
             }
         }
-        g_s_refill = true;
-        g_s_ref_top = true;     // refresh # of articles
+        g_browse.refill = true;
+        g_browse.ref_top = true; // refresh # of articles
         break;
 
     case 'X': // kill unmarked (basic-eligible) in group
@@ -242,16 +241,16 @@ int sa_do_cmd(std::string_view command)
             sa_clear_mark(b);
             return b;
         }
-        g_s_refill = true;
-        g_s_ref_top = true;     // refresh # of articles
+        g_browse.refill = true;
+        g_browse.ref_top = true; // refresh # of articles
         break;
     }
 
     case 'c': // catchup
         s_go_bot();
         ask_catchup();
-        g_s_refill = true;
-        g_s_ref_all = true;
+        g_browse.refill = true;
+        g_browse.ref_all = true;
         break;
 
     case 'o': // toggle between score and arrival orders
@@ -280,8 +279,8 @@ int sa_do_cmd(std::string_view command)
         }
         s_sort();
         s_go_top_ents();
-        g_s_refill = true;
-        g_s_ref_bot = true;
+        g_browse.refill = true;
+        g_browse.ref_bot = true;
         break;
 
     case 'O': // change article sorting order
@@ -293,7 +292,7 @@ int sa_do_cmd(std::string_view command)
         g_score_new_first = !g_score_new_first;
         s_sort();
         s_go_top_ents();
-        g_s_refill = true;
+        g_browse.refill = true;
         break;
 
     case 'R': // rescore articles
@@ -303,36 +302,36 @@ int sa_do_cmd(std::string_view command)
         }
         // clear to end of screen
         clear_rest();
-        g_s_ref_all = true; // refresh everything
+        g_browse.ref_all = true; // refresh everything
         fmt::print("\nRescoring articles...\n");
         sc_rescore();
         s_sort();
         s_go_top_ents();
-        g_s_refill = true;
+        g_browse.refill = true;
         eat_typeahead();        // stay in control.
         break;
 
     case Ctl('e'):            // edit scorefile for group
           // clear to end of screen
           clear_rest();
-        g_s_ref_all = true;  // refresh everything
-        sc_score_cmd("e"); // edit scorefile
-        eat_typeahead();   // stay in control.
-        break;
+          g_browse.ref_all = true; // refresh everything
+          sc_score_cmd("e");       // edit scorefile
+          eat_typeahead();         // stay in control.
+          break;
 
     case '\t':        // TAB: toggle threadcount display
         g_sa_mode_desc_thread_count = !g_sa_mode_desc_thread_count;
-        g_s_ref_desc = 0;
+        g_browse.ref_desc = 0;
         break;
 
     case 'a': // toggle author display
         g_sa_mode_desc_author = !g_sa_mode_desc_author;
-        g_s_ref_desc = 0;
+        g_browse.ref_desc = 0;
         break;
 
     case '%': // toggle article # display
         g_sa_mode_desc_art_num = !g_sa_mode_desc_art_num;
-        g_s_ref_desc = 0;
+        g_browse.ref_desc = 0;
         break;
 
     case 'U': // toggle unread/unread+read mode
@@ -355,10 +354,10 @@ int sa_do_cmd(std::string_view command)
                 g_sc_fill_read = false;
             }
 #endif
-            g_s_ref_top = true;
+            g_browse.ref_top = true;
             s_rub_ptr();
             s_go_top_ents();
-            g_s_refill = true;
+            g_browse.refill = true;
         }
         else // quit out: no articles
         {
@@ -368,13 +367,13 @@ int sa_do_cmd(std::string_view command)
 
     case 'F': // Fold
         g_sa_mode_fold = !g_sa_mode_fold;
-        g_s_refill = true;
-        g_s_ref_top = true;
+        g_browse.refill = true;
+        g_browse.ref_top = true;
         break;
 
     case 'f': // follow
         g_sa_follow = !g_sa_follow;
-        g_s_ref_top = true;
+        g_browse.ref_top = true;
         break;
 
     case 'Z': // Zero (wipe) selections...
@@ -382,12 +381,12 @@ int sa_do_cmd(std::string_view command)
         {
             sa_clear_select1(j);
         }
-        g_s_ref_status = 0;
+        g_browse.ref_status = 0;
         if (!g_sa_mode_zoom)
         {
             break;
         }
-        g_s_ref_all = true;     // otherwise won't be refreshed
+        g_browse.ref_all = true; // otherwise won't be refreshed
         // if in zoom mode, turn it off...
         // FALL THROUGH
 
@@ -400,9 +399,9 @@ int sa_do_cmd(std::string_view command)
         // toggle mode again if no elibible articles left
         if (sa_eligible(s_first()) || s_next_elig(s_first()))
         {
-            g_s_ref_top = true;
+            g_browse.ref_top = true;
             s_go_top_ents();
-            g_s_refill = true;
+            g_browse.refill = true;
         }
         else
         {
@@ -414,20 +413,20 @@ int sa_do_cmd(std::string_view command)
     case 'j': // junk just this article
         (void)sa_art_cmd(false,SA_KILL,a);
         // later refill the page
-        g_s_refill = true;
-        g_s_ref_top = true;     // refresh # of articles
+        g_browse.refill = true;
+        g_browse.ref_top = true; // refresh # of articles
         break;
 
     case 'n': // next art
     case ']':
         s_rub_ptr();
-        if (g_s_ptr_page_line<(g_s_bot_ent)) // more on page...
+        if (g_browse.ptr_page_line < (g_browse.bot_ent)) // more on page...
         {
-            g_s_ptr_page_line +=1;
+            g_browse.ptr_page_line += 1;
         }
         else
         {
-            if (!s_next_elig(g_page_ents[g_s_bot_ent].ent_num))
+            if (!s_next_elig(g_browse.page_ents[g_browse.bot_ent].ent_num))
             {
                 s_beep();
                 return 0;
@@ -439,8 +438,8 @@ int sa_do_cmd(std::string_view command)
     case 'k': // kill subject thread
     case ',': // might later clone TRN ','
         (void)sa_art_cmd(true,SA_KILL,a);
-        g_s_refill = true;
-        g_s_ref_top = true;     // refresh # of articles
+        g_browse.refill = true;
+        g_browse.ref_top = true; // refresh # of articles
         break;
 
     case Ctl('n'):    // follow subject forward
@@ -457,18 +456,18 @@ int sa_do_cmd(std::string_view command)
             s_beep();
             return 0;
         }
-        for (int j = g_s_ptr_page_line+1; j <= g_s_bot_ent; j++)
+        for (int j = g_browse.ptr_page_line + 1; j <= g_browse.bot_ent; j++)
         {
-            if (g_page_ents[j].ent_num == b)     // art is on same page
+            if (g_browse.page_ents[j].ent_num == b) // art is on same page
             {
                 s_rub_ptr();
-                g_s_ptr_page_line = j;
+                g_browse.ptr_page_line = j;
                 return 0;
             }
         }
         // article is not on page...
         (void)s_fill_page_forward(b);  // fill forward (*must* work)
-        g_s_ptr_page_line = 0;
+        g_browse.ptr_page_line = 0;
         break;
 
     case Ctl('a'):    // next article with same author...
@@ -480,18 +479,18 @@ int sa_do_cmd(std::string_view command)
             s_beep();
             return 0;
         }
-        for (int j = 0; j <= g_s_bot_ent; j++)
+        for (int j = 0; j <= g_browse.bot_ent; j++)
         {
-            if (g_page_ents[j].ent_num == b)     // art is on same page
+            if (g_browse.page_ents[j].ent_num == b) // art is on same page
             {
                 s_rub_ptr();
-                g_s_ptr_page_line = j;
+                g_browse.ptr_page_line = j;
                 return 0;
             }
         }
         // article is not on page...
         (void)s_fill_page_forward(b);  // fill forward (*must* work)
-        g_s_ptr_page_line = 0;
+        g_browse.ptr_page_line = 0;
         break;
 
     case Ctl('p'):    // follow subject backwards
@@ -508,20 +507,20 @@ int sa_do_cmd(std::string_view command)
             s_beep();
             return 0;
         }
-        for (int j = g_s_ptr_page_line-1; j >= 0; j--)
+        for (int j = g_browse.ptr_page_line - 1; j >= 0; j--)
         {
-            if (g_page_ents[j].ent_num == b)     // art is on same page
+            if (g_browse.page_ents[j].ent_num == b) // art is on same page
             {
                 s_rub_ptr();
-                g_s_ptr_page_line = j;
+                g_browse.ptr_page_line = j;
                 return 0;
             }
         }
         // article is not on page...
         (void)s_fill_page_backward(b);  // fill backward (*must* work)
-        g_s_ptr_page_line = g_s_bot_ent;  // go to bottom of page
+        g_browse.ptr_page_line = g_browse.bot_ent; // go to bottom of page
         (void)s_refill_page();   // make sure page is full
-        g_s_ref_all = true;             // make everything redrawn...
+        g_browse.ref_all = true; // make everything redrawn...
         break;
 
     case 'G': // go to article number
@@ -575,7 +574,7 @@ int sa_do_cmd(std::string_view command)
 
     case 'r': // read article...
         // everything needs to be refreshed...
-        g_s_ref_all = true;
+        g_browse.ref_all = true;
         return a;
 
     case 'm': // toggle mark on one article
@@ -585,9 +584,9 @@ int sa_do_cmd(std::string_view command)
         if (!g_sa_mark_stay)
         {
             // go to next art on page or top of page if at bottom
-            if (g_s_ptr_page_line < g_s_bot_ent)        // more on page
+            if (g_browse.ptr_page_line < g_browse.bot_ent) // more on page
             {
-                g_s_ptr_page_line +=1;
+                g_browse.ptr_page_line += 1;
             }
             else
             {
@@ -608,9 +607,9 @@ int sa_do_cmd(std::string_view command)
         if (!g_sa_mark_stay && !g_sa_mode_zoom)
         {
             // go to next art on page or top of page if at bottom
-            if (g_s_ptr_page_line<(g_s_bot_ent))        // more on page
+            if (g_browse.ptr_page_line < (g_browse.bot_ent)) // more on page
             {
-                g_s_ptr_page_line +=1;
+                g_browse.ptr_page_line += 1;
             }
             else
             {
@@ -625,7 +624,7 @@ int sa_do_cmd(std::string_view command)
     case '"':                 // append to local SCORE file
     {
         s_go_bot();
-        g_s_ref_all = true;
+        g_browse.ref_all = true;
         fmt::print("Enter score append command or type RETURN for a menu\n");
         const std::string full_command = finish_command(":", false);
         if (full_command.empty())
@@ -643,7 +642,7 @@ int sa_do_cmd(std::string_view command)
     case '\'': // execute scoring command
     {
         s_go_bot();
-        g_s_ref_all = true;
+        g_browse.ref_all = true;
         fmt::print("\nEnter scoring command or type RETURN for a menu\n");
         const std::string full_command = finish_command(":", false);
         if (full_command.empty())
@@ -653,7 +652,7 @@ int sa_do_cmd(std::string_view command)
         fmt::print("\n");
         sa_go_art(artnum);
         sc_score_cmd(sa_command_argument(full_command));
-        g_s_ref_all = true;
+        g_browse.ref_all = true;
         (void)get_anything();
         eat_typeahead();
         break;
@@ -712,7 +711,7 @@ static void sa_art_cmd_prim(SaCommand cmd, long a)
             sa_clear_select1(a);
             if (g_sa_mode_zoom)
             {
-                g_s_refill = true;      // article is now ineligible
+                g_browse.refill = true; // article is now ineligible
             }
         }
         else
