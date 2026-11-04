@@ -16334,6 +16334,6 @@ TEST_F(InputNewsgroupTest, readsRemoteArticleFromMockServer)
     EXPECT_EQ(NG_NEXT, result);
     EXPECT_THAT(output, testing::HasSubstr(TRN_TEST_BODY));
 
-    nntp_close(true);
+    g_nntp.close(true);
     server.verify();
 }

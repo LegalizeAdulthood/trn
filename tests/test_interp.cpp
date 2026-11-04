@@ -2456,7 +2456,7 @@ void RemotePagerArticleTest::TearDown()
         art_close();
         (void) nntp_art_name(ArticleNum{}, false);
         g_nntp.gets_clear_buffer();
-        nntp_close(true);
+        g_nntp.close(true);
         m_server.verify();
     }
     g_data_source = m_local_source;

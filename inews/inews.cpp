@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
         {
             if (new_connection)
             {
-                nntp_close(true);
+                g_nntp.close(true);
             }
             fmt::print(stderr, "Sorry, you can't post from this machine.\n");
             std::exit(1);
@@ -347,14 +347,14 @@ int main(int argc, char *argv[])
         }
         if (new_connection)
         {
-            nntp_close(true);
+            g_nntp.close(true);
         }
         std::exit(1);
     }
 
     if (new_connection)
     {
-        nntp_close(true);
+        g_nntp.close(true);
     }
     cleanup_nntp();
 
@@ -441,7 +441,7 @@ int nntp_handle_timeout()
             return -1;
         }
         handling_timeout = true;
-        nntp_close(false);
+        g_nntp.close(false);
         if (init_nntp() < 0 || nntp_connect(g_server_name, false) <= 0)
         {
             std::exit(1);

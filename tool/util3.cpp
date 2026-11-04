@@ -27,7 +27,7 @@ int do_shell(std::string_view, std::string_view cmd)
 
 [[noreturn]] void finalize(int num)
 {
-    nntp_close(true);
+    g_nntp.close(true);
     std::exit(num);
 }
 

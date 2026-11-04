@@ -518,7 +518,7 @@ TEST_F(SourceFileRemoteOpenTest, openFetchesRemoteLinesFromMockServer)
     EXPECT_EQ("comp.lang.apl 10 1 y\n", source_file.m_lines[0]);
     EXPECT_EQ("comp.lang.c++ 20 1 y\n", source_file.m_lines[1]);
 
-    nntp_close(true);
+    g_nntp.close(true);
     server.verify();
 }
 

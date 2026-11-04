@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 #ifdef HAS_SIGHOLD
         sigrelse(SIGINT);
 #endif
-        nntp_close(true);
+        g_nntp.close(true);
         cleanup_nntp();
     }
     else

@@ -716,7 +716,7 @@ int nntp_handle_timeout()
     }
     handling_timeout = true;
     const std::string last_command_save{g_nntp.last_command};
-    nntp_close(false);
+    g_nntp.close(false);
     g_data_source->m_nntp_link = g_nntp.link;
     if (nntp_connect(g_data_source->m_news_id, false) <= 0)
     {

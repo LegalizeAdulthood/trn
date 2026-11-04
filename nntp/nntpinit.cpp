@@ -203,7 +203,7 @@ int server_init(std::string_view machine)
         if (ec)
         {
             g_nntp.ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
-            nntp_close(false);
+            g_nntp.close(false);
             return -1;
         }
         g_nntp.link.security = NntpSecurity::ImplicitTls;
@@ -217,7 +217,7 @@ int server_init(std::string_view machine)
         const std::string save_line{g_nntp.ser_line};
         if (nntp_refresh_capabilities() < 0)
         {
-            nntp_close(false);
+            g_nntp.close(false);
             return -1;
         }
         if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
@@ -256,7 +256,7 @@ int server_init(std::string_view machine)
             const std::string reader_line{g_nntp.ser_line};
             if (nntp_refresh_capabilities() < 0)
             {
-                nntp_close(false);
+                g_nntp.close(false);
                 return -1;
             }
             if (g_nntp.link.security == NntpSecurity::Cleartext && g_nntp.link.allow_starttls &&

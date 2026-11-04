@@ -1109,7 +1109,7 @@ void RemoteMultipartArticleTest::TearDown()
     if (m_started)
     {
         art_close();
-        nntp_close(true);
+        g_nntp.close(true);
         m_server.verify();
     }
     (void) nntp_art_name(ArticleNum{}, false);

@@ -279,7 +279,7 @@ TEST_F(NNTPTest, connectsImplicitTlsBeforeGreetingAndOnReconnect)
     {
         EXPECT_EQ(200, server_init(m_machine));
         EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
-        nntp_close(false);
+        g_nntp.close(false);
         EXPECT_EQ(NntpSecurity::Cleartext, g_nntp.link.security);
         EXPECT_TRUE(g_nntp.link.implicit_tls);
     }
@@ -596,7 +596,7 @@ TEST_F(NNTPTest, discoversCapabilitiesFromMockServer)
     EXPECT_TRUE(g_nntp.link.capabilities.has("AUTHINFO", "USER"));
     EXPECT_FALSE(g_nntp.link.capabilities.has("MODE-READER"));
 
-    nntp_close(true);
+    g_nntp.close(true);
     server.verify();
 }
 
@@ -1060,7 +1060,7 @@ TEST_F(NntpAuthTest, closeClearsAuthenticationState)
 {
     g_nntp.link.auth_state = NntpAuthState::Authenticated;
 
-    nntp_close(false);
+    g_nntp.close(false);
 
     EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
 }
@@ -1255,7 +1255,7 @@ void NntpTlsLoopbackTest::SetUp()
 
 void NntpTlsLoopbackTest::TearDown()
 {
-    nntp_close(false);
+    g_nntp.close(false);
     set_ca_file(m_old_ca_file);
     std::error_code ec;
     fs::remove_all(m_certificate.parent_path(), ec);
@@ -1286,7 +1286,7 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
     ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("second line", line);
     nntp_finish_list();
-    nntp_close(true);
+    g_nntp.close(true);
     server.verify();
 }
 
@@ -1342,7 +1342,7 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
     ASSERT_EQ(NGSR_FULL_LINE, g_nntp.gets(line, NNTP_STRLEN));
     EXPECT_EQ("second line", line);
     nntp_finish_list();
-    nntp_close(true);
+    g_nntp.close(true);
     server.verify();
 }
 
@@ -1507,7 +1507,7 @@ TEST_P(NntpCommandTest, closeClearsRejectedCommandState)
     expect_list(GetParam().modern);
 
     EXPECT_EQ(-1, GetParam().request());
-    nntp_close(false);
+    g_nntp.close(false);
     g_nntp.link.connection = m_connection;
     EXPECT_EQ(1, GetParam().request());
     nntp_finish_list();
@@ -1703,7 +1703,7 @@ TEST_F(NNTPGetStringTest, closeDiscardsCapabilities)
     g_nntp.link.capabilities.available = true;
     g_nntp.link.capabilities.add("READER");
 
-    nntp_close(false);
+    g_nntp.close(false);
 
     EXPECT_FALSE(g_nntp.link.capabilities.available);
     EXPECT_FALSE(g_nntp.link.capabilities.has("READER"));

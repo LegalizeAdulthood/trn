@@ -392,7 +392,7 @@ int nntp_start_tls()
     if (g_nntp.command("STARTTLS") <= 0 || g_nntp.check() <= 0 ||
         nntp_response_code(g_nntp.ser_line) != NNTP_STARTTLS_VAL)
     {
-        nntp_close(false);
+        g_nntp.close(false);
         return -1;
     }
     error_code_t ec;
@@ -400,7 +400,7 @@ int nntp_start_tls()
     if (ec)
     {
         g_nntp.ser_line = fmt::format("580 TLS negotiation failed: {}", ec.message());
-        nntp_close(false);
+        g_nntp.close(false);
         return -1;
     }
     g_nntp.link.security = NntpSecurity::StartTls;
@@ -410,7 +410,7 @@ int nntp_start_tls()
     g_nntp.gets_clear_buffer();
     if (nntp_refresh_capabilities() < 0)
     {
-        nntp_close(false);
+        g_nntp.close(false);
         return -1;
     }
     if (!selected_group.empty() &&
@@ -418,7 +418,7 @@ int nntp_start_tls()
          (selected_article > 0 &&
           (g_nntp.command(fmt::format("STAT {}", selected_article)) <= 0 || g_nntp.check() <= 0))))
     {
-        nntp_close(false);
+        g_nntp.close(false);
         return -1;
     }
     g_nntp.link.flags |= force_auth;
@@ -579,7 +579,7 @@ int nntp_refresh_capabilities()
         if (ec || line.empty())
         {
             g_nntp.ser_line = "503 Incomplete capability list.";
-            nntp_close(false);
+            g_nntp.close(false);
             return -1;
         }
         if (g_nntp.link.at_list_end(line))
@@ -661,22 +661,22 @@ void NntpSession::gets_clear_buffer()
     gets_line.clear();
 }
 
-void nntp_close(bool send_quit)
+void NntpSession::close(bool send_quit)
 {
-    if (send_quit && g_nntp.link.connection)
+    if (send_quit && link.connection)
     {
-        if (g_nntp.command("QUIT") > 0)
+        if (command("QUIT") > 0)
         {
-            g_nntp.check();
+            check();
         }
     }
-    g_nntp.link.connection.reset();
-    g_nntp.link.capabilities = {};
-    g_nntp.link.unsupported_commands.clear();
-    g_nntp.link.flags |= NNTP_NEW_CMD_OK;
-    g_nntp.link.security = NntpSecurity::Cleartext;
-    g_nntp.link.auth_state = NntpAuthState::Unauthenticated;
-    g_nntp.link.tls_attempted = false;
-    g_nntp.link.selected_group.clear();
-    g_nntp.link.selected_article = 0;
+    link.connection.reset();
+    link.capabilities = {};
+    link.unsupported_commands.clear();
+    link.flags |= NNTP_NEW_CMD_OK;
+    link.security = NntpSecurity::Cleartext;
+    link.auth_state = NntpAuthState::Unauthenticated;
+    link.tls_attempted = false;
+    link.selected_group.clear();
+    link.selected_article = 0;
 }

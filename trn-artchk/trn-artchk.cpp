@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    nntp_close(true);
+    g_nntp.close(true);
     if (!g_server_name.empty())
     {
         cleanup_nntp();

@@ -570,7 +570,7 @@ void check_data_sources()
                 {
                     DataSource *save_datasrc = g_data_source;
                     set_data_source(dp);
-                    nntp_close(true);
+                    g_nntp.close(true);
                     dp->m_nntp_link = g_nntp.link;
                     set_data_source(save_datasrc);
                 }
@@ -615,7 +615,7 @@ void DataSource ::close()
     {
         DataSource* save_datasrc = g_data_source;
         set_data_source(this);
-        nntp_close(true);
+        g_nntp.close(true);
         m_nntp_link = g_nntp.link;
         set_data_source(save_datasrc);
     }
