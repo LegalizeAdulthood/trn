@@ -112,6 +112,7 @@ struct GraphicState
     int              visual_length_of(std::string_view text);
     std::string      insert_unicode_at(CodePoint c);
     bool             at_norm_char(std::string_view s);
+    std::string      create_utf8_copy(std::string_view text);
 
     CharsetType      in;
     CharsetType      out;
@@ -705,18 +706,23 @@ int put_char_adv(std::string_view &text, bool outputok)
 
 std::string create_utf8_copy(std::string_view text)
 {
+    return s_gs.create_utf8_copy(text);
+}
+
+std::string GraphicState::create_utf8_copy(std::string_view text)
+{
     std::string result;
 
     // Precalculate size of required space
     std::size_t tlen = 0;
     for (std::string_view remaining = text; !remaining.empty();)
     {
-        const int sw = s_gs.byte_length_at(remaining);
+        const int sw = byte_length_at(remaining);
         if (sw <= 0)
         {
             break;
         }
-        const std::string encoded_text = utf8_text(s_gs.code_point_at(remaining));
+        const std::string encoded_text = utf8_text(code_point_at(remaining));
         remaining.remove_prefix(static_cast<std::size_t>(sw));
         tlen += encoded_text.size();
     }
@@ -726,12 +732,12 @@ std::string create_utf8_copy(std::string_view text)
     // Create the actual copy
     for (std::string_view remaining = text; !remaining.empty();)
     {
-        const int sw = s_gs.byte_length_at(remaining);
+        const int sw = byte_length_at(remaining);
         if (sw <= 0)
         {
             break;
         }
-        result += utf8_text(s_gs.code_point_at(remaining));
+        result += utf8_text(code_point_at(remaining));
         remaining.remove_prefix(static_cast<std::size_t>(sw));
     }
     return result;
