@@ -24,6 +24,9 @@ struct ArticlePager
 {
     void init();
 
+    // TODO: private
+    bool inner_more();
+
     ArticleLine     highlight{-1};     // next line to be highlighted
     int             goto_line{};       // TODO: ArticleLine?
     ArticlePosition inner_search{};    // g_art_input.pos of end of line we want to visit

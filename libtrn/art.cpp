@@ -89,7 +89,6 @@ inline std::string_view line_view(ArticlePosition pos)
 static std::string finish_pager_command(std::string_view command, bool donewline);
 static std::string finish_pager_dbl_command(std::string_view command);
 static bool        maybe_set_color(std::string_view line, std::size_t pos, bool back_search);
-static bool        inner_more();
 static bool        pager_command_needs_completion(std::string_view command);
 
 void ArticlePager::init()
@@ -268,7 +267,7 @@ DoArticleResult do_article(std::string &article_command)
             g_back_page.vary_write(g_art_input.line_num, g_art_input.pos); // remember pos in file
         }
         for (bool restart_color = true; // line_num already set
-             g_pager.inner_search                                 ? (g_parsed_header.in_header || inner_more())
+             g_pager.inner_search                                 ? (g_parsed_header.in_header || g_pager.inner_more())
              : g_pager.special                                    ? (line_num.value_of() < g_pager.special_lines)
              : (g_pager.first_page && !g_parsed_header.in_header) ? (line_num < g_init_lines)
                                               : (line_num.value_of() < g_tc_LINES);
@@ -307,7 +306,7 @@ DoArticleResult do_article(std::string &article_command)
                     g_pager.special = false;
                     if (g_pager.inner_search)
                     {
-                        (void) inner_more();
+                        (void) g_pager.inner_more();
                     }
                     break;
                 }
@@ -1496,52 +1495,52 @@ go_forward:
     return PS_ASK;
 }
 
-static bool inner_more()
+bool ArticlePager::inner_more()
 {
-    if (g_art_input.pos < g_pager.inner_search) // not even on page yet?
+    if (g_art_input.pos < inner_search) // not even on page yet?
     {
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("Not on page {} < {}\n", g_art_input.pos.value_of(), g_pager.inner_search.value_of());
+            fmt::print("Not on page {} < {}\n", g_art_input.pos.value_of(), inner_search.value_of());
         }
 #endif
         return true;
     }
-    if (g_art_input.pos == g_pager.inner_search || g_pager.hide_everything) // just got onto page?
+    if (g_art_input.pos == inner_search || hide_everything) // just got onto page?
     {
-        g_pager.i_search_line = g_art_input.line_num; // remember first line after
-        if (g_pager.inner_light)
+        i_search_line = g_art_input.line_num; // remember first line after
+        if (inner_light)
         {
-            g_pager.highlight = g_pager.inner_light;
+            highlight = inner_light;
         }
         else
         {
-            g_pager.highlight = line_before(g_art_input.line_num);
+            highlight = line_before(g_art_input.line_num);
         }
 #ifdef DEBUG
         if (g_debug & DEB_INNERSRCH)
         {
-            fmt::print("There it is {} = {}, {} @ {}\n", g_art_input.pos.value_of(), g_pager.inner_search.value_of(),
-                       g_pager.hide_everything, g_pager.highlight.value_of());
+            fmt::print("There it is {} = {}, {} @ {}\n", g_art_input.pos.value_of(), inner_search.value_of(),
+                       hide_everything, highlight.value_of());
             term_down(1);
         }
 #endif
-        if (g_pager.hide_everything) // forced refresh?
+        if (hide_everything) // forced refresh?
         {
-            g_pager.top_line = std::max(g_art_input.line_num - ArticleLine{g_pager.goto_line + 1}, ArticleLine{-1});
+            top_line = std::max(g_art_input.line_num - ArticleLine{goto_line + 1}, ArticleLine{-1});
             return false;               // let refresh do it all
         }
     }
 #ifdef DEBUG
     if (g_debug & DEB_INNERSRCH)
     {
-        fmt::print("Not far enough? {} <? {} + {}\n", g_art_input.line_num.value_of(), g_pager.i_search_line.value_of(),
-                   g_pager.goto_line);
+        fmt::print("Not far enough? {} <? {} + {}\n", g_art_input.line_num.value_of(), i_search_line.value_of(),
+                   goto_line);
         term_down(1);
     }
 #endif
-    if (g_art_input.line_num < g_pager.i_search_line + ArticleLine{g_pager.goto_line})
+    if (g_art_input.line_num < i_search_line + ArticleLine{goto_line})
     {
         return true;
     }
