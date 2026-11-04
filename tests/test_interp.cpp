@@ -7288,7 +7288,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
     ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = g_pager.do_article();
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_NORM, result);
@@ -7312,7 +7312,7 @@ TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
     ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = g_pager.do_article();
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_NORM, result);
@@ -7362,7 +7362,7 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
     ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = g_pager.do_article();
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_NORM, result);
@@ -7389,7 +7389,7 @@ TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
     ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = g_pager.do_article();
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_NORM, result);
@@ -7419,7 +7419,7 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = g_pager.do_article();
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_NORM, result);
@@ -7441,7 +7441,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
     ASSERT_TRUE(parse_header(g_nav.target.num));
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article();
+    const DoArticleResult result = g_pager.do_article();
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_NORM, result);

@@ -96,10 +96,10 @@ void ArticlePager::init()
     gcompex.init_compex();
 }
 
-DoArticleResult do_article()
+DoArticleResult ArticlePager::do_article()
 {
     std::string article_command;
-    return g_pager.do_article(article_command);
+    return do_article(article_command);
 }
 
 DoArticleResult ArticlePager::do_article(std::string &article_command)
