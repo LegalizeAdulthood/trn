@@ -587,7 +587,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             else                        // found it, so print it
             {
-                switch (do_article(article_command))
+                switch (g_pager.do_article(article_command))
                 {
                 case DA_CLEAN:          // quit newsgroup
                     goto cleanup;

@@ -1724,7 +1724,7 @@ void ArticleHeaderPresentationTest::render_article()
 {
     testing::internal::CaptureStdout();
     m_capturing = true;
-    m_result = do_article(m_article_command);
+    m_result = g_pager.do_article(m_article_command);
     m_rendered = testing::internal::GetCapturedStdout();
     m_capturing = false;
 }
@@ -7481,7 +7481,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
     std::string article_command;
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article(article_command);
+    const DoArticleResult result = g_pager.do_article(article_command);
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_RAISE, result);
@@ -7510,7 +7510,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
     std::string article_command;
 
     testing::internal::CaptureStdout();
-    const DoArticleResult result = do_article(article_command);
+    const DoArticleResult result = g_pager.do_article(article_command);
     const std::string     output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(DA_RAISE, result);

@@ -34,6 +34,7 @@ struct ArticlePager
 {
     void init();
     PageSwitchResult page_switch(std::string_view command);
+    DoArticleResult  do_article(std::string &article_command);
 
     // TODO: private
     bool inner_more();
@@ -68,7 +69,6 @@ extern std::string     g_art_line;          // place for article lines
 extern bool g_dont_filter_control; // -j
 
 DoArticleResult do_article();
-DoArticleResult do_article(std::string &article_command);
 void pager_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 
 #endif
