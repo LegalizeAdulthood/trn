@@ -105,6 +105,7 @@ struct GraphicState
 {
     CharsetType init(std::string_view from, std::string_view to);
     std::string_view input_charset_name();
+    std::string_view output_charset_name();
 
     CharsetType      in;
     CharsetType      out;
@@ -200,7 +201,12 @@ std::string_view GraphicState::input_charset_name()
 
 std::string_view output_charset_name()
 {
-    return find_charset_desc(s_gs.out)->name;
+    return s_gs.output_charset_name();
+}
+
+std::string_view GraphicState::output_charset_name()
+{
+    return find_charset_desc(out)->name;
 }
 
 static bool is_utf8_continuation(std::string_view text, std::size_t index)
