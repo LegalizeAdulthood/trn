@@ -38,6 +38,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -96,9 +97,7 @@ void sf_clear_file_cache_for_test()
 // Must be called before any other sf_ routine (once for each group)
 void sf_init()
 {
-    g_score_rules.num_entries = 0;
-    g_score_rules.entries.clear();
-    g_score_rules.extra_headers.clear();
+    g_score_rules.clear_lists();
 
     // initialize abbreviation list
     g_score_compiler.abbr = {};
@@ -238,8 +237,23 @@ void sf_clean()
 
 void ScoreRules::grow()
 {
-    entries.push_back(ScoreFileEntry{});
+    append(ScoreFileEntry{});
+}
+
+void ScoreRules::append(ScoreFileEntry entry)
+{
+    entries.push_back(std::move(entry));
     num_entries = size_cast<int>(entries);
+}
+
+void ScoreRules::begin_file(std::string_view filename, int level)
+{
+    append(ScoreFileEntry{SF_FILE_MARK_START, level, std::string{filename}, {}, nullptr, 0});
+}
+
+void ScoreRules::end_file(std::string_view filename, int level)
+{
+    append(ScoreFileEntry{SF_FILE_MARK_END, level, std::string{filename}, {}, nullptr, 0});
 }
 
 // Returns -1 if no matching extra header found, otherwise returns offset
@@ -418,9 +432,7 @@ bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
         {
             head_type = SF_REPLY;
         }
-        g_score_rules.grow();
-        g_score_rules.entries[g_score_rules.num_entries - 1].head_type = head_type;
-        g_score_rules.entries[g_score_rules.num_entries - 1].score = score;
+        g_score_rules.append(ScoreFileEntry{head_type, score, {}, {}, nullptr, 0});
         return true;
     }
     if (command == "savescores")
@@ -673,8 +685,7 @@ bool ScoreRuleCompiler::do_line(std::string_view line, bool check)
     {
         return true; // limits of check
     }
-    g_score_rules.grow(); // acutally make an entry
-    ScoreFileEntry &entry = g_score_rules.entries[g_score_rules.num_entries - 1];
+    ScoreFileEntry entry{};
     entry.head_type = j;
     entry.score = score;
     if (pattern_status) // in pattern matching mode
@@ -697,6 +708,7 @@ bool ScoreRuleCompiler::do_line(std::string_view line, bool check)
             delete compex;
             compex = nullptr;
             entry.compex = nullptr;
+            g_score_rules.append(std::move(entry));
             return false;
         }
         entry.compex = compex;
@@ -717,6 +729,7 @@ bool ScoreRuleCompiler::do_line(std::string_view line, bool check)
         }
         entry.str1.assign(pattern);
     }
+    g_score_rules.append(std::move(entry));
     return true;
 }
 
@@ -737,26 +750,14 @@ void ScoreRuleCompiler::do_file(std::string_view fname)
         }
         fmt::print("Score file: {}\n", filename);
     }
-    // add end marker to scoring array
-    g_score_rules.grow();
-    g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_START;
-    // file_level is 1 to n
-    g_score_rules.entries[g_score_rules.num_entries - 1].score = file_level;
-    g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
-    g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
+    g_score_rules.begin_file(filename, file_level);
 
     const ScoreFile &file = g_score_cache.files[static_cast<std::size_t>(sf_fp)];
     for (const std::string &s : file.lines)
     {
         (void) do_line(s, false);
     }
-    // add end marker to scoring array
-    g_score_rules.grow();
-    g_score_rules.entries[g_score_rules.num_entries - 1].head_type = SF_FILE_MARK_END;
-    // file_level is 1 to n
-    g_score_rules.entries[g_score_rules.num_entries - 1].score = file_level;
-    g_score_rules.entries[g_score_rules.num_entries - 1].str2.clear();
-    g_score_rules.entries[g_score_rules.num_entries - 1].str1 = filename;
+    g_score_rules.end_file(filename, file_level);
     file_level--;
 }
 
@@ -1194,33 +1195,48 @@ static void sf_print_match(int indx)
     fmt::print("\n");
 }
 
-static void sf_exclude_file(std::string_view fname)
+ScoreRules::ExcludeResult ScoreRules::exclude_file(std::string_view fname)
 {
-    int       start;
-    int       end;
+    int start;
+    int end;
 
-    for (start = 0; start < g_score_rules.num_entries; start++)
+    for (start = 0; start < num_entries; start++)
     {
-        if (g_score_rules.entries[start].head_type == SF_FILE_MARK_START &&
-            std::string_view{g_score_rules.entries[start].str1} == fname)
+        if (entries[start].head_type == SF_FILE_MARK_START && std::string_view{entries[start].str1} == fname)
         {
             break;
         }
     }
-    if (start == g_score_rules.num_entries)
+    if (start == num_entries)
+    {
+        return ExcludeResult::NOT_INCLUDED;
+    }
+    for (end = start + 1; end < num_entries; end++)
+    {
+        if (entries[end].head_type == SF_FILE_MARK_END && std::string_view{entries[end].str1} == fname)
+        {
+            break;
+        }
+    }
+    if (end == num_entries)
+    {
+        return ExcludeResult::INCOMPLETE;
+    }
+
+    entries.erase(entries.begin() + start, entries.begin() + end + 1);
+    num_entries = size_cast<int>(entries);
+    return ExcludeResult::REMOVED;
+}
+
+static void sf_exclude_file(std::string_view fname)
+{
+    const ScoreRules::ExcludeResult result = g_score_rules.exclude_file(fname);
+    if (result == ScoreRules::ExcludeResult::NOT_INCLUDED)
     {
         fmt::print("Exclude: file |{}| was not included\n", fname);
         return;
     }
-    for (end = start + 1; end < g_score_rules.num_entries; end++)
-    {
-        if (g_score_rules.entries[end].head_type == SF_FILE_MARK_END &&
-            std::string_view{g_score_rules.entries[end].str1} == fname)
-        {
-            break;
-        }
-    }
-    if (end == g_score_rules.num_entries)
+    if (result == ScoreRules::ExcludeResult::INCOMPLETE)
     {
         fmt::print("Exclude: file |{}| is incomplete at exclusion command\n", fname);
         // insert more explanation later?
@@ -1228,19 +1244,14 @@ static void sf_exclude_file(std::string_view fname)
     }
 
 #ifdef UNDEF
-    int newnum = g_score_rules.num_entries - (end - start) - 1;
     // Deal with exclusion of all scorefile entries.
     // This cannot happen since the exclusion command has to be within a
     // file.  Code kept in case online exclusions allowed later.
-    if (newnum==0)
+    if (g_score_rules.num_entries == 0)
     {
-        g_score_rules.num_entries = 0;
-        g_score_rules.entries.clear();
         return;
     }
 #endif
-    g_score_rules.entries.erase(g_score_rules.entries.begin() + start, g_score_rules.entries.begin() + end + 1);
-    g_score_rules.num_entries = size_cast<int>(g_score_rules.entries);
     if (g_sf_verbose)
     {
         fmt::print("Excluded file: {}\n", fname);

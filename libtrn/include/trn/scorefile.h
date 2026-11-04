@@ -35,8 +35,19 @@ struct ScoreFileEntry
 
 struct ScoreRules
 {
-    void free_patterns();
-    void clear_lists();
+    enum class ExcludeResult
+    {
+        REMOVED,
+        NOT_INCLUDED,
+        INCOMPLETE
+    };
+
+    void          free_patterns();
+    void          clear_lists();
+    void          append(ScoreFileEntry entry);
+    void          begin_file(std::string_view filename, int level);
+    void          end_file(std::string_view filename, int level);
+    ExcludeResult exclude_file(std::string_view fname);
 
     // TODO: private
     void grow();
