@@ -78,7 +78,6 @@ static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view 
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static std::string univ_edit_new_user_file();
-static void  univ_vg_add_group();
 
 void univ_init()
 {
@@ -1116,7 +1115,7 @@ void univ_newsgroup_virtual()
 
     if (std::holds_alternative<UniversalVirtualGroup>(current_vg_ui->m_data))
     {
-        univ_vg_add_group();
+        g_vg_builder.vg_add_group();
     }
     else if (std::holds_alternative<UniversalVirtualArticle>(current_vg_ui->m_data))
     {
@@ -1156,7 +1155,7 @@ void VirtualGroupBuilder::vg_add_article(ArticleNum a)
 }
 
 
-static void univ_vg_add_group()
+void VirtualGroupBuilder::vg_add_group()
 {
     // later: allow was-read articles, etc...
     for (ArticleNum a = g_cache.first(g_first_art); a <= g_last_art; a = g_cache.next(a))
@@ -1166,7 +1165,7 @@ static void univ_vg_add_group()
             continue;
         }
         // minimum score check
-        g_vg_builder.vg_add_article(a);
+        vg_add_article(a);
     }
 }
 
