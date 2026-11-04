@@ -217,6 +217,7 @@ struct KeyMap
 {
     // TODO: private
     void install_macro(std::string_view sequence, std::string_view definition, bool report_overrides);
+    void show_key_map(std::string &prefix);
 
     char        km_type[128]{};
     KeyMap    *km_km[128]{};
@@ -267,7 +268,6 @@ static KeyMap     *new_key_map();
 static std::string read_command(bool allow_macros, bool mark_finished);
 static int         read_tty(char *addr, int size);
 static void        reprint(std::string_view text);
-static void        show_key_map(KeyMap *curmap, std::string &prefix);
 static std::string store_command(std::string_view command);
 static int         echo_char(char_int ch);
 static void        line_col_calcs();
@@ -792,7 +792,7 @@ void show_macros()
         print_lines("Macros:\n", STANDOUT);
         std::string prefix;
         prefix.reserve(64);
-        show_key_map(s_top_map, prefix);
+        s_top_map->show_key_map(prefix);
     }
     else
     {
@@ -800,13 +800,13 @@ void show_macros()
     }
 }
 
-static void show_key_map(KeyMap *curmap, std::string &prefix)
+void KeyMap::show_key_map(std::string &prefix)
 {
     const std::size_t prefix_size = prefix.size();
 
     for (int i = 0; i < 128; i++)
     {
-        int kt = curmap->km_type[i];
+        int kt = km_type[i];
         if (kt != 0)
         {
             prefix.resize(prefix_size);
@@ -841,12 +841,12 @@ static void show_key_map(KeyMap *curmap, std::string &prefix)
             }
 
             case KM_KEYMAP:
-                show_key_map(curmap->km_km[i], prefix);
+                km_km[i]->show_key_map(prefix);
                 break;
 
             case KM_STRING:
             {
-                const std::string line{fmt::format("{}   {}\n", prefix, curmap->km_str[i])};
+                const std::string line{fmt::format("{}   {}\n", prefix, km_str[i])};
                 print_lines(line, NO_MARKING);
                 break;
             }
