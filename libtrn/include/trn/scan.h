@@ -72,7 +72,8 @@ struct ScanContext
 
 struct ArticleScanSession
 {
-    int new_context(ScanContextType type);
+    int  new_context(ScanContextType type);
+    void save_context();
 
     // TODO: private
     ScanContext       &current_context();
@@ -120,7 +121,6 @@ extern ArticleScanSession g_art_scan;
 extern int g_s_item_num; // show item numbers by default
 extern int g_s_mode_vi;
 
-void s_save_context();
 void s_change_context(int newcontext);
 void s_delete_context(int cnum);
 

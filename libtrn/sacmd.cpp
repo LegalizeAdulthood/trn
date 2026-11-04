@@ -110,7 +110,7 @@ int sa_do_cmd(std::string_view command)
         }
         g_last_char = '+';
         g_sa_art = artnum; // give it somewhere to point
-        s_save_context();       // for possible later changes
+        g_art_scan.save_context(); // for possible later changes
         return SA_FAKE; // fake up the command.
 
     case 'K': // kill below a threshold

@@ -98,7 +98,7 @@ SaMainResult sa_main()
             sa_clear_mark(a);
             // trn 3.x won't read an unselected article if g_sel.selected_only
             g_sel.selected_only = false;
-            s_save_context();
+            g_art_scan.save_context();
             return SA_NORM;
         }
     }
@@ -132,7 +132,7 @@ SaMainResult sa_main()
     }
     if (g_sa_scan_context >= 0)
     {
-        s_save_context();
+        g_art_scan.save_context();
     }
     return i;
 }

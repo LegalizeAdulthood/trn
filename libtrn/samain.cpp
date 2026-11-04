@@ -63,7 +63,7 @@ void sa_init()
         g_sc_fill_max = article_before(g_abs_first);
     }
 #endif
-    s_save_context();
+    g_art_scan.save_context();
     g_sa_initialized = true;            // all went well...
 }
 

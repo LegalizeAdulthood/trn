@@ -87,34 +87,34 @@ int ArticleScanSession::new_context(ScanContextType type)
 }
 
 // saves the current context
-void s_save_context()
+void ArticleScanSession::save_context()
 {
-    ScanContext *p = &g_art_scan.contexts[g_art_scan.cur_context];
+    ScanContext *p = &contexts[cur_context];
 
-    p->type = g_art_scan.cur_type;
-    p->page_ents = g_art_scan.page_ents;
+    p->type = cur_type;
+    p->page_ents = page_ents;
 
-    p->ent_sort_max = g_art_scan.ent_sort_max;
-    p->ent_sorted_max = g_art_scan.ent_sorted_max;
-    p->ent_index_max = g_art_scan.ent_index_max;
+    p->ent_sort_max = ent_sort_max;
+    p->ent_sorted_max = ent_sorted_max;
+    p->ent_index_max = ent_index_max;
 
-    p->top_ent = g_art_scan.top_ent;
-    p->bot_ent = g_art_scan.bot_ent;
-    p->refill = g_art_scan.refill;
-    p->ref_all = g_art_scan.ref_all;
-    p->ref_top = g_art_scan.ref_top;
-    p->ref_bot = g_art_scan.ref_bot;
-    p->ref_status = g_art_scan.ref_status;
-    p->ref_desc = g_art_scan.ref_desc;
+    p->top_ent = top_ent;
+    p->bot_ent = bot_ent;
+    p->refill = refill;
+    p->ref_all = ref_all;
+    p->ref_top = ref_top;
+    p->ref_bot = ref_bot;
+    p->ref_status = ref_status;
+    p->ref_desc = ref_desc;
 
-    p->top_lines = g_art_scan.top_lines;
-    p->bot_lines = g_art_scan.bot_lines;
-    p->status_cols = g_art_scan.status_cols;
-    p->cursor_cols = g_art_scan.cursor_cols;
-    p->desc_cols = g_art_scan.desc_cols;
-    p->item_num_cols = g_art_scan.item_num_cols;
-    p->ptr_page_line = g_art_scan.ptr_page_line;
-    p->flags = g_art_scan.flags;
+    p->top_lines = top_lines;
+    p->bot_lines = bot_lines;
+    p->status_cols = status_cols;
+    p->cursor_cols = cursor_cols;
+    p->desc_cols = desc_cols;
+    p->item_num_cols = item_num_cols;
+    p->ptr_page_line = ptr_page_line;
+    p->flags = flags;
 }
 
 // int newcontext;                      // context number to activate
