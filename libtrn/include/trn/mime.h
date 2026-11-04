@@ -135,6 +135,22 @@ struct MimeContext
     {
         return section->html.filter(f, prefix, base_offset);
     }
+    std::string decode_text_chunk(std::string_view bytes, bool final = false)
+    {
+        return section->decode_text_chunk(bytes, final);
+    }
+    bool has_pending_text() const
+    {
+        return !section->m_decoder_pending.empty();
+    }
+    bool at_top_level() const
+    {
+        return section->m_prev == nullptr;
+    }
+    std::string description() const
+    {
+        return section->mime_description();
+    }
 
     // TODO: private
     bool pop_section();
