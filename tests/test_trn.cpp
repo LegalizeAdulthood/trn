@@ -9114,7 +9114,7 @@ void ViewArticleTest::SetUp()
 
 void ViewArticleTest::TearDown()
 {
-    mime_final();
+    g_mimecap.final();
     g_tmp_dir = m_old_tmp_dir;
     g_login_name = m_old_login_name;
     ExtractSaveArticleTest::TearDown();

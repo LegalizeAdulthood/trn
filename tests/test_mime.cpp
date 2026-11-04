@@ -42,7 +42,7 @@ protected:
     void SetUp() override;
     void TearDown() override
     {
-        mime_final();
+        g_mimecap.final();
     }
 
     trn::testing::MockEnvironment                                               m_env;

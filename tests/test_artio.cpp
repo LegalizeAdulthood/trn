@@ -1589,7 +1589,7 @@ void InlineMultipartArticleTest::SetUp()
     g_tc_CE = "<CE>";
     g_tc_US = "<US>";
     g_tc_UE = "<UE>";
-    mime_final();
+    g_mimecap.final();
     g_mimecap.set_executor([this](std::string_view, std::string_view command) { return execute_viewer(command); });
     const fs::path cap_file = m_output_dir / "mimecap";
     {
@@ -1630,7 +1630,7 @@ void InlineMultipartArticleTest::SetUp()
 
 void InlineMultipartArticleTest::TearDown()
 {
-    mime_final();
+    g_mimecap.final();
     g_mimecap.set_executor(do_shell);
     fs::current_path(m_old_directory);
     g_tmp_dir = m_old_tmp_dir;

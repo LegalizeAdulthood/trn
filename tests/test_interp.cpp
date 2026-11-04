@@ -262,7 +262,7 @@ void InterpolatorTest::TearDown()
     g_data_source = nullptr;
 
     util_final();
-    mime_final();
+    g_mimecap.final();
     g_art_buf.final();
     rcstuff_final();
     data_source_finalize();

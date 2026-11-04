@@ -101,9 +101,9 @@ void MimeCapRegistry::init()
     }
 }
 
-void mime_final()
+void MimeCapRegistry::final()
 {
-    g_mimecap.entries.clear();
+    entries.clear();
 }
 
 void MimeCapRegistry::read_mimecap(std::string_view mcname)
