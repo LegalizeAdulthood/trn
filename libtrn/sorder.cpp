@@ -13,7 +13,6 @@
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
 
-static std::vector<long> &s_ent_index();
 static void               s_save_order_bounds();
 static void               s_sort_basic();
 
@@ -27,9 +26,9 @@ std::vector<long> &ArticleBrowseSession::ent_sort()
     return current_context().ent_sort;
 }
 
-static std::vector<long> &s_ent_index()
+std::vector<long> &ArticleBrowseSession::ent_index()
 {
-    return g_browse.current_context().ent_index;
+    return current_context().ent_index;
 }
 
 static void s_save_order_bounds()
@@ -140,7 +139,7 @@ static void s_sort_basic()
 void s_sort()
 {
     std::vector<long> &ent_sort = g_browse.ent_sort();
-    std::vector<long> &ent_index = s_ent_index();
+    std::vector<long> &ent_index = g_browse.ent_index();
 
 #ifdef UNDEF
     std::qsort((void *) ent_sort.data(), (g_browse.ent_sort_max) + 1, sizeof(long), s_compare);
@@ -159,7 +158,7 @@ void s_sort()
 void s_order_clean()
 {
     g_browse.ent_sort().clear();
-    s_ent_index().clear();
+    g_browse.ent_index().clear();
 
     g_browse.ent_sort_max = -1;
     g_browse.ent_sorted_max = -1;
@@ -171,7 +170,7 @@ void s_order_clean()
 void s_order_add(long ent)
 {
     std::vector<long> &ent_sort = g_browse.ent_sort();
-    std::vector<long> &ent_index = s_ent_index();
+    std::vector<long> &ent_index = g_browse.ent_index();
 
     if (ent >= 0 && ent < size_cast<long>(ent_index) && ent_index[ent] >= 0)
     {
@@ -197,7 +196,7 @@ void s_order_add(long ent)
 long s_prev(long ent)
 {
     std::vector<long> &ent_sort = g_browse.ent_sort();
-    std::vector<long> &ent_index = s_ent_index();
+    std::vector<long> &ent_index = g_browse.ent_index();
 
     if (ent < 0 || ent > g_browse.ent_index_max || g_browse.ent_sorted_max < 0)
     {
@@ -218,7 +217,7 @@ long s_prev(long ent)
 long s_next(long ent)
 {
     std::vector<long> &ent_sort = g_browse.ent_sort();
-    std::vector<long> &ent_index = s_ent_index();
+    std::vector<long> &ent_index = g_browse.ent_index();
 
     if (ent < 0 || ent > g_browse.ent_index_max || g_browse.ent_sorted_max < 0)
     {
