@@ -1208,13 +1208,13 @@ int univ_visit_group_main(std::string_view gname)
 // LATER: allow the loop to be interrupted
 void univ_virt_pass()
 {
-    univ_virt_pass(univ_visit_group);
+    g_vg_builder.virt_pass(univ_visit_group);
 }
 
 // LATER: allow the loop to be interrupted
-void univ_virt_pass(UniversalGroupVisitor visit_group)
+void VirtualGroupBuilder::virt_pass(UniversalGroupVisitor visit_group)
 {
-    g_vg_builder.virt_pass(visit_group, input_pending);
+    virt_pass(visit_group, input_pending);
 }
 
 // LATER: allow the loop to be interrupted
