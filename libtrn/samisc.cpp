@@ -16,6 +16,7 @@
 #include <trn/rthread.h>
 #include <trn/samain.h>
 #include <trn/sathread.h>
+#include <trn/scan.h>
 #include <trn/scanart.h>
 #include <trn/score.h>
 #include <trn/size_cast.h>
@@ -131,7 +132,7 @@ void sa_sel_threads()
                 }// for all articles
             }// if selected
         }// for all threads
-    s_sort();
+    g_art_scan.current_context().sort();
 }
 
 int sa_number_arts()

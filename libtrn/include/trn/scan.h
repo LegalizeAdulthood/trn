@@ -37,6 +37,8 @@ struct PageEntry
 
 struct ScanContext
 {
+    void sort();
+
     // TODO: private
     void save_order_bounds();
     void sort_basic();

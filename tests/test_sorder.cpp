@@ -67,7 +67,7 @@ protected:
 void SortedScanOrderTest::SetUp()
 {
     ScanOrderTest::SetUp();
-    s_sort();
+    g_art_scan.current_context().sort();
 }
 
 class ScanOrderEndpointTest : public SortedScanOrderTest, public testing::WithParamInterface<bool>
@@ -94,7 +94,7 @@ void IndependentScanContextsTest::SetUp()
     g_art_scan.change_context(m_second_context);
     s_order_add(20);
     s_order_add(10);
-    s_sort();
+    g_art_scan.current_context().sort();
     g_art_scan.save_context();
 }
 
@@ -117,7 +117,7 @@ void RestoredScanContextTest::SetUp()
 
 TEST_F(ScanOrderTest, sortsEntriesAndDiscardsDuplicates)
 {
-    s_sort();
+    g_art_scan.current_context().sort();
 
     EXPECT_EQ((std::vector<long>{1, 2, 3}), g_art_scan.contexts[m_first_context].ent_sort);
     EXPECT_EQ(2, g_art_scan.ent_sorted_max);

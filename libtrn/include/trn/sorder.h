@@ -8,7 +8,6 @@
 #define TRN_SORDER_H
 
 int s_compare(long a, long b);
-void s_sort();
 void s_order_clean();
 void s_order_add(long ent);
 long s_prev(long ent);

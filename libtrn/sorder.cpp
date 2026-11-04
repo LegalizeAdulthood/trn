@@ -130,15 +130,12 @@ void ScanContext::sort_basic()
     // end of heapsort
 }
 
-void s_sort()
+void ScanContext::sort()
 {
-    std::vector<long> &ent_sort = g_art_scan.ent_sort();
-    std::vector<long> &ent_index = g_art_scan.ent_index();
-
 #ifdef UNDEF
     std::qsort((void *) ent_sort.data(), (g_art_scan.ent_sort_max) + 1, sizeof(long), s_compare);
 #endif
-    g_art_scan.current_context().sort_basic();
+    sort_basic();
     g_art_scan.ent_sorted_max = g_art_scan.ent_sort_max; // whole array is now sorted
     g_art_scan.order_changed = false;
     // rebuild the indexes
@@ -146,7 +143,7 @@ void s_sort()
     {
         ent_index[ent_sort[i]] = i;
     }
-    g_art_scan.current_context().save_order_bounds();
+    save_order_bounds();
 }
 
 void s_order_clean()
@@ -198,7 +195,7 @@ long s_prev(long ent)
     }
     if (g_art_scan.order_changed)
     {
-        s_sort();
+        g_art_scan.current_context().sort();
     }
     long tmp = ent_index[ent];
     if (tmp <= 0)
@@ -219,7 +216,7 @@ long s_next(long ent)
     }
     if (g_art_scan.order_changed)
     {
-        s_sort();
+        g_art_scan.current_context().sort();
     }
     long tmp = ent_index[ent];
     if (tmp < 0 || tmp == g_art_scan.ent_sorted_max)
@@ -263,7 +260,7 @@ long s_first()
 
     if (g_art_scan.order_changed)
     {
-        s_sort();
+        g_art_scan.current_context().sort();
     }
     if (g_art_scan.ent_sorted_max < 0)
     {
@@ -278,7 +275,7 @@ long s_last()
 
     if (g_art_scan.order_changed)
     {
-        s_sort();
+        g_art_scan.current_context().sort();
     }
     if (g_art_scan.ent_sorted_max < 0)
     {

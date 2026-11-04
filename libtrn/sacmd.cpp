@@ -277,7 +277,7 @@ int sa_do_cmd(std::string_view command)
         {
             g_sa_mode_desc_score = true;
         }
-        s_sort();
+        g_art_scan.current_context().sort();
         s_go_top_ents();
         g_art_scan.refill = true;
         g_art_scan.ref_bot = true;
@@ -290,7 +290,7 @@ int sa_do_cmd(std::string_view command)
             break;
         }
         g_score_new_first = !g_score_new_first;
-        s_sort();
+        g_art_scan.current_context().sort();
         s_go_top_ents();
         g_art_scan.refill = true;
         break;
@@ -305,7 +305,7 @@ int sa_do_cmd(std::string_view command)
         g_art_scan.ref_all = true; // refresh everything
         fmt::print("\nRescoring articles...\n");
         sc_rescore();
-        s_sort();
+        g_art_scan.current_context().sort();
         s_go_top_ents();
         g_art_scan.refill = true;
         eat_typeahead();        // stay in control.
