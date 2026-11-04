@@ -13,7 +13,6 @@
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
 
-static std::vector<long> &s_ent_sort();
 static std::vector<long> &s_ent_index();
 static void               s_save_order_bounds();
 static void               s_sort_basic();
@@ -23,9 +22,9 @@ ScanContext &ArticleBrowseSession::current_context()
     return contexts[cur_context];
 }
 
-static std::vector<long> &s_ent_sort()
+std::vector<long> &ArticleBrowseSession::ent_sort()
 {
-    return g_browse.current_context().ent_sort;
+    return current_context().ent_sort;
 }
 
 static std::vector<long> &s_ent_index()
@@ -78,7 +77,7 @@ int s_compare(long a, long b)
 // Uses a heapsort algorithm with the heap readjustment inlined.
 static void s_sort_basic()
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
     int t1;
     int j;
 
@@ -140,7 +139,7 @@ static void s_sort_basic()
 
 void s_sort()
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
     std::vector<long> &ent_index = s_ent_index();
 
 #ifdef UNDEF
@@ -159,7 +158,7 @@ void s_sort()
 
 void s_order_clean()
 {
-    s_ent_sort().clear();
+    g_browse.ent_sort().clear();
     s_ent_index().clear();
 
     g_browse.ent_sort_max = -1;
@@ -171,7 +170,7 @@ void s_order_clean()
 // adds the entry number to the current context
 void s_order_add(long ent)
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
     std::vector<long> &ent_index = s_ent_index();
 
     if (ent >= 0 && ent < size_cast<long>(ent_index) && ent_index[ent] >= 0)
@@ -197,7 +196,7 @@ void s_order_add(long ent)
 
 long s_prev(long ent)
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
     std::vector<long> &ent_index = s_ent_index();
 
     if (ent < 0 || ent > g_browse.ent_index_max || g_browse.ent_sorted_max < 0)
@@ -218,7 +217,7 @@ long s_prev(long ent)
 
 long s_next(long ent)
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
     std::vector<long> &ent_index = s_ent_index();
 
     if (ent < 0 || ent > g_browse.ent_index_max || g_browse.ent_sorted_max < 0)
@@ -267,7 +266,7 @@ long s_next_elig(long a)
 
 long s_first()
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
 
     if (g_browse.order_changed)
     {
@@ -282,7 +281,7 @@ long s_first()
 
 long s_last()
 {
-    std::vector<long> &ent_sort = s_ent_sort();
+    std::vector<long> &ent_sort = g_browse.ent_sort();
 
     if (g_browse.order_changed)
     {
