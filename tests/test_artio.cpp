@@ -2277,7 +2277,7 @@ TEST_F(ArticleIoTest, changingSubstitutionModeInvalidatesPresentationCache)
     g_pager.top_line = ArticleLine{4};
 
     testing::internal::CaptureStdout();
-    const PageSwitchResult result = page_switch("_C");
+    const PageSwitchResult result = g_pager.page_switch("_C");
     testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(PS_NORM, result);

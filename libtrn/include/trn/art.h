@@ -10,6 +10,7 @@
 #include <trn/search.h>
 
 #include <string>
+#include <string_view>
 
 // do_article() return values
 enum DoArticleResult
@@ -20,9 +21,19 @@ enum DoArticleResult
     DA_TO_END = 3
 };
 
+// page_switch() return values
+enum PageSwitchResult
+{
+    PS_NORM = 0,
+    PS_ASK = 1,
+    PS_RAISE = 2,
+    PS_TO_END = 3
+};
+
 struct ArticlePager
 {
     void init();
+    PageSwitchResult page_switch(std::string_view command);
 
     // TODO: private
     bool inner_more();

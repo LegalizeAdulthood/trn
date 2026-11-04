@@ -49,18 +49,18 @@ protected:
 
 TEST_F(ArticlePagerCommandTest, quitCommandEndsPager)
 {
-    EXPECT_EQ(PS_TO_END, page_switch("q"));
+    EXPECT_EQ(PS_TO_END, g_pager.page_switch("q"));
 }
 
 TEST_F(ArticlePagerCommandTest, uppercaseQuitRaisesToArticleLevel)
 {
-    EXPECT_EQ(PS_RAISE, page_switch("Q"));
+    EXPECT_EQ(PS_RAISE, g_pager.page_switch("Q"));
 }
 
 TEST_F(ArticlePagerCommandTest, completedSearchCommandUsesCommandText)
 {
     testing::internal::CaptureStdout();
-    EXPECT_EQ(PS_ASK, page_switch("g["));
+    EXPECT_EQ(PS_ASK, g_pager.page_switch("g["));
     testing::internal::GetCapturedStdout();
 }
 
@@ -70,7 +70,7 @@ TEST_F(ArticlePagerCommandTest, searchCommandCompletesFromInput)
     const std::string command = unfinished_pager_command('g');
 
     testing::internal::CaptureStdout();
-    EXPECT_EQ(PS_ASK, page_switch(command));
+    EXPECT_EQ(PS_ASK, g_pager.page_switch(command));
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_NE(std::string::npos, output.find("g["));
@@ -82,7 +82,7 @@ TEST_F(ArticlePagerCommandTest, doubleCommandCompletesFromInput)
     const std::string command = unfinished_pager_command('_');
 
     testing::internal::CaptureStdout();
-    EXPECT_EQ(PS_RAISE, page_switch(command));
+    EXPECT_EQ(PS_RAISE, g_pager.page_switch(command));
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_NE(std::string::npos, output.find("_x"));

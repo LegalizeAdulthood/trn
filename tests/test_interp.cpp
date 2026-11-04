@@ -2114,7 +2114,7 @@ void ArticleCacheLifecycleTest::SetUp()
 PageSwitchResult ArticleCacheLifecycleTest::pager_command(std::string_view command)
 {
     testing::internal::CaptureStdout();
-    const PageSwitchResult result = page_switch(command);
+    const PageSwitchResult result = g_pager.page_switch(command);
     (void) testing::internal::GetCapturedStdout();
     return result;
 }
