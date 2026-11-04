@@ -744,7 +744,7 @@ static bool open_newsrc(Newsrc *rp)
             std::string subscription_line;
             while (g_nntp.gets(subscription_line, NNTP_STRLEN) != NGSR_ERROR)
             {
-                if (g_nntp.link.at_list_end(subscription_line))
+                if (g_nntp.at_list_end(subscription_line))
                 {
                     break;
                 }

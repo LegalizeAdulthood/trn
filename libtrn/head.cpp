@@ -652,7 +652,7 @@ static void prefetch_remote_lines(ArticleNum art_num, HeaderLineType which_line,
             if (g_debug & DEB_NNTP)
                 fmt::print("<{}", line.empty() ? "<EOF>" : line);
 #endif
-            if (g_nntp.link.at_list_end(line))
+            if (g_nntp.at_list_end(line))
             {
                 break;
             }

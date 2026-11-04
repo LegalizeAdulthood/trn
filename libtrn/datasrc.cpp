@@ -479,7 +479,7 @@ bool DataSource::open()
                 std::string next_active_line;
                 next_active_line.reserve(LINE_BUF_LEN);
                 if (g_nntp.gets(next_active_line, LINE_BUF_LEN) == NGSR_FULL_LINE //
-                    && !g_nntp.link.at_list_end(next_active_line))
+                    && !g_nntp.at_list_end(next_active_line))
                 {
                     nntp_finish_list();
                     success = active_file_hash();
@@ -822,7 +822,7 @@ std::string DataSource::find_moderator(std::string_view group_name)
             {
                 continue;
             }
-            if (g_nntp.link.at_list_end(record))
+            if (g_nntp.at_list_end(record))
             {
                 return rules;
             }
@@ -906,7 +906,7 @@ try_group_description:
             {
                 description_line = g_nntp.ser_line;
             }
-            if (g_nntp.link.at_list_end(description_line))
+            if (g_nntp.at_list_end(description_line))
             {
                 return m_desc_sf.append(fmt::format("{} \n", group_name), grouplen).substr(grouplen + 1);
             }
@@ -1038,7 +1038,7 @@ int SourceFile::open(const fs::path &filename, std::string_view fetch_cmd, std::
                 g_progress.set_spin(SPIN_OFF);
                 return 0;
             }
-            if (g_nntp.link.at_list_end(remote_line))
+            if (g_nntp.at_list_end(remote_line))
             {
                 break;
             }

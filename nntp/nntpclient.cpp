@@ -502,7 +502,7 @@ read_it:
         ret = -1;
     }
     // Even though the following check doesn't catch all possible lists, the
-    // bit will get set right when the caller checks NNTPLink::at_list_end().
+    // bit will get set right when the caller checks NntpSession::at_list_end().
     if (nntp_response_code(ser_line) == NNTP_LIST_FOLLOWS_VAL || nntp_response_code(ser_line) == NNTP_CAPABILITIES_VAL)
     {
         link.flags &= ~NNTP_NEW_CMD_OK;
@@ -582,7 +582,7 @@ int nntp_refresh_capabilities()
             g_nntp.close(false);
             return -1;
         }
-        if (g_nntp.link.at_list_end(line))
+        if (g_nntp.at_list_end(line))
         {
             capabilities.available = true;
             g_nntp.link.capabilities = std::move(capabilities);

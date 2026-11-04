@@ -122,6 +122,10 @@ struct NntpSession
     int            command(std::string_view bp);
     int            check();
     void           close(bool send_quit);
+    bool           at_list_end(std::string_view s)
+    {
+        return link.at_list_end(s);
+    }
 
     // TODO: private
     std::string_view response_text();

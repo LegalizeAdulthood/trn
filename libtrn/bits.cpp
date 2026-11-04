@@ -330,7 +330,7 @@ void find_existing_articles()
                 {
                     break;
                 }
-                if (g_nntp.link.at_list_end(list_line))
+                if (g_nntp.at_list_end(list_line))
                 {
                     break;
                 }
