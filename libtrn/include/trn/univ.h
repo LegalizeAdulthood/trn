@@ -209,6 +209,7 @@ struct UniversalMenuLoader
     // TODO: private
     void use_pattern(std::string_view pattern, int type);
     void use_group_line(std::string_view line, int type);
+    void do_line_ext1(std::string_view desc, std::string_view line);
 
     bool        begin_found{};
     std::string begin_label; // label to start working with

@@ -83,7 +83,6 @@ static void           univ_add_virtual_group(std::string_view grpname);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
-static void           univ_do_line_ext1(std::string_view desc, std::string_view line);
 static bool           univ_do_line(std::string_view line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
@@ -680,7 +679,7 @@ static bool univ_include_file(std::string_view fname)
 }
 
 // do the '$' extensions of the line.
-static void univ_do_line_ext1(std::string_view desc, std::string_view line)
+void UniversalMenuLoader::do_line_ext1(std::string_view desc, std::string_view line)
 {
     if (line.empty())
     {
@@ -770,7 +769,7 @@ static void univ_do_line_ext1(std::string_view desc, std::string_view line)
                 s_univ_use_min_score = true;
                 line.remove_prefix(score_end + 1);
             }
-            g_univ_loader.use_group_line(line, 1);
+            use_group_line(line, 1);
             s_univ_use_min_score = false;
             break;
         }
@@ -940,7 +939,7 @@ static bool univ_do_line(std::string_view line)
             break;
 
         case '$': // extension 1
-            univ_do_line_ext1(line_desc, line);
+            g_univ_loader.do_line_ext1(line_desc, line);
             break;
 
         default:
