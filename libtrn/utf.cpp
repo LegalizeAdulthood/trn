@@ -107,6 +107,7 @@ struct GraphicState
     std::string_view input_charset_name();
     std::string_view output_charset_name();
     int              byte_length_at(std::string_view text);
+    CodePoint        code_point_at(std::string_view text);
 
     CharsetType      in;
     CharsetType      out;
@@ -314,7 +315,7 @@ static int scalar_visual_width(CodePoint c)
 
 int visual_width_at(std::string_view text)
 {
-    const CodePoint scalar = code_point_at(text);
+    const CodePoint scalar = s_gs.code_point_at(text);
     if (scalar == INVALID_CODE_POINT)
     {
         return 0;
@@ -349,10 +350,15 @@ int visual_length_of(std::string_view text)
 
 CodePoint code_point_at(std::string_view text)
 {
+    return s_gs.code_point_at(text);
+}
+
+CodePoint GraphicState::code_point_at(std::string_view text)
+{
     CodePoint it = INVALID_CODE_POINT;
     if (!text.empty())
     {
-        if (IS_UTF8(s_gs.in))
+        if (IS_UTF8(in))
         {
             const Uchar first = U(text.front());
             if ((first & 0x80) == 0)
@@ -392,16 +398,16 @@ CodePoint code_point_at(std::string_view text)
                 it = INVALID_CODE_POINT;
             }
         }
-        else if (s_gs.in == CHARSET_ASCII)
+        else if (in == CHARSET_ASCII)
         {
             it = U(text.front()) & 0x7F;
         }
-        else if (s_gs.himap_in != nullptr)
+        else if (himap_in != nullptr)
         {
             it = U(text.front());
             if (it & 0x80)
             {
-                it = s_gs.himap_in[it & 0x7F];
+                it = himap_in[it & 0x7F];
             }
         }
     }
@@ -625,7 +631,7 @@ bool at_norm_char(std::string_view s)
         const char ch = s.front();
         if (s_gs.in == CHARSET_UTF8)
         {
-            CodePoint c = code_point_at(s);
+            CodePoint c = s_gs.code_point_at(s);
             it = c >= 0x20 && !(c >= 0x7F && c < 0xA0) && c != 0x2028 && c != 0x2029;
         }
         else if (U(ch) < 0x80)
@@ -686,7 +692,7 @@ std::string create_utf8_copy(std::string_view text)
         {
             break;
         }
-        const std::string encoded_text = utf8_text(code_point_at(remaining));
+        const std::string encoded_text = utf8_text(s_gs.code_point_at(remaining));
         remaining.remove_prefix(static_cast<std::size_t>(sw));
         tlen += encoded_text.size();
     }
@@ -701,7 +707,7 @@ std::string create_utf8_copy(std::string_view text)
         {
             break;
         }
-        result += utf8_text(code_point_at(remaining));
+        result += utf8_text(s_gs.code_point_at(remaining));
         remaining.remove_prefix(static_cast<std::size_t>(sw));
     }
     return result;
