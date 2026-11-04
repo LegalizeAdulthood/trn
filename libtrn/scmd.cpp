@@ -172,7 +172,7 @@ static int s_do_cmd(std::string_view command)
         }
         else
         {
-            if (!s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
+            if (!g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
             {
                 s_beep();
                 g_art_scan.refill = true;
@@ -223,7 +223,7 @@ static int s_do_cmd(std::string_view command)
 
     case '>': // next page
         s_rub_ptr();
-        a = s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
+        a = g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
         if (!a)                 // at end of articles
         {
             s_beep();
@@ -434,13 +434,13 @@ static long s_forward_search(long ent)
 {
     if (ent)
     {
-        ent = s_next_elig(ent);
+        ent = g_art_scan.current_context().next_elig(ent);
     }
     else
     {
         ent = s_first();
     }
-    for ( ; ent; ent = s_next_elig(ent))
+    for (; ent; ent = g_art_scan.current_context().next_elig(ent))
     {
         if (s_match_description(ent))
         {

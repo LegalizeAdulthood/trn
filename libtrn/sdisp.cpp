@@ -50,7 +50,7 @@ void s_mail_and_place()
 #endif // MAILCALL
     // print page status wrt all entries
     previous = (0 != g_art_scan.current_context().prev_elig(g_art_scan.page_ents[0].ent_num));
-    next = (0 != s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num));
+    next = (0 != g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num));
     if (previous && next)
     {
         fmt::print("-MIDDLE-"); // middle of entries

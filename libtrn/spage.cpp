@@ -177,7 +177,7 @@ bool s_fill_page_forward(long start)
     }
     else
     {
-        a = s_next_elig(start);
+        a = g_art_scan.current_context().next_elig(start);
     }
     if (!a)     // no eligible entries
     {
@@ -195,7 +195,7 @@ bool s_fill_page_forward(long start)
         i = s_ent_lines(a);
         g_art_scan.page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
         line_on = line_on+i;
-        a = s_next_elig(a);
+        a = g_art_scan.current_context().next_elig(a);
         if (!a)         // no more eligible
         {
             break;      // get out of loop and finish up...
@@ -278,7 +278,7 @@ bool s_refill_page()
     //  this case the start_line entry of g_art_scan.page_ents[0] could be overwritten
     //  causing big problems...)
     //
-    a = s_next_elig(g_art_scan.page_ents[0].ent_num);
+    a = g_art_scan.current_context().next_elig(g_art_scan.page_ents[0].ent_num);
 
     // similar to the tests in the last loop...
     while (i <= g_art_scan.bot_ent && s_eligible(g_art_scan.page_ents[i].ent_num) //
@@ -286,14 +286,14 @@ bool s_refill_page()
            && g_art_scan.page_ents[i].lines == s_ent_lines(g_art_scan.page_ents[i].ent_num))
     {
         i++;
-        a = s_next_elig(a);
+        a = g_art_scan.current_context().next_elig(a);
     }
     j = i-1;    // j is the last "good" entry
 
     g_art_scan.bot_ent = j;
     g_art_scan.page_ents.resize(j + 1);
     line_on = g_art_scan.page_ents[j].start_line + s_ent_lines(g_art_scan.page_ents[j].ent_num);
-    a = s_next_elig(g_art_scan.page_ents[j].ent_num);
+    a = g_art_scan.current_context().next_elig(g_art_scan.page_ents[j].ent_num);
     if (page_lines > 0)
     {
         g_art_scan.page_ents.reserve(page_lines);
@@ -305,7 +305,7 @@ bool s_refill_page()
         i = s_ent_lines(a);
         g_art_scan.page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
         line_on = line_on+i;
-        a = s_next_elig(a);
+        a = g_art_scan.current_context().next_elig(a);
     }
     g_progress.set_spin(SPIN_POP);
     g_art_scan.bot_ent = size_cast<long>(g_art_scan.page_ents) - 1;
@@ -442,7 +442,7 @@ bool s_go_top_ents()
     TRN_ASSERT(g_art_scan.top_ent);      // be nicer later
     if (!s_eligible(g_art_scan.top_ent)) // this may save a redraw...
     {
-        g_art_scan.top_ent = s_next_elig(g_art_scan.top_ent);
+        g_art_scan.top_ent = g_art_scan.current_context().next_elig(g_art_scan.top_ent);
     }
     if (!g_art_scan.top_ent) // none eligible
     {
@@ -474,7 +474,7 @@ bool s_go_bot_ents()
 
 void s_go_next_page()
 {
-    long a = s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
+    long a = g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
     if (!a)
     {
         return;         // no next page (we shouldn't have been called)

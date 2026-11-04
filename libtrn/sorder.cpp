@@ -233,9 +233,9 @@ long ScanContext::prev_elig(long a)
 
 // given an entry, returns next eligible entry
 // returns 0 if no next eligible entry
-long s_next_elig(long a)
+long ScanContext::next_elig(long a)
 {
-    while ((a = g_art_scan.current_context().next(a)) != 0)
+    while ((a = next(a)) != 0)
     {
         if (s_eligible(a))
         {

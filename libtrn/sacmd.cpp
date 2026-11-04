@@ -341,7 +341,7 @@ int sa_do_cmd(std::string_view command)
         {
             g_art_scan.current_context().order_add(j); // duplicates ignored
         }
-        if (sa_eligible(s_first()) || s_next_elig(s_first()))
+        if (sa_eligible(s_first()) || g_art_scan.current_context().next_elig(s_first()))
         {
 #ifdef PENDING
             if (g_sa_mode_read_elig)
@@ -397,7 +397,7 @@ int sa_do_cmd(std::string_view command)
             g_sa_mode_fold = true;
         }
         // toggle mode again if no elibible articles left
-        if (sa_eligible(s_first()) || s_next_elig(s_first()))
+        if (sa_eligible(s_first()) || g_art_scan.current_context().next_elig(s_first()))
         {
             g_art_scan.ref_top = true;
             s_go_top_ents();
@@ -426,7 +426,7 @@ int sa_do_cmd(std::string_view command)
         }
         else
         {
-            if (!s_next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
+            if (!g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
             {
                 s_beep();
                 return 0;
@@ -444,7 +444,7 @@ int sa_do_cmd(std::string_view command)
 
     case Ctl('n'):    // follow subject forward
           i = sa_subj_thread(a);
-        for (b = s_next_elig(a); b; b = s_next_elig(b))
+        for (b = g_art_scan.current_context().next_elig(a); b; b = g_art_scan.current_context().next_elig(b))
         {
             if (i == sa_subj_thread(b))
             {
@@ -757,7 +757,7 @@ static long sa_wrap_next_author(long a)
 {
 #ifdef UNDEF
     const std::string author = sa_author_key(a);
-    for (long b = s_next_elig(a); b; b = s_next_elig(b))
+    for (long b = g_art_scan.current_context().next_elig(a); b; b = g_art_scan.current_context().next_elig(b))
     {
         if (sa_author_key(b) == author)
         {
@@ -768,9 +768,9 @@ static long sa_wrap_next_author(long a)
     long b = s_first();
     if (!sa_eligible(b))
     {
-        b = s_next_elig(b);
+        b = g_art_scan.current_context().next_elig(b);
     }
-    for (; b; b = s_next_elig(b))
+    for (; b; b = g_art_scan.current_context().next_elig(b))
     {
         if (sa_author_key(b) == author)
         {
