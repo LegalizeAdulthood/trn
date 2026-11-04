@@ -872,14 +872,7 @@ reask_unread:
         }
         else if (unread_ch == 't' && !u_help_thread.empty())
         {
-            if (g_nav.target.art->m_subj->m_thread)
-            {
-                g_nav.target.art->m_subj->m_thread->unkill_thread();
-            }
-            else
-            {
-                g_nav.target.art->m_subj->unkill_subject();
-            }
+            g_nav.target.art->m_subj->unkill_thread();
             g_nav.target.art = g_nav.target.art->m_subj->first_art();
             if (g_nav.target.art != nullptr)
             {
@@ -1071,7 +1064,7 @@ not_threaded:
         }
         if (g_threaded_group)
         {
-            g_nav.target.art->m_subj->m_thread->kill_thread(AFFECT_ALL);
+            g_nav.target.art->m_subj->kill_thread(AFFECT_ALL);
             if (g_sa_in)
             {
                 return AS_SA;
@@ -1241,7 +1234,7 @@ no_previous_article:
                     break;
 
                 case SM_THREAD:
-                    if (old_artp->m_subj->m_thread != g_nav.target.art->m_subj->m_thread)
+                    if (!old_artp->m_subj->same_thread(*g_nav.target.art->m_subj))
                     {
                         return AS_SA;
                     }
@@ -2405,7 +2398,7 @@ reask_memorize:
         }
         else
         {
-            g_nav.target.art->m_subj->m_thread->kill_thread(AFFECT_ALL | AUTO_KILL_THD);
+            g_nav.target.art->m_subj->kill_thread(AFFECT_ALL | AUTO_KILL_THD);
         }
         if (g_general_mode != GM_SELECTOR)
         {
@@ -2456,7 +2449,7 @@ reask_memorize:
     {
         if (thread_cmd)
         {
-            g_nav.target.art->m_subj->m_thread->clear_thread();
+            g_nav.target.art->m_subj->clear_thread();
         }
         else
         {

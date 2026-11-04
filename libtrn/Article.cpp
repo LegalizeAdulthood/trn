@@ -547,9 +547,9 @@ void Article::select_articles_subject(AutoKillFlags auto_flags)
 //
 void Article::select_articles_thread(AutoKillFlags auto_flags)
 {
-    if (m_subj && m_subj->m_thread)
+    if (m_subj && m_subj->has_thread())
     {
-        m_subj->m_thread->select_thread(auto_flags);
+        m_subj->select_thread(auto_flags);
     }
     else
     {
@@ -611,9 +611,9 @@ void Article::deselect_articles_subject()
 //
 void Article::deselect_articles_thread()
 {
-    if (m_subj && m_subj->m_thread)
+    if (m_subj && m_subj->has_thread())
     {
-        m_subj->m_thread->deselect_thread();
+        m_subj->deselect_thread();
     }
     else
     {
@@ -660,9 +660,9 @@ void Article::kill_articles_subject(AutoKillFlags auto_flags)
 //
 void Article::kill_articles_thread(AutoKillFlags auto_flags)
 {
-    if (m_subj && m_subj->m_thread)
+    if (m_subj && m_subj->has_thread())
     {
-        m_subj->m_thread->kill_thread(auto_flags);
+        m_subj->kill_thread(auto_flags);
     }
     else
     {
@@ -704,6 +704,11 @@ void Article::clear_thread()
         sp->clear_subject();
         sp = sp->m_thread_link;
     } while (sp != m_subj);
+}
+
+Subject *Article::thread_subject() const
+{
+    return m_subj->thread_subject();
 }
 
 void Article::change_auto_flags(AutoKillFlags auto_flag)

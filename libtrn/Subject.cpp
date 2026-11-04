@@ -229,6 +229,43 @@ void Subject::clear_subject()
     }
 }
 
+void Subject::select_thread(AutoKillFlags auto_flags)
+{
+    m_thread->select_thread(auto_flags);
+}
+
+void Subject::deselect_thread()
+{
+    m_thread->deselect_thread();
+}
+
+void Subject::kill_thread(AutoKillFlags auto_flags)
+{
+    m_thread->kill_thread(auto_flags);
+}
+
+void Subject::unkill_thread()
+{
+    if (m_thread)
+    {
+        m_thread->unkill_thread();
+    }
+    else
+    {
+        unkill_subject();
+    }
+}
+
+void Subject::clear_thread()
+{
+    m_thread->clear_thread();
+}
+
+Subject *Subject::thread_subject() const
+{
+    return m_thread->m_subj;
+}
+
 Article *Subject::subj_article()
 {
     int  art_mask = (g_sel.selected_only ? (AF_SEL | AF_UNREAD) : AF_UNREAD);

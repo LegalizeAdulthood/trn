@@ -41,6 +41,20 @@ struct Subject
     void     kill_subject(AutoKillFlags auto_flags);
     void     unkill_subject();
     void     clear_subject();
+    void     select_thread(AutoKillFlags auto_flags);
+    void     deselect_thread();
+    void     kill_thread(AutoKillFlags auto_flags);
+    void     unkill_thread();
+    void     clear_thread();
+    Subject *thread_subject() const;
+    bool     has_thread() const
+    {
+        return m_thread != nullptr;
+    }
+    bool same_thread(const Subject &other) const
+    {
+        return m_thread == other.m_thread;
+    }
     Article *subj_article();
     std::size_t stripped_offset() const { return m_str.size() < 4 ? m_str.size() : 4; }
     std::string_view text() const { return m_str; }

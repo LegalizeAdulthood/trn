@@ -446,7 +446,7 @@ int thread_perform(std::string_view command)
         g_status.performed_article_loop = false;
         if (one_thread)
         {
-            sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
+            sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->thread_subject() : g_nav.target.art->m_subj);
         }
         else
         {
@@ -493,12 +493,12 @@ int thread_perform(std::string_view command)
             Article **limit = g_art_order.end();
             if (one_thread)
             {
-                sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
+                sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->thread_subject() : g_nav.target.art->m_subj);
             }
             for (Article **app = g_art_order.begin(); app < limit; app++)
             {
                 ap = *app;
-                if (one_thread && ap->m_subj->m_thread != sp->m_thread)
+                if (one_thread && !ap->m_subj->same_thread(*sp))
                 {
                     continue;
                 }
@@ -523,7 +523,7 @@ int thread_perform(std::string_view command)
         {
             if (one_thread)
             {
-                sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->m_subj->m_thread->m_subj : g_nav.target.art->m_subj);
+                sp = (g_sel.mode == SM_THREAD ? g_nav.target.art->thread_subject() : g_nav.target.art->m_subj);
             }
             else
             {
