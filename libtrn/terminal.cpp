@@ -215,6 +215,9 @@ std::string_view standout_end()
 
 struct KeyMap
 {
+    // TODO: private
+    void install_macro(std::string_view sequence, std::string_view definition, bool report_overrides);
+
     char        km_type[128]{};
     KeyMap    *km_km[128]{};
     std::string km_str[128];
@@ -702,15 +705,19 @@ void mac_line(std::string_view line)
 static void install_macro(std::string_view sequence, std::string_view definition,
                           bool report_overrides)
 {
-    KeyMap*     curmap;
-    int         garbage = 0;
-    static constexpr char OVERRIDE[] = "\nkeymap overrides string\n";
-
     if (s_top_map == nullptr)
     {
         s_top_map = new_key_map();
     }
-    curmap=s_top_map;
+    s_top_map->install_macro(sequence, definition, report_overrides);
+}
+
+void KeyMap::install_macro(std::string_view sequence, std::string_view definition, bool report_overrides)
+{
+    KeyMap               *curmap = this;
+    int                   garbage = 0;
+    static constexpr char OVERRIDE[] = "\nkeymap overrides string\n";
+
     for (std::size_t position = 0; position < sequence.size(); position++)
     {
         int ch = static_cast<unsigned char>(sequence[position]) & 0177;
