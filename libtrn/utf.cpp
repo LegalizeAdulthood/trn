@@ -109,6 +109,7 @@ struct GraphicState
     int              byte_length_at(std::string_view text);
     CodePoint        code_point_at(std::string_view text);
     int              visual_width_at(std::string_view text);
+    int              visual_length_of(std::string_view text);
 
     CharsetType      in;
     CharsetType      out;
@@ -339,11 +340,16 @@ int GraphicState::visual_width_at(std::string_view text)
 
 int visual_length_of(std::string_view text)
 {
+    return s_gs.visual_length_of(text);
+}
+
+int GraphicState::visual_length_of(std::string_view text)
+{
     int it = 0;
     while (!text.empty())
     {
-        int w = s_gs.byte_length_at(text);
-        int v = s_gs.visual_width_at(text);
+        int w = byte_length_at(text);
+        int v = visual_width_at(text);
         if (w <= 0)
         {
             break;
