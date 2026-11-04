@@ -533,7 +533,7 @@ TEST_F(PerformStatusEndTest, emitsSpinnerCharacters)
     g_tc_BC = "\b";
 
     testing::internal::CaptureStdout();
-    perform_status(3, 1);
+    g_status.status(3, 1);
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(">\b", output);

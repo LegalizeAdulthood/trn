@@ -531,7 +531,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_newsgroup_ptr->m_to_read, 60 / (how_much + 1));
+            g_status.status(g_newsgroup_ptr->m_to_read, 60 / (how_much + 1));
         }
     }
 exit:

@@ -379,7 +379,7 @@ NumNumResult num_num(std::string_view command)
             }
             if (!output_level)
             {
-                perform_status(g_newsgroup_ptr->m_to_read, 50);
+                g_status.status(g_newsgroup_ptr->m_to_read, 50);
             }
         }
         if (have_range)
@@ -515,7 +515,7 @@ int thread_perform(std::string_view command)
                 }
                 if (!output_level)
                 {
-                    perform_status(g_newsgroup_ptr->m_to_read, 50);
+                    g_status.status(g_newsgroup_ptr->m_to_read, 50);
                 }
             }
         }
@@ -551,7 +551,7 @@ int thread_perform(std::string_view command)
                 }
                 if (!output_level)
                 {
-                    perform_status(g_newsgroup_ptr->m_to_read, 50);
+                    g_status.status(g_newsgroup_ptr->m_to_read, 50);
                 }
             }
         }
@@ -919,7 +919,7 @@ int newsgroup_sel_perform(std::string_view command)
                 break;
             }
         }
-        perform_status(g_newsgroup_to_read.value_of(), 50);
+        g_status.status(g_newsgroup_to_read.value_of(), 50);
     }
 
 break_out:
@@ -1062,7 +1062,7 @@ int add_group_sel_perform(std::string_view command)
                 break;
             }
         }
-        perform_status(g_newsgroup_to_read.value_of(), 50);
+        g_status.status(g_newsgroup_to_read.value_of(), 50);
     }
 
 break_out:

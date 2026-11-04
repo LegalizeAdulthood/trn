@@ -156,7 +156,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             }
             if (!output_level && g_page_line == 1)
             {
-                perform_status(g_newsgroup_to_read.value_of(), 50);
+                g_status.status(g_newsgroup_to_read.value_of(), 50);
             }
         }
         return ret;
@@ -243,7 +243,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
         }
         if (!output_level && g_page_line == 1)
         {
-            perform_status(g_newsgroup_to_read.value_of(), 50);
+            g_status.status(g_newsgroup_to_read.value_of(), 50);
         }
     } while ((g_newsgroup_ptr =
                   (backward ? (newsgroup_prev(g_newsgroup_ptr) ? newsgroup_prev(g_newsgroup_ptr) : g_ng_order.last())

@@ -885,7 +885,7 @@ void BulkCommandStatus::init(int cnt)
     g_progress.chars = "v>^<";
 }
 
-void perform_status(int cnt, int spin)
+void BulkCommandStatus::status(int cnt, int spin)
 {
     if (!(++g_progress.count % spin))
     {
@@ -894,23 +894,23 @@ void perform_status(int cnt, int spin)
         std::fflush(stdout);
     }
 
-    if (g_status.perform_count == g_status.prior_count)
+    if (perform_count == prior_count)
     {
         return;
     }
 
     std::time_t now = std::time(nullptr);
-    if (now - g_status.prior_now < 2)
+    if (now - prior_now < 2)
     {
         return;
     }
 
-    g_status.prior_now = now;
-    g_status.prior_count = g_status.perform_count;
+    prior_now = now;
+    prior_count = perform_count;
 
-    long missing = g_missing_count - g_status.missing;
-    long kills = g_status.start_count - cnt - missing;
-    long sels = g_selected_count - g_status.sel;
+    long missing = g_missing_count - this->missing;
+    long kills = start_count - cnt - missing;
+    long sels = g_selected_count - sel;
 
     if (!(kills | sels))
     {
@@ -918,10 +918,9 @@ void perform_status(int cnt, int spin)
     }
 
     carriage_return();
-    if (g_status.perform_count != sels && g_status.perform_count != -sels && g_status.perform_count != kills &&
-        g_status.perform_count != -kills)
+    if (perform_count != sels && perform_count != -sels && perform_count != kills && perform_count != -kills)
     {
-        fmt::print("M:{} ", g_status.perform_count);
+        fmt::print("M:{} ", perform_count);
     }
     if (kills)
     {
