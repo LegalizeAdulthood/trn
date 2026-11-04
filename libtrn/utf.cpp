@@ -110,6 +110,7 @@ struct GraphicState
     CodePoint        code_point_at(std::string_view text);
     int              visual_width_at(std::string_view text);
     int              visual_length_of(std::string_view text);
+    std::string      insert_unicode_at(CodePoint c);
 
     CharsetType      in;
     CharsetType      out;
@@ -475,7 +476,12 @@ static std::string utf8_text(CodePoint c)
 
 std::string insert_unicode_at(CodePoint c)
 {
-    if (IS_UTF8(s_gs.in))
+    return s_gs.insert_unicode_at(c);
+}
+
+std::string GraphicState::insert_unicode_at(CodePoint c)
+{
+    if (IS_UTF8(in))
     {
         return utf8_text(c);
     }
@@ -483,9 +489,9 @@ std::string insert_unicode_at(CodePoint c)
     {
         return std::string(1, static_cast<char>(c));
     }
-    if (s_gs.himap_in != nullptr)
+    if (himap_in != nullptr)
     {
-        return utf8_text(s_gs.himap_in[c & 0x7F]);
+        return utf8_text(himap_in[c & 0x7F]);
     }
     return {};
 }
