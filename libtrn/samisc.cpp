@@ -28,6 +28,22 @@ inline int check_article(ArticleNum a)
     return a >= g_abs_first && a <= g_last_art;
 }
 
+bool ArticleScanSession::page_has_unavailable_entries() const
+{
+    if (cur_type != S_ART)
+    {
+        return false;
+    }
+    for (int i = 0; i <= bot_ent; i++)
+    {
+        if (g_cache.is_unavailable(g_sa_ents[page_ents[i].ent_num].artnum))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // ignoring "Fold" (or later recursive) mode(s), is this article eligible?
 bool sa_basic_elig(long a)
 {

@@ -7,7 +7,6 @@
 #include <trn/spage.h>
 
 #include <config/common.h>
-#include <trn/cache.h>
 #include <trn/ngdata.h>
 #include <trn/rt-util.h> // spinner
 #include <trn/samain.h>
@@ -111,22 +110,11 @@ bool s_fill_page_backward(long end)
     // be bad, so lets make sure it doesn't happen.
     //
     g_art_scan.ptr_page_line = std::min<long>(g_art_scan.ptr_page_line, g_art_scan.bot_ent);
-    if (g_art_scan.cur_type != S_ART)
-    {
-        return true;
-    }
     // temporary fix.  Under some conditions ineligible entries will
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (i = 0; i <= g_art_scan.bot_ent; i++)
-    {
-        if (g_cache.is_unavailable(g_sa_ents[g_art_scan.page_ents[i].ent_num].artnum))
-        {
-            break;
-        }
-    }
-    if (i <= g_art_scan.bot_ent)
+    if (g_art_scan.page_has_unavailable_entries())
     {
         return s_fill_page_backward(end);
     }
@@ -213,22 +201,11 @@ bool s_fill_page_forward(long start)
     // set new g_art_scan.top_ent
     g_art_scan.top_ent = g_art_scan.page_ents[0].ent_num;
     g_art_scan.ptr_page_line = std::min<long>(g_art_scan.ptr_page_line, g_art_scan.bot_ent);
-    if (g_art_scan.cur_type != S_ART)
-    {
-        return true;
-    }
     // temporary fix.  Under some conditions ineligible entries will
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (i = 0; i <= g_art_scan.bot_ent; i++)
-    {
-        if (g_cache.is_unavailable(g_sa_ents[g_art_scan.page_ents[i].ent_num].artnum))
-        {
-            break;
-        }
-    }
-    if (i <= g_art_scan.bot_ent)
+    if (g_art_scan.page_has_unavailable_entries())
     {
         return s_fill_page_forward(start);
     }
@@ -320,22 +297,11 @@ bool s_refill_page()
     // be bad, so lets make sure it doesn't happen.
     //
     g_art_scan.ptr_page_line = std::min<long>(g_art_scan.ptr_page_line, g_art_scan.bot_ent);
-    if (g_art_scan.cur_type != S_ART)
-    {
-        return true;
-    }
     // temporary fix.  Under some conditions ineligible entries will
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (i = 0; i <= g_art_scan.bot_ent; i++)
-    {
-        if (g_cache.is_unavailable(g_sa_ents[g_art_scan.page_ents[i].ent_num].artnum))
-        {
-            break;
-        }
-    }
-    if (i <= g_art_scan.bot_ent)
+    if (g_art_scan.page_has_unavailable_entries())
     {
         return s_refill_page();  // next time the unavail won't be chosen
     }
@@ -351,8 +317,6 @@ bool s_refill_page()
  */
 int s_fill_page()
 {
-    int i;
-
     g_art_scan.refill = false;  // we don't need one now
     if (g_art_scan.top_ent < 1) // set top to first entry
     {
@@ -399,19 +363,8 @@ int s_fill_page()
             return s_fill_page();  // ineligible won't be chosen again
         }
     }
-    if (g_art_scan.cur_type != S_ART)
-    {
-        return 1;
-    }
     // be extra cautious about the article scan pages
-    for (i = 0; i <= g_art_scan.bot_ent; i++)
-    {
-        if (g_cache.is_unavailable(g_sa_ents[g_art_scan.page_ents[i].ent_num].artnum))
-        {
-            break;
-        }
-    }
-    if (i <= g_art_scan.bot_ent)
+    if (g_art_scan.page_has_unavailable_entries())
     {
         return s_fill_page();    // next time the unavail won't be chosen
     }
