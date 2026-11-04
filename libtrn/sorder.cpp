@@ -13,30 +13,29 @@
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
 
-static ScanContext       &s_current_context();
 static std::vector<long> &s_ent_sort();
 static std::vector<long> &s_ent_index();
 static void               s_save_order_bounds();
 static void               s_sort_basic();
 
-static ScanContext &s_current_context()
+ScanContext &ArticleBrowseSession::current_context()
 {
-    return g_browse.contexts[g_browse.cur_context];
+    return contexts[cur_context];
 }
 
 static std::vector<long> &s_ent_sort()
 {
-    return s_current_context().ent_sort;
+    return g_browse.current_context().ent_sort;
 }
 
 static std::vector<long> &s_ent_index()
 {
-    return s_current_context().ent_index;
+    return g_browse.current_context().ent_index;
 }
 
 static void s_save_order_bounds()
 {
-    ScanContext &context = s_current_context();
+    ScanContext &context = g_browse.current_context();
 
     context.ent_sort_max = g_browse.ent_sort_max;
     context.ent_sorted_max = g_browse.ent_sorted_max;

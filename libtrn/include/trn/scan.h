@@ -72,6 +72,9 @@ struct ScanContext
 
 struct ArticleBrowseSession
 {
+    // TODO: private
+    ScanContext &current_context();
+
     std::vector<ScanContext> contexts;      // context structures
     int                      cur_context{}; // current context number
     ScanContextType          cur_type{};    // current context type (for fast switching)
