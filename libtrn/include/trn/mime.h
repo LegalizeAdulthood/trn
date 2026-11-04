@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -211,6 +212,16 @@ struct MimeCapEntry
     std::string  description;
     MimeCapFlags flags{};
 };
+
+using MimeExecutor = std::function<int(std::string_view shell, std::string_view cmd)>;
+
+struct MimeCapRegistry
+{
+    std::vector<MimeCapEntry> entries;
+    MimeExecutor              executor;
+};
+
+extern MimeCapRegistry g_mimecap;
 
 void          mime_init();
 void          mime_final();

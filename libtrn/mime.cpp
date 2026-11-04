@@ -69,8 +69,7 @@ static const HtmlTag s_tag_attr[LAST_TAG] = {
     {"xml",        TF_BLOCK | TF_HIDE                      }, // non-standard but seen in the wild
 };
 // clang-format on
-static std::vector<MimeCapEntry> s_mimecap_entries;
-static MimeExecutor              s_executor;
+MimeCapRegistry g_mimecap{};
 
 constexpr bool CLOSING_TAG = false;
 constexpr bool OPENING_TAG = true;
@@ -83,13 +82,13 @@ static std::string_view find_attr(std::string_view str, std::string_view attr);
 
 void mime_set_executor(MimeExecutor executor)
 {
-    s_executor = std::move(executor);
+    g_mimecap.executor = std::move(executor);
 }
 
 void mime_init()
 {
-    s_executor = do_shell;
-    s_mimecap_entries.clear();
+    g_mimecap.executor = do_shell;
+    g_mimecap.entries.clear();
 
     std::string mcname = get_env_var("MIMECAPS");
     if (mcname.empty())
@@ -104,7 +103,7 @@ void mime_init()
 
 void mime_final()
 {
-    s_mimecap_entries.clear();
+    g_mimecap.entries.clear();
 }
 
 void mime_read_mimecap(std::string_view mcname)
@@ -154,7 +153,7 @@ void mime_read_mimecap(std::string_view mcname)
             fmt::print(stderr, "trn: Ignoring invalid mimecap entry: {}\n", entry);
             continue;
         }
-        MimeCapEntry &mcp = s_mimecap_entries.emplace_back();
+        MimeCapEntry &mcp = g_mimecap.entries.emplace_back();
         mcp.content_type = std::move(content_type);
         mcp.command = mime_parse_entry_arg(args);
         while (!args.empty())
@@ -277,7 +276,7 @@ static std::string mime_parse_entry_value(std::string_view text)
 
 MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags)
 {
-    for (MimeCapEntry &mcp : s_mimecap_entries)
+    for (MimeCapEntry &mcp : g_mimecap.entries)
     {
         if (!(mcp.flags & skip_flags) //
             && mime_types_match(contenttype, mcp.content_type))
@@ -454,7 +453,7 @@ int mime_exec(std::string_view cmd)
         }
     }
 
-    return s_executor(SH, command);
+    return g_mimecap.executor(SH, command);
 }
 
 void MimeContext::init_sections()
