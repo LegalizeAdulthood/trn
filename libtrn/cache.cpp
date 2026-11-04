@@ -347,6 +347,53 @@ void SubjectIndex::remove_empty(const Subject *subj)
     count--;
 }
 
+void SubjectIndex::splice_after(Subject *after, Subject *range_first, Subject *range_last)
+{
+    // Unlink the range from its current position.
+    if (!range_first->m_prev)
+    {
+        first = range_last->m_next;
+    }
+    else
+    {
+        range_first->m_prev->m_next = range_last->m_next;
+    }
+    if (!range_last->m_next)
+    {
+        last = range_first->m_prev;
+    }
+    else
+    {
+        range_last->m_next->m_prev = range_first->m_prev;
+    }
+    // Link the range after the destination subject.
+    range_first->m_prev = after;
+    range_last->m_next = after->m_next;
+    if (!after->m_next)
+    {
+        last = range_last;
+    }
+    else
+    {
+        after->m_next->m_prev = range_last;
+    }
+    after->m_next = range_first;
+}
+
+void SubjectIndex::set_order(const std::vector<Subject *> &order)
+{
+    first = order[0];
+    first->m_prev = nullptr;
+    Subject *const *lp = order.data();
+    for (int i = count; --i; lp++)
+    {
+        lp[0]->m_next = lp[1];
+        lp[1]->m_prev = lp[0];
+    }
+    last = lp[0];
+    last->m_next = nullptr;
+}
+
 // The article turned out to be a duplicate, so remove it from the cached
 // list and possibly destroy the subject (should only happen if the data
 // was corrupt and the duplicate id got a different subject).

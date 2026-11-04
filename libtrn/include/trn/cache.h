@@ -86,6 +86,8 @@ struct SubjectIndex
     void     rekey(Subject *subj, std::string &new_subj);
     Subject *find_or_create(std::string new_subj, std::string_view new_key);
     void     remove_empty(const Subject *subj);
+    void     splice_after(Subject *after, Subject *range_first, Subject *range_last);
+    void     set_order(const std::vector<Subject *> &order);
 
     HashTable *hash{};
     HashTable *short_hash{};

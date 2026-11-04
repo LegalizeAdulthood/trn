@@ -229,35 +229,7 @@ void merge_threads(Subject *s1, Subject *s2)
                 goto artlink;
             }
         }
-        // Unlink the s2 chunk of subjects from the list
-        if (!sp->m_prev)
-        {
-            g_subj.first = s2->m_next;
-        }
-        else
-        {
-            sp->m_prev->m_next = s2->m_next;
-        }
-        if (!s2->m_next)
-        {
-            g_subj.last = sp->m_prev;
-        }
-        else
-        {
-            s2->m_next->m_prev = sp->m_prev;
-        }
-        // Link the s2 chunk after s1
-        sp->m_prev = s1;
-        s2->m_next = s1->m_next;
-        if (!s1->m_next)
-        {
-            g_subj.last = s2;
-        }
-        else
-        {
-            s1->m_next->m_prev = s2;
-        }
-        s1->m_next = sp;
+        g_subj.splice_after(s1, sp, s2);
     }
 
 artlink:

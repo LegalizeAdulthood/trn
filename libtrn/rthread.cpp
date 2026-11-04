@@ -1419,15 +1419,12 @@ void sort_subjects()
     std::qsort(subj_list.data(), subj_list.size(), sizeof (Subject*),
                ((int(*)(const void *, const void *))sort_procedure));
 
-    g_subj.first = subj_list[0];
-    sp = subj_list[0];
-    sp->m_prev = nullptr;
-    lp = subj_list.data();
-    for (int i = g_subj.count; --i; lp++)
+    g_subj.set_order(subj_list);
+    if (g_sel.mode == SM_THREAD)
     {
-        lp[0]->m_next = lp[1];
-        lp[1]->m_prev = lp[0];
-        if (g_sel.mode == SM_THREAD)
+        sp = subj_list[0];
+        lp = subj_list.data();
+        for (int i = g_subj.count; --i; lp++)
         {
             if (lp[0]->m_thread && lp[0]->m_thread == lp[1]->m_thread)
             {
@@ -1439,11 +1436,6 @@ void sort_subjects()
                 sp = lp[1];
             }
         }
-    }
-    g_subj.last = lp[0];
-    g_subj.last->m_next = nullptr;
-    if (g_sel.mode == SM_THREAD)
-    {
         g_subj.last->m_thread_link = sp;
     }
 }
