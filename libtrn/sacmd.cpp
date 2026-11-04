@@ -195,20 +195,20 @@ int sa_do_cmd(std::string_view command)
         {
             break;
         }
-        i = g_art_scan.current_context().first();
+        i = g_art_scan.first();
         if (!i)
         {
             break;
         }
         if (!sa_basic_elig(i))
         {
-            while ((i = g_art_scan.current_context().next(i)) != 0 && !sa_basic_elig(i))
+            while ((i = g_art_scan.next(i)) != 0 && !sa_basic_elig(i))
             {
             }
         }
         // New action: if in fold mode, will not delete an article which
         // has a thread-prior marked article.
-        for (; i; i = g_art_scan.current_context().next(i))
+        for (; i; i = g_art_scan.next(i))
         {
             if (!sa_basic_elig(i))
             {
@@ -277,7 +277,7 @@ int sa_do_cmd(std::string_view command)
         {
             g_sa_mode_desc_score = true;
         }
-        g_art_scan.current_context().sort();
+        g_art_scan.sort();
         s_go_top_ents();
         g_art_scan.refill = true;
         g_art_scan.ref_bot = true;
@@ -290,7 +290,7 @@ int sa_do_cmd(std::string_view command)
             break;
         }
         g_score_new_first = !g_score_new_first;
-        g_art_scan.current_context().sort();
+        g_art_scan.sort();
         s_go_top_ents();
         g_art_scan.refill = true;
         break;
@@ -305,7 +305,7 @@ int sa_do_cmd(std::string_view command)
         g_art_scan.ref_all = true; // refresh everything
         fmt::print("\nRescoring articles...\n");
         sc_rescore();
-        g_art_scan.current_context().sort();
+        g_art_scan.sort();
         s_go_top_ents();
         g_art_scan.refill = true;
         eat_typeahead();        // stay in control.
@@ -339,10 +339,9 @@ int sa_do_cmd(std::string_view command)
 // maybe later use the flag to not do this more than once per newsgroup
         for (int j = 1; j < size_cast<int>(g_sa_ents); j++)
         {
-            g_art_scan.current_context().order_add(j); // duplicates ignored
+            g_art_scan.order_add(j); // duplicates ignored
         }
-        if (sa_eligible(g_art_scan.current_context().first()) ||
-            g_art_scan.current_context().next_elig(g_art_scan.current_context().first()))
+        if (sa_eligible(g_art_scan.first()) || g_art_scan.next_elig(g_art_scan.first()))
         {
 #ifdef PENDING
             if (g_sa_mode_read_elig)
@@ -398,8 +397,7 @@ int sa_do_cmd(std::string_view command)
             g_sa_mode_fold = true;
         }
         // toggle mode again if no elibible articles left
-        if (sa_eligible(g_art_scan.current_context().first()) ||
-            g_art_scan.current_context().next_elig(g_art_scan.current_context().first()))
+        if (sa_eligible(g_art_scan.first()) || g_art_scan.next_elig(g_art_scan.first()))
         {
             g_art_scan.ref_top = true;
             s_go_top_ents();
@@ -428,7 +426,7 @@ int sa_do_cmd(std::string_view command)
         }
         else
         {
-            if (!g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
+            if (!g_art_scan.next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
             {
                 s_beep();
                 return 0;
@@ -446,7 +444,7 @@ int sa_do_cmd(std::string_view command)
 
     case Ctl('n'):    // follow subject forward
           i = sa_subj_thread(a);
-        for (b = g_art_scan.current_context().next_elig(a); b; b = g_art_scan.current_context().next_elig(b))
+        for (b = g_art_scan.next_elig(a); b; b = g_art_scan.next_elig(b))
         {
             if (i == sa_subj_thread(b))
             {
@@ -497,7 +495,7 @@ int sa_do_cmd(std::string_view command)
 
     case Ctl('p'):    // follow subject backwards
           i = sa_subj_thread(a);
-        for (b = g_art_scan.current_context().prev_elig(a); b; b = g_art_scan.current_context().prev_elig(b))
+        for (b = g_art_scan.prev_elig(a); b; b = g_art_scan.prev_elig(b))
         {
             if (i == sa_subj_thread(b))
             {
@@ -759,7 +757,7 @@ static long sa_wrap_next_author(long a)
 {
 #ifdef UNDEF
     const std::string author = sa_author_key(a);
-    for (long b = g_art_scan.current_context().next_elig(a); b; b = g_art_scan.current_context().next_elig(b))
+    for (long b = g_art_scan.next_elig(a); b; b = g_art_scan.next_elig(b))
     {
         if (sa_author_key(b) == author)
         {
@@ -767,12 +765,12 @@ static long sa_wrap_next_author(long a)
         }
     }
 
-    long b = g_art_scan.current_context().first();
+    long b = g_art_scan.first();
     if (!sa_eligible(b))
     {
-        b = g_art_scan.current_context().next_elig(b);
+        b = g_art_scan.next_elig(b);
     }
-    for (; b; b = g_art_scan.current_context().next_elig(b))
+    for (; b; b = g_art_scan.next_elig(b))
     {
         if (sa_author_key(b) == author)
         {

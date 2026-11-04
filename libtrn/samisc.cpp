@@ -132,7 +132,7 @@ void sa_sel_threads()
                 }// for all articles
             }// if selected
         }// for all threads
-    g_art_scan.current_context().sort();
+        g_art_scan.sort();
 }
 
 int sa_number_arts()

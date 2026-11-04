@@ -27,10 +27,10 @@ void ScanOrderTest::SetUp()
 {
     m_first_context = g_art_scan.new_context(S_GROUP);
     g_art_scan.change_context(m_first_context);
-    g_art_scan.current_context().order_add(3);
-    g_art_scan.current_context().order_add(1);
-    g_art_scan.current_context().order_add(2);
-    g_art_scan.current_context().order_add(2);
+    g_art_scan.order_add(3);
+    g_art_scan.order_add(1);
+    g_art_scan.order_add(2);
+    g_art_scan.order_add(2);
 }
 
 void ScanOrderTest::TearDown()
@@ -51,8 +51,7 @@ void ScanOrderTest::TearDown()
 std::vector<long> ScanOrderTest::current_entries()
 {
     std::vector<long> result;
-    for (long entry = g_art_scan.current_context().first(); entry != 0;
-         entry = g_art_scan.current_context().next(entry))
+    for (long entry = g_art_scan.first(); entry != 0; entry = g_art_scan.next(entry))
     {
         result.push_back(entry);
     }
@@ -68,7 +67,7 @@ protected:
 void SortedScanOrderTest::SetUp()
 {
     ScanOrderTest::SetUp();
-    g_art_scan.current_context().sort();
+    g_art_scan.sort();
 }
 
 class ScanOrderEndpointTest : public SortedScanOrderTest, public testing::WithParamInterface<bool>
@@ -93,9 +92,9 @@ void IndependentScanContextsTest::SetUp()
     g_art_scan.save_context();
     m_second_context = g_art_scan.new_context(S_GROUP);
     g_art_scan.change_context(m_second_context);
-    g_art_scan.current_context().order_add(20);
-    g_art_scan.current_context().order_add(10);
-    g_art_scan.current_context().sort();
+    g_art_scan.order_add(20);
+    g_art_scan.order_add(10);
+    g_art_scan.sort();
     g_art_scan.save_context();
 }
 
@@ -118,7 +117,7 @@ void RestoredScanContextTest::SetUp()
 
 TEST_F(ScanOrderTest, sortsEntriesAndDiscardsDuplicates)
 {
-    g_art_scan.current_context().sort();
+    g_art_scan.sort();
 
     EXPECT_EQ((std::vector<long>{1, 2, 3}), g_art_scan.contexts[m_first_context].ent_sort);
     EXPECT_EQ(2, g_art_scan.ent_sorted_max);
@@ -126,7 +125,7 @@ TEST_F(ScanOrderTest, sortsEntriesAndDiscardsDuplicates)
 
 TEST_P(ScanOrderEndpointTest, returnsTheRequestedEndOfTheOrder)
 {
-    const long entry = GetParam() ? g_art_scan.current_context().last() : g_art_scan.current_context().first();
+    const long entry = GetParam() ? g_art_scan.last() : g_art_scan.first();
 
     EXPECT_EQ(GetParam() ? 3 : 1, entry);
 }
@@ -135,8 +134,8 @@ INSTANTIATE_TEST_SUITE_P(FirstAndLast, ScanOrderEndpointTest, testing::Bool());
 
 TEST_P(ScanOrderStepTest, stepsWithinTheOrderOrStopsAtItsBoundary)
 {
-    const long entry = std::get<0>(GetParam()) ? g_art_scan.current_context().prev(std::get<1>(GetParam()))
-                                               : g_art_scan.current_context().next(std::get<1>(GetParam()));
+    const long entry =
+        std::get<0>(GetParam()) ? g_art_scan.prev(std::get<1>(GetParam())) : g_art_scan.next(std::get<1>(GetParam()));
 
     EXPECT_EQ(std::get<2>(GetParam()), entry);
 }
@@ -160,7 +159,7 @@ TEST_P(RestoredScanContextTest, restoresTheSavedOrderWhenReturningToAContext)
     const std::vector<long> entries = current_entries();
 
     EXPECT_EQ((GetParam() ? std::vector<long>{10, 20} : std::vector<long>{1, 2, 3}), entries);
-    EXPECT_EQ(GetParam() ? 20 : 3, g_art_scan.current_context().last());
+    EXPECT_EQ(GetParam() ? 20 : 3, g_art_scan.last());
 }
 
 INSTANTIATE_TEST_SUITE_P(FirstAndSecond, RestoredScanContextTest, testing::Bool());

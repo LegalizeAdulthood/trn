@@ -37,20 +37,6 @@ struct PageEntry
 
 struct ScanContext
 {
-    void sort();
-    void order_clean();
-    void order_add(long ent);
-    long prev(long ent);
-    long next(long ent);
-    long prev_elig(long a);
-    long next_elig(long a);
-    long first();
-    long last();
-
-    // TODO: private
-    void save_order_bounds();
-    void sort_basic();
-
     ScanContextType type; // context type
 
     // ordering information
@@ -90,12 +76,23 @@ struct ArticleScanSession
     void save_context();
     void change_context(int newcontext);
     void delete_context(int cnum);
+    void sort();
+    void order_clean();
+    void order_add(long ent);
+    long prev(long ent);
+    long next(long ent);
+    long prev_elig(long a);
+    long next_elig(long a);
+    long first();
+    long last();
 
     // TODO: private
     ScanContext       &current_context();
     std::vector<long> &ent_sort();
     std::vector<long> &ent_index();
     void               init_context(int cnum, ScanContextType type);
+    void               save_order_bounds();
+    void               sort_basic();
 
     std::vector<ScanContext> contexts;      // context structures
     int                      cur_context{}; // current context number

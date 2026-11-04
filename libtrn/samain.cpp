@@ -87,7 +87,7 @@ static long sa_add_ent(ArticleNum artnum)
     }
     g_sa_ents.push_back(ScanArticleEntryData{artnum, 0, SAF_NONE});
     const long cur = size_cast<long>(g_sa_ents) - 1;
-    g_art_scan.current_context().order_add(cur);
+    g_art_scan.order_add(cur);
     return cur;
 }
 
@@ -175,7 +175,7 @@ SaMainResult sa_main_loop()
     g_art_scan.ref_all = true;
     if (g_art_scan.top_ent < 1)
     {
-        g_art_scan.top_ent = g_art_scan.current_context().first();
+        g_art_scan.top_ent = g_art_scan.first();
     }
     int i = s_fill_page();
     if (i == -1 || i == 0)
@@ -210,12 +210,12 @@ void sa_lookahead()
 // Returns first marked entry number, or 0 if no articles are marked.
 long sa_read_marked_elig()
 {
-    long e = g_art_scan.current_context().first();
+    long e = g_art_scan.first();
     if (!e)
     {
         return 0L;
     }
-    for (; e; e = g_art_scan.current_context().next(e))
+    for (; e; e = g_art_scan.next(e))
     {
         if (!sa_basic_elig(e))
         {

@@ -172,7 +172,7 @@ static int s_do_cmd(std::string_view command)
         }
         else
         {
-            if (!g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
+            if (!g_art_scan.next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num))
             {
                 s_beep();
                 g_art_scan.refill = true;
@@ -198,7 +198,7 @@ static int s_do_cmd(std::string_view command)
         }
         else
         {
-            if (g_art_scan.current_context().prev_elig(g_art_scan.page_ents[0].ent_num))
+            if (g_art_scan.prev_elig(g_art_scan.page_ents[0].ent_num))
             {
                 s_go_prev_page();
                 g_art_scan.ptr_page_line = g_art_scan.bot_ent; // go to page bot.
@@ -223,7 +223,7 @@ static int s_do_cmd(std::string_view command)
 
     case '>': // next page
         s_rub_ptr();
-        a = g_art_scan.current_context().next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
+        a = g_art_scan.next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
         if (!a)                 // at end of articles
         {
             s_beep();
@@ -234,7 +234,7 @@ static int s_do_cmd(std::string_view command)
 
     case '<': // previous page
         s_rub_ptr();
-        if (!g_art_scan.current_context().prev_elig(g_art_scan.page_ents[0].ent_num))
+        if (!g_art_scan.prev_elig(g_art_scan.page_ents[0].ent_num))
         {
             s_beep();
             break;
@@ -434,13 +434,13 @@ static long s_forward_search(long ent)
 {
     if (ent)
     {
-        ent = g_art_scan.current_context().next_elig(ent);
+        ent = g_art_scan.next_elig(ent);
     }
     else
     {
-        ent = g_art_scan.current_context().first();
+        ent = g_art_scan.first();
     }
-    for (; ent; ent = g_art_scan.current_context().next_elig(ent))
+    for (; ent; ent = g_art_scan.next_elig(ent))
     {
         if (s_match_description(ent))
         {
@@ -454,13 +454,13 @@ static long s_backward_search(long ent)
 {
     if (ent)
     {
-        ent = g_art_scan.current_context().prev_elig(ent);
+        ent = g_art_scan.prev_elig(ent);
     }
     else
     {
-        ent = g_art_scan.current_context().last();
+        ent = g_art_scan.last();
     }
-    for (; ent; ent = g_art_scan.current_context().prev_elig(ent))
+    for (; ent; ent = g_art_scan.prev_elig(ent))
     {
         if (s_match_description(ent))
         {
