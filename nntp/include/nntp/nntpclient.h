@@ -122,6 +122,14 @@ struct NntpSession
     int            command(std::string_view bp);
     int            check();
     void           close(bool send_quit);
+    std::string    read_line(error_code_t &ec)
+    {
+        return link.connection->read_line(ec);
+    }
+    void write(std::string_view buffer, error_code_t &ec)
+    {
+        link.connection->write(buffer, ec);
+    }
     bool           at_list_end(std::string_view s)
     {
         return link.at_list_end(s);
@@ -183,7 +191,7 @@ inline std::string nntp_get_a_line()
 {
     boost::system::error_code ec;
 
-    return g_nntp.link.connection->read_line(ec);
+    return g_nntp.read_line(ec);
 }
 
 void        set_nntp_connection_factory(ConnectionFactory factory);

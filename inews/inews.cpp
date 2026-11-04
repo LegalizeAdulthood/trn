@@ -46,7 +46,7 @@ static void inews_fputs(std::string_view buff)
     else
     {
         boost::system::error_code ec;
-        g_nntp.link.connection->write(buff, ec);
+        g_nntp.write(buff, ec);
     }
 }
 
@@ -59,7 +59,7 @@ static void inews_fputc(char c)
     else
     {
         boost::system::error_code ec;
-        g_nntp.link.connection->write(std::string_view{&c, 1}, ec);
+        g_nntp.write(std::string_view{&c, 1}, ec);
     }
 }
 
