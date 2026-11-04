@@ -53,7 +53,7 @@ void MimeTest::SetUp()
 {
     m_env.expect_env("MIMECAPS", TRN_TEST_MIMECAP_FILE);
     mime_init();
-    mime_set_executor(m_exec.AsStdFunction());
+    g_mimecap.set_executor(m_exec.AsStdFunction());
 }
 
 } // namespace

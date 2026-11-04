@@ -4,8 +4,4 @@
 
 #include <trn/mime.h>
 
-// Internal entry points for testing purposes.
-
-void mime_set_executor(MimeExecutor executor);
-
 #endif

@@ -80,9 +80,9 @@ static int         mime_getc(std::FILE *fp);
 static std::size_t mime_skip_whitespace(std::string_view text, std::size_t pos);
 static std::string_view find_attr(std::string_view str, std::string_view attr);
 
-void mime_set_executor(MimeExecutor executor)
+void MimeCapRegistry::set_executor(MimeExecutor executor)
 {
-    g_mimecap.executor = std::move(executor);
+    this->executor = std::move(executor);
 }
 
 void mime_init()

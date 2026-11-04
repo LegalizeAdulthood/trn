@@ -123,7 +123,7 @@ protected:
         m_section.m_part = 1;
         m_section.m_total = 1;
 
-        mime_set_executor(
+        g_mimecap.set_executor(
             [this](std::string_view, std::string_view command)
             {
                 m_command = command;
@@ -135,7 +135,7 @@ protected:
 
     void TearDown() override
     {
-        mime_set_executor(do_shell);
+        g_mimecap.set_executor(do_shell);
         if (m_input != nullptr)
         {
             std::fclose(m_input);

@@ -217,6 +217,8 @@ using MimeExecutor = std::function<int(std::string_view shell, std::string_view 
 
 struct MimeCapRegistry
 {
+    void set_executor(MimeExecutor executor);
+
     std::vector<MimeCapEntry> entries;
     MimeExecutor              executor;
 };
