@@ -83,7 +83,6 @@ static void           univ_add_virtual_group(std::string_view grpname);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
 static bool           univ_use_file(std::string_view fname, std::string_view label);
 static bool  univ_include_file(std::string_view fname);
-static bool           univ_do_line(std::string_view line);
 static std::string univ_edit_new_user_file();
 static void  univ_vg_add_article(ArticleNum a);
 static void  univ_vg_add_group();
@@ -648,7 +647,7 @@ static bool univ_use_file(std::string_view fname, std::string_view label)
     std::string line;
     while (std::getline(input, line))
     {
-        if (!univ_do_line(line))
+        if (!g_univ_loader.do_line(line))
         {
             break; // end of useful file
         }
@@ -798,7 +797,7 @@ void UniversalMenuLoader::do_line_ext1(std::string_view desc, std::string_view l
 }
 
 // returns false when no more lines should be interpreted
-static bool univ_do_line(std::string_view line)
+bool UniversalMenuLoader::do_line(std::string_view line)
 {
     std::string relative_file;
 
@@ -814,23 +813,23 @@ static bool univ_do_line(std::string_view line)
     }
     line.remove_prefix(line_start);
 
-    if (!g_univ_loader.begin_found)
+    if (!begin_found)
     {
         if (!string_case_equal(line.substr(0, 11), "begin group"))
         {
             return true; // wait until "begin group" is found
         }
-        g_univ_loader.begin_found = true;
+        begin_found = true;
     }
-    if (!g_univ_loader.begin_label.empty())
+    if (!begin_label.empty())
     {
-        if (line.size() >= 2 && line[0] == '>' && line[1] == ':' && line.substr(2) == g_univ_loader.begin_label)
+        if (line.size() >= 2 && line[0] == '>' && line[1] == ':' && line.substr(2) == begin_label)
         {
-            g_univ_loader.begin_label.clear(); // interpret starting at next line
+            begin_label.clear(); // interpret starting at next line
         }
         return true;
     }
-    g_univ_loader.line_desc.clear();
+    line_desc.clear();
     if (line.front() == '"') // description name
     {
         std::string_view description_text = line.substr(1);
@@ -856,12 +855,12 @@ static bool univ_do_line(std::string_view line)
             fmt::print("univ: unmatched quote in string:\n\"{}\"\n", description);
             return true;
         }
-        g_univ_loader.line_desc = description;
+        line_desc = description;
         line.remove_prefix(description_size + 2);
     }
     const std::size_t text_start = line.find_first_not_of(" \f\n\r\t\v");
     line = text_start == std::string_view::npos ? std::string_view{} : line.substr(text_start);
-    const std::string_view line_desc{g_univ_loader.line_desc};
+    const std::string_view desc{line_desc};
     if (string_case_equal(line.substr(0, 9), "end group"))
     {
         return false;
@@ -876,7 +875,7 @@ static bool univ_do_line(std::string_view line)
             // XXX later do more error checking
         }
         // description defaults to name
-        univ_add_file(!line_desc.empty() ? line_desc : line, line, label);
+        univ_add_file(!desc.empty() ? desc : line, line, label);
     }
     else if (!line.empty())
     {
@@ -909,7 +908,7 @@ static bool univ_do_line(std::string_view line)
                 file_name.erase(label_pos);
             }
             // description defaults to name
-            univ_add_file(!line_desc.empty() ? line_desc : std::string_view{file_name}, file_exp(file_name), label);
+            univ_add_file(!desc.empty() ? desc : std::string_view{file_name}, file_exp(file_name), label);
             break;
         }
 
@@ -920,7 +919,7 @@ static bool univ_do_line(std::string_view line)
                 break;
             }
             line.remove_prefix(2);
-            univ_add_file(!line_desc.empty() ? line_desc : line, g_univ.fname, line);
+            univ_add_file(!desc.empty() ? desc : line, g_univ.fname, line);
             break;
 
         case '>':
@@ -935,28 +934,28 @@ static bool univ_do_line(std::string_view line)
 
         case '&': // text file shortcut (for help files)
             line.remove_prefix(1);
-            univ_add_text_file(!line_desc.empty() ? line_desc : line, line);
+            univ_add_text_file(!desc.empty() ? desc : line, line);
             break;
 
         case '$': // extension 1
-            g_univ_loader.do_line_ext1(line_desc, line);
+            do_line_ext1(desc, line);
             break;
 
         default:
             // if there is a description, this must be a restriction list
-            if (!line_desc.empty())
+            if (!desc.empty())
             {
-                univ_add_mask(line_desc, line);
+                univ_add_mask(desc, line);
                 break;
             }
             // one or more newsgroups instead
-            g_univ_loader.use_group_line(line, 0);
+            use_group_line(line, 0);
             break;
         }
     }
-    else if (!line_desc.empty())
+    else if (!desc.empty())
     {
-        univ_add_mask(line_desc, line);
+        univ_add_mask(desc, line);
     }
     return true; // continue reading
 }
