@@ -2508,7 +2508,7 @@ static bool sel_perform_change(long cnt, std::string_view obj_type)
         g_error_occurred = false;
     }
 
-    int ret = perform_status_end(cnt, obj_type);
+    int ret = g_status.end(cnt, obj_type);
     if (ret)
     {
         g_sel_session.disp_status_line = 1;

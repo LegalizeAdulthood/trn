@@ -473,7 +473,7 @@ TEST_F(PerformStatusEndTest, reportsNoArticlesAffected)
 {
     begin_status(3);
 
-    const int result = perform_status_end(3, "article");
+    const int result = g_status.end(3, "article");
 
     EXPECT_EQ(0, result);
     EXPECT_EQ("No articles affected.", g_msg);
@@ -486,7 +486,7 @@ TEST_F(PerformStatusEndTest, reportsThreadMatchesWithoutArticleLoop)
     g_sel.mode = SM_THREAD;
     g_status.perform_count = 1;
 
-    const int result = perform_status_end(0, "article");
+    const int result = g_status.end(0, "article");
 
     EXPECT_EQ(1, result);
     EXPECT_EQ("1 thread matched.", g_msg);
@@ -497,7 +497,7 @@ TEST_F(PerformStatusEndTest, reportsKilledArticles)
     begin_status(5);
     g_status.perform_count = 2;
 
-    const int result = perform_status_end(3, "article");
+    const int result = g_status.end(3, "article");
 
     EXPECT_EQ(2, result);
     EXPECT_EQ("2 articles killed.", g_msg);
@@ -509,7 +509,7 @@ TEST_F(PerformStatusEndTest, reportsDeselectedArticles)
     g_selected_count = ArticleUnread{1};
     g_status.perform_count = -2;
 
-    const int result = perform_status_end(3, "article");
+    const int result = g_status.end(3, "article");
 
     EXPECT_EQ(1, result);
     EXPECT_EQ("2 articles deselected.", g_msg);
@@ -521,7 +521,7 @@ TEST_F(PerformStatusEndTest, reportsMissingArticlesWithPluralModifier)
     g_missing_count = ArticleUnread{2};
     g_status.perform_count = 2;
 
-    const int result = perform_status_end(1, "article");
+    const int result = g_status.end(1, "article");
 
     EXPECT_EQ(2, result);
     EXPECT_EQ("2 articles killed(, 2  were missing).", g_msg);

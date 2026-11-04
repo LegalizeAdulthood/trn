@@ -1112,7 +1112,7 @@ not_threaded:
             return AS_INP;
         }
         carriage_return();
-        perform_status_end(g_newsgroup_ptr->m_to_read, "article");
+        g_status.end(g_newsgroup_ptr->m_to_read, "article");
         fmt::print("{}", g_msg);
         newline();
         g_nav.restore_current();
@@ -1357,7 +1357,7 @@ no_previous_article:
                 if (g_use_threads)
                 {
                     erase_line(false);
-                    perform_status_end(g_newsgroup_ptr->m_to_read, "article");
+                    g_status.end(g_newsgroup_ptr->m_to_read, "article");
                     fmt::print("{}", g_msg);
                 }
                 newline();
@@ -1438,7 +1438,7 @@ normal_search:
             if (g_use_threads)
             {
                 erase_line(false);
-                perform_status_end(g_newsgroup_ptr->m_to_read, "article");
+                g_status.end(g_newsgroup_ptr->m_to_read, "article");
                 fmt::print("{}\n", g_msg);
             }
             else

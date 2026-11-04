@@ -1008,12 +1008,12 @@ static void output_change(std::string &out, long num, std::string_view obj_type,
     out += text;
 }
 
-int perform_status_end(long cnt, std::string_view obj_type)
+int BulkCommandStatus::end(long cnt, std::string_view obj_type)
 {
     bool article_status = !obj_type.empty() && obj_type.front() == 'a';
 
     g_msg.clear();
-    if (g_status.perform_count == 0)
+    if (perform_count == 0)
     {
         g_msg = "No ";
         g_msg += obj_type;
@@ -1021,19 +1021,18 @@ int perform_status_end(long cnt, std::string_view obj_type)
         return 0;
     }
 
-    long missing = g_missing_count - g_status.missing;
-    long kills = g_status.start_count - cnt - missing;
-    long sels = g_selected_count - g_status.sel;
+    long missing = g_missing_count - this->missing;
+    long kills = start_count - cnt - missing;
+    long sels = g_selected_count - sel;
 
-    if (!g_status.performed_article_loop)
+    if (!performed_article_loop)
     {
-        output_change(g_msg, (long) g_status.perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {},
-                      "ERR|match|ed");
+        output_change(g_msg, (long) perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {}, "ERR|match|ed");
     }
-    else if (g_status.perform_count != sels && g_status.perform_count != -sels //
-             && g_status.perform_count != kills && g_status.perform_count != -kills)
+    else if (perform_count != sels && perform_count != -sels //
+             && perform_count != kills && perform_count != -kills)
     {
-        output_change(g_msg, (long) g_status.perform_count, obj_type, {}, "ERR|match|ed");
+        output_change(g_msg, (long) perform_count, obj_type, {}, "ERR|match|ed");
         obj_type = {};
     }
     if (kills)

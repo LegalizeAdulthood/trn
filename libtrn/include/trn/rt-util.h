@@ -51,6 +51,7 @@ struct BulkCommandStatus
 {
     void init(int cnt);
     void status(int cnt, int spin);
+    int  end(long cnt, std::string_view obj_type);
 
     int         prior_count{};
     std::time_t prior_now{};
@@ -70,6 +71,5 @@ bool        strip_one_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject, std::string_view &remaining);
 bool        subject_has_re(std::string_view subject);
 std::string compress_subj(const Article *ap, int max);
-int perform_status_end(long cnt, std::string_view obj_type);
 
 #endif

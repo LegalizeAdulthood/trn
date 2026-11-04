@@ -280,7 +280,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             }
             if (last_kill_type)
             {
-                if (perform_status_end(g_newsgroup_ptr->m_to_read, "article"))
+                if (g_status.end(g_newsgroup_ptr->m_to_read, "article"))
                 {
                     s_kill_mentioned = true;
                     carriage_return();
@@ -334,7 +334,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             {
                 if (last_kill_type)
                 {
-                    if (perform_status_end(g_newsgroup_ptr->m_to_read, "article"))
+                    if (g_status.end(g_newsgroup_ptr->m_to_read, "article"))
                     {
                         s_kill_mentioned = true;
                         carriage_return();
@@ -428,7 +428,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
     }
     if (last_kill_type)
     {
-        if (perform_status_end(g_newsgroup_ptr->m_to_read, "article"))
+        if (g_status.end(g_newsgroup_ptr->m_to_read, "article"))
         {
             s_kill_mentioned = true;
             carriage_return();
