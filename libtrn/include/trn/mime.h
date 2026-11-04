@@ -218,6 +218,7 @@ using MimeExecutor = std::function<int(std::string_view shell, std::string_view 
 struct MimeCapRegistry
 {
     void set_executor(MimeExecutor executor);
+    void read_mimecap(std::string_view mcname);
 
     std::vector<MimeCapEntry> entries;
     MimeExecutor              executor;
@@ -227,7 +228,6 @@ extern MimeCapRegistry g_mimecap;
 
 void          mime_init();
 void          mime_final();
-void          mime_read_mimecap(std::string_view mcname);
 MimeCapEntry *mime_find_mimecap_entry(std::string_view contenttype, MimeCapFlags skip_flags);
 bool          mime_types_match(std::string_view ct, std::string_view pat);
 int            mime_exec(std::string_view cmd);

@@ -97,7 +97,7 @@ void mime_init()
     }
     for (std::string_view item : split_path_list(mcname))
     {
-        mime_read_mimecap(item);
+        g_mimecap.read_mimecap(item);
     }
 }
 
@@ -106,7 +106,7 @@ void mime_final()
     g_mimecap.entries.clear();
 }
 
-void mime_read_mimecap(std::string_view mcname)
+void MimeCapRegistry::read_mimecap(std::string_view mcname)
 {
     std::ifstream input{file_exp(mcname)};
     if (!input)
@@ -153,7 +153,7 @@ void mime_read_mimecap(std::string_view mcname)
             fmt::print(stderr, "trn: Ignoring invalid mimecap entry: {}\n", entry);
             continue;
         }
-        MimeCapEntry &mcp = g_mimecap.entries.emplace_back();
+        MimeCapEntry &mcp = entries.emplace_back();
         mcp.content_type = std::move(content_type);
         mcp.command = mime_parse_entry_arg(args);
         while (!args.empty())

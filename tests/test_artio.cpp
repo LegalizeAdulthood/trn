@@ -1619,7 +1619,7 @@ void InlineMultipartArticleTest::SetUp()
             }
         }
     }
-    mime_read_mimecap(cap_file.generic_string());
+    g_mimecap.read_mimecap(cap_file.generic_string());
     const std::string disposition = GetParam().inline_disposition ? "inline" : "attachment";
     const std::string headers = std::string{"Content-Type: "} + GetParam().type +
                                 "; name=inline.bin\nContent-Disposition: " + disposition +
