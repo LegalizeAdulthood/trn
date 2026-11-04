@@ -258,13 +258,11 @@ long ScanContext::first()
     return ent_sort[0];
 }
 
-long s_last()
+long ScanContext::last()
 {
-    std::vector<long> &ent_sort = g_art_scan.ent_sort();
-
     if (g_art_scan.order_changed)
     {
-        g_art_scan.current_context().sort();
+        sort();
     }
     if (g_art_scan.ent_sorted_max < 0)
     {

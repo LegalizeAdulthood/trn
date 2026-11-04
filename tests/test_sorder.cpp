@@ -126,7 +126,7 @@ TEST_F(ScanOrderTest, sortsEntriesAndDiscardsDuplicates)
 
 TEST_P(ScanOrderEndpointTest, returnsTheRequestedEndOfTheOrder)
 {
-    const long entry = GetParam() ? s_last() : g_art_scan.current_context().first();
+    const long entry = GetParam() ? g_art_scan.current_context().last() : g_art_scan.current_context().first();
 
     EXPECT_EQ(GetParam() ? 3 : 1, entry);
 }
@@ -160,7 +160,7 @@ TEST_P(RestoredScanContextTest, restoresTheSavedOrderWhenReturningToAContext)
     const std::vector<long> entries = current_entries();
 
     EXPECT_EQ((GetParam() ? std::vector<long>{10, 20} : std::vector<long>{1, 2, 3}), entries);
-    EXPECT_EQ(GetParam() ? 20 : 3, s_last());
+    EXPECT_EQ(GetParam() ? 20 : 3, g_art_scan.current_context().last());
 }
 
 INSTANTIATE_TEST_SUITE_P(FirstAndSecond, RestoredScanContextTest, testing::Bool());

@@ -458,7 +458,7 @@ static long s_backward_search(long ent)
     }
     else
     {
-        ent = s_last();
+        ent = g_art_scan.current_context().last();
     }
     for (; ent; ent = g_art_scan.current_context().prev_elig(ent))
     {

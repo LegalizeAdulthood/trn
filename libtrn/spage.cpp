@@ -54,7 +54,7 @@ bool s_fill_page_backward(long end)
 
     if (end < 1)                // start from end
     {
-        end = s_last();
+        end = g_art_scan.current_context().last();
     }
     if (end == 0)               // no entries
     {
@@ -463,7 +463,7 @@ bool s_go_top_ents()
 
 bool s_go_bot_ents()
 {
-    bool flag = s_fill_page_backward(s_last()); // fill backwards
+    bool flag = s_fill_page_backward(g_art_scan.current_context().last()); // fill backwards
     if (!flag)
     {
         return false;
