@@ -29,7 +29,7 @@
 #include <string>
 
 ProgressDisplay g_progress{};
-PerformReport   g_report{};
+BulkCommandStatus g_status{};
 
 bool g_bkgnd_spinner{};          // -B
 bool g_unbroken_subjects{};      // -u
@@ -866,7 +866,7 @@ bool ProgressDisplay::in_background()
     return mode == SPIN_BACKGROUND;
 }
 
-void PerformReport::init(int cnt)
+void BulkCommandStatus::init(int cnt)
 {
     perform_count = 0;
     g_error_occurred = false;
@@ -894,23 +894,23 @@ void perform_status(int cnt, int spin)
         std::fflush(stdout);
     }
 
-    if (g_report.perform_count == g_report.prior_count)
+    if (g_status.perform_count == g_status.prior_count)
     {
         return;
     }
 
     std::time_t now = std::time(nullptr);
-    if (now - g_report.prior_now < 2)
+    if (now - g_status.prior_now < 2)
     {
         return;
     }
 
-    g_report.prior_now = now;
-    g_report.prior_count = g_report.perform_count;
+    g_status.prior_now = now;
+    g_status.prior_count = g_status.perform_count;
 
-    long missing = g_missing_count - g_report.missing;
-    long kills = g_report.start_count - cnt - missing;
-    long sels = g_selected_count - g_report.sel;
+    long missing = g_missing_count - g_status.missing;
+    long kills = g_status.start_count - cnt - missing;
+    long sels = g_selected_count - g_status.sel;
 
     if (!(kills | sels))
     {
@@ -918,10 +918,10 @@ void perform_status(int cnt, int spin)
     }
 
     carriage_return();
-    if (g_report.perform_count != sels && g_report.perform_count != -sels && g_report.perform_count != kills &&
-        g_report.perform_count != -kills)
+    if (g_status.perform_count != sels && g_status.perform_count != -sels && g_status.perform_count != kills &&
+        g_status.perform_count != -kills)
     {
-        fmt::print("M:{} ", g_report.perform_count);
+        fmt::print("M:{} ", g_status.perform_count);
     }
     if (kills)
     {
@@ -1014,7 +1014,7 @@ int perform_status_end(long cnt, std::string_view obj_type)
     bool article_status = !obj_type.empty() && obj_type.front() == 'a';
 
     g_msg.clear();
-    if (g_report.perform_count == 0)
+    if (g_status.perform_count == 0)
     {
         g_msg = "No ";
         g_msg += obj_type;
@@ -1022,19 +1022,19 @@ int perform_status_end(long cnt, std::string_view obj_type)
         return 0;
     }
 
-    long missing = g_missing_count - g_report.missing;
-    long kills = g_report.start_count - cnt - missing;
-    long sels = g_selected_count - g_report.sel;
+    long missing = g_missing_count - g_status.missing;
+    long kills = g_status.start_count - cnt - missing;
+    long sels = g_selected_count - g_status.sel;
 
-    if (!g_report.performed_article_loop)
+    if (!g_status.performed_article_loop)
     {
-        output_change(g_msg, (long) g_report.perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {},
+        output_change(g_msg, (long) g_status.perform_count, g_sel.mode == SM_THREAD ? "thread" : "subject", {},
                       "ERR|match|ed");
     }
-    else if (g_report.perform_count != sels && g_report.perform_count != -sels //
-             && g_report.perform_count != kills && g_report.perform_count != -kills)
+    else if (g_status.perform_count != sels && g_status.perform_count != -sels //
+             && g_status.perform_count != kills && g_status.perform_count != -kills)
     {
-        output_change(g_msg, (long) g_report.perform_count, obj_type, {}, "ERR|match|ed");
+        output_change(g_msg, (long) g_status.perform_count, obj_type, {}, "ERR|match|ed");
         obj_type = {};
     }
     if (kills)

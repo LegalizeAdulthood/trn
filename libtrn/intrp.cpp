@@ -699,7 +699,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     }
                     else
                     {
-                        set_owned_value(std::to_string(g_report.perform_count));
+                        set_owned_value(std::to_string(g_status.perform_count));
                     }
                     break;
 

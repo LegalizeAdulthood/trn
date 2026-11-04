@@ -2105,11 +2105,11 @@ protected:
 private:
     AddGroupTable              m_old_add_groups;
     bool                       m_old_sel_rereading{g_sel.rereading};
-    int                        m_old_perform_count{g_report.perform_count};
+    int                        m_old_perform_count{g_status.perform_count};
     bool                       m_old_error_occurred{g_error_occurred};
     std::optional<std::string> m_old_subj_line{g_subj_line};
     int                        m_old_page_line{g_page_line};
-    bool                       m_old_performed_article_loop{g_report.performed_article_loop};
+    bool                       m_old_performed_article_loop{g_status.performed_article_loop};
     int                        m_old_spin_count{g_progress.count};
 };
 
@@ -2129,11 +2129,11 @@ void InputNewsgroupSearchTest::TearDown()
     newsgroup_search_init();
     g_add_groups = std::move(m_old_add_groups);
     g_sel.rereading = m_old_sel_rereading;
-    g_report.perform_count = m_old_perform_count;
+    g_status.perform_count = m_old_perform_count;
     g_error_occurred = m_old_error_occurred;
     g_subj_line = m_old_subj_line;
     g_page_line = m_old_page_line;
-    g_report.performed_article_loop = m_old_performed_article_loop;
+    g_status.performed_article_loop = m_old_performed_article_loop;
     g_progress.count = m_old_spin_count;
     InputNewsgroupNavigationTest::TearDown();
 }

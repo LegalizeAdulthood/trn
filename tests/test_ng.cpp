@@ -1027,11 +1027,11 @@ private:
     bool                  m_old_mouse_is_down{g_mouse_is_down};
     char                  m_old_int_count{g_int_count};
     std::string           m_old_msg{g_msg};
-    int                   m_old_perform_count{g_report.perform_count};
+    int                   m_old_perform_count{g_status.perform_count};
     bool                  m_old_error_occurred{g_error_occurred};
     decltype(g_subj_line) m_old_subj_line{g_subj_line};
     int                   m_old_page_line{g_page_line};
-    bool                  m_old_performed_article_loop{g_report.performed_article_loop};
+    bool                  m_old_performed_article_loop{g_status.performed_article_loop};
     int                   m_old_spin_count{g_progress.count};
 };
 
@@ -1067,11 +1067,11 @@ void NumericJumpArticleTest::TearDown()
     g_mouse_is_down = m_old_mouse_is_down;
     g_int_count = m_old_int_count;
     g_msg = m_old_msg;
-    g_report.perform_count = m_old_perform_count;
+    g_status.perform_count = m_old_perform_count;
     g_error_occurred = m_old_error_occurred;
     g_subj_line = m_old_subj_line;
     g_page_line = m_old_page_line;
-    g_report.performed_article_loop = m_old_performed_article_loop;
+    g_status.performed_article_loop = m_old_performed_article_loop;
     g_progress.count = m_old_spin_count;
     UnreadScopeArticleTest::TearDown();
 }
@@ -1180,7 +1180,7 @@ void NumericRangeArticleTest::SetUp()
     g_just_a_sec = 0;
     g_tc_CR = "\r";
     g_tc_CE = "\033[K";
-    g_report.perform_count = 77;
+    g_status.perform_count = 77;
     g_msg = "prior status";
 }
 
@@ -2045,10 +2045,10 @@ private:
     bool                  m_old_use_threads{g_use_threads};
     int                   m_old_page_line{g_page_line};
     char                  m_old_int_count{g_int_count};
-    int                   m_old_perform_count{g_report.perform_count};
+    int                   m_old_perform_count{g_status.perform_count};
     decltype(g_subj_line) m_old_subj_line{g_subj_line};
     bool                  m_old_error_occurred{g_error_occurred};
-    bool                  m_old_performed_article_loop{g_report.performed_article_loop};
+    bool                  m_old_performed_article_loop{g_status.performed_article_loop};
     int                   m_old_spin_count{g_progress.count};
     bool                  m_old_mouse_is_down{g_mouse_is_down};
     char                  m_old_erase_char{g_erase_char};
@@ -2093,10 +2093,10 @@ void SearchCommandArticleTest::TearDown()
     g_use_threads = m_old_use_threads;
     g_page_line = m_old_page_line;
     g_int_count = m_old_int_count;
-    g_report.perform_count = m_old_perform_count;
+    g_status.perform_count = m_old_perform_count;
     g_subj_line = m_old_subj_line;
     g_error_occurred = m_old_error_occurred;
-    g_report.performed_article_loop = m_old_performed_article_loop;
+    g_status.performed_article_loop = m_old_performed_article_loop;
     g_progress.count = m_old_spin_count;
     g_mouse_is_down = m_old_mouse_is_down;
     g_erase_char = m_old_erase_char;
@@ -2850,7 +2850,7 @@ void EmptyBulkCommandArticleTest::SetUp()
 {
     BulkSelectionArticleTest::SetUp();
     g_msg = "prior status";
-    g_report.perform_count = 19;
+    g_status.perform_count = 19;
 }
 
 class PersistentKillArticleTest : public KillSubjectArticleTest
@@ -7010,7 +7010,7 @@ TEST_P(BulkArticleOrderTest, junkAffectsOnlySelectedUnreadArticlesAndReportsExac
     expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
     EXPECT_EQ("3 articles killed, 3 deselected.", g_msg);
     EXPECT_NE(std::string::npos, output.find(g_msg));
 }
@@ -7024,7 +7024,7 @@ TEST_P(BulkArticleOrderTest, deselectLeavesReadSelectionsAndUnselectedArticlesAl
                   AF_EXISTS | AF_UNREAD, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
     EXPECT_EQ("3 articles deselected.", g_msg);
     EXPECT_NE(std::string::npos, output.find(g_msg));
 }
@@ -7040,7 +7040,7 @@ TEST_P(BulkArticleOrderTest, inverseSelectionSelectsUnreadArticlesAcrossThreads)
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
-    EXPECT_EQ(2, g_report.perform_count);
+    EXPECT_EQ(2, g_status.perform_count);
     EXPECT_EQ("2 articles selected.", g_msg);
 }
 
@@ -7052,7 +7052,7 @@ TEST_P(BulkArticleOrderTest, markUnreadTargetsOnlyReadSelections)
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ("1 article unkilled.", g_msg);
 }
 
@@ -7064,7 +7064,7 @@ TEST_P(BulkArticleOrderTest, currentThreadScopeExcludesSelectedArticlesInOtherTh
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{2}, g_selected_count);
-    EXPECT_EQ(2, g_report.perform_count);
+    EXPECT_EQ(2, g_status.perform_count);
     EXPECT_EQ("2 articles killed, 2 deselected.", g_msg);
 }
 
@@ -7079,7 +7079,7 @@ TEST_P(BulkArticleOrderTest, inverseCurrentThreadScopeExcludesOtherThreadsAndRea
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ("1 article selected.", g_msg);
 }
 
@@ -7093,7 +7093,7 @@ TEST_P(BulkArticleOrderTest, rereadingModeDeselectsOnlyReadSelections)
                   AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ("1 article deselected.", g_msg);
 }
 
@@ -7111,7 +7111,7 @@ TEST_P(BulkArticleOrderTest, noUnreadSelectionsReportsNoArticlesAffected)
                   AF_EXISTS | AF_UNREAD, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(0, g_report.perform_count);
+    EXPECT_EQ(0, g_status.perform_count);
     EXPECT_EQ("No articles affected.", g_msg);
     EXPECT_NE(std::string::npos, output.find(g_msg));
 }
@@ -7126,7 +7126,7 @@ TEST_P(BulkArticleOrderTest, bulkActionFromGroupEndRestoresTheNullReadingAnchor)
     expect_flags({AF_EXISTS, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
 }
 
 TEST_P(BulkArticleOrderTest, invalidActionStopsAtTheFirstMatchAndPreservesCompletedEffects)
@@ -7149,7 +7149,7 @@ TEST_P(BulkArticleOrderTest, invalidActionStopsAtTheFirstMatchAndPreservesComple
     }
     EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ("1 article killed, 1 deselected.", g_msg);
 }
 
@@ -7201,8 +7201,8 @@ TEST_F(BulkSelectionArticleTest, threadShortcutKillsWholeSelectedThreadsIncludin
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{0}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(2, g_report.perform_count);
-    EXPECT_FALSE(g_report.performed_article_loop);
+    EXPECT_EQ(2, g_status.perform_count);
+    EXPECT_FALSE(g_status.performed_article_loop);
     EXPECT_EQ("2 threads matched, 4 articles killed, 3 deselected.", g_msg);
     EXPECT_NE(std::string::npos, output.find(g_msg));
 }
@@ -7220,8 +7220,8 @@ TEST_F(BulkSelectionArticleTest, inverseThreadShortcutLeavesSelectedThreadsAlone
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS, AF_EXISTS});
     EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
-    EXPECT_FALSE(g_report.performed_article_loop);
+    EXPECT_EQ(1, g_status.perform_count);
+    EXPECT_FALSE(g_status.performed_article_loop);
     EXPECT_EQ("1 thread matched, 1 article killed.", g_msg);
 }
 
@@ -11498,7 +11498,7 @@ TEST_P(SearchListingArticleTest, listingMatchesRestoresTheReadingAnchorWithoutCh
     EXPECT_NE(std::string::npos, output.find("Needle later"));
     EXPECT_EQ(std::string::npos, output.find("Plain middle"));
     EXPECT_EQ(std::string::npos, output.find("done"));
-    EXPECT_EQ(current == 8 ? 4 : direction == '/' ? 2 : 3, g_report.perform_count);
+    EXPECT_EQ(current == 8 ? 4 : direction == '/' ? 2 : 3, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_NONE, AF_EXISTS,
@@ -11524,7 +11524,7 @@ TEST_P(DirectionalSearchActionArticleTest, junkIncludesTheCurrentMatchAndStopsAt
     EXPECT_TRUE(g_reread);
     EXPECT_NE(std::string::npos, output.find("Junked"));
     EXPECT_NE(std::string::npos, output.find("done\n"));
-    EXPECT_EQ(2, g_report.perform_count);
+    EXPECT_EQ(2, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{2}, g_selected_count);
     if (direction == '/')
@@ -11557,7 +11557,7 @@ TEST_F(SearchActionArticleTest, threadedJunkFromTheTopReportsKillsAndDeselection
     EXPECT_EQ(ArticleNum{3}, g_nav.target.num);
     EXPECT_EQ(g_nav.current.art, g_nav.target.art);
     EXPECT_TRUE(g_reread);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_NONE, AF_EXISTS, AF_EXISTS, AF_EXISTS});
@@ -11576,7 +11576,7 @@ TEST_F(SearchActionArticleTest, unreadActionAlsoSelectsReadMatchesAndRestoresThe
     EXPECT_EQ(ArticleNum{8}, g_nav.target.num);
     EXPECT_EQ(nullptr, g_nav.target.art);
     EXPECT_TRUE(g_reread);
-    EXPECT_EQ(4, g_report.perform_count);
+    EXPECT_EQ(4, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{5}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD | AF_SEL,
@@ -11595,7 +11595,7 @@ TEST_F(SearchActionArticleTest, selectionIncludesUnselectedUnreadMatchesAndRepor
     EXPECT_EQ(ArticleNum{3}, g_nav.target.num);
     EXPECT_EQ(g_nav.current.art, g_nav.target.art);
     EXPECT_TRUE(g_reread);
-    EXPECT_EQ(2, g_report.perform_count);
+    EXPECT_EQ(2, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_NONE, AF_EXISTS,
@@ -11615,7 +11615,7 @@ TEST_F(SearchActionArticleTest, unmatchedActionReportsNoAffectedArticlesAndKeeps
     EXPECT_EQ(ArticleNum{6}, g_nav.target.num);
     EXPECT_EQ(g_nav.current.art, g_nav.target.art);
     EXPECT_TRUE(g_reread);
-    EXPECT_EQ(0, g_report.perform_count);
+    EXPECT_EQ(0, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_NONE, AF_EXISTS,
@@ -11634,7 +11634,7 @@ TEST_F(SearchActionArticleTest, subjectSearchAheadResumesAtTheFirstRemainingSele
     EXPECT_EQ(g_cache.ptr(g_nav.target.num), g_nav.target.art);
     EXPECT_FALSE(g_reread);
     EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{1}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_NONE, AF_EXISTS, AF_EXISTS, AF_EXISTS});
@@ -11652,7 +11652,7 @@ TEST_F(SearchActionArticleTest, subjectSearchAheadKeepsTheEndNumberAndNullPointe
     EXPECT_EQ(nullptr, g_nav.target.art);
     EXPECT_FALSE(g_reread);
     EXPECT_EQ(ArticleNum{-1}, g_search_ahead);
-    EXPECT_EQ(4, g_report.perform_count);
+    EXPECT_EQ(4, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS, AF_NONE, AF_EXISTS, AF_EXISTS, AF_EXISTS});
@@ -11677,7 +11677,7 @@ TEST_F(SearchActionArticleTest, interruptionPreservesCompletedActionsAndRestores
     EXPECT_EQ(g_nav.current.art, g_nav.target.art);
     EXPECT_TRUE(g_reread);
     EXPECT_EQ(0, g_int_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ(ArticleUnread{3}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{3}, g_selected_count);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS, AF_EXISTS | AF_UNREAD | AF_SEL, AF_NONE, AF_EXISTS,
@@ -13416,7 +13416,7 @@ TEST_P(NumericRangeOutputArticleTest, editedRangeJunksReadSelectedAndUnselectedT
     expect_changes({{1, CACHED}, {3, CACHED}});
     EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
     EXPECT_EQ(12, g_check_count);
     if (GetParam())
     {
@@ -13449,7 +13449,7 @@ TEST_F(NumericRangeArticleTest, commaSeparatedOverlappingRangesRetainNumericScop
     expect_changes({{1, CACHED}, {3, CACHED}});
     EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(4, g_report.perform_count);
+    EXPECT_EQ(4, g_status.perform_count);
     EXPECT_EQ("4 articles matched, 2 killed, 1 deselected.", g_msg);
     EXPECT_NE(std::string::npos, output.find(g_msg));
 }
@@ -13479,7 +13479,7 @@ TEST_F(NumericRangeArticleTest, aRangeWithoutAnActionDefaultsToMarkingReadArticl
     EXPECT_EQ(ArticleUnread{9}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{6}, g_selected_count);
     EXPECT_EQ(ArticleNum{2}, g_first_art);
-    EXPECT_EQ(2, g_report.perform_count);
+    EXPECT_EQ(2, g_status.perform_count);
     EXPECT_EQ("2 articles matched, 1 unkilled, 1 selected.", g_msg);
 }
 
@@ -13490,7 +13490,7 @@ TEST_F(NumericRangeArticleTest, currentArticleCanBeTheUpperRangeEndpoint)
     expect_changes({{3, CACHED}, {4, CACHED}});
     EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
 }
 
 TEST_F(NumericRangeArticleTest, dotThroughDollarIncludesTheLastArticleAndSkipsAbsentNumbers)
@@ -13503,7 +13503,7 @@ TEST_F(NumericRangeArticleTest, dotThroughDollarIncludesTheLastArticleAndSkipsAb
     expect_changes({{4, CACHED}, {6, CACHED}, {9, CACHED}, {11, CACHED}, {12, CACHED}});
     EXPECT_EQ(ArticleUnread{2}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
-    EXPECT_EQ(8, g_report.perform_count);
+    EXPECT_EQ(8, g_status.perform_count);
     EXPECT_FALSE(g_cache.has_data(ArticleNum{8}));
     EXPECT_EQ(AF_CACHED, g_cache.ptr(ArticleNum{5})->m_flags);
     EXPECT_EQ("8 articles matched, 5 killed, 4 deselected.", g_msg);
@@ -13532,7 +13532,7 @@ TEST_F(NumericRangeArticleTest, rangeWithoutAnyStoredTargetsReportsNoArticlesAff
     expect_changes({});
     EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
-    EXPECT_EQ(0, g_report.perform_count);
+    EXPECT_EQ(0, g_status.perform_count);
     EXPECT_EQ("No articles affected.", g_msg);
     EXPECT_NE(std::string::npos, output.find(g_msg));
 }
@@ -13545,7 +13545,7 @@ TEST_F(NumericRangeArticleTest, clampsBothRangeEndpointsAndWarnsBeforeApplyingTh
         {{1, CACHED}, {3, CACHED}, {4, CACHED}, {6, CACHED}, {8, CACHED}, {9, CACHED}, {11, CACHED}, {12, CACHED}});
     EXPECT_EQ(ArticleUnread{}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{}, g_selected_count);
-    EXPECT_EQ(12, g_report.perform_count);
+    EXPECT_EQ(12, g_status.perform_count);
     EXPECT_NE(std::string::npos, output.find("(First article is 1)"));
     EXPECT_NE(std::string::npos, output.find("(Last article is 12)"));
 }
@@ -13557,7 +13557,7 @@ TEST_P(NumericRangeInvalidArticleTest, rejectsReversedOrUnfinishedRangesBeforeCh
     expect_changes({});
     EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
-    EXPECT_EQ(0, g_report.perform_count);
+    EXPECT_EQ(0, g_status.perform_count);
     EXPECT_NE(std::string::npos, output.find("Bad range"));
     EXPECT_EQ(std::string::npos, output.find("prior status"));
 }
@@ -13571,7 +13571,7 @@ TEST_P(NumericRangeCancelArticleTest, cancellingBeforeCompletionChangesNothingAn
     expect_changes({});
     EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
-    EXPECT_EQ(77, g_report.perform_count);
+    EXPECT_EQ(77, g_status.perform_count);
     EXPECT_EQ("prior status", g_msg);
     EXPECT_EQ(std::string::npos, output.find("Processing..."));
 }
@@ -13585,7 +13585,7 @@ TEST_F(NumericRangeArticleTest, malformedLaterRangePreservesCompletedActionsAndR
     expect_changes({{1, CACHED}});
     EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(2, g_report.perform_count);
+    EXPECT_EQ(2, g_status.perform_count);
     EXPECT_NE(std::string::npos, output.find("Bad range"));
 }
 
@@ -13598,7 +13598,7 @@ TEST_P(NumericRangeFailureArticleTest, invalidActionStopsAtTheFirstTargetAndReta
     expect_changes({{1, CACHED}});
     EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_NE(std::string::npos, output.find("Unknown command: ?"));
     EXPECT_NE(std::string::npos, output.find(GetParam() ? "(Interrupted at article 1)" : "(Intr at 1)"));
 }
@@ -13622,7 +13622,7 @@ TEST_F(NumericRangeArticleTest, rangeExecutorStopsAtAnInterruptionAndRestoresThe
     EXPECT_EQ(CACHED | AF_UNREAD | AF_SEL, g_cache.ptr(ArticleNum{4})->m_flags);
     EXPECT_EQ(ArticleUnread{7}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ(0, g_int_count);
     EXPECT_NE(std::string::npos, output.find("(Intr at 1)"));
     EXPECT_EQ(std::string::npos, output.find("Unknown command"));
@@ -13636,7 +13636,7 @@ TEST_F(NumericRangeArticleTest, delayedRangeMarksReadAndUnreadTargetsForReturnWi
     EXPECT_EQ(ArticleUnread{6}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{4}, g_selected_count);
     EXPECT_EQ(4, g_dm_count);
-    EXPECT_EQ(3, g_report.perform_count);
+    EXPECT_EQ(3, g_status.perform_count);
 }
 
 TEST_F(NumericRangeArticleTest, applyingARangeFromGroupEndRestoresTheNullReadingAnchor)
@@ -13661,7 +13661,7 @@ TEST_F(NumericRangeArticleTest, anExplicitActionOnOneNumberRepromptsInsteadOfJum
     EXPECT_FALSE(g_reread);
     EXPECT_EQ(ArticleUnread{8}, m_newsgroup.m_to_read);
     EXPECT_EQ(ArticleUnread{5}, g_selected_count);
-    EXPECT_EQ(1, g_report.perform_count);
+    EXPECT_EQ(1, g_status.perform_count);
     EXPECT_EQ("1 article matched.", g_msg);
 }
 

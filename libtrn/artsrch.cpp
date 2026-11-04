@@ -485,7 +485,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         g_search_ahead = ArticleNum{-1};
     }
     TRN_ASSERT(cmd_lst.empty() || cmd_lst[0] != '\0');
-    g_report.init(g_newsgroup_ptr->m_to_read);
+    g_status.init(g_newsgroup_ptr->m_to_read);
     while (true)
     {
         // check if we're out of articles

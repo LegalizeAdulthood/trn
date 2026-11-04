@@ -54,7 +54,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
         command = completed_command;
     }
 
-    g_report.init(g_newsgroup_to_read.value_of());
+    g_status.init(g_newsgroup_to_read.value_of());
     const char             cmdchr = command.front(); // what kind of search?
     const std::string_view search_text = command.substr(1);
     std::string            pattern_text;

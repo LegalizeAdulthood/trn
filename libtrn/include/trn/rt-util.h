@@ -47,7 +47,7 @@ struct ProgressDisplay
 
 extern ProgressDisplay g_progress;
 
-struct PerformReport
+struct BulkCommandStatus
 {
     void init(int cnt);
 
@@ -60,7 +60,7 @@ struct PerformReport
     bool        performed_article_loop{};
 };
 
-extern PerformReport g_report;
+extern BulkCommandStatus g_status;
 
 std::string_view extract_name(std::string_view name);
 std::string compress_name(std::string_view name, int max);

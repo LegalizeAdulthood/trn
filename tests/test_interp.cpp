@@ -1088,12 +1088,12 @@ TEST_F(InterpolatorTest, unknownEscapePreservesMetabit)
 
 TEST_F(InterpolatorTest, performCount)
 {
-    ValueSaver<int> saved(g_report.perform_count, 86);
+    ValueSaver<int> saved(g_status.perform_count, 86);
 
     const std::string_view new_pattern = interpolate("%#");
 
     ASSERT_TRUE(new_pattern.empty());
-    ASSERT_EQ(std::to_string(g_report.perform_count), buffer());
+    ASSERT_EQ(std::to_string(g_status.perform_count), buffer());
 }
 
 TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
@@ -1106,7 +1106,7 @@ TEST_F(InterpolatorTest, modifiedPerformCountNotZero)
 
 TEST_F(InterpolatorTest, consecutiveModifiedPerformCountIncreases)
 {
-    ValueSaver<int> saved(g_report.perform_count, 86);
+    ValueSaver<int> saved(g_status.perform_count, 86);
 
     const std::string_view new_pattern = interpolate("%^#,%^#");
     std::istringstream str{buffer()};
