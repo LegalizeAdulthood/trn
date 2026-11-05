@@ -5560,7 +5560,7 @@ void DownloadEndArticleTest::start_download()
     EXPECT_CALL(*m_connection, read_line(testing::_))
         .WillOnce(testing::Return("222 4 <end@example.test> body follows"))
         .WillOnce(testing::Return("\xC4"));
-    nntp_body(g_nav.target.num);
+    g_nntp_art.body(g_nav.target.num);
     ASSERT_NE(nullptr, g_art_input.fp);
     m_download_file = output_dir() / g_nntp_art.art_name(g_nav.target.num, false);
     ASSERT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));

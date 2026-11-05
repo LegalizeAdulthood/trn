@@ -269,12 +269,12 @@ int nntp_header(ArticleNum art_num)
 
 // copy the body of an article to a temporary file
 
-void nntp_body(ArticleNum art_num)
+void NntpArticleCache::body(ArticleNum art_num)
 {
-    std::string artname = g_nntp_art.art_name(art_num, false); // Is it already in a tmp file?
+    std::string artname = art_name(art_num, false); // Is it already in a tmp file?
     if (!artname.empty())
     {
-        if (g_nntp_art.body_pos >= 0)
+        if (body_pos >= 0)
         {
             nntp_finish_body(FB_DISCARD);
         }
@@ -282,12 +282,12 @@ void nntp_body(ArticleNum art_num)
         stat_t art_stat{};
         if (g_art_input.fp && fstat(fileno(g_art_input.fp), &art_stat) == 0)
         {
-            g_nntp_art.body_end = ArticlePosition{art_stat.st_size};
+            body_end = ArticlePosition{art_stat.st_size};
         }
         return;
     }
 
-    artname = g_nntp_art.art_name(art_num, true); // Allocate a tmp file
+    artname = art_name(art_num, true); // Allocate a tmp file
     if (!(g_art_input.fp = std::fopen(artname.c_str(), "w+b")))
     {
         fmt::print(stderr, "\nUnable to write temporary file: '{}'.\n", artname);
@@ -313,26 +313,26 @@ void nntp_body(ArticleNum art_num)
         errno = ENOENT; // Simulate file-not-found
         return;
     }
-    g_nntp_art.body_pos = ArticlePosition{};
+    body_pos = ArticlePosition{};
     if (g_parsed_header.parsed_art == art_num)
     {
         std::fwrite(g_parsed_header.head_buf.data(), 1, g_parsed_header.head_buf.size(), g_art_input.fp);
-        g_nntp_art.body_end = ftell_art();
-        g_parsed_header.positions[PAST_HEADER].min_pos = g_nntp_art.body_end;
+        body_end = ftell_art();
+        g_parsed_header.positions[PAST_HEADER].min_pos = body_end;
     }
     else
     {
         std::string line;
         line.reserve(NNTP_STRLEN);
-        g_nntp_art.body_end = ArticlePosition{};
+        body_end = ArticlePosition{};
         ArticlePosition prev_pos{};
-        while (g_nntp_art.copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}) > 0)
+        while (copy_body(line, NNTP_STRLEN, body_end + ArticlePosition{1}) > 0)
         {
-            if (!line.empty() && line[0] == '\n' && (g_nntp_art.body_end - prev_pos).value_of() < NNTP_STRLEN)
+            if (!line.empty() && line[0] == '\n' && (body_end - prev_pos).value_of() < NNTP_STRLEN)
             {
                 break;
             }
-            prev_pos = g_nntp_art.body_end;
+            prev_pos = body_end;
         }
     }
     fseek(g_art_input.fp, 0L, 0);

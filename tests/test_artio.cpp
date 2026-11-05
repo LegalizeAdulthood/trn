@@ -1113,7 +1113,7 @@ void RemoteMultipartArticleTest::SetUp()
     ASSERT_EQ(1, nntp_connect("127.0.0.1", false));
     g_nntp.gets_clear_buffer();
     m_data_source.m_flags = DF_REMOTE;
-    nntp_body(ArticleNum{7});
+    g_nntp_art.body(ArticleNum{7});
     ASSERT_NE(nullptr, g_art_input.fp);
     g_art_input.open_art = ArticleNum{7};
     g_raw_art_size = ArticlePosition{-1};

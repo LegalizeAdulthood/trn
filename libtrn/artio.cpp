@@ -95,7 +95,7 @@ std::FILE *art_open(ArticleNum art_num, ArticlePosition pos)
     {
         if (g_data_source->m_flags & DF_REMOTE)
         {
-            nntp_body(art_num);
+            g_nntp_art.body(art_num);
         }
         else
         {

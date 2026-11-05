@@ -2007,7 +2007,7 @@ TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
         .WillOnce(Return("..dot-stuffed"))
         .WillOnce(Return("."));
 
-    nntp_body(ArticleNum{7});
+    g_nntp_art.body(ArticleNum{7});
 
     EXPECT_EQ("plain\n", nntp_read_art(NNTP_STRLEN));
     EXPECT_EQ(".dot-stuffed\n", nntp_read_art(NNTP_STRLEN));
@@ -2031,7 +2031,7 @@ TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
     {
         reads.WillOnce(Return(line));
     }
-    nntp_body(ArticleNum{7});
+    g_nntp_art.body(ArticleNum{7});
     for (int pass = 0; pass < 2; ++pass)
     {
         SCOPED_TRACE(pass);
@@ -2063,7 +2063,7 @@ TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
                 return "ignored";
             }));
 
-    nntp_body(ArticleNum{7});
+    g_nntp_art.body(ArticleNum{7});
 
     EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
 }
@@ -2077,7 +2077,7 @@ TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)
     EXPECT_CALL(*m_connection, write_line(StrEq("BODY 7"), _));
     EXPECT_CALL(*m_connection, read_line(_)).WillOnce(Return("222 7 <message@example.test> body follows"));
 
-    nntp_body(ArticleNum{7});
+    g_nntp_art.body(ArticleNum{7});
 }
 
 class RemoteHeaderPrefetchTest : public NNTPGetStringTest
