@@ -28,6 +28,7 @@ struct ScoringSession
     void cleanup();
     void append(std::string_view line);
     void rescore();
+    void kill_threshold(int thresh);
 
     // TODO: private
     void score_art_basic(ArticleNum a);
@@ -51,6 +52,5 @@ extern ScoringSession g_scoring;
 extern bool       g_score_new_first; // changes order of sorting (artnum comparison) when scores are equal
 
 void sc_score_cmd(std::string_view line);
-void sc_kill_threshold(int thresh);
 
 #endif

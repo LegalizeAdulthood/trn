@@ -132,7 +132,7 @@ int sa_do_cmd(std::string_view command)
                 return 0;                       // beep but do nothing
             }
         }
-        sc_kill_threshold(i);
+        g_scoring.kill_threshold(i);
         g_art_scan.refill = true;
         g_art_scan.ref_top = true; // refresh # of articles
         break;

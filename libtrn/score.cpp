@@ -628,7 +628,7 @@ void sc_score_cmd(std::string_view line)
 }
 
 //int thresh;           // kill all articles with this score or lower
-void sc_kill_threshold(int thresh)
+void ScoringSession::kill_threshold(int thresh)
 {
     for (ArticleNum a = g_cache.first(g_first_art); a <= g_last_art; a = g_cache.next(a))
     {
