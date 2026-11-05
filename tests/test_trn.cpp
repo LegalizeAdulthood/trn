@@ -7946,6 +7946,69 @@ void NewsgroupSelectorDisplayStateTest::expect_display_preserved(bool rereading)
     EXPECT_EQ(NewsgroupNum{rereading ? 0 : 3}, g_newsgroup_to_read);
 }
 
+class NewsgroupSelectorDescriptionSourcesTest : public NewsgroupSelectorDisplayStateTest,
+                                                public testing::WithParamInterface<std::tuple<char, bool, bool>>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+    std::array<DataSource, 2> m_description_sources{};
+    std::array<Newsrc, 2>     m_description_newsrcs{};
+};
+
+void NewsgroupSelectorDescriptionSourcesTest::SetUp()
+{
+    NewsgroupSelectorDisplayStateTest::SetUp();
+    for (std::size_t index = 0; index < m_description_sources.size(); ++index)
+    {
+        DataSource &source = m_description_sources[index];
+        source.m_flags = DF_OPEN;
+        source.m_group_desc = (m_output_dir / ("descriptions-" + std::to_string(index))).generic_string();
+        std::ofstream{source.m_group_desc} << "aux.group Auxiliary discussion\n";
+        Newsrc &newsrc = m_description_newsrcs[index];
+        newsrc.data_source = &source;
+        newsrc.flags = index == 0 ? RF_ACTIVE : RF_NONE;
+    }
+    m_newsrc.next = &m_description_newsrcs[0];
+    m_description_newsrcs[0].next = &m_description_newsrcs[1];
+}
+
+void NewsgroupSelectorDescriptionSourcesTest::TearDown()
+{
+    m_newsrc.next = nullptr;
+    for (DataSource &source : m_description_sources)
+    {
+        source.m_desc_sf.close();
+    }
+    NewsgroupSelectorDisplayStateTest::TearDown();
+}
+
+TEST_P(NewsgroupSelectorDescriptionSourcesTest, descriptionDisplayPreparesActiveSourcesOnEntryOrRestart)
+{
+    const auto [style, on_entry, missing] = GetParam();
+    prepare_display_session(false, on_entry ? std::string{style} : std::string{"s"} + style);
+    if (missing)
+    {
+        m_data_source.m_group_desc = (m_output_dir / "absent-descriptions").generic_string();
+    }
+
+    const char result = run_selector_session(on_entry ? "qQ" : "LqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(style, current_group_display_mode());
+    EXPECT_EQ(!missing, m_data_source.has_group_descriptions());
+    ASSERT_TRUE(m_description_sources[0].has_group_descriptions());
+    EXPECT_EQ("Auxiliary discussion\n", m_description_sources[0].find_group_desc("aux.group"));
+    EXPECT_FALSE(m_description_sources[1].has_group_descriptions());
+    EXPECT_THAT(m_output, testing::HasSubstr(missing ? "comp.lang.cpp" : "Cplusplus discussion"));
+    expect_selector_session_preserved(false);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(StyleEntryAndMissingDescriptions, NewsgroupSelectorDescriptionSourcesTest,
+                         testing::Combine(testing::Values('m', 'l'), testing::Bool(), testing::Bool()));
+
 struct GroupDisplayChoice
 {
     std::string_view modes;
