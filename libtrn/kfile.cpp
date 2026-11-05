@@ -480,7 +480,7 @@ void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
             }
             intr = do_kill_file(g_kill.local_kfp, entering);
         }
-        open_kill_file(KF_GLOBAL);          // Just in case the name changed
+        g_kill.open(KF_GLOBAL); // Just in case the name changed
         if (g_kill.global_kfp && !intr)
         {
             intr = do_kill_file(g_kill.global_kfp, entering);
@@ -631,7 +631,7 @@ void rewrite_kill_file(ArticleNum thru)
         {
             fs::remove(killname, error);
         }
-        open_kill_file(KF_LOCAL);           // and reopen local file
+        g_kill.open(KF_LOCAL); // and reopen local file
     }
     else
     {
@@ -794,7 +794,7 @@ void edit_kill_file()
         do_shell(SH, command);            // invoke the shell
         no_echo();                       // and make terminal
         cr_mode();                       // unfriendly again
-        open_kill_file(g_in_ng);
+        g_kill.open(g_in_ng);
         if (g_kill.local_kfp)
         {
             std::fseek(g_kill.local_kfp, 0L, 0); // rewind file
@@ -844,7 +844,7 @@ void edit_kill_file()
     }
 }
 
-void open_kill_file(int local)
+void KillFileProcessor::open(int local)
 {
     const fs::path kname{
         file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))};
@@ -856,19 +856,19 @@ void open_kill_file(int local)
     }
     if (local)
     {
-        if (g_kill.local_kfp)
+        if (local_kfp)
         {
-            std::fclose(g_kill.local_kfp);
+            std::fclose(local_kfp);
         }
-        g_kill.local_kfp = std::fopen(kname.string().c_str(), "r");
+        local_kfp = std::fopen(kname.string().c_str(), "r");
     }
     else
     {
-        if (g_kill.global_kfp)
+        if (global_kfp)
         {
-            std::fclose(g_kill.global_kfp);
+            std::fclose(global_kfp);
         }
-        g_kill.global_kfp = std::fopen(kname.string().c_str(), "r");
+        global_kfp = std::fopen(kname.string().c_str(), "r");
     }
 }
 
@@ -914,7 +914,7 @@ void kill_file_append(std::string_view cmd, bool local)
             output.close();
             if (local && !g_kill.local_kfp)
             {
-                open_kill_file(KF_LOCAL);
+                g_kill.open(KF_LOCAL);
             }
             fmt::print("done\n");
         }

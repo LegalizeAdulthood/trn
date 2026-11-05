@@ -320,7 +320,7 @@ TEST_F(KillFileEditTest, enteringLocalKillFileParsesThruArticleNumber)
 
     m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
     m_env.expect_env_repeatedly("KILLGLOBAL", global_kill_file_name.c_str());
-    open_kill_file(KF_LOCAL);
+    g_kill.open(KF_LOCAL);
 
     testing::internal::CaptureStdout();
     kill_unwanted(ArticleNum{1}, "", true);
@@ -368,7 +368,7 @@ TEST_F(KillFileEditTest, leadingSpaceSwitchCommandAppliesSwitch)
 
     m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
     m_env.expect_env_repeatedly("KILLGLOBAL", global_kill_file_name.c_str());
-    open_kill_file(KF_LOCAL);
+    g_kill.open(KF_LOCAL);
 
     testing::internal::CaptureStdout();
     kill_unwanted(ArticleNum{1}, "", true);

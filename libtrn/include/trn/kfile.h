@@ -66,6 +66,8 @@ enum
 
 struct KillFileProcessor
 {
+    void open(int local);
+
     std::FILE *local_kfp{};  // local (for this newsgroup) file
     std::FILE *global_kfp{}; // global article killer file
     ArticleNum first{};      // used as g_first_art when killing
@@ -84,7 +86,6 @@ void kill_unwanted(ArticleNum starting, std::string_view message, int entering);
 void rewrite_kill_file(ArticleNum thru);
 void update_thread_kill_file();
 void edit_kill_file();
-void open_kill_file(int local);
 void kill_file_append(std::string_view cmd, bool local);
 
 #endif

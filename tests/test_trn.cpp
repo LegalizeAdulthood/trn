@@ -6493,7 +6493,7 @@ void NewsgroupSelectorKillEditorTest::SetUp()
 void NewsgroupSelectorKillEditorTest::TearDown()
 {
     m_env.expect_env_repeatedly("KILLGLOBAL", (m_output_dir / "absent-global").generic_string().c_str());
-    open_kill_file(KF_GLOBAL);
+    g_kill.open(KF_GLOBAL);
     for (const std::pair<int, SignalHandler> &signal : m_signals)
     {
         std::signal(signal.first, signal.second);

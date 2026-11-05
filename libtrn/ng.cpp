@@ -140,7 +140,7 @@ void ng_init()
 {
     set_default_cmd();
 
-    open_kill_file(KF_GLOBAL);
+    g_kill.open(KF_GLOBAL);
     g_hide_line.compex.init_compex();
     g_page_stop.compex.init_compex();
 }
@@ -326,7 +326,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
 
     // see if there are any special searches to do
 
-    open_kill_file(KF_LOCAL);
+    g_kill.open(KF_LOCAL);
     if (g_verbose)
     {
         kill_unwanted(g_first_art, "Processing memorized commands...\n\n", true);
