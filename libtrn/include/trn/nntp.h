@@ -32,6 +32,9 @@ struct NntpArticleCache
 {
     std::string art_name(ArticleNum art_num, bool allocate);
 
+    // TODO: private
+    int copy_body(std::string &line, int limit, ArticlePosition pos);
+
     ArticlePosition body_pos{-1};
     ArticlePosition body_end{};
     ArticleNum      art_nums[MAX_NNTP_ARTICLES]{};

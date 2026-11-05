@@ -31,7 +31,6 @@
 #include <system_error>
 
 static ArticleNum  nntp_next_art();
-static int         nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
 static std::string read_art_file_chunk(int limit);
 
 NntpArticleCache g_nntp_art;
@@ -327,7 +326,7 @@ void nntp_body(ArticleNum art_num)
         line.reserve(NNTP_STRLEN);
         g_nntp_art.body_end = ArticlePosition{};
         ArticlePosition prev_pos{};
-        while (nntp_copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}) > 0)
+        while (g_nntp_art.copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}) > 0)
         {
             if (!line.empty() && line[0] == '\n' && (g_nntp_art.body_end - prev_pos).value_of() < NNTP_STRLEN)
             {
@@ -345,12 +344,12 @@ ArticlePosition nntp_art_size()
     return g_nntp_art.body_pos < 0 ? g_nntp_art.body_end : ArticlePosition{-1};
 }
 
-static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
+int NntpArticleCache::copy_body(std::string &line, int limit, ArticlePosition pos)
 {
     bool had_nl = true;
     line.reserve(static_cast<std::size_t>(limit));
 
-    while (pos > g_nntp_art.body_end || !had_nl)
+    while (pos > body_end || !had_nl)
     {
         const NNTPGetsResult result = g_nntp.gets(line, limit);
         if (result == NGSR_ERROR)
@@ -361,8 +360,8 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
         {
             if (g_nntp.at_list_end(line))
             {
-                std::fseek(g_art_input.fp, (long) g_nntp_art.body_pos.value_of(), 0);
-                g_nntp_art.body_pos = ArticlePosition{-1};
+                std::fseek(g_art_input.fp, (long) body_pos.value_of(), 0);
+                body_pos = ArticlePosition{-1};
                 return 0;
             }
             if (!line.empty() && line[0] == '.')
@@ -375,7 +374,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
             line += '\n';
         }
         std::fwrite(line.data(), 1, line.size(), g_art_input.fp);
-        g_nntp_art.body_end = ftell_art();
+        body_end = ftell_art();
         had_nl = result == NGSR_FULL_LINE;
     }
     return 1;
@@ -410,11 +409,11 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     if (bmode != FB_BACKGROUND)
     {
-        nntp_copy_body(line, NNTP_STRLEN, ArticlePosition{0x7fffffffL});
+        g_nntp_art.copy_body(line, NNTP_STRLEN, ArticlePosition{0x7fffffffL});
     }
     else
     {
-        while (nntp_copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}))
+        while (g_nntp_art.copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}))
         {
             if (input_pending())
             {
@@ -442,7 +441,7 @@ int nntp_seek_art(ArticlePosition pos)
             std::string line;
             line.reserve(NNTP_STRLEN);
             std::fseek(g_art_input.fp, g_nntp_art.body_end.value_of(), 0);
-            nntp_copy_body(line, NNTP_STRLEN, pos);
+            g_nntp_art.copy_body(line, NNTP_STRLEN, pos);
             if (g_nntp_art.body_pos >= 0)
             {
                 g_nntp_art.body_pos = pos;
@@ -491,7 +490,7 @@ std::string nntp_read_art(int limit)
         {
             std::string line;
             line.reserve(static_cast<std::size_t>(limit));
-            if (nntp_copy_body(line, limit, g_nntp_art.body_pos + ArticlePosition{1}) <= 0)
+            if (g_nntp_art.copy_body(line, limit, g_nntp_art.body_pos + ArticlePosition{1}) <= 0)
             {
                 return {};
             }
