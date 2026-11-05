@@ -28,6 +28,16 @@ enum
     MAX_NNTP_ARTICLES = 10
 };
 
+struct NntpArticleCache
+{
+    ArticlePosition body_pos{-1};
+    ArticlePosition body_end{};
+    ArticleNum      art_nums[MAX_NNTP_ARTICLES]{};
+    std::time_t     art_ages[MAX_NNTP_ARTICLES]{};
+};
+
+extern NntpArticleCache g_nntp_art;
+
 int             nntp_list(std::string_view type, std::string_view arg);
 int             nntp_list(std::string_view type, std::string_view arg, std::string &first_line);
 void            nntp_finish_list();

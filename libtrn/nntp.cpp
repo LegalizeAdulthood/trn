@@ -34,8 +34,7 @@ static ArticleNum  nntp_next_art();
 static int         nntp_copy_body(std::string &line, int limit, ArticlePosition pos);
 static std::string read_art_file_chunk(int limit);
 
-static ArticlePosition s_body_pos{-1};
-static ArticlePosition s_body_end{};
+NntpArticleCache g_nntp_art;
 
 int nntp_list(std::string_view type, std::string_view arg)
 {
@@ -276,7 +275,7 @@ void nntp_body(ArticleNum art_num)
     std::string artname = nntp_art_name(art_num, false); // Is it already in a tmp file?
     if (!artname.empty())
     {
-        if (s_body_pos >= 0)
+        if (g_nntp_art.body_pos >= 0)
         {
             nntp_finish_body(FB_DISCARD);
         }
@@ -284,7 +283,7 @@ void nntp_body(ArticleNum art_num)
         stat_t art_stat{};
         if (g_art_input.fp && fstat(fileno(g_art_input.fp), &art_stat) == 0)
         {
-            s_body_end = ArticlePosition{art_stat.st_size};
+            g_nntp_art.body_end = ArticlePosition{art_stat.st_size};
         }
         return;
     }
@@ -315,26 +314,26 @@ void nntp_body(ArticleNum art_num)
         errno = ENOENT; // Simulate file-not-found
         return;
     }
-    s_body_pos = ArticlePosition{};
+    g_nntp_art.body_pos = ArticlePosition{};
     if (g_parsed_header.parsed_art == art_num)
     {
         std::fwrite(g_parsed_header.head_buf.data(), 1, g_parsed_header.head_buf.size(), g_art_input.fp);
-        s_body_end = ftell_art();
-        g_parsed_header.positions[PAST_HEADER].min_pos = s_body_end;
+        g_nntp_art.body_end = ftell_art();
+        g_parsed_header.positions[PAST_HEADER].min_pos = g_nntp_art.body_end;
     }
     else
     {
         std::string line;
         line.reserve(NNTP_STRLEN);
-        s_body_end = ArticlePosition{};
+        g_nntp_art.body_end = ArticlePosition{};
         ArticlePosition prev_pos{};
-        while (nntp_copy_body(line, NNTP_STRLEN, s_body_end + ArticlePosition{1}) > 0)
+        while (nntp_copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}) > 0)
         {
-            if (!line.empty() && line[0] == '\n' && (s_body_end - prev_pos).value_of() < NNTP_STRLEN)
+            if (!line.empty() && line[0] == '\n' && (g_nntp_art.body_end - prev_pos).value_of() < NNTP_STRLEN)
             {
                 break;
             }
-            prev_pos = s_body_end;
+            prev_pos = g_nntp_art.body_end;
         }
     }
     fseek(g_art_input.fp, 0L, 0);
@@ -343,7 +342,7 @@ void nntp_body(ArticleNum art_num)
 
 ArticlePosition nntp_art_size()
 {
-    return s_body_pos < 0 ? s_body_end : ArticlePosition{-1};
+    return g_nntp_art.body_pos < 0 ? g_nntp_art.body_end : ArticlePosition{-1};
 }
 
 static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
@@ -351,7 +350,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
     bool had_nl = true;
     line.reserve(static_cast<std::size_t>(limit));
 
-    while (pos > s_body_end || !had_nl)
+    while (pos > g_nntp_art.body_end || !had_nl)
     {
         const NNTPGetsResult result = g_nntp.gets(line, limit);
         if (result == NGSR_ERROR)
@@ -362,8 +361,8 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
         {
             if (g_nntp.at_list_end(line))
             {
-                std::fseek(g_art_input.fp, (long) s_body_pos.value_of(), 0);
-                s_body_pos = ArticlePosition{-1};
+                std::fseek(g_art_input.fp, (long) g_nntp_art.body_pos.value_of(), 0);
+                g_nntp_art.body_pos = ArticlePosition{-1};
                 return 0;
             }
             if (!line.empty() && line[0] == '.')
@@ -376,7 +375,7 @@ static int nntp_copy_body(std::string &line, int limit, ArticlePosition pos)
             line += '\n';
         }
         std::fwrite(line.data(), 1, line.size(), g_art_input.fp);
-        s_body_end = ftell_art();
+        g_nntp_art.body_end = ftell_art();
         had_nl = result == NGSR_FULL_LINE;
     }
     return 1;
@@ -386,7 +385,7 @@ int nntp_finish_body(FinishBodyMode bmode)
 {
     std::string line;
     line.reserve(NNTP_STRLEN);
-    if (s_body_pos < 0)
+    if (g_nntp_art.body_pos < 0)
     {
         return 0;
     }
@@ -405,9 +404,9 @@ int nntp_finish_body(FinishBodyMode bmode)
         }
         std::fflush(stdout);
     }
-    if (s_body_end != s_body_pos)
+    if (g_nntp_art.body_end != g_nntp_art.body_pos)
     {
-        std::fseek(g_art_input.fp, s_body_end.value_of(), 0);
+        std::fseek(g_art_input.fp, g_nntp_art.body_end.value_of(), 0);
     }
     if (bmode != FB_BACKGROUND)
     {
@@ -415,16 +414,16 @@ int nntp_finish_body(FinishBodyMode bmode)
     }
     else
     {
-        while (nntp_copy_body(line, NNTP_STRLEN, s_body_end + ArticlePosition{1}))
+        while (nntp_copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}))
         {
             if (input_pending())
             {
                 break;
             }
         }
-        if (s_body_pos >= 0)
+        if (g_nntp_art.body_pos >= 0)
         {
-            std::fseek(g_art_input.fp, s_body_pos.value_of(), 0);
+            std::fseek(g_art_input.fp, g_nntp_art.body_pos.value_of(), 0);
         }
     }
     if (bmode == FB_OUTPUT)
@@ -436,22 +435,22 @@ int nntp_finish_body(FinishBodyMode bmode)
 
 int nntp_seek_art(ArticlePosition pos)
 {
-    if (s_body_pos >= 0)
+    if (g_nntp_art.body_pos >= 0)
     {
-        if (s_body_end < pos)
+        if (g_nntp_art.body_end < pos)
         {
             std::string line;
             line.reserve(NNTP_STRLEN);
-            std::fseek(g_art_input.fp, s_body_end.value_of(), 0);
+            std::fseek(g_art_input.fp, g_nntp_art.body_end.value_of(), 0);
             nntp_copy_body(line, NNTP_STRLEN, pos);
-            if (s_body_pos >= 0)
+            if (g_nntp_art.body_pos >= 0)
             {
-                s_body_pos = pos;
+                g_nntp_art.body_pos = pos;
             }
         }
         else
         {
-            s_body_pos = pos;
+            g_nntp_art.body_pos = pos;
         }
     }
     return std::fseek(g_art_input.fp, pos.value_of(), 0);
@@ -459,7 +458,7 @@ int nntp_seek_art(ArticlePosition pos)
 
 ArticlePosition nntp_tell_art()
 {
-    return s_body_pos < 0 ? ftell_art() : s_body_pos;
+    return g_nntp_art.body_pos < 0 ? ftell_art() : g_nntp_art.body_pos;
 }
 
 static std::string read_art_file_chunk(int limit)
@@ -486,32 +485,32 @@ std::string nntp_read_art(int limit)
         return {};
     }
 
-    if (s_body_pos >= 0)
+    if (g_nntp_art.body_pos >= 0)
     {
-        if (s_body_pos == s_body_end)
+        if (g_nntp_art.body_pos == g_nntp_art.body_end)
         {
             std::string line;
             line.reserve(static_cast<std::size_t>(limit));
-            if (nntp_copy_body(line, limit, s_body_pos + ArticlePosition{1}) <= 0)
+            if (nntp_copy_body(line, limit, g_nntp_art.body_pos + ArticlePosition{1}) <= 0)
             {
                 return {};
             }
-            if (s_body_end - s_body_pos < ArticlePosition{limit})
+            if (g_nntp_art.body_end - g_nntp_art.body_pos < ArticlePosition{limit})
             {
-                s_body_pos = s_body_end;
+                g_nntp_art.body_pos = g_nntp_art.body_end;
                 return line;
             }
-            std::fseek(g_art_input.fp, s_body_pos.value_of(), 0);
+            std::fseek(g_art_input.fp, g_nntp_art.body_pos.value_of(), 0);
         }
         std::string line = read_art_file_chunk(limit);
         if (line.empty())
         {
             return {};
         }
-        s_body_pos = ftell_art();
-        if (s_body_pos == s_body_end)
+        g_nntp_art.body_pos = ftell_art();
+        if (g_nntp_art.body_pos == g_nntp_art.body_end)
         {
-            std::fseek(g_art_input.fp, s_body_pos.value_of(), 0); // Prepare for coming write
+            std::fseek(g_art_input.fp, g_nntp_art.body_pos.value_of(), 0); // Prepare for coming write
         }
         return line;
     }
@@ -641,16 +640,14 @@ ArticleNum nntp_find_real_art(ArticleNum after)
 
 std::string nntp_art_name(ArticleNum art_num, bool allocate)
 {
-    static ArticleNum artnums[MAX_NNTP_ARTICLES];
-    static std::time_t  artages[MAX_NNTP_ARTICLES];
     std::time_t         lowage;
 
     if (!art_num)
     {
         for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
         {
-            artnums[i] = ArticleNum{};
-            artages[i] = 0;
+            g_nntp_art.art_nums[i] = ArticleNum{};
+            g_nntp_art.art_ages[i] = 0;
         }
         return {};
     }
@@ -661,22 +658,22 @@ std::string nntp_art_name(ArticleNum art_num, bool allocate)
     lowage = now;
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
-        if (artnums[i] == art_num)
+        if (g_nntp_art.art_nums[i] == art_num)
         {
-            artages[i] = now;
+            g_nntp_art.art_ages[i] = now;
             return nntp_tmp_name(i);
         }
-        if (artages[i] <= lowage)
+        if (g_nntp_art.art_ages[i] <= lowage)
         {
             j = i;
-            lowage = artages[j];
+            lowage = g_nntp_art.art_ages[j];
         }
     }
 
     if (allocate)
     {
-        artnums[j] = art_num;
-        artages[j] = now;
+        g_nntp_art.art_nums[j] = art_num;
+        g_nntp_art.art_ages[j] = now;
         return nntp_tmp_name(j);
     }
 
