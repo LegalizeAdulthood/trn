@@ -3278,6 +3278,164 @@ TEST_F(UniversalExpansionSessionTest, queuedInputLeavesThePendingVirtualGroupAva
     expect_caller();
 }
 
+class UniversalRecoverySessionTest : public UniversalSessionTest
+{
+protected:
+    void SetUp() override;
+    void expect_completed_recovery() const;
+};
+
+void UniversalRecoverySessionTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    m_env.expect_env_repeatedly("SELECTCHARS", "ab");
+    load_menu("comp.previous comp.next\n");
+}
+
+void UniversalRecoverySessionTest::expect_completed_recovery() const
+{
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_FALSE(menu.empty());
+    EXPECT_EQ("Local menu", menu.back().title);
+    EXPECT_EQ(0, menu.back().selected);
+    for (const UniversalItem &item : menu.back().items)
+    {
+        EXPECT_FALSE(item.m_flags & UF_SEL);
+    }
+    EXPECT_EQ(" 1-3", menu.back().ranges[2]);
+    EXPECT_THAT(m_output, testing::HasSubstr("Group body comp.next article 3"));
+    expect_caller();
+}
+
+class UniversalMissingGroupSessionTest : public UniversalRecoverySessionTest, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(UniversalMissingGroupSessionTest, aGroupRemovedAfterSelectionReportsItsNameAndContinuesTheBatch)
+{
+    if (GetParam())
+    {
+        g_univ.close();
+        load_menu("\"Vanished article\" $v1 3 comp.previous\ncomp.next\n");
+    }
+    int menu_prompts{};
+    m_on_prompt = [&menu_prompts]
+    {
+        if (g_mode == MM_UNIVERSAL && ++menu_prompts == 3)
+        {
+            g_newsrc_hash->erase("comp.previous");
+        }
+    };
+
+    const char result = run_menu({"a", "b", "Z", "q", "Q"});
+
+    EXPECT_EQ('Q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Universal: newsgroup comp.previous not found!"));
+    const std::vector<UniversalSessionPrompt> reading = prompts(MM_ARTICLE);
+    ASSERT_EQ(1, reading.size());
+    EXPECT_EQ("comp.next", reading[0].group);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    expect_completed_recovery();
+}
+
+INSTANTIATE_TEST_SUITE_P(ItemKind, UniversalMissingGroupSessionTest, testing::Bool());
+
+class UniversalFileFailureSessionTest : public UniversalRecoverySessionTest, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(UniversalFileFailureSessionTest, aMissingFileOrFailedPagerDoesNotDiscardTheFollowingSelection)
+{
+    const fs::path notes = m_output_dir / "notes";
+    if (GetParam())
+    {
+        std::ofstream{notes} << "Unviewed note\n";
+    }
+    m_env.expect_env_repeatedly("HELPPAGER", helper_command("viewer").c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", m_output_dir.generic_string().c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam() ? "viewer_failure" : "");
+    g_univ.close();
+    load_menu("\"Notes\" &" + notes.generic_string() + "\ncomp.next\n");
+
+    const char result = run_menu({"a", "b", "Z", "q", "Q"});
+
+    EXPECT_EQ('Q', result);
+    EXPECT_FALSE(fs::exists(m_output_dir / "viewed-notes"));
+    EXPECT_EQ("viewer\n" + notes.generic_string() + '\n', read_file(m_output_dir / "tools.log"));
+    EXPECT_EQ(1, prompts(MM_ARTICLE).size());
+    expect_completed_recovery();
+}
+
+INSTANTIATE_TEST_SUITE_P(MissingFileAndFailedPager, UniversalFileFailureSessionTest, testing::Bool());
+
+TEST_F(UniversalRecoverySessionTest, anUnavailableGroupStopsTheBatchAndLeavesTheNextSelectionForRetry)
+{
+    fs::rename(m_output_dir / "comp/previous", m_output_dir / "saved-previous");
+
+    const char result = run_menu({"a", "b", "Z", "Z", "q", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(5, menu.size());
+    EXPECT_EQ(1, menu[3].selected);
+    EXPECT_TRUE(menu[3].items[1].m_flags & UF_SEL);
+    EXPECT_EQ(" 1-2", menu[3].ranges[0]);
+    EXPECT_EQ(1, prompts(MM_ARTICLE).size());
+    EXPECT_THAT(m_output, testing::HasSubstr("spool"));
+    expect_completed_recovery();
+}
+
+TEST_F(UniversalRecoverySessionTest, anExpiredArticleReachesTheGroupEndAndTheBatchCanContinue)
+{
+    ASSERT_TRUE(fs::remove(m_output_dir / "comp/previous/3"));
+
+    const char result = run_menu({"a", "b", "Z", "q", "q", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> end = prompts(MM_ARTICLE_END);
+    ASSERT_EQ(1, end.size());
+    EXPECT_EQ("comp.previous", end[0].group);
+    EXPECT_EQ(ArticleNum{4}, end[0].article);
+    EXPECT_EQ(1, prompts(MM_ARTICLE).size());
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Group body comp.previous article 3")));
+    expect_completed_recovery();
+}
+
+class UniversalInterruptedSessionTest : public UniversalRecoverySessionTest, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(UniversalInterruptedSessionTest, interruptedArticleInputCanResumeTheRemainingSelectedBatch)
+{
+    bool                      interrupted{};
+    const TerminalInputReader reading_input = g_terminal_input_reader;
+    g_terminal_input_reader = [reading_input, &interrupted](char *buffer, int size)
+    {
+        if (g_mode == MM_ARTICLE && !interrupted)
+        {
+            interrupted = true;
+            errno = EINTR;
+            g_int_count = GetParam() ? 1 : 0;
+            return -1;
+        }
+        return reading_input(buffer, size);
+    };
+
+    const char result = run_menu({"a", "b", "Z", "q", "q", "Q"});
+
+    EXPECT_EQ('Q', result);
+    EXPECT_TRUE(interrupted);
+    const std::vector<UniversalSessionPrompt> reading = prompts(MM_ARTICLE);
+    ASSERT_EQ(2, reading.size());
+    EXPECT_EQ("comp.previous", reading[0].group);
+    EXPECT_EQ("comp.next", reading[1].group);
+    expect_completed_recovery();
+}
+
+INSTANTIATE_TEST_SUITE_P(PendingSignal, UniversalInterruptedSessionTest, testing::Bool());
+
 struct MultircReadingPrompt
 {
     int                        group;
