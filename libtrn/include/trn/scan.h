@@ -85,6 +85,7 @@ struct ArticleScanSession
     long next_elig(long a);
     long first();
     long last();
+    void go_top_page();
     bool page_has_unavailable_entries() const;
 
     // TODO: private

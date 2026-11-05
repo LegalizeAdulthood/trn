@@ -213,7 +213,7 @@ static int s_do_cmd(std::string_view command)
 
     case 't': // top of page
         s_rub_ptr();
-        s_go_top_page();
+        g_art_scan.go_top_page();
         break;
 
     case 'b': // bottom of page
@@ -575,7 +575,7 @@ static void s_search(std::string_view command)
     else
     {
         (void)s_fill_page_forward(ent);
-        s_go_top_page();
+        g_art_scan.go_top_page();
         g_art_scan.ref_all = true;
     }
 }

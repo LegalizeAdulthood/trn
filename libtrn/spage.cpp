@@ -375,9 +375,9 @@ static void s_clean_page()
 {
 }
 
-void s_go_top_page()
+void ArticleScanSession::go_top_page()
 {
-    g_art_scan.ptr_page_line = 0;
+    ptr_page_line = 0;
 }
 
 void s_go_bot_page()
@@ -410,7 +410,7 @@ bool s_go_top_ents()
         }
     }
     g_art_scan.refill = true;
-    s_go_top_page();
+    g_art_scan.go_top_page();
     return true;        // successful
 }
 

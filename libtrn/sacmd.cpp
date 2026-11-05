@@ -590,7 +590,7 @@ int sa_do_cmd(std::string_view command)
             }
             else
             {
-                s_go_top_page();        // wrap around to top
+                g_art_scan.go_top_page(); // wrap around to top
             }
         }
         break;
@@ -613,7 +613,7 @@ int sa_do_cmd(std::string_view command)
             }
             else
             {
-                s_go_top_page();        // wrap around to top
+                g_art_scan.go_top_page(); // wrap around to top
             }
         }
         break;
