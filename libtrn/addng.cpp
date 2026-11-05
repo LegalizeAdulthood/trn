@@ -377,8 +377,7 @@ void new_local_groups(DataSource *dp)
     }
     std::fclose(fp);
 
-    dp->m_last_new_group = last_one+1;
-    dp->m_act_sf.m_recent_cnt = file_size;
+    dp->finish_local_groups(last_one, file_size);
 }
 
 AddGroupIndex add_to_list(std::string_view name, int to_read, char_int ch)

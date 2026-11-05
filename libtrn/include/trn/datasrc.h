@@ -105,6 +105,7 @@ struct DataSource
     void             refetch_active(std::time_t now, bool force);
     void             remember_active_group(std::string_view group_name, long high, long low, char status);
     void             finish_new_groups(std::time_t server_time);
+    void             finish_local_groups(std::time_t last_one, long file_size);
     void             visit_active_groups(const std::function<SourceLineVisitor> &visitor)
     {
         m_act_sf.visit_lines(visitor);

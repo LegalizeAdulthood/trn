@@ -653,6 +653,12 @@ void DataSource::finish_new_groups(std::time_t server_time)
     m_last_new_group = server_time;
 }
 
+void DataSource::finish_local_groups(std::time_t last_one, long file_size)
+{
+    m_last_new_group = last_one + 1;
+    m_act_sf.m_recent_cnt = file_size;
+}
+
 bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;
