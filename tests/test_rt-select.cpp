@@ -5437,11 +5437,15 @@ private:
     SelectorSession   m_old_session{g_sel_session};
     SelectorPolicy    m_old_policy{g_sel};
     std::string       m_old_message{g_msg};
+    int               m_old_delayed{g_dm_count};
+    bool              m_old_panic{g_panic};
 };
 
 void ArticleSelectorBehaviorTest::SetUp()
 {
     ArticleSelectorBulkStateTest::SetUp();
+    g_dm_count = 0;
+    g_panic = false;
     g_tc_SO = g_tc_SE = "";
     g_tc_LINES = 24;
     g_in_ng = true;
@@ -5465,6 +5469,8 @@ void ArticleSelectorBehaviorTest::TearDown()
     g_sel_session = m_old_session;
     g_sel = m_old_policy;
     g_msg = m_old_message;
+    g_dm_count = m_old_delayed;
+    g_panic = m_old_panic;
     ArticleSelectorBulkStateTest::TearDown();
 }
 
@@ -5662,28 +5668,8 @@ INSTANTIATE_TEST_SUITE_P(ModeScopeAndCommand, ArticleSelectorGroupingCleanupTest
 class ArticleSelectorYankStateTest : public ArticleSelectorBehaviorTest
 {
 protected:
-    void SetUp() override;
-    void TearDown() override;
     void prepare_yank(SelectionMode mode, bool rereading, int delayed);
-
-private:
-    int  m_old_delayed{g_dm_count};
-    bool m_old_panic{g_panic};
 };
-
-void ArticleSelectorYankStateTest::SetUp()
-{
-    ArticleSelectorBehaviorTest::SetUp();
-    g_dm_count = 0;
-    g_panic = false;
-}
-
-void ArticleSelectorYankStateTest::TearDown()
-{
-    g_dm_count = m_old_delayed;
-    g_panic = m_old_panic;
-    ArticleSelectorBehaviorTest::TearDown();
-}
 
 void ArticleSelectorYankStateTest::prepare_yank(SelectionMode mode, bool rereading, int delayed)
 {
@@ -6305,6 +6291,182 @@ INSTANTIATE_TEST_SUITE_P(ModeCommandHelpAndVerbosity, ArticleSelectorMemorizeCan
                          testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Values('A', 'T'),
                                           testing::Values(std::string{"q"}, std::string{"hq"}, std::string{"Hq"}),
                                           testing::Bool()));
+
+class ArticleSelectorCatchupStateTest : public ArticleSelectorExitStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_catchup(SelectionMode mode);
+
+private:
+    NewsgroupNum m_old_groups_to_read{g_newsgroup_to_read};
+    char         m_old_erase{g_erase_char};
+    char         m_old_kill{g_kill_char};
+};
+
+void ArticleSelectorCatchupStateTest::SetUp()
+{
+    ArticleSelectorExitStateTest::SetUp();
+    g_newsgroup_to_read = NewsgroupNum{1};
+    g_erase_char = '\b';
+    g_kill_char = Ctl('u');
+}
+
+void ArticleSelectorCatchupStateTest::TearDown()
+{
+    g_newsgroup_to_read = m_old_groups_to_read;
+    g_erase_char = m_old_erase;
+    g_kill_char = m_old_kill;
+    ArticleSelectorExitStateTest::TearDown();
+}
+
+void ArticleSelectorCatchupStateTest::prepare_catchup(SelectionMode mode)
+{
+    prepare_behavior(mode);
+    m_newsgroup.subscribe();
+    m_newsrc.flags = RF_ACTIVE;
+}
+
+class ArticleSelectorFullCatchupTest : public ArticleSelectorCatchupStateTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, std::string>>
+{
+};
+
+TEST_P(ArticleSelectorFullCatchupTest, catchingUpAllArticlesLeavesTheSelectorWithNoReadingTarget)
+{
+    const auto [mode, answer] = GetParam();
+    prepare_catchup(mode);
+
+    const char result = run_exit(mode, "c" + answer + 'Q');
+    bits_to_rc();
+
+    EXPECT_EQ('Z', result);
+    expect_articles({}, {});
+    EXPECT_FALSE(g_sel.selected_only);
+    EXPECT_EQ(article_after(g_last_art), g_nav.target.num);
+    EXPECT_EQ(nullptr, g_nav.target.art);
+    EXPECT_EQ(" 1-4", m_newsgroup.rc_numbers());
+    EXPECT_EQ(':', m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    expect_exit_sentinel();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndConfirmation, ArticleSelectorFullCatchupTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values(std::string{"y"}, std::string{" "}, std::string{"#0"})));
+
+class ArticleSelectorPartialCatchupTest : public ArticleSelectorCatchupStateTest,
+                                          public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+TEST_P(ArticleSelectorPartialCatchupTest, partialCatchupRebuildsTheUnreadTailWithoutUnreadingExistingReadArticles)
+{
+    const auto [mode, tail_already_read] = GetParam();
+    prepare_catchup(mode);
+    if (tail_already_read)
+    {
+        g_cache.ptr(ArticleNum{4})->one_less();
+    }
+
+    const DisplayState result = run_redisplay('c', "#2\nQ");
+    bits_to_rc();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles(tail_already_read ? std::initializer_list<long>{3} : std::initializer_list<long>{3, 4},
+                    tail_already_read ? std::initializer_list<long>{} : std::initializer_list<long>{4});
+    EXPECT_EQ(tail_already_read ? 1 : 2, g_obj_count);
+    EXPECT_EQ(tail_already_read ? 1 : 2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(0, g_sel_page.item_index);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(tail_already_read ? " 1-2,4" : " 1-2", m_newsgroup.rc_numbers());
+    EXPECT_EQ(':', m_newsgroup.m_subscribe_char);
+    expect_exit_sentinel();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndTailReadState, ArticleSelectorPartialCatchupTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+class ArticleSelectorCatchupRefusalTest
+    : public ArticleSelectorCatchupStateTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, std::string, bool>>
+{
+};
+
+TEST_P(ArticleSelectorCatchupRefusalTest, refusingCatchupRetainsTheReadingSelectionAndReturnsToTheSelector)
+{
+    const auto [mode, answer, verbose] = GetParam();
+    prepare_catchup(mode);
+    g_verbose = verbose;
+    g_can_home = true;
+    const ArticleLocation target = g_nav.target;
+
+    const DisplayState result = run_redisplay('c', answer + 'Q');
+
+    EXPECT_EQ(answer.size() == 1 ? DS_ASK : DS_DISPLAY, result);
+    EXPECT_EQ(target, g_nav.target);
+    expect_read_ranges_preserved(false);
+    EXPECT_EQ(':', m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(NewsgroupNum{1}, g_newsgroup_to_read);
+    if (answer.size() > 1)
+    {
+        EXPECT_THAT(m_output, testing::HasSubstr(verbose ? "Type n to leave" : "n to forget it."));
+    }
+    expect_exit_sentinel();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeConfirmationAndVerbosity, ArticleSelectorCatchupRefusalTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values(std::string{"n"}, std::string{"q"}, std::string{"hn"},
+                                                          std::string{"hq"}, std::string{"Hn"}),
+                                          testing::Bool()));
+
+class ArticleSelectorCatchupModeTest : public ArticleSelectorCatchupStateTest,
+                                       public testing::WithParamInterface<SelectionMode>
+{
+};
+
+TEST_P(ArticleSelectorCatchupModeTest, unsubscribingCatchesUpAndLeavesTheSelectorWithTheNewsrcChanged)
+{
+    prepare_catchup(GetParam());
+
+    const char result = run_exit(GetParam(), "cuQ");
+    bits_to_rc();
+
+    EXPECT_EQ('Z', result);
+    EXPECT_EQ(TR_UNSUB, m_newsgroup.m_to_read);
+    EXPECT_EQ(UNSUBSCRIBED_CHAR, m_newsgroup.m_subscribe_char);
+    EXPECT_EQ(NewsgroupNum{}, g_newsgroup_to_read);
+    EXPECT_EQ(" 1-4", m_newsgroup.rc_numbers());
+    EXPECT_EQ(0, g_selected_count);
+    for (const auto &[number, article] : g_cache.article_list)
+    {
+        EXPECT_EQ(AF_NONE, article.m_flags & (AF_UNREAD | AF_SEL));
+    }
+    EXPECT_THAT(m_output, testing::HasSubstr("Unsubscribed to newsgroup comp.selector"));
+    expect_exit_sentinel();
+}
+
+TEST_P(ArticleSelectorCatchupModeTest, fullCatchupReturnsDelayedArticlesAndKeepsTheSelectorOpenForThem)
+{
+    prepare_catchup(GetParam());
+    g_cache.ptr(ArticleNum{2})->delay_unmark();
+    g_cache.ptr(ArticleNum{2})->one_less();
+
+    const DisplayState result = run_redisplay('c', "yQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    expect_articles({2}, {});
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_FALSE(g_cache.ptr(ArticleNum{2})->m_flags & AF_YANK_BACK);
+    EXPECT_EQ(1, g_obj_count);
+    EXPECT_EQ(1, g_sel_page.page_item_cnt);
+    EXPECT_FALSE(g_sel.selected_only);
+    expect_exit_sentinel();
+}
+
+INSTANTIATE_TEST_SUITE_P(Mode, ArticleSelectorCatchupModeTest, testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
 
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
