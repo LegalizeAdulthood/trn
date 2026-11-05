@@ -3139,6 +3139,62 @@ TEST_P(UniversalBulkSessionTest, togglingThePageChangesEveryVisibleMark)
 INSTANTIATE_TEST_SUITE_P(CursorAddressingAndInitialMarks, UniversalBulkSessionTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
 
+class UniversalEditSessionTest : public UniversalSessionTest, public testing::WithParamInterface<std::string>
+{
+protected:
+    void SetUp() override;
+};
+
+void UniversalEditSessionTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    m_env.expect_env_repeatedly("SELECTCHARS", "ab");
+    m_env.expect_env_repeatedly("VISUAL", helper_command("universal-editor").c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", m_output_dir.generic_string().c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", GetParam().c_str());
+    std::ofstream{m_output_dir / "child"} << "comp.*\n";
+    std::ofstream{m_output_dir / "replacement"} << "comp.next\n";
+    load_menu("\"Child\" :child\ncomp.lang.cpp\n");
+}
+
+TEST_P(UniversalEditSessionTest, reloadingAnEditedChildRebuildsItsPageWithoutChangingThePendingParent)
+{
+    const char result = run_menu({"a", "b", "Z", "a", ">", std::string(1, Ctl('e')), "q", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(8, menu.size());
+    const UniversalSessionPrompt &child = menu[6];
+    EXPECT_EQ(2, child.level);
+    EXPECT_EQ("Child", child.title);
+    EXPECT_EQ(0, child.prior);
+    EXPECT_EQ(0, child.selected);
+    const bool changed = GetParam().empty();
+    ASSERT_EQ(changed ? 1 : 3, child.items.size());
+    EXPECT_EQ(changed ? "comp.next" : "comp.previous", child.items.front().group().ng);
+    for (const UniversalItem &item : child.items)
+    {
+        EXPECT_FALSE(item.m_flags & UF_SEL);
+    }
+    const UniversalSessionPrompt &parent = menu.back();
+    EXPECT_EQ(1, parent.level);
+    EXPECT_EQ("Local menu", parent.title);
+    ASSERT_EQ(2, parent.items.size());
+    EXPECT_EQ("Child", parent.items[0].m_desc);
+    EXPECT_EQ("comp.lang.cpp", parent.items[1].group().ng);
+    EXPECT_EQ(1, parent.selected);
+    EXPECT_TRUE(parent.items[1].m_flags & UF_SEL);
+    EXPECT_TRUE(prompts(MM_ARTICLE).empty());
+    EXPECT_EQ("universal-editor\n" + (m_output_dir / "child").generic_string() + '\n',
+              read_file(m_output_dir / "tools.log"));
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(EditorResult, UniversalEditSessionTest,
+                         testing::Values("", "universal-editor_unchanged", "universal-editor_failure",
+                                         "universal-editor_cancel"));
+
 struct MultircReadingPrompt
 {
     int                        group;

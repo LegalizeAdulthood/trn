@@ -128,6 +128,20 @@ int main(int argc, char **argv)
         }
         return 4;
     }
+    if (role == "universal-editor")
+    {
+        if (argc != 3)
+        {
+            return 17;
+        }
+        const std::filesystem::path path = argv[2];
+        write_file(directory / "universal-editor-input", read_file(path));
+        if (mode != "universal-editor_unchanged")
+        {
+            write_file(path, read_file(directory / "replacement"));
+        }
+        return 0;
+    }
     if (role == "kill-editor")
     {
         if (argc != 3)

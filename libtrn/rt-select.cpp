@@ -4329,6 +4329,7 @@ static DisplayState universal_commands(char_int ch)
     case Ctl('e'):
         univ_edit();
         univ_redo_file();
+        g_selected_count = 0;
         sel_cleanup();
         g_sel_page.page_univ_index = {};
         return DS_RESTART;
