@@ -6834,6 +6834,37 @@ TEST_F(NewsgroupSelectorWorkflowTest, finishingAGroupRemovesItFromTheUnreadPage)
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
 }
 
+class NewsgroupSelectorRestartExitTest : public NewsgroupSelectorWorkflowTest,
+                                         public testing::WithParamInterface<std::tuple<char, bool>>
+{
+};
+
+TEST_P(NewsgroupSelectorRestartExitTest, exitingAfterScopeRestartsReturnsTheRequestedGroupListCommand)
+{
+    const auto [command, return_to_unread] = GetParam();
+
+    const char result = run_inner(std::string{return_to_unread ? "UU" : "U"} + command);
+
+    EXPECT_EQ(command == Ctl('q') ? '\033' : command, result);
+    expect_modes(std::vector<MinorMode>(return_to_unread ? 3 : 2, MM_NEWSGROUP_SELECTOR));
+    ASSERT_FALSE(m_prompts.empty());
+    EXPECT_TRUE(m_prompts[1].rows.empty());
+    if (return_to_unread)
+    {
+        EXPECT_EQ(m_prompts.front().rows, m_prompts.back().rows);
+    }
+    EXPECT_EQ((std::vector<std::string>{" 1-2", " 1", " 1-2"}), m_prompts.back().ranges);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(&m_multirc, g_multirc);
+    EXPECT_EQ(&m_data_source, g_data_source);
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
+}
+
+INSTANTIATE_TEST_SUITE_P(ExitCommandAndScope, NewsgroupSelectorRestartExitTest,
+                         testing::Combine(testing::Values('q', 'Q', '`', '\033', Ctl('q'), Ctl('n'), Ctl('p')),
+                                          testing::Bool()));
+
 void MultircSelectorStateTest::prepare_sources()
 {
     m_old_multircs = std::move(g_multircs);
