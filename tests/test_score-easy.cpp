@@ -193,7 +193,7 @@ TEST_F(ScoreCommandTest, unknownCommandReportsCommandText)
     const std::string command{"xignored"};
 
     testing::internal::CaptureStdout();
-    sc_score_cmd(std::string_view{command.data(), 1});
+    g_scoring.score_cmd(std::string_view{command.data(), 1});
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("Unknown scoring command |x|\n", output);
@@ -205,7 +205,7 @@ TEST_F(ScoreCommandTest, easyAppendCommandRunsAppendMenu)
     g_pushback.push('1');
 
     testing::internal::CaptureStdout();
-    sc_score_cmd({});
+    g_scoring.score_cmd({});
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("\n"

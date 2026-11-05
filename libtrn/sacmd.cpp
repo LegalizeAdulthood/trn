@@ -315,7 +315,7 @@ int sa_do_cmd(std::string_view command)
           // clear to end of screen
           clear_rest();
           g_art_scan.ref_all = true; // refresh everything
-          sc_score_cmd("e");       // edit scorefile
+          g_scoring.score_cmd("e");  // edit scorefile
           eat_typeahead();         // stay in control.
           break;
 
@@ -651,7 +651,7 @@ int sa_do_cmd(std::string_view command)
         }
         fmt::print("\n");
         sa_go_art(artnum);
-        sc_score_cmd(sa_command_argument(full_command));
+        g_scoring.score_cmd(sa_command_argument(full_command));
         g_art_scan.ref_all = true;
         (void)get_anything();
         eat_typeahead();

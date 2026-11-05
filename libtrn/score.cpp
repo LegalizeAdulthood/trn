@@ -528,28 +528,28 @@ void ScoringSession::rescore()
 }
 
 // May have a very different interface in the user versions
-void sc_score_cmd(std::string_view line)
+void ScoringSession::score_cmd(std::string_view line)
 {
     long        i;
     long        j;
     std::string easy_command;
 
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
-        if (g_scoring.delay)
+        if (delay)
         {
-            g_scoring.delay = false;
-            g_scoring.sf_force_init = true;
-            g_scoring.init(true);
-            g_scoring.sf_force_init = false;
+            delay = false;
+            sf_force_init = true;
+            init(true);
+            sf_force_init = false;
         }
     }
-    else if (g_scoring.sf_delay)
+    else if (sf_delay)
     {
         sf_init();
-        g_scoring.sf_delay = false;
+        sf_delay = false;
     }
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
@@ -563,7 +563,7 @@ void sc_score_cmd(std::string_view line)
         }
         if (easy_command == "\"")
         {
-            g_scoring.append({});
+            append({});
             return;
         }
         line = easy_command;
@@ -574,9 +574,9 @@ void sc_score_cmd(std::string_view line)
         fmt::print("Scoring more articles...");
         std::fflush(stdout); // print it now
         g_progress.set_spin(SPIN_FOREGROUND);
-        g_scoring.do_spin = true;
-        g_scoring.look_ahead(true, false);
-        g_scoring.do_spin = false;
+        do_spin = true;
+        look_ahead(true, false);
+        do_spin = false;
         g_progress.set_spin(SPIN_POP);
         // consider a "done" message later,
         // *if* lookahead did all the arts
@@ -585,7 +585,7 @@ void sc_score_cmd(std::string_view line)
 
     case 'r': // rescore
         fmt::print("Rescoring articles...\n");
-        g_scoring.rescore();
+        rescore();
         break;
 
     case 's': // verbose score for this article
@@ -596,7 +596,7 @@ void sc_score_cmd(std::string_view line)
         g_sf_score_verbose = false;
         fmt::print("Scorefile total score: {}\n", j);
         i += j;
-        j = g_scoring.score_art(g_nav.target.num, true);
+        j = score_art(g_nav.target.num, true);
         if (i != j)
         {
             // Consider resubmitting article to filter?
