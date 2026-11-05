@@ -452,16 +452,16 @@ static bool kill_file_junk(Article &article, int killmask)
     return false;
 }
 
-void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
+void KillFileProcessor::kill_unwanted(ArticleNum starting, std::string_view message, int entering)
 {
     bool intr = false;                  // did we get an interrupt?
     MinorMode oldmode = g_mode;
     bool anytokill = (g_newsgroup_ptr->m_to_read > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);
-    if ((entering || g_kill.exit_cmds) && (g_kill.local_kfp || g_kill.global_kfp))
+    if ((entering || exit_cmds) && (local_kfp || global_kfp))
     {
-        g_kill.exit_cmds = false;
+        exit_cmds = false;
         ArticleNum oldfirst = g_first_art;
         g_first_art = starting;
         clear();
@@ -470,22 +470,22 @@ void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
             fmt::print("{}", message);
         }
 
-        g_kill.mentioned = false;
-        if (g_kill.local_kfp)
+        mentioned = false;
+        if (local_kfp)
         {
             if (entering)
             {
                 g_kf_state |= KFS_LOCAL_CHANGES;
             }
-            intr = g_kill.do_file(g_kill.local_kfp, entering);
+            intr = do_file(local_kfp, entering);
         }
-        g_kill.open(KF_GLOBAL); // Just in case the name changed
-        if (g_kill.global_kfp && !intr)
+        open(KF_GLOBAL); // Just in case the name changed
+        if (global_kfp && !intr)
         {
-            intr = g_kill.do_file(g_kill.global_kfp, entering);
+            intr = do_file(global_kfp, entering);
         }
         newline();
-        if (entering && g_kill.mentioned && g_novice_delays)
+        if (entering && mentioned && g_novice_delays)
         {
             if (g_verbose)
             {

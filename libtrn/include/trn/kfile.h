@@ -67,6 +67,7 @@ enum
 struct KillFileProcessor
 {
     void open(int local);
+    void kill_unwanted(ArticleNum starting, std::string_view message, int entering);
 
     // TODO: private
     int do_file(std::FILE *kfp, int entering);
@@ -85,7 +86,6 @@ extern KillFileStateFlags g_kfs_thread_change_set; // bits to set for thread cha
 extern int                g_kf_change_thread_cnt;  // # entries changed from old to new
 
 void kill_file_init();
-void kill_unwanted(ArticleNum starting, std::string_view message, int entering);
 void rewrite_kill_file(ArticleNum thru);
 void update_thread_kill_file();
 void edit_kill_file();

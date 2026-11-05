@@ -329,11 +329,11 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     g_kill.open(KF_LOCAL);
     if (g_verbose)
     {
-        kill_unwanted(g_first_art, "Processing memorized commands...\n\n", true);
+        g_kill.kill_unwanted(g_first_art, "Processing memorized commands...\n\n", true);
     }
     else
     {
-        kill_unwanted(g_first_art, "Auto-processing...\n\n", true);
+        g_kill.kill_unwanted(g_first_art, "Auto-processing...\n\n", true);
     }
 
     sc_init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING) && start_command &&
@@ -723,7 +723,7 @@ article_level:
 // shut down newsgroup
 
 cleanup:
-    kill_unwanted(g_first_art,"\nCleaning up...\n\n",false);
+    g_kill.kill_unwanted(g_first_art, "\nCleaning up...\n\n", false);
                                         // do cleanup from KILL file, if any
     if (g_sa_initialized)
     {
