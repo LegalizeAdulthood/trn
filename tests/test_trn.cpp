@@ -3195,6 +3195,89 @@ INSTANTIATE_TEST_SUITE_P(EditorResult, UniversalEditSessionTest,
                          testing::Values("", "universal-editor_unchanged", "universal-editor_failure",
                                          "universal-editor_cancel"));
 
+class UniversalExpansionSessionTest : public UniversalSessionTest
+{
+protected:
+    void SetUp() override;
+    void expect_expanded(const UniversalSessionPrompt &state) const;
+};
+
+void UniversalExpansionSessionTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    load_menu("\"Pinned\" comp.previous\n");
+    g_vg_builder.add_virtual_group("comp.lang.cpp");
+}
+
+void UniversalExpansionSessionTest::expect_expanded(const UniversalSessionPrompt &state) const
+{
+    EXPECT_EQ(1, state.level);
+    EXPECT_EQ("Local menu", state.title);
+    EXPECT_EQ(0, state.prior);
+    ASSERT_EQ(3, state.items.size());
+    EXPECT_EQ("Pinned", state.items[0].m_desc);
+    EXPECT_TRUE(std::holds_alternative<UniversalGroupMaskData>(state.items[0].m_data));
+    for (std::size_t i = 1; i < state.items.size(); ++i)
+    {
+        const UniversalItem &item = state.items[i];
+        ASSERT_TRUE(std::holds_alternative<UniversalVirtualArticle>(item.m_data));
+        EXPECT_EQ("comp.lang.cpp", item.article().ng);
+        EXPECT_EQ(ArticleNum{static_cast<long>(i + 1)}, item.article().num);
+        EXPECT_FALSE(item.article().subj.empty());
+        EXPECT_FALSE(item.article().from.empty());
+        EXPECT_TRUE(item.m_flags & UF_INCLUDED);
+    }
+    EXPECT_EQ(" 1-1", state.ranges[1]);
+    EXPECT_FALSE(g_univ_ng_virt_flag);
+    EXPECT_FALSE(g_vg_builder.current_vg_ui_index);
+}
+
+TEST_F(UniversalExpansionSessionTest, expandingAVirtualGroupRetainsTheSelectedParentItem)
+{
+    const char result = run_menu({"a", "~", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    expect_expanded(menu[2]);
+    EXPECT_EQ(menu[0].items[0].m_num, menu[2].items[0].m_num);
+    EXPECT_EQ(1, menu[2].selected);
+    EXPECT_TRUE(menu[2].items[0].m_flags & UF_SEL);
+    EXPECT_TRUE(prompts(MM_ARTICLE).empty());
+    EXPECT_THAT(m_output, testing::HasSubstr("Scanning newsgroup comp.lang.cpp"));
+    expect_caller();
+}
+
+TEST_F(UniversalExpansionSessionTest, repeatingExpansionDoesNotDuplicateTheScannedArticles)
+{
+    const char result = run_menu({"~", "~", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    expect_expanded(menu[1]);
+    expect_expanded(menu[2]);
+    for (std::size_t i = 0; i < menu[1].items.size(); ++i)
+    {
+        EXPECT_EQ(menu[1].items[i].m_num, menu[2].items[i].m_num);
+    }
+    expect_caller();
+}
+
+TEST_F(UniversalExpansionSessionTest, queuedInputLeavesThePendingVirtualGroupAvailableForRetry)
+{
+    const char result = run_menu({"~\f", "~", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    ASSERT_EQ(2, menu[1].items.size());
+    EXPECT_TRUE(std::holds_alternative<UniversalVirtualGroup>(menu[1].items[1].m_data));
+    expect_expanded(menu[2]);
+    expect_caller();
+}
+
 struct MultircReadingPrompt
 {
     int                        group;
