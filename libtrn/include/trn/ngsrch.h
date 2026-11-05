@@ -23,13 +23,14 @@ enum NewsgroupSearchResult
 
 struct NewsgroupSearchContext
 {
+    void init();
+
     bool          do_empty{}; // search empty newsgroups?
     CompiledRegex compex;
 };
 
 extern NewsgroupSearchContext g_ng_search;
 
-void newsgroup_search_init();
 NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd);
 std::string_view newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool re, bool fold);
 

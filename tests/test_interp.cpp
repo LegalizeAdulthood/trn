@@ -239,7 +239,7 @@ void InterpolatorTest::SetUp()
     g_kill_store.init();
     g_mimecap.init();
     ng_init();
-    newsgroup_search_init();
+    g_ng_search.init();
     newsgroup_stuff_init();
     only_init();
     rcln_init();

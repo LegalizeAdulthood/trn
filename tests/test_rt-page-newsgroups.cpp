@@ -1266,12 +1266,12 @@ void NewsgroupSelectorSearchStateTest::SetUp()
 {
     NewsgroupSelectorInlineStateTest::SetUp();
     g_add_groups = {};
-    newsgroup_search_init();
+    g_ng_search.init();
 }
 
 void NewsgroupSelectorSearchStateTest::TearDown()
 {
-    newsgroup_search_init();
+    g_ng_search.init();
     g_add_groups = std::move(m_old_add_groups);
     g_newsgroup_dir = m_old_directory;
     NewsgroupSelectorInlineStateTest::TearDown();

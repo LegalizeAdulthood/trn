@@ -2122,12 +2122,12 @@ void InputNewsgroupSearchTest::SetUp()
     g_add_groups = {};
     g_sel.rereading = false;
     search_init();
-    newsgroup_search_init();
+    g_ng_search.init();
 }
 
 void InputNewsgroupSearchTest::TearDown()
 {
-    newsgroup_search_init();
+    g_ng_search.init();
     g_add_groups = std::move(m_old_add_groups);
     g_sel.rereading = m_old_sel_rereading;
     g_status.perform_count = m_old_perform_count;

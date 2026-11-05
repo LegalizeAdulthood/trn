@@ -28,10 +28,10 @@
 
 NewsgroupSearchContext g_ng_search;
 
-void newsgroup_search_init()
+void NewsgroupSearchContext::init()
 {
-    g_ng_search.do_empty = false;
-    g_ng_search.compex.init_compex();
+    do_empty = false;
+    compex.init_compex();
 }
 
 NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)

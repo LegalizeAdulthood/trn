@@ -53,7 +53,7 @@ protected:
         g_sel.mask = AGF_SEL;
         g_int_count = 0;
 
-        newsgroup_search_init();
+        g_ng_search.init();
     }
 
     void TearDown() override
