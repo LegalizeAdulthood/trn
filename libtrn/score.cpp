@@ -509,22 +509,22 @@ void ScoringSession::append(std::string_view line)
     }
 }
 
-void sc_rescore()
+void ScoringSession::rescore()
 {
-    g_scoring.rescoring = true; // in case routines need to know
-    g_scoring.cleanup();        // get rid of the old
+    rescoring = true; // in case routines need to know
+    cleanup();        // get rid of the old
     g_score_cache.file_clear();
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
         g_cache.ptr(a)->m_score_flags = SFLAG_NONE;
     }
-    g_scoring.init(true); // enter the new... (wait for rescore)
+    init(true); // enter the new... (wait for rescore)
     if (g_sa_initialized)
     {
         g_art_scan.top_ent = -1;  // reset top of page
         g_art_scan.refill = true; // make sure a refill is done
     }
-    g_scoring.rescoring = false;
+    rescoring = false;
 }
 
 // May have a very different interface in the user versions
@@ -585,7 +585,7 @@ void sc_score_cmd(std::string_view line)
 
     case 'r': // rescore
         fmt::print("Rescoring articles...\n");
-        sc_rescore();
+        g_scoring.rescore();
         break;
 
     case 's': // verbose score for this article

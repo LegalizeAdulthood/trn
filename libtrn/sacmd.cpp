@@ -304,7 +304,7 @@ int sa_do_cmd(std::string_view command)
         clear_rest();
         g_art_scan.ref_all = true; // refresh everything
         fmt::print("\nRescoring articles...\n");
-        sc_rescore();
+        g_scoring.rescore();
         g_art_scan.sort();
         g_art_scan.go_top_ents();
         g_art_scan.refill = true;
