@@ -71,14 +71,14 @@ inline long kill_file_day_num(long x)
     return (long) std::time(nullptr) / 86400 - 10490 - x;
 }
 
-void kill_file_init()
+void KillFilePersistence::init()
 {
     std::string kill_threads = get_env_var("KILLTHREADS", s_kill_threads);
     if (!kill_threads.empty() && kill_threads != "none")
     {
-        g_kill_store.day_num = kill_file_day_num(0);
-        g_kill_store.thread_cnt = 0;
-        g_kill_store.change_thread_cnt = 0;
+        day_num = kill_file_day_num(0);
+        thread_cnt = 0;
+        change_thread_cnt = 0;
         std::FILE *fp = std::fopen(file_exp(kill_threads).c_str(), "r");
         if (fp != nullptr)
         {
@@ -101,10 +101,10 @@ void kill_file_init()
                     age_text = skip_leading_space(age_text);
                     long command_day{};
                     (void) std::from_chars(age_text.data(), age_text.data() + age_text.size(), command_day);
-                    const int age = static_cast<int>(g_kill_store.day_num - command_day);
+                    const int age = static_cast<int>(day_num - command_day);
                     if (age > KF_MAX_DAYS)
                     {
-                        g_kill_store.change_thread_cnt++;
+                        change_thread_cnt++;
                         continue;
                     }
                     const std::size_t thread_cmd = s_thread_cmd_ltr.find(command_char);
@@ -118,24 +118,24 @@ void kill_file_init()
                         }
                         else
                         {
-                            g_kill_store.change_thread_cnt++;
+                            change_thread_cnt++;
                             data.dat_len = auto_flag | age;
                         }
                         g_hash_cursor.store_last(data);
                     }
-                    g_kill_store.thread_cnt++;
+                    thread_cnt++;
                 }
             }
             std::fclose(fp);
         }
-        g_kill_store.state |= KFS_GLOBAL_THREAD_FILE;
-        g_kill_store.local_change_clear = KFS_LOCAL_CHANGES;
-        g_kill_store.thread_change_set = KFS_THREAD_CHANGES;
+        state |= KFS_GLOBAL_THREAD_FILE;
+        local_change_clear = KFS_LOCAL_CHANGES;
+        thread_change_set = KFS_THREAD_CHANGES;
     }
     else
     {
-        g_kill_store.local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
-        g_kill_store.thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+        local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+        thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
     }
 }
 

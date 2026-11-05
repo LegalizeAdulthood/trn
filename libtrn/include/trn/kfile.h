@@ -84,6 +84,8 @@ extern KillFileProcessor g_kill;
 
 struct KillFilePersistence
 {
+    void init();
+
     KillFileStateFlags state{};              // the state of our kill files
     KillFileStateFlags thread_change_set{};  // bits to set for thread changes
     KillFileStateFlags local_change_clear{}; // bits to clear local changes
@@ -95,7 +97,6 @@ struct KillFilePersistence
 
 extern KillFilePersistence g_kill_store;
 
-void kill_file_init();
 void rewrite_kill_file(ArticleNum thru);
 void update_thread_kill_file();
 void edit_kill_file();

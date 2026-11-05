@@ -236,7 +236,7 @@ void InterpolatorTest::SetUp()
     bits_init();
     cache_init();
     help_init();
-    kill_file_init();
+    g_kill_store.init();
     g_mimecap.init();
     ng_init();
     newsgroup_search_init();

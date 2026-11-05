@@ -468,7 +468,7 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
     g_msg_id_hash = nullptr;
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
-    kill_file_init();
+    g_kill_store.init();
     g_kill_store.change_thread_cnt = 1;
     g_kill_store.state |= KFS_THREAD_CHANGES;
 
@@ -487,7 +487,7 @@ TEST_F(KillFileEditTest, defaultThreadKillFileUsesTrnDirectory)
 
     g_trn_dir = (m_output_dir / "trn").generic_string();
     EXPECT_CALL(m_env.getter, Call(StrEq("KILLTHREADS"))).WillRepeatedly(Return(nullptr));
-    kill_file_init();
+    g_kill_store.init();
 
     Article *article = g_cache.ptr(ArticleNum{1});
     article->m_msg_id = "<case@example.com>";
@@ -515,7 +515,7 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileAllowsTrailingAgeText)
     g_msg_id_hash = nullptr;
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
-    kill_file_init();
+    g_kill_store.init();
     g_kill_store.change_thread_cnt = 1;
     g_kill_store.state |= KFS_THREAD_CHANGES;
 
