@@ -13,6 +13,7 @@
 #include <string_view>
 
 struct Article;
+struct HashDatum;
 
 enum : bool
 {
@@ -85,6 +86,9 @@ extern KillFileProcessor g_kill;
 struct KillFilePersistence
 {
     void init();
+
+    // TODO: private
+    int write_local_thread_commands(int keylen, HashDatum *data, int extra);
 
     KillFileStateFlags state{};              // the state of our kill files
     KillFileStateFlags thread_change_set{};  // bits to set for thread changes

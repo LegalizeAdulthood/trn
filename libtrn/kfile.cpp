@@ -505,6 +505,11 @@ void KillFileProcessor::kill_unwanted(ArticleNum starting, std::string_view mess
 
 static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
 {
+    return g_kill_store.write_local_thread_commands(keylen, data, extra);
+}
+
+int KillFilePersistence::write_local_thread_commands(int keylen, HashDatum *data, int extra)
+{
     Article *ap = (Article *) data->dat_ptr;
     int      autofl = ap->m_auto_flags;
     char     ch;
@@ -520,7 +525,7 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
                 break;
             }
         }
-        fmt::print(g_kill_store.new_fp, "{} T{}\n", ap->msg_id_view(), ch);
+        fmt::print(new_fp, "{} T{}\n", ap->msg_id_view(), ch);
     }
     return 0;
 }
