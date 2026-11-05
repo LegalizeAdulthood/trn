@@ -2116,11 +2116,11 @@ static bool select_option(OptionIndex i)
     g_color.pop(); // of COLOR_CMD
     newline();
     const std::string oldval = quote_string(option_value(option));
-    const bool        had_draft = g_opt_edit.draft->contains(option);
+    const bool        had_draft = g_opt_edit.contains(option);
     std::string val{oldval};
     if (had_draft)
     {
-        const std::optional<std::string_view> draft_value = g_opt_edit.draft->value(option);
+        const std::optional<std::string_view> draft_value = g_opt_edit.value(option);
         TRN_ASSERT(draft_value.has_value());
         val = *draft_value;
     }
