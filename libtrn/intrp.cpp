@@ -91,10 +91,15 @@ std::string host_match_name(std::string_view host_name, int segments)
     return result;
 }
 
+void InterpolationContext::init()
+{
+    last_input.clear();
+    cond_compex.init_compex();
+}
+
 void interp_init()
 {
-    g_interp.last_input.clear();
-    g_interp.cond_compex.init_compex();
+    g_interp.init();
 
     // get environmental stuff
 

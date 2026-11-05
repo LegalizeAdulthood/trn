@@ -13,6 +13,8 @@
 
 struct InterpolationContext
 {
+    void init();
+
     CompiledRegex cond_compex;
     std::string   last_input;
     int           interp_counter{};
