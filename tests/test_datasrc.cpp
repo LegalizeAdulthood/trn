@@ -1143,8 +1143,8 @@ TEST_F(FindCloseMatchTest, leavesNameUnchangedWhenNoMatchExists)
 
 TEST_F(FindCloseMatchTest, promptsForMultipleCloseMatches)
 {
-    add_active_source("comp.lang.apl 10 1 y\n"
-                      "comp.lang.apm 10 1 y\n");
+    add_active_source("comp.lang.apm 10 1 y\n"
+                      "comp.lang.apl 10 1 y\n");
     set_newsgroup_name("comp.lang.apx");
     g_pushback.push('2');
     testing::internal::CaptureStdout();
@@ -1153,7 +1153,7 @@ TEST_F(FindCloseMatchTest, promptsForMultipleCloseMatches)
     const std::string output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(1, result);
-    EXPECT_EQ("comp.lang.apm", g_newsgroup_name);
-    EXPECT_NE(std::string::npos, output.find("  1.  comp.lang.apl\n"));
-    EXPECT_NE(std::string::npos, output.find("  2.  comp.lang.apm\n"));
+    EXPECT_EQ("comp.lang.apl", g_newsgroup_name);
+    EXPECT_NE(std::string::npos, output.find("  1.  comp.lang.apm\n"));
+    EXPECT_NE(std::string::npos, output.find("  2.  comp.lang.apl\n"));
 }

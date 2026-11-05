@@ -107,6 +107,10 @@ struct DataSource
     {
         m_act_sf.visit_lines(visitor);
     }
+    bool visit_cached_active_groups(const std::function<SourceLineVisitor> &visitor) const
+    {
+        return m_act_sf.visit_stored_lines(visitor);
+    }
     bool             has_full_active_list() const
     {
         return m_act_sf.m_fp != nullptr;

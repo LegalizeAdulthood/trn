@@ -1351,17 +1351,15 @@ int find_close_match()
     {
         if (dp->m_flags & DF_OPEN)
         {
-            if (dp->m_act_sf.m_hp)
-            {
-                for (const std::string &line : dp->m_act_sf.m_lines)
-                {
-                    const std::string::const_iterator key_end = std::find_if(
-                        line.begin(), line.end(), [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
-                    check_distance(std::string_view{line}.substr(0, static_cast<std::size_t>(key_end - line.begin())),
-                                   newsgroup_matches, best_match);
-                }
-            }
-            else
+            if (!dp->visit_cached_active_groups(
+                    [&newsgroup_matches, &best_match](std::string_view line)
+                    {
+                        const std::string_view::const_iterator key_end =
+                            std::find_if(line.begin(), line.end(),
+                                         [](char ch) { return std::isspace(static_cast<unsigned char>(ch)); });
+                        check_distance(line.substr(0, static_cast<std::size_t>(key_end - line.begin())),
+                                       newsgroup_matches, best_match);
+                    }))
             {
                 ret = -1;
             }
