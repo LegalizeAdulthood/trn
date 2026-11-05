@@ -1303,7 +1303,7 @@ position_selector:
       force_pos = -1;
       if (removed_prompt & RP_MOUSE_BAR)
       {
-          draw_mouse_bar(g_tc_COLS, false);
+          g_mouse.draw_bar(g_tc_COLS, false);
           removed_prompt &= ~RP_MOUSE_BAR;
       }
     if (g_can_home)
@@ -1658,7 +1658,7 @@ reinp_selector:
                 g_term_col = static_cast<int>(g_msg.size());
                 if (removed_prompt & RP_MOUSE_BAR)
                 {
-                    draw_mouse_bar(g_tc_COLS,false);
+                    g_mouse.draw_bar(g_tc_COLS, false);
                     removed_prompt &= ~RP_MOUSE_BAR;
                 }
                 disp_status_line = 2;
@@ -1810,7 +1810,7 @@ reinp_selector:
 ///
 void SelectorSession::prompt()
 {
-    draw_mouse_bar(g_tc_COLS,false);
+    g_mouse.draw_bar(g_tc_COLS, false);
     if (g_can_home)
     {
         goto_xy(0, g_sel_page.last_line);

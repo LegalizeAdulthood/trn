@@ -48,6 +48,7 @@ struct MouseInteraction
 {
     void off();
     void check();
+    void draw_bar(int limit, bool restore_cursor);
 
     // TODO: private
     void on();
@@ -251,7 +252,6 @@ Signal_t winch_catcher(int);
 void  termlib_init();
 void  termlib_reset();
 void  xmouse_init(std::string_view progname);
-void  draw_mouse_bar(int limit, bool restore_cursor);
 bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 bool has_underchar_capability();
 bool has_insert_line_capability();

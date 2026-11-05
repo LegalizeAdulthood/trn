@@ -629,8 +629,8 @@ reask_article:
             const std::string mail_call = do_interp(g_mail_call);
             const std::string prompt_text = fmt::sprintf(g_pager.prompt, mail_call.c_str(),
                                                          g_subst.current_char_subst().c_str(), g_default_cmd.c_str());
-            draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? static_cast<int>(prompt_text.size()) + 5 : 0),
-                           true);
+            g_mouse.draw_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? static_cast<int>(prompt_text.size()) + 5 : 0),
+                             true);
             g_color.print(COLOR_CMD, prompt_text);
             std::putchar(' ');
             std::fflush(stdout);

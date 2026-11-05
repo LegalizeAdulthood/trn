@@ -844,7 +844,7 @@ reask_pager:
                 g_art_size < 0 ? "?" : std::to_string(g_art_input.pos.value_of() * 100 / g_art_size.value_of());
             const std::string more_prompt = fmt::format("{}--MORE--({}%)", g_subst.current_char_subst(), percent);
             out_pos = g_term_col + static_cast<int>(more_prompt.size());
-            draw_mouse_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? out_pos + 5 : 0), true);
+            g_mouse.draw_bar(g_tc_COLS - (g_term_line == g_tc_LINES - 1 ? out_pos + 5 : 0), true);
             g_color.print(COLOR_MORE, more_prompt);
         }
         std::fflush(stdout);

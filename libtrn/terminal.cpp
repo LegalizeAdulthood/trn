@@ -2688,32 +2688,31 @@ void MouseInteraction::off()
     }
 }
 
-void draw_mouse_bar(int limit, bool restore_cursor)
+void MouseInteraction::draw_bar(int limit, bool restore_cursor)
 {
     int save_col = g_term_col;
     int save_line = g_term_line;
 
-    g_mouse.bar_width = 0;
-    if (g_mouse.bar_btns == nullptr || g_mouse.bar_cnt == 0)
+    bar_width = 0;
+    if (bar_btns == nullptr || bar_cnt == 0)
     {
         return;
     }
 
-    g_mouse.bar_width = mouse_button_bar_width(*g_mouse.bar_btns);
-    g_mouse.bar_start = 0;
+    bar_width = mouse_button_bar_width(*bar_btns);
+    bar_start = 0;
 
-    while (g_mouse.bar_width > limit && g_mouse.bar_start < g_mouse.bar_cnt)
+    while (bar_width > limit && bar_start < bar_cnt)
     {
-        const MouseButtonDisplay display =
-            mouse_button_display((*g_mouse.bar_btns)[static_cast<std::size_t>(g_mouse.bar_start)]);
-        g_mouse.bar_width -= display.width;
-        g_mouse.bar_start++;
+        const MouseButtonDisplay display = mouse_button_display((*bar_btns)[static_cast<std::size_t>(bar_start)]);
+        bar_width -= display.width;
+        bar_start++;
     }
 
-    goto_xy(g_tc_COLS - g_mouse.bar_width - 1, g_tc_LINES - 1);
-    for (int i = g_mouse.bar_start; i < g_mouse.bar_cnt; i++)
+    goto_xy(g_tc_COLS - bar_width - 1, g_tc_LINES - 1);
+    for (int i = bar_start; i < bar_cnt; i++)
     {
-        const MouseButtonDisplay display = mouse_button_display((*g_mouse.bar_btns)[static_cast<std::size_t>(i)]);
+        const MouseButtonDisplay display = mouse_button_display((*bar_btns)[static_cast<std::size_t>(i)]);
         std::putchar(' ');
         g_color.print(COLOR_MOUSE, display.text);
     }
