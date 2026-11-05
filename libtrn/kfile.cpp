@@ -682,13 +682,18 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
 
 static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
 {
+    return g_kill_store.age_thread_commands(keylen, data, elapsed_days);
+}
+
+int KillFilePersistence::age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
+{
     if (data->dat_len)
     {
         int age = (data->dat_len & KF_AGE_MASK) + elapsed_days;
         if (age > KF_MAX_DAYS)
         {
             free_pending_msg_id(data);
-            g_kill_store.change_thread_cnt++;
+            change_thread_cnt++;
             return -1;
         }
         data->dat_len += elapsed_days;
@@ -699,8 +704,8 @@ static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
         if (ap->m_auto_flags & AUTO_OLD)
         {
             ap->m_auto_flags &= ~AUTO_OLD;
-            g_kill_store.change_thread_cnt++;
-            g_kill_store.state |= KFS_THREAD_CHANGES;
+            change_thread_cnt++;
+            state |= KFS_THREAD_CHANGES;
         }
     }
     return 0;
