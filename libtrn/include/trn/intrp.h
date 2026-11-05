@@ -5,9 +5,20 @@
 #ifndef TRN_INTRP_H
 #define TRN_INTRP_H
 
+#include <trn/search.h>
+
 #include <cstddef>
 #include <string>
 #include <string_view>
+
+struct InterpolationContext
+{
+    CompiledRegex cond_compex;
+    std::string   last_input;
+    int           interp_counter{};
+};
+
+extern InterpolationContext g_interp;
 
 extern std::string g_orig_dir;  // cwd when rn invoked
 extern std::string g_host_name; // host name to match local postings

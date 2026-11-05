@@ -63,9 +63,7 @@ int               g_news_uid{};
 static void        skip_interp_cursor(std::string_view &pattern, std::string_view stoppers);
 
 static constexpr std::string_view s_regexp_specials{R"(^$.*[\/?%)"};
-static CompiledRegex s_cond_compex;
-static std::string   s_last_input;
-static int           s_interp_counter{};
+InterpolationContext              g_interp;
 
 std::string host_match_name(std::string_view host_name, int segments)
 {
@@ -95,8 +93,8 @@ std::string host_match_name(std::string_view host_name, int segments)
 
 void interp_init()
 {
-    s_last_input.clear();
-    s_cond_compex.init_compex();
+    g_interp.last_input.clear();
+    g_interp.cond_compex.init_compex();
 
     // get environmental stuff
 
@@ -577,18 +575,18 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         std::string_view regex_cursor{format_spec};
                         regex_text = do_interp(regex_cursor, {}, cmd);
                     }
-                    const std::string_view compile_error = s_cond_compex.compile(regex_text, true, true);
+                    const std::string_view compile_error = g_interp.cond_compex.compile(regex_text, true, true);
                     if (!compile_error.empty())
                     {
                         fmt::print("{}: {}\n", regex_text, compile_error);
                         pattern.remove_prefix(pattern.size());
-                        s_cond_compex.free_compex();
+                        g_interp.cond_compex.free_compex();
                         goto getout;
                     }
-                    matched = s_cond_compex.execute(condition_text);
-                    if (s_cond_compex.has_brackets()) // were there brackets?
+                    matched = g_interp.cond_compex.execute(condition_text);
+                    if (g_interp.cond_compex.has_brackets()) // were there brackets?
                     {
-                        g_art_search.bra_compex = &s_cond_compex;
+                        g_art_search.bra_compex = &g_interp.cond_compex;
                     }
                     condition_cursor.remove_prefix(1);
                     std::string branch_text;
@@ -613,7 +611,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     pattern = condition_cursor;
                     set_owned_value(std::move(branch_text));
                     g_art_search.bra_compex = oldbra_compex;
-                    s_cond_compex.free_compex();
+                    g_interp.cond_compex.free_compex();
                     break;
                 }
 
@@ -671,7 +669,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     {
                         scratch.pop_back();
                     }
-                    s_last_input = scratch;
+                    g_interp.last_input = scratch;
                     set_value(scratch);
                     break;
                 }
@@ -695,7 +693,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case '#':
                     if (upper)
                     {
-                        set_owned_value(std::to_string(++s_interp_counter));
+                        set_owned_value(std::to_string(++g_interp.interp_counter));
                     }
                     else
                     {
@@ -1007,7 +1005,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     break;
 
                 case 'q':
-                    scratch.assign(s_last_input);
+                    scratch.assign(g_interp.last_input);
                     set_value(scratch);
                     break;
 
