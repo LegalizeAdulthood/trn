@@ -23,8 +23,9 @@ enum NewsgroupSearchResult
 
 struct NewsgroupSearchContext
 {
-    void init();
-    bool matches(std::string_view line);
+    void                  init();
+    bool                  matches(std::string_view line);
+    NewsgroupSearchResult search(std::string_view command, bool get_cmd);
 
     bool          do_empty{}; // search empty newsgroups?
     CompiledRegex compex;
@@ -32,7 +33,6 @@ struct NewsgroupSearchContext
 
 extern NewsgroupSearchContext g_ng_search;
 
-NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd);
 std::string_view newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool re, bool fold);
 
 #endif

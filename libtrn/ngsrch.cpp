@@ -34,7 +34,7 @@ void NewsgroupSearchContext::init()
     compex.init_compex();
 }
 
-NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
+NewsgroupSearchResult NewsgroupSearchContext::search(std::string_view command, bool get_cmd)
 {
     g_int_count = 0;
     if (command.empty())
@@ -80,7 +80,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     }
     if (!pattern.empty())
     {
-        g_ng_search.do_empty = false;
+        do_empty = false;
     }
 
     std::string_view modifier_tail = search_text.substr(tail_start);
@@ -94,7 +94,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             switch (modifier_tail[modifier_pos])
             {
             case 'r':
-                g_ng_search.do_empty = true;
+                do_empty = true;
                 ++modifier_pos;
                 break;
 
@@ -123,7 +123,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     {
         ret = NGS_DONE;
     }
-    const std::string_view err = newsgroup_comp(g_ng_search.compex, pattern, true, true);
+    const std::string_view err = newsgroup_comp(compex, pattern, true, true);
     if (!err.empty())
     {
                                         // compile regular expression
@@ -142,7 +142,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
         for (AddGroupIndex index : g_add_groups.indices())
         {
             AddGroup *gp = &g_add_groups[index];
-            if (g_ng_search.compex.execute(gp->m_name))
+            if (compex.execute(gp->m_name))
             {
                 if (cmdlst.empty())
                 {
@@ -222,7 +222,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             {
                 g_newsgroup_ptr->set_to_read(ST_LAX);
             }
-            if (g_ng_search.do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel.rereading))
+            if (do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel.rereading))
             {
                 if (cmdlst.empty())
                 {

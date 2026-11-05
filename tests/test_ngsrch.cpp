@@ -91,7 +91,7 @@ protected:
 
 TEST_F(NewsgroupSearchTest, selectsAddGroupWithEscapedDelimiterAndCommand)
 {
-    EXPECT_EQ(NGS_DONE, newsgroup_search("/comp\\/lang/:+", false));
+    EXPECT_EQ(NGS_DONE, g_ng_search.search("/comp\\/lang/:+", false));
     EXPECT_EQ(AGF_SEL, g_add_groups[m_group].m_flags & AGF_SEL);
     EXPECT_EQ(ArticleUnread{1}, g_selected_count);
     EXPECT_EQ(1, g_status.perform_count);
@@ -100,7 +100,7 @@ TEST_F(NewsgroupSearchTest, selectsAddGroupWithEscapedDelimiterAndCommand)
 TEST_F(NewsgroupSearchTest, emptyPatternReusesPreviousSearch)
 {
     testing::internal::CaptureStdout();
-    EXPECT_EQ(NGS_FOUND, newsgroup_search("/comp\\/lang/", false));
-    EXPECT_EQ(NGS_FOUND, newsgroup_search("//", false));
+    EXPECT_EQ(NGS_FOUND, g_ng_search.search("/comp\\/lang/", false));
+    EXPECT_EQ(NGS_FOUND, g_ng_search.search("//", false));
     (void) testing::internal::GetCapturedStdout();
 }

@@ -646,7 +646,7 @@ do_command:
             set_newsgroup(g_current_newsgroup);
             return ING_INPUT;
         }
-        switch (newsgroup_search(command, false))
+        switch (g_ng_search.search(command, false))
         {
         case NGS_ERROR:
             set_newsgroup(g_current_newsgroup);
