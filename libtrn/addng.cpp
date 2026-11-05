@@ -274,7 +274,7 @@ void new_nntp_groups(DataSource *dp)
         const std::string_view group_name = line.substr(0, name_end);
         const bool             has_fields = name_end != std::string_view::npos;
         const std::string_view fields = has_fields ? line.substr(name_end + 1) : std::string_view{};
-        if (dp->m_act_sf.m_fp)
+        if (dp->has_full_active_list())
         {
             const std::string active_line = dp->find_active_group(group_name, ArticleNum{});
             if (!active_line.empty())

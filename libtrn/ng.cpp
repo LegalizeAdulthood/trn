@@ -395,7 +395,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
             }
             if (g_data_source->m_flags & DF_REMOTE)
             {
-                if (g_data_source->m_act_sf.m_fp || g_newsgroup_ptr->get_newsgroup_size() > g_last_art)
+                if (g_data_source->has_full_active_list() || g_newsgroup_ptr->get_newsgroup_size() > g_last_art)
                 {
                     if (nntp_group(g_newsgroup_name.c_str(), g_newsgroup_ptr) <= 0)
                     {
