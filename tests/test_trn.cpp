@@ -6919,6 +6919,110 @@ TEST_F(NewsgroupSelectorWorkflowTest, unsubscribingWhileReadingRemovesTheGroupFr
     EXPECT_THAT(m_output, testing::HasSubstr("Unsubscribed to newsgroup comp.lang.cpp"));
 }
 
+class NewsgroupSelectorSaveStateTest : public MultircSelectorStateTest
+{
+protected:
+    void SetUp() override;
+    void expect_saved_newsrc(std::string_view expected) const;
+};
+
+void NewsgroupSelectorSaveStateTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    g_tc_LINES = 24;
+    g_newsgroup_to_read = NewsgroupNum{3};
+}
+
+void NewsgroupSelectorSaveStateTest::expect_saved_newsrc(std::string_view expected) const
+{
+    EXPECT_EQ(expected, read_file(m_newsrc.name));
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.old_name));
+    EXPECT_FALSE(fs::exists(m_newsrc.new_name));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Entering ")));
+}
+
+class NewsgroupSelectorBulkCleanupSessionTest : public NewsgroupSelectorSaveStateTest,
+                                                public testing::WithParamInterface<std::tuple<char, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorBulkCleanupSessionTest::SetUp()
+{
+    NewsgroupSelectorSaveStateTest::SetUp();
+    const bool unsubscribed = std::get<1>(GetParam());
+    if (unsubscribed)
+    {
+        NewsgroupData &group = g_newsgroup_data[0];
+        group.unsubscribe();
+        group.m_to_read = TR_UNSUB;
+        group.m_flags = NF_SEL | NF_DEL;
+        g_newsgroup_to_read = NewsgroupNum{2};
+    }
+}
+
+TEST_P(NewsgroupSelectorBulkCleanupSessionTest, bulkCleanupSavesOnlyTheRequestedGroupsAndRetainsUnsubscriptions)
+{
+    const auto [command, unsubscribed] = GetParam();
+
+    run_outer(std::string{"a"} + command + "q");
+
+    ASSERT_EQ(3, m_prompts.size());
+    EXPECT_EQ(0, m_prompts[0].selected);
+    EXPECT_EQ(1, m_prompts[1].selected);
+    const std::string previous = std::string{"comp.previous"} + (unsubscribed     ? "! 1-2\n"
+                                                                 : command == 'J' ? ": 1-2\n"
+                                                                                  : ": 1-3\n");
+    const std::string language = command == 'J' ? "comp.lang.cpp: 1-3\n" : "comp.lang.cpp: 1\n";
+    const std::string next = command == 'J' ? "comp.next: 1-2\n" : "comp.next: 1-3\n";
+    expect_saved_newsrc(previous + language + next);
+    EXPECT_EQ(command == 'J' ? 0 : 1, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{command == 'J' ? (unsubscribed ? 1 : 2) : 1}, g_newsgroup_to_read);
+    EXPECT_EQ(unsubscribed ? TR_UNSUB : command == 'J' ? ArticleUnread{1} : TR_NONE, g_newsgroup_data[0].m_to_read);
+    EXPECT_EQ(unsubscribed ? '!' : ':', g_newsgroup_data[0].m_subscribe_char);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[0].m_flags & (NF_SEL | NF_DEL));
+    EXPECT_EQ(command == 'J' ? TR_NONE : ArticleUnread{2}, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(command == 'J' ? ArticleUnread{1} : TR_NONE, g_newsgroup_data[2].m_to_read);
+}
+
+INSTANTIATE_TEST_SUITE_P(CommandAndUnsubscribedGroup, NewsgroupSelectorBulkCleanupSessionTest,
+                         testing::Combine(testing::Values('D', 'X', 'J'), testing::Bool()));
+
+class NewsgroupSelectorPendingKillSessionTest : public NewsgroupSelectorSaveStateTest,
+                                                public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorPendingKillSessionTest::SetUp()
+{
+    NewsgroupSelectorSaveStateTest::SetUp();
+    g_tc_LINES = GetParam() ? 7 : 24;
+}
+
+TEST_P(NewsgroupSelectorPendingKillSessionTest, quittingAppliesPendingKillMarksBeforeSavingTheNewsrc)
+{
+    const bool across_pages = GetParam();
+
+    run_outer(across_pages ? "k>kq" : "kq");
+
+    const std::string previous = across_pages ? "comp.previous: 1-3\n" : "comp.previous: 1-2\n";
+    expect_saved_newsrc(previous + "comp.lang.cpp: 1-3\ncomp.next: 1-2\n");
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{across_pages ? 1 : 2}, g_newsgroup_to_read);
+    EXPECT_EQ(across_pages ? TR_NONE : ArticleUnread{1}, g_newsgroup_data[0].m_to_read);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[2].m_to_read);
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        EXPECT_EQ(NF_NONE, group.m_flags & NF_DEL);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(PageScope, NewsgroupSelectorPendingKillSessionTest, testing::Bool());
+
 class NewsgroupSelectorSpoolTest : public NewsgroupSelectorWorkflowTest
 {
 protected:
