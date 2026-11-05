@@ -2767,6 +2767,77 @@ TEST_F(UniversalBatchSessionTest, leavingAGroupEarlyRetainsTheUnprocessedSelecti
     expect_completed_batch();
 }
 
+class UniversalNestedSessionTest : public UniversalSessionTest,
+                                   public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+TEST_P(UniversalNestedSessionTest, leavingANestedMenuRestoresItsParentAndAppliesTheRequestedBatchPolicy)
+{
+    const auto [configuration_file, exit_command] = GetParam();
+    std::ofstream{m_output_dir / "child"} << "comp.next\n";
+    load_menu(configuration_file ? "\"Child\" :child\ncomp.previous\n" : "\"Child\" comp.next\ncomp.previous\n");
+    const fs::path parent_temp = m_output_dir / "parent-download";
+    const fs::path child_temp = m_output_dir / "child-download";
+    std::ofstream{parent_temp} << "Parent temporary resource\n";
+    g_univ.tmp_file = parent_temp.generic_string();
+    bool child_seen = false;
+    m_on_prompt = [&]
+    {
+        if (g_mode != MM_UNIVERSAL)
+        {
+            return;
+        }
+        if (g_univ.level == 2)
+        {
+            if (!child_seen)
+            {
+                std::ofstream{child_temp} << "Child temporary resource\n";
+                g_univ.tmp_file = child_temp.generic_string();
+                child_seen = true;
+            }
+            EXPECT_TRUE(fs::exists(parent_temp));
+        }
+        else if (child_seen)
+        {
+            EXPECT_FALSE(fs::exists(child_temp));
+            EXPECT_TRUE(fs::exists(parent_temp));
+        }
+    };
+    std::vector<std::string> commands{"a", "b", "Z", "R", std::string{exit_command}};
+    if (exit_command == 'Q')
+    {
+        commands.emplace_back("q");
+    }
+    commands.emplace_back("Q");
+
+    const char result = run_menu(std::move(commands));
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(6, menu.size());
+    EXPECT_EQ(2, menu[3].level);
+    EXPECT_EQ("Child", menu[3].title);
+    EXPECT_EQ(-1, menu[4].direction);
+    EXPECT_EQ(1, menu[5].level);
+    EXPECT_EQ("Local menu", menu[5].title);
+    EXPECT_EQ(SS_NATURAL, menu[5].sort);
+    EXPECT_EQ(1, menu[5].direction);
+    EXPECT_EQ(0, menu[5].prior);
+    ASSERT_EQ(2, menu[5].items.size());
+    EXPECT_EQ("Child", menu[5].items[0].m_desc);
+    ASSERT_TRUE(std::holds_alternative<UniversalNewsgroup>(menu[5].items[1].m_data));
+    EXPECT_EQ("comp.previous", menu[5].items[1].group().ng);
+    EXPECT_EQ(exit_command == 'q' ? 1 : 0, menu[5].selected);
+    EXPECT_EQ(exit_command == 'q' ? 0 : 1, prompts(MM_ARTICLE).size());
+    EXPECT_FALSE(fs::exists(parent_temp));
+    EXPECT_FALSE(fs::exists(child_temp));
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(MenuTypeAndExit, UniversalNestedSessionTest,
+                         testing::Combine(testing::Bool(), testing::Values('q', 'Q')));
+
 struct MultircReadingPrompt
 {
     int                        group;

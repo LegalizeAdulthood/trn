@@ -1171,6 +1171,7 @@ sel_restart:
             UniversalItem *ui = &g_univ.items[i];
             if (ui->m_flags & UF_SEL)
             {
+                const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
                 PUSH_SELECTOR();
                 PUSH_UNIV_SELECTOR();
 
@@ -1180,6 +1181,7 @@ sel_restart:
 
                 POP_UNIV_SELECTOR();
                 POP_SELECTOR();
+                g_sel.set_selector(SM_UNIVERSAL, parent_order);
                 if (ret == UR_ERROR || ret == UR_BREAK)
                 {
                     g_sel_session.ret = ' '; // don't leave completely.
