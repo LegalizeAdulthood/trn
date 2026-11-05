@@ -379,13 +379,13 @@ void ScoringSession::look_ahead(bool flag, bool nowait)
     }
 }
 
-int sc_percent_scored()
+int ScoringSession::percent_scored()
 {
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         return 0;       // none scored
     }
-    if (g_scoring.fill_max == g_last_art)
+    if (fill_max == g_last_art)
     {
         return 100;
     }

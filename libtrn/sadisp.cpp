@@ -87,7 +87,7 @@ void sa_refresh_bot()
     g_color.object(COLOR_SCORE, true);
     s_mail_and_place();
     const std::string_view order = sa_order_text();
-    fmt::print("({} order, {}% scored)", order, sc_percent_scored());
+    fmt::print("({} order, {}% scored)", order, g_scoring.percent_scored());
     g_color.pop(); // of COLOR_SCORE
     std::fflush(stdout);
 }
