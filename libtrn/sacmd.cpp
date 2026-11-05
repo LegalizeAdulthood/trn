@@ -431,7 +431,7 @@ int sa_do_cmd(std::string_view command)
                 s_beep();
                 return 0;
             }
-            s_go_next_page();   // will jump to top too...
+            g_art_scan.go_next_page(); // will jump to top too...
         }
         break;
 

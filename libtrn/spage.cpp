@@ -424,17 +424,17 @@ bool ArticleScanSession::go_bot_ents()
     return true;
 }
 
-void s_go_next_page()
+void ArticleScanSession::go_next_page()
 {
-    long a = g_art_scan.next_elig(g_art_scan.page_ents[g_art_scan.bot_ent].ent_num);
+    long a = next_elig(page_ents[bot_ent].ent_num);
     if (!a)
     {
         return;         // no next page (we shouldn't have been called)
     }
     // the fill-page will set the refresh for the screen
-    bool flag = g_art_scan.fill_page_forward(a);
+    bool flag = fill_page_forward(a);
     TRN_ASSERT(flag);           // I *must* be able to fill a page
-    g_art_scan.ptr_page_line = 0; // top of page
+    ptr_page_line = 0;          // top of page
 }
 
 void s_go_prev_page()

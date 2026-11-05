@@ -178,7 +178,7 @@ static int s_do_cmd(std::string_view command)
                 g_art_scan.refill = true;
                 break;
             }
-            s_go_next_page();   // will jump to top too...
+            g_art_scan.go_next_page(); // will jump to top too...
         }
         break;
 
@@ -229,7 +229,7 @@ static int s_do_cmd(std::string_view command)
             s_beep();
             break;
         }
-        s_go_next_page();               // will beep if no next page
+        g_art_scan.go_next_page(); // will beep if no next page
         break;
 
     case '<': // previous page

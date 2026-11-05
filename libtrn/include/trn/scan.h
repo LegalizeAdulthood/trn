@@ -93,6 +93,7 @@ struct ArticleScanSession
     bool go_top_ents();
     bool go_bot_ents();
     int  fill_page();
+    void go_next_page();
     bool page_has_unavailable_entries() const;
 
     // TODO: private
