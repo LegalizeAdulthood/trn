@@ -117,6 +117,11 @@ void NewsgroupData::show_subscribe_char()
     }
 }
 
+bool NewsgroupData::uses_source(const DataSource *source) const
+{
+    return m_rc->data_source == source;
+}
+
 void NewsgroupData::mark_changed()
 {
     m_rc->mark_changed();

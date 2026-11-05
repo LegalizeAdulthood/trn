@@ -13,6 +13,7 @@
 #include <string_view>
 #include <vector>
 
+struct DataSource;
 struct Newsrc;
 
 enum NewsgroupFlags : std::uint8_t
@@ -34,6 +35,7 @@ struct NewsgroupData
     void             catch_up(int leave_count, int output_level);
     void             set_to_read(bool lax_high_check);
     bool             has_full_active_list() const;
+    bool             uses_source(const DataSource *source) const;
     void             check_expired(ArticleNum first);
     void             abandon_newsgroup();
     bool             relocate_newsgroup(NewsgroupNum newnum);

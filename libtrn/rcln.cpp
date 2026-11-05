@@ -104,7 +104,7 @@ int add_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_n
     {
         return 0;
     }
-    if (dp != np->m_rc->data_source) // punt on cross-host xrefs
+    if (!np->uses_source(dp)) // punt on cross-host xrefs
     {
 #ifdef DEBUG
         if (g_debug & DEB_XREF_MARKER)
@@ -305,7 +305,7 @@ void sub_art_num(DataSource *dp, ArticleNum art_num, std::string_view newsgroup_
     {
         return;
     }
-    if (dp != np->m_rc->data_source) // punt on cross-host xrefs
+    if (!np->uses_source(dp)) // punt on cross-host xrefs
     {
         return;
     }
