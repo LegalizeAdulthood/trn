@@ -125,7 +125,7 @@ bool ArticleScanSession::fill_page_backward(long end)
 // fills the page array
 // returns true on success
 //long start;                   // entry to start filling with
-bool s_fill_page_forward(long start)
+bool ArticleScanSession::fill_page_forward(long start)
 {
     int i;
     long a;
@@ -137,22 +137,22 @@ bool s_fill_page_forward(long start)
     fmt::print("entry: s_fillpage_forward({})\n", start);
 #endif
 
-    page_lines = g_scr_height - g_art_scan.top_lines - g_art_scan.bot_lines;
-    g_art_scan.page_ents.clear();
+    page_lines = g_scr_height - top_lines - bot_lines;
+    page_ents.clear();
     if (page_lines > 0)
     {
-        g_art_scan.page_ents.reserve(page_lines);
+        page_ents.reserve(page_lines);
     }
-    g_art_scan.bot_ent = -1;
+    bot_ent = -1;
     line_on = 0;
 
     // whatever happens, the entry zone will need a full refresh...
-    g_art_scan.ref_status = 0;
-    g_art_scan.ref_desc = 0;
+    ref_status = 0;
+    ref_desc = 0;
 
     if (start < 0)      // fill from top
     {
-        start = g_art_scan.first();
+        start = first();
     }
     if (start == 0)     // no entries
     {
@@ -165,7 +165,7 @@ bool s_fill_page_forward(long start)
     }
     else
     {
-        a = g_art_scan.next_elig(start);
+        a = next_elig(start);
     }
     if (!a)     // no eligible entries
     {
@@ -177,37 +177,37 @@ bool s_fill_page_forward(long start)
 // later make it shorten the descript.
 
     g_progress.set_spin(SPIN_BACKGROUND); // turn on spin on cache misses
-                                          // ?  later do paranoia check for g_art_scan.bot_ent
+                                          // ?  later do paranoia check for bot_ent
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_art_scan.page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
+        page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
         line_on = line_on+i;
-        a = g_art_scan.next_elig(a);
+        a = next_elig(a);
         if (!a)         // no more eligible
         {
             break;      // get out of loop and finish up...
         }
     }
     g_progress.set_spin(SPIN_POP); // turn off spin on cache misses
-    if (g_art_scan.page_ents.empty())
+    if (page_ents.empty())
     {
         return false;
     }
-    g_art_scan.bot_ent = size_cast<long>(g_art_scan.page_ents) - 1;
+    bot_ent = size_cast<long>(page_ents) - 1;
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
-    // set new g_art_scan.top_ent
-    g_art_scan.top_ent = g_art_scan.page_ents[0].ent_num;
-    g_art_scan.ptr_page_line = std::min<long>(g_art_scan.ptr_page_line, g_art_scan.bot_ent);
+    // set new top_ent
+    top_ent = page_ents[0].ent_num;
+    ptr_page_line = std::min<long>(ptr_page_line, bot_ent);
     // temporary fix.  Under some conditions ineligible entries will
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    if (g_art_scan.page_has_unavailable_entries())
+    if (page_has_unavailable_entries())
     {
-        return s_fill_page_forward(start);
+        return fill_page_forward(start);
     }
     // next time the unavail won't be chosen
     return true;        // we have a page...
@@ -243,7 +243,7 @@ bool s_refill_page()
         !s_eligible(g_art_scan.page_ents[0].ent_num) || g_art_scan.page_ents[0].start_line != 0 ||
         g_art_scan.page_ents[0].lines != s_ent_lines(g_art_scan.page_ents[0].ent_num))
     {
-        return s_fill_page_forward(g_art_scan.top_ent);
+        return g_art_scan.fill_page_forward(g_art_scan.top_ent);
     }
 
     i = 1;
@@ -433,7 +433,7 @@ void s_go_next_page()
         return;         // no next page (we shouldn't have been called)
     }
     // the fill-page will set the refresh for the screen
-    bool flag = s_fill_page_forward(a);
+    bool flag = g_art_scan.fill_page_forward(a);
     TRN_ASSERT(flag);           // I *must* be able to fill a page
     g_art_scan.ptr_page_line = 0; // top of page
 }

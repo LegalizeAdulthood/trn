@@ -88,6 +88,7 @@ struct ArticleScanSession
     void go_top_page();
     void go_bot_page();
     bool fill_page_backward(long end);
+    bool fill_page_forward(long start);
     bool page_has_unavailable_entries() const;
 
     // TODO: private

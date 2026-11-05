@@ -574,7 +574,7 @@ static void s_search(std::string_view command)
     }
     else
     {
-        (void)s_fill_page_forward(ent);
+        (void) g_art_scan.fill_page_forward(ent);
         g_art_scan.go_top_page();
         g_art_scan.ref_all = true;
     }

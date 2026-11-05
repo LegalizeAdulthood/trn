@@ -466,7 +466,7 @@ int sa_do_cmd(std::string_view command)
             }
         }
         // article is not on page...
-        (void)s_fill_page_forward(b);  // fill forward (*must* work)
+        (void) g_art_scan.fill_page_forward(b); // fill forward (*must* work)
         g_art_scan.ptr_page_line = 0;
         break;
 
@@ -489,7 +489,7 @@ int sa_do_cmd(std::string_view command)
             }
         }
         // article is not on page...
-        (void)s_fill_page_forward(b);  // fill forward (*must* work)
+        (void) g_art_scan.fill_page_forward(b); // fill forward (*must* work)
         g_art_scan.ptr_page_line = 0;
         break;
 
