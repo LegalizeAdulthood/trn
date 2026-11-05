@@ -881,7 +881,7 @@ void KillFileProcessor::close(int local)
     }
 }
 
-void kill_file_append(std::string_view cmd, bool local)
+void KillFilePersistence::append(std::string_view cmd, bool local)
 {
     const fs::path kill_file{
         file_exp(local ? get_env_var("KILLLOCAL", s_kill_local) : get_env_var("KILLGLOBAL", s_kill_global))};
@@ -933,5 +933,5 @@ void kill_file_append(std::string_view cmd, bool local)
         }
         term_down(2);
     }
-    g_kill_store.state |= KFS_NORMAL_LINES;
+    state |= KFS_NORMAL_LINES;
 }

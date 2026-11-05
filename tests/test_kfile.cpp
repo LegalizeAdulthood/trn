@@ -340,7 +340,7 @@ TEST_F(KillFileEditTest, appendLocalKillFileWritesConfiguredPath)
     m_env.expect_env_repeatedly("KILLLOCAL", kill_file_name.c_str());
 
     testing::internal::CaptureStdout();
-    kill_file_append("/new/j", KF_LOCAL);
+    g_kill_store.append("/new/j", KF_LOCAL);
     (void) testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("/old/j\n/new/j\n", file_contents(kill_file));

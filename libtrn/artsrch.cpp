@@ -430,7 +430,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             cmd_lst = "j";
         }
         salt_command += cmd_lst;
-        kill_file_append(salt_command, salt_away == 2 ? KF_GLOBAL : KF_LOCAL);
+        g_kill_store.append(salt_command, salt_away == 2 ? KF_GLOBAL : KF_LOCAL);
     }
     if (get_cmd)
     {

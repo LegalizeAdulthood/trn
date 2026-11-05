@@ -88,6 +88,7 @@ struct KillFilePersistence
     void init();
     void rewrite_kill_file(ArticleNum thru);
     void update_thread_kill_file();
+    void append(std::string_view cmd, bool local);
 
     // TODO: private
     int write_local_thread_commands(int keylen, HashDatum *data, int extra);
@@ -106,6 +107,5 @@ struct KillFilePersistence
 extern KillFilePersistence g_kill_store;
 
 void edit_kill_file();
-void kill_file_append(std::string_view cmd, bool local);
 
 #endif
