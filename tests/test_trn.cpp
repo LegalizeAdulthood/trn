@@ -2308,6 +2308,7 @@ protected:
     void                 SetUp() override;
     void                 TearDown() override;
     InputNewsgroupResult run_command(std::string_view command);
+    void                 prepare_group_spools();
 
     std::string m_output;
 
@@ -2404,6 +2405,22 @@ InputNewsgroupResult InputNewsgroupReadingTest::run_command(std::string_view com
     return result;
 }
 
+void InputNewsgroupReadingTest::prepare_group_spools()
+{
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        std::string directory{group.rc_name()};
+        std::replace(directory.begin(), directory.end(), '.', '/');
+        fs::create_directories(m_output_dir / directory);
+        for (int number = 1; number <= 3; ++number)
+        {
+            const fs::path path = m_output_dir / directory / std::to_string(number);
+            fs::copy_file(m_output_dir / std::to_string(number), path, fs::copy_options::overwrite_existing);
+            std::ofstream{path, std::ios::app} << "Group body " << group.rc_name() << " article " << number << '\n';
+        }
+    }
+}
+
 struct MultircReadingPrompt
 {
     int                        group;
@@ -2442,24 +2459,7 @@ void MultircReadingStateTest::SetUp()
     g_thread_always = true;
     g_newsgroup_min_to_read = TR_ONE;
     g_allow_typeahead = true;
-    for (const char *directory : {"comp/previous", "comp/next"})
-    {
-        fs::create_directories(m_output_dir / directory);
-        for (const char *number : {"1", "2", "3"})
-        {
-            fs::copy_file(m_output_dir / number, m_output_dir / directory / number);
-        }
-    }
-    for (const NewsgroupData &group : g_newsgroup_data)
-    {
-        std::string directory{group.rc_name()};
-        std::replace(directory.begin(), directory.end(), '.', '/');
-        for (int number = 1; number <= 3; ++number)
-        {
-            std::ofstream{m_output_dir / directory / std::to_string(number), std::ios::app}
-                << "Group body " << group.rc_name() << " article " << number << '\n';
-        }
-    }
+    prepare_group_spools();
     g_terminal_input_reader = [this](char *buffer, int)
     {
         EXPECT_EQ(g_mode == MM_ADD_NEWSGROUP_PROMPT ? GM_PROMPT : GM_READ, g_general_mode);
@@ -6833,6 +6833,68 @@ TEST_F(NewsgroupSelectorWorkflowTest, finishingAGroupRemovesItFromTheUnreadPage)
     EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
 }
+
+class NewsgroupSelectorBatchTest : public NewsgroupSelectorWorkflowTest, public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorBatchTest::SetUp()
+{
+    NewsgroupSelectorWorkflowTest::SetUp();
+    prepare_group_spools();
+}
+
+TEST_P(NewsgroupSelectorBatchTest, acceptingABatchVisitsOnlyItsGroupsInSelectorOrder)
+{
+    const bool explicit_selection = GetParam();
+    if (explicit_selection)
+    {
+        g_tc_LINES = 7;
+    }
+
+    const char result = run_inner(explicit_selection ? "a>aZnnnq" : "Znnnnq");
+
+    EXPECT_EQ('q', result);
+    std::vector<std::string> visited;
+    for (const MultircSelectorPrompt &prompt : m_prompts)
+    {
+        if (prompt.mode == MM_ARTICLE)
+        {
+            visited.push_back(prompt.group);
+            EXPECT_NE(NF_NONE, prompt.flags[0] & NF_VISIT);
+            EXPECT_NE(NF_NONE, prompt.flags[1] & NF_VISIT);
+            EXPECT_EQ(explicit_selection ? NF_NONE : NF_VISIT, prompt.flags[2] & NF_VISIT);
+        }
+    }
+    EXPECT_EQ((explicit_selection
+                   ? std::vector<std::string>{"comp.lang.cpp", "comp.lang.cpp", "comp.previous"}
+                   : std::vector<std::string>{"comp.lang.cpp", "comp.lang.cpp", "comp.next", "comp.previous"}),
+              visited);
+    ASSERT_FALSE(m_prompts.empty());
+    const MultircSelectorPrompt &rebuilt = m_prompts.back();
+    EXPECT_EQ(explicit_selection ? std::vector<std::string>{"comp.next"} : std::vector<std::string>{}, rebuilt.rows);
+    EXPECT_EQ(0, rebuilt.selected);
+    EXPECT_EQ((explicit_selection ? std::vector<std::string>{" 1-3", " 1-3", " 1-2"}
+                                  : std::vector<std::string>{" 1-3", " 1-3", " 1-3"}),
+              rebuilt.ranges);
+    if (explicit_selection)
+    {
+        ASSERT_EQ(8, m_prompts.size());
+        EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.next"}), m_prompts[0].rows);
+        EXPECT_EQ((std::vector<std::string>{"comp.previous"}), m_prompts[2].rows);
+        EXPECT_EQ(2, m_prompts[3].selected);
+        EXPECT_EQ(NF_SEL, m_prompts[4].flags[0] & NF_SEL);
+        EXPECT_EQ(NF_NONE, m_prompts[4].flags[1] & NF_SEL);
+        EXPECT_EQ(NF_NONE, m_prompts[6].flags[0] & NF_SEL);
+        EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Entering comp.next")));
+    }
+    EXPECT_THAT(m_output, testing::HasSubstr("Group body comp.lang.cpp article 2"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Group body comp.previous article 3"));
+}
+
+INSTANTIATE_TEST_SUITE_P(AcceptancePolicy, NewsgroupSelectorBatchTest, testing::Bool());
 
 class NewsgroupSelectorRestartExitTest : public NewsgroupSelectorWorkflowTest,
                                          public testing::WithParamInterface<std::tuple<char, bool>>
