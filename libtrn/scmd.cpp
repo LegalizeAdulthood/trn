@@ -218,7 +218,7 @@ static int s_do_cmd(std::string_view command)
 
     case 'b': // bottom of page
         s_rub_ptr();
-        s_go_bot_page();
+        g_art_scan.go_bot_page();
         break;
 
     case '>': // next page
@@ -568,7 +568,7 @@ static void s_search(std::string_view command)
     if (fill_type == 1)
     {
         (void)s_fill_page_backward(ent);
-        s_go_bot_page();
+        g_art_scan.go_bot_page();
         g_art_scan.refill = true;
         g_art_scan.ref_all = true;
     }

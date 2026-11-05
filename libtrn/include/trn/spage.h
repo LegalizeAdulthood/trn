@@ -11,7 +11,6 @@ bool s_fill_page_backward(long end);
 bool s_fill_page_forward(long start);
 bool s_refill_page();
 int  s_fill_page();
-void s_go_bot_page();
 bool s_go_top_ents();
 bool s_go_bot_ents();
 void s_go_next_page();

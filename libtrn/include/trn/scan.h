@@ -86,6 +86,7 @@ struct ArticleScanSession
     long first();
     long last();
     void go_top_page();
+    void go_bot_page();
     bool page_has_unavailable_entries() const;
 
     // TODO: private

@@ -380,9 +380,9 @@ void ArticleScanSession::go_top_page()
     ptr_page_line = 0;
 }
 
-void s_go_bot_page()
+void ArticleScanSession::go_bot_page()
 {
-    g_art_scan.ptr_page_line = g_art_scan.bot_ent;
+    ptr_page_line = bot_ent;
 }
 
 bool s_go_top_ents()
@@ -421,7 +421,7 @@ bool s_go_bot_ents()
     {
         return false;
     }
-    s_go_bot_page();
+    g_art_scan.go_bot_page();
     return true;
 }
 
