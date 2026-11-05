@@ -6616,6 +6616,9 @@ struct MultircSelectorPrompt
 
     int                         selected;
     std::vector<NewsgroupFlags> flags;
+    AddGroupFlags               mask;
+    bool                        rereading;
+    bool                        exclusive;
 };
 
 class MultircSelectorStateTest : public NewsgroupSelectorDelegationStateTest
@@ -6683,6 +6686,9 @@ void MultircSelectorStateTest::SetUp()
         prompt.restrictions = multirc_restrictions();
         prompt.article = g_in_ng ? g_nav.target.num : ArticleNum{};
         prompt.selected = g_selected_count;
+        prompt.mask = g_sel.mask;
+        prompt.rereading = g_sel.rereading;
+        prompt.exclusive = g_sel.exclusive;
         for (const NewsgroupData &group : g_newsgroup_data)
         {
             prompt.ranges.emplace_back(group.rc_numbers());
@@ -6832,6 +6838,85 @@ TEST_F(NewsgroupSelectorWorkflowTest, finishingAGroupRemovesItFromTheUnreadPage)
     EXPECT_EQ(2, g_sel_page.total_obj_cnt);
     EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
     EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
+}
+
+TEST_F(NewsgroupSelectorWorkflowTest, selectingAReadGroupCarriesItsSelectionBackToTheUnreadScope)
+{
+    g_newsgroup_data[0].catch_up(0, 0);
+
+    const char result = run_inner("UaUq");
+
+    EXPECT_EQ('q', result);
+    ASSERT_EQ(4, m_prompts.size());
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.next"}), m_prompts.front().rows);
+    EXPECT_EQ(std::vector<std::string>{"comp.previous"}, m_prompts[1].rows);
+    EXPECT_TRUE(m_prompts[1].rereading);
+    EXPECT_EQ(AGF_DEL_SEL, m_prompts[1].mask);
+    EXPECT_EQ(NF_DEL_SEL, m_prompts[2].flags[0] & NF_DEL_SEL);
+    EXPECT_EQ(1, m_prompts[2].selected);
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.next", "comp.previous"}), m_prompts.back().rows);
+    EXPECT_EQ(NF_INCLUDED, m_prompts.back().flags[0] & NF_INCLUDED);
+    EXPECT_FALSE(m_prompts.back().rereading);
+    EXPECT_EQ(AGF_SEL, m_prompts.back().mask);
+    EXPECT_EQ(1, m_prompts.back().selected);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[0].m_flags & (NF_SEL | NF_DEL_SEL));
+    EXPECT_EQ(" 1-3", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[0].m_to_read);
+}
+
+TEST_F(NewsgroupSelectorWorkflowTest, exclusiveDisplayCanBeReleasedWithoutLosingTheSelectedGroup)
+{
+    const char result = run_inner("aEEq");
+
+    EXPECT_EQ('q', result);
+    ASSERT_EQ(4, m_prompts.size());
+    EXPECT_EQ(1, m_prompts[1].selected);
+    EXPECT_TRUE(m_prompts[2].exclusive);
+    EXPECT_EQ(std::vector<std::string>{"comp.lang.cpp"}, m_prompts[2].rows);
+    EXPECT_FALSE(m_prompts.back().exclusive);
+    EXPECT_EQ(m_prompts.front().rows, m_prompts.back().rows);
+    EXPECT_EQ(1, m_prompts.back().selected);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[1].m_flags & NF_SEL);
+    EXPECT_EQ(m_prompts.front().ranges, m_prompts.back().ranges);
+}
+
+TEST_F(NewsgroupSelectorWorkflowTest, aTemporaryRestrictionFiltersReadingAndIsReleasedOnSelectorExit)
+{
+    g_only.set_to_do("comp.lang.cpp");
+
+    const char result = run_inner("\nQq");
+
+    EXPECT_EQ('q', result);
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_ARTICLE, MM_NEWSGROUP_SELECTOR});
+    ASSERT_EQ(3, m_prompts.size());
+    for (const MultircSelectorPrompt &prompt : m_prompts)
+    {
+        EXPECT_EQ(std::vector<std::string>{"comp.lang.cpp"}, prompt.restrictions);
+    }
+    EXPECT_EQ(std::vector<std::string>{"comp.lang.cpp"}, m_prompts.front().rows);
+    EXPECT_EQ(m_prompts.front().rows, m_prompts.back().rows);
+    EXPECT_EQ(" 1-2", m_prompts.back().ranges[1]);
+    EXPECT_EQ(0, m_prompts.back().selected);
+    EXPECT_TRUE(multirc_restrictions().empty());
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    EXPECT_EQ(" 1-2", g_newsgroup_data[2].rc_numbers());
+}
+
+TEST_F(NewsgroupSelectorWorkflowTest, unsubscribingWhileReadingRemovesTheGroupFromTheRebuiltPage)
+{
+    const char result = run_inner("a\nuq");
+
+    EXPECT_EQ('q', result);
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_ARTICLE, MM_NEWSGROUP_SELECTOR});
+    ASSERT_EQ(4, m_prompts.size());
+    EXPECT_EQ((std::vector<std::string>{"comp.next", "comp.previous"}), m_prompts.back().rows);
+    EXPECT_EQ(0, m_prompts.back().selected);
+    EXPECT_EQ('!', g_newsgroup_data[1].m_subscribe_char);
+    EXPECT_EQ(TR_UNSUB, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(" 1-2", g_newsgroup_data[1].rc_numbers());
+    EXPECT_EQ(NewsgroupNum{2}, g_newsgroup_to_read);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_THAT(m_output, testing::HasSubstr("Unsubscribed to newsgroup comp.lang.cpp"));
 }
 
 class NewsgroupSelectorBatchTest : public NewsgroupSelectorWorkflowTest, public testing::WithParamInterface<bool>
