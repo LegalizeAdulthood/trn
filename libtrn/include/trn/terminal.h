@@ -46,6 +46,8 @@ using MouseButtonList = std::vector<MouseButton>;
 
 struct MouseInteraction
 {
+    void off();
+
     // TODO: private
     void on();
 
@@ -249,7 +251,6 @@ void  termlib_init();
 void  termlib_reset();
 void  xmouse_init(std::string_view progname);
 void  xmouse_check();
-void  xmouse_off();
 void  draw_mouse_bar(int limit, bool restore_cursor);
 bool  check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk);
 bool has_underchar_capability();

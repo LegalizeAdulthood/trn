@@ -109,7 +109,7 @@ void finalize(int status)
     {
         reset_tty();
     }
-    xmouse_off();       // turn off mouse tracking (if on)
+    g_mouse.off(); // turn off mouse tracking (if on)
     std::fflush(stdout);
 
     change_dir(g_tmp_dir);
@@ -278,7 +278,7 @@ Signal_t stop_catcher(int signo)
 {
     if (!g_waiting)
     {
-        xmouse_off();
+        g_mouse.off();
         checkpoint_newsrcs();   // good chance of crash while stopped
         if (g_bos_on_stop)
         {

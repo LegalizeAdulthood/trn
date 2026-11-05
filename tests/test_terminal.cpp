@@ -262,7 +262,7 @@ protected:
     void TearDown() override
     {
         drain_macro_buffer();
-        xmouse_off();
+        g_mouse.off();
         g_univ_sel_btns = m_old_univ_sel_btns;
         g_mouse.bar_cnt = m_old_mouse_bar_cnt;
         g_mouse.bar_width = m_old_mouse_bar_width;

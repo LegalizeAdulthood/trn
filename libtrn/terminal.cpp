@@ -2660,7 +2660,7 @@ void xmouse_check()
         }
         else
         {
-            xmouse_off();
+            g_mouse.off();
         }
         g_mouse.is_down = false;
     }
@@ -2677,14 +2677,14 @@ void MouseInteraction::on()
     }
 }
 
-void xmouse_off()
+void MouseInteraction::off()
 {
-    if (g_mouse.is_on)
+    if (is_on)
     {
         // disable mouse tracking and restore old highlight mouse tracking
         fmt::print("\033[?1000l\033[?1001r");
         std::fflush(stdout);
-        g_mouse.is_on = false;
+        is_on = false;
     }
 }
 

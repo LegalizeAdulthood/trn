@@ -150,7 +150,7 @@ int do_shell(std::string_view shell, std::string_view cmd)
 {
     const std::string command_text{cmd};
 
-    xmouse_off();
+    g_mouse.off();
 
 #ifdef SIGTSTP
     sigset(SIGTSTP,SIG_DFL);
