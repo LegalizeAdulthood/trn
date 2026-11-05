@@ -2838,6 +2838,186 @@ TEST_P(UniversalNestedSessionTest, leavingANestedMenuRestoresItsParentAndApplies
 INSTANTIATE_TEST_SUITE_P(MenuTypeAndExit, UniversalNestedSessionTest,
                          testing::Combine(testing::Bool(), testing::Values('q', 'Q')));
 
+class UniversalOrderSessionStateTest : public UniversalSessionTest
+{
+protected:
+    void             SetUp() override;
+    std::vector<int> identities(const UniversalSessionPrompt &state, bool included_only = false) const;
+    void             expect_payloads(const UniversalSessionPrompt &state, const std::vector<int> &selected) const;
+
+private:
+    const std::array<int, 3>         m_scores{10, 30, 30};
+    const std::array<std::string, 3> m_groups{"comp.previous", "comp.lang.cpp", "comp.next"};
+};
+
+void UniversalOrderSessionStateTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    load_menu("comp.*\n");
+    for (std::size_t i = 0; i < m_scores.size(); ++i)
+    {
+        g_univ.items[i].m_score = m_scores[i];
+    }
+}
+
+std::vector<int> UniversalOrderSessionStateTest::identities(const UniversalSessionPrompt &state,
+                                                            bool                          included_only) const
+{
+    std::vector<int> result;
+    for (const UniversalItem &item : state.items)
+    {
+        if (!included_only || item.m_flags & UF_INCLUDED)
+        {
+            result.push_back(item.m_num);
+        }
+    }
+    return result;
+}
+
+void UniversalOrderSessionStateTest::expect_payloads(const UniversalSessionPrompt &state,
+                                                     const std::vector<int>       &selected) const
+{
+    for (const UniversalItem &item : state.items)
+    {
+        SCOPED_TRACE(item.m_num);
+        ASSERT_GE(item.m_num, 1);
+        ASSERT_LE(item.m_num, 3);
+        ASSERT_TRUE(std::holds_alternative<UniversalNewsgroup>(item.m_data));
+        const std::size_t index = static_cast<std::size_t>(item.m_num - 1);
+        EXPECT_EQ(m_groups[index], item.group().ng);
+        EXPECT_EQ(m_scores[index], item.m_score);
+        EXPECT_EQ(std::find(selected.begin(), selected.end(), item.m_num) != selected.end(),
+                  (item.m_flags & UF_SEL) != 0);
+    }
+    EXPECT_EQ(selected.size(), state.selected);
+}
+
+struct UniversalOrderChoice
+{
+    std::string       answer;
+    SelectionSortMode sort;
+    int               direction;
+    std::vector<int>  order;
+};
+
+void PrintTo(const UniversalOrderChoice &choice, std::ostream *output)
+{
+    *output << choice.answer;
+}
+
+class UniversalSortSessionTest : public UniversalOrderSessionStateTest,
+                                 public testing::WithParamInterface<std::tuple<UniversalOrderChoice, bool>>
+{
+};
+
+TEST_P(UniversalSortSessionTest, choosingAnOrderRetainsSelectedPayloadsAndUsesTheRequestedDirection)
+{
+    const auto [choice, verbose] = GetParam();
+    g_verbose = verbose;
+
+    const char result = run_menu({"a", "O", choice.answer, "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    EXPECT_EQ(choice.sort, menu.back().sort);
+    EXPECT_EQ(choice.direction, menu.back().direction);
+    EXPECT_EQ(choice.order, identities(menu.back()));
+    EXPECT_EQ(0, menu.back().prior);
+    expect_payloads(menu.back(), {1});
+    if (choice.answer.size() > 1)
+    {
+        EXPECT_THAT(m_output, testing::HasSubstr(verbose ? "Type p to order" : "p sorts by score."));
+    }
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(ChoiceAndVerbosity, UniversalSortSessionTest,
+                         testing::Combine(testing::Values(UniversalOrderChoice{"n", SS_NATURAL, 1, {1, 2, 3}},
+                                                          UniversalOrderChoice{"N", SS_NATURAL, -1, {3, 2, 1}},
+                                                          UniversalOrderChoice{"p", SS_SCORE, 1, {2, 3, 1}},
+                                                          UniversalOrderChoice{"P", SS_SCORE, -1, {1, 3, 2}},
+                                                          UniversalOrderChoice{" ", SS_NATURAL, 1, {1, 2, 3}},
+                                                          UniversalOrderChoice{"hn", SS_NATURAL, 1, {1, 2, 3}},
+                                                          UniversalOrderChoice{"hP", SS_SCORE, -1, {1, 3, 2}}),
+                                          testing::Bool()));
+
+class UniversalSortCancelSessionTest : public UniversalOrderSessionStateTest,
+                                       public testing::WithParamInterface<std::string>
+{
+};
+
+TEST_P(UniversalSortCancelSessionTest, cancellingOrderKeepsTheExistingScoreOrderAndSelection)
+{
+    g_sel.universal_sort = SS_SCORE;
+
+    const char result = run_menu({".", "O", GetParam(), "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    EXPECT_EQ(SS_SCORE, menu.back().sort);
+    EXPECT_EQ(1, menu.back().direction);
+    EXPECT_EQ((std::vector<int>{2, 3, 1}), identities(menu.back()));
+    expect_payloads(menu.back(), {2});
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(DirectAndHelp, UniversalSortCancelSessionTest,
+                         testing::Values(std::string{"q"}, std::string{"hq"}));
+
+class UniversalReverseSessionTest : public UniversalOrderSessionStateTest,
+                                    public testing::WithParamInterface<SelectionSortMode>
+{
+};
+
+TEST_P(UniversalReverseSessionTest, reversingTheCurrentOrderRetainsTheSelectedItemIdentity)
+{
+    g_sel.universal_sort = GetParam();
+
+    const char result = run_menu({".", "R", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    EXPECT_EQ(GetParam(), menu.back().sort);
+    EXPECT_EQ(-1, menu.back().direction);
+    EXPECT_EQ(GetParam() == SS_NATURAL ? std::vector<int>({3, 2, 1}) : std::vector<int>({1, 3, 2}),
+              identities(menu.back()));
+    expect_payloads(menu.back(), {GetParam() == SS_NATURAL ? 1 : 2});
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(Order, UniversalReverseSessionTest, testing::Values(SS_NATURAL, SS_SCORE));
+
+class UniversalExclusiveSessionTest : public UniversalOrderSessionStateTest, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(UniversalExclusiveSessionTest, exclusiveDisplayPreservesSelectionsMadeOnDifferentPages)
+{
+    m_env.expect_env_repeatedly("SELECTCHARS", "ab");
+    std::vector<std::string> commands{"a", ">", "a", "E"};
+    if (GetParam())
+    {
+        commands.emplace_back("E");
+    }
+    commands.emplace_back("Q");
+
+    const char result = run_menu(std::move(commands));
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_FALSE(menu.empty());
+    EXPECT_EQ(!GetParam(), menu.back().exclusive);
+    EXPECT_EQ(GetParam() ? std::vector<int>({1, 2, 3}) : std::vector<int>({1, 3}), identities(menu.back(), true));
+    EXPECT_EQ(0, menu.back().prior);
+    expect_payloads(menu.back(), {1, 3});
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(RetainOrRestore, UniversalExclusiveSessionTest, testing::Bool());
+
 struct MultircReadingPrompt
 {
     int                        group;
