@@ -519,7 +519,7 @@ int sa_do_cmd(std::string_view command)
         // article is not on page...
         (void) g_art_scan.fill_page_backward(b);       // fill backward (*must* work)
         g_art_scan.ptr_page_line = g_art_scan.bot_ent; // go to bottom of page
-        (void)s_refill_page();   // make sure page is full
+        (void) g_art_scan.refill_page();               // make sure page is full
         g_art_scan.ref_all = true; // make everything redrawn...
         break;
 

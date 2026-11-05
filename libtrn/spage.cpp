@@ -219,7 +219,7 @@ bool ArticleScanSession::fill_page_forward(long start)
 //  or not.)
 //
 // returns true on success
-bool s_refill_page()
+bool ArticleScanSession::refill_page()
 {
     int  i;
     int  j;
@@ -232,78 +232,77 @@ bool s_refill_page()
     fmt::print("entry: s_refillpage\n");
 #endif
 
-    page_lines = g_scr_height - g_art_scan.top_lines - g_art_scan.bot_lines;
-    // if the top entry is not the g_art_scan.top_ent,
+    page_lines = g_scr_height - top_lines - bot_lines;
+    // if the top entry is not the top_ent,
     //    or the top entry is not eligible,
     //    or the top entry is not on the first line,
     //    or the top entry has a different # of lines now,
     // just refill the whole page.
     //
-    if (g_art_scan.bot_ent < 1 || g_art_scan.top_ent < 1 || g_art_scan.top_ent != g_art_scan.page_ents[0].ent_num ||
-        !s_eligible(g_art_scan.page_ents[0].ent_num) || g_art_scan.page_ents[0].start_line != 0 ||
-        g_art_scan.page_ents[0].lines != s_ent_lines(g_art_scan.page_ents[0].ent_num))
+    if (bot_ent < 1 || top_ent < 1 || top_ent != page_ents[0].ent_num || !s_eligible(page_ents[0].ent_num) ||
+        page_ents[0].start_line != 0 || page_ents[0].lines != s_ent_lines(page_ents[0].ent_num))
     {
-        return g_art_scan.fill_page_forward(g_art_scan.top_ent);
+        return fill_page_forward(top_ent);
     }
 
     i = 1;
     // misc note: I used to have
-    // a = g_art_scan.page_ents[1];
+    // a = page_ents[1];
     // ...at this point.  This caused a truly difficult to track bug...
-    // (briefly, occasionally the entry in g_art_scan.page_ents[1] would be
-    //  *before* (by display order) the entry in g_art_scan.page_ents[0].  In
-    //  this case the start_line entry of g_art_scan.page_ents[0] could be overwritten
+    // (briefly, occasionally the entry in page_ents[1] would be
+    //  *before* (by display order) the entry in page_ents[0].  In
+    //  this case the start_line entry of page_ents[0] could be overwritten
     //  causing big problems...)
     //
-    a = g_art_scan.next_elig(g_art_scan.page_ents[0].ent_num);
+    a = next_elig(page_ents[0].ent_num);
 
     // similar to the tests in the last loop...
-    while (i <= g_art_scan.bot_ent && s_eligible(g_art_scan.page_ents[i].ent_num) //
-           && g_art_scan.page_ents[i].ent_num == a                                //
-           && g_art_scan.page_ents[i].lines == s_ent_lines(g_art_scan.page_ents[i].ent_num))
+    while (i <= bot_ent && s_eligible(page_ents[i].ent_num) //
+           && page_ents[i].ent_num == a                     //
+           && page_ents[i].lines == s_ent_lines(page_ents[i].ent_num))
     {
         i++;
-        a = g_art_scan.next_elig(a);
+        a = next_elig(a);
     }
     j = i-1;    // j is the last "good" entry
 
-    g_art_scan.bot_ent = j;
-    g_art_scan.page_ents.resize(j + 1);
-    line_on = g_art_scan.page_ents[j].start_line + s_ent_lines(g_art_scan.page_ents[j].ent_num);
-    a = g_art_scan.next_elig(g_art_scan.page_ents[j].ent_num);
+    bot_ent = j;
+    page_ents.resize(j + 1);
+    line_on = page_ents[j].start_line + s_ent_lines(page_ents[j].ent_num);
+    a = next_elig(page_ents[j].ent_num);
     if (page_lines > 0)
     {
-        g_art_scan.page_ents.reserve(page_lines);
+        page_ents.reserve(page_lines);
     }
 
     g_progress.set_spin(SPIN_BACKGROUND);
     while (a && line_on + s_ent_lines(a) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_art_scan.page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
+        page_ents.push_back({a, static_cast<short>(i), static_cast<short>(line_on), (char) 0});
         line_on = line_on+i;
-        a = g_art_scan.next_elig(a);
+        a = next_elig(a);
     }
     g_progress.set_spin(SPIN_POP);
-    g_art_scan.bot_ent = size_cast<long>(g_art_scan.page_ents) - 1;
+    bot_ent = size_cast<long>(page_ents) - 1;
 
     // there are fairly good reasons to refresh the last good entry, such
     // as clearing the rest of the screen...
     //
-    g_art_scan.ref_status = j;
-    g_art_scan.ref_desc = j;
+    ref_status = j;
+    ref_desc = j;
 
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
-    g_art_scan.ptr_page_line = std::min<long>(g_art_scan.ptr_page_line, g_art_scan.bot_ent);
+    ptr_page_line = std::min<long>(ptr_page_line, bot_ent);
     // temporary fix.  Under some conditions ineligible entries will
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    if (g_art_scan.page_has_unavailable_entries())
+    if (page_has_unavailable_entries())
     {
-        return s_refill_page();  // next time the unavail won't be chosen
+        return refill_page(); // next time the unavail won't be chosen
     }
     return true;        // we have a page...
 }
@@ -326,7 +325,7 @@ int s_fill_page()
     {
         return 0;       // failure
     }
-    if (!s_refill_page())        // try for efficient refill
+    if (!g_art_scan.refill_page()) // try for efficient refill
     {
         if (!g_art_scan.fill_page_backward(g_art_scan.top_ent))
         {
@@ -449,7 +448,7 @@ void s_go_prev_page()
     bool flag = g_art_scan.fill_page_backward(a); // fill backward
     TRN_ASSERT(flag);                   // be nicer later...
     // take care of partially filled previous pages
-    flag = s_refill_page();
+    flag = g_art_scan.refill_page();
     TRN_ASSERT(flag);           // be nicer later...
     g_art_scan.ref_status = 0;
     g_art_scan.ref_desc = 0;      // refresh from top

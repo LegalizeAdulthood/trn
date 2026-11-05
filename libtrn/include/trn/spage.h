@@ -7,7 +7,6 @@
 #ifndef TRN_SPAGE_H
 #define TRN_SPAGE_H
 
-bool s_refill_page();
 int  s_fill_page();
 bool s_go_top_ents();
 bool s_go_bot_ents();
