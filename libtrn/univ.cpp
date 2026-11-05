@@ -70,7 +70,6 @@ VirtualGroupBuilder  g_vg_builder;
 static bool           s_univ_done_startup{};     //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
-static void           univ_open();
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
@@ -235,7 +234,7 @@ void univ_startup()
     // later: make user top file an option or environment variable?
     if (!univ_file_load("%+/univ/top", "Top Level", {}))
     {
-        univ_open();
+        g_univ.open();
         g_univ.title = "Top Level";
         g_univ.fname = "%+/univ/usertop";
 
@@ -262,20 +261,20 @@ void univ_startup()
     s_univ_done_startup = true;
 }
 
-static void univ_open()
+void UniversalMenuContext::open()
 {
-    g_univ.items.clear();
-    g_univ.ng_names.clear();
-    g_univ.vg_names.clear();
+    items.clear();
+    ng_names.clear();
+    vg_names.clear();
     g_sel_page.page_univ_index = {};
     g_sel_page.next_univ_index = {};
-    g_univ.fname.clear();
-    g_univ.title.clear();
-    g_univ.label.clear();
-    g_univ.tmp_file.clear();
+    fname.clear();
+    title.clear();
+    label.clear();
+    tmp_file.clear();
     g_vg_builder.virt_pass_needed = false;
     g_vg_builder.current_vg_ui_index = {};
-    g_univ.level++;
+    level++;
 }
 
 void univ_close()
@@ -965,7 +964,7 @@ bool UniversalMenuLoader::do_line(std::string_view line)
 // level generator
 bool univ_file_load(std::string_view fname, std::string_view title, std::string_view label)
 {
-    univ_open();
+    g_univ.open();
 
     if (!fname.empty())
     {
@@ -995,7 +994,7 @@ bool univ_file_load(std::string_view fname, std::string_view title, std::string_
 // level generator
 void univ_mask_load(std::string_view mask, std::string_view title)
 {
-    univ_open();
+    g_univ.open();
 
     g_univ_loader.use_group_line(mask, 0);
     g_univ.title = title;
@@ -1477,7 +1476,7 @@ HelpLocation UniversalItem::help_location() const
 //int where;    // what context were we in--use later for key help?
 void univ_help_main(HelpLocation where)
 {
-    univ_open();
+    g_univ.open();
     g_univ.title = "Extended Help";
 
     // first add help on current mode

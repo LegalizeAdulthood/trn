@@ -192,6 +192,7 @@ struct UniversalMenuContext
     std::optional<std::size_t> erase(UniversalItemIndex item_index);
 
     // TODO: private
+    void           open();
     std::size_t position(const UniversalItem *item);
     std::size_t position(UniversalItemIndex item_index);
     UniversalItem *add(UniversalData data, std::string_view desc);
