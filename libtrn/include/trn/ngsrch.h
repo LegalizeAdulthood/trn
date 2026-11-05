@@ -5,9 +5,10 @@
 #ifndef TRN_NGSRCH_H
 #define TRN_NGSRCH_H
 
+#include <trn/search.h>
+
 #include <string_view>
 
-class CompiledRegex;
 struct NewsgroupData;
 
 enum NewsgroupSearchResult
@@ -19,6 +20,14 @@ enum NewsgroupSearchResult
     NGS_ERROR = 4,
     NGS_DONE = 5
 };
+
+struct NewsgroupSearchContext
+{
+    bool          do_empty{}; // search empty newsgroups?
+    CompiledRegex compex;
+};
+
+extern NewsgroupSearchContext g_ng_search;
 
 void newsgroup_search_init();
 NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd);

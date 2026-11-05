@@ -26,13 +26,12 @@
 #include <string>
 #include <string_view>
 
-static bool          s_newsgroup_do_empty{}; // search empty newsgroups?
-static CompiledRegex s_newsgroup_compex;
+NewsgroupSearchContext g_ng_search;
 
 void newsgroup_search_init()
 {
-    s_newsgroup_do_empty = false;
-    s_newsgroup_compex.init_compex();
+    g_ng_search.do_empty = false;
+    g_ng_search.compex.init_compex();
 }
 
 NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
@@ -81,7 +80,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     }
     if (!pattern.empty())
     {
-        s_newsgroup_do_empty = false;
+        g_ng_search.do_empty = false;
     }
 
     std::string_view modifier_tail = search_text.substr(tail_start);
@@ -95,7 +94,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             switch (modifier_tail[modifier_pos])
             {
             case 'r':
-                s_newsgroup_do_empty = true;
+                g_ng_search.do_empty = true;
                 ++modifier_pos;
                 break;
 
@@ -124,7 +123,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
     {
         ret = NGS_DONE;
     }
-    const std::string_view err = newsgroup_comp(s_newsgroup_compex, pattern, true, true);
+    const std::string_view err = newsgroup_comp(g_ng_search.compex, pattern, true, true);
     if (!err.empty())
     {
                                         // compile regular expression
@@ -143,7 +142,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
         for (AddGroupIndex index : g_add_groups.indices())
         {
             AddGroup *gp = &g_add_groups[index];
-            if (s_newsgroup_compex.execute(gp->m_name))
+            if (g_ng_search.compex.execute(gp->m_name))
             {
                 if (cmdlst.empty())
                 {
@@ -223,7 +222,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
             {
                 g_newsgroup_ptr->set_to_read(ST_LAX);
             }
-            if (s_newsgroup_do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel.rereading))
+            if (g_ng_search.do_empty || ((g_newsgroup_ptr->m_to_read > TR_NONE) ^ g_sel.rereading))
             {
                 if (cmdlst.empty())
                 {
@@ -255,7 +254,7 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
 
 bool NewsgroupData::newsgroup_wanted()
 {
-    return s_newsgroup_compex.execute(m_rc_line);
+    return g_ng_search.compex.execute(m_rc_line);
 }
 
 std::string_view newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool re, bool fold)
