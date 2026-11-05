@@ -50,6 +50,7 @@
 #include <string_view>
 #include <utility>
 #include <variant>
+#include <vector>
 
 enum UniversalReadResult
 {
@@ -397,6 +398,57 @@ sel_exit:
     return g_sel_session.ret;
 }
 
+static NewsgroupData *recover_group_batch(NewsgroupData *failed)
+{
+    struct GroupMarks
+    {
+        std::string    name;
+        Newsrc        *newsrc;
+        NewsgroupFlags flags;
+    };
+    DataSource *const source = failed->m_rc->data_source;
+    NewsgroupData    *next = newsgroup_next(failed);
+    while (next && (next->m_rc->data_source == source || !(next->m_flags & NF_VISIT)))
+    {
+        next = newsgroup_next(next);
+    }
+    Newsrc *const           next_newsrc = next ? next->m_rc : nullptr;
+    const std::string       next_name = next ? std::string{next->rc_name()} : std::string{};
+    const NewsgroupFlags    marks = NF_SEL | NF_DEL_SEL | NF_DEL | NF_VISIT;
+    std::vector<GroupMarks> saved;
+    for (const NewsgroupData &group : g_newsgroup_data)
+    {
+        if (group.m_rc->data_source != source)
+        {
+            saved.push_back({std::string{group.rc_name()}, group.m_rc, group.m_flags & marks});
+        }
+    }
+    std::sort(saved.begin(), saved.end(),
+              [](const GroupMarks &left, const GroupMarks &right) { return left.name < right.name; });
+    source->nntp_server_died();
+    next = nullptr;
+    for (NewsgroupData &group : g_newsgroup_data)
+    {
+        auto found = std::lower_bound(saved.begin(), saved.end(), group.rc_name(),
+                                      [](const GroupMarks &entry, std::string_view name) { return entry.name < name; });
+        for (; found != saved.end() && found->name == group.rc_name(); ++found)
+        {
+            if (found->newsrc == group.m_rc)
+            {
+                group.m_flags = (group.m_flags & ~marks) | found->flags;
+                break;
+            }
+        }
+        if (group.m_rc == next_newsrc && group.rc_name() == next_name)
+        {
+            next = &group;
+        }
+    }
+    g_sel.set_selector(SM_NEWSGROUP, SS_MAGIC_NUMBER);
+    g_ng_order.sort();
+    return next;
+}
+
 /// @brief Processes selected newsgroups and performs actions based on their flags.
 ///
 /// This function iterates through the list of newsgroups, checking their flags to determine
@@ -474,9 +526,16 @@ do_group:
             goto do_group;
 
         case NG_NO_SERVER:
-            np->m_rc->data_source->nntp_server_died();
+            np = recover_group_batch(np);
+            save_selected_count = static_cast<int>(
+                std::count_if(g_newsgroup_data.begin(), g_newsgroup_data.end(), [](const NewsgroupData &group)
+                              { return group.m_to_read != TR_UNSUB && (group.m_flags & NF_SEL); }));
             (void) g_sel_page.first_page();
-            break;
+            if (np)
+            {
+                goto do_group;
+            }
+            goto loop_break;
 
         // extensions
         case NG_GO_ARTICLE:

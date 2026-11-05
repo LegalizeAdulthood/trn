@@ -8238,8 +8238,7 @@ void NewsgroupSelectorDelegatedErrorSessionTest::TearDown()
     NewsgroupSelectorDelegatedExitStateTest::TearDown();
 }
 
-class NewsgroupSelectorDelegatedServerLossTest : public NewsgroupSelectorDelegatedExitStateTest,
-                                                 public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+class NewsgroupSelectorServerLossStateTest : public NewsgroupSelectorDelegatedExitStateTest
 {
 protected:
     void TearDown() override;
@@ -8267,8 +8266,12 @@ private:
     NewsgroupData *m_old_go_group{g_ng_go_newsgroup_ptr};
 };
 
-void NewsgroupSelectorDelegatedServerLossTest::prepare_server_loss(bool rereading, bool later_page,
-                                                                   bool remaining_source)
+class NewsgroupSelectorDelegatedServerLossTest : public NewsgroupSelectorServerLossStateTest,
+                                                 public testing::WithParamInterface<std::tuple<bool, bool, bool>>
+{
+};
+
+void NewsgroupSelectorServerLossStateTest::prepare_server_loss(bool rereading, bool later_page, bool remaining_source)
 {
     prepare_exit(rereading, later_page);
     const int target = later_page ? 0 : 1;
@@ -8334,7 +8337,7 @@ void NewsgroupSelectorDelegatedServerLossTest::prepare_server_loss(bool rereadin
         .WillOnce([](const std::string &, error_code_t &error) { error = boost::asio::error::connection_reset; });
 }
 
-void NewsgroupSelectorDelegatedServerLossTest::TearDown()
+void NewsgroupSelectorServerLossStateTest::TearDown()
 {
     if (g_multirc == &m_multirc)
     {
@@ -8354,7 +8357,7 @@ void NewsgroupSelectorDelegatedServerLossTest::TearDown()
     NewsgroupSelectorDelegatedExitStateTest::TearDown();
 }
 
-void NewsgroupSelectorDelegatedServerLossTest::expect_saved_changes() const
+void NewsgroupSelectorServerLossStateTest::expect_saved_changes() const
 {
     EXPECT_EQ(m_saved_failed_text, read_newsrc(m_newsrc.name));
     EXPECT_EQ(m_original_newsrc, read_newsrc(m_newsrc.old_name));
@@ -8371,7 +8374,7 @@ void NewsgroupSelectorDelegatedServerLossTest::expect_saved_changes() const
     EXPECT_FALSE(g_restore_old_newsrc);
 }
 
-void NewsgroupSelectorDelegatedServerLossTest::expect_selector_modes(bool rereading) const
+void NewsgroupSelectorServerLossStateTest::expect_selector_modes(bool rereading) const
 {
     EXPECT_EQ(GM_SELECTOR, g_general_mode);
     EXPECT_EQ(MM_NEWSGROUP_SELECTOR, g_mode);
@@ -8380,6 +8383,75 @@ void NewsgroupSelectorDelegatedServerLossTest::expect_selector_modes(bool reread
     EXPECT_EQ(rereading, g_sel.rereading);
     EXPECT_FALSE(g_in_ng);
     EXPECT_FALSE(g_restore_old_newsrc);
+}
+
+class NewsgroupSelectorBatchServerLossTest : public NewsgroupSelectorServerLossStateTest,
+                                             public testing::WithParamInterface<bool>
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorBatchServerLossTest::SetUp()
+{
+    NewsgroupSelectorServerLossStateTest::SetUp();
+    prepare_server_loss(false, false, GetParam());
+    prepare_group_spools();
+    g_tc_LINES = 24;
+    g_sel_page.page_ngd = nullptr;
+    for (NewsgroupData &group : g_newsgroup_data)
+    {
+        group.m_flags &= ~(NF_SEL | NF_DEL_SEL | NF_DEL);
+    }
+}
+
+TEST_P(NewsgroupSelectorBatchServerLossTest, losingASourceDuringABatchRecoversInRemainingSelectorOrder)
+{
+    const bool remaining_source = GetParam();
+
+    testing::internal::CaptureStderr();
+    const char result = run_selector_session(remaining_source ? "abdZ  QqQ" : "abdZ  Q");
+    m_diagnostic = testing::internal::GetCapturedStderr();
+
+    EXPECT_EQ('q', result);
+    EXPECT_EQ(remaining_source ? &m_multirc : nullptr, g_multirc);
+    EXPECT_EQ(remaining_source ? 2 : 0, g_newsgroup_data.size());
+    EXPECT_EQ(remaining_source ? 1 : 0, g_selected_count);
+    EXPECT_THAT(m_diagnostic, testing::HasSubstr("503 Server closed connection."));
+    if (remaining_source)
+    {
+        EXPECT_THAT(m_output, testing::HasSubstr("Entering comp.next"));
+        EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Entering comp.previous")));
+        ASSERT_EQ(2, g_sel_page.page_item_cnt);
+        EXPECT_EQ("comp.next", g_sel_page.items[0].u.np->rc_name());
+        EXPECT_EQ("comp.previous", g_sel_page.items[1].u.np->rc_name());
+        for (const NewsgroupData &group : g_newsgroup_data)
+        {
+            EXPECT_EQ(" 1-2", group.rc_numbers());
+            EXPECT_EQ(group.rc_name() == "comp.previous" ? NF_SEL : NF_NONE, group.m_flags & NF_SEL);
+        }
+    }
+    expect_saved_changes();
+    expect_selector_modes(false);
+    expect_next_command('Q');
+}
+
+INSTANTIATE_TEST_SUITE_P(RemainingSource, NewsgroupSelectorBatchServerLossTest, testing::Bool());
+
+TEST_F(NewsgroupSelectorWorkflowTest, aMissingSpoolGroupStopsTheBatchAndRetainsLaterSelections)
+{
+    const char result = run_inner("bdZq");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("No spool for comp.next"));
+    EXPECT_THAT(m_output, testing::Not(testing::HasSubstr("Entering comp.previous")));
+    ASSERT_EQ(4, m_prompts.size());
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.previous"}), m_prompts.back().rows);
+    EXPECT_EQ(1, m_prompts.back().selected);
+    EXPECT_EQ(NF_SEL, g_newsgroup_data[0].m_flags & NF_SEL);
+    EXPECT_EQ(NF_NONE, g_newsgroup_data[2].m_flags & NF_SEL);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[2].m_to_read);
+    EXPECT_EQ((std::vector<std::string>{" 1-2", " 1", " 1-2"}), m_prompts.back().ranges);
 }
 
 class NewsgroupSelectorDelegatedEntryTest : public NewsgroupSelectorDelegationStateTest,
