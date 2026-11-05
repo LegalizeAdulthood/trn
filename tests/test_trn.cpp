@@ -6024,8 +6024,11 @@ protected:
     void TearDown() override;
     void publish_articles();
     void expect_arrival_bodies(int expected) const;
+    std::vector<ArticleNum> unread_entries(int first_arrival = 4) const;
+    std::string             arrival_notice() const;
 
     int                                   m_arrival_count{};
+    int                                   m_selection_count{};
     bool                                  m_force_refresh{};
     std::vector<LocalArrivalReadingState> m_arrival_states;
 
@@ -6050,6 +6053,13 @@ void LocalNewsgroupArrivalTest::SetUp()
             if (m_force_refresh)
             {
                 g_force_grow = true;
+            }
+        }
+        if (m_states.size() == 1)
+        {
+            for (int index = 0; index < m_selection_count; ++index)
+            {
+                g_cache.ptr(ArticleNum{3 + index})->select_article(AUTO_KILL_NONE);
             }
         }
         m_arrival_states.push_back({g_last_art, g_keep_the_group_static, g_added_articles});
@@ -6082,6 +6092,21 @@ void LocalNewsgroupArrivalTest::expect_arrival_bodies(int expected) const
     {
         expect_body_count("Arrival body " + std::to_string(number), expected);
     }
+}
+
+std::vector<ArticleNum> LocalNewsgroupArrivalTest::unread_entries(int first_arrival) const
+{
+    std::vector<ArticleNum> entries{ArticleNum{3}};
+    for (int number = first_arrival; number < 4 + m_arrival_count; ++number)
+    {
+        entries.emplace_back(number);
+    }
+    return entries;
+}
+
+std::string LocalNewsgroupArrivalTest::arrival_notice() const
+{
+    return std::to_string(m_arrival_count) + (m_arrival_count == 1 ? " new article arrived" : " new articles arrived");
 }
 
 struct PagerReadingState
@@ -14130,28 +14155,75 @@ TEST_P(LocalNewsgroupArrivalTest, returningToTheSelectorReleasesTemporaryStaticP
 
 TEST_P(LocalNewsgroupArrivalTest, theSelectorReportsArrivalsOnceAcrossRepeatedEntries)
 {
-    std::vector<ArticleNum> unread{ArticleNum{3}};
-    for (int number = 4; number < 4 + m_arrival_count; ++number)
-    {
-        unread.emplace_back(number);
-    }
-    const std::string message =
-        std::to_string(m_arrival_count) + (m_arrival_count == 1 ? " new article arrived" : " new articles arrived");
-
     const DoNewsgroupResult result = run_reading({"$", "+", "+", "+", "Q"});
 
     EXPECT_EQ(NG_ASK, result);
     ASSERT_EQ(5, m_states.size());
     EXPECT_EQ(MM_ARTICLE_END, m_states[1].mode);
     EXPECT_EQ(m_arrival_count, m_arrival_states[1].added);
-    expect_selector(2, unread);
-    expect_selector(4, unread);
+    expect_selector(2, unread_entries());
+    expect_selector(4, unread_entries());
     EXPECT_EQ(0, m_arrival_states[2].added);
     EXPECT_EQ(0, m_arrival_states[4].added);
     EXPECT_EQ(0, g_added_articles);
     EXPECT_EQ(ArticleUnread{1 + m_arrival_count}, g_newsgroup_ptr->m_to_read);
-    expect_body_count(message, 1);
+    expect_body_count(arrival_notice(), 1);
     expect_arrival_bodies(0);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(LocalNewsgroupArrivalTest, theSelectorReportsOnlyUnreadArrivalsAfterReadingOneOfThem)
+{
+    const std::string message =
+        std::to_string(m_arrival_count - 1) + " of " + std::to_string(m_arrival_count) + " new articles unread";
+
+    const DoNewsgroupResult result = run_reading({"$", "4\n", "+", "+", "+", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(6, m_states.size());
+    expect_selector(3, unread_entries(5));
+    expect_selector(5, unread_entries(5));
+    EXPECT_EQ(ArticleUnread{m_arrival_count}, m_states[3].unread);
+    EXPECT_EQ(ArticleUnread{m_arrival_count}, g_newsgroup_ptr->m_to_read);
+    EXPECT_EQ(0, m_arrival_states[3].added);
+    EXPECT_EQ(0, m_arrival_states[5].added);
+    EXPECT_EQ(0, g_added_articles);
+    expect_body_count(message, 1);
+    EXPECT_EQ(" 1-2,4", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(LocalNewsgroupArrivalTest, restartingTheSelectorDoesNotRepeatTheArrivalNotice)
+{
+    const DoNewsgroupResult result = run_reading({"$", "+", "U", "U", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(5, m_states.size());
+    expect_selector(2, unread_entries());
+    expect_selector(3, {ArticleNum{1}, ArticleNum{2}});
+    expect_selector(4, unread_entries());
+    EXPECT_EQ(0, m_arrival_states[2].added);
+    EXPECT_EQ(0, m_arrival_states[3].added);
+    EXPECT_EQ(0, m_arrival_states[4].added);
+    EXPECT_EQ(ArticleUnread{1 + m_arrival_count}, g_newsgroup_ptr->m_to_read);
+    expect_body_count(arrival_notice(), 1);
+    EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
+}
+
+TEST_P(LocalNewsgroupArrivalTest, existingSelectionsAreReportedOnceWhenEnteringTheSelector)
+{
+    m_selection_count = m_arrival_count;
+    const std::string message = std::to_string(m_selection_count) +
+                                (m_selection_count == 1 ? " article is selected." : " articles are selected.");
+
+    const DoNewsgroupResult result = run_reading({"$", "+", "U", "U", "Q"});
+
+    EXPECT_EQ(NG_ASK, result);
+    ASSERT_EQ(5, m_states.size());
+    EXPECT_EQ(MM_THREAD_SELECTOR, m_states[2].mode);
+    EXPECT_EQ(ArticleUnread{m_selection_count}, m_states[2].selected);
+    EXPECT_EQ(ArticleUnread{1 + m_arrival_count}, m_states[2].unread);
+    EXPECT_EQ(ArticleUnread{1 + m_arrival_count}, g_newsgroup_ptr->m_to_read);
+    expect_body_count(message, 1);
     EXPECT_EQ(" 1-2", g_newsgroup_ptr->rc_numbers());
 }
 
