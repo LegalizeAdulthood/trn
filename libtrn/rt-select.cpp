@@ -4612,6 +4612,7 @@ int univ_visit_group(std::string_view group_name)
 // later consider returning universal_selector() value
 void univ_visit_help(HelpLocation where)
 {
+    const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
     PUSH_SELECTOR();
     PUSH_UNIV_SELECTOR();
 
@@ -4620,4 +4621,5 @@ void univ_visit_help(HelpLocation where)
 
     POP_UNIV_SELECTOR();
     POP_SELECTOR();
+    g_sel.set_selector(g_sel.mode, parent_order);
 }

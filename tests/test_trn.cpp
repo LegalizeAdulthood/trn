@@ -3436,6 +3436,185 @@ TEST_P(UniversalInterruptedSessionTest, interruptedArticleInputCanResumeTheRemai
 
 INSTANTIATE_TEST_SUITE_P(PendingSignal, UniversalInterruptedSessionTest, testing::Bool());
 
+class UniversalHelpSessionStateTest : public UniversalSessionTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void expect_resources_released() const;
+    void expect_pending_parent(const UniversalSessionPrompt &state) const;
+
+    fs::path m_parent_resource;
+    fs::path m_help_resource;
+
+private:
+    std::string m_old_library{g_rn_lib};
+    bool        m_entered_help{};
+};
+
+void UniversalHelpSessionStateTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    fs::create_directories(m_output_dir / "HelpFiles");
+    std::ofstream{m_output_dir / "HelpFiles/top"} << "\"Local topic\" &help-note\n";
+    g_rn_lib = m_output_dir.generic_string();
+    load_menu("comp.*\n");
+    m_parent_resource = m_output_dir / "parent-resource";
+    m_help_resource = m_output_dir / "help-resource";
+    std::ofstream{m_parent_resource} << "parent\n";
+    g_univ.tmp_file = m_parent_resource.generic_string();
+    m_on_prompt = [this]
+    {
+        if (g_mode != MM_UNIVERSAL)
+        {
+            return;
+        }
+        EXPECT_TRUE(fs::exists(m_parent_resource));
+        if (g_univ.level == 2 && !m_entered_help)
+        {
+            m_entered_help = true;
+            std::ofstream{m_help_resource} << "help\n";
+            g_univ.tmp_file = m_help_resource.generic_string();
+        }
+        else if (g_univ.level == 1 && m_entered_help)
+        {
+            EXPECT_FALSE(fs::exists(m_help_resource));
+        }
+    };
+}
+
+void UniversalHelpSessionStateTest::TearDown()
+{
+    UniversalSessionTest::TearDown();
+    g_rn_lib = m_old_library;
+}
+
+void UniversalHelpSessionStateTest::expect_resources_released() const
+{
+    EXPECT_FALSE(fs::exists(m_parent_resource));
+    EXPECT_FALSE(fs::exists(m_help_resource));
+    expect_caller();
+}
+
+void UniversalHelpSessionStateTest::expect_pending_parent(const UniversalSessionPrompt &state) const
+{
+    EXPECT_EQ(1, state.level);
+    EXPECT_EQ("Local menu", state.title);
+    EXPECT_EQ(SS_NATURAL, state.sort);
+    EXPECT_EQ(1, state.direction);
+    EXPECT_EQ(0, state.prior);
+    ASSERT_EQ(3, state.items.size());
+    EXPECT_EQ("comp.previous", state.items.front().group().ng);
+    EXPECT_EQ(1, state.selected);
+    EXPECT_TRUE(state.items.front().m_flags & UF_SEL);
+}
+
+class UniversalOnlineHelpSessionTest : public UniversalHelpSessionStateTest,
+                                       public testing::WithParamInterface<std::tuple<char, char>>
+{
+};
+
+TEST_P(UniversalOnlineHelpSessionTest, leavingOnlineHelpRestoresTheParentOrderAndPendingSelection)
+{
+    const auto [help, leave] = GetParam();
+
+    const char result = run_menu({"a", std::string(1, help), "R", std::string(1, leave), "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(5, menu.size());
+    EXPECT_EQ(2, menu[2].level);
+    EXPECT_EQ("Extended Help", menu[2].title);
+    EXPECT_EQ(-1, menu[3].direction);
+    expect_pending_parent(menu.back());
+    expect_resources_released();
+}
+
+INSTANTIATE_TEST_SUITE_P(HelpAndExit, UniversalOnlineHelpSessionTest,
+                         testing::Combine(testing::Values('h', '?'), testing::Values('q', 'Q')));
+
+class UniversalPagedHelpSessionTest : public UniversalHelpSessionStateTest,
+                                      public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+TEST_P(UniversalPagedHelpSessionTest, pagedHelpDismissalOrAQueuedCommandRetainsThePendingSelection)
+{
+    const auto [verbose, followup] = GetParam();
+    g_verbose = verbose;
+    g_tc_LINES = 8;
+
+    const char result = run_menu({"a", "H", std::string(1, followup), "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    EXPECT_EQ(1, prompts(MM_ANY_KEY_PROMPT).size());
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    EXPECT_EQ("Local menu", menu.back().title);
+    EXPECT_EQ(followup == 'R' ? -1 : 1, menu.back().direction);
+    EXPECT_EQ(1, menu.back().selected);
+    ASSERT_EQ(3, menu.back().items.size());
+    const UniversalItem &selected = menu.back().items[followup == 'R' ? 2 : 0];
+    EXPECT_EQ("comp.previous", selected.group().ng);
+    EXPECT_TRUE(selected.m_flags & UF_SEL);
+    EXPECT_THAT(m_output, testing::HasSubstr("The Universal Selector:"));
+    expect_resources_released();
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndFollowup, UniversalPagedHelpSessionTest,
+                         testing::Combine(testing::Bool(), testing::Values('q', 'R')));
+
+class UniversalHelpTopicSessionTest : public UniversalHelpSessionStateTest,
+                                      public testing::WithParamInterface<std::tuple<bool, char>>
+{
+};
+
+TEST_P(UniversalHelpTopicSessionTest, readingContextHelpClearsItsSelectionAndRetainsTheParentMenu)
+{
+    const auto [verbose, followup] = GetParam();
+    g_verbose = verbose;
+    g_tc_LINES = 8;
+
+    const char result = run_menu({"a", "h", "\n", std::string(1, followup), "Q", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    EXPECT_EQ(1, prompts(MM_ANY_KEY_PROMPT).size());
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(5, menu.size());
+    EXPECT_EQ("Extended Help", menu[3].title);
+    EXPECT_EQ(0, menu[3].selected);
+    EXPECT_EQ(followup == 'R' ? -1 : 1, menu[3].direction);
+    for (const UniversalItem &item : menu[3].items)
+    {
+        EXPECT_FALSE(item.m_flags & UF_SEL);
+    }
+    expect_pending_parent(menu.back());
+    EXPECT_THAT(m_output, testing::HasSubstr("The Universal Selector:"));
+    expect_resources_released();
+}
+
+INSTANTIATE_TEST_SUITE_P(VerbosityAndFollowup, UniversalHelpTopicSessionTest,
+                         testing::Combine(testing::Bool(), testing::Values('q', 'R')));
+
+class UniversalQuitSessionTest : public UniversalHelpSessionStateTest, public testing::WithParamInterface<char>
+{
+};
+
+TEST_P(UniversalQuitSessionTest, explicitQuitReturnsTheRequestedPolicyAndClosesTheMenuWithoutReadingSelections)
+{
+    const char result = run_menu({"a", std::string(1, GetParam())});
+
+    EXPECT_EQ(GetParam(), result);
+    EXPECT_EQ(2, prompts(MM_UNIVERSAL).size());
+    EXPECT_TRUE(prompts(MM_ARTICLE).empty());
+    EXPECT_EQ(" 1-2", g_newsgroup_data[0].rc_numbers());
+    expect_resources_released();
+}
+
+INSTANTIATE_TEST_SUITE_P(QuitAndNextSelector, UniversalQuitSessionTest, testing::Values('q', 'Q'));
+
 struct MultircReadingPrompt
 {
     int                        group;
