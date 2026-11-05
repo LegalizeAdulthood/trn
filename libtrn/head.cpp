@@ -111,6 +111,15 @@ void HeaderRules::clear()
     user_type_count = 0;
 }
 
+void HeaderRules::reset_user_types()
+{
+    while (user_type_count > 1)
+    {
+        user_type[--user_type_count].name.clear();
+    }
+    user_type_index.fill(0);
+}
+
 void head_init()
 {
     g_header_rules.init();
@@ -204,55 +213,65 @@ HeaderLineType HeaderRules::set_line_type(std::string_view header_name)
     return SOME_LINE;
 }
 
+void HeaderRules::set_custom(std::string_view header_name, HeaderLineType fallback)
+{
+    type[CUSTOM_LINE].name = lower_header_name(header_name);
+    type[CUSTOM_LINE].length = static_cast<char>(header_name.size());
+    type[CUSTOM_LINE].flags = type[fallback].flags;
+}
+
 HeaderLineType get_header_num(std::string_view header_name)
 {
     HeaderLineType i = g_header_rules.set_line_type(header_name);
 
     if (i <= SOME_LINE && i != CUSTOM_LINE)
     {
-        g_header_rules.type[CUSTOM_LINE].name = lower_header_name(header_name);
-        g_header_rules.type[CUSTOM_LINE].length = static_cast<char>(header_name.size());
-        g_header_rules.type[CUSTOM_LINE].flags = g_header_rules.type[i].flags;
-        g_parsed_header.positions[CUSTOM_LINE].min_pos = ArticlePosition{-1};
-        g_parsed_header.positions[CUSTOM_LINE].max_pos = ArticlePosition{};
-        if (!g_parsed_header.head_buf.empty())
-        {
-            const std::string_view header_text{g_parsed_header.head_buf};
-            for (std::size_t line_start{}; line_start < header_text.size();)
-            {
-                const std::size_t line_end = header_text.find('\n', line_start);
-                if (line_end == std::string_view::npos || line_end == line_start)
-                {
-                    break;
-                }
-                const std::string_view line = header_text.substr(line_start, line_end - line_start);
-                const std::size_t      colon = line.find(':');
-                const std::size_t      next_line_start = line_end + 1;
-                if (colon == std::string_view::npos ||
-                    g_header_rules.set_line_type(line.substr(0, colon)) != CUSTOM_LINE)
-                {
-                    line_start = next_line_start;
-                    continue;
-                }
-                g_parsed_header.positions[CUSTOM_LINE].min_pos = ArticlePosition{static_cast<long>(line_start)};
-                std::size_t header_end = next_line_start;
-                while (header_end < header_text.size() && is_hor_space(header_text[header_end]))
-                {
-                    const std::size_t continuation_end = header_text.find('\n', header_end);
-                    if (continuation_end == std::string_view::npos)
-                    {
-                        header_end = header_text.size();
-                        break;
-                    }
-                    header_end = continuation_end + 1;
-                }
-                g_parsed_header.positions[CUSTOM_LINE].max_pos = ArticlePosition{static_cast<long>(header_end)};
-                break;
-            }
-        }
+        g_header_rules.set_custom(header_name, i);
+        g_parsed_header.locate_custom();
         i = CUSTOM_LINE;
     }
     return i;
+}
+
+// Uses the custom rule configured in g_header_rules.
+void ParsedHeaderContext::locate_custom()
+{
+    positions[CUSTOM_LINE].min_pos = ArticlePosition{-1};
+    positions[CUSTOM_LINE].max_pos = ArticlePosition{};
+    if (!head_buf.empty())
+    {
+        const std::string_view header_text{head_buf};
+        for (std::size_t line_start{}; line_start < header_text.size();)
+        {
+            const std::size_t line_end = header_text.find('\n', line_start);
+            if (line_end == std::string_view::npos || line_end == line_start)
+            {
+                break;
+            }
+            const std::string_view line = header_text.substr(line_start, line_end - line_start);
+            const std::size_t      colon = line.find(':');
+            const std::size_t      next_line_start = line_end + 1;
+            if (colon == std::string_view::npos || g_header_rules.set_line_type(line.substr(0, colon)) != CUSTOM_LINE)
+            {
+                line_start = next_line_start;
+                continue;
+            }
+            positions[CUSTOM_LINE].min_pos = ArticlePosition{static_cast<long>(line_start)};
+            std::size_t header_end = next_line_start;
+            while (header_end < header_text.size() && is_hor_space(header_text[header_end]))
+            {
+                const std::size_t continuation_end = header_text.find('\n', header_end);
+                if (continuation_end == std::string_view::npos)
+                {
+                    header_end = header_text.size();
+                    break;
+                }
+                header_end = continuation_end + 1;
+            }
+            positions[CUSTOM_LINE].max_pos = ArticlePosition{static_cast<long>(header_end)};
+            break;
+        }
+    }
 }
 
 // restart_header may insert into the active g_cache.article_list.

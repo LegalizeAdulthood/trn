@@ -1378,12 +1378,7 @@ void HeaderRules::set_list(HeaderTypeFlags flag, HeaderTypeFlags def_flag, std::
 {
     if (flag == HT_HIDE || flag == HT_DEF_HIDE)
     {
-        // Free old user_type list
-        while (user_type_count > 1)
-        {
-            user_type[--user_type_count].name.clear();
-        }
-        user_type_index.fill(0);
+        reset_user_types();
     }
 
     for (int i = HEAD_FIRST; i < HEAD_LAST; i++)

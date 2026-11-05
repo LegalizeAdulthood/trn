@@ -321,12 +321,7 @@ void decode_switch(std::string_view s)
         case 'h':
             if (switch_suffix(s).empty())
             {
-                // Free old g_user_htype list
-                while (g_header_rules.user_type_count > 1)
-                {
-                    g_header_rules.user_type[--g_header_rules.user_type_count].name.clear();
-                }
-                g_header_rules.user_type_index.fill(0);
+                g_header_rules.reset_user_types();
             }
             // FALL THROUGH
 

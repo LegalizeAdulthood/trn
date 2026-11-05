@@ -95,6 +95,7 @@ struct ParsedHeaderContext
     // Restart a parsed header's presentation without discarding its offsets.
     void restart_header(ArticleNum artnum);
     bool parse_line(std::string_view art_buf, int new_hide, int old_hide);
+    void locate_custom();
 
     // TODO: private
     void        end_line();
@@ -115,6 +116,8 @@ struct HeaderRules
 {
     void init();
     void clear();
+    void           reset_user_types();
+    void           set_custom(std::string_view header_name, HeaderLineType fallback);
     HeaderLineType set_line_type(std::string_view header_name);
     void           set(std::string_view s, HeaderTypeFlags flag, bool set_flag);
 
