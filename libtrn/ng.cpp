@@ -730,7 +730,7 @@ cleanup:
     }
     if (g_scoring.initialized)
     {
-        sc_cleanup();
+        g_scoring.cleanup();
     }
     chase_xrefs(false);
     if (!g_univ_ng_virt_flag)

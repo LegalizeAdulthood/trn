@@ -10273,7 +10273,7 @@ void ScoreArticleTest::SetUp()
 void ScoreArticleTest::TearDown()
 {
     g_scoring.save_scores = false;
-    sc_cleanup();
+    g_scoring.cleanup();
     g_score_cache.file_clear();
     g_scoring.delay = m_old_sc_delay;
     g_scoring.scoring = m_old_sc_scoring;
@@ -10366,7 +10366,7 @@ protected:
 void DeferredScoreArticleTest::SetUp()
 {
     ScoreArticleTest::SetUp();
-    sc_cleanup();
+    g_scoring.cleanup();
     g_scoring.delay = true;
 }
 

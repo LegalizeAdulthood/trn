@@ -136,7 +136,7 @@ void ScoringSession::init(bool pend_wait)
             {
                 fmt::print("\nNo articles available for scoring\n");
             }
-            sc_cleanup();
+            cleanup();
             return;
         }
     }
@@ -183,14 +183,14 @@ void ScoringSession::init(bool pend_wait)
     initialized = true;
 }
 
-void sc_cleanup()
+void ScoringSession::cleanup()
 {
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         return;
     }
 
-    if (g_scoring.save_scores)
+    if (save_scores)
     {
         g_saved_scores.save();
     }
@@ -202,11 +202,11 @@ void sc_cleanup()
         std::fflush(stdout);
     }
 
-    if (!g_scoring.sf_delay)
+    if (!sf_delay)
     {
         sf_clean(); // let the scorefile do whatever cleaning it needs
     }
-    g_scoring.initialized = false;
+    initialized = false;
 
     if (g_sf_verbose)
     {
@@ -514,7 +514,7 @@ void sc_append(std::string_view line)
 void sc_rescore()
 {
     g_scoring.rescoring = true; // in case routines need to know
-    sc_cleanup();        // get rid of the old
+    g_scoring.cleanup();        // get rid of the old
     g_score_cache.file_clear();
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
