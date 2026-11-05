@@ -716,21 +716,21 @@ int KillFilePersistence::age_thread_commands(int keylen, HashDatum *data, int el
     return 0;
 }
 
-void update_thread_kill_file()
+void KillFilePersistence::update_thread_kill_file()
 {
-    if (!(g_kill_store.state & KFS_GLOBAL_THREAD_FILE))
+    if (!(state & KFS_GLOBAL_THREAD_FILE))
     {
         return;
     }
 
-    int elapsed_days = kill_file_day_num(g_kill_store.day_num);
+    int elapsed_days = kill_file_day_num(day_num);
     if (elapsed_days)
     {
-        g_hash_cursor.walk(g_msg_id_hash, &age_thread_commands, elapsed_days);
-        g_kill_store.day_num += elapsed_days;
+        g_hash_cursor.walk(g_msg_id_hash, &::age_thread_commands, elapsed_days);
+        day_num += elapsed_days;
     }
 
-    if (!(g_kill_store.state & KFS_THREAD_CHANGES))
+    if (!(state & KFS_THREAD_CHANGES))
     {
         return;
     }
@@ -738,30 +738,30 @@ void update_thread_kill_file()
     const fs::path kname{file_exp(get_env_var("KILLTHREADS", s_kill_threads))};
     std::error_code error;
     fs::create_directories(kname.parent_path(), error);
-    if (g_kill_store.change_thread_cnt * 5 > g_kill_store.thread_cnt)
+    if (change_thread_cnt * 5 > thread_cnt)
     {
         fs::remove(kname, error);       // to prevent file reuse
-        g_kill_store.new_fp = std::fopen(kname.string().c_str(), "w");
-        if (g_kill_store.new_fp == nullptr)
+        new_fp = std::fopen(kname.string().c_str(), "w");
+        if (new_fp == nullptr)
         {
             return; // Yikes!
         }
-        g_kill_store.thread_cnt = 0;
-        g_kill_store.change_thread_cnt = 0;
-        g_hash_cursor.walk(g_msg_id_hash, &write_global_thread_commands, 0); // Rewrite
+        thread_cnt = 0;
+        change_thread_cnt = 0;
+        g_hash_cursor.walk(g_msg_id_hash, &::write_global_thread_commands, 0); // Rewrite
     }
     else
     {
-        g_kill_store.new_fp = std::fopen(kname.string().c_str(), "a");
-        if (g_kill_store.new_fp == nullptr)
+        new_fp = std::fopen(kname.string().c_str(), "a");
+        if (new_fp == nullptr)
         {
             return; // Yikes!
         }
-        g_hash_cursor.walk(g_msg_id_hash, &write_global_thread_commands, 1); // Append
+        g_hash_cursor.walk(g_msg_id_hash, &::write_global_thread_commands, 1); // Append
     }
-    std::fclose(g_kill_store.new_fp);
+    std::fclose(new_fp);
 
-    g_kill_store.state &= ~KFS_THREAD_CHANGES;
+    state &= ~KFS_THREAD_CHANGES;
 }
 
 // edit KILL file for newsgroup

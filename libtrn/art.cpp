@@ -864,7 +864,7 @@ reask_pager:
                             // in an article he is interested in
             g_check_count = 0;
             checkpoint_newsrcs();       // update all newsrcs
-            update_thread_kill_file();
+            g_kill_store.update_thread_kill_file();
         }
         set_mode(g_general_mode, MM_PAGER);
         cache_until_key();

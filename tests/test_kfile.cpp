@@ -472,7 +472,7 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
     g_kill_store.change_thread_cnt = 1;
     g_kill_store.state |= KFS_THREAD_CHANGES;
 
-    update_thread_kill_file();
+    g_kill_store.update_thread_kill_file();
 
     EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
 }
@@ -497,7 +497,7 @@ TEST_F(KillFileEditTest, defaultThreadKillFileUsesTrnDirectory)
     g_kill_store.change_thread_cnt = 1;
     g_kill_store.state |= KFS_THREAD_CHANGES;
 
-    update_thread_kill_file();
+    g_kill_store.update_thread_kill_file();
 
     EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
 }
@@ -519,7 +519,7 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileAllowsTrailingAgeText)
     g_kill_store.change_thread_cnt = 1;
     g_kill_store.state |= KFS_THREAD_CHANGES;
 
-    update_thread_kill_file();
+    g_kill_store.update_thread_kill_file();
 
     EXPECT_EQ("<case@example.com> + " + std::to_string(day_num) + "\n", file_contents(kill_file));
 }

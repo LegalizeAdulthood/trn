@@ -759,7 +759,7 @@ cleanup2:
             {
                 get_anything();
             }
-            update_thread_kill_file();
+            g_kill_store.update_thread_kill_file();
         }
     }
 

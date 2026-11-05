@@ -102,7 +102,7 @@ void final_init()
 void finalize(int status)
 {
     g_saved_scores.save_file(); // save any scores from memory to disk
-    update_thread_kill_file();
+    g_kill_store.update_thread_kill_file();
     g_color.deefault();
     termlib_reset();
     if (g_bizarre)
@@ -236,7 +236,7 @@ Signal_t sig_catcher(int signo)
     {
         // TODO: get_old_newsrcs(g_multirc);  ??
     }
-    update_thread_kill_file();
+    g_kill_store.update_thread_kill_file();
 
 #ifdef SIGHUP
     if (signo != SIGHUP)
