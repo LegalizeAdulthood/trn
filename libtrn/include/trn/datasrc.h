@@ -111,6 +111,10 @@ struct DataSource
     {
         return m_act_sf.m_fp != nullptr;
     }
+    bool has_group_descriptions() const
+    {
+        return m_desc_sf.m_hp != nullptr;
+    }
     std::string      find_active_group(std::string_view name, ArticleNum high);
     std::string_view find_group_desc(std::string_view group_name);
     void             prepare_group_descriptions(DescriptionLookup lookup);

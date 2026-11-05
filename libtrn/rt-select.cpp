@@ -3304,7 +3304,7 @@ DisplayState newsgroup_commands(char_int ch)
 
     case 'L':
         switch_dmode(g_sel_grp_display_mode, g_sel_grp_display_mode_index); // sets g_msg
-        if (current_group_display_mode() != 's' && !g_multirc->m_first->data_source->m_desc_sf.m_hp)
+        if (current_group_display_mode() != 's' && !g_multirc->m_first->data_source->has_group_descriptions())
         {
             newline();
             return DS_RESTART;
@@ -3839,7 +3839,7 @@ reask_sort:
 
     case 'L':
         switch_dmode(g_sel_grp_display_mode, g_sel_grp_display_mode_index); // sets g_msg
-        if (current_group_display_mode() != 's' && !g_data_source->m_desc_sf.m_hp)
+        if (current_group_display_mode() != 's' && !g_data_source->has_group_descriptions())
         {
             newline();
             return DS_RESTART;

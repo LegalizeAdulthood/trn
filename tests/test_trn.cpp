@@ -14849,14 +14849,14 @@ TEST_P(NewsgroupSelectorDisplayLoadingTest, enteringADescriptionModeRequestsARes
 {
     const auto [rereading, mode] = GetParam();
     prepare_display(rereading, std::string{"s"} + mode);
-    ASSERT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    ASSERT_FALSE(m_data_source.has_group_descriptions());
 
     const DisplayState result = run_delegated('L', "Q");
 
     EXPECT_EQ(DS_RESTART, result);
     EXPECT_EQ(1, g_sel_grp_display_mode_index);
     EXPECT_EQ(mode, current_group_display_mode());
-    EXPECT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    EXPECT_FALSE(m_data_source.has_group_descriptions());
     EXPECT_EQ(mode == 'm' ? "(medium display style)" : "(long display style)", g_msg);
     expect_display_preserved(rereading);
     expect_next_command('Q');
@@ -14869,14 +14869,14 @@ TEST_P(NewsgroupSelectorDisplayScopeTest, returningToShortDisplayNeedsNoDescript
 {
     const bool rereading = GetParam();
     prepare_display(rereading, "ms");
-    ASSERT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    ASSERT_FALSE(m_data_source.has_group_descriptions());
 
     const DisplayState result = run_delegated('L', "Q");
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ('s', current_group_display_mode());
     EXPECT_EQ("(short display style)", g_msg);
-    EXPECT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    EXPECT_FALSE(m_data_source.has_group_descriptions());
     expect_display_preserved(rereading);
     expect_next_command('Q');
 }
@@ -14894,7 +14894,7 @@ TEST_P(NewsgroupSelectorDisplaySessionTest, descriptionDisplayResumesTheSelector
 
     EXPECT_EQ('q', result);
     EXPECT_EQ(mode, current_group_display_mode());
-    ASSERT_NE(nullptr, m_data_source.m_desc_sf.m_hp);
+    ASSERT_TRUE(m_data_source.has_group_descriptions());
     EXPECT_EQ("Cplusplus discussion\n", m_data_source.find_group_desc("comp.lang.cpp"));
     const std::size_t description = m_output.find("Cplusplus discussion");
     ASSERT_NE(std::string::npos, description);
@@ -14921,7 +14921,7 @@ TEST_P(NewsgroupSelectorDisplayScopeTest, unavailableDescriptionsFallBackToNames
 
     EXPECT_EQ('q', result);
     EXPECT_EQ('m', current_group_display_mode());
-    EXPECT_EQ(nullptr, m_data_source.m_desc_sf.m_hp);
+    EXPECT_FALSE(m_data_source.has_group_descriptions());
     EXPECT_EQ(0, m_data_source.m_desc_sf.m_refetch_secs);
     EXPECT_NE(std::string::npos, m_output.find("comp.lang.cpp"));
     EXPECT_NE(std::string::npos, m_output.find("comp.previous"));
