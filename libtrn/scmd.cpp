@@ -200,7 +200,7 @@ static int s_do_cmd(std::string_view command)
         {
             if (g_art_scan.prev_elig(g_art_scan.page_ents[0].ent_num))
             {
-                s_go_prev_page();
+                g_art_scan.go_prev_page();
                 g_art_scan.ptr_page_line = g_art_scan.bot_ent; // go to page bot.
             }
             else
@@ -239,7 +239,7 @@ static int s_do_cmd(std::string_view command)
             s_beep();
             break;
         }
-        s_go_prev_page();               // will beep if no prior page
+        g_art_scan.go_prev_page(); // will beep if no prior page
         break;
 
     case 'T':         // top of ents

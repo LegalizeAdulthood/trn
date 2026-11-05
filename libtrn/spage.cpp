@@ -437,20 +437,20 @@ void ArticleScanSession::go_next_page()
     ptr_page_line = 0;          // top of page
 }
 
-void s_go_prev_page()
+void ArticleScanSession::go_prev_page()
 {
-    long a = g_art_scan.prev_elig(g_art_scan.page_ents[0].ent_num);
+    long a = prev_elig(page_ents[0].ent_num);
     if (!a)
     {
         return;         // no prev. page (we shouldn't have been called)
     }
     // the fill-page will set the refresh for the screen
-    bool flag = g_art_scan.fill_page_backward(a); // fill backward
+    bool flag = fill_page_backward(a);  // fill backward
     TRN_ASSERT(flag);                   // be nicer later...
     // take care of partially filled previous pages
-    flag = g_art_scan.refill_page();
+    flag = refill_page();
     TRN_ASSERT(flag);           // be nicer later...
-    g_art_scan.ref_status = 0;
-    g_art_scan.ref_desc = 0;      // refresh from top
-    g_art_scan.ptr_page_line = 0; // top of page
+    ref_status = 0;
+    ref_desc = 0;      // refresh from top
+    ptr_page_line = 0; // top of page
 }

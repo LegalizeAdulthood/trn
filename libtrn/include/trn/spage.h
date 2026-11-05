@@ -7,6 +7,5 @@
 #ifndef TRN_SPAGE_H
 #define TRN_SPAGE_H
 
-void s_go_prev_page();
 
 #endif
