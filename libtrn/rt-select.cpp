@@ -1169,13 +1169,14 @@ sel_restart:
         for (std::size_t i = 0; i < g_univ.items.size(); ++i)
         {
             UniversalItem *ui = &g_univ.items[i];
-            if (ui->m_flags & UF_SEL)
+            const UniversalItemFlags active_mask = static_cast<UniversalItemFlags>(g_sel.mask);
+            if (ui->m_flags & active_mask)
             {
                 const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
                 PUSH_SELECTOR();
                 PUSH_UNIV_SELECTOR();
 
-                ui->m_flags &= ~UF_SEL;
+                ui->m_flags &= ~active_mask;
                 save_selected_count--;
                 UniversalReadResult ret = univ_read(ui);
 
@@ -1754,11 +1755,6 @@ reinp_selector:
             {
                 output_sel(g_sel_page.item_index, 1, true);
             }
-            if (g_term_line >= g_sel_page.last_line)
-            {
-                display();
-                goto reask_selector;
-            }
             break;
 
         case '-':  case 'k':  case 'M':
@@ -1774,11 +1770,6 @@ reinp_selector:
                 output_sel(g_sel_page.item_index, ch == '-' ? 0 : 2, true);
             }
             g_sel.rereading = sel_reread_save;
-            if (g_term_line >= g_sel_page.last_line)
-            {
-                display();
-                goto reask_selector;
-            }
             break;
         }
         }
@@ -1796,6 +1787,11 @@ reinp_selector:
     if (force_pos >= 0)
     {
         g_sel_page.item_index = force_pos;
+    }
+    if (g_term_line >= g_sel_page.last_line)
+    {
+        display();
+        goto reask_selector;
     }
     goto position_selector;
 }

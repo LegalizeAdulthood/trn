@@ -3018,6 +3018,127 @@ TEST_P(UniversalExclusiveSessionTest, exclusiveDisplayPreservesSelectionsMadeOnD
 
 INSTANTIATE_TEST_SUITE_P(RetainOrRestore, UniversalExclusiveSessionTest, testing::Bool());
 
+class UniversalScopeSessionTest : public UniversalSessionTest
+{
+protected:
+    void SetUp() override;
+};
+
+void UniversalScopeSessionTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    g_newsgroup_data[0].set_rc_line("comp.previous: 1-3", TR_NONE);
+    load_menu("comp.*\n");
+}
+
+TEST_F(UniversalScopeSessionTest, switchingScopesRetainsPendingUnreadSelectionsAndItemIdentity)
+{
+    const char result = run_menu({".", "U", "U", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(4, menu.size());
+    EXPECT_TRUE(menu[2].rereading);
+    EXPECT_EQ(AGF_DEL_SEL, menu[2].mask);
+    EXPECT_FALSE(menu[3].rereading);
+    EXPECT_EQ(AGF_SEL, menu[3].mask);
+    for (const UniversalSessionPrompt &state : menu)
+    {
+        ASSERT_EQ(3, state.items.size());
+        EXPECT_EQ("comp.previous", state.items[0].group().ng);
+        EXPECT_EQ("comp.lang.cpp", state.items[1].group().ng);
+        EXPECT_EQ("comp.next", state.items[2].group().ng);
+    }
+    EXPECT_TRUE(menu[2].items[0].m_flags & UF_INCLUDED);
+    EXPECT_FALSE(menu[2].items[1].m_flags & UF_INCLUDED);
+    EXPECT_EQ(1, menu[3].selected);
+    EXPECT_TRUE(menu[3].items[1].m_flags & UF_SEL);
+    EXPECT_EQ(" 1-3", menu[3].ranges[0]);
+    expect_caller();
+}
+
+class UniversalReadScopeSessionTest : public UniversalScopeSessionTest, public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(UniversalReadScopeSessionTest, acceptingAReadScopeSelectionInvokesTheReaderAndClearsItsMark)
+{
+    g_univ.close();
+    load_menu(GetParam() ? "\"Read article\" $v1 3 comp.previous\n" : "comp.previous\n");
+
+    const char result = run_menu({"U", "\n", "Q", "Q"});
+
+    SCOPED_TRACE(m_output);
+    EXPECT_EQ('Q', result);
+    EXPECT_EQ(1, prompts(MM_ARTICLE_END).size());
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    EXPECT_EQ("comp.previous", menu.back().group);
+    EXPECT_EQ(0, menu.back().selected);
+    ASSERT_EQ(1, menu.back().items.size());
+    EXPECT_FALSE(menu.back().items[0].m_flags & UF_DEL_SEL);
+    EXPECT_EQ(" 1-3", menu.back().ranges[0]);
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(ItemKind, UniversalReadScopeSessionTest, testing::Bool());
+
+TEST_F(UniversalSessionTest, returningFromAnEmptyReadScopeRestoresTheUnreadPopulation)
+{
+    load_menu("comp.*\n");
+
+    const char result = run_menu({"U", "U", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(3, menu.size());
+    for (const UniversalItem &item : menu[1].items)
+    {
+        EXPECT_FALSE(item.m_flags & UF_INCLUDED);
+    }
+    for (const UniversalItem &item : menu[2].items)
+    {
+        EXPECT_TRUE(item.m_flags & UF_INCLUDED);
+    }
+    EXPECT_EQ(0, menu[2].selected);
+    expect_caller();
+}
+
+class UniversalBulkSessionTest : public UniversalSessionTest, public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+protected:
+    void SetUp() override;
+};
+
+void UniversalBulkSessionTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    m_env.expect_env_repeatedly("SELECTCHARS", "abc");
+}
+
+TEST_P(UniversalBulkSessionTest, togglingThePageChangesEveryVisibleMark)
+{
+    const auto [can_home, initially_selected] = GetParam();
+    g_can_home = can_home;
+    load_menu("comp.*\n");
+
+    const char result = run_menu(initially_selected ? std::vector<std::string>{"a", "b", "c", "@", "Q"}
+                                                    : std::vector<std::string>{"@", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(initially_selected ? 5 : 2, menu.size());
+    EXPECT_EQ(initially_selected ? 0 : 3, menu.back().selected);
+    for (const UniversalItem &item : menu.back().items)
+    {
+        EXPECT_EQ(!initially_selected, !!(item.m_flags & UF_SEL));
+    }
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(CursorAddressingAndInitialMarks, UniversalBulkSessionTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
 struct MultircReadingPrompt
 {
     int                        group;
