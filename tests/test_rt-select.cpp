@@ -5659,6 +5659,149 @@ INSTANTIATE_TEST_SUITE_P(ModeScopeAndCommand, ArticleSelectorGroupingCleanupTest
                          testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
                                           testing::Values('S', '=')));
 
+class ArticleSelectorYankStateTest : public ArticleSelectorBehaviorTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_yank(SelectionMode mode, bool rereading, int delayed);
+
+private:
+    int  m_old_delayed{g_dm_count};
+    bool m_old_panic{g_panic};
+};
+
+void ArticleSelectorYankStateTest::SetUp()
+{
+    ArticleSelectorBehaviorTest::SetUp();
+    g_dm_count = 0;
+    g_panic = false;
+}
+
+void ArticleSelectorYankStateTest::TearDown()
+{
+    g_dm_count = m_old_delayed;
+    g_panic = m_old_panic;
+    ArticleSelectorBehaviorTest::TearDown();
+}
+
+void ArticleSelectorYankStateTest::prepare_yank(SelectionMode mode, bool rereading, int delayed)
+{
+    prepare_behavior(mode, rereading);
+    g_cache.ptr(ArticleNum{1})->m_flags |= AF_HAS_RE;
+    for (int number = 2; number < delayed + 2; ++number)
+    {
+        Article *article = g_cache.ptr(ArticleNum{number});
+        article->delay_unmark();
+        article->one_less();
+    }
+    g_sel_page.page_art = nullptr;
+    g_sel_page.page_subj = nullptr;
+    rebuild_page();
+    calculate_page();
+}
+
+class ArticleSelectorYankCommandTest : public ArticleSelectorYankStateTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, int>>
+{
+};
+
+TEST_P(ArticleSelectorYankCommandTest, returningDelayedArticlesRebuildsTheActiveScopeAndRetainsOtherSelections)
+{
+    const auto [mode, rereading, delayed] = GetParam();
+    prepare_yank(mode, rereading, delayed);
+
+    const DisplayState result = run_redisplay('Y');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(0, g_dm_count);
+    EXPECT_EQ("Returned " + std::to_string(delayed) + " Marked article" + (delayed == 1 ? "." : "s."), g_msg);
+    EXPECT_THAT(m_output, testing::HasSubstr(g_msg));
+    EXPECT_EQ(rereading ? delayed : 4, m_newsgroup.m_to_read);
+    EXPECT_EQ(rereading ? 2 : delayed + 2, g_selected_count);
+    EXPECT_EQ(mode == SM_ARTICLE ? (rereading ? 4 - delayed : 4) : (rereading ? 3 - delayed : 3),
+              g_sel_page.page_item_cnt);
+    for (int number = 1; number <= 4; ++number)
+    {
+        const Article *article = g_cache.ptr(ArticleNum{number});
+        const bool     returned = number >= 2 && number < delayed + 2;
+        EXPECT_EQ(!rereading || returned, (article->m_flags & AF_UNREAD) != 0) << number;
+        EXPECT_EQ(number == 1 || number == 4 || (returned && !rereading), (article->m_flags & g_sel.mask) != 0)
+            << number;
+        EXPECT_EQ(AF_NONE, article->m_flags & AF_YANK_BACK) << number;
+    }
+    EXPECT_EQ(AF_HAS_RE, g_cache.ptr(ArticleNum{1})->m_flags & AF_HAS_RE);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
+    EXPECT_EQ(rereading ? " 1-4" : " ", m_newsgroup.rc_numbers());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScopeAndDelayedCount, ArticleSelectorYankCommandTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(1, 2)));
+
+class ArticleSelectorEmptyYankTest : public ArticleSelectorYankStateTest,
+                                     public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+TEST_P(ArticleSelectorEmptyYankTest, anEmptyReturnRequestReportsItsStatusWithoutChangingThePageOrQueuedInput)
+{
+    const auto [mode, rereading] = GetParam();
+    prepare_yank(mode, rereading, 0);
+    const std::vector<long> order = displayed_order();
+    const int               rows = g_sel_page.page_item_cnt;
+
+    const DisplayState result = run_command('Y', "Q");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("No marked articles to yank back.", g_msg);
+    EXPECT_EQ(order, displayed_order());
+    EXPECT_EQ(rows, g_sel_page.page_item_cnt);
+    expect_read_ranges_preserved(rereading);
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndScope, ArticleSelectorEmptyYankTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
+
+class ArticleSelectorYankCleanupTest : public ArticleSelectorYankStateTest,
+                                       public testing::WithParamInterface<SelectionMode>
+{
+};
+
+TEST_P(ArticleSelectorYankCleanupTest, returningAnArticleAppliesOtherPendingKillsWithoutKillingTheReturnedArticle)
+{
+    const SelectionMode mode = GetParam();
+    prepare_yank(mode, false, 1);
+    g_cache.ptr(ArticleNum{4})->m_flags = (g_cache.ptr(ArticleNum{4})->m_flags & ~AF_SEL) | AF_DEL;
+    --g_selected_count;
+    if (mode != SM_ARTICLE)
+    {
+        g_cache.ptr(ArticleNum{1})->m_flags &= ~AF_SEL;
+        --g_selected_count;
+        m_subject.m_flags = (m_subject.m_flags & ~SF_SEL) | SF_DEL;
+    }
+
+    const DisplayState result = run_redisplay('Y');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    if (mode == SM_ARTICLE)
+    {
+        expect_articles({1, 2, 3}, {1, 2});
+    }
+    else
+    {
+        expect_articles({2, 3}, {2});
+    }
+    EXPECT_EQ(AF_NONE, g_cache.ptr(ArticleNum{2})->m_flags & AF_YANK_BACK);
+    EXPECT_EQ(AF_HAS_RE, g_cache.ptr(ArticleNum{1})->m_flags & AF_HAS_RE);
+    EXPECT_EQ(0, g_dm_count);
+}
+
+INSTANTIATE_TEST_SUITE_P(Mode, ArticleSelectorYankCleanupTest, testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
 {
