@@ -2438,6 +2438,7 @@ struct UniversalSessionPrompt
     std::string                group;
     std::string                recent;
     ArticleNum                 article;
+    bool                       virtual_reading;
     std::array<std::string, 3> ranges;
 };
 
@@ -2555,6 +2556,7 @@ UniversalSessionPrompt UniversalSessionTest::snapshot() const
                                  g_current_newsgroup ? std::string{g_current_newsgroup->rc_name()} : std::string{},
                                  g_recent_newsgroup ? std::string{g_recent_newsgroup->rc_name()} : std::string{},
                                  g_nav.target.num,
+                                 g_univ_read_virt_flag,
                                  {}};
     for (std::size_t i = 0; i < state.ranges.size(); ++i)
     {
@@ -2627,6 +2629,46 @@ TEST_P(UniversalEntrySessionTest, enteringAndSelectingAnItemDisplaysTheLoadedGro
 }
 
 INSTANTIATE_TEST_SUITE_P(SourceAndVerbosity, UniversalEntrySessionTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
+class UniversalReadingSessionTest : public UniversalSessionTest,
+                                    public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+TEST_P(UniversalReadingSessionTest, readingAnItemUsesTheLocalSpoolAndRestoresTheMenuWithUpdatedReadState)
+{
+    const auto [virtual_article, previous_group] = GetParam();
+    const std::size_t index = previous_group ? 0 : 2;
+    const std::string group{g_newsgroup_data[index].rc_name()};
+    load_menu(virtual_article ? "\"Chosen article\" $v1 3 " + group + '\n' : group + '\n');
+
+    const char result = run_menu({"\n", "Q", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> reading = prompts(MM_ARTICLE);
+    ASSERT_EQ(1, reading.size());
+    EXPECT_EQ(group, reading[0].group);
+    EXPECT_EQ("comp.lang.cpp", reading[0].recent);
+    EXPECT_EQ(ArticleNum{3}, reading[0].article);
+    EXPECT_EQ(virtual_article, reading[0].virtual_reading);
+    EXPECT_THAT(m_output, testing::HasSubstr("Group body " + group + " article 3"));
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(2, menu.size());
+    EXPECT_EQ("Local menu", menu[1].title);
+    EXPECT_EQ(0, menu[1].selected);
+    ASSERT_EQ(1, menu[1].items.size());
+    EXPECT_FALSE(menu[1].items[0].m_flags & UF_SEL);
+    EXPECT_EQ(" 1-3", menu[1].ranges[index]);
+    EXPECT_EQ(&g_newsgroup_data[index], g_current_newsgroup);
+    EXPECT_EQ(&g_newsgroup_data[1], g_recent_newsgroup);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[index].m_to_read);
+    EXPECT_EQ(" 1", g_newsgroup_data[1].rc_numbers());
+    EXPECT_FALSE(g_univ_read_virt_flag);
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(ItemAndDestination, UniversalReadingSessionTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
 
 struct MultircReadingPrompt
