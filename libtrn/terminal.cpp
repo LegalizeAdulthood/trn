@@ -684,7 +684,7 @@ void mac_line(std::string_view line)
         pattern.remove_suffix(1);
     }
     std::string_view  cursor{pattern};
-    const std::string macro_sequence = do_interp(cursor, " \t", {});
+    const std::string macro_sequence = g_interp.do_interp(cursor, " \t", {});
     if (cursor.empty())
     {
         return;

@@ -655,7 +655,7 @@ bool parse_ini_section(const IniSection &section, const IniSchema &schema, IniSe
 bool check_ini_cond(std::string_view cond)
 {
     std::string_view cond_cursor{cond};
-    std::string      condition_text = do_interp(cond_cursor, "!=<>", {});
+    std::string      condition_text = g_interp.do_interp(cond_cursor, "!=<>", {});
     while (!condition_text.empty() && std::isspace(static_cast<unsigned char>(condition_text.back())))
     {
         condition_text.pop_back();

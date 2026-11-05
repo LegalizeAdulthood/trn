@@ -290,10 +290,10 @@ std::size_t skip_interp(std::string_view pattern, std::string_view stoppers)
 std::string do_interp(std::string_view pattern)
 {
     std::string_view cursor{pattern};
-    return do_interp(cursor, {}, {});
+    return g_interp.do_interp(cursor, {}, {});
 }
 
-std::string do_interp(std::string_view &pattern, std::string_view stoppers, std::string_view cmd)
+std::string InterpolationContext::do_interp(std::string_view &pattern, std::string_view stoppers, std::string_view cmd)
 {
     std::optional<std::string>        subj_buf;
     std::optional<std::string>        ngs_buf;
@@ -580,18 +580,18 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         std::string_view regex_cursor{format_spec};
                         regex_text = do_interp(regex_cursor, {}, cmd);
                     }
-                    const std::string_view compile_error = g_interp.cond_compex.compile(regex_text, true, true);
+                    const std::string_view compile_error = cond_compex.compile(regex_text, true, true);
                     if (!compile_error.empty())
                     {
                         fmt::print("{}: {}\n", regex_text, compile_error);
                         pattern.remove_prefix(pattern.size());
-                        g_interp.cond_compex.free_compex();
+                        cond_compex.free_compex();
                         goto getout;
                     }
-                    matched = g_interp.cond_compex.execute(condition_text);
-                    if (g_interp.cond_compex.has_brackets()) // were there brackets?
+                    matched = cond_compex.execute(condition_text);
+                    if (cond_compex.has_brackets()) // were there brackets?
                     {
-                        g_art_search.bra_compex = &g_interp.cond_compex;
+                        g_art_search.bra_compex = &cond_compex;
                     }
                     condition_cursor.remove_prefix(1);
                     std::string branch_text;
@@ -616,7 +616,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     pattern = condition_cursor;
                     set_owned_value(std::move(branch_text));
                     g_art_search.bra_compex = oldbra_compex;
-                    g_interp.cond_compex.free_compex();
+                    cond_compex.free_compex();
                     break;
                 }
 
@@ -674,7 +674,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     {
                         scratch.pop_back();
                     }
-                    g_interp.last_input = scratch;
+                    last_input = scratch;
                     set_value(scratch);
                     break;
                 }
@@ -698,7 +698,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                 case '#':
                     if (upper)
                     {
-                        set_owned_value(std::to_string(++g_interp.interp_counter));
+                        set_owned_value(std::to_string(++interp_counter));
                     }
                     else
                     {
@@ -1010,7 +1010,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                     break;
 
                 case 'q':
-                    scratch.assign(g_interp.last_input);
+                    scratch.assign(last_input);
                     set_value(scratch);
                     break;
 
@@ -1450,7 +1450,7 @@ getout:
 std::string interp_search(std::string_view pattern, std::string_view cmd)
 {
     std::string_view cursor{pattern};
-    return do_interp(cursor, {}, cmd);
+    return g_interp.do_interp(cursor, {}, cmd);
 }
 
 /// @brief Converts an escape sequence in a pattern to its corresponding character.

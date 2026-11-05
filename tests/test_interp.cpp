@@ -135,7 +135,7 @@ protected:
     std::string_view interpolate(std::string_view pattern, std::string_view stoppers = {})
     {
         std::string_view cursor{pattern};
-        m_buffer = do_interp(cursor, stoppers, {});
+        m_buffer = g_interp.do_interp(cursor, stoppers, {});
         return cursor;
     }
 
@@ -344,7 +344,7 @@ TEST_F(InterpolatorTest, referenceCursorDoInterpStopsBeforeStopper)
     m_env.expect_env("FOO", "value");
     std::string_view pattern{"%{FOO}|tail"};
 
-    EXPECT_EQ("value", do_interp(pattern, "|", ""));
+    EXPECT_EQ("value", g_interp.do_interp(pattern, "|", ""));
     EXPECT_EQ("|tail", pattern);
 }
 
@@ -355,7 +355,7 @@ TEST_F(InterpolatorTest, referenceCursorDoInterpUsesSearchCommand)
     g_art_search.how_much = ARTSCOPE_SUBJECT;
     std::string_view pattern{"%/"};
 
-    EXPECT_EQ("needle?", do_interp(pattern, "", "?"));
+    EXPECT_EQ("needle?", g_interp.do_interp(pattern, "", "?"));
     EXPECT_TRUE(pattern.empty());
 }
 
