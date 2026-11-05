@@ -5417,6 +5417,123 @@ void ArticleSelectorBulkStateTest::expect_articles(std::initializer_list<long> u
     EXPECT_EQ(static_cast<ArticleUnread>(selected.size()), g_selected_count);
 }
 
+class ArticleSelectorBehaviorTest : public ArticleSelectorBulkStateTest
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+    void prepare_behavior(SelectionMode mode, bool rereading = false);
+    void expect_read_ranges_preserved(bool rereading) const;
+
+    Newsrc m_newsrc{};
+
+private:
+    std::string_view  m_old_standout{g_tc_SO};
+    std::string_view  m_old_end_standout{g_tc_SE};
+    bool              m_old_in_ng{g_in_ng};
+    std::string       m_old_group_name{g_newsgroup_name};
+    ReadingNavigation m_old_navigation{g_nav};
+    SelectorSession   m_old_session{g_sel_session};
+};
+
+void ArticleSelectorBehaviorTest::SetUp()
+{
+    ArticleSelectorBulkStateTest::SetUp();
+    g_tc_SO = g_tc_SE = "";
+    g_tc_LINES = 24;
+    g_in_ng = true;
+    g_newsgroup_name = "comp.selector";
+    m_newsrc.data_source = g_data_source;
+    m_newsrc.flags = RF_ACTIVE;
+    m_newsgroup.m_rc = &m_newsrc;
+    m_newsgroup.m_abs_first = ArticleNum{1};
+    m_newsgroup.m_ng_max = ArticleNum{4};
+    g_sel_session.extra_commands = article_commands;
+    g_nav.current = g_nav.target = {ArticleNum{1}, g_cache.ptr(ArticleNum{1})};
+}
+
+void ArticleSelectorBehaviorTest::TearDown()
+{
+    g_tc_SO = m_old_standout;
+    g_tc_SE = m_old_end_standout;
+    g_in_ng = m_old_in_ng;
+    g_newsgroup_name = m_old_group_name;
+    g_nav = m_old_navigation;
+    g_sel_session = m_old_session;
+    ArticleSelectorBulkStateTest::TearDown();
+}
+
+void ArticleSelectorBehaviorTest::prepare_behavior(SelectionMode mode, bool rereading)
+{
+    prepare_bulk(mode, rereading);
+    m_newsgroup.m_rc_line = "comp.selector: ";
+    m_newsgroup.m_num_offset = static_cast<int>(m_newsgroup.m_rc_line.size()) - 1;
+    if (rereading)
+    {
+        m_newsgroup.m_rc_line += "1-4";
+    }
+}
+
+void ArticleSelectorBehaviorTest::expect_read_ranges_preserved(bool rereading) const
+{
+    EXPECT_EQ(rereading ? " 1-4" : " ", m_newsgroup.rc_numbers());
+    expect_selection_preserved(rereading);
+}
+
+struct ArticleDisplayChoice
+{
+    std::string modes;
+    std::size_t before;
+    std::size_t after;
+    std::string style;
+};
+
+void PrintTo(const ArticleDisplayChoice &choice, std::ostream *output)
+{
+    *output << choice.modes << '[' << choice.before << "] -> " << choice.style;
+}
+
+class ArticleSelectorDisplayCommandTest
+    : public ArticleSelectorBehaviorTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, ArticleDisplayChoice>>
+{
+};
+
+TEST_P(ArticleSelectorDisplayCommandTest, cyclingTheDisplayRendersTheRequestedStyleWithoutChangingArticleState)
+{
+    const auto [mode, rereading, choice] = GetParam();
+    prepare_behavior(mode, rereading);
+    g_sel_art_display_mode = choice.modes;
+    g_sel_art_display_mode_index = choice.before;
+    const std::vector<long> order = displayed_order();
+
+    const DisplayState result = run_command('L');
+    testing::internal::CaptureStdout();
+    g_sel_session.display();
+    m_output += testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(choice.after, g_sel_art_display_mode_index);
+    EXPECT_EQ("(" + choice.style + " display style)", g_msg);
+    EXPECT_THAT(m_output, testing::HasSubstr(g_msg));
+    EXPECT_THAT(m_output, testing::HasSubstr("Alpha"));
+    const bool with_authors = choice.style == "medium" || choice.style == "long";
+    EXPECT_EQ(with_authors, m_output.find("Delta") != std::string::npos);
+    EXPECT_EQ(order, displayed_order());
+    EXPECT_EQ(mode, g_sel.mode);
+    expect_read_ranges_preserved(rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScopeAndCycle, ArticleSelectorDisplayCommandTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(ArticleDisplayChoice{"lmds", 0, 1, "medium"},
+                                                          ArticleDisplayChoice{"lmds", 1, 2, "date"},
+                                                          ArticleDisplayChoice{"lmds", 2, 3, "short"},
+                                                          ArticleDisplayChoice{"lmds", 3, 0, "long"},
+                                                          ArticleDisplayChoice{"ms", 0, 1, "short"},
+                                                          ArticleDisplayChoice{"ms", 1, 0, "medium"},
+                                                          ArticleDisplayChoice{"s", 0, 0, "short"})));
+
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
 {
