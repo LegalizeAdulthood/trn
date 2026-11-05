@@ -5930,7 +5930,9 @@ protected:
     void        TearDown() override;
     void        prepare_memorize(SelectionMode mode);
     void        rebuild_memorize_page();
-    void        expect_auto_flags(const std::vector<long> &affected, AutoKillFlags flags) const;
+    void        expect_auto_flags(const std::vector<long> &affected, AutoKillFlags flags,
+                                  AutoKillFlags untouched = AUTO_KILL_NONE) const;
+    void        seed_auto_flags();
     void        expect_pending_command();
     std::string saved_rule() const;
 
@@ -6020,13 +6022,22 @@ void ArticleSelectorMemorizeStateTest::rebuild_memorize_page()
     m_output = testing::internal::GetCapturedStdout();
 }
 
-void ArticleSelectorMemorizeStateTest::expect_auto_flags(const std::vector<long> &affected, AutoKillFlags flags) const
+void ArticleSelectorMemorizeStateTest::expect_auto_flags(const std::vector<long> &affected, AutoKillFlags flags,
+                                                         AutoKillFlags untouched) const
 {
     for (const auto &[number, article] : g_cache.article_list)
     {
         SCOPED_TRACE(number.value_of());
         const bool changed = std::find(affected.begin(), affected.end(), number.value_of()) != affected.end();
-        EXPECT_EQ(changed ? flags : AUTO_KILL_NONE, article.m_auto_flags);
+        EXPECT_EQ(changed ? flags : untouched, article.m_auto_flags);
+    }
+}
+
+void ArticleSelectorMemorizeStateTest::seed_auto_flags()
+{
+    for (auto &[number, article] : g_cache.article_list)
+    {
+        article.m_auto_flags = AUTO_SEL_1 | AUTO_OLD;
     }
 }
 
@@ -6162,6 +6173,138 @@ TEST_F(ArticleSelectorMemorizeStateTest, anUnthreadedGroupRefusesThreadMemorizat
     expect_selection_preserved(false);
     expect_pending_command();
 }
+
+class ArticleSelectorMemorizedSelectionTest
+    : public ArticleSelectorMemorizeStateTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, MemorizedAction>>
+{
+};
+
+TEST_P(ArticleSelectorMemorizedSelectionTest, memorizingASelectionSelectsTheHighlightedScopeWithoutReadingArticles)
+{
+    const auto [mode, action] = GetParam();
+    prepare_memorize(mode);
+    const std::vector<long> &affected = mode == SM_THREAD ? action.root : action.descendant;
+    const std::vector<long>  order = displayed_order();
+    const int                rows = g_sel_page.page_item_cnt;
+
+    const DisplayState result = run_command(action.command, std::string{action.reply} + 'Q');
+
+    EXPECT_EQ(DS_UPDATE, result);
+    EXPECT_EQ("Selection memorized.", g_msg);
+    EXPECT_EQ(1, g_sel_session.disp_status_line);
+    expect_auto_flags(affected, action.flags);
+    const bool includes_reply = std::find(affected.begin(), affected.end(), 3) != affected.end();
+    expect_articles({1, 2, 3, 4},
+                    includes_reply ? std::initializer_list<long>{1, 3, 4} : std::initializer_list<long>{1, 4});
+    EXPECT_EQ(order, displayed_order());
+    EXPECT_EQ(rows, g_sel_page.page_item_cnt);
+    EXPECT_EQ(action.rule.empty(), saved_rule().empty());
+    EXPECT_THAT(saved_rule(), testing::HasSubstr(action.rule));
+    expect_pending_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeAndSelection, ArticleSelectorMemorizedSelectionTest,
+    testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                     testing::Values(MemorizedAction{'A', '+', AUTO_KILL_NONE, {1, 4}, {3}, ":+"},
+                                     MemorizedAction{'A', ' ', AUTO_KILL_NONE, {1, 4}, {3}, ":+"},
+                                     MemorizedAction{'T', '+', AUTO_SEL_THD, {1, 3, 4}, {1, 3, 4}, {}},
+                                     MemorizedAction{'T', ' ', AUTO_SEL_THD, {1, 3, 4}, {1, 3, 4}, {}},
+                                     MemorizedAction{'A', 'S', AUTO_SEL_SBJ, {1, 4}, {3}, {}},
+                                     MemorizedAction{'T', 'S', AUTO_SEL_SBJ, {1, 4}, {3}, {}},
+                                     MemorizedAction{'A', '.', AUTO_KILL_NONE, {1, 3, 4}, {3, 4}, ":."},
+                                     MemorizedAction{'T', '.', AUTO_SEL_FOL, {1, 3, 4}, {3, 4}, {}})));
+
+class ArticleSelectorMemorizedSingleTest : public ArticleSelectorMemorizeStateTest,
+                                           public testing::WithParamInterface<std::tuple<SelectionMode, char>>
+{
+};
+
+TEST_P(ArticleSelectorMemorizedSingleTest, memorizingSingleArticleSelectionDefersItsImmediateSelection)
+{
+    const auto [mode, command] = GetParam();
+    prepare_memorize(mode);
+
+    const DisplayState result = run_command(command, "mQ");
+
+    EXPECT_EQ(DS_UPDATE, result);
+    EXPECT_EQ("Selection memorized.", g_msg);
+    expect_auto_flags({mode == SM_THREAD ? 1L : 3L}, AUTO_SEL_1);
+    expect_read_ranges_preserved(false);
+    EXPECT_TRUE(saved_rule().empty());
+    expect_pending_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndCommand, ArticleSelectorMemorizedSingleTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values('A', 'T')));
+
+class ArticleSelectorMemorizedClearTest : public ArticleSelectorMemorizeStateTest,
+                                          public testing::WithParamInterface<std::tuple<SelectionMode, MemorizedAction>>
+{
+};
+
+TEST_P(ArticleSelectorMemorizedClearTest, clearingAutomaticActionsPreservesUnrelatedRulesAndImmediateState)
+{
+    const auto [mode, action] = GetParam();
+    prepare_memorize(mode);
+    seed_auto_flags();
+    const std::vector<long> &affected = mode == SM_THREAD ? action.root : action.descendant;
+
+    const DisplayState result = run_command(action.command, std::string{action.reply} + 'Q');
+
+    EXPECT_EQ(DS_UPDATE, result);
+    EXPECT_EQ("Auto-commands cleared.", g_msg);
+    EXPECT_EQ(1, g_sel_session.disp_status_line);
+    expect_auto_flags(affected, AUTO_KILL_NONE, AUTO_SEL_1 | AUTO_OLD);
+    EXPECT_EQ(affected.size(), g_kill_store.change_thread_cnt);
+    expect_read_ranges_preserved(false);
+    EXPECT_TRUE(saved_rule().empty());
+    expect_pending_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeCommandAndScope, ArticleSelectorMemorizedClearTest,
+    testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                     testing::Values(MemorizedAction{'A', 'c', AUTO_KILL_NONE, {1, 3, 4}, {3, 4}, {}},
+                                     MemorizedAction{'T', 'c', AUTO_KILL_NONE, {1, 3, 4}, {3, 4}, {}},
+                                     MemorizedAction{'A', 'C', AUTO_KILL_NONE, {1, 4}, {3}, {}},
+                                     MemorizedAction{'T', 'C', AUTO_KILL_NONE, {1, 3, 4}, {1, 3, 4}, {}})));
+
+class ArticleSelectorMemorizeCancelTest
+    : public ArticleSelectorMemorizeStateTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, char, std::string, bool>>
+{
+};
+
+TEST_P(ArticleSelectorMemorizeCancelTest, cancellingThePromptRetainsPreviousActionsSelectionsAndQueuedInput)
+{
+    const auto [mode, command, input, verbose] = GetParam();
+    prepare_memorize(mode);
+    seed_auto_flags();
+    g_verbose = verbose;
+    g_msg = "Pending selector status";
+
+    const DisplayState result = run_command(command, input + 'Q');
+
+    EXPECT_EQ(input == "q" ? DS_ASK : DS_UPDATE, result);
+    EXPECT_EQ("Pending selector status", g_msg);
+    expect_auto_flags({}, AUTO_KILL_NONE, AUTO_SEL_1 | AUTO_OLD);
+    EXPECT_EQ(0, g_kill_store.change_thread_cnt);
+    expect_read_ranges_preserved(false);
+    EXPECT_TRUE(saved_rule().empty());
+    if (input != "q")
+    {
+        EXPECT_THAT(m_output, testing::HasSubstr(verbose ? "Type q to abort" : "q aborts."));
+    }
+    expect_pending_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeCommandHelpAndVerbosity, ArticleSelectorMemorizeCancelTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Values('A', 'T'),
+                                          testing::Values(std::string{"q"}, std::string{"hq"}, std::string{"Hq"}),
+                                          testing::Bool()));
 
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
