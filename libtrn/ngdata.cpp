@@ -386,7 +386,7 @@ void grow_newsgroup(ArticleNum new_last)
         } while (g_last_art < new_last);
         thread_grow();
         // Score all new articles now just in case they weren't done above.
-        sc_fill_score_list(tmpfirst,new_last);
+        g_scoring.fill_score_list(tmpfirst, new_last);
         const std::string message =
             g_verbose ? fmt::format("{} more article{} arrived -- processing memorized commands...\n\n",
                                     g_last_art.value_of() - tmpfirst.value_of() + 1,

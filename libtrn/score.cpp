@@ -288,11 +288,11 @@ int ScoringSession::score_art(ArticleNum a, bool now)
 
 // scores articles in a range
 // CONSIDER: option for scoring only unread articles (obey sc_fill_unread?)
-void sc_fill_score_list(ArticleNum first, ArticleNum last)
+void ScoringSession::fill_score_list(ArticleNum first, ArticleNum last)
 {
     for (ArticleNum i = g_cache.first(first); i <= last; i = g_cache.next(i))
     {
-        (void) g_scoring.score_art(i, false); // will be sorted later...
+        (void) score_art(i, false); // will be sorted later...
     }
 }
 
