@@ -2421,6 +2421,214 @@ void InputNewsgroupReadingTest::prepare_group_spools()
     }
 }
 
+struct UniversalSessionPrompt
+{
+    MinorMode                  mode;
+    int                        level;
+    std::string                title;
+    ArticleUnread              selected;
+    bool                       rereading;
+    AddGroupFlags              mask;
+    bool                       exclusive;
+    SelectionSortMode          sort;
+    int                        direction;
+    int                        cursor;
+    int                        prior;
+    UniversalItemList          items;
+    std::string                group;
+    std::string                recent;
+    ArticleNum                 article;
+    std::array<std::string, 3> ranges;
+};
+
+class UniversalSessionTest : public InputNewsgroupReadingTest
+{
+protected:
+    void                                SetUp() override;
+    void                                TearDown() override;
+    void                                load_menu(std::string_view text);
+    char                                run_menu(std::vector<std::string> commands);
+    UniversalSessionPrompt              snapshot() const;
+    std::vector<UniversalSessionPrompt> prompts(MinorMode mode) const;
+    void                                expect_caller() const;
+
+    fs::path                            m_menu_file;
+    std::vector<UniversalSessionPrompt> m_prompts;
+
+private:
+    UniversalMenuContext     m_old_universal;
+    UniversalMenuLoader      m_old_loader{g_univ_loader};
+    VirtualGroupBuilder      m_old_builder{g_vg_builder};
+    SelectorPolicy           m_old_policy{g_sel};
+    SelectorSession          m_old_session{g_sel_session};
+    SelectorPage             m_old_page{g_sel_page};
+    TerminalInputReader      m_old_reader{g_terminal_input_reader};
+    bool                     m_old_typeahead{g_allow_typeahead};
+    bool                     m_old_home{g_can_home};
+    bool                     m_old_numeric{g_use_sel_num};
+    bool                     m_old_bizarre{g_bizarre};
+    int                      m_old_mouse{g_mouse_bar_cnt};
+    NewsgroupData           *m_old_recent{g_recent_newsgroup};
+    std::vector<std::string> m_commands;
+    std::size_t              m_input_pos{};
+};
+
+void UniversalSessionTest::SetUp()
+{
+    InputNewsgroupReadingTest::SetUp();
+    prepare_group_spools();
+    for (NewsgroupData &group : g_newsgroup_data)
+    {
+        group.set_to_read(ST_LAX);
+    }
+    m_old_universal = std::move(g_univ);
+    g_univ = {};
+    g_univ_loader = {};
+    g_vg_builder = {};
+    g_sel.universal_sort = SS_NATURAL;
+    g_use_sel_num = false;
+    g_bizarre = false;
+    g_allow_typeahead = true;
+    g_can_home = false;
+    g_mouse_bar_cnt = 0;
+    g_recent_newsgroup = nullptr;
+    g_tc_LINES = 24;
+    m_menu_file = m_output_dir / "menu";
+    g_terminal_input_reader = [this](char *buffer, int)
+    {
+        m_prompts.push_back(snapshot());
+        if (m_input_pos == m_commands.size())
+        {
+            ADD_FAILURE() << "Unexpected universal-session input in mode " << static_cast<int>(g_mode);
+            *buffer = 'Q';
+            return 1;
+        }
+        const std::string &command = m_commands[m_input_pos++];
+        push_command(std::string_view{command}.substr(1));
+        *buffer = command.front();
+        return 1;
+    };
+}
+
+void UniversalSessionTest::TearDown()
+{
+    g_terminal_input_reader = m_old_reader;
+    while (g_univ.level > 0)
+    {
+        g_univ.close();
+    }
+    InputNewsgroupReadingTest::TearDown();
+    g_univ = std::move(m_old_universal);
+    g_univ_loader = m_old_loader;
+    g_vg_builder = m_old_builder;
+    g_sel = m_old_policy;
+    g_sel_session = m_old_session;
+    g_sel_page = m_old_page;
+    g_allow_typeahead = m_old_typeahead;
+    g_can_home = m_old_home;
+    g_use_sel_num = m_old_numeric;
+    g_bizarre = m_old_bizarre;
+    g_mouse_bar_cnt = m_old_mouse;
+    g_recent_newsgroup = m_old_recent;
+}
+
+void UniversalSessionTest::load_menu(std::string_view text)
+{
+    std::ofstream{m_menu_file} << text;
+    ASSERT_TRUE(univ_file_load(m_menu_file.generic_string(), "Local menu", {}));
+}
+
+UniversalSessionPrompt UniversalSessionTest::snapshot() const
+{
+    UniversalSessionPrompt state{g_mode,
+                                 g_univ.level,
+                                 g_univ.title,
+                                 g_selected_count,
+                                 g_sel.rereading,
+                                 g_sel.mask,
+                                 g_sel.exclusive,
+                                 g_sel.sort,
+                                 g_sel.direction,
+                                 g_sel_page.item_index,
+                                 g_sel_page.prior_obj_cnt,
+                                 g_univ.items,
+                                 g_current_newsgroup ? std::string{g_current_newsgroup->rc_name()} : std::string{},
+                                 g_recent_newsgroup ? std::string{g_recent_newsgroup->rc_name()} : std::string{},
+                                 g_nav.target.num,
+                                 {}};
+    for (std::size_t i = 0; i < state.ranges.size(); ++i)
+    {
+        state.ranges[i] = g_newsgroup_data[i].rc_numbers();
+    }
+    return state;
+}
+
+std::vector<UniversalSessionPrompt> UniversalSessionTest::prompts(MinorMode mode) const
+{
+    std::vector<UniversalSessionPrompt> result;
+    std::copy_if(m_prompts.begin(), m_prompts.end(), std::back_inserter(result),
+                 [mode](const UniversalSessionPrompt &state) { return state.mode == mode; });
+    return result;
+}
+
+char UniversalSessionTest::run_menu(std::vector<std::string> commands)
+{
+    m_commands = std::move(commands);
+    errno = 0;
+    testing::internal::CaptureStdout();
+    const char result = universal_selector();
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(m_commands.size(), m_input_pos);
+    EXPECT_FALSE(macro_pending());
+    return result;
+}
+
+void UniversalSessionTest::expect_caller() const
+{
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_FALSE(g_doing_ng);
+    EXPECT_EQ(0, g_univ.level);
+    EXPECT_TRUE(g_univ.items.empty());
+}
+
+class UniversalEntrySessionTest : public UniversalSessionTest,
+                                  public testing::WithParamInterface<std::tuple<bool, bool>>
+{
+};
+
+TEST_P(UniversalEntrySessionTest, enteringAndSelectingAnItemDisplaysTheLoadedGroupsAndReturnsToTheCaller)
+{
+    const auto [configuration_file, verbose] = GetParam();
+    g_verbose = verbose;
+    if (configuration_file)
+    {
+        load_menu("comp.*\n");
+    }
+    else
+    {
+        univ_mask_load("comp.*", "Local menu");
+    }
+
+    const char result = run_menu({".", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(2, menu.size());
+    EXPECT_EQ(0, menu[0].selected);
+    EXPECT_EQ(1, menu[1].selected);
+    ASSERT_EQ(3, menu[1].items.size());
+    EXPECT_TRUE(menu[1].items.front().m_flags & UF_SEL);
+    EXPECT_EQ("comp.previous", menu[1].items.front().group().ng);
+    EXPECT_THAT(m_output, testing::HasSubstr("Local menu"));
+    EXPECT_THAT(m_output, testing::HasSubstr("comp.lang.cpp"));
+    expect_caller();
+}
+
+INSTANTIATE_TEST_SUITE_P(SourceAndVerbosity, UniversalEntrySessionTest,
+                         testing::Combine(testing::Bool(), testing::Bool()));
+
 struct MultircReadingPrompt
 {
     int                        group;
