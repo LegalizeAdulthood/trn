@@ -53,6 +53,7 @@ struct MouseInteraction
 
     // TODO: private
     void on();
+    void input(const char *cp);
 
     bool                   use_mouse{};
     std::string            modes{"acjlptwvK"};

@@ -264,7 +264,6 @@ static void        reprint(std::string_view text);
 static std::string store_command(std::string_view command);
 static int         echo_char(char_int ch);
 static void        line_col_calcs();
-static void        mouse_input(const char *cp);
 
 // terminal initialization
 
@@ -1558,7 +1557,7 @@ got_canonical:
     // This hack is for mouse support
     if (g_mouse.is_on && *whatbuf == Ctl('c'))
     {
-        mouse_input(whatbuf+1);
+        g_mouse.input(whatbuf + 1);
         times = 0;
         goto tryagain;
     }
@@ -2723,7 +2722,7 @@ void MouseInteraction::draw_bar(int limit, bool restore_cursor)
     }
 }
 
-static void mouse_input(const char *cp)
+void MouseInteraction::input(const char *cp)
 {
     if (cp[2] < ' ' || cp[2] > ' '+3)
     {
@@ -2736,33 +2735,33 @@ static void mouse_input(const char *cp)
     if (btn != 3)
     {
         double this_time = current_time();
-        if (g_mouse.last_btn == btn && g_mouse.last_y == y && this_time - g_mouse.last_time <= 0.75 //
-            && (g_mouse.last_x == x || g_mouse.last_x == x - 1 || g_mouse.last_x == x + 1))
+        if (last_btn == btn && last_y == y && this_time - last_time <= 0.75 //
+            && (last_x == x || last_x == x - 1 || last_x == x + 1))
         {
             btn |= 4;
         }
-        g_mouse.last_time = this_time;
-        g_mouse.last_btn = (btn & 3);
-        g_mouse.last_x = x;
-        g_mouse.last_y = y;
-        g_mouse.is_down = true;
+        last_time = this_time;
+        last_btn = (btn & 3);
+        last_x = x;
+        last_y = y;
+        is_down = true;
     }
     else
     {
-        if (!g_mouse.is_down)
+        if (!is_down)
         {
             return;
         }
-        g_mouse.is_down = false;
+        is_down = false;
     }
 
     if (g_general_mode == GM_SELECTOR)
     {
-        selector_mouse(btn, x, y, g_mouse.last_btn, g_mouse.last_x, g_mouse.last_y);
+        selector_mouse(btn, x, y, last_btn, last_x, last_y);
     }
     else if (g_mode == MM_ARTICLE || g_mode == MM_PAGER)
     {
-        pager_mouse(btn, x, y, g_mouse.last_btn, g_mouse.last_x, g_mouse.last_y);
+        pager_mouse(btn, x, y, last_btn, last_x, last_y);
     }
     else
     {
