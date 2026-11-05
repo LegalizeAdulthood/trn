@@ -5424,6 +5424,7 @@ protected:
     void TearDown() override;
     void prepare_behavior(SelectionMode mode, bool rereading = false);
     void expect_read_ranges_preserved(bool rereading) const;
+    DisplayState run_redisplay(char command, std::string_view input = {});
 
     Newsrc m_newsrc{};
 
@@ -5434,6 +5435,8 @@ private:
     std::string       m_old_group_name{g_newsgroup_name};
     ReadingNavigation m_old_navigation{g_nav};
     SelectorSession   m_old_session{g_sel_session};
+    SelectorPolicy    m_old_policy{g_sel};
+    std::string       m_old_message{g_msg};
 };
 
 void ArticleSelectorBehaviorTest::SetUp()
@@ -5460,6 +5463,8 @@ void ArticleSelectorBehaviorTest::TearDown()
     g_newsgroup_name = m_old_group_name;
     g_nav = m_old_navigation;
     g_sel_session = m_old_session;
+    g_sel = m_old_policy;
+    g_msg = m_old_message;
     ArticleSelectorBulkStateTest::TearDown();
 }
 
@@ -5478,6 +5483,18 @@ void ArticleSelectorBehaviorTest::expect_read_ranges_preserved(bool rereading) c
 {
     EXPECT_EQ(rereading ? " 1-4" : " ", m_newsgroup.rc_numbers());
     expect_selection_preserved(rereading);
+}
+
+DisplayState ArticleSelectorBehaviorTest::run_redisplay(char command, std::string_view input)
+{
+    const DisplayState result = run_command(command, input);
+    if (result == DS_DISPLAY)
+    {
+        testing::internal::CaptureStdout();
+        g_sel_session.display();
+        m_output += testing::internal::GetCapturedStdout();
+    }
+    return result;
 }
 
 struct ArticleDisplayChoice
@@ -5507,10 +5524,7 @@ TEST_P(ArticleSelectorDisplayCommandTest, cyclingTheDisplayRendersTheRequestedSt
     g_sel_art_display_mode_index = choice.before;
     const std::vector<long> order = displayed_order();
 
-    const DisplayState result = run_command('L');
-    testing::internal::CaptureStdout();
-    g_sel_session.display();
-    m_output += testing::internal::GetCapturedStdout();
+    const DisplayState result = run_redisplay('L');
 
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ(choice.after, g_sel_art_display_mode_index);
@@ -5533,6 +5547,117 @@ INSTANTIATE_TEST_SUITE_P(ModeScopeAndCycle, ArticleSelectorDisplayCommandTest,
                                                           ArticleDisplayChoice{"ms", 0, 1, "short"},
                                                           ArticleDisplayChoice{"ms", 1, 0, "medium"},
                                                           ArticleDisplayChoice{"s", 0, 0, "short"})));
+
+using ArticleGroupingChoice = std::pair<std::string, SelectionMode>;
+
+class ArticleSelectorGroupingCommandTest
+    : public ArticleSelectorBehaviorTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, ArticleGroupingChoice>>
+{
+};
+
+TEST_P(ArticleSelectorGroupingCommandTest, aModeChoiceRebuildsThePageWithoutLosingSelections)
+{
+    const auto [initial, rereading, choice] = GetParam();
+    prepare_behavior(initial, rereading);
+
+    const DisplayState result = run_redisplay('S', choice.first);
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(choice.second, g_sel.mode);
+    EXPECT_EQ(choice.second, g_sel.default_mode);
+    EXPECT_TRUE(g_threaded_group);
+    EXPECT_EQ(0, g_sel_page.item_index);
+    EXPECT_EQ(0, g_sel_page.prior_obj_cnt);
+    EXPECT_EQ(choice.second == SM_ARTICLE ? 4 : 3, g_sel_page.page_item_cnt);
+    EXPECT_EQ(ArticleNum{1}, page_article());
+    EXPECT_THAT(m_output, testing::HasSubstr("Selector mode:  Threads, Subjects, Articles?"));
+    expect_read_ranges_preserved(rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InitialScopeAndChoice, ArticleSelectorGroupingCommandTest,
+    testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                     testing::Values(ArticleGroupingChoice{"a", SM_ARTICLE}, ArticleGroupingChoice{"A", SM_ARTICLE},
+                                     ArticleGroupingChoice{"s", SM_SUBJECT}, ArticleGroupingChoice{"S", SM_SUBJECT},
+                                     ArticleGroupingChoice{"t", SM_THREAD}, ArticleGroupingChoice{"T", SM_THREAD},
+                                     ArticleGroupingChoice{" ", SM_THREAD}, ArticleGroupingChoice{"\r", SM_THREAD},
+                                     ArticleGroupingChoice{"\n", SM_THREAD}, ArticleGroupingChoice{"ha", SM_ARTICLE},
+                                     ArticleGroupingChoice{"Hs", SM_SUBJECT})));
+
+class ArticleSelectorGroupingCancelTest
+    : public ArticleSelectorBehaviorTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, std::string>>
+{
+};
+
+TEST_P(ArticleSelectorGroupingCancelTest, cancellingTheModePromptRetainsTheCurrentPageAndReadingAnchor)
+{
+    const auto [mode, rereading, input] = GetParam();
+    prepare_behavior(mode, rereading);
+    const std::vector<long> order = displayed_order();
+    const ArticleLocation   anchor = g_nav.target;
+    const SelectionMode     default_mode = g_sel.default_mode;
+
+    const DisplayState result = run_command('S', input);
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(mode, g_sel.mode);
+    EXPECT_EQ(default_mode, g_sel.default_mode);
+    EXPECT_EQ(order, displayed_order());
+    EXPECT_EQ(anchor, g_nav.target);
+    expect_read_ranges_preserved(rereading);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScopeAndHelp, ArticleSelectorGroupingCancelTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(std::string{"q"}, std::string{"hq"})));
+
+class ArticleSelectorGroupingCleanupTest : public ArticleSelectorBehaviorTest,
+                                           public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+};
+
+TEST_P(ArticleSelectorGroupingCleanupTest, changingGroupingAppliesPendingKillsOnlyInUnreadScope)
+{
+    const auto [mode, rereading, command] = GetParam();
+    g_sel.thread_mode = SM_SUBJECT;
+    g_sel.art_sort = g_sel.thread_sort = SS_DATE;
+    prepare_behavior(mode, rereading);
+    if (mode == SM_ARTICLE)
+    {
+        g_cache.ptr(ArticleNum{2})->m_flags |= AF_DEL;
+    }
+    else
+    {
+        m_bravo.m_flags |= SF_DEL;
+    }
+    const SelectionMode destination = mode == SM_ARTICLE ? SM_SUBJECT : SM_ARTICLE;
+
+    const DisplayState result = run_redisplay(command, destination == SM_ARTICLE ? "a" : "s");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(destination, g_sel.mode);
+    EXPECT_EQ(0, g_sel_page.item_index);
+    EXPECT_EQ(ArticleNum{1}, page_article());
+    EXPECT_EQ(destination == SM_ARTICLE ? (rereading ? 4 : 3) : (rereading ? 3 : 2), g_sel_page.page_item_cnt);
+    if (rereading)
+    {
+        expect_articles({}, {1, 4});
+    }
+    else
+    {
+        expect_articles({1, 3, 4}, {1, 4});
+    }
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
+    EXPECT_EQ(rereading ? " 1-4" : " ", m_newsgroup.rc_numbers());
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeScopeAndCommand, ArticleSelectorGroupingCleanupTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('S', '=')));
 
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
