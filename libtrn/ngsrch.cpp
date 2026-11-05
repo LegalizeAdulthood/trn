@@ -254,7 +254,12 @@ NewsgroupSearchResult newsgroup_search(std::string_view command, bool get_cmd)
 
 bool NewsgroupData::newsgroup_wanted()
 {
-    return g_ng_search.compex.execute(m_rc_line);
+    return g_ng_search.matches(m_rc_line);
+}
+
+bool NewsgroupSearchContext::matches(std::string_view line)
+{
+    return compex.execute(line);
 }
 
 std::string_view newsgroup_comp(CompiledRegex &compex, std::string_view pattern, bool re, bool fold)

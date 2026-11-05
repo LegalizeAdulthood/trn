@@ -24,6 +24,7 @@ enum NewsgroupSearchResult
 struct NewsgroupSearchContext
 {
     void init();
+    bool matches(std::string_view line);
 
     bool          do_empty{}; // search empty newsgroups?
     CompiledRegex compex;
