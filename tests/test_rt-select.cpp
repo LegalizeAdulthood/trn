@@ -751,13 +751,19 @@ INSTANTIATE_TEST_SUITE_P(NextPreviousAndScan, SelectorCallbackQuitTest, testing:
 
 TEST_F(SelectorCallbackTest, unknownCommandOnACleanScreenReturnsAHelpStatus)
 {
+    g_cache.ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+    const ArticleLocation current = g_nav.current;
+    Article **const       page = g_sel_page.page_art;
     g_pushback.push('x' | 0200);
 
     const DisplayState result = dispatch('%');
 
     EXPECT_EQ(DS_STATUS, result);
     EXPECT_EQ("Type ? for help.", g_msg);
-    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(1, g_selected_count);
+    EXPECT_TRUE(g_cache.ptr(ArticleNum{3})->m_flags & AF_SEL);
+    EXPECT_EQ(current, g_nav.current);
+    EXPECT_EQ(page, g_sel_page.page_art);
     EXPECT_EQ(0, g_term_scrolled);
     expect_next_command('q');
 }
@@ -775,11 +781,11 @@ TEST_F(SelectorCallbackTest, helpFollowupReversesOrderOnceWithoutConsumingTheNex
     expect_next_command('q');
 }
 
-class ArticleSelectorHelpSessionTest : public SelectorCallbackTest, public testing::WithParamInterface<char>
+class SelectorHelpFiles
 {
-protected:
-    void SetUp() override;
-    void TearDown() override;
+public:
+    ~SelectorHelpFiles();
+    void create();
 
 private:
     std::filesystem::path m_root;
@@ -787,25 +793,38 @@ private:
     int                   m_initial_level{g_univ.level};
 };
 
-void ArticleSelectorHelpSessionTest::SetUp()
+void SelectorHelpFiles::create()
 {
-    SelectorCallbackTest::SetUp();
     const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
     m_root = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
     std::filesystem::create_directories(m_root / "HelpFiles");
     std::ofstream{m_root / "HelpFiles/top"} << "\"Local help topic\" &selector-help\n";
     g_rn_lib = m_root.generic_string();
-    g_cache.ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
 }
 
-void ArticleSelectorHelpSessionTest::TearDown()
+SelectorHelpFiles::~SelectorHelpFiles()
 {
     EXPECT_EQ(m_initial_level, g_univ.level);
     g_rn_lib = m_old_library;
     std::error_code error;
     std::filesystem::remove_all(m_root, error);
     EXPECT_FALSE(error) << error.message();
-    SelectorCallbackTest::TearDown();
+}
+
+class ArticleSelectorHelpSessionTest : public SelectorCallbackTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+
+private:
+    SelectorHelpFiles m_help;
+};
+
+void ArticleSelectorHelpSessionTest::SetUp()
+{
+    SelectorCallbackTest::SetUp();
+    m_help.create();
+    g_cache.ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
 }
 
 TEST_P(ArticleSelectorHelpSessionTest, helpReturnsToTheSameArticlePageBeforeResumingReading)
@@ -6467,6 +6486,157 @@ TEST_P(ArticleSelectorCatchupModeTest, fullCatchupReturnsDelayedArticlesAndKeeps
 }
 
 INSTANTIATE_TEST_SUITE_P(Mode, ArticleSelectorCatchupModeTest, testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
+
+class ArticleSelectorHelpStateTest : public ArticleSelectorExitStateTest
+{
+protected:
+    void prepare_help(SelectionMode mode, bool rereading);
+    void expect_help_state();
+
+private:
+    ArticleLocation             m_current{};
+    ArticleLocation             m_target{};
+    std::vector<long>           m_order;
+    std::array<ArticleFlags, 4> m_flags{};
+    SelectionMode               m_mode{};
+    bool                        m_rereading{};
+};
+
+void ArticleSelectorHelpStateTest::prepare_help(SelectionMode mode, bool rereading)
+{
+    prepare_behavior(mode, rereading);
+    m_current = g_nav.current;
+    m_target = g_nav.target;
+    m_order = displayed_order();
+    m_mode = mode;
+    m_rereading = rereading;
+    for (const auto &[number, article] : g_cache.article_list)
+    {
+        m_flags[static_cast<std::size_t>(number.value_of() - 1)] = article.m_flags;
+    }
+}
+
+void ArticleSelectorHelpStateTest::expect_help_state()
+{
+    EXPECT_EQ(m_current, g_nav.current);
+    EXPECT_EQ(m_target, g_nav.target);
+    EXPECT_EQ(m_order, displayed_order());
+    EXPECT_EQ(m_mode, g_sel.mode);
+    EXPECT_EQ(m_rereading, g_sel.rereading);
+    EXPECT_EQ(m_rereading ? " 1-4" : " ", m_newsgroup.rc_numbers());
+    EXPECT_EQ(m_rereading ? TR_NONE : ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(2, g_selected_count);
+    EXPECT_EQ(1, g_selected_subj_cnt);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+    for (const auto &[number, article] : g_cache.article_list)
+    {
+        SCOPED_TRACE(number.value_of());
+        EXPECT_EQ(m_flags[static_cast<std::size_t>(number.value_of() - 1)], article.m_flags);
+    }
+    expect_exit_sentinel();
+}
+
+class ArticleSelectorOnlineHelpStateTest : public ArticleSelectorHelpStateTest
+{
+protected:
+    void SetUp() override;
+
+private:
+    SelectorHelpFiles m_help;
+};
+
+void ArticleSelectorOnlineHelpStateTest::SetUp()
+{
+    ArticleSelectorHelpStateTest::SetUp();
+    m_help.create();
+}
+
+class ArticleSelectorOnlineHelpTest : public ArticleSelectorOnlineHelpStateTest,
+                                      public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+};
+
+TEST_P(ArticleSelectorOnlineHelpTest, onlineHelpUsesTheArticleSelectorDestinationAndRequestsARestart)
+{
+    const auto [mode, rereading, command] = GetParam();
+    prepare_help(mode, rereading);
+
+    const DisplayState result = run_command(command, "qQ");
+
+    EXPECT_EQ(DS_RESTART, result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Extended Help"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Thread/Subject/Article Selector"));
+    expect_help_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndCommand, ArticleSelectorOnlineHelpTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('h', '?')));
+
+struct SelectorHelpAnswer
+{
+    int          lines;
+    char         command;
+    DisplayState result;
+};
+
+void PrintTo(const SelectorHelpAnswer &answer, std::ostream *output)
+{
+    *output << answer.lines << " lines, key " << static_cast<int>(answer.command);
+}
+
+class ArticleSelectorPagedHelpTest
+    : public ArticleSelectorHelpStateTest,
+      public testing::WithParamInterface<std::tuple<SelectionMode, bool, SelectorHelpAnswer>>
+{
+};
+
+TEST_P(ArticleSelectorPagedHelpTest, leavingPagedHelpPreservesTheReadingStateAndHonorsAFollowupCommand)
+{
+    const auto [mode, rereading, answer] = GetParam();
+    prepare_help(mode, rereading);
+    g_tc_LINES = answer.lines;
+    g_sel_session.ret = 'N';
+
+    const DisplayState result = run_command('H', std::string{answer.command} + 'Q');
+
+    EXPECT_EQ(answer.result, result);
+    EXPECT_EQ(answer.result == DS_DO_COMMAND ? 'R' : 'N', g_sel_session.ret);
+    EXPECT_THAT(m_output, testing::HasSubstr("Selector Commands:"));
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
+    expect_help_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeReadScopeAndHelpExit, ArticleSelectorPagedHelpTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(SelectorHelpAnswer{6, 'q', DS_DISPLAY},
+                                                          SelectorHelpAnswer{200, 'q', DS_DISPLAY},
+                                                          SelectorHelpAnswer{200, '\n', DS_DISPLAY},
+                                                          SelectorHelpAnswer{6, 'R', DS_DO_COMMAND},
+                                                          SelectorHelpAnswer{200, 'R', DS_DO_COMMAND})));
+
+class ArticleSelectorUnsupportedTest : public ArticleSelectorHelpStateTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool>>
+{
+};
+
+TEST_P(ArticleSelectorUnsupportedTest, unsupportedArticleCommandsLeaveTheReadingStateAndQueuedInputForTheCaller)
+{
+    const auto [mode, rereading] = GetParam();
+    prepare_help(mode, rereading);
+    g_msg = "Pending selector status";
+
+    const DisplayState result = run_command('%', "Q");
+
+    EXPECT_EQ(DS_ERROR, result);
+    EXPECT_EQ("Pending selector status", g_msg);
+    EXPECT_EQ(rereading ? AGF_DEL_SEL : AGF_SEL, g_sel.mask);
+    expect_help_state();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndReadScope, ArticleSelectorUnsupportedTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool()));
 
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
