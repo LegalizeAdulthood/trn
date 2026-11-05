@@ -455,9 +455,9 @@ int NntpArticleCache::seek_art(ArticlePosition pos)
     return std::fseek(g_art_input.fp, pos.value_of(), 0);
 }
 
-ArticlePosition nntp_tell_art()
+ArticlePosition NntpArticleCache::tell_art()
 {
-    return g_nntp_art.body_pos < 0 ? ftell_art() : g_nntp_art.body_pos;
+    return body_pos < 0 ? ftell_art() : body_pos;
 }
 
 static std::string read_art_file_chunk(int limit)

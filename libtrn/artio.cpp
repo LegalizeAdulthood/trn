@@ -164,7 +164,7 @@ ArticlePosition tell_art()
 {
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        return nntp_tell_art();
+        return g_nntp_art.tell_art();
     }
     return ftell_art();
 }
