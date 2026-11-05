@@ -82,9 +82,18 @@ struct KillFileProcessor
 
 extern KillFileProcessor g_kill;
 
-extern KillFileStateFlags g_kf_state;              // the state of our kill files
-extern KillFileStateFlags g_kfs_thread_change_set; // bits to set for thread changes
-extern int                g_kf_change_thread_cnt;  // # entries changed from old to new
+struct KillFilePersistence
+{
+    KillFileStateFlags state{};              // the state of our kill files
+    KillFileStateFlags thread_change_set{};  // bits to set for thread changes
+    KillFileStateFlags local_change_clear{}; // bits to clear local changes
+    int                change_thread_cnt{};  // # entries changed from old to new
+    int                thread_cnt{};         // # entries in the thread kfile
+    long               day_num{};            // day number for thread killfile
+    std::FILE         *new_fp{};
+};
+
+extern KillFilePersistence g_kill_store;
 
 void kill_file_init();
 void rewrite_kill_file(ArticleNum thru);

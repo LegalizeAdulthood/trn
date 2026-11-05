@@ -130,7 +130,7 @@ Article *get_article(std::string_view msgid)
         }
         else
         {
-            g_kf_change_thread_cnt++;
+            g_kill_store.change_thread_cnt++;
         }
         article->m_msg_id = take_pending_msg_id(&data);
         data.dat_ptr = (char *) article;

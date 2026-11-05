@@ -2198,7 +2198,7 @@ private:
     bool               m_old_sel_exclusive{g_sel.exclusive};
     int                m_old_selected_subj_cnt{g_selected_subj_cnt};
     int                m_old_added_articles{g_added_articles};
-    KillFileStateFlags m_old_kf_state{g_kf_state};
+    KillFileStateFlags m_old_kf_state{g_kill_store.state};
     bool               m_old_reread{g_reread};
     bool               m_old_force_last{g_force_last};
     bool               m_old_do_fseek{g_pager.do_fseek};
@@ -2221,7 +2221,7 @@ void LocalSpoolArticleTest::SetUp()
     g_sel.mask = AGF_SEL;
     g_sel.rereading = g_sel.exclusive = false;
     g_selected_subj_cnt = 0;
-    g_kf_state = KFS_NONE;
+    g_kill_store.state = KFS_NONE;
     g_in_ng = true;
     g_mode = MM_ARTICLE;
     g_reread = g_force_last = g_pager.do_fseek = false;
@@ -2270,7 +2270,7 @@ void LocalSpoolArticleTest::TearDown()
     g_sel.exclusive = m_old_sel_exclusive;
     g_selected_subj_cnt = m_old_selected_subj_cnt;
     g_added_articles = m_old_added_articles;
-    g_kf_state = m_old_kf_state;
+    g_kill_store.state = m_old_kf_state;
     g_reread = m_old_reread;
     g_force_last = m_old_force_last;
     g_pager.do_fseek = m_old_do_fseek;

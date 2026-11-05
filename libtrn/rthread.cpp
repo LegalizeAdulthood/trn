@@ -224,7 +224,7 @@ static int cleanup_msg_id_hash(int keylen, HashDatum *data, int extra)
         {
             return 0;
         }
-        if ((g_kf_state & KFS_GLOBAL_THREAD_FILE) && ap->m_auto_flags && ap->m_msg_id)
+        if ((g_kill_store.state & KFS_GLOBAL_THREAD_FILE) && ap->m_auto_flags && ap->m_msg_id)
         {
             *data = make_pending_msg_id(*ap->m_msg_id, ap->m_auto_flags);
             ret = 0;

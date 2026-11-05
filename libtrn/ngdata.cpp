@@ -383,7 +383,7 @@ void grow_newsgroup(ArticleNum new_last)
                                     g_last_art > tmpfirst ? "s have" : " has")
                       : "More news -- auto-processing...\n\n";
         term_down(2);
-        if (g_kf_state & KFS_NORMAL_LINES)
+        if (g_kill_store.state & KFS_NORMAL_LINES)
         {
             bool forcelast_save = g_force_last;
             Article *artp_save = g_nav.target.art;

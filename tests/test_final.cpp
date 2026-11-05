@@ -36,7 +36,7 @@ protected:
         m_old_head_name = g_head_name;
         m_old_check_flag = g_check_flag;
         m_old_bizarre = g_bizarre;
-        m_old_kf_state = g_kf_state;
+        m_old_kf_state = g_kill_store.state;
 
         const testing::TestInfo *test_info = testing::UnitTest::GetInstance()->current_test_info();
         m_output_dir = fs::path{TRN_TEST_TMP_DIR} / test_info->test_suite_name() / test_info->name();
@@ -53,7 +53,7 @@ protected:
         g_head_name = (m_output_dir / "head.tmp").generic_string();
         g_check_flag = true;
         g_bizarre = false;
-        g_kf_state = KFS_NONE;
+        g_kill_store.state = KFS_NONE;
     }
 
     void TearDown() override
@@ -63,7 +63,7 @@ protected:
         g_head_name = m_old_head_name;
         g_check_flag = m_old_check_flag;
         g_bizarre = m_old_bizarre;
-        g_kf_state = m_old_kf_state;
+        g_kill_store.state = m_old_kf_state;
 
         std::error_code error;
         fs::remove_all(m_output_dir, error);

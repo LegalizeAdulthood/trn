@@ -3936,7 +3936,7 @@ private:
     ValueSaver<int>                 m_delayed{g_dm_count, g_dm_count};
     ValueSaver<bool>                m_erase{g_erase_screen, g_erase_screen};
     ValueSaver<MarkingMode>         m_marking{g_marking, g_marking};
-    ValueSaver<KillFileStateFlags>  m_kill_state{g_kf_state, g_kf_state};
+    ValueSaver<KillFileStateFlags>  m_kill_state{g_kill_store.state, g_kill_store.state};
     ValueSaver<SelectionSortMode>   m_group_sort{g_sel.newsgroup_sort, g_sel.newsgroup_sort};
     ValueSaver<TerminalInputReader> m_reader{g_terminal_input_reader, g_terminal_input_reader};
 };
@@ -3970,7 +3970,7 @@ void PagerCheckpointArticleTest::SetUp()
     m_multirc.m_first = &m_newsrc;
     g_multirc = &m_multirc;
     g_doing_ng = true;
-    g_kf_state = KFS_NONE;
+    g_kill_store.state = KFS_NONE;
     g_sel.newsgroup_sort = SS_NATURAL;
     g_do_check_when = scenario.threshold;
     g_check_count = scenario.count;

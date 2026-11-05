@@ -1558,7 +1558,7 @@ protected:
 
 private:
     std::FILE         *m_old_local{g_kill.local_kfp};
-    KillFileStateFlags m_old_state{g_kf_state};
+    KillFileStateFlags m_old_state{g_kill_store.state};
 };
 
 void SelectorKillEditorTest::SetUp()
@@ -1566,7 +1566,7 @@ void SelectorKillEditorTest::SetUp()
     SelectorShellTest::SetUp();
     g_in_ng = true;
     g_kill.local_kfp = nullptr;
-    g_kf_state = KFS_NONE;
+    g_kill_store.state = KFS_NONE;
     m_env.expect_env_repeatedly("VISUAL", m_editor.c_str());
     m_env.expect_env_repeatedly("EDITOR", "unused-editor");
     m_env.expect_env_repeatedly("KILLGLOBAL", (m_root / "unused-global").generic_string().c_str());
@@ -1577,7 +1577,7 @@ void SelectorKillEditorTest::TearDown()
 {
     g_kill.close(KF_LOCAL);
     g_kill.local_kfp = m_old_local;
-    g_kf_state = m_old_state;
+    g_kill_store.state = m_old_state;
     SelectorShellTest::TearDown();
 }
 
@@ -1604,7 +1604,7 @@ void SelectorKillEditorTest::expect_edited_file(std::string_view original)
     EXPECT_EQ("kill-editor\n" + m_kill_file.generic_string() + '\n', read_file(m_root / "tools.log"));
     EXPECT_FALSE(std::filesystem::exists(m_root / "unused-global"));
     ASSERT_NE(nullptr, g_kill.local_kfp);
-    EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
+    EXPECT_TRUE(g_kill_store.state & KFS_NORMAL_LINES);
     std::rewind(g_kill.local_kfp);
     EXPECT_EQ(original.empty() ? "/controlled/:j\n" : "# Existing rules\n", get_a_line(g_kill.local_kfp));
 }
@@ -1695,7 +1695,7 @@ TEST_P(SelectorKillEditorFailureTest, anEditorFailureReturnsToTheUnchangedArticl
     EXPECT_EQ(DS_DISPLAY, result);
     EXPECT_EQ("# Existing rules\n", read_file(m_kill_file));
     EXPECT_EQ("kill-editor\n" + m_kill_file.generic_string() + '\n', read_file(m_root / "tools.log"));
-    EXPECT_FALSE(g_kf_state & KFS_NORMAL_LINES);
+    EXPECT_FALSE(g_kill_store.state & KFS_NORMAL_LINES);
     expect_selector_preserved();
     expect_next_command('q');
 }

@@ -82,9 +82,9 @@ protected:
     void SetUp() override
     {
         m_old_in_ng = g_in_ng;
-        m_old_kf_state = g_kf_state;
-        m_old_kfs_thread_change_set = g_kfs_thread_change_set;
-        m_old_kf_change_thread_cnt = g_kf_change_thread_cnt;
+        m_old_kf_state = g_kill_store.state;
+        m_old_kfs_thread_change_set = g_kill_store.thread_change_set;
+        m_old_kf_change_thread_cnt = g_kill_store.change_thread_cnt;
         m_old_local_kfp = g_kill.local_kfp;
         m_old_msg_id_hash = g_msg_id_hash;
         m_old_article_list = g_cache.article_list;
@@ -118,9 +118,9 @@ protected:
         fs::remove_all(m_output_dir, error);
 
         g_in_ng = false;
-        g_kf_state = KFS_NONE;
-        g_kfs_thread_change_set = KFS_NONE;
-        g_kf_change_thread_cnt = 0;
+        g_kill_store.state = KFS_NONE;
+        g_kill_store.thread_change_set = KFS_NONE;
+        g_kill_store.change_thread_cnt = 0;
         g_kill.local_kfp = nullptr;
         g_msg_id_hash = new HashTable(17, msg_id_cmp);
         g_cache.article_list.clear();
@@ -156,9 +156,9 @@ protected:
         }
 
         g_in_ng = m_old_in_ng;
-        g_kf_state = m_old_kf_state;
-        g_kfs_thread_change_set = m_old_kfs_thread_change_set;
-        g_kf_change_thread_cnt = m_old_kf_change_thread_cnt;
+        g_kill_store.state = m_old_kf_state;
+        g_kill_store.thread_change_set = m_old_kfs_thread_change_set;
+        g_kill_store.change_thread_cnt = m_old_kf_change_thread_cnt;
         g_kill.local_kfp = m_old_local_kfp;
         g_msg_id_hash = m_old_msg_id_hash;
         g_cache.article_list = m_old_article_list;
@@ -345,7 +345,7 @@ TEST_F(KillFileEditTest, appendLocalKillFileWritesConfiguredPath)
 
     EXPECT_EQ("/old/j\n/new/j\n", file_contents(kill_file));
     EXPECT_NE(nullptr, g_kill.local_kfp);
-    EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
+    EXPECT_TRUE(g_kill_store.state & KFS_NORMAL_LINES);
 }
 
 TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
@@ -360,7 +360,7 @@ TEST_F(KillFileEditTest, rewriteLocalKillFileWritesThreadCommand)
     newsgroup.m_to_read = ArticleUnread{1};
     g_newsgroup_ptr = &newsgroup;
     g_last_art = ArticleNum{42};
-    g_kf_state = KFS_LOCAL_CHANGES | KFS_THREAD_LINES;
+    g_kill_store.state = KFS_LOCAL_CHANGES | KFS_THREAD_LINES;
 
     Article *article = g_cache.ptr(ArticleNum{1});
     article->m_msg_id = "<case@example.com>";
@@ -469,8 +469,8 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileWritesThreadCommand)
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
     kill_file_init();
-    g_kf_change_thread_cnt = 1;
-    g_kf_state |= KFS_THREAD_CHANGES;
+    g_kill_store.change_thread_cnt = 1;
+    g_kill_store.state |= KFS_THREAD_CHANGES;
 
     update_thread_kill_file();
 
@@ -494,8 +494,8 @@ TEST_F(KillFileEditTest, defaultThreadKillFileUsesTrnDirectory)
     article->m_flags = AF_EXISTS;
     article->m_auto_flags = AUTO_SEL_THD;
     g_msg_id_hash->store(article->msg_id_view(), {reinterpret_cast<char *>(article), 0});
-    g_kf_change_thread_cnt = 1;
-    g_kf_state |= KFS_THREAD_CHANGES;
+    g_kill_store.change_thread_cnt = 1;
+    g_kill_store.state |= KFS_THREAD_CHANGES;
 
     update_thread_kill_file();
 
@@ -516,8 +516,8 @@ TEST_F(KillFileEditTest, rewriteGlobalThreadKillFileAllowsTrailingAgeText)
 
     m_env.expect_env_repeatedly("KILLTHREADS", kill_file_name.c_str());
     kill_file_init();
-    g_kf_change_thread_cnt = 1;
-    g_kf_state |= KFS_THREAD_CHANGES;
+    g_kill_store.change_thread_cnt = 1;
+    g_kill_store.state |= KFS_THREAD_CHANGES;
 
     update_thread_kill_file();
 

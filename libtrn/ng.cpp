@@ -293,8 +293,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     }
 
     g_newsgroup_exit_code = NG_NORM;
-    g_kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
-                 |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
+    g_kill_store.state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES | KFS_NORMAL_LINES | KFS_THREAD_LINES);
     g_kill.first = ArticleNum{};
 
     g_extract_dest.clear();

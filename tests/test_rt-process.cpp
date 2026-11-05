@@ -23,11 +23,11 @@ protected:
     {
         m_old_hash = g_msg_id_hash;
         m_old_abs_first = g_abs_first;
-        m_old_change_thread_count = g_kf_change_thread_cnt;
+        m_old_change_thread_count = g_kill_store.change_thread_cnt;
 
         g_msg_id_hash = new HashTable(17, msg_id_cmp);
         g_abs_first = ArticleNum{1};
-        g_kf_change_thread_cnt = 0;
+        g_kill_store.change_thread_cnt = 0;
     }
 
     void TearDown() override
@@ -35,7 +35,7 @@ protected:
         delete g_msg_id_hash;
         g_msg_id_hash = m_old_hash;
         g_abs_first = m_old_abs_first;
-        g_kf_change_thread_cnt = m_old_change_thread_count;
+        g_kill_store.change_thread_cnt = m_old_change_thread_count;
     }
 
 private:
@@ -62,7 +62,7 @@ TEST_F(MessageIdHashTest, getArticlePromotesPendingMessageIdToFakeArticle)
     EXPECT_TRUE((article->m_flags & AF_FAKE) != 0);
     EXPECT_TRUE((article->m_flags & AF_TMP_MEM) != 0);
     EXPECT_TRUE((article->m_auto_flags & AUTO_SEL_THD) != 0);
-    EXPECT_EQ(1, g_kf_change_thread_cnt);
+    EXPECT_EQ(1, g_kill_store.change_thread_cnt);
 
     const HashDatum stored = g_hash_cursor.fetch(g_msg_id_hash, "<case@example.com>");
     EXPECT_EQ(0U, stored.dat_len);

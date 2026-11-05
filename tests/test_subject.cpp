@@ -45,7 +45,7 @@ protected:
         m_old_target = g_nav.target;
         m_old_curr_artp = g_nav.current.art;
         m_old_in_ng = g_in_ng;
-        m_old_kf_state = g_kf_state;
+        m_old_kf_state = g_kill_store.state;
         m_old_threaded_group = g_threaded_group;
         m_old_thread_always = g_thread_always;
         m_old_int_count = g_int_count;
@@ -80,7 +80,7 @@ protected:
         g_nav.current.art = nullptr;
         g_nav.target.art = nullptr;
         g_in_ng = false;
-        g_kf_state = KFS_NONE;
+        g_kill_store.state = KFS_NONE;
         g_threaded_group = false;
         g_thread_always = false;
         g_int_count = 0;
@@ -117,7 +117,7 @@ protected:
         g_nav.target = m_old_target;
         g_nav.current.art = m_old_curr_artp;
         g_in_ng = m_old_in_ng;
-        g_kf_state = m_old_kf_state;
+        g_kill_store.state = m_old_kf_state;
         g_threaded_group = m_old_threaded_group;
         g_thread_always = m_old_thread_always;
         g_int_count = m_old_int_count;

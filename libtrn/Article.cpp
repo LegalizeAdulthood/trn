@@ -717,10 +717,10 @@ void Article::change_auto_flags(AutoKillFlags auto_flag)
     {
         if (m_auto_flags & AUTO_OLD)
         {
-            g_kf_change_thread_cnt++;
+            g_kill_store.change_thread_cnt++;
         }
         m_auto_flags = auto_flag;
-        g_kf_state |= g_kfs_thread_change_set;
+        g_kill_store.state |= g_kill_store.thread_change_set;
     }
 }
 
@@ -730,10 +730,10 @@ void Article::clear_auto_flags()
     {
         if (m_auto_flags & AUTO_OLD)
         {
-            g_kf_change_thread_cnt++;
+            g_kill_store.change_thread_cnt++;
         }
         m_auto_flags = AUTO_KILL_NONE;
-        g_kf_state |= g_kfs_thread_change_set;
+        g_kill_store.state |= g_kill_store.thread_change_set;
     }
 }
 
@@ -805,7 +805,7 @@ bool Article::valid_article()
             }
             else
             {
-                g_kf_change_thread_cnt++;
+                g_kill_store.change_thread_cnt++;
             }
             data.dat_len = 0;
         }
@@ -834,7 +834,7 @@ bool Article::valid_article()
             if (fake_ap->m_auto_flags)
             {
                 m_auto_flags |= fake_ap->m_auto_flags;
-                g_kf_state |= g_kfs_thread_change_set;
+                g_kill_store.state |= g_kill_store.thread_change_set;
             }
             if (g_nav.current.art == fake_ap)
             {

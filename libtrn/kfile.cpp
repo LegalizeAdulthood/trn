@@ -49,9 +49,7 @@ namespace fs = std::filesystem;
 
 KillFileProcessor g_kill{};
 
-KillFileStateFlags g_kf_state{};              // the state of our kill files
-KillFileStateFlags g_kfs_thread_change_set{}; // bits to set for thread changes
-int                g_kf_change_thread_cnt{};  // # entries changed from old to new
+KillFilePersistence g_kill_store{};
 
 static void mention(std::string_view str);
 static bool kill_file_junk(Article &article, int killmask);
@@ -60,9 +58,6 @@ static int  write_global_thread_commands(int keylen, HashDatum *data, int append
 static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
 static std::string_view skip_leading_space(std::string_view text);
 
-static KillFileStateFlags s_kill_file_state_local_change_clear{}; // bits to clear local changes
-static int                s_kill_file_thread_cnt{};               // # entries in the thread kfile
-static long               s_kill_file_day_num{};                  // day number for thread killfile
 static constexpr std::string_view s_thread_cmd_ltr{"JK,j+S.m"};
 static AutoKillFlags              s_thread_cmd_flag[]{
     AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
@@ -70,7 +65,6 @@ static AutoKillFlags              s_thread_cmd_flag[]{
 static constexpr std::string_view s_kill_global{KILL_GLOBAL};
 static constexpr std::string_view s_kill_local{KILL_LOCAL};
 static constexpr std::string_view s_kill_threads{KILL_THREADS};
-static std::FILE *s_new_kill_file_fp{};
 
 inline long kill_file_day_num(long x)
 {
@@ -82,9 +76,9 @@ void kill_file_init()
     std::string kill_threads = get_env_var("KILLTHREADS", s_kill_threads);
     if (!kill_threads.empty() && kill_threads != "none")
     {
-        s_kill_file_day_num = kill_file_day_num(0);
-        s_kill_file_thread_cnt = 0;
-        g_kf_change_thread_cnt = 0;
+        g_kill_store.day_num = kill_file_day_num(0);
+        g_kill_store.thread_cnt = 0;
+        g_kill_store.change_thread_cnt = 0;
         std::FILE *fp = std::fopen(file_exp(kill_threads).c_str(), "r");
         if (fp != nullptr)
         {
@@ -107,10 +101,10 @@ void kill_file_init()
                     age_text = skip_leading_space(age_text);
                     long command_day{};
                     (void) std::from_chars(age_text.data(), age_text.data() + age_text.size(), command_day);
-                    const int age = static_cast<int>(s_kill_file_day_num - command_day);
+                    const int age = static_cast<int>(g_kill_store.day_num - command_day);
                     if (age > KF_MAX_DAYS)
                     {
-                        g_kf_change_thread_cnt++;
+                        g_kill_store.change_thread_cnt++;
                         continue;
                     }
                     const std::size_t thread_cmd = s_thread_cmd_ltr.find(command_char);
@@ -124,24 +118,24 @@ void kill_file_init()
                         }
                         else
                         {
-                            g_kf_change_thread_cnt++;
+                            g_kill_store.change_thread_cnt++;
                             data.dat_len = auto_flag | age;
                         }
                         g_hash_cursor.store_last(data);
                     }
-                    s_kill_file_thread_cnt++;
+                    g_kill_store.thread_cnt++;
                 }
             }
             std::fclose(fp);
         }
-        g_kf_state |= KFS_GLOBAL_THREAD_FILE;
-        s_kill_file_state_local_change_clear = KFS_LOCAL_CHANGES;
-        g_kfs_thread_change_set = KFS_THREAD_CHANGES;
+        g_kill_store.state |= KFS_GLOBAL_THREAD_FILE;
+        g_kill_store.local_change_clear = KFS_LOCAL_CHANGES;
+        g_kill_store.thread_change_set = KFS_THREAD_CHANGES;
     }
     else
     {
-        s_kill_file_state_local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
-        g_kfs_thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+        g_kill_store.local_change_clear = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+        g_kill_store.thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
     }
 }
 
@@ -269,7 +263,7 @@ int KillFileProcessor::do_file(std::FILE *kfp, int entering)
         }
         else if (!command.empty() && command.front() == '/')
         {
-            g_kf_state |= KFS_NORMAL_LINES;
+            g_kill_store.state |= KFS_NORMAL_LINES;
             if (g_first_art > g_last_art)
             {
                 continue;
@@ -390,11 +384,11 @@ int KillFileProcessor::do_file(std::FILE *kfp, int entering)
                 }
             }
             g_nav.target.num = article_after(g_last_art);
-            g_kf_state |= KFS_THREAD_LINES;
+            g_kill_store.state |= KFS_THREAD_LINES;
         }
         else if (!command.empty() && command.front() == '<')
         {
-            g_kf_state |= KFS_THREAD_LINES;
+            g_kill_store.state |= KFS_THREAD_LINES;
         }
         else if (!command.empty() && command.front() == '*')
         {
@@ -409,7 +403,7 @@ int KillFileProcessor::do_file(std::FILE *kfp, int entering)
                 g_cache.walk(kill_file_junk, killmask);
                 break;
             }
-            g_kf_state |= KFS_NORMAL_LINES;
+            g_kill_store.state |= KFS_NORMAL_LINES;
         }
     }
     if (thread_kill_cnt)
@@ -475,7 +469,7 @@ void KillFileProcessor::kill_unwanted(ArticleNum starting, std::string_view mess
         {
             if (entering)
             {
-                g_kf_state |= KFS_LOCAL_CHANGES;
+                g_kill_store.state |= KFS_LOCAL_CHANGES;
             }
             intr = do_file(local_kfp, entering);
         }
@@ -502,7 +496,7 @@ void KillFileProcessor::kill_unwanted(ArticleNum starting, std::string_view mess
         }
         g_first_art = oldfirst;
     }
-    if (!entering && (g_kf_state & KFS_LOCAL_CHANGES) && !intr)
+    if (!entering && (g_kill_store.state & KFS_LOCAL_CHANGES) && !intr)
     {
         rewrite_kill_file(g_last_art);
     }
@@ -526,15 +520,14 @@ static int write_local_thread_commands(int keylen, HashDatum *data, int extra)
                 break;
             }
         }
-        fmt::print(s_new_kill_file_fp, "{} T{}\n", ap->msg_id_view(), ch);
+        fmt::print(g_kill_store.new_fp, "{} T{}\n", ap->msg_id_view(), ch);
     }
     return 0;
 }
 
 void rewrite_kill_file(ArticleNum thru)
 {
-    bool has_content = (g_kf_state & (KFS_THREAD_LINES|KFS_GLOBAL_THREAD_FILE))
-                                 == KFS_THREAD_LINES;
+    bool           has_content = (g_kill_store.state & (KFS_THREAD_LINES | KFS_GLOBAL_THREAD_FILE)) == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
     const fs::path killname{file_exp(get_env_var("KILLLOCAL", s_kill_local))};
@@ -556,11 +549,11 @@ void rewrite_kill_file(ArticleNum thru)
         fs::create_directories(killname.parent_path(), error);
     }
     fs::remove(killname, error);        // to prevent file reuse
-    g_kf_state &= ~(s_kill_file_state_local_change_clear | KFS_NORMAL_LINES);
-    s_new_kill_file_fp = std::fopen(killname.string().c_str(), "w");
-    if (s_new_kill_file_fp != nullptr)
+    g_kill_store.state &= ~(g_kill_store.local_change_clear | KFS_NORMAL_LINES);
+    g_kill_store.new_fp = std::fopen(killname.string().c_str(), "w");
+    if (g_kill_store.new_fp != nullptr)
     {
-        fmt::print(s_new_kill_file_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
+        fmt::print(g_kill_store.new_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
         for (const std::string &kill_line : kill_lines)
         {
             const std::string_view line{kill_line};
@@ -576,7 +569,7 @@ void rewrite_kill_file(ArticleNum thru)
                 if (thru_args.size() < len || thru_args.substr(0, len) != rc_name ||
                     (thru_args.size() > len && !std::isspace(static_cast<unsigned char>(thru_args[len]))))
                 {
-                    fmt::print(s_new_kill_file_fp, "{}", kill_line);
+                    fmt::print(g_kill_store.new_fp, "{}", kill_line);
                     needs_newline = kill_line.back() != '\n';
                 }
                 continue;
@@ -594,14 +587,14 @@ void rewrite_kill_file(ArticleNum thru)
             }
             else
             {
-                fmt::print(s_new_kill_file_fp, "{}", kill_line);
+                fmt::print(g_kill_store.new_fp, "{}", kill_line);
                 needs_newline = kill_line.back() != '\n';
             }
             has_content = true;
         }
         if (needs_newline)
         {
-            std::putc('\n', s_new_kill_file_fp);
+            std::putc('\n', g_kill_store.new_fp);
         }
         if (has_star_commands)
         {
@@ -610,21 +603,21 @@ void rewrite_kill_file(ArticleNum thru)
                 const std::string_view line_text = skip_leading_space(kill_line);
                 if (!line_text.empty() && line_text.front() == '*')
                 {
-                    fmt::print(s_new_kill_file_fp, "{}", kill_line);
+                    fmt::print(g_kill_store.new_fp, "{}", kill_line);
                     needs_newline = kill_line.back() != '\n';
                 }
             }
             if (needs_newline)
             {
-                std::putc('\n', s_new_kill_file_fp);
+                std::putc('\n', g_kill_store.new_fp);
             }
         }
-        if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
+        if (!(g_kill_store.state & KFS_GLOBAL_THREAD_FILE))
         {
             // Append all the still-valid thread commands
             g_hash_cursor.walk(g_msg_id_hash, &write_local_thread_commands, 0);
         }
-        std::fclose(s_new_kill_file_fp);
+        std::fclose(g_kill_store.new_fp);
         if (!has_content)
         {
             fs::remove(killname, error);
@@ -676,8 +669,8 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
             break;
         }
     }
-    fmt::print(s_new_kill_file_fp, "{} {} {}\n", msgid, ch, s_kill_file_day_num - age);
-    s_kill_file_thread_cnt++;
+    fmt::print(g_kill_store.new_fp, "{} {} {}\n", msgid, ch, g_kill_store.day_num - age);
+    g_kill_store.thread_cnt++;
 
     return 0;
 }
@@ -690,7 +683,7 @@ static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
         if (age > KF_MAX_DAYS)
         {
             free_pending_msg_id(data);
-            g_kf_change_thread_cnt++;
+            g_kill_store.change_thread_cnt++;
             return -1;
         }
         data->dat_len += elapsed_days;
@@ -701,8 +694,8 @@ static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
         if (ap->m_auto_flags & AUTO_OLD)
         {
             ap->m_auto_flags &= ~AUTO_OLD;
-            g_kf_change_thread_cnt++;
-            g_kf_state |= KFS_THREAD_CHANGES;
+            g_kill_store.change_thread_cnt++;
+            g_kill_store.state |= KFS_THREAD_CHANGES;
         }
     }
     return 0;
@@ -710,19 +703,19 @@ static int age_thread_commands(int keylen, HashDatum *data, int elapsed_days)
 
 void update_thread_kill_file()
 {
-    if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
+    if (!(g_kill_store.state & KFS_GLOBAL_THREAD_FILE))
     {
         return;
     }
 
-    int elapsed_days = kill_file_day_num(s_kill_file_day_num);
+    int elapsed_days = kill_file_day_num(g_kill_store.day_num);
     if (elapsed_days)
     {
         g_hash_cursor.walk(g_msg_id_hash, &age_thread_commands, elapsed_days);
-        s_kill_file_day_num += elapsed_days;
+        g_kill_store.day_num += elapsed_days;
     }
 
-    if (!(g_kf_state & KFS_THREAD_CHANGES))
+    if (!(g_kill_store.state & KFS_THREAD_CHANGES))
     {
         return;
     }
@@ -730,30 +723,30 @@ void update_thread_kill_file()
     const fs::path kname{file_exp(get_env_var("KILLTHREADS", s_kill_threads))};
     std::error_code error;
     fs::create_directories(kname.parent_path(), error);
-    if (g_kf_change_thread_cnt * 5 > s_kill_file_thread_cnt)
+    if (g_kill_store.change_thread_cnt * 5 > g_kill_store.thread_cnt)
     {
         fs::remove(kname, error);       // to prevent file reuse
-        s_new_kill_file_fp = std::fopen(kname.string().c_str(), "w");
-        if (s_new_kill_file_fp == nullptr)
+        g_kill_store.new_fp = std::fopen(kname.string().c_str(), "w");
+        if (g_kill_store.new_fp == nullptr)
         {
             return; // Yikes!
         }
-        s_kill_file_thread_cnt = 0;
-        g_kf_change_thread_cnt = 0;
+        g_kill_store.thread_cnt = 0;
+        g_kill_store.change_thread_cnt = 0;
         g_hash_cursor.walk(g_msg_id_hash, &write_global_thread_commands, 0); // Rewrite
     }
     else
     {
-        s_new_kill_file_fp = std::fopen(kname.string().c_str(), "a");
-        if (s_new_kill_file_fp == nullptr)
+        g_kill_store.new_fp = std::fopen(kname.string().c_str(), "a");
+        if (g_kill_store.new_fp == nullptr)
         {
             return; // Yikes!
         }
         g_hash_cursor.walk(g_msg_id_hash, &write_global_thread_commands, 1); // Append
     }
-    std::fclose(s_new_kill_file_fp);
+    std::fclose(g_kill_store.new_fp);
 
-    g_kf_state &= ~KFS_THREAD_CHANGES;
+    g_kill_store.state &= ~KFS_THREAD_CHANGES;
 }
 
 // edit KILL file for newsgroup
@@ -764,11 +757,11 @@ void edit_kill_file()
 
     if (g_in_ng)
     {
-        if (g_kf_state & KFS_LOCAL_CHANGES)
+        if (g_kill_store.state & KFS_LOCAL_CHANGES)
         {
             rewrite_kill_file(g_last_art);
         }
-        if (!(g_kf_state & KFS_GLOBAL_THREAD_FILE))
+        if (!(g_kill_store.state & KFS_GLOBAL_THREAD_FILE))
         {
             for (Subject *sp = g_subj.first; sp; sp = sp->m_next)
             {
@@ -796,14 +789,14 @@ void edit_kill_file()
         if (g_kill.local_kfp)
         {
             std::fseek(g_kill.local_kfp, 0L, 0); // rewind file
-            g_kf_state &= ~KFS_NORMAL_LINES;
+            g_kill_store.state &= ~KFS_NORMAL_LINES;
             for (std::string kill_line = get_a_line(g_kill.local_kfp); !kill_line.empty();
                  kill_line = get_a_line(g_kill.local_kfp))
             {
                 const std::string_view line = skip_leading_space(kill_line);
                 if (!line.empty() && (line.front() == '/' || line.front() == '*'))
                 {
-                    g_kf_state |= KFS_NORMAL_LINES;
+                    g_kill_store.state |= KFS_NORMAL_LINES;
                 }
                 else if (!line.empty() && line.front() == '<')
                 {
@@ -925,5 +918,5 @@ void kill_file_append(std::string_view cmd, bool local)
         }
         term_down(2);
     }
-    g_kf_state |= KFS_NORMAL_LINES;
+    g_kill_store.state |= KFS_NORMAL_LINES;
 }
