@@ -201,7 +201,7 @@ SaMainResult sa_main_loop()
 void sa_lookahead()
 {
 #ifdef PENDING
-    sc_look_ahead(true,false);           // do resorting now...
+    g_scoring.look_ahead(true, false); // do resorting now...
 #else // !PENDING
     ;                           // so the function isn't empty
 #endif

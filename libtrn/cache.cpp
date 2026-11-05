@@ -826,7 +826,7 @@ void cache_until_key()
 
     if (!input_pending() && g_scoring.initialized)
     {
-        sc_look_ahead(true, true);
+        g_scoring.look_ahead(true, true);
     }
 
     g_progress.set_spin(SPIN_OFF);

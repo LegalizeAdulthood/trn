@@ -168,7 +168,7 @@ void ScoringSession::init(bool pend_wait)
             g_progress.set_spin(SPIN_FOREGROUND);
             do_spin = true; // really do it
         }
-        sc_look_ahead(true,waitflag);    // jump in *now*
+        look_ahead(true, waitflag); // jump in *now*
         if (waitflag)
         {
             do_spin = false;
@@ -301,12 +301,12 @@ void ScoringSession::fill_score_list(ArticleNum first, ArticleNum last)
 // flag == true means sort now, false means wait until later (not used)
 // nowait == true means start scoring immediately (group entry)
 //
-void sc_look_ahead(bool flag, bool nowait)
+void ScoringSession::look_ahead(bool flag, bool nowait)
 {
     ArticleNum      oldart = g_art_input.open_art;
     ArticlePosition oldartpos;
 
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         return;                 // no looking ahead now
     }
@@ -317,7 +317,7 @@ void sc_look_ahead(bool flag, bool nowait)
         return;                 // delay as little as possible
     }
 #endif
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         return;         // don't score then...
     }
@@ -332,15 +332,15 @@ void sc_look_ahead(bool flag, bool nowait)
     }
 #endif
     // prevent needless looping below
-    if (g_scoring.fill_max < g_first_art && !g_scoring.fill_read)
+    if (fill_max < g_first_art && !fill_read)
     {
-        g_scoring.fill_max = article_before(g_cache.first(g_first_art));
+        fill_max = article_before(g_cache.first(g_first_art));
     }
     else
     {
-        g_scoring.fill_max = g_cache.first(g_scoring.fill_max);
+        fill_max = g_cache.first(fill_max);
     }
-    while (g_scoring.fill_max < g_last_art //
+    while (fill_max < g_last_art //
 #ifdef PENDING
            && !input_pending()
 #endif
@@ -353,26 +353,25 @@ void sc_look_ahead(bool flag, bool nowait)
             return;     // user requested break
         }
 #endif
-        g_scoring.fill_max = g_cache.next(g_scoring.fill_max);
+        fill_max = g_cache.next(fill_max);
         // skip over some articles quickly
-        while (g_scoring.fill_max < g_last_art &&
-               (g_cache.scored(g_scoring.fill_max) || (!g_scoring.fill_read && !g_cache.unread(g_scoring.fill_max))))
+        while (fill_max < g_last_art && (g_cache.scored(fill_max) || (!fill_read && !g_cache.unread(fill_max))))
         {
-            g_scoring.fill_max = g_cache.next(g_scoring.fill_max);
+            fill_max = g_cache.next(fill_max);
         }
 
-        if (g_cache.scored(g_scoring.fill_max))
+        if (g_cache.scored(fill_max))
         {
             continue;
         }
-        if (!g_scoring.fill_read) // score only unread
+        if (!fill_read) // score only unread
         {
-            if (!g_cache.unread(g_scoring.fill_max))
+            if (!g_cache.unread(fill_max))
             {
                 continue;
             }
         }
-        (void) g_scoring.score_art(g_scoring.fill_max, false);
+        (void) score_art(fill_max, false);
     }
     if (oldart)                 // copied from cheat.cpp
     {
@@ -578,7 +577,7 @@ void sc_score_cmd(std::string_view line)
         std::fflush(stdout); // print it now
         g_progress.set_spin(SPIN_FOREGROUND);
         g_scoring.do_spin = true;
-        sc_look_ahead(true, false);
+        g_scoring.look_ahead(true, false);
         g_scoring.do_spin = false;
         g_progress.set_spin(SPIN_POP);
         // consider a "done" message later,
