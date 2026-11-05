@@ -549,8 +549,7 @@ void rewrite_kill_file(ArticleNum thru)
             kill_lines.push_back(line);
         }
         // Close the reader before removing its file on Windows.
-        std::fclose(g_kill.local_kfp);
-        g_kill.local_kfp = nullptr;
+        g_kill.close(KF_LOCAL);
     }
     else
     {
@@ -853,21 +852,24 @@ void KillFileProcessor::open(int local)
     {
         fs::remove(kname);
     }
+    close(local);
     if (local)
     {
-        if (local_kfp)
-        {
-            std::fclose(local_kfp);
-        }
         local_kfp = std::fopen(kname.string().c_str(), "r");
     }
     else
     {
-        if (global_kfp)
-        {
-            std::fclose(global_kfp);
-        }
         global_kfp = std::fopen(kname.string().c_str(), "r");
+    }
+}
+
+void KillFileProcessor::close(int local)
+{
+    std::FILE *&reader = local ? local_kfp : global_kfp;
+    if (reader)
+    {
+        std::fclose(reader);
+        reader = nullptr;
     }
 }
 

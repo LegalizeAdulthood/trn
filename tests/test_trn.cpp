@@ -3906,10 +3906,7 @@ void NewsgroupExitReadingTest::SetUp()
 
 void NewsgroupExitReadingTest::TearDown()
 {
-    if (g_kill.local_kfp)
-    {
-        std::fclose(g_kill.local_kfp);
-    }
+    g_kill.close(KF_LOCAL);
     g_kill.local_kfp = m_old_local_kfp;
     g_sel.newsgroup_sort = m_old_group_sort;
     g_check_count = m_old_check_count;

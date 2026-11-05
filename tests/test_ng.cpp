@@ -2888,9 +2888,9 @@ void PersistentKillArticleTest::SetUp()
 
 void PersistentKillArticleTest::TearDown()
 {
-    if (g_kill.local_kfp != nullptr && g_kill.local_kfp != m_old_local_kfp)
+    if (g_kill.local_kfp != m_old_local_kfp)
     {
-        std::fclose(g_kill.local_kfp);
+        g_kill.close(KF_LOCAL);
     }
     g_kill.local_kfp = m_old_local_kfp;
     g_kf_state = m_old_kf_state;

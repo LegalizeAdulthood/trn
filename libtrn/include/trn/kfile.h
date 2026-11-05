@@ -67,6 +67,7 @@ enum
 struct KillFileProcessor
 {
     void open(int local);
+    void close(int local);
     void kill_unwanted(ArticleNum starting, std::string_view message, int entering);
 
     // TODO: private

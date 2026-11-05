@@ -100,10 +100,7 @@ protected:
 
     void TearDown() override
     {
-        if (g_kill.local_kfp != nullptr)
-        {
-            std::fclose(g_kill.local_kfp);
-        }
+        g_kill.close(KF_LOCAL);
         g_kill.local_kfp = m_old_local_kfp;
 
         art_close();

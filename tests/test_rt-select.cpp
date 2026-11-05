@@ -1575,10 +1575,7 @@ void SelectorKillEditorTest::SetUp()
 
 void SelectorKillEditorTest::TearDown()
 {
-    if (g_kill.local_kfp)
-    {
-        std::fclose(g_kill.local_kfp);
-    }
+    g_kill.close(KF_LOCAL);
     g_kill.local_kfp = m_old_local;
     g_kf_state = m_old_state;
     SelectorShellTest::TearDown();
@@ -1586,11 +1583,7 @@ void SelectorKillEditorTest::TearDown()
 
 void SelectorKillEditorTest::use_file(std::string_view name, bool existing)
 {
-    if (g_kill.local_kfp)
-    {
-        std::fclose(g_kill.local_kfp);
-        g_kill.local_kfp = nullptr;
-    }
+    g_kill.close(KF_LOCAL);
     m_kill_file = m_root / name;
     m_env.expect_env_repeatedly("KILLLOCAL", m_kill_file.generic_string().c_str());
     if (existing)

@@ -764,11 +764,7 @@ cleanup2:
         }
     }
 
-    if (g_kill.local_kfp)
-    {
-        std::fclose(g_kill.local_kfp);
-        g_kill.local_kfp = nullptr;
-    }
+    g_kill.close(KF_LOCAL);
     set_mode(gmode_save,mode_save);
     return g_newsgroup_exit_code;
 }                                       // Whew!

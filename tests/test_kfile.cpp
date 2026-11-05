@@ -35,6 +35,47 @@ namespace
 
 namespace fs = std::filesystem;
 
+class KillFileCloseTest : public testing::TestWithParam<bool>
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    std::FILE *&selected_reader()
+    {
+        return GetParam() ? m_processor.local_kfp : m_processor.global_kfp;
+    }
+    std::FILE *other_reader() const
+    {
+        return GetParam() ? m_processor.global_kfp : m_processor.local_kfp;
+    }
+
+    KillFileProcessor m_processor{};
+
+private:
+    fs::path m_output_dir;
+};
+
+void KillFileCloseTest::SetUp()
+{
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_output_dir = fs::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
+    fs::create_directories(m_output_dir);
+
+    m_processor.local_kfp = std::fopen((m_output_dir / "local").string().c_str(), "w+");
+    ASSERT_NE(nullptr, m_processor.local_kfp);
+    m_processor.global_kfp = std::fopen((m_output_dir / "global").string().c_str(), "w+");
+    ASSERT_NE(nullptr, m_processor.global_kfp);
+}
+
+void KillFileCloseTest::TearDown()
+{
+    m_processor.close(KF_LOCAL);
+    m_processor.close(KF_GLOBAL);
+
+    std::error_code error;
+    fs::remove_all(m_output_dir, error);
+}
+
 class KillFileEditTest : public testing::Test
 {
 protected:
@@ -105,9 +146,9 @@ protected:
 
     void TearDown() override
     {
-        if (g_kill.local_kfp != nullptr && g_kill.local_kfp != m_old_local_kfp)
+        if (g_kill.local_kfp != m_old_local_kfp)
         {
-            std::fclose(g_kill.local_kfp);
+            g_kill.close(KF_LOCAL);
         }
         if (g_msg_id_hash != nullptr && g_msg_id_hash != m_old_msg_id_hash)
         {
@@ -188,6 +229,43 @@ protected:
 };
 
 } // namespace
+
+TEST_P(KillFileCloseTest, closesSelectedReader)
+{
+    m_processor.close(GetParam());
+
+    EXPECT_EQ(nullptr, selected_reader());
+}
+
+TEST_P(KillFileCloseTest, leavesOtherReaderUnchanged)
+{
+    std::FILE *other = other_reader();
+
+    m_processor.close(GetParam());
+
+    EXPECT_EQ(other, other_reader());
+}
+
+TEST_P(KillFileCloseTest, ignoresUnopenedReader)
+{
+    std::fclose(selected_reader());
+    selected_reader() = nullptr;
+
+    m_processor.close(GetParam());
+
+    EXPECT_EQ(nullptr, selected_reader());
+}
+
+TEST_P(KillFileCloseTest, ignoresAlreadyClosedReader)
+{
+    m_processor.close(GetParam());
+
+    m_processor.close(GetParam());
+
+    EXPECT_EQ(nullptr, selected_reader());
+}
+
+INSTANTIATE_TEST_SUITE_P(LocalAndGlobal, KillFileCloseTest, testing::Bool());
 
 TEST_F(KillFileEditTest, createsLocalKillFileDirectory)
 {
