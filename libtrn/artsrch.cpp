@@ -452,7 +452,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
     }
     search_first = do_read || g_sel.rereading                      ? g_abs_first
                    : (g_mode != MM_PROCESSING_KILL || ignore_thru > 0) ? g_first_art
-                                                                       : g_kill_first;
+                                                                       : g_kill.first;
     if (top_start || g_nav.target.num == 0)
     {
         g_nav.target.num = article_after(g_last_art);

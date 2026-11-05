@@ -295,7 +295,7 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
     g_newsgroup_exit_code = NG_NORM;
     g_kf_state &= ~(KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES
                  |KFS_NORMAL_LINES  | KFS_THREAD_LINES);
-    g_kill_first = ArticleNum{};
+    g_kill.first = ArticleNum{};
 
     g_extract_dest.clear();
     g_extract_prog.clear();
@@ -764,10 +764,10 @@ cleanup2:
         }
     }
 
-    if (g_local_kfp)
+    if (g_kill.local_kfp)
     {
-        std::fclose(g_local_kfp);
-        g_local_kfp = nullptr;
+        std::fclose(g_kill.local_kfp);
+        g_kill.local_kfp = nullptr;
     }
     set_mode(gmode_save,mode_save);
     return g_newsgroup_exit_code;

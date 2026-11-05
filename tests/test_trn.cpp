@@ -3864,7 +3864,7 @@ protected:
 
 private:
     trn::testing::MockEnvironment m_env;
-    std::FILE                    *m_old_local_kfp{g_local_kfp};
+    std::FILE                    *m_old_local_kfp{g_kill.local_kfp};
     SelectionSortMode             m_old_group_sort{g_sel.newsgroup_sort};
     int                           m_old_check_count{g_check_count};
     std::string                   m_original_newsrc;
@@ -3883,7 +3883,7 @@ void NewsgroupExitReadingTest::SetUp()
     g_use_threads = g_threaded_group = g_thread_always = threaded;
     g_sel.newsgroup_sort = SS_NATURAL;
     g_check_count = 0;
-    g_local_kfp = nullptr;
+    g_kill.local_kfp = nullptr;
     m_kill_file = m_output_dir / "KILL";
     std::ofstream{m_kill_file} << m_kill_contents;
     m_env.expect_env_repeatedly("KILLLOCAL", m_kill_file.generic_string().c_str());
@@ -3898,7 +3898,7 @@ void NewsgroupExitReadingTest::SetUp()
     const TerminalInputReader reading_input = g_terminal_input_reader;
     g_terminal_input_reader = [reading_input](char *buffer, int size)
     {
-        EXPECT_NE(nullptr, g_local_kfp);
+        EXPECT_NE(nullptr, g_kill.local_kfp);
         EXPECT_NE(nullptr, g_art_input.fp);
         return reading_input(buffer, size);
     };
@@ -3906,11 +3906,11 @@ void NewsgroupExitReadingTest::SetUp()
 
 void NewsgroupExitReadingTest::TearDown()
 {
-    if (g_local_kfp)
+    if (g_kill.local_kfp)
     {
-        std::fclose(g_local_kfp);
+        std::fclose(g_kill.local_kfp);
     }
-    g_local_kfp = m_old_local_kfp;
+    g_kill.local_kfp = m_old_local_kfp;
     g_sel.newsgroup_sort = m_old_group_sort;
     g_check_count = m_old_check_count;
     NewsgroupEndReadingStateTest::TearDown();
@@ -3940,7 +3940,7 @@ void NewsgroupExitReadingTest::expect_final_state(std::string_view numbers, Arti
     EXPECT_FALSE(g_sel.selected_only);
     EXPECT_EQ(nullptr, g_sel_page.page_subj);
     EXPECT_EQ(nullptr, g_sel_page.page_art);
-    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(nullptr, g_kill.local_kfp);
     EXPECT_EQ(nullptr, g_art_input.fp);
     EXPECT_EQ(ArticleNum{}, g_art_input.open_art);
     for (const long number : {1L, 2L, 3L})
@@ -6446,7 +6446,7 @@ private:
     using SignalHandler = void (*)(int);
     trn::testing::MockEnvironment              m_env;
     std::vector<std::pair<int, SignalHandler>> m_signals;
-    std::FILE                                 *m_old_local{g_local_kfp};
+    std::FILE                                 *m_old_local{g_kill.local_kfp};
     bool                                       m_old_waiting{g_waiting};
     bool                                       m_old_no_wait{g_no_wait_fork};
     bool                                       m_old_bizarre{g_bizarre};
@@ -6471,7 +6471,7 @@ void NewsgroupSelectorKillEditorTest::SetUp()
         m_signals.emplace_back(number, std::signal(number, SIG_IGN));
     }
     g_waiting = g_no_wait_fork = false;
-    g_local_kfp = nullptr;
+    g_kill.local_kfp = nullptr;
     const std::string editor =
 #ifdef USE_SPAWN_SHELL
         "call "
@@ -6498,7 +6498,7 @@ void NewsgroupSelectorKillEditorTest::TearDown()
     {
         std::signal(signal.first, signal.second);
     }
-    g_local_kfp = m_old_local;
+    g_kill.local_kfp = m_old_local;
     g_waiting = m_old_waiting;
     g_no_wait_fork = m_old_no_wait;
     g_bizarre = m_old_bizarre;
@@ -6525,7 +6525,7 @@ TEST_F(NewsgroupSelectorKillEditorTest, editingTheGlobalRulesRedisplaysTheSameSe
     EXPECT_EQ("kill-editor\n" + m_kill_file.generic_string() + '\n', editor_text("tools.log"));
     EXPECT_EQ("# Global rules\n/controlled/:j\n", editor_text("global rules/KILL"));
     EXPECT_FALSE(fs::exists(m_output_dir / "unused-local"));
-    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(nullptr, g_kill.local_kfp);
     EXPECT_EQ(cursor, g_newsgroup_ptr);
     EXPECT_EQ(article_location, g_nav.target);
     EXPECT_FALSE(g_in_ng);

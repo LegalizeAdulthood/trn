@@ -44,14 +44,14 @@ protected:
         m_old_kf_state = g_kf_state;
         m_old_kfs_thread_change_set = g_kfs_thread_change_set;
         m_old_kf_change_thread_cnt = g_kf_change_thread_cnt;
-        m_old_local_kfp = g_local_kfp;
+        m_old_local_kfp = g_kill.local_kfp;
         m_old_msg_id_hash = g_msg_id_hash;
         m_old_article_list = g_cache.article_list;
         m_old_newsgroup_ptr = g_newsgroup_ptr;
         m_old_priv_dir = g_priv_dir;
         m_old_trn_dir = g_trn_dir;
         m_old_newsgroup_dir = g_newsgroup_dir;
-        m_old_kill_first = g_kill_first;
+        m_old_kill_first = g_kill.first;
         m_old_first_art = g_first_art;
         m_old_last_art = g_last_art;
         m_old_force_last = g_force_last;
@@ -80,14 +80,14 @@ protected:
         g_kf_state = KFS_NONE;
         g_kfs_thread_change_set = KFS_NONE;
         g_kf_change_thread_cnt = 0;
-        g_local_kfp = nullptr;
+        g_kill.local_kfp = nullptr;
         g_msg_id_hash = new HashTable(17, msg_id_cmp);
         g_cache.article_list.clear();
         g_newsgroup_ptr = nullptr;
         g_priv_dir.clear();
         g_trn_dir.clear();
         g_newsgroup_dir.clear();
-        g_kill_first = ArticleNum{};
+        g_kill.first = ArticleNum{};
         g_first_art = ArticleNum{};
         g_last_art = ArticleNum{};
         g_force_last = false;
@@ -105,9 +105,9 @@ protected:
 
     void TearDown() override
     {
-        if (g_local_kfp != nullptr && g_local_kfp != m_old_local_kfp)
+        if (g_kill.local_kfp != nullptr && g_kill.local_kfp != m_old_local_kfp)
         {
-            std::fclose(g_local_kfp);
+            std::fclose(g_kill.local_kfp);
         }
         if (g_msg_id_hash != nullptr && g_msg_id_hash != m_old_msg_id_hash)
         {
@@ -118,14 +118,14 @@ protected:
         g_kf_state = m_old_kf_state;
         g_kfs_thread_change_set = m_old_kfs_thread_change_set;
         g_kf_change_thread_cnt = m_old_kf_change_thread_cnt;
-        g_local_kfp = m_old_local_kfp;
+        g_kill.local_kfp = m_old_local_kfp;
         g_msg_id_hash = m_old_msg_id_hash;
         g_cache.article_list = m_old_article_list;
         g_newsgroup_ptr = m_old_newsgroup_ptr;
         g_priv_dir = m_old_priv_dir;
         g_trn_dir = m_old_trn_dir;
         g_newsgroup_dir = m_old_newsgroup_dir;
-        g_kill_first = m_old_kill_first;
+        g_kill.first = m_old_kill_first;
         g_first_art = m_old_first_art;
         g_last_art = m_old_last_art;
         g_force_last = m_old_force_last;
@@ -266,7 +266,7 @@ TEST_F(KillFileEditTest, appendLocalKillFileWritesConfiguredPath)
     (void) testing::internal::GetCapturedStdout();
 
     EXPECT_EQ("/old/j\n/new/j\n", file_contents(kill_file));
-    EXPECT_NE(nullptr, g_local_kfp);
+    EXPECT_NE(nullptr, g_kill.local_kfp);
     EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
 }
 
@@ -326,7 +326,7 @@ TEST_F(KillFileEditTest, enteringLocalKillFileParsesThruArticleNumber)
     kill_unwanted(ArticleNum{1}, "", true);
     (void) testing::internal::GetCapturedStdout();
 
-    EXPECT_EQ(13, g_kill_first.value_of());
+    EXPECT_EQ(13, g_kill.first.value_of());
 }
 
 TEST_F(KillFileEditTest, editLocalKillFileAppliesThreadCommand)

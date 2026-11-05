@@ -1557,7 +1557,7 @@ protected:
         "\"" TRN_TEST_PROCESS_TOOL "\" kill-editor"};
 
 private:
-    std::FILE         *m_old_local{g_local_kfp};
+    std::FILE         *m_old_local{g_kill.local_kfp};
     KillFileStateFlags m_old_state{g_kf_state};
 };
 
@@ -1565,7 +1565,7 @@ void SelectorKillEditorTest::SetUp()
 {
     SelectorShellTest::SetUp();
     g_in_ng = true;
-    g_local_kfp = nullptr;
+    g_kill.local_kfp = nullptr;
     g_kf_state = KFS_NONE;
     m_env.expect_env_repeatedly("VISUAL", m_editor.c_str());
     m_env.expect_env_repeatedly("EDITOR", "unused-editor");
@@ -1575,21 +1575,21 @@ void SelectorKillEditorTest::SetUp()
 
 void SelectorKillEditorTest::TearDown()
 {
-    if (g_local_kfp)
+    if (g_kill.local_kfp)
     {
-        std::fclose(g_local_kfp);
+        std::fclose(g_kill.local_kfp);
     }
-    g_local_kfp = m_old_local;
+    g_kill.local_kfp = m_old_local;
     g_kf_state = m_old_state;
     SelectorShellTest::TearDown();
 }
 
 void SelectorKillEditorTest::use_file(std::string_view name, bool existing)
 {
-    if (g_local_kfp)
+    if (g_kill.local_kfp)
     {
-        std::fclose(g_local_kfp);
-        g_local_kfp = nullptr;
+        std::fclose(g_kill.local_kfp);
+        g_kill.local_kfp = nullptr;
     }
     m_kill_file = m_root / name;
     m_env.expect_env_repeatedly("KILLLOCAL", m_kill_file.generic_string().c_str());
@@ -1597,8 +1597,8 @@ void SelectorKillEditorTest::use_file(std::string_view name, bool existing)
     {
         std::filesystem::create_directories(m_kill_file.parent_path());
         std::ofstream(m_kill_file, std::ios::binary) << "# Existing rules\n";
-        g_local_kfp = std::fopen(m_kill_file.string().c_str(), "r");
-        ASSERT_NE(nullptr, g_local_kfp);
+        g_kill.local_kfp = std::fopen(m_kill_file.string().c_str(), "r");
+        ASSERT_NE(nullptr, g_kill.local_kfp);
     }
 }
 
@@ -1610,10 +1610,10 @@ void SelectorKillEditorTest::expect_edited_file(std::string_view original)
     EXPECT_EQ(std::string(original) + "/controlled/:j\n", read_file(m_kill_file));
     EXPECT_EQ("kill-editor\n" + m_kill_file.generic_string() + '\n', read_file(m_root / "tools.log"));
     EXPECT_FALSE(std::filesystem::exists(m_root / "unused-global"));
-    ASSERT_NE(nullptr, g_local_kfp);
+    ASSERT_NE(nullptr, g_kill.local_kfp);
     EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
-    std::rewind(g_local_kfp);
-    EXPECT_EQ(original.empty() ? "/controlled/:j\n" : "# Existing rules\n", get_a_line(g_local_kfp));
+    std::rewind(g_kill.local_kfp);
+    EXPECT_EQ(original.empty() ? "/controlled/:j\n" : "# Existing rules\n", get_a_line(g_kill.local_kfp));
 }
 
 class SelectorKillEditorPathTest : public SelectorKillEditorTest, public testing::WithParamInterface<const char *>

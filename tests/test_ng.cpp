@@ -2865,14 +2865,14 @@ protected:
 private:
     std::filesystem::path         m_output_dir;
     KillFileStateFlags            m_old_kf_state{g_kf_state};
-    std::FILE                    *m_old_local_kfp{g_local_kfp};
+    std::FILE                    *m_old_local_kfp{g_kill.local_kfp};
     bool                          m_old_novice_delays{g_novice_delays};
 };
 
 void PersistentKillArticleTest::SetUp()
 {
     KillSubjectArticleTest::SetUp();
-    g_local_kfp = nullptr;
+    g_kill.local_kfp = nullptr;
     g_kf_state = KFS_NONE;
     g_novice_delays = false;
     const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
@@ -2888,11 +2888,11 @@ void PersistentKillArticleTest::SetUp()
 
 void PersistentKillArticleTest::TearDown()
 {
-    if (g_local_kfp != nullptr && g_local_kfp != m_old_local_kfp)
+    if (g_kill.local_kfp != nullptr && g_kill.local_kfp != m_old_local_kfp)
     {
-        std::fclose(g_local_kfp);
+        std::fclose(g_kill.local_kfp);
     }
-    g_local_kfp = m_old_local_kfp;
+    g_kill.local_kfp = m_old_local_kfp;
     g_kf_state = m_old_kf_state;
     g_novice_delays = m_old_novice_delays;
     std::error_code error;
@@ -6597,7 +6597,7 @@ TEST_F(PersistentKillArticleTest, savesALocalRuleAndKillsEarlierSubjectArticlesA
     EXPECT_NE(std::string::npos, output.find("KILL"));
     EXPECT_NE(std::string::npos, output.find("done"));
     EXPECT_EQ("/: *Target subject/:j\n", file_contents(m_kill_file));
-    EXPECT_NE(nullptr, g_local_kfp);
+    EXPECT_NE(nullptr, g_kill.local_kfp);
     EXPECT_TRUE(g_kf_state & KFS_NORMAL_LINES);
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
                   AF_EXISTS, AF_EXISTS});
@@ -6674,7 +6674,7 @@ TEST_F(PersistentKillArticleTest, groupEndDoesNotCreateARuleOrChangeArticles)
 
     EXPECT_NE(std::string::npos, output.find("End of group"));
     EXPECT_FALSE(std::filesystem::exists(m_kill_file));
-    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(nullptr, g_kill.local_kfp);
     EXPECT_EQ(KFS_NONE, g_kf_state);
     expect_flags({AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_YANK_BACK,
                   AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS});
@@ -6691,7 +6691,7 @@ TEST_F(PersistentKillArticleTest, failedRuleSaveReportsTheErrorAndStillKillsMatc
     const std::string output = kill_subject(AS_NORM, 2, {}, "K");
 
     EXPECT_NE(std::string::npos, output.find("Can't open"));
-    EXPECT_EQ(nullptr, g_local_kfp);
+    EXPECT_EQ(nullptr, g_kill.local_kfp);
     EXPECT_TRUE(std::filesystem::is_empty(m_kill_file));
     expect_flags({AF_EXISTS, AF_EXISTS, AF_EXISTS | AF_YANK_BACK, AF_EXISTS | AF_UNREAD | AF_SEL, AF_EXISTS | AF_UNREAD,
                   AF_EXISTS, AF_EXISTS});

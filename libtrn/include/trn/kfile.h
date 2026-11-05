@@ -64,11 +64,20 @@ enum
     KF_MAX_DAYS = 30
 };
 
-extern std::FILE         *g_local_kfp;             // local (for this newsgroup) file
+struct KillFileProcessor
+{
+    std::FILE *local_kfp{};  // local (for this newsgroup) file
+    std::FILE *global_kfp{}; // global article killer file
+    ArticleNum first{};      // used as g_first_art when killing
+    bool       exit_cmds{};
+    bool       mentioned{};
+};
+
+extern KillFileProcessor g_kill;
+
 extern KillFileStateFlags g_kf_state;              // the state of our kill files
 extern KillFileStateFlags g_kfs_thread_change_set; // bits to set for thread changes
 extern int                g_kf_change_thread_cnt;  // # entries changed from old to new
-extern ArticleNum         g_kill_first;            // used as g_first_art when killing
 
 void kill_file_init();
 void kill_unwanted(ArticleNum starting, std::string_view message, int entering);

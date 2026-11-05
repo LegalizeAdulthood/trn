@@ -47,11 +47,11 @@
 
 namespace fs = std::filesystem;
 
-std::FILE         *g_local_kfp{};             // local (for this newsgroup) file
+KillFileProcessor g_kill{};
+
 KillFileStateFlags g_kf_state{};              // the state of our kill files
 KillFileStateFlags g_kfs_thread_change_set{}; // bits to set for thread changes
 int                g_kf_change_thread_cnt{};  // # entries changed from old to new
-ArticleNum         g_kill_first{};            // used as g_firstart when killing
 
 static void mention(std::string_view str);
 static bool kill_file_junk(Article &article, int killmask);
@@ -61,11 +61,9 @@ static int  write_global_thread_commands(int keylen, HashDatum *data, int append
 static int  age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
 static std::string_view skip_leading_space(std::string_view text);
 
-static std::FILE         *s_global_kill_file_fp{};                // global article killer file
 static KillFileStateFlags s_kill_file_state_local_change_clear{}; // bits to clear local changes
 static int                s_kill_file_thread_cnt{};               // # entries in the thread kfile
 static long               s_kill_file_day_num{};                  // day number for thread killfile
-static bool               s_exit_cmds{};
 static constexpr std::string_view s_thread_cmd_ltr{"JK,j+S.m"};
 static AutoKillFlags              s_thread_cmd_flag[]{
     AUTO_KILL_THD, AUTO_KILL_SBJ, AUTO_KILL_FOL, AUTO_KILL_1, AUTO_SEL_THD, AUTO_SEL_SBJ, AUTO_SEL_FOL, AUTO_SEL_1,
@@ -73,7 +71,6 @@ static AutoKillFlags              s_thread_cmd_flag[]{
 static constexpr std::string_view s_kill_global{KILL_GLOBAL};
 static constexpr std::string_view s_kill_local{KILL_LOCAL};
 static constexpr std::string_view s_kill_threads{KILL_THREADS};
-static bool       s_kill_mentioned;
 static std::FILE *s_new_kill_file_fp{};
 
 inline long kill_file_day_num(long x)
@@ -184,13 +181,13 @@ static std::string_view skip_non_space_prefix(std::string_view text)
 
 static int do_kill_file(std::FILE *kfp, int entering)
 {
-    bool first_time = (entering && !g_kill_first);
+    bool first_time = (entering && !g_kill.first);
     char last_kill_type = '\0';
     int  thread_kill_cnt = 0;
     int  thread_select_cnt = 0;
 
     g_nav.target.num = article_after(g_last_art);
-    g_kill_first = g_first_art;
+    g_kill.first = g_first_art;
     std::fseek(kfp,0L,0);                    // rewind file
     for (std::string kill_line = get_a_line(kfp); !kill_line.empty(); kill_line = get_a_line(kfp))
     {
@@ -212,11 +209,11 @@ static int do_kill_file(std::FILE *kfp, int entering)
             const std::string_view article_text = skip_leading_space(thru_args.substr(len));
             long                   article_num{};
             (void) std::from_chars(article_text.data(), article_text.data() + article_text.size(), article_num);
-            g_kill_first = ArticleNum{article_num + 1};
-            g_kill_first = std::max(g_kill_first, g_first_art);
-            if (g_kill_first > g_last_art)
+            g_kill.first = ArticleNum{article_num + 1};
+            g_kill.first = std::max(g_kill.first, g_first_art);
+            if (g_kill.first > g_last_art)
             {
-                g_kill_first = article_after(g_last_art);
+                g_kill.first = article_after(g_last_art);
             }
             continue;
         }
@@ -255,7 +252,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
         {
             if (entering)
             {
-                s_exit_cmds = true;
+                g_kill.exit_cmds = true;
                 continue;
             }
             command_view.remove_prefix(1);
@@ -282,7 +279,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             {
                 if (g_status.end(g_newsgroup_ptr->m_to_read, "article"))
                 {
-                    s_kill_mentioned = true;
+                    g_kill.mentioned = true;
                     carriage_return();
                     fmt::print("{}", g_msg);
                     newline();
@@ -291,7 +288,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
             g_status.init(g_newsgroup_ptr->m_to_read);
             last_kill_type = '/';
             mention(command);
-            s_kill_mentioned = true;
+            g_kill.mentioned = true;
             switch (art_search(command, false))
             {
             case SRCH_ABORT:
@@ -336,7 +333,7 @@ static int do_kill_file(std::FILE *kfp, int entering)
                 {
                     if (g_status.end(g_newsgroup_ptr->m_to_read, "article"))
                     {
-                        s_kill_mentioned = true;
+                        g_kill.mentioned = true;
                         carriage_return();
                         fmt::print("{}", g_msg);
                         newline();
@@ -419,18 +416,18 @@ static int do_kill_file(std::FILE *kfp, int entering)
     if (thread_kill_cnt)
     {
         mention(fmt::format("{} auto-kill command{}.", thread_kill_cnt, plural(thread_kill_cnt)));
-        s_kill_mentioned = true;
+        g_kill.mentioned = true;
     }
     if (thread_select_cnt)
     {
         mention(fmt::format("{} auto-select command{}.", thread_select_cnt, plural(thread_select_cnt)));
-        s_kill_mentioned = true;
+        g_kill.mentioned = true;
     }
     if (last_kill_type)
     {
         if (g_status.end(g_newsgroup_ptr->m_to_read, "article"))
         {
-            s_kill_mentioned = true;
+            g_kill.mentioned = true;
             carriage_return();
             fmt::print("{}", g_msg);
             newline();
@@ -463,9 +460,9 @@ void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
     bool anytokill = (g_newsgroup_ptr->m_to_read > 0);
 
     set_mode(GM_READ,MM_PROCESSING_KILL);
-    if ((entering || s_exit_cmds) && (g_local_kfp || s_global_kill_file_fp))
+    if ((entering || g_kill.exit_cmds) && (g_kill.local_kfp || g_kill.global_kfp))
     {
-        s_exit_cmds = false;
+        g_kill.exit_cmds = false;
         ArticleNum oldfirst = g_first_art;
         g_first_art = starting;
         clear();
@@ -474,22 +471,22 @@ void kill_unwanted(ArticleNum starting, std::string_view message, int entering)
             fmt::print("{}", message);
         }
 
-        s_kill_mentioned = false;
-        if (g_local_kfp)
+        g_kill.mentioned = false;
+        if (g_kill.local_kfp)
         {
             if (entering)
             {
                 g_kf_state |= KFS_LOCAL_CHANGES;
             }
-            intr = do_kill_file(g_local_kfp, entering);
+            intr = do_kill_file(g_kill.local_kfp, entering);
         }
         open_kill_file(KF_GLOBAL);          // Just in case the name changed
-        if (s_global_kill_file_fp && !intr)
+        if (g_kill.global_kfp && !intr)
         {
-            intr = do_kill_file(s_global_kill_file_fp, entering);
+            intr = do_kill_file(g_kill.global_kfp, entering);
         }
         newline();
-        if (entering && s_kill_mentioned && g_novice_delays)
+        if (entering && g_kill.mentioned && g_novice_delays)
         {
             if (g_verbose)
             {
@@ -545,16 +542,16 @@ void rewrite_kill_file(ArticleNum thru)
     std::error_code error;
     std::vector<std::string> kill_lines;
 
-    if (g_local_kfp)
+    if (g_kill.local_kfp)
     {
-        std::fseek(g_local_kfp, 0L, 0);       // rewind current file
-        for (std::string line = get_a_line(g_local_kfp); !line.empty(); line = get_a_line(g_local_kfp))
+        std::fseek(g_kill.local_kfp, 0L, 0); // rewind current file
+        for (std::string line = get_a_line(g_kill.local_kfp); !line.empty(); line = get_a_line(g_kill.local_kfp))
         {
             kill_lines.push_back(line);
         }
         // Close the reader before removing its file on Windows.
-        std::fclose(g_local_kfp);
-        g_local_kfp = nullptr;
+        std::fclose(g_kill.local_kfp);
+        g_kill.local_kfp = nullptr;
     }
     else
     {
@@ -798,12 +795,12 @@ void edit_kill_file()
         no_echo();                       // and make terminal
         cr_mode();                       // unfriendly again
         open_kill_file(g_in_ng);
-        if (g_local_kfp)
+        if (g_kill.local_kfp)
         {
-            std::fseek(g_local_kfp,0L,0);     // rewind file
+            std::fseek(g_kill.local_kfp, 0L, 0); // rewind file
             g_kf_state &= ~KFS_NORMAL_LINES;
-            for (std::string kill_line = get_a_line(g_local_kfp); !kill_line.empty();
-                 kill_line = get_a_line(g_local_kfp))
+            for (std::string kill_line = get_a_line(g_kill.local_kfp); !kill_line.empty();
+                 kill_line = get_a_line(g_kill.local_kfp))
             {
                 const std::string_view line = skip_leading_space(kill_line);
                 if (!line.empty() && (line.front() == '/' || line.front() == '*'))
@@ -859,19 +856,19 @@ void open_kill_file(int local)
     }
     if (local)
     {
-        if (g_local_kfp)
+        if (g_kill.local_kfp)
         {
-            std::fclose(g_local_kfp);
+            std::fclose(g_kill.local_kfp);
         }
-        g_local_kfp = std::fopen(kname.string().c_str(), "r");
+        g_kill.local_kfp = std::fopen(kname.string().c_str(), "r");
     }
     else
     {
-        if (s_global_kill_file_fp)
+        if (g_kill.global_kfp)
         {
-            std::fclose(s_global_kill_file_fp);
+            std::fclose(g_kill.global_kfp);
         }
-        s_global_kill_file_fp = std::fopen(kname.string().c_str(), "r");
+        g_kill.global_kfp = std::fopen(kname.string().c_str(), "r");
     }
 }
 
@@ -915,7 +912,7 @@ void kill_file_append(std::string_view cmd, bool local)
             }
             output << cmd << '\n';
             output.close();
-            if (local && !g_local_kfp)
+            if (local && !g_kill.local_kfp)
             {
                 open_kill_file(KF_LOCAL);
             }

@@ -53,7 +53,7 @@ protected:
         m_old_use_threads = g_use_threads;
         m_old_verbose = g_verbose;
         m_old_novice_delays = g_novice_delays;
-        m_old_local_kfp = g_local_kfp;
+        m_old_local_kfp = g_kill.local_kfp;
         m_old_art_fp = g_art_input.fp;
         m_old_open_art = g_art_input.open_art;
         m_old_raw_art_size = g_raw_art_size;
@@ -83,7 +83,7 @@ protected:
         g_use_threads = false;
         g_verbose = false;
         g_novice_delays = false;
-        g_local_kfp = nullptr;
+        g_kill.local_kfp = nullptr;
         g_art_input.fp = nullptr;
         g_art_input.open_art = ArticleNum{};
         g_data_source = &m_data_source;
@@ -100,11 +100,11 @@ protected:
 
     void TearDown() override
     {
-        if (g_local_kfp != nullptr)
+        if (g_kill.local_kfp != nullptr)
         {
-            std::fclose(g_local_kfp);
+            std::fclose(g_kill.local_kfp);
         }
-        g_local_kfp = m_old_local_kfp;
+        g_kill.local_kfp = m_old_local_kfp;
 
         art_close();
         g_art_buf.final();
