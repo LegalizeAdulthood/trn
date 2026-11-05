@@ -418,7 +418,7 @@ static NewsgroupData *recover_group_batch(NewsgroupData *failed)
     };
     DataSource *const source = failed->m_rc->data_source;
     NewsgroupData    *next = newsgroup_next(failed);
-    while (next && (next->m_rc->data_source == source || !(next->m_flags & NF_VISIT)))
+    while (next && (next->same_source(*failed) || !(next->m_flags & NF_VISIT)))
     {
         next = newsgroup_next(next);
     }
@@ -428,7 +428,7 @@ static NewsgroupData *recover_group_batch(NewsgroupData *failed)
     std::vector<GroupMarks> saved;
     for (const NewsgroupData &group : g_newsgroup_data)
     {
-        if (group.m_rc->data_source != source)
+        if (!group.same_source(*failed))
         {
             saved.push_back({std::string{group.rc_name()}, group.m_rc, group.m_flags & marks});
         }

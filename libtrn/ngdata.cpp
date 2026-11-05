@@ -122,6 +122,11 @@ bool NewsgroupData::uses_source(const DataSource *source) const
     return m_rc->data_source == source;
 }
 
+bool NewsgroupData::same_source(const NewsgroupData &other) const
+{
+    return uses_source(other.m_rc->data_source);
+}
+
 void NewsgroupData::mark_changed()
 {
     m_rc->mark_changed();
