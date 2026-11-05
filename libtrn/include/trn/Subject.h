@@ -55,6 +55,10 @@ struct Subject
     {
         return m_thread == other.m_thread;
     }
+    Subject *next_in_thread() const
+    {
+        return m_next && same_thread(*m_next) ? m_next : nullptr;
+    }
     Article *subj_article();
     std::size_t stripped_offset() const { return m_str.size() < 4 ? m_str.size() : 4; }
     std::string_view text() const { return m_str; }

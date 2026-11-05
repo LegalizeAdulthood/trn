@@ -994,9 +994,9 @@ try_again:
             }
             if (g_sel.mode == SM_THREAD)
             {
-                while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
+                while (Subject *next = sp->next_in_thread())
                 {
-                    sp = sp->m_next;
+                    sp = next;
                     if (sp == g_sel_page.page_subj)
                     {
                         g_sel_page.prior_obj_cnt = g_sel_page.total_obj_cnt;
@@ -1868,9 +1868,9 @@ try_again:
             }
             if (g_sel.mode == SM_THREAD)
             {
-                while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
+                while (Subject *next = sp->next_in_thread())
                 {
-                    sp = sp->m_next;
+                    sp = next;
                     if (!line_cnt || !sp->m_misc)
                     {
                         continue;
@@ -2428,9 +2428,9 @@ start_of_loop:
             }
             if (g_sel.mode == SM_THREAD)
             {
-                while (sp->m_next && sp->m_next->m_thread == sp->m_thread)
+                while (Subject *next = sp->next_in_thread())
                 {
-                    sp = sp->m_next;
+                    sp = next;
                     if (!line_cnt || !sp->m_misc)
                     {
                         continue;
@@ -2649,7 +2649,6 @@ static int count_subject_lines(const Subject *subj, int *selptr)
 static int count_thread_lines(const Subject *subj, int *selptr)
 {
     int total = 0;
-    const Article *thread = subj->m_thread;
     int            sel = -1;
     int            subj_sel;
 
@@ -2667,7 +2666,7 @@ static int count_thread_lines(const Subject *subj, int *selptr)
                 sel = 3;
             }
         }
-    } while ((subj = subj->m_next) != nullptr && subj->m_thread == thread);
+    } while ((subj = subj->next_in_thread()) != nullptr);
     if (selptr)
     {
         *selptr = (sel < 0 ? 0 : sel);
