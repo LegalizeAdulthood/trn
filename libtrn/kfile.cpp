@@ -637,6 +637,11 @@ void KillFilePersistence::rewrite_kill_file(ArticleNum thru)
 
 static int write_global_thread_commands(int keylen, HashDatum *data, int appending)
 {
+    return g_kill_store.write_global_thread_commands(keylen, data, appending);
+}
+
+int KillFilePersistence::write_global_thread_commands(int keylen, HashDatum *data, int appending)
+{
     int autofl;
     int age;
     std::string_view msgid;
@@ -674,8 +679,8 @@ static int write_global_thread_commands(int keylen, HashDatum *data, int appendi
             break;
         }
     }
-    fmt::print(g_kill_store.new_fp, "{} {} {}\n", msgid, ch, g_kill_store.day_num - age);
-    g_kill_store.thread_cnt++;
+    fmt::print(new_fp, "{} {} {}\n", msgid, ch, day_num - age);
+    thread_cnt++;
 
     return 0;
 }

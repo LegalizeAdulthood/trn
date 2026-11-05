@@ -91,6 +91,7 @@ struct KillFilePersistence
     // TODO: private
     int write_local_thread_commands(int keylen, HashDatum *data, int extra);
     int age_thread_commands(int keylen, HashDatum *data, int elapsed_days);
+    int write_global_thread_commands(int keylen, HashDatum *data, int appending);
 
     KillFileStateFlags state{};              // the state of our kill files
     KillFileStateFlags thread_change_set{};  // bits to set for thread changes
