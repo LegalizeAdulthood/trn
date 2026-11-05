@@ -2009,9 +2009,9 @@ TEST_F(NNTPBodyTest, unstuffsDotPrefixedBodyLines)
 
     g_nntp_art.body(ArticleNum{7});
 
-    EXPECT_EQ("plain\n", nntp_read_art(NNTP_STRLEN));
-    EXPECT_EQ(".dot-stuffed\n", nntp_read_art(NNTP_STRLEN));
-    EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
+    EXPECT_EQ("plain\n", g_nntp_art.read_art(NNTP_STRLEN));
+    EXPECT_EQ(".dot-stuffed\n", g_nntp_art.read_art(NNTP_STRLEN));
+    EXPECT_TRUE(g_nntp_art.read_art(NNTP_STRLEN).empty());
 }
 
 TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
@@ -2036,7 +2036,8 @@ TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
     {
         SCOPED_TRACE(pass);
         std::string article;
-        for (std::string chunk = nntp_read_art(NNTP_STRLEN); !chunk.empty(); chunk = nntp_read_art(NNTP_STRLEN))
+        for (std::string chunk = g_nntp_art.read_art(NNTP_STRLEN); !chunk.empty();
+             chunk = g_nntp_art.read_art(NNTP_STRLEN))
         {
             article += chunk;
         }
@@ -2065,7 +2066,7 @@ TEST_F(NNTPBodyTest, stopsBodyReadOnReadError)
 
     g_nntp_art.body(ArticleNum{7});
 
-    EXPECT_TRUE(nntp_read_art(NNTP_STRLEN).empty());
+    EXPECT_TRUE(g_nntp_art.read_art(NNTP_STRLEN).empty());
 }
 
 TEST_F(NNTPBodyTest, requestsBodyWhenArticleHeaderIsParsed)

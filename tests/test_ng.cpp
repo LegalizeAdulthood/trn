@@ -12617,7 +12617,7 @@ TEST_P(CompletedDownloadCacheArticleTest, rereadsTheOriginalArticleBytesThroughE
 {
     std::string article;
 
-    for (std::string line{nntp_read_art(NNTP_STRLEN)}; !line.empty(); line = nntp_read_art(NNTP_STRLEN))
+    for (std::string line{g_nntp_art.read_art(NNTP_STRLEN)}; !line.empty(); line = g_nntp_art.read_art(NNTP_STRLEN))
     {
         article += line;
     }

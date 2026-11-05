@@ -30,12 +30,13 @@ enum
 
 struct NntpArticleCache
 {
-    std::string art_name(ArticleNum art_num, bool allocate);
-    void        body(ArticleNum art_num);
+    std::string     art_name(ArticleNum art_num, bool allocate);
+    void            body(ArticleNum art_num);
     ArticlePosition art_size();
     int             finish_body(FinishBodyMode bmode);
     int             seek_art(ArticlePosition pos);
     ArticlePosition tell_art();
+    std::string     read_art(int limit);
 
     // TODO: private
     int copy_body(std::string &line, int limit, ArticlePosition pos);
@@ -55,7 +56,6 @@ int             nntp_group(std::string_view group, NewsgroupData *gp);
 int             nntp_stat(ArticleNum art_num);
 ArticleNum      nntp_stat_id(std::string_view msg_id);
 int             nntp_header(ArticleNum art_num);
-std::string     nntp_read_art(int limit);
 std::time_t     nntp_time();
 int             nntp_new_groups(std::time_t t);
 int             nntp_art_nums();

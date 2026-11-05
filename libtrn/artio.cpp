@@ -173,7 +173,7 @@ static std::string read_art_chunk(int limit)
 {
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        return nntp_read_art(limit);
+        return g_nntp_art.read_art(limit);
     }
 
     if (limit <= 1)
