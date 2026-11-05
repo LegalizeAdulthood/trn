@@ -751,7 +751,7 @@ TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)
 
     testing::internal::CaptureStdout();
     g_mouse.check();
-    EXPECT_TRUE(check_mouse_bar(3, 75, 23, 0, 75, 23));
+    EXPECT_TRUE(g_mouse.check_bar(3, 75, 23, 0, 75, 23));
     testing::internal::GetCapturedStdout();
 
     ASSERT_TRUE(macro_pending());

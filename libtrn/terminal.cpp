@@ -2770,17 +2770,17 @@ static void mouse_input(const char *cp)
     }
 }
 
-bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
+bool MouseInteraction::check_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    int col = g_tc_COLS - g_mouse.bar_width;
+    int col = g_tc_COLS - bar_width;
 
-    if (g_mouse.bar_btns != nullptr && g_mouse.bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
+    if (bar_btns != nullptr && bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
         && (x_clk -= col - 1) > 0)
     {
         x -= col - 1;
-        for (int button_index = g_mouse.bar_start; button_index < g_mouse.bar_cnt; button_index++)
+        for (int button_index = bar_start; button_index < bar_cnt; button_index++)
         {
-            const MouseButton       &button = (*g_mouse.bar_btns)[static_cast<std::size_t>(button_index)];
+            const MouseButton       &button = (*bar_btns)[static_cast<std::size_t>(button_index)];
             const MouseButtonDisplay display = mouse_button_display(button);
             if (x_clk < display.width)
             {
