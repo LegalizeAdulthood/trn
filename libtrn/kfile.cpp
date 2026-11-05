@@ -498,7 +498,7 @@ void KillFileProcessor::kill_unwanted(ArticleNum starting, std::string_view mess
     }
     if (!entering && (g_kill_store.state & KFS_LOCAL_CHANGES) && !intr)
     {
-        rewrite_kill_file(g_last_art);
+        g_kill_store.rewrite_kill_file(g_last_art);
     }
     set_mode(g_general_mode,oldmode);
 }
@@ -530,9 +530,9 @@ int KillFilePersistence::write_local_thread_commands(int keylen, HashDatum *data
     return 0;
 }
 
-void rewrite_kill_file(ArticleNum thru)
+void KillFilePersistence::rewrite_kill_file(ArticleNum thru)
 {
-    bool           has_content = (g_kill_store.state & (KFS_THREAD_LINES | KFS_GLOBAL_THREAD_FILE)) == KFS_THREAD_LINES;
+    bool                     has_content = (state & (KFS_THREAD_LINES | KFS_GLOBAL_THREAD_FILE)) == KFS_THREAD_LINES;
     bool has_star_commands = false;
     bool needs_newline = false;
     const fs::path killname{file_exp(get_env_var("KILLLOCAL", s_kill_local))};
@@ -554,11 +554,11 @@ void rewrite_kill_file(ArticleNum thru)
         fs::create_directories(killname.parent_path(), error);
     }
     fs::remove(killname, error);        // to prevent file reuse
-    g_kill_store.state &= ~(g_kill_store.local_change_clear | KFS_NORMAL_LINES);
-    g_kill_store.new_fp = std::fopen(killname.string().c_str(), "w");
-    if (g_kill_store.new_fp != nullptr)
+    state &= ~(local_change_clear | KFS_NORMAL_LINES);
+    new_fp = std::fopen(killname.string().c_str(), "w");
+    if (new_fp != nullptr)
     {
-        fmt::print(g_kill_store.new_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
+        fmt::print(new_fp, "THRU {} {}\n", g_newsgroup_ptr->m_rc->name.generic_string(), thru.value_of());
         for (const std::string &kill_line : kill_lines)
         {
             const std::string_view line{kill_line};
@@ -574,7 +574,7 @@ void rewrite_kill_file(ArticleNum thru)
                 if (thru_args.size() < len || thru_args.substr(0, len) != rc_name ||
                     (thru_args.size() > len && !std::isspace(static_cast<unsigned char>(thru_args[len]))))
                 {
-                    fmt::print(g_kill_store.new_fp, "{}", kill_line);
+                    fmt::print(new_fp, "{}", kill_line);
                     needs_newline = kill_line.back() != '\n';
                 }
                 continue;
@@ -592,14 +592,14 @@ void rewrite_kill_file(ArticleNum thru)
             }
             else
             {
-                fmt::print(g_kill_store.new_fp, "{}", kill_line);
+                fmt::print(new_fp, "{}", kill_line);
                 needs_newline = kill_line.back() != '\n';
             }
             has_content = true;
         }
         if (needs_newline)
         {
-            std::putc('\n', g_kill_store.new_fp);
+            std::putc('\n', new_fp);
         }
         if (has_star_commands)
         {
@@ -608,21 +608,21 @@ void rewrite_kill_file(ArticleNum thru)
                 const std::string_view line_text = skip_leading_space(kill_line);
                 if (!line_text.empty() && line_text.front() == '*')
                 {
-                    fmt::print(g_kill_store.new_fp, "{}", kill_line);
+                    fmt::print(new_fp, "{}", kill_line);
                     needs_newline = kill_line.back() != '\n';
                 }
             }
             if (needs_newline)
             {
-                std::putc('\n', g_kill_store.new_fp);
+                std::putc('\n', new_fp);
             }
         }
-        if (!(g_kill_store.state & KFS_GLOBAL_THREAD_FILE))
+        if (!(state & KFS_GLOBAL_THREAD_FILE))
         {
             // Append all the still-valid thread commands
-            g_hash_cursor.walk(g_msg_id_hash, &write_local_thread_commands, 0);
+            g_hash_cursor.walk(g_msg_id_hash, &::write_local_thread_commands, 0);
         }
-        std::fclose(g_kill_store.new_fp);
+        std::fclose(new_fp);
         if (!has_content)
         {
             fs::remove(killname, error);
@@ -764,7 +764,7 @@ void edit_kill_file()
     {
         if (g_kill_store.state & KFS_LOCAL_CHANGES)
         {
-            rewrite_kill_file(g_last_art);
+            g_kill_store.rewrite_kill_file(g_last_art);
         }
         if (!(g_kill_store.state & KFS_GLOBAL_THREAD_FILE))
         {
