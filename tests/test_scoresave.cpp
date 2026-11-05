@@ -87,7 +87,7 @@ protected:
     {
         Article *article = g_cache.ptr(num);
         article->m_flags = AF_EXISTS | AF_UNREAD;
-        sc_set_score(num, score);
+        g_scoring.set_score(num, score);
     }
 
     void clear_article_scores(ArticleNum first, ArticleNum last)

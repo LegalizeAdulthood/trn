@@ -19,13 +19,15 @@ enum
 
 struct ScoringSession
 {
+    void set_score(ArticleNum a, int score);
+
     bool       kill_thresh_active{};
     int        kill_thresh{LOW_SCORE}; // KILL articles at or below this score
     ArticleNum fill_max{};             // maximum art# scored by fill-routine
     bool       fill_read{};            // true if also scoring read arts...
     bool       initialized{};          // has score been initialized (are we "in" scoring?)
     bool       scoring{};              // are we currently scoring an article (prevents loops)
-    bool       saves_cores{};          // If true, save the scores for this group on exit.
+    bool       save_scores{};          // If true, save the scores for this group on exit.
     bool       delay{};                // If true, delay initialization of scoring until explicitly required
     bool       sf_force_init{};        // If true, always sf_init()
     bool       sf_delay{};             // if true, delay loading rule files
@@ -38,7 +40,6 @@ extern bool       g_score_new_first; // changes order of sorting (artnum compari
 
 void sc_init(bool pend_wait);
 void sc_cleanup();
-void sc_set_score(ArticleNum a, int score);
 int  sc_score_art(ArticleNum a, bool now);
 void sc_fill_score_list(ArticleNum first, ArticleNum last);
 void sc_look_ahead(bool flag, bool nowait);

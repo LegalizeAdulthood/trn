@@ -174,7 +174,7 @@ ArticleNum SavedScoreStore::use_line(std::string_view line, ArticleNum a)
                 loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
-                    sc_set_score(a, score);
+                    g_scoring.set_score(a, score);
                     used++;
                 }
                 ++a;
@@ -201,7 +201,7 @@ ArticleNum SavedScoreStore::use_line(std::string_view line, ArticleNum a)
                 loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
-                    sc_set_score(a, score);
+                    g_scoring.set_score(a, score);
                     used++;
                 }
                 ++a;
@@ -228,7 +228,7 @@ ArticleNum SavedScoreStore::use_line(std::string_view line, ArticleNum a)
                 loaded++;
                 if (g_cache.is_available(a) && g_cache.unread(a))
                 {
-                    sc_set_score(a, score);
+                    g_scoring.set_score(a, score);
                     used++;
                 }
                 ++a;

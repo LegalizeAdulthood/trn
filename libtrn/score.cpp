@@ -62,7 +62,7 @@ void sc_init(bool pend_wait)
     //
     g_scoring.kill_thresh_active = false; // kill thresholds are generic
     // July 24, 1993: changed default of g_sc_savescores to true
-    g_scoring.saves_cores = true;
+    g_scoring.save_scores = true;
 
     // CONSIDER: (for sc_init callers) is g_lastart properly set yet?
     g_scoring.fill_max = article_before(g_abs_first);
@@ -191,7 +191,7 @@ void sc_cleanup()
         return;
     }
 
-    if (g_scoring.saves_cores)
+    if (g_scoring.save_scores)
     {
         g_saved_scores.save();
     }
@@ -215,13 +215,13 @@ void sc_cleanup()
     }
 }
 
-void sc_set_score(ArticleNum a, int score)
+void ScoringSession::set_score(ArticleNum a, int score)
 {
     if (g_cache.is_unavailable(a)) // newly unavailable
     {
         return;
     }
-    if (g_scoring.kill_thresh_active && score <= g_scoring.kill_thresh && g_cache.unread(a))
+    if (kill_thresh_active && score <= kill_thresh && g_cache.unread(a))
     {
         one_less_art_num(a);
     }
@@ -243,7 +243,7 @@ static void sc_score_art_basic(ArticleNum a)
     {
         g_progress.spin(20); // keep the user amused
     }
-    sc_set_score(a,score);      // set the score
+    g_scoring.set_score(a, score); // set the score
 }
 
 // Returns an article's score, scoring it if necessary

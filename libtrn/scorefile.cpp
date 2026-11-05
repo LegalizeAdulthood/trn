@@ -444,7 +444,7 @@ bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
         {
             if (!check)
             {
-                g_scoring.saves_cores = false;
+                g_scoring.save_scores = false;
             }
             return true;
         }
@@ -452,7 +452,7 @@ bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
         {
             if (!check)
             {
-                g_scoring.saves_cores = true;
+                g_scoring.save_scores = true;
             }
             return true;
         }

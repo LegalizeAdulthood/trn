@@ -210,22 +210,22 @@ TEST_F(ScoreFileTest, newAuthorCommandAcceptsAssignmentSeparator)
 
 TEST_F(ScoreFileTest, saveScoresOffDisablesScoreSaving)
 {
-    const bool old_save_scores = g_scoring.saves_cores;
-    g_scoring.saves_cores = true;
+    const bool old_save_scores = g_scoring.save_scores;
+    g_scoring.save_scores = true;
     sf_append("!savescores off");
 
-    EXPECT_FALSE(g_scoring.saves_cores);
-    g_scoring.saves_cores = old_save_scores;
+    EXPECT_FALSE(g_scoring.save_scores);
+    g_scoring.save_scores = old_save_scores;
 }
 
 TEST_F(ScoreFileTest, saveScoresOtherArgumentEnablesScoreSaving)
 {
-    const bool old_save_scores = g_scoring.saves_cores;
-    g_scoring.saves_cores = false;
+    const bool old_save_scores = g_scoring.save_scores;
+    g_scoring.save_scores = false;
     sf_append("!savescores on");
 
-    EXPECT_TRUE(g_scoring.saves_cores);
-    g_scoring.saves_cores = old_save_scores;
+    EXPECT_TRUE(g_scoring.save_scores);
+    g_scoring.save_scores = old_save_scores;
 }
 
 TEST_F(ScoreFileTest, includeUrlFetchesScoreFile)

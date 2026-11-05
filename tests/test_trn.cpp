@@ -10233,7 +10233,7 @@ protected:
 private:
     bool       m_old_sc_delay{g_scoring.delay};
     bool       m_old_sc_scoring{g_scoring.scoring};
-    bool       m_old_sc_saves_cores{g_scoring.saves_cores};
+    bool       m_old_sc_saves_cores{g_scoring.save_scores};
     ArticleNum m_old_sc_fill_max{g_scoring.fill_max};
     bool       m_old_sc_fill_read{g_scoring.fill_read};
     int        m_old_sc_loaded_count{g_saved_scores.loaded_count};
@@ -10272,12 +10272,12 @@ void ScoreArticleTest::SetUp()
 
 void ScoreArticleTest::TearDown()
 {
-    g_scoring.saves_cores = false;
+    g_scoring.save_scores = false;
     sc_cleanup();
     g_score_cache.file_clear();
     g_scoring.delay = m_old_sc_delay;
     g_scoring.scoring = m_old_sc_scoring;
-    g_scoring.saves_cores = m_old_sc_saves_cores;
+    g_scoring.save_scores = m_old_sc_saves_cores;
     g_scoring.fill_max = m_old_sc_fill_max;
     g_scoring.fill_read = m_old_sc_fill_read;
     g_saved_scores.loaded_count = m_old_sc_loaded_count;
