@@ -263,12 +263,12 @@ int sa_do_cmd(std::string_view command)
         {
             g_sa_mode_order = SA_ORDER_ARRIVAL;
         }
-        if (g_sa_mode_order == SA_ORDER_DESCENDING && g_sc_delay)
+        if (g_sa_mode_order == SA_ORDER_DESCENDING && g_scoring.delay)
         {
-            g_sc_delay = false;
+            g_scoring.delay = false;
             sc_init(true);
         }
-        if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_sc_initialized) // score order
+        if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_scoring.initialized) // score order
         {
             g_sa_mode_order = SA_ORDER_ARRIVAL; // nope... (maybe allow later)
         }
@@ -296,7 +296,7 @@ int sa_do_cmd(std::string_view command)
         break;
 
     case 'R': // rescore articles
-        if (!g_sc_initialized)
+        if (!g_scoring.initialized)
         {
             break;
         }
@@ -346,12 +346,12 @@ int sa_do_cmd(std::string_view command)
 #ifdef PENDING
             if (g_sa_mode_read_elig)
             {
-                g_sc_fill_read = true;
-                g_sc_fill_max = article_before(g_abs_first);
+                g_scoring.fill_read = true;
+                g_scoring.fill_max = article_before(g_abs_first);
             }
             if (!g_sa_mode_read_elig)
             {
-                g_sc_fill_read = false;
+                g_scoring.fill_read = false;
             }
 #endif
             g_art_scan.ref_top = true;

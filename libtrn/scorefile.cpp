@@ -134,7 +134,7 @@ void sf_init()
     // set thresholds from the g_score_rules.entries
     g_score_rules.reply_active = false;
     g_score_rules.new_author_active = false;
-    g_kill_thresh_active = false;
+    g_scoring.kill_thresh_active = false;
     for (int i = 0; i < g_score_rules.num_entries; i++)
     {
         if (g_score_rules.entries[i].head_type >= HEAD_LAST)
@@ -144,8 +144,8 @@ void sf_init()
         switch (g_score_rules.entries[i].head_type)
         {
         case SF_KILL_THRESHOLD:
-            g_kill_thresh_active = true;
-            g_kill_thresh = g_score_rules.entries[i].score;
+            g_scoring.kill_thresh_active = true;
+            g_scoring.kill_thresh = g_score_rules.entries[i].score;
             if (g_sf_verbose)
             {
                 int j;
@@ -159,7 +159,7 @@ void sf_init()
                 }
                 if (j == g_score_rules.num_entries) // no later thresholds
                 {
-                    fmt::print("killthreshold {}\n", g_kill_thresh);
+                    fmt::print("killthreshold {}\n", g_scoring.kill_thresh);
                 }
             }
             break;
@@ -444,7 +444,7 @@ bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
         {
             if (!check)
             {
-                g_sc_saves_cores = false;
+                g_scoring.saves_cores = false;
             }
             return true;
         }
@@ -452,7 +452,7 @@ bool ScoreRuleCompiler::do_command(std::string_view cmd, bool check)
         {
             if (!check)
             {
-                g_sc_saves_cores = true;
+                g_scoring.saves_cores = true;
             }
             return true;
         }
@@ -798,7 +798,7 @@ int sf_score(ArticleNum a)
     }
     bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
-    g_sc_scoring = true;                // loop prevention
+    g_scoring.scoring = true; // loop prevention
     int sum = 0;
 
     // parse the header now if there are extra headers
@@ -883,7 +883,7 @@ int sf_score(ArticleNum a)
         }
     }
     g_untrim_cache = old_untrim;
-    g_sc_scoring = false;
+    g_scoring.scoring = false;
     return sum;
 }
 

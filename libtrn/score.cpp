@@ -30,20 +30,8 @@
 #include <string>
 #include <string_view>
 
-bool       g_kill_thresh_active{};   //
-int        g_kill_thresh{LOW_SCORE}; // KILL articles at or below this score
-ArticleNum g_sc_fill_max;            // maximum art# scored by fill-routine
-bool       g_sc_fill_read{};         // true if also scoring read arts...
-bool       g_sc_initialized{};       // has score been initialized (are we "in" scoring?)
-bool       g_sc_scoring{};           // are we currently scoring an article (prevents loops)
+ScoringSession g_scoring;
 bool       g_score_new_first{};      // changes order of sorting (artnum comparison) when scores are equal
-bool       g_sc_saves_cores{};       // If true, save the scores for this group on exit.
-bool       g_sc_delay{};             // If true, delay initialization of scoring until explicitly required
-
-static bool s_sc_sf_force_init{}; // If true, always sf_init()
-static bool s_sc_sf_delay{};      // if true, delay loading rule files
-static bool s_sc_do_spin{};       // actually do the score spinner
-static bool s_sc_rescoring{};     // are we rescoring now?
 
 static void sc_score_art_basic(ArticleNum a);
 static void sc_rescore_arts();
@@ -59,12 +47,12 @@ void sc_init(bool pend_wait)
 #endif
         return;
     }
-    s_sc_sf_force_init = true; // generally force initialization
-    if (g_sc_delay)            // requested delay?
+    g_scoring.sf_force_init = true; // generally force initialization
+    if (g_scoring.delay)            // requested delay?
     {
         return;
     }
-    s_sc_sf_delay = false;
+    g_scoring.sf_delay = false;
 
     // Consider the relationships between scoring and article scan mode.
     // Should one be able to initialize the other?  How much can they depend on
@@ -72,13 +60,13 @@ void sc_init(bool pend_wait)
     // Consider this especially in a later redesign or porting these systems
     // to other newsreaders.
     //
-    g_kill_thresh_active = false; // kill thresholds are generic
+    g_scoring.kill_thresh_active = false; // kill thresholds are generic
     // July 24, 1993: changed default of g_sc_savescores to true
-    g_sc_saves_cores = true;
+    g_scoring.saves_cores = true;
 
     // CONSIDER: (for sc_init callers) is g_lastart properly set yet?
-    g_sc_fill_max = article_before(g_abs_first);
-    g_sc_fill_read = g_sa_mode_read_elig || g_first_art > g_last_art;
+    g_scoring.fill_max = article_before(g_abs_first);
+    g_scoring.fill_read = g_sa_mode_read_elig || g_first_art > g_last_art;
 
     if (g_sf_verbose)
     {
@@ -86,43 +74,43 @@ void sc_init(bool pend_wait)
         std::fflush(stdout); // print it *now*
     }
 
-    g_sc_initialized = true;    // little white lie for lookahead
+    g_scoring.initialized = true; // little white lie for lookahead
     // now is a good time to load a saved score-list which may exist
-    if (!s_sc_rescoring)        // don't load if rescoring
+    if (!g_scoring.rescoring) // don't load if rescoring
     {
         g_saved_scores.load(); // will be quiet if non-existent
         ArticleNum i = g_first_art;
-        if (g_sc_fill_read)
+        if (g_scoring.fill_read)
         {
             i = g_abs_first;
         }
-        if (s_sc_sf_force_init)
+        if (g_scoring.sf_force_init)
         {
             i = article_after(g_last_art); // skip loop
         }
         for (i = g_cache.first(i); i <= g_last_art; i = g_cache.next(i))
         {
-            if (!g_cache.scored(i) && (g_sc_fill_read || g_cache.unread(i)))
+            if (!g_cache.scored(i) && (g_scoring.fill_read || g_cache.unread(i)))
             {
                 break;
             }
         }
         if (i == g_last_art)     // all scored
         {
-            s_sc_sf_delay = true;
+            g_scoring.sf_delay = true;
         }
     }
-    if (s_sc_sf_force_init)
+    if (g_scoring.sf_force_init)
     {
-        s_sc_sf_delay = false;
+        g_scoring.sf_delay = false;
     }
 
-    if (!s_sc_sf_delay)
+    if (!g_scoring.sf_delay)
     {
         sf_init();      // initialize the scorefile code
     }
 
-    s_sc_do_spin = false;
+    g_scoring.do_spin = false;
     ArticleNum i;
     for (i = g_cache.last(g_last_art); i >= g_abs_first; i = g_cache.prev(i))
     {
@@ -179,12 +167,12 @@ void sc_init(bool pend_wait)
         if (waitflag)
         {
             g_progress.set_spin(SPIN_FOREGROUND);
-            s_sc_do_spin = true;                // really do it
+            g_scoring.do_spin = true; // really do it
         }
         sc_look_ahead(true,waitflag);    // jump in *now*
         if (waitflag)
         {
-            s_sc_do_spin = false;
+            g_scoring.do_spin = false;
             g_progress.set_spin(SPIN_POP);
         }
     }
@@ -193,17 +181,17 @@ void sc_init(bool pend_wait)
         std::putchar('\n');
     }
 
-    g_sc_initialized = true;
+    g_scoring.initialized = true;
 }
 
 void sc_cleanup()
 {
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         return;
     }
 
-    if (g_sc_saves_cores)
+    if (g_scoring.saves_cores)
     {
         g_saved_scores.save();
     }
@@ -215,11 +203,11 @@ void sc_cleanup()
         std::fflush(stdout);
     }
 
-    if (!s_sc_sf_delay)
+    if (!g_scoring.sf_delay)
     {
         sf_clean(); // let the scorefile do whatever cleaning it needs
     }
-    g_sc_initialized = false;
+    g_scoring.initialized = false;
 
     if (g_sf_verbose)
     {
@@ -233,7 +221,7 @@ void sc_set_score(ArticleNum a, int score)
     {
         return;
     }
-    if (g_kill_thresh_active && score <= g_kill_thresh && g_cache.unread(a))
+    if (g_scoring.kill_thresh_active && score <= g_scoring.kill_thresh && g_cache.unread(a))
     {
         one_less_art_num(a);
     }
@@ -251,7 +239,7 @@ static void sc_score_art_basic(ArticleNum a)
     int score = 0;
     score += sf_score(a);       // get a score
 
-    if (s_sc_do_spin)           // appropriate to spin
+    if (g_scoring.do_spin) // appropriate to spin
     {
         g_progress.spin(20); // keep the user amused
     }
@@ -275,20 +263,20 @@ int sc_score_art(ArticleNum a, bool now)
         return LOW_SCORE;
     }
 
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
-        g_sc_delay = false;
-        s_sc_sf_force_init = true;
+        g_scoring.delay = false;
+        g_scoring.sf_force_init = true;
         sc_init(false);
-        s_sc_sf_force_init = false;
+        g_scoring.sf_force_init = false;
     }
 
     if (!g_cache.scored(a))
     {
-        if (s_sc_sf_delay)
+        if (g_scoring.sf_delay)
         {
             sf_init();
-            s_sc_sf_delay = false;
+            g_scoring.sf_delay = false;
         }
         sc_score_art_basic(a);
     }
@@ -319,7 +307,7 @@ void sc_look_ahead(bool flag, bool nowait)
     ArticleNum      oldart = g_art_input.open_art;
     ArticlePosition oldartpos;
 
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         return;                 // no looking ahead now
     }
@@ -330,7 +318,7 @@ void sc_look_ahead(bool flag, bool nowait)
         return;                 // delay as little as possible
     }
 #endif
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         return;         // don't score then...
     }
@@ -345,15 +333,15 @@ void sc_look_ahead(bool flag, bool nowait)
     }
 #endif
     // prevent needless looping below
-    if (g_sc_fill_max < g_first_art && !g_sc_fill_read)
+    if (g_scoring.fill_max < g_first_art && !g_scoring.fill_read)
     {
-        g_sc_fill_max = article_before(g_cache.first(g_first_art));
+        g_scoring.fill_max = article_before(g_cache.first(g_first_art));
     }
     else
     {
-        g_sc_fill_max = g_cache.first(g_sc_fill_max);
+        g_scoring.fill_max = g_cache.first(g_scoring.fill_max);
     }
-    while (g_sc_fill_max < g_last_art //
+    while (g_scoring.fill_max < g_last_art //
 #ifdef PENDING
            && !input_pending()
 #endif
@@ -366,26 +354,26 @@ void sc_look_ahead(bool flag, bool nowait)
             return;     // user requested break
         }
 #endif
-        g_sc_fill_max = g_cache.next(g_sc_fill_max);
+        g_scoring.fill_max = g_cache.next(g_scoring.fill_max);
         // skip over some articles quickly
-        while (g_sc_fill_max < g_last_art &&
-               (g_cache.scored(g_sc_fill_max) || (!g_sc_fill_read && !g_cache.unread(g_sc_fill_max))))
+        while (g_scoring.fill_max < g_last_art &&
+               (g_cache.scored(g_scoring.fill_max) || (!g_scoring.fill_read && !g_cache.unread(g_scoring.fill_max))))
         {
-            g_sc_fill_max = g_cache.next(g_sc_fill_max);
+            g_scoring.fill_max = g_cache.next(g_scoring.fill_max);
         }
 
-        if (g_cache.scored(g_sc_fill_max))
+        if (g_cache.scored(g_scoring.fill_max))
         {
             continue;
         }
-        if (!g_sc_fill_read)    // score only unread
+        if (!g_scoring.fill_read) // score only unread
         {
-            if (!g_cache.unread(g_sc_fill_max))
+            if (!g_cache.unread(g_scoring.fill_max))
             {
                 continue;
             }
         }
-        (void)sc_score_art(g_sc_fill_max,false);
+        (void) sc_score_art(g_scoring.fill_max, false);
     }
     if (oldart)                 // copied from cheat.cpp
     {
@@ -395,11 +383,11 @@ void sc_look_ahead(bool flag, bool nowait)
 
 int sc_percent_scored()
 {
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         return 0;       // none scored
     }
-    if (g_sc_fill_max == g_last_art)
+    if (g_scoring.fill_max == g_last_art)
     {
         return 100;
     }
@@ -435,30 +423,30 @@ int sc_percent_scored()
 
 static void sc_rescore_arts()
 {
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
-        if (g_sc_delay)
+        if (g_scoring.delay)
         {
-            g_sc_delay = false;
-            s_sc_sf_force_init = true;
+            g_scoring.delay = false;
+            g_scoring.sf_force_init = true;
             sc_init(true);
-            s_sc_sf_force_init = false;
+            g_scoring.sf_force_init = false;
         }
     }
-    else if (s_sc_sf_delay)
+    else if (g_scoring.sf_delay)
     {
         sf_init();
-        s_sc_sf_delay = false;
+        g_scoring.sf_delay = false;
     }
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
     }
-    // I think s_sc_do_spin will always be false, but why take chances?
-    bool old_spin = s_sc_do_spin;
+    // I think g_scoring.do_spin will always be false, but why take chances?
+    bool old_spin = g_scoring.do_spin;
     g_progress.set_spin(SPIN_FOREGROUND);
-    s_sc_do_spin = true; // amuse the user
+    g_scoring.do_spin = true; // amuse the user
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
         if (g_cache.exists(a))
@@ -466,7 +454,7 @@ static void sc_rescore_arts()
             sc_score_art_basic(a); // rescore it then
         }
     }
-    s_sc_do_spin = old_spin;
+    g_scoring.do_spin = old_spin;
     g_progress.set_spin(SPIN_POP);
     if (g_sa_in)
     {
@@ -480,22 +468,22 @@ static void sc_rescore_arts()
 // corrupted (:-) for online rescoring
 void sc_append(std::string_view line)
 {
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
-        if (g_sc_delay)
+        if (g_scoring.delay)
         {
-            g_sc_delay = false;
-            s_sc_sf_force_init = true;
+            g_scoring.delay = false;
+            g_scoring.sf_force_init = true;
             sc_init(true);
-            s_sc_sf_force_init = false;
+            g_scoring.sf_force_init = false;
         }
     }
-    else if (s_sc_sf_delay)
+    else if (g_scoring.sf_delay)
     {
         sf_init();
-        s_sc_sf_delay = false;
+        g_scoring.sf_delay = false;
     }
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
@@ -527,7 +515,7 @@ void sc_append(std::string_view line)
 
 void sc_rescore()
 {
-    s_sc_rescoring = true; // in case routines need to know
+    g_scoring.rescoring = true; // in case routines need to know
     sc_cleanup();        // get rid of the old
     g_score_cache.file_clear();
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
@@ -540,7 +528,7 @@ void sc_rescore()
         g_art_scan.top_ent = -1;  // reset top of page
         g_art_scan.refill = true; // make sure a refill is done
     }
-    s_sc_rescoring = false;
+    g_scoring.rescoring = false;
 }
 
 // May have a very different interface in the user versions
@@ -550,22 +538,22 @@ void sc_score_cmd(std::string_view line)
     long        j;
     std::string easy_command;
 
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
-        if (g_sc_delay)
+        if (g_scoring.delay)
         {
-            g_sc_delay = false;
-            s_sc_sf_force_init = true;
+            g_scoring.delay = false;
+            g_scoring.sf_force_init = true;
             sc_init(true);
-            s_sc_sf_force_init = false;
+            g_scoring.sf_force_init = false;
         }
     }
-    else if (s_sc_sf_delay)
+    else if (g_scoring.sf_delay)
     {
         sf_init();
-        s_sc_sf_delay = false;
+        g_scoring.sf_delay = false;
     }
-    if (!g_sc_initialized)
+    if (!g_scoring.initialized)
     {
         fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
@@ -590,9 +578,9 @@ void sc_score_cmd(std::string_view line)
         fmt::print("Scoring more articles...");
         std::fflush(stdout); // print it now
         g_progress.set_spin(SPIN_FOREGROUND);
-        s_sc_do_spin = true;
+        g_scoring.do_spin = true;
         sc_look_ahead(true, false);
-        s_sc_do_spin = false;
+        g_scoring.do_spin = false;
         g_progress.set_spin(SPIN_POP);
         // consider a "done" message later,
         // *if* lookahead did all the arts

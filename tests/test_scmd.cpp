@@ -51,7 +51,7 @@ protected:
         article->m_from = m_author;
         article->m_flags = AF_EXISTS | AF_UNREAD;
 
-        g_sc_initialized = false;
+        g_scoring.initialized = false;
         g_sa_mode_desc_art_num = false;
         g_sa_mode_desc_author = true;
         g_sa_mode_desc_score = false;

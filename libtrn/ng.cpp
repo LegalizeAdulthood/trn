@@ -728,7 +728,7 @@ cleanup:
     {
         sa_cleanup();
     }
-    if (g_sc_initialized)
+    if (g_scoring.initialized)
     {
         sc_cleanup();
     }

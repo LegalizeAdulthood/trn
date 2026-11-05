@@ -42,14 +42,14 @@ protected:
     void SetUp() override
     {
         drain_macro_buffer();
-        m_old_sc_initialized = g_sc_initialized;
-        g_sc_initialized = true;
+        m_old_sc_initialized = g_scoring.initialized;
+        g_scoring.initialized = true;
     }
 
     void TearDown() override
     {
         drain_macro_buffer();
-        g_sc_initialized = m_old_sc_initialized;
+        g_scoring.initialized = m_old_sc_initialized;
     }
 
     bool m_old_sc_initialized{};

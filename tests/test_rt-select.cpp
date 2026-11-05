@@ -5031,7 +5031,7 @@ private:
     SelectionSortMode m_old_thread_sort{g_sel.thread_sort};
     std::string_view  m_old_mode_string{g_sel.mode_string};
     std::string_view  m_old_sort_string{g_sel.sort_string};
-    bool              m_old_sc_initialized{g_sc_initialized};
+    bool              m_old_sc_initialized{g_scoring.initialized};
     bool              m_old_default_cmd{g_s_default_cmd};
     bool              m_old_univ_default_cmd{g_univ_default_cmd};
     bool              m_old_verify{g_verify};
@@ -5051,7 +5051,7 @@ void ArticleSelectorSortTest::SetUp()
     drain_input();
     errno = 0;
     g_subj.count = 3;
-    g_sc_initialized = true;
+    g_scoring.initialized = true;
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
     g_verify = false;
@@ -5105,7 +5105,7 @@ void ArticleSelectorSortTest::TearDown()
     g_sel.thread_sort = m_old_thread_sort;
     g_sel.mode_string = m_old_mode_string;
     g_sel.sort_string = m_old_sort_string;
-    g_sc_initialized = m_old_sc_initialized;
+    g_scoring.initialized = m_old_sc_initialized;
     g_s_default_cmd = m_old_default_cmd;
     g_univ_default_cmd = m_old_univ_default_cmd;
     g_verify = m_old_verify;

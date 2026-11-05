@@ -224,7 +224,7 @@ protected:
         m_old_selected_count = g_selected_count;
         m_old_keep_the_group_static = g_keep_the_group_static;
         m_old_sa_initialized = g_sa_initialized;
-        m_old_sc_initialized = g_sc_initialized;
+        m_old_sc_initialized = g_scoring.initialized;
         m_old_univ_ng_virt_flag = g_univ_ng_virt_flag;
         m_old_univ_read_virt_flag = g_univ_read_virt_flag;
         m_old_univ_default_cmd = g_univ_default_cmd;
@@ -334,7 +334,7 @@ protected:
         g_selected_count = TR_NONE;
         g_keep_the_group_static = 0;
         g_sa_initialized = false;
-        g_sc_initialized = false;
+        g_scoring.initialized = false;
         g_univ_ng_virt_flag = false;
         g_univ_read_virt_flag = false;
         g_univ_default_cmd = false;
@@ -462,7 +462,7 @@ protected:
         g_selected_count = m_old_selected_count;
         g_keep_the_group_static = m_old_keep_the_group_static;
         g_sa_initialized = m_old_sa_initialized;
-        g_sc_initialized = m_old_sc_initialized;
+        g_scoring.initialized = m_old_sc_initialized;
         g_univ_ng_virt_flag = m_old_univ_ng_virt_flag;
         g_univ_read_virt_flag = m_old_univ_read_virt_flag;
         g_univ_default_cmd = m_old_univ_default_cmd;
@@ -10231,16 +10231,16 @@ protected:
     static constexpr std::string_view GLOBAL_RULES = "savescores off\n10 subject: topic\n";
 
 private:
-    bool       m_old_sc_delay{g_sc_delay};
-    bool       m_old_sc_scoring{g_sc_scoring};
-    bool       m_old_sc_saves_cores{g_sc_saves_cores};
-    ArticleNum m_old_sc_fill_max{g_sc_fill_max};
-    bool       m_old_sc_fill_read{g_sc_fill_read};
+    bool       m_old_sc_delay{g_scoring.delay};
+    bool       m_old_sc_scoring{g_scoring.scoring};
+    bool       m_old_sc_saves_cores{g_scoring.saves_cores};
+    ArticleNum m_old_sc_fill_max{g_scoring.fill_max};
+    bool       m_old_sc_fill_read{g_scoring.fill_read};
     int        m_old_sc_loaded_count{g_saved_scores.loaded_count};
     bool       m_old_sf_verbose{g_sf_verbose};
     int        m_old_sf_score_verbose{g_sf_score_verbose};
-    bool       m_old_kill_thresh_active{g_kill_thresh_active};
-    int        m_old_kill_thresh{g_kill_thresh};
+    bool       m_old_kill_thresh_active{g_scoring.kill_thresh_active};
+    int        m_old_kill_thresh{g_scoring.kill_thresh};
     bool       m_old_s_order_changed{g_art_scan.order_changed};
 };
 
@@ -10253,12 +10253,12 @@ void ScoreArticleTest::SetUp()
     std::ofstream{m_scores / "global"} << GLOBAL_RULES;
     m_env.expect_env_repeatedly("SCOREDIR", m_scores.generic_string().c_str());
     m_env.expect_env_repeatedly("SAVESCOREFILE", (m_output_dir / "saved-scores").generic_string().c_str());
-    g_sc_delay = false;
+    g_scoring.delay = false;
     g_sf_verbose = false;
     g_sf_score_verbose = 0;
     g_score_cache.file_clear();
     sc_init(false);
-    ASSERT_TRUE(g_sc_initialized);
+    ASSERT_TRUE(g_scoring.initialized);
     for (long number = 1; number <= 3; ++number)
     {
         (void) sc_score_art(ArticleNum{number}, true);
@@ -10272,19 +10272,19 @@ void ScoreArticleTest::SetUp()
 
 void ScoreArticleTest::TearDown()
 {
-    g_sc_saves_cores = false;
+    g_scoring.saves_cores = false;
     sc_cleanup();
     g_score_cache.file_clear();
-    g_sc_delay = m_old_sc_delay;
-    g_sc_scoring = m_old_sc_scoring;
-    g_sc_saves_cores = m_old_sc_saves_cores;
-    g_sc_fill_max = m_old_sc_fill_max;
-    g_sc_fill_read = m_old_sc_fill_read;
+    g_scoring.delay = m_old_sc_delay;
+    g_scoring.scoring = m_old_sc_scoring;
+    g_scoring.saves_cores = m_old_sc_saves_cores;
+    g_scoring.fill_max = m_old_sc_fill_max;
+    g_scoring.fill_read = m_old_sc_fill_read;
     g_saved_scores.loaded_count = m_old_sc_loaded_count;
     g_sf_verbose = m_old_sf_verbose;
     g_sf_score_verbose = m_old_sf_score_verbose;
-    g_kill_thresh_active = m_old_kill_thresh_active;
-    g_kill_thresh = m_old_kill_thresh;
+    g_scoring.kill_thresh_active = m_old_kill_thresh_active;
+    g_scoring.kill_thresh = m_old_kill_thresh;
     g_art_scan.order_changed = m_old_s_order_changed;
     SaveArticleTest::TearDown();
 }
@@ -10294,7 +10294,7 @@ std::string ScoreArticleTest::score(char command, std::string_view input, bool n
     const ArticlePosition position = tell_art();
     const std::string     output = save(command, input, AS_ASK, next_command);
     EXPECT_EQ(position, tell_art());
-    EXPECT_TRUE(g_sc_initialized);
+    EXPECT_TRUE(g_scoring.initialized);
     return output;
 }
 
@@ -10367,7 +10367,7 @@ void DeferredScoreArticleTest::SetUp()
 {
     ScoreArticleTest::SetUp();
     sc_cleanup();
-    g_sc_delay = true;
+    g_scoring.delay = true;
 }
 
 class EditScoreArticleTest : public ScoreArticleTest
@@ -12094,13 +12094,13 @@ TEST_P(ExecuteScoreArticleTest, continuesScoringUnscoredArticles)
 {
     g_cache.ptr(ArticleNum{2})->m_score_flags = SFLAG_NONE;
     g_cache.ptr(ArticleNum{3})->m_score_flags = SFLAG_NONE;
-    g_sc_fill_max = ArticleNum{1};
+    g_scoring.fill_max = ArticleNum{1};
 
     const std::string output = score('\'', GetParam() ? "\n5" : "f\n", false);
 
     expect_scores({10, 10, 0});
     EXPECT_TRUE(g_art_scan.order_changed);
-    EXPECT_EQ(ArticleNum{3}, g_sc_fill_max);
+    EXPECT_EQ(ArticleNum{3}, g_scoring.fill_max);
     EXPECT_THAT(output, testing::HasSubstr("Scoring more articles..."));
 }
 
@@ -12114,14 +12114,14 @@ TEST_F(ScoreArticleTest, queuedInputDefersFurtherScoringAndRemainsAvailableToRea
 #endif
     g_cache.ptr(ArticleNum{2})->m_score_flags = SFLAG_NONE;
     g_cache.ptr(ArticleNum{3})->m_score_flags = SFLAG_NONE;
-    g_sc_fill_max = ArticleNum{1};
+    g_scoring.fill_max = ArticleNum{1};
 
     const std::string output = score('\'', "f\n");
 
     EXPECT_TRUE(g_cache.scored(ArticleNum{1}));
     EXPECT_FALSE(g_cache.scored(ArticleNum{2}));
     EXPECT_FALSE(g_cache.scored(ArticleNum{3}));
-    EXPECT_EQ(ArticleNum{1}, g_sc_fill_max);
+    EXPECT_EQ(ArticleNum{1}, g_scoring.fill_max);
     EXPECT_FALSE(g_art_scan.order_changed);
     EXPECT_THAT(output, testing::HasSubstr("Scoring more articles..."));
 }
@@ -12171,7 +12171,7 @@ TEST_F(DeferredScoreArticleTest, appendingARuleInitializesDeferredScoring)
 {
     score('"', "\" 25 subject: Topic\n");
 
-    EXPECT_FALSE(g_sc_delay);
+    EXPECT_FALSE(g_scoring.delay);
     EXPECT_EQ("25 subject: topic\n", score_file());
 }
 
@@ -12179,7 +12179,7 @@ TEST_F(DeferredScoreArticleTest, explainingTheCurrentScoreInitializesDeferredSco
 {
     const std::string output = score('\'', "s\n");
 
-    EXPECT_FALSE(g_sc_delay);
+    EXPECT_FALSE(g_scoring.delay);
     EXPECT_TRUE(g_cache.scored(g_nav.target.num));
     EXPECT_EQ(10, g_nav.target.art->m_score);
     EXPECT_THAT(output, testing::HasSubstr("Total score is 10\n"));

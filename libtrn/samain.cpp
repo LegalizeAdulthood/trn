@@ -59,8 +59,8 @@ void sa_init()
 #ifdef PENDING
     if (g_sa_mode_read_elig)
     {
-        g_sc_fill_read = true;
-        g_sc_fill_max = article_before(g_abs_first);
+        g_scoring.fill_read = true;
+        g_scoring.fill_max = article_before(g_abs_first);
     }
 #endif
     g_art_scan.save_context();
@@ -162,11 +162,11 @@ SaMainResult sa_main_loop()
     // then try to initialize.
     // If that fails then strn will just use arrival ordering.
     //
-    if (!g_sc_initialized && g_sa_mode_order == SA_ORDER_DESCENDING)
+    if (!g_scoring.initialized && g_sa_mode_order == SA_ORDER_DESCENDING)
     {
-        g_sc_delay = false;     // yes, actually score...
+        g_scoring.delay = false; // yes, actually score...
         sc_init(true);          // wait for articles to score
-        if (!g_sc_initialized)
+        if (!g_scoring.initialized)
         {
             g_sa_mode_order = SA_ORDER_ARRIVAL; // arrival order
         }

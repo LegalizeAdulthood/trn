@@ -95,7 +95,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
         {
             fmt::format_to(std::back_inserter(desc), "{:6d} ", static_cast<int>(artnum.value_of()));
         }
-        if (g_sc_initialized && g_sa_mode_desc_score)
+        if (g_scoring.initialized && g_sa_mode_desc_score)
         {
             // we'd like the score now
             fmt::format_to(std::back_inserter(desc), "[{:4d}] ", sc_score_art(artnum, true));
@@ -127,7 +127,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
             {
                 i += 7;
             }
-            if (g_sc_initialized && g_sa_mode_desc_score)
+            if (g_scoring.initialized && g_sa_mode_desc_score)
             {
                 i += 7;
             }
@@ -162,7 +162,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
             {
                 i += 7;
             }
-            if (g_sc_initialized && g_sa_mode_desc_score)
+            if (g_scoring.initialized && g_sa_mode_desc_score)
             {
                 i += 7;
             }

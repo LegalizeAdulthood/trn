@@ -824,7 +824,7 @@ void cache_until_key()
         }
     }
 
-    if (!input_pending() && g_sc_initialized)
+    if (!input_pending() && g_scoring.initialized)
     {
         sc_look_ahead(true, true);
     }
