@@ -1627,9 +1627,9 @@ bool SelectorPage::prev_page()
             int item_arts = sp->m_misc;
             if (g_sel.mode == SM_THREAD)
             {
-                while (sp->m_prev && sp->m_prev->m_thread == sp->m_thread)
+                while (Subject *prev = sp->prev_in_thread())
                 {
-                    sp = sp->m_prev;
+                    sp = prev;
                     item_arts += sp->m_misc;
                 }
                 line_cnt = count_thread_lines(sp, (int*)nullptr);
