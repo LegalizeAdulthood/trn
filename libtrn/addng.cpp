@@ -295,9 +295,7 @@ void new_nntp_groups(DataSource *dp)
                 {
                     active_fields = parse_active_line_fields(fields);
                 }
-                const std::string new_active_line = fmt::format("{} {:010} {:05} {}\n", group_name, active_fields.high,
-                                                                active_fields.low, active_fields.status);
-                (void) dp->m_act_sf.append(new_active_line, static_cast<int>(group_name.size()));
+                dp->remember_active_group(group_name, active_fields.high, active_fields.low, active_fields.status);
             }
         }
         if (has_fields)

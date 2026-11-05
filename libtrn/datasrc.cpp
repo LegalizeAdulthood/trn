@@ -641,6 +641,12 @@ void DataSource::refetch_active(std::time_t now, bool force)
     active_file_hash();
 }
 
+void DataSource::remember_active_group(std::string_view group_name, long high, long low, char status)
+{
+    const std::string new_active_line = fmt::format("{} {:010} {:05} {}\n", group_name, high, low, status);
+    (void) m_act_sf.append(new_active_line, static_cast<int>(group_name.size()));
+}
+
 bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;
