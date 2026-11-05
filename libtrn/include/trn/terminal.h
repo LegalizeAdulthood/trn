@@ -46,6 +46,9 @@ using MouseButtonList = std::vector<MouseButton>;
 
 struct MouseInteraction
 {
+    // TODO: private
+    void on();
+
     bool                   use_mouse{};
     std::string            modes{"acjlptwvK"};
     int                    bar_cnt{};

@@ -265,7 +265,6 @@ static std::string store_command(std::string_view command);
 static int         echo_char(char_int ch);
 static void        line_col_calcs();
 static void        mouse_input(const char *cp);
-static void    xmouse_on();
 
 // terminal initialization
 
@@ -2657,7 +2656,7 @@ void xmouse_check()
                 g_mouse.bar_cnt = size_cast<int>(*g_mouse.bar_btns);
                 g_mouse.bar_width = mouse_button_bar_width(*g_mouse.bar_btns);
             }
-            xmouse_on();
+            g_mouse.on();
         }
         else
         {
@@ -2667,14 +2666,14 @@ void xmouse_check()
     }
 }
 
-static void xmouse_on()
+void MouseInteraction::on()
 {
-    if (!g_mouse.is_on)
+    if (!is_on)
     {
         // save old highlight mouse tracking and enable mouse tracking
         fmt::print("\033[?1001s\033[?1000h");
         std::fflush(stdout);
-        g_mouse.is_on = true;
+        is_on = true;
     }
 }
 
