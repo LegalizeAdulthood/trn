@@ -8,7 +8,6 @@
 #define TRN_SPAGE_H
 
 int  s_fill_page();
-bool s_go_top_ents();
 bool s_go_bot_ents();
 void s_go_next_page();
 void s_go_prev_page();

@@ -245,7 +245,7 @@ static int s_do_cmd(std::string_view command)
     case 'T':         // top of ents
     case '^':
         s_rub_ptr();
-        flag = s_go_top_ents();
+        flag = g_art_scan.go_top_ents();
         if (!flag)              // failure
         {
             return S_QUIT;

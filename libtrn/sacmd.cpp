@@ -278,7 +278,7 @@ int sa_do_cmd(std::string_view command)
             g_sa_mode_desc_score = true;
         }
         g_art_scan.sort();
-        s_go_top_ents();
+        g_art_scan.go_top_ents();
         g_art_scan.refill = true;
         g_art_scan.ref_bot = true;
         break;
@@ -291,7 +291,7 @@ int sa_do_cmd(std::string_view command)
         }
         g_score_new_first = !g_score_new_first;
         g_art_scan.sort();
-        s_go_top_ents();
+        g_art_scan.go_top_ents();
         g_art_scan.refill = true;
         break;
 
@@ -306,7 +306,7 @@ int sa_do_cmd(std::string_view command)
         fmt::print("\nRescoring articles...\n");
         sc_rescore();
         g_art_scan.sort();
-        s_go_top_ents();
+        g_art_scan.go_top_ents();
         g_art_scan.refill = true;
         eat_typeahead();        // stay in control.
         break;
@@ -356,7 +356,7 @@ int sa_do_cmd(std::string_view command)
 #endif
             g_art_scan.ref_top = true;
             s_rub_ptr();
-            s_go_top_ents();
+            g_art_scan.go_top_ents();
             g_art_scan.refill = true;
         }
         else // quit out: no articles
@@ -400,7 +400,7 @@ int sa_do_cmd(std::string_view command)
         if (sa_eligible(g_art_scan.first()) || g_art_scan.next_elig(g_art_scan.first()))
         {
             g_art_scan.ref_top = true;
-            s_go_top_ents();
+            g_art_scan.go_top_ents();
             g_art_scan.refill = true;
         }
         else

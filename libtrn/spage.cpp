@@ -341,7 +341,7 @@ int s_fill_page()
                     {
                         g_sa_mode_fold = true;
                     }
-                    (void)s_go_top_ents();      // go to top (ents and page)
+                    (void) g_art_scan.go_top_ents(); // go to top (ents and page)
                     return s_fill_page();
                 }
                 return -1;              // there just aren't entries!
@@ -384,32 +384,32 @@ void ArticleScanSession::go_bot_page()
     ptr_page_line = bot_ent;
 }
 
-bool s_go_top_ents()
+bool ArticleScanSession::go_top_ents()
 {
-    g_art_scan.top_ent = g_art_scan.first();
-    if (!g_art_scan.top_ent)
+    top_ent = first();
+    if (!top_ent)
     {
         fmt::print("s_go_top_ents(): no first entry\n");
     }
-    TRN_ASSERT(g_art_scan.top_ent);      // be nicer later
-    if (!s_eligible(g_art_scan.top_ent)) // this may save a redraw...
+    TRN_ASSERT(top_ent);      // be nicer later
+    if (!s_eligible(top_ent)) // this may save a redraw...
     {
-        g_art_scan.top_ent = g_art_scan.next_elig(g_art_scan.top_ent);
+        top_ent = next_elig(top_ent);
     }
-    if (!g_art_scan.top_ent) // none eligible
+    if (!top_ent) // none eligible
     {
         // just go to the top of all the entries
-        if (g_art_scan.cur_type == S_ART)
+        if (cur_type == S_ART)
         {
-            g_art_scan.top_ent = g_abs_first.value_of();
+            top_ent = g_abs_first.value_of();
         }
         else
         {
-            g_art_scan.top_ent = 1; // not very nice coding
+            top_ent = 1; // not very nice coding
         }
     }
-    g_art_scan.refill = true;
-    g_art_scan.go_top_page();
+    refill = true;
+    go_top_page();
     return true;        // successful
 }
 
