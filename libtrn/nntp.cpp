@@ -432,24 +432,24 @@ int NntpArticleCache::finish_body(FinishBodyMode bmode)
     return 1;
 }
 
-int nntp_seek_art(ArticlePosition pos)
+int NntpArticleCache::seek_art(ArticlePosition pos)
 {
-    if (g_nntp_art.body_pos >= 0)
+    if (body_pos >= 0)
     {
-        if (g_nntp_art.body_end < pos)
+        if (body_end < pos)
         {
             std::string line;
             line.reserve(NNTP_STRLEN);
-            std::fseek(g_art_input.fp, g_nntp_art.body_end.value_of(), 0);
-            g_nntp_art.copy_body(line, NNTP_STRLEN, pos);
-            if (g_nntp_art.body_pos >= 0)
+            std::fseek(g_art_input.fp, body_end.value_of(), 0);
+            copy_body(line, NNTP_STRLEN, pos);
+            if (body_pos >= 0)
             {
-                g_nntp_art.body_pos = pos;
+                body_pos = pos;
             }
         }
         else
         {
-            g_nntp_art.body_pos = pos;
+            body_pos = pos;
         }
     }
     return std::fseek(g_art_input.fp, pos.value_of(), 0);

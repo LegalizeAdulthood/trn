@@ -145,7 +145,7 @@ int seek_art(ArticlePosition pos)
 {
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        return nntp_seek_art(pos);
+        return g_nntp_art.seek_art(pos);
     }
     return std::fseek(g_art_input.fp, pos.value_of(), 0);
 }

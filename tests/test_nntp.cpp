@@ -2047,7 +2047,7 @@ TEST_F(NNTPBodyTest, preservesYencBytesWhenRereadingCachedArticle)
         {
             EXPECT_EQ(i, static_cast<unsigned char>(decoded->data[i]));
         }
-        ASSERT_EQ(0, nntp_seek_art(ArticlePosition{}));
+        ASSERT_EQ(0, g_nntp_art.seek_art(ArticlePosition{}));
     }
 }
 
