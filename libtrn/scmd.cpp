@@ -255,7 +255,7 @@ static int s_do_cmd(std::string_view command)
     case 'B': // bottom of ents
     case '$':
         s_rub_ptr();
-        flag = s_go_bot_ents();
+        flag = g_art_scan.go_bot_ents();
         if (!flag)
         {
             return S_QUIT;

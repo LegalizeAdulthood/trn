@@ -413,14 +413,14 @@ bool ArticleScanSession::go_top_ents()
     return true;        // successful
 }
 
-bool s_go_bot_ents()
+bool ArticleScanSession::go_bot_ents()
 {
-    bool flag = g_art_scan.fill_page_backward(g_art_scan.last()); // fill backwards
+    bool flag = fill_page_backward(last()); // fill backwards
     if (!flag)
     {
         return false;
     }
-    g_art_scan.go_bot_page();
+    go_bot_page();
     return true;
 }
 
