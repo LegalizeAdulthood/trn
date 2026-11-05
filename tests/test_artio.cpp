@@ -1127,7 +1127,7 @@ void RemoteMultipartArticleTest::SetUp()
     g_parsed_header.positions[PAST_HEADER].min_pos = body_start;
     ASSERT_EQ(0, seek_art(body_start));
     g_art_buf.set_seek(body_start);
-    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+    ASSERT_EQ(ArticlePosition{-1}, g_nntp_art.art_size());
 }
 
 void RemoteMultipartArticleTest::TearDown()
@@ -1172,9 +1172,9 @@ TEST_P(RemoteMultipartArticleTest, completesThePresentationAndReleasesTheConnect
     const MimePresentation result = read_presentation();
 
     EXPECT_EQ(GetParam().lines, result.lines);
-    EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
-    EXPECT_EQ(g_art_buf.article_pos(), g_art_buf.size_from_raw(nntp_art_size()));
-    EXPECT_EQ(nntp_art_size(), tell_art());
+    EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, g_nntp_art.art_size());
+    EXPECT_EQ(g_art_buf.article_pos(), g_art_buf.size_from_raw(g_nntp_art.art_size()));
+    EXPECT_EQ(g_nntp_art.art_size(), tell_art());
     expect_next_command();
 }
 
@@ -1207,13 +1207,13 @@ TEST_P(RemoteMultipartArticleTest, leavingBeforeTheFirstPartDrainsTheBodyBeforeT
     std::string line;
     ASSERT_TRUE(read_art_buf(line, false));
     ASSERT_EQ("Part\n", line);
-    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+    ASSERT_EQ(ArticlePosition{-1}, g_nntp_art.art_size());
 
     art_close();
 
     EXPECT_EQ(nullptr, g_art_input.fp);
     EXPECT_EQ(ArticleNum{}, g_art_input.open_art);
-    EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, nntp_art_size());
+    EXPECT_EQ(ArticlePosition{static_cast<long>(m_raw_article.size())}, g_nntp_art.art_size());
     expect_next_command();
 }
 

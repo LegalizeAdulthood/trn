@@ -6085,7 +6085,7 @@ TEST_P(RemoteNewsgroupRefreshReadingTest, leavingThePagerFinishesTheBodyBeforeRe
     expect_body(2,
                 [this, &interrupted_body]
                 {
-                    EXPECT_LT(nntp_art_size(), ArticlePosition{});
+                    EXPECT_LT(g_nntp_art.art_size(), ArticlePosition{});
                     interrupted_body = true;
                     push_command("$");
                 });
@@ -6103,7 +6103,7 @@ TEST_P(RemoteNewsgroupRefreshReadingTest, leavingThePagerFinishesTheBodyBeforeRe
         std::ifstream     cached{name, std::ios::binary};
         const std::string body{std::istreambuf_iterator<char>{cached}, {}};
         EXPECT_THAT(body, testing::HasSubstr("Pending body line 99\n"));
-        EXPECT_GE(nntp_art_size(), ArticlePosition{});
+        EXPECT_GE(g_nntp_art.art_size(), ArticlePosition{});
         return reading_input(buffer, size);
     };
 

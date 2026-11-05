@@ -2404,7 +2404,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     g_art_buf.set_seek(m_body_start);
     g_art_input.pos = m_body_start;
     g_back_page.vary_write(ArticleLine{}, m_body_start);
-    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+    ASSERT_EQ(ArticlePosition{-1}, g_nntp_art.art_size());
 }
 
 void RemotePagerArticleTest::expect_complete_article()
@@ -2412,7 +2412,7 @@ void RemotePagerArticleTest::expect_complete_article()
     SCOPED_TRACE(m_rendered);
     EXPECT_EQ(DA_NORM, m_result);
     EXPECT_TRUE(m_received_end);
-    EXPECT_EQ(m_raw_size, nntp_art_size());
+    EXPECT_EQ(m_raw_size, g_nntp_art.art_size());
     EXPECT_EQ(m_raw_size, g_raw_art_size);
     EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(m_filtered_body.size())}, g_art_size);
     EXPECT_EQ(g_art_size, g_art_input.pos);
@@ -6884,7 +6884,7 @@ TEST_P(InterruptedPagerRenderingTest, refreshesAndContinuesAfterRenderingIsInter
     EXPECT_EQ(AS_NORM, m_refresh_result);
     EXPECT_EQ(DA_NORM, m_result);
     EXPECT_TRUE(m_received_end);
-    EXPECT_EQ(m_raw_size, nntp_art_size());
+    EXPECT_EQ(m_raw_size, g_nntp_art.art_size());
     EXPECT_EQ(m_raw_size, g_raw_art_size);
     EXPECT_EQ(m_body_start + ArticlePosition{static_cast<long>(m_filtered_body.size())}, g_art_size);
     EXPECT_EQ(g_art_size, g_art_input.pos);
@@ -6987,7 +6987,7 @@ TEST_F(RemotePagerArticleTest, quittingLeavesTheDownloadIncomplete)
     SCOPED_TRACE(m_rendered);
     EXPECT_EQ(DA_TO_END, m_result);
     EXPECT_FALSE(m_received_end);
-    EXPECT_EQ(ArticlePosition{-1}, nntp_art_size());
+    EXPECT_EQ(ArticlePosition{-1}, g_nntp_art.art_size());
     EXPECT_EQ(ArticlePosition{-1}, g_art_size);
     EXPECT_EQ(m_body_start + ArticlePosition{9 * 9 + 1}, g_art_input.pos);
     EXPECT_THAT(m_rendered, HasSubstr("--MORE--(?%)"));

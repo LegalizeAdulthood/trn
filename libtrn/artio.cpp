@@ -352,7 +352,7 @@ static void finish_mime_article()
     if (g_data_source->m_flags & DF_REMOTE)
     {
         nntp_finish_body(FB_SILENT);
-        g_raw_art_size = nntp_art_size();
+        g_raw_art_size = g_nntp_art.art_size();
     }
     seek_art(g_raw_art_size);
 }

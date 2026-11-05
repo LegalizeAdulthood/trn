@@ -339,9 +339,9 @@ void NntpArticleCache::body(ArticleNum art_num)
     g_nntp.link.flags &= ~NNTP_NEW_CMD_OK;
 }
 
-ArticlePosition nntp_art_size()
+ArticlePosition NntpArticleCache::art_size()
 {
-    return g_nntp_art.body_pos < 0 ? g_nntp_art.body_end : ArticlePosition{-1};
+    return body_pos < 0 ? body_end : ArticlePosition{-1};
 }
 
 int NntpArticleCache::copy_body(std::string &line, int limit, ArticlePosition pos)

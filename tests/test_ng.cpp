@@ -5567,7 +5567,7 @@ void DownloadEndArticleTest::start_download()
     g_art_buf.set_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
     g_raw_art_size = g_art_size = ArticlePosition{-1};
     read_prefix(g_do_hiding ? "\xC3\x84\n" : "\xC4\n");
-    ASSERT_EQ(ArticlePosition{-1}, nntp_art_size());
+    ASSERT_EQ(ArticlePosition{-1}, g_nntp_art.art_size());
     ASSERT_TRUE(testing::Mock::VerifyAndClearExpectations(m_connection.get()));
     EXPECT_CALL(*m_connection, read_line(testing::_)).WillOnce(testing::Return("Last")).WillOnce(testing::Return("."));
 }
@@ -12599,8 +12599,8 @@ TEST_P(DownloadEndArticleTest, finishesThePendingBodyAndTargetsTheEndInTheCurren
 
     EXPECT_NE(std::string::npos, output.find("Receiving..."));
     expect_end(m_end, ArticleLine{41}, ArticleLine{40}, 0);
-    EXPECT_EQ(m_header_end + ArticlePosition{7}, nntp_art_size());
-    EXPECT_EQ(nntp_art_size(), g_raw_art_size);
+    EXPECT_EQ(m_header_end + ArticlePosition{7}, g_nntp_art.art_size());
+    EXPECT_EQ(g_nntp_art.art_size(), g_raw_art_size);
     EXPECT_EQ(m_end, g_art_size);
     EXPECT_EQ(m_position, g_art_input.pos);
     EXPECT_EQ(ArticlePosition{g_do_hiding ? 3 : 2}, g_art_buf.pos());

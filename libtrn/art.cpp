@@ -136,7 +136,7 @@ DoArticleResult ArticlePager::do_article(std::string &article_command)
 
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        const ArticlePosition art_size{nntp_art_size()};
+        const ArticlePosition art_size{g_nntp_art.art_size()};
         g_raw_art_size = art_size;
         g_art_size = art_size;
     }
@@ -788,7 +788,7 @@ DoArticleResult ArticlePager::do_article(std::string &article_command)
 
         // extra loop bombout
 
-        if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
+        if (g_art_size < 0 && (g_raw_art_size = g_nntp_art.art_size()) >= 0)
         {
             g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
         }
@@ -868,7 +868,7 @@ reask_pager:
         }
         set_mode(g_general_mode, MM_PAGER);
         cache_until_key();
-        if (g_art_size < 0 && (g_raw_art_size = nntp_art_size()) >= 0)
+        if (g_art_size < 0 && (g_raw_art_size = g_nntp_art.art_size()) >= 0)
         {
             g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
             goto_xy(more_prompt_col, g_term_line);
@@ -1196,7 +1196,7 @@ refresh_screen:
         if (g_art_size < 0)
         {
             nntp_finish_body(FB_OUTPUT);
-            g_raw_art_size = nntp_art_size();
+            g_raw_art_size = g_nntp_art.art_size();
             g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
         }
         if (g_do_hiding)
