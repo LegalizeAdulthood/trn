@@ -68,6 +68,9 @@ struct KillFileProcessor
 {
     void open(int local);
 
+    // TODO: private
+    int do_file(std::FILE *kfp, int entering);
+
     std::FILE *local_kfp{};  // local (for this newsgroup) file
     std::FILE *global_kfp{}; // global article killer file
     ArticleNum first{};      // used as g_first_art when killing
