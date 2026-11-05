@@ -5923,6 +5923,246 @@ INSTANTIATE_TEST_SUITE_P(ModePopulationAndDestination, ArticleSelectorDestinatio
                          testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
                                           testing::Values('N', 'P', ';', '#')));
 
+class ArticleSelectorMemorizeStateTest : public ArticleSelectorBehaviorTest
+{
+protected:
+    void        SetUp() override;
+    void        TearDown() override;
+    void        prepare_memorize(SelectionMode mode);
+    void        rebuild_memorize_page();
+    void        expect_auto_flags(const std::vector<long> &affected, AutoKillFlags flags) const;
+    void        expect_pending_command();
+    std::string saved_rule() const;
+
+    std::filesystem::path         m_root;
+    trn::testing::MockEnvironment m_env;
+
+private:
+    KillFilePersistence  m_old_store{g_kill_store};
+    KillFileProcessor    m_old_kill{g_kill};
+    ArticleSearchContext m_old_search{g_art_search};
+    HeaderType           m_old_subject_header{g_header_rules.type[SUBJ_LINE]};
+    HeaderPosition       m_old_subject_position{g_parsed_header.positions[SUBJ_LINE]};
+    ArticleNum           m_old_parsed_article{g_parsed_header.parsed_art};
+    bool                 m_old_kill_thru{g_kill_thru_kludge};
+    bool                 m_old_delays{g_novice_delays};
+    std::string_view     m_old_bell{g_tc_VB};
+};
+
+void ArticleSelectorMemorizeStateTest::SetUp()
+{
+    EXPECT_CALL(m_env.getter, Call(testing::_)).WillRepeatedly(testing::Invoke(std::getenv));
+    ArticleSelectorBehaviorTest::SetUp();
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_root = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    ASSERT_FALSE(error) << error.message();
+    std::filesystem::create_directories(m_root);
+    m_env.expect_env_repeatedly("KILLLOCAL", (m_root / "KILL").generic_string().c_str());
+    g_kill = {};
+    g_kill.first = ArticleNum{1};
+    g_kill_store = {};
+    g_kill_store.thread_change_set = KFS_LOCAL_CHANGES | KFS_THREAD_CHANGES;
+    g_header_rules.type[SUBJ_LINE].flags |= HT_CACHED;
+    g_parsed_header.parsed_art = ArticleNum{};
+    g_kill_thru_kludge = false;
+    g_novice_delays = false;
+    g_tc_VB = "";
+    search_init();
+    g_art_search.init();
+}
+
+void ArticleSelectorMemorizeStateTest::TearDown()
+{
+    g_kill.close(KF_LOCAL);
+    g_kill = m_old_kill;
+    g_kill_store = m_old_store;
+    g_art_search = m_old_search;
+    g_header_rules.type[SUBJ_LINE] = m_old_subject_header;
+    g_parsed_header.positions[SUBJ_LINE] = m_old_subject_position;
+    g_parsed_header.parsed_art = m_old_parsed_article;
+    g_kill_thru_kludge = m_old_kill_thru;
+    g_novice_delays = m_old_delays;
+    g_tc_VB = m_old_bell;
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    EXPECT_FALSE(error) << error.message();
+    ArticleSelectorBehaviorTest::TearDown();
+}
+
+void ArticleSelectorMemorizeStateTest::prepare_memorize(SelectionMode mode)
+{
+    prepare_behavior(mode);
+    Article *const first = g_cache.ptr(ArticleNum{1});
+    Article *const reply = g_cache.ptr(ArticleNum{3});
+    Article *const child = g_cache.ptr(ArticleNum{4});
+    first->m_child1 = reply;
+    reply->m_parent = first;
+    reply->m_child1 = child;
+    child->m_parent = reply;
+    m_charlie.m_thread = first;
+    m_subject.m_thread_link = &m_charlie;
+    m_charlie.m_thread_link = &m_subject;
+    rebuild_memorize_page();
+    g_sel_page.item_index = mode == SM_THREAD ? 0 : 1;
+    g_nav.target = {ArticleNum{2}, g_cache.ptr(ArticleNum{2})};
+}
+
+void ArticleSelectorMemorizeStateTest::rebuild_memorize_page()
+{
+    g_sel_page.page_art = nullptr;
+    g_sel_page.page_subj = nullptr;
+    rebuild_page();
+    calculate_page();
+    testing::internal::CaptureStdout();
+    g_sel_session.display();
+    m_output = testing::internal::GetCapturedStdout();
+}
+
+void ArticleSelectorMemorizeStateTest::expect_auto_flags(const std::vector<long> &affected, AutoKillFlags flags) const
+{
+    for (const auto &[number, article] : g_cache.article_list)
+    {
+        SCOPED_TRACE(number.value_of());
+        const bool changed = std::find(affected.begin(), affected.end(), number.value_of()) != affected.end();
+        EXPECT_EQ(changed ? flags : AUTO_KILL_NONE, article.m_auto_flags);
+    }
+}
+
+void ArticleSelectorMemorizeStateTest::expect_pending_command()
+{
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+std::string ArticleSelectorMemorizeStateTest::saved_rule() const
+{
+    std::ifstream input{m_root / "KILL"};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
+struct MemorizedAction
+{
+    char              command;
+    char              reply;
+    AutoKillFlags     flags;
+    std::vector<long> root;
+    std::vector<long> descendant;
+    std::string       rule;
+};
+
+void PrintTo(const MemorizedAction &action, std::ostream *output)
+{
+    *output << action.command << action.reply;
+}
+
+class ArticleSelectorMemorizedKillTest : public ArticleSelectorMemorizeStateTest,
+                                         public testing::WithParamInterface<std::tuple<SelectionMode, MemorizedAction>>
+{
+};
+
+TEST_P(ArticleSelectorMemorizedKillTest, memorizingAKillAppliesItToTheHighlightedScopeAndRebuildsThePage)
+{
+    const auto [mode, action] = GetParam();
+    prepare_memorize(mode);
+    const long               target = mode == SM_THREAD ? 1 : 3;
+    const std::vector<long> &killed = mode == SM_THREAD ? action.root : action.descendant;
+
+    const DisplayState result = run_redisplay(action.command, std::string{action.reply} + 'Q');
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ("Kill memorized.", g_msg);
+    EXPECT_EQ(ArticleNum{target}, g_nav.target.num);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{target}), g_nav.target.art);
+    expect_auto_flags(killed, action.flags);
+    for (const auto &[number, article] : g_cache.article_list)
+    {
+        SCOPED_TRACE(number.value_of());
+        const bool was_killed = std::find(killed.begin(), killed.end(), number.value_of()) != killed.end();
+        EXPECT_EQ(!was_killed, (article.m_flags & AF_UNREAD) != 0);
+        EXPECT_EQ(!was_killed && (number == ArticleNum{1} || number == ArticleNum{4}), (article.m_flags & AF_SEL) != 0);
+    }
+    EXPECT_EQ(ArticleUnread{static_cast<long>(4 - killed.size())}, m_newsgroup.m_to_read);
+    EXPECT_EQ(4 - killed.size(), g_obj_count);
+    EXPECT_GT(g_sel_page.page_item_cnt, 0);
+    EXPECT_EQ(action.rule.empty(), saved_rule().empty());
+    EXPECT_THAT(saved_rule(), testing::HasSubstr(action.rule));
+    expect_pending_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModeAndKill, ArticleSelectorMemorizedKillTest,
+    testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                     testing::Values(MemorizedAction{'A', 'j', AUTO_KILL_1, {1}, {3}, {}},
+                                     MemorizedAction{'T', 'j', AUTO_KILL_1, {1}, {3}, {}},
+                                     MemorizedAction{'A', 'K', AUTO_KILL_SBJ, {1, 4}, {3}, {}},
+                                     MemorizedAction{'T', 'K', AUTO_KILL_SBJ, {1, 4}, {3}, {}},
+                                     MemorizedAction{'A', 'J', AUTO_KILL_NONE, {1, 4}, {3}, ":j"},
+                                     MemorizedAction{'T', 'J', AUTO_KILL_THD, {1, 3, 4}, {1, 3, 4}, {}},
+                                     MemorizedAction{'A', ',', AUTO_KILL_NONE, {1, 3, 4}, {3, 4}, ":,"},
+                                     MemorizedAction{'T', ',', AUTO_KILL_FOL, {1, 3, 4}, {3, 4}, {}})));
+
+TEST_F(ArticleSelectorMemorizeStateTest, aThreadWithAReadRootTargetsItsFirstUnreadSubject)
+{
+    prepare_memorize(SM_THREAD);
+    g_cache.ptr(ArticleNum{1})->one_less();
+    g_cache.ptr(ArticleNum{4})->one_less();
+    rebuild_memorize_page();
+    g_sel_page.item_index = 0;
+
+    const DisplayState result = run_redisplay('T', "jQ");
+
+    EXPECT_EQ(DS_DISPLAY, result);
+    EXPECT_EQ(ArticleNum{3}, g_nav.target.num);
+    expect_auto_flags({3}, AUTO_KILL_1);
+    expect_articles({2}, {});
+    EXPECT_EQ(1, g_sel_page.page_item_cnt);
+    expect_pending_command();
+}
+
+class ArticleSelectorMemorizeRefusalTest : public ArticleSelectorMemorizeStateTest,
+                                           public testing::WithParamInterface<std::tuple<SelectionMode, char>>
+{
+};
+
+TEST_P(ArticleSelectorMemorizeRefusalTest, anEmptyPageRefusesMemorizationWithoutConsumingInput)
+{
+    const auto [mode, command] = GetParam();
+    prepare_memorize(mode);
+    g_sel_page.page_item_cnt = 0;
+    const ArticleLocation target = g_nav.target;
+
+    const DisplayState result = run_command(command, "Q");
+
+    EXPECT_EQ(DS_ASK, result);
+    EXPECT_EQ(target, g_nav.target);
+    expect_auto_flags({}, AUTO_KILL_NONE);
+    expect_selection_preserved(false);
+    expect_pending_command();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModeAndCommand, ArticleSelectorMemorizeRefusalTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD),
+                                          testing::Values('A', 'T')));
+
+TEST_F(ArticleSelectorMemorizeStateTest, anUnthreadedGroupRefusesThreadMemorizationWithoutConsumingInput)
+{
+    prepare_memorize(SM_SUBJECT);
+    g_threaded_group = false;
+    const ArticleLocation target = g_nav.target;
+
+    const DisplayState result = run_command('T', "Q");
+
+    EXPECT_EQ(DS_STATUS, result);
+    EXPECT_EQ("Group is not threaded.", g_msg);
+    EXPECT_EQ(target, g_nav.target);
+    expect_auto_flags({}, AUTO_KILL_NONE);
+    expect_selection_preserved(false);
+    expect_pending_command();
+}
+
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
 {
