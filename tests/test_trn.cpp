@@ -2472,7 +2472,7 @@ private:
     bool                     m_old_home{g_can_home};
     bool                     m_old_numeric{g_use_sel_num};
     bool                     m_old_bizarre{g_bizarre};
-    int                      m_old_mouse{g_mouse_bar_cnt};
+    int                      m_old_mouse{g_mouse.bar_cnt};
     NewsgroupData           *m_old_recent{g_recent_newsgroup};
     std::vector<std::string> m_commands;
     std::size_t              m_input_pos{};
@@ -2497,7 +2497,7 @@ void UniversalSessionTest::SetUp()
     g_bizarre = false;
     g_allow_typeahead = true;
     g_can_home = false;
-    g_mouse_bar_cnt = 0;
+    g_mouse.bar_cnt = 0;
     g_recent_newsgroup = nullptr;
     g_tc_LINES = 24;
     m_menu_file = m_output_dir / "menu";
@@ -2540,7 +2540,7 @@ void UniversalSessionTest::TearDown()
     g_can_home = m_old_home;
     g_use_sel_num = m_old_numeric;
     g_bizarre = m_old_bizarre;
-    g_mouse_bar_cnt = m_old_mouse;
+    g_mouse.bar_cnt = m_old_mouse;
     g_recent_newsgroup = m_old_recent;
 }
 
@@ -4585,8 +4585,8 @@ private:
     bool                     m_old_can_home{g_can_home};
     bool                     m_old_use_sel_num{g_use_sel_num};
     std::string              m_old_news_sel_cmds{g_news_sel_cmds};
-    int                      m_old_mouse_count{g_mouse_bar_cnt};
-    int                      m_old_mouse_width{g_mouse_bar_width};
+    int                      m_old_mouse_count{g_mouse.bar_cnt};
+    int                      m_old_mouse_width{g_mouse.bar_width};
     std::vector<std::string> m_commands;
     std::size_t              m_input_pos{};
 };
@@ -4598,7 +4598,7 @@ void NewsgroupEndReadingStateTest::SetUp()
     g_can_home = false;
     g_use_sel_num = false;
     g_news_sel_cmds = "Z>";
-    g_mouse_bar_cnt = g_mouse_bar_width = 0;
+    g_mouse.bar_cnt = g_mouse.bar_width = 0;
     g_terminal_input_reader = [this](char *buffer, int)
     {
         NewsgroupEndReadingState state{g_mode,           g_nav.target.num, g_newsgroup_ptr->m_to_read,
@@ -4682,8 +4682,8 @@ void NewsgroupEndReadingStateTest::TearDown()
     g_can_home = m_old_can_home;
     g_use_sel_num = m_old_use_sel_num;
     g_news_sel_cmds = m_old_news_sel_cmds;
-    g_mouse_bar_cnt = m_old_mouse_count;
-    g_mouse_bar_width = m_old_mouse_width;
+    g_mouse.bar_cnt = m_old_mouse_count;
+    g_mouse.bar_width = m_old_mouse_width;
     InputNewsgroupReadingTest::TearDown();
 }
 
@@ -7515,8 +7515,8 @@ private:
     bool                          m_old_can_home{g_can_home};
     bool                          m_old_numbered{g_use_sel_num};
     bool                          m_old_bos{g_bos_on_stop};
-    int                           m_old_mouse_count{g_mouse_bar_cnt};
-    int                           m_old_mouse_width{g_mouse_bar_width};
+    int                           m_old_mouse_count{g_mouse.bar_cnt};
+    int                           m_old_mouse_width{g_mouse.bar_width};
     std::vector<OptionFlags>      m_options;
 };
 
@@ -7531,7 +7531,7 @@ void NewsgroupSelectorDelegationStateTest::SetUp()
     g_newsgroup_sel_cmds = g_option_sel_cmds = "Z>";
     g_can_home = false;
     g_use_sel_num = false;
-    g_mouse_bar_cnt = g_mouse_bar_width = 0;
+    g_mouse.bar_cnt = g_mouse.bar_width = 0;
     const OptionCatalog catalog;
     m_options.assign(catalog.row_count() + 1, OF_NONE);
     g_opt_edit.flags = m_options.data();
@@ -7555,8 +7555,8 @@ void NewsgroupSelectorDelegationStateTest::TearDown()
     g_can_home = m_old_can_home;
     g_use_sel_num = m_old_numbered;
     g_bos_on_stop = m_old_bos;
-    g_mouse_bar_cnt = m_old_mouse_count;
-    g_mouse_bar_width = m_old_mouse_width;
+    g_mouse.bar_cnt = m_old_mouse_count;
+    g_mouse.bar_width = m_old_mouse_width;
     InputNewsgroupReadingTest::TearDown();
 }
 

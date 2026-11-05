@@ -155,7 +155,7 @@ DoArticleResult ArticlePager::do_article(std::string &article_command)
         g_raw_art_size = art_size;
         g_art_size = art_size;
     }
-    if (g_mouse_bar_cnt > 3)
+    if (g_mouse.bar_cnt > 3)
     {
         prompt = fmt::format("%sEnd of art {} (of {}) %s[%s]", g_nav.target.num.value_of(), g_last_art.value_of());
     }
@@ -894,7 +894,7 @@ fake_command: // used by inner_search
 
         // parse and process pager command
 
-        if (g_mouse_bar_cnt)
+        if (g_mouse.bar_cnt)
         {
             clear_rest();
         }

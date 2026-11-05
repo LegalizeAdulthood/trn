@@ -348,8 +348,8 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_USE_MOUSE:
-        g_use_mouse = is_yes(value);
-        if (g_use_mouse)
+        g_mouse.use_mouse = is_yes(value);
+        if (g_mouse.use_mouse)
         {
             // set up the Xterm mouse sequence
             set_macro("\033[M+3","\003");
@@ -357,7 +357,7 @@ void apply_global_option(OptionIndex num, std::string_view value)
         break;
 
     case OI_MOUSE_MODES:
-        g_mouse_modes = value;
+        g_mouse.modes = value;
         break;
 
     case OI_USE_UNIV_SEL:
@@ -1007,10 +1007,10 @@ std::string option_value(OptionIndex num)
         return yes_or_no(g_use_threads);
 
     case OI_USE_MOUSE:
-        return yes_or_no(g_use_mouse);
+        return yes_or_no(g_mouse.use_mouse);
 
     case OI_MOUSE_MODES:
-        return g_mouse_modes.c_str();
+        return g_mouse.modes.c_str();
 
     case OI_USE_UNIV_SEL:
         return yes_or_no(g_use_univ_selector);

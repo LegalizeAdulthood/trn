@@ -44,6 +44,24 @@ struct MouseButton
 
 using MouseButtonList = std::vector<MouseButton>;
 
+struct MouseInteraction
+{
+    bool                   use_mouse{};
+    std::string            modes{"acjlptwvK"};
+    int                    bar_cnt{};
+    int                    bar_width{};
+    bool                   is_down{};
+    const MouseButtonList *bar_btns{};
+    int                    bar_start{};
+    bool                   is_on{};
+    int                    last_btn{};
+    int                    last_x{};
+    int                    last_y{};
+    double                 last_time{};
+};
+
+extern MouseInteraction g_mouse;
+
 extern MouseButtonList g_univ_sel_btns;
 extern MouseButtonList g_newsrc_sel_btns;
 extern MouseButtonList g_add_sel_btns;
@@ -59,8 +77,6 @@ extern bool        g_erase_each_line; // fancy -e
 extern bool        g_allow_typeahead; // -T
 extern bool        g_verify;          // -v
 extern ArticleLine g_init_lines;      // -i
-extern bool        g_use_mouse;       //
-extern std::string g_mouse_modes;     //
 
 // These identifiers are a best guess based on usage in the code.
 enum GeneralMode : char
@@ -164,9 +180,6 @@ extern int   g_term_scrolled; // how many lines scrolled away
 extern int   g_just_a_sec;    // 1 sec at current baud rate (number of nulls)
 extern int   g_page_line;     // line number for paging in print_line (origin 1)
 extern bool  g_error_occurred;
-extern int   g_mouse_bar_cnt;
-extern int   g_mouse_bar_width;
-extern bool  g_mouse_is_down;
 extern int   g_auto_arrow_macros; // -A
 
 void  term_init();

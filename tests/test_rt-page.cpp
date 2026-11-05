@@ -68,7 +68,7 @@ private:
     int                      m_old_page_items{g_sel_page.page_item_cnt};
     int                      m_old_lines{g_tc_LINES};
     int                      m_old_columns{g_tc_COLS};
-    int                      m_old_mouse_width{g_mouse_bar_width};
+    int                            m_old_mouse_width{g_mouse.bar_width};
     bool                     m_old_use_sel_num{g_use_sel_num};
     std::string              m_old_sel_chars{g_sel_page.chars};
 };
@@ -93,7 +93,7 @@ void ArticlePageStateTest::SetUp()
     g_sel_page.page_subj = nullptr;
     g_tc_LINES = 24;
     g_tc_COLS = 80;
-    g_mouse_bar_width = 0;
+    g_mouse.bar_width = 0;
     g_use_sel_num = false;
     m_subject.m_str = "Re: Article eligibility";
     m_subject.m_thread_link = &m_subject;
@@ -130,7 +130,7 @@ void ArticlePageStateTest::TearDown()
     g_sel_page.page_item_cnt = m_old_page_items;
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
-    g_mouse_bar_width = m_old_mouse_width;
+    g_mouse.bar_width = m_old_mouse_width;
     g_use_sel_num = m_old_use_sel_num;
     g_sel_page.chars = m_old_sel_chars;
 }

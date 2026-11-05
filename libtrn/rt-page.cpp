@@ -450,7 +450,7 @@ thread_subj_sort:
 ///
 void SelectorPage::init()
 {
-    max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse_bar_width < 50 ? 6 : 5);
+    max_line_cnt = g_tc_LINES - (g_tc_COLS - g_mouse.bar_width < 50 ? 6 : 5);
     chars = get_env_var("SELECTCHARS", SELECTION_CHARS);
     if (g_sel.group_listing)
     {

@@ -170,7 +170,7 @@ private:
     std::string              m_old_sel_chars{g_sel_page.chars};
     int                      m_old_lines{g_tc_LINES};
     int                      m_old_columns{g_tc_COLS};
-    int                      m_old_mouse_width{g_mouse_bar_width};
+    int                            m_old_mouse_width{g_mouse.bar_width};
     char                     m_old_interrupts{g_int_count};
     long                           m_old_spin_estimate{g_progress.estimate};
     long                           m_old_spin_todo{g_progress.todo};
@@ -210,7 +210,7 @@ void ArticleSelectorCommandTest::SetUp()
     g_int_count = 0;
     g_tc_LINES = 24;
     g_tc_COLS = 80;
-    g_mouse_bar_width = 0;
+    g_mouse.bar_width = 0;
     m_newsgroup.m_to_read = 2;
     m_subject.m_str = "Re: Selector mode";
     m_subject.m_thread_link = &m_subject;
@@ -276,7 +276,7 @@ void ArticleSelectorCommandTest::TearDown()
     g_sel_page.chars = m_old_sel_chars;
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
-    g_mouse_bar_width = m_old_mouse_width;
+    g_mouse.bar_width = m_old_mouse_width;
     g_int_count = m_old_interrupts;
     g_progress.estimate = m_old_spin_estimate;
     g_progress.todo = m_old_spin_todo;
@@ -328,7 +328,7 @@ private:
     int                                m_old_index{g_sel_page.item_index};
     int                                m_old_last_line{g_sel_page.last_line};
     int                                m_old_term_col{g_term_col};
-    int                                m_old_mouse_count{g_mouse_bar_cnt};
+    int                                m_old_mouse_count{g_mouse.bar_cnt};
     bool                               m_old_at_end{g_sel_page.at_end};
     bool                               m_old_numeric{g_use_sel_num};
     bool                               m_old_can_home{g_can_home};
@@ -356,7 +356,7 @@ void SelectorInputTest::SetUp()
     g_sel_page.chars = "abc";
     g_use_sel_num = false;
     g_can_home = false;
-    g_mouse_bar_cnt = 0;
+    g_mouse.bar_cnt = 0;
     g_s_default_cmd = false;
     g_univ_default_cmd = false;
     g_verify = false;
@@ -428,7 +428,7 @@ void SelectorInputTest::TearDown()
     g_sel_page.item_index = m_old_index;
     g_sel_page.last_line = m_old_last_line;
     g_term_col = m_old_term_col;
-    g_mouse_bar_cnt = m_old_mouse_count;
+    g_mouse.bar_cnt = m_old_mouse_count;
     g_sel_page.at_end = m_old_at_end;
     g_use_sel_num = m_old_numeric;
     g_can_home = m_old_can_home;
@@ -889,7 +889,7 @@ private:
     bool           m_old_do_read{g_art_search.do_read};
     bool           m_old_novice_delays{g_novice_delays};
     bool           m_old_error{g_error_occurred};
-    bool           m_old_mouse_down{g_mouse_is_down};
+    bool           m_old_mouse_down{g_mouse.is_down};
     int            m_old_perform_count{g_status.perform_count};
     bool           m_old_performed_loop{g_status.performed_article_loop};
 };
@@ -917,7 +917,7 @@ void SelectorCallbackSearchTest::TearDown()
     g_art_search.do_read = m_old_do_read;
     g_novice_delays = m_old_novice_delays;
     g_error_occurred = m_old_error;
-    g_mouse_is_down = m_old_mouse_down;
+    g_mouse.is_down = m_old_mouse_down;
     g_status.perform_count = m_old_perform_count;
     g_status.performed_article_loop = m_old_performed_loop;
     SelectorCallbackTest::TearDown();
@@ -1402,7 +1402,7 @@ private:
     bool                                       m_old_waiting{g_waiting};
     bool                                       m_old_no_wait{g_no_wait_fork};
     bool                                       m_old_one_command{g_one_command};
-    bool                                       m_old_mouse_down{g_mouse_is_down};
+    bool                                       m_old_mouse_down{g_mouse.is_down};
     std::string_view                           m_old_backspace{g_tc_BC};
     int                                        m_old_perform_count{g_status.perform_count};
     int                                        m_old_mail_count{g_mail_count};
@@ -1474,7 +1474,7 @@ void SelectorShellTest::TearDown()
     g_waiting = m_old_waiting;
     g_no_wait_fork = m_old_no_wait;
     g_one_command = m_old_one_command;
-    g_mouse_is_down = m_old_mouse_down;
+    g_mouse.is_down = m_old_mouse_down;
     g_tc_BC = m_old_backspace;
     g_status.perform_count = m_old_perform_count;
     g_mail_count = m_old_mail_count;
@@ -1838,7 +1838,7 @@ private:
     OptionFlags                *m_old_flags{g_opt_edit.flags};
     int                         m_old_page{g_sel_page.page_op};
     bool                        m_old_one_command{g_one_command};
-    bool                        m_old_mouse_down{g_mouse_is_down};
+    bool                        m_old_mouse_down{g_mouse.is_down};
     bool                        m_old_novice_delays{g_novice_delays};
     int                         m_old_perform_count{g_status.perform_count};
     SelectionMode               m_old_thread_mode{g_sel.thread_mode};
@@ -1885,7 +1885,7 @@ void SelectorOptionTest::TearDown()
     g_opt_edit.flags = m_old_flags;
     g_sel_page.page_op = m_old_page;
     g_one_command = m_old_one_command;
-    g_mouse_is_down = m_old_mouse_down;
+    g_mouse.is_down = m_old_mouse_down;
     g_novice_delays = m_old_novice_delays;
     g_status.perform_count = m_old_perform_count;
     g_sel.thread_mode = m_old_thread_mode;
@@ -5037,7 +5037,7 @@ private:
     bool              m_old_verify{g_verify};
     bool              m_old_verbose{g_verbose};
     bool              m_old_can_home{g_can_home};
-    int               m_old_mouse_bar_cnt{g_mouse_bar_cnt};
+    int               m_old_mouse_bar_cnt{g_mouse.bar_cnt};
     int               m_old_term_col{g_term_col};
     GeneralMode       m_old_general_mode{g_general_mode};
     MinorMode         m_old_minor_mode{g_mode};
@@ -5057,7 +5057,7 @@ void ArticleSelectorSortTest::SetUp()
     g_verify = false;
     g_verbose = false;
     g_can_home = false;
-    g_mouse_bar_cnt = 0;
+    g_mouse.bar_cnt = 0;
     g_general_mode = GM_SELECTOR;
     g_mode = MM_THREAD_SELECTOR;
     g_tc_CR = "\r";
@@ -5111,7 +5111,7 @@ void ArticleSelectorSortTest::TearDown()
     g_verify = m_old_verify;
     g_verbose = m_old_verbose;
     g_can_home = m_old_can_home;
-    g_mouse_bar_cnt = m_old_mouse_bar_cnt;
+    g_mouse.bar_cnt = m_old_mouse_bar_cnt;
     g_term_col = m_old_term_col;
     g_general_mode = m_old_general_mode;
     g_mode = m_old_minor_mode;
@@ -6798,7 +6798,7 @@ private:
     HeaderLineType m_old_header{g_art_search.srch_hdr};
     bool           m_old_do_read{g_art_search.do_read};
     bool           m_old_novice_delays{g_novice_delays};
-    bool           m_old_mouse_down{g_mouse_is_down};
+    bool           m_old_mouse_down{g_mouse.is_down};
     ArticleNum     m_old_search_ahead{g_search_ahead};
 };
 
@@ -6830,7 +6830,7 @@ void ArticleSelectorSearchStateTest::TearDown()
     g_art_search.srch_hdr = m_old_header;
     g_art_search.do_read = m_old_do_read;
     g_novice_delays = m_old_novice_delays;
-    g_mouse_is_down = m_old_mouse_down;
+    g_mouse.is_down = m_old_mouse_down;
     g_search_ahead = m_old_search_ahead;
     ArticleSelectorInlineStateTest::TearDown();
 }

@@ -125,8 +125,7 @@ bool          g_verify{};                         // -v
 MarkingMode   g_marking{NO_MARKING};              // -m
 MarkingAreas  g_marking_areas{HALF_PAGE_MARKING}; //
 ArticleLine   g_init_lines{};                     // -i
-bool          g_use_mouse{};                      //
-std::string   g_mouse_modes{"acjlptwvK"};         //
+MouseInteraction    g_mouse;
 MinorMode     g_mode{MM_INITIALIZING};            // current state of trn
 GeneralMode   g_general_mode{GM_INIT};            // general mode of trn
 TerminalInputReader g_terminal_input_reader{read_terminal_input};
@@ -159,14 +158,8 @@ int   g_term_scrolled;        // how many lines scrolled away
 int   g_just_a_sec{960};      // 1 sec at current baud rate (number of nulls)
 int   g_page_line{1};         // line number for paging in print_line (origin 1)
 bool  g_error_occurred{};     //
-int   g_mouse_bar_cnt{};      //
-int   g_mouse_bar_width{};    //
-bool  g_mouse_is_down{};      //
 int   g_auto_arrow_macros{2}; // -A
 
-static const MouseButtonList *s_mouse_bar_btns{};
-static int   s_mouse_bar_start{};
-static bool  s_xmouse_is_on{};
 static const char *s_tc_CL{}; // home and clear screen
 static const char *s_tc_TI{}; // initialize terminal
 static const char *s_tc_TE{}; // reset terminal
@@ -977,7 +970,7 @@ static std::string finish_command_text(std::string_view command, bool donewline,
             break;
         }
         std::fflush(stdout);
-        const std::string input = read_command(s_xmouse_is_on, false);
+        const std::string input = read_command(g_mouse.is_on, false);
         char              input_char = input.empty() ? '\0' : input.front();
         if (errno || input_char == '\f')
         {
@@ -986,7 +979,7 @@ static std::string finish_command_text(std::string_view command, bool donewline,
         buffer.resize(cursor);
         buffer.push_back(input_char);
     } while (buffer[cursor] != '\r' && buffer[cursor] != '\n'); // until CR or NL (not echoed)
-    g_mouse_is_down = false;
+    g_mouse.is_down = false;
 
     if (!buffer.empty() && (buffer.back() == '\r' || buffer.back() == '\n'))
     {
@@ -1157,7 +1150,7 @@ static std::size_t edit_buffer(std::string &buffer, std::size_t cursor, std::str
         std::putchar('^');
         backspace();
         std::fflush(stdout);
-        const std::string input = read_command(s_xmouse_is_on, false);
+        const std::string input = read_command(g_mouse.is_on, false);
         buffer[cursor] = input.empty() ? '\0' : input.front();
     }
     else if (ch == '\\')
@@ -1200,7 +1193,7 @@ void eat_typeahead()
     s_got_a_char = false;
 
     // cancel only keyboard stuff
-    if (!g_allow_typeahead && !g_mouse_is_down && !macro_pending() //
+    if (!g_allow_typeahead && !g_mouse.is_down && !macro_pending() //
         && this_time - last_time > 0.3)
     {
 #ifdef PENDING
@@ -1564,7 +1557,7 @@ tryagain:
 
 got_canonical:
     // This hack is for mouse support
-    if (s_xmouse_is_on && *whatbuf == Ctl('c'))
+    if (g_mouse.is_on && *whatbuf == Ctl('c'))
     {
         mouse_input(whatbuf+1);
         times = 0;
@@ -1600,7 +1593,7 @@ std::string get_cmd()
 
 static char get_any_key()
 {
-    const std::string command = read_command(s_xmouse_is_on, false);
+    const std::string command = read_command(g_mouse.is_on, false);
     return command.empty() ? '\0' : command.front();
 }
 
@@ -1968,7 +1961,7 @@ reinp_in_choice:
         s_screen_is_dirty = true;
     }
     std::fflush(stdout);
-    const std::string input_command = read_command(s_xmouse_is_on, false);
+    const std::string input_command = read_command(g_mouse.is_on, false);
     char              ch = input_command.empty() ? '\0' : input_command.front();
     if (errno || ch == '\f') // if return from stop signal
     {
@@ -2601,9 +2594,9 @@ static int mouse_button_bar_width(const MouseButtonList &buttons)
 
 void xmouse_check()
 {
-    g_mouse_bar_cnt = 0;
-    g_mouse_bar_width = 0;
-    if (g_use_mouse)
+    g_mouse.bar_cnt = 0;
+    g_mouse.bar_width = 0;
+    if (g_mouse.use_mouse)
     {
         bool turn_it_on;
         MinorMode mmode = g_mode;
@@ -2619,7 +2612,7 @@ void xmouse_check()
         }
         else
         {
-            const std::string mouse_modes = do_interp(g_mouse_modes);
+            const std::string mouse_modes = do_interp(g_mouse.modes);
             turn_it_on = mouse_modes.find(static_cast<char>(g_mode)) != std::string::npos;
         }
         if (turn_it_on)
@@ -2627,42 +2620,42 @@ void xmouse_check()
             switch (mmode)
             {
             case MM_NEWSRC_SELECTOR:
-                s_mouse_bar_btns = &g_newsrc_sel_btns;
+                g_mouse.bar_btns = &g_newsrc_sel_btns;
                 break;
 
             case MM_ADD_GROUP_SELECTOR:
-                s_mouse_bar_btns = &g_add_sel_btns;
+                g_mouse.bar_btns = &g_add_sel_btns;
                 break;
 
             case MM_OPTION_SELECTOR:
-                s_mouse_bar_btns = &g_option_sel_btns;
+                g_mouse.bar_btns = &g_option_sel_btns;
                 break;
 
             case MM_THREAD_SELECTOR:
-                s_mouse_bar_btns = &g_news_sel_btns;
+                g_mouse.bar_btns = &g_news_sel_btns;
                 break;
 
             case MM_NEWSGROUP_SELECTOR:
-                s_mouse_bar_btns = &g_newsgroup_sel_btns;
+                g_mouse.bar_btns = &g_newsgroup_sel_btns;
                 break;
 
             case MM_ARTICLE:
             case MM_PAGER:
-                s_mouse_bar_btns = &g_art_pager_btns;
+                g_mouse.bar_btns = &g_art_pager_btns;
                 break;
 
             case MM_UNIVERSAL:
-                s_mouse_bar_btns = &g_univ_sel_btns;
+                g_mouse.bar_btns = &g_univ_sel_btns;
                 break;
 
             default:
-                s_mouse_bar_btns = nullptr;
+                g_mouse.bar_btns = nullptr;
                 break;
             }
-            if (s_mouse_bar_btns != nullptr)
+            if (g_mouse.bar_btns != nullptr)
             {
-                g_mouse_bar_cnt = size_cast<int>(*s_mouse_bar_btns);
-                g_mouse_bar_width = mouse_button_bar_width(*s_mouse_bar_btns);
+                g_mouse.bar_cnt = size_cast<int>(*g_mouse.bar_btns);
+                g_mouse.bar_width = mouse_button_bar_width(*g_mouse.bar_btns);
             }
             xmouse_on();
         }
@@ -2670,29 +2663,29 @@ void xmouse_check()
         {
             xmouse_off();
         }
-        g_mouse_is_down = false;
+        g_mouse.is_down = false;
     }
 }
 
 static void xmouse_on()
 {
-    if (!s_xmouse_is_on)
+    if (!g_mouse.is_on)
     {
         // save old highlight mouse tracking and enable mouse tracking
         fmt::print("\033[?1001s\033[?1000h");
         std::fflush(stdout);
-        s_xmouse_is_on = true;
+        g_mouse.is_on = true;
     }
 }
 
 void xmouse_off()
 {
-    if (s_xmouse_is_on)
+    if (g_mouse.is_on)
     {
         // disable mouse tracking and restore old highlight mouse tracking
         fmt::print("\033[?1000l\033[?1001r");
         std::fflush(stdout);
-        s_xmouse_is_on = false;
+        g_mouse.is_on = false;
     }
 }
 
@@ -2701,27 +2694,27 @@ void draw_mouse_bar(int limit, bool restore_cursor)
     int save_col = g_term_col;
     int save_line = g_term_line;
 
-    g_mouse_bar_width = 0;
-    if (s_mouse_bar_btns == nullptr || g_mouse_bar_cnt == 0)
+    g_mouse.bar_width = 0;
+    if (g_mouse.bar_btns == nullptr || g_mouse.bar_cnt == 0)
     {
         return;
     }
 
-    g_mouse_bar_width = mouse_button_bar_width(*s_mouse_bar_btns);
-    s_mouse_bar_start = 0;
+    g_mouse.bar_width = mouse_button_bar_width(*g_mouse.bar_btns);
+    g_mouse.bar_start = 0;
 
-    while (g_mouse_bar_width > limit && s_mouse_bar_start < g_mouse_bar_cnt)
+    while (g_mouse.bar_width > limit && g_mouse.bar_start < g_mouse.bar_cnt)
     {
         const MouseButtonDisplay display =
-            mouse_button_display((*s_mouse_bar_btns)[static_cast<std::size_t>(s_mouse_bar_start)]);
-        g_mouse_bar_width -= display.width;
-        s_mouse_bar_start++;
+            mouse_button_display((*g_mouse.bar_btns)[static_cast<std::size_t>(g_mouse.bar_start)]);
+        g_mouse.bar_width -= display.width;
+        g_mouse.bar_start++;
     }
 
-    goto_xy(g_tc_COLS - g_mouse_bar_width - 1, g_tc_LINES - 1);
-    for (int i = s_mouse_bar_start; i < g_mouse_bar_cnt; i++)
+    goto_xy(g_tc_COLS - g_mouse.bar_width - 1, g_tc_LINES - 1);
+    for (int i = g_mouse.bar_start; i < g_mouse.bar_cnt; i++)
     {
-        const MouseButtonDisplay display = mouse_button_display((*s_mouse_bar_btns)[static_cast<std::size_t>(i)]);
+        const MouseButtonDisplay display = mouse_button_display((*g_mouse.bar_btns)[static_cast<std::size_t>(i)]);
         std::putchar(' ');
         g_color.print(COLOR_MOUSE, display.text);
     }
@@ -2734,10 +2727,6 @@ void draw_mouse_bar(int limit, bool restore_cursor)
 
 static void mouse_input(const char *cp)
 {
-    static int last_btn;
-    static int last_x;
-    static int last_y;
-
     if (cp[2] < ' ' || cp[2] > ' '+3)
     {
         return;
@@ -2748,35 +2737,34 @@ static void mouse_input(const char *cp)
 
     if (btn != 3)
     {
-        static double last_time = 0.;
         double this_time = current_time();
-        if (last_btn == btn && last_y == y && this_time - last_time <= 0.75 //
-            && (last_x == x || last_x == x - 1 || last_x == x + 1))
+        if (g_mouse.last_btn == btn && g_mouse.last_y == y && this_time - g_mouse.last_time <= 0.75 //
+            && (g_mouse.last_x == x || g_mouse.last_x == x - 1 || g_mouse.last_x == x + 1))
         {
             btn |= 4;
         }
-        last_time = this_time;
-        last_btn = (btn & 3);
-        last_x = x;
-        last_y = y;
-        g_mouse_is_down = true;
+        g_mouse.last_time = this_time;
+        g_mouse.last_btn = (btn & 3);
+        g_mouse.last_x = x;
+        g_mouse.last_y = y;
+        g_mouse.is_down = true;
     }
     else
     {
-        if (!g_mouse_is_down)
+        if (!g_mouse.is_down)
         {
             return;
         }
-        g_mouse_is_down = false;
+        g_mouse.is_down = false;
     }
 
     if (g_general_mode == GM_SELECTOR)
     {
-        selector_mouse(btn, x,y, last_btn, last_x,last_y);
+        selector_mouse(btn, x, y, g_mouse.last_btn, g_mouse.last_x, g_mouse.last_y);
     }
     else if (g_mode == MM_ARTICLE || g_mode == MM_PAGER)
     {
-        pager_mouse(btn, x,y, last_btn, last_x,last_y);
+        pager_mouse(btn, x, y, g_mouse.last_btn, g_mouse.last_x, g_mouse.last_y);
     }
     else
     {
@@ -2786,15 +2774,15 @@ static void mouse_input(const char *cp)
 
 bool check_mouse_bar(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 {
-    int col = g_tc_COLS - g_mouse_bar_width;
+    int col = g_tc_COLS - g_mouse.bar_width;
 
-    if (s_mouse_bar_btns != nullptr && g_mouse_bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
+    if (g_mouse.bar_btns != nullptr && g_mouse.bar_width != 0 && btn_clk == 0 && y_clk == g_tc_LINES - 1 //
         && (x_clk -= col - 1) > 0)
     {
         x -= col - 1;
-        for (int button_index = s_mouse_bar_start; button_index < g_mouse_bar_cnt; button_index++)
+        for (int button_index = g_mouse.bar_start; button_index < g_mouse.bar_cnt; button_index++)
         {
-            const MouseButton       &button = (*s_mouse_bar_btns)[static_cast<std::size_t>(button_index)];
+            const MouseButton       &button = (*g_mouse.bar_btns)[static_cast<std::size_t>(button_index)];
             const MouseButtonDisplay display = mouse_button_display(button);
             if (x_clk < display.width)
             {

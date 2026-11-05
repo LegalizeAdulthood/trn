@@ -840,7 +840,7 @@ private:
     char             m_old_erase_char{g_erase_char};
     char             m_old_kill_char{g_kill_char};
     std::string_view m_old_tc_bc{g_tc_BC};
-    bool             m_old_mouse_is_down{g_mouse_is_down};
+    bool             m_old_mouse_is_down{g_mouse.is_down};
     char             m_old_int_count{g_int_count};
     std::string      m_rc_line;
 };
@@ -856,7 +856,7 @@ void CatchupArticleTest::SetUp()
     g_erase_char = '\b';
     g_kill_char = Ctl('U');
     g_tc_BC = "\b";
-    g_mouse_is_down = false;
+    g_mouse.is_down = false;
     g_int_count = 0;
     m_newsrc.flags = RF_ACTIVE;
     m_newsgroup.m_rc = &m_newsrc;
@@ -875,7 +875,7 @@ void CatchupArticleTest::TearDown()
     g_erase_char = m_old_erase_char;
     g_kill_char = m_old_kill_char;
     g_tc_BC = m_old_tc_bc;
-    g_mouse_is_down = m_old_mouse_is_down;
+    g_mouse.is_down = m_old_mouse_is_down;
     g_int_count = m_old_int_count;
     RestoreDelayedArticleTest::TearDown();
 }
@@ -1024,7 +1024,7 @@ private:
     char                  m_old_erase_char{g_erase_char};
     char                  m_old_kill_char{g_kill_char};
     std::string_view      m_old_tc_bc{g_tc_BC};
-    bool                  m_old_mouse_is_down{g_mouse_is_down};
+    bool                  m_old_mouse_is_down{g_mouse.is_down};
     char                  m_old_int_count{g_int_count};
     std::string           m_old_msg{g_msg};
     int                   m_old_perform_count{g_status.perform_count};
@@ -1043,7 +1043,7 @@ void NumericJumpArticleTest::SetUp()
     g_erase_char = '\b';
     g_kill_char = Ctl('U');
     g_tc_BC = "\b";
-    g_mouse_is_down = false;
+    g_mouse.is_down = false;
     g_int_count = 0;
     const ArticleFlags cached = AF_EXISTS | AF_CACHED;
     set_articles({cached | AF_UNREAD | AF_SEL, cached, cached | AF_UNREAD, cached | AF_UNREAD | AF_SEL, AF_CACHED,
@@ -1064,7 +1064,7 @@ void NumericJumpArticleTest::TearDown()
     g_erase_char = m_old_erase_char;
     g_kill_char = m_old_kill_char;
     g_tc_BC = m_old_tc_bc;
-    g_mouse_is_down = m_old_mouse_is_down;
+    g_mouse.is_down = m_old_mouse_is_down;
     g_int_count = m_old_int_count;
     g_msg = m_old_msg;
     g_status.perform_count = m_old_perform_count;
@@ -1552,7 +1552,7 @@ private:
     char             m_old_erase_char{g_erase_char};
     char             m_old_kill_char{g_kill_char};
     std::string_view m_old_tc_bc{g_tc_BC};
-    bool             m_old_mouse_is_down{g_mouse_is_down};
+    bool             m_old_mouse_is_down{g_mouse.is_down};
 };
 
 void AlternateSelectorArticleTest::SetUp()
@@ -1561,7 +1561,7 @@ void AlternateSelectorArticleTest::SetUp()
     g_erase_char = '\b';
     g_kill_char = Ctl('U');
     g_tc_BC = "\b";
-    g_mouse_is_down = false;
+    g_mouse.is_down = false;
 }
 
 void AlternateSelectorArticleTest::TearDown()
@@ -1569,7 +1569,7 @@ void AlternateSelectorArticleTest::TearDown()
     g_erase_char = m_old_erase_char;
     g_kill_char = m_old_kill_char;
     g_tc_BC = m_old_tc_bc;
-    g_mouse_is_down = m_old_mouse_is_down;
+    g_mouse.is_down = m_old_mouse_is_down;
     SelectorEntryArticleTest::TearDown();
 }
 
@@ -2050,7 +2050,7 @@ private:
     bool                  m_old_error_occurred{g_error_occurred};
     bool                  m_old_performed_article_loop{g_status.performed_article_loop};
     int                   m_old_spin_count{g_progress.count};
-    bool                  m_old_mouse_is_down{g_mouse_is_down};
+    bool                  m_old_mouse_is_down{g_mouse.is_down};
     char                  m_old_erase_char{g_erase_char};
     char                  m_old_kill_char{g_kill_char};
     std::string_view      m_old_tc_bc{g_tc_BC};
@@ -2098,7 +2098,7 @@ void SearchCommandArticleTest::TearDown()
     g_error_occurred = m_old_error_occurred;
     g_status.performed_article_loop = m_old_performed_article_loop;
     g_progress.count = m_old_spin_count;
-    g_mouse_is_down = m_old_mouse_is_down;
+    g_mouse.is_down = m_old_mouse_is_down;
     g_erase_char = m_old_erase_char;
     g_kill_char = m_old_kill_char;
     g_tc_BC = m_old_tc_bc;
@@ -3911,7 +3911,7 @@ private:
     char             m_old_erase_char{g_erase_char};
     char             m_old_kill_char{g_kill_char};
     std::string_view m_old_tc_bc{g_tc_BC};
-    bool             m_old_mouse_is_down{g_mouse_is_down};
+    bool             m_old_mouse_is_down{g_mouse.is_down};
     char             m_old_int_count{g_int_count};
 };
 
@@ -3932,7 +3932,7 @@ void DirectNavigationArticleTest::SetUp()
     g_erase_char = '\b';
     g_kill_char = Ctl('U');
     g_tc_BC = "\b";
-    g_mouse_is_down = false;
+    g_mouse.is_down = false;
     g_int_count = 0;
 }
 
@@ -3941,7 +3941,7 @@ void DirectNavigationArticleTest::TearDown()
     g_erase_char = m_old_erase_char;
     g_kill_char = m_old_kill_char;
     g_tc_BC = m_old_tc_bc;
-    g_mouse_is_down = m_old_mouse_is_down;
+    g_mouse.is_down = m_old_mouse_is_down;
     g_int_count = m_old_int_count;
     BranchingArticleTest::TearDown();
 }

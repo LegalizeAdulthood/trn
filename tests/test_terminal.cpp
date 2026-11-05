@@ -225,9 +225,9 @@ protected:
         drain_macro_buffer();
 
         m_old_univ_sel_btns = g_univ_sel_btns;
-        m_old_mouse_bar_cnt = g_mouse_bar_cnt;
-        m_old_mouse_bar_width = g_mouse_bar_width;
-        m_old_use_mouse = g_use_mouse;
+        m_old_mouse_bar_cnt = g_mouse.bar_cnt;
+        m_old_mouse_bar_width = g_mouse.bar_width;
+        m_old_use_mouse = g_mouse.use_mouse;
         m_old_general_mode = g_general_mode;
         m_old_mode = g_mode;
         m_old_tc_lines = g_tc_LINES;
@@ -242,9 +242,9 @@ protected:
         m_old_tc_se = g_tc_SE;
 
         g_univ_sel_btns.clear();
-        g_mouse_bar_cnt = 0;
-        g_mouse_bar_width = 0;
-        g_use_mouse = true;
+        g_mouse.bar_cnt = 0;
+        g_mouse.bar_width = 0;
+        g_mouse.use_mouse = true;
         g_general_mode = GM_SELECTOR;
         g_mode = MM_UNIVERSAL;
         g_tc_LINES = 24;
@@ -264,9 +264,9 @@ protected:
         drain_macro_buffer();
         xmouse_off();
         g_univ_sel_btns = m_old_univ_sel_btns;
-        g_mouse_bar_cnt = m_old_mouse_bar_cnt;
-        g_mouse_bar_width = m_old_mouse_bar_width;
-        g_use_mouse = m_old_use_mouse;
+        g_mouse.bar_cnt = m_old_mouse_bar_cnt;
+        g_mouse.bar_width = m_old_mouse_bar_width;
+        g_mouse.use_mouse = m_old_use_mouse;
         g_general_mode = m_old_general_mode;
         g_mode = m_old_mode;
         g_tc_LINES = m_old_tc_lines;
@@ -312,12 +312,12 @@ protected:
     {
         m_old_can_home = g_can_home;
         m_old_use_threads = g_use_threads;
-        m_old_use_mouse = g_use_mouse;
+        m_old_use_mouse = g_mouse.use_mouse;
         m_old_xterm_mouse = get_env_var(XTERM_MOUSE_ENV);
 
         g_can_home = true;
         g_use_threads = true;
-        g_use_mouse = false;
+        g_mouse.use_mouse = false;
         unset_env_var(XTERM_MOUSE_ENV);
     }
 
@@ -325,7 +325,7 @@ protected:
     {
         g_can_home = m_old_can_home;
         g_use_threads = m_old_use_threads;
-        g_use_mouse = m_old_use_mouse;
+        g_mouse.use_mouse = m_old_use_mouse;
         restore_env(XTERM_MOUSE_ENV, m_old_xterm_mouse);
     }
 
@@ -766,7 +766,7 @@ TEST_F(XMouseInitTest, environmentValueEnablesMouse)
 
     xmouse_init("trn");
 
-    EXPECT_TRUE(g_use_mouse);
+    EXPECT_TRUE(g_mouse.use_mouse);
 }
 
 TEST_F(XMouseInitTest, environmentValueWinsOverProgramNameSuffix)
@@ -775,14 +775,14 @@ TEST_F(XMouseInitTest, environmentValueWinsOverProgramNameSuffix)
 
     xmouse_init("trnx");
 
-    EXPECT_FALSE(g_use_mouse);
+    EXPECT_FALSE(g_mouse.use_mouse);
 }
 
 TEST_F(XMouseInitTest, programNameSuffixEnablesMouseWhenEnvironmentMissing)
 {
     xmouse_init("trnx");
 
-    EXPECT_TRUE(g_use_mouse);
+    EXPECT_TRUE(g_mouse.use_mouse);
 }
 
 TEST_F(XMouseInitTest, disabledTerminalStateSkipsMouseSetup)
@@ -792,5 +792,5 @@ TEST_F(XMouseInitTest, disabledTerminalStateSkipsMouseSetup)
 
     xmouse_init("trnx");
 
-    EXPECT_FALSE(g_use_mouse);
+    EXPECT_FALSE(g_mouse.use_mouse);
 }

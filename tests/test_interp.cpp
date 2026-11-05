@@ -1665,7 +1665,7 @@ protected:
     std::string     m_article_command;
 
 private:
-    int                                      m_old_mouse_bar_count{g_mouse_bar_cnt};
+    int                                            m_old_mouse_bar_count{g_mouse.bar_cnt};
     decltype(g_header_rules.type[FROM_LINE].flags) m_old_from_flags{g_header_rules.type[FROM_LINE].flags};
     ArticleLine                                    m_old_top_line{g_pager.top_line};
     ArticleLine                              m_old_init_lines{g_init_lines};
@@ -1685,7 +1685,7 @@ void ArticleHeaderPresentationTest::SetUp()
 {
     InterpolatorNewsgroupTest::SetUp();
     ASSERT_FALSE(HasFatalFailure());
-    g_mouse_bar_cnt = 0;
+    g_mouse.bar_cnt = 0;
     g_header_rules.type[FROM_LINE].flags |= HT_MAGIC;
     g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
@@ -1706,7 +1706,7 @@ void ArticleHeaderPresentationTest::TearDown()
         m_capturing = false;
     }
     InterpolatorNewsgroupTest::TearDown();
-    g_mouse_bar_cnt = m_old_mouse_bar_count;
+    g_mouse.bar_cnt = m_old_mouse_bar_count;
     g_header_rules.type[FROM_LINE].flags = m_old_from_flags;
     g_pager.top_line = m_old_top_line;
     g_init_lines = m_old_init_lines;
@@ -7275,7 +7275,7 @@ INSTANTIATE_TEST_SUITE_P(ThreadingAndBodyEncoding, PagerTreeArticleTest,
 
 TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 {
-    ValueSaver<int> mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int> mouse_bar_count(g_mouse.bar_cnt, 0);
     g_header_rules.type[DATE_LINE].flags |= HT_MAGIC;
     g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
@@ -7297,7 +7297,7 @@ TEST_F(InterpolatorNewsgroupTest, displaysDateUsingLocalTimeFormatOverride)
 
 TEST_F(InterpolatorNewsgroupTest, hidesSingleNewsgroupHeaderInArticleHeader)
 {
-    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>         mouse_bar_count(g_mouse.bar_cnt, 0);
     ValueSaver<std::string> newsgroup_name(g_newsgroup_name, TRN_TEST_NEWSGROUP);
     g_nav.target.num = ArticleNum{TRN_TEST_ARTICLE_NO_FALLBACKS_NUM};
     g_header_rules.type[NEWSGROUPS_LINE].flags |= HT_MAGIC;
@@ -7347,7 +7347,7 @@ TEST_F(InterpolatorNewsgroupTest, marksCitedArticleBodyLine)
         }
     } cited_text_attribute;
     PushDir                  output_dir{output_path};
-    ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>              mouse_bar_count(g_mouse.bar_cnt, 0);
     ValueSaver<std::string_view> standout_start(g_tc_SO, "<so>");
     ValueSaver<std::string_view> standout_end(g_tc_SE, "<se>");
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
@@ -7377,7 +7377,7 @@ TEST_F(InterpolatorNewsgroupTest, rotatesArticleBodyText)
     PushDir                 output_dir{output_path};
     ValueSaver<bool>        rotate(g_rotate, true);
     ValueSaver<std::string> group_dir(g_newsgroup_dir, ".");
-    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>         mouse_bar_count(g_mouse.bar_cnt, 0);
     g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
@@ -7407,7 +7407,7 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
     ValueSaver<std::string_view> underchar(g_tc_UC, "");
     ValueSaver<bool>         underline_glitch(g_tc_UG, false);
     ValueSaver<std::string>  group_dir(g_newsgroup_dir, ".");
-    ValueSaver<int>          mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>              mouse_bar_count(g_mouse.bar_cnt, 0);
     g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
     g_tc_LINES = 30000;
@@ -7428,7 +7428,7 @@ TEST_F(InterpolatorNewsgroupTest, rendersBackspaceUnderlineBodyText)
 
 TEST_F(InterpolatorNewsgroupTest, displaysInterpolatedFirstLine)
 {
-    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>         mouse_bar_count(g_mouse.bar_cnt, 0);
     ValueSaver<std::string> first_line(g_first_line, std::string{"X-First: article %a"});
     g_pager.top_line = ArticleLine{-1};
     g_init_lines = ArticleLine{30000};
@@ -7464,7 +7464,7 @@ TEST_F(InterpolatorNewsgroupTest, articleSearchCurrentAuthorCommandCompletes)
 
 TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerCommand)
 {
-    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>         mouse_bar_count(g_mouse.bar_cnt, 0);
     ValueSaver<std::string> mail_call(g_mail_call, std::string{"<%/> "});
     g_art_search.last_pat = "needle";
     g_art_search.do_read = false;
@@ -7493,7 +7493,7 @@ TEST_F(InterpolatorNewsgroupTest, pagerPromptInterpolatesMailCallWithPagerComman
 
 TEST_F(InterpolatorNewsgroupTest, pagerPromptSkipsMailCallForNextArticleCommand)
 {
-    ValueSaver<int>         mouse_bar_count(g_mouse_bar_cnt, 0);
+    ValueSaver<int>         mouse_bar_count(g_mouse.bar_cnt, 0);
     ValueSaver<std::string> mail_call(g_mail_call, std::string{"<%/> "});
     g_art_search.last_pat = "needle";
     g_art_search.do_read = false;

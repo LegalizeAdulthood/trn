@@ -333,7 +333,7 @@ sel_restart:
 
     sel_cleanup();
     newline();
-    if (g_mouse_bar_cnt)
+    if (g_mouse.bar_cnt)
     {
         clear_rest();
     }
@@ -599,7 +599,7 @@ sel_restart:
     }
 
     newline();
-    if (g_mouse_bar_cnt)
+    if (g_mouse.bar_cnt)
     {
         clear_rest();
     }
@@ -695,7 +695,7 @@ sel_restart:
     }
 
     newline();
-    if (g_mouse_bar_cnt)
+    if (g_mouse.bar_cnt)
     {
         clear_rest();
     }
@@ -792,7 +792,7 @@ sel_restart:
 
     g_selected_count = 0;
     newline();
-    if (g_mouse_bar_cnt)
+    if (g_mouse.bar_cnt)
     {
         clear_rest();
     }
@@ -870,7 +870,7 @@ sel_restart:
 
     g_selected_count = 0;
     newline();
-    if (g_mouse_bar_cnt)
+    if (g_mouse.bar_cnt)
     {
         clear_rest();
     }
@@ -1158,7 +1158,7 @@ sel_restart:
     }
 
     newline();
-    if (g_mouse_bar_cnt)
+    if (g_mouse.bar_cnt)
     {
         clear_rest();
     }
@@ -2107,7 +2107,7 @@ static bool select_option(OptionIndex i)
     }
 
     goto_xy(0, g_sel_page.last_line);
-    erase_line(g_mouse_bar_cnt > 0);     // erase the prompt
+    erase_line(g_mouse.bar_cnt > 0); // erase the prompt
     g_color.object(COLOR_CMD, true);
     const OptionIndex      option = catalog.option(row);
     const std::string_view name = catalog.name(row);
@@ -2410,7 +2410,7 @@ do_command:
 
     case '&':  case '!':
     {
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         removed_prompt = RP_ALL;
         const std::string command = finish_selector_command(ch, true);
         if (command.empty())      // get rest of command
@@ -2460,7 +2460,7 @@ do_command:
         return DS_DISPLAY;
 
     case '\\':
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         removed_prompt = RP_ALL;
         if (g_sel.mode == SM_NEWSGROUP)
         {
@@ -2852,7 +2852,7 @@ DisplayState article_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
 reask_output:
         const std::string command = read_selector_prompt_command("Selector mode:  Threads, Subjects, Articles?",
@@ -2903,7 +2903,7 @@ reask_output:
         {
             sel_cleanup();
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         std::string command;
@@ -3110,7 +3110,7 @@ reask_sort:
             dingaling();
             break;
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         if (g_sel.mode == SM_ARTICLE)
         {
@@ -3194,7 +3194,7 @@ reask_sort:
 
     case '/':
     {
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         std::string search_command;
         bool        command_finished{};
@@ -3286,7 +3286,7 @@ reask_sort:
     }
 
     case 'c':
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
@@ -3451,7 +3451,7 @@ DisplayState newsgroup_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         const std::string command =
@@ -3530,7 +3530,7 @@ reask_sort:
 
     case '/':
     {
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         std::string search_command;
         bool        command_finished{};
@@ -3644,7 +3644,7 @@ reask_sort:
             g_recent_newsgroup = g_current_newsgroup;
             g_current_newsgroup = g_newsgroup_ptr;
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         ch = ask_catchup();
         if (ch == 'y' || ch == 'u')
@@ -3686,7 +3686,7 @@ reask_sort:
         PUSH_SELECTOR();
         if (!(g_sel_session.removed_prompt & RP_NEWLINE))
         {
-            erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+            erase_line(g_mouse.bar_cnt > 0); // erase the prompt
             g_sel_session.removed_prompt = RP_ALL;
             fmt::print("[{}] Cmd: ", g_newsgroup_ptr ? g_newsgroup_ptr->rc_line() : std::string_view{"*End*"});
             std::fflush(stdout);
@@ -3824,7 +3824,7 @@ static DisplayState add_group_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         const std::string command =
@@ -3967,7 +3967,7 @@ reask_sort:
     case ':':
     case '/':
     {
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         std::string search_command;
         bool        command_finished{};
@@ -4059,7 +4059,7 @@ static DisplayState unsubscribed_group_commands(char_int ch)
 
     case 'l':
     {
-        erase_line(g_mouse_bar_cnt > 0);
+        erase_line(g_mouse.bar_cnt > 0);
         g_sel_session.removed_prompt = RP_ALL;
         fmt::print("Newsgroup glob: ");
         const std::string command = finish_selector_command(ch, true);
@@ -4206,7 +4206,7 @@ static DisplayState option_commands(char_int ch)
     case '/':
     {
         Selection u;
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
         const std::string search_command = finish_selector_command(ch, true);
         if (search_command.empty()) // get rest of command
@@ -4353,7 +4353,7 @@ static DisplayState universal_commands(char_int ch)
         {
             sel_cleanup();
         }
-        erase_line(g_mouse_bar_cnt > 0); // erase the prompt
+        erase_line(g_mouse.bar_cnt > 0); // erase the prompt
         g_sel_session.removed_prompt = RP_ALL;
 reask_sort:
         const std::string command =
@@ -4510,7 +4510,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
                 if (btn & 4)
                 {
                     g_pushback.push(btn_clk == 0 ? '\n' : 'Z');
-                    g_mouse_is_down = false;
+                    g_mouse.is_down = false;
                 }
                 else
                 {

@@ -34,7 +34,7 @@ void NewsgroupPageStateTest::SetUp()
     g_verbose = false;
     g_tc_LINES = 24;
     g_tc_COLS = 80;
-    g_mouse_bar_width = 0;
+    g_mouse.bar_width = 0;
     g_use_sel_num = false;
     set_read_scope(false);
     search_init();
@@ -67,7 +67,7 @@ void NewsgroupPageStateTest::TearDown()
     g_term_line = m_old_term_line;
     g_tc_LINES = m_old_lines;
     g_tc_COLS = m_old_columns;
-    g_mouse_bar_width = m_old_mouse_width;
+    g_mouse.bar_width = m_old_mouse_width;
     g_use_sel_num = m_old_use_sel_num;
     g_sel_page.chars = m_old_sel_chars;
     g_msg = m_old_message;

@@ -62,7 +62,7 @@ private:
     int                          m_old_term_line{g_term_line};
     int                          m_old_lines{g_tc_LINES};
     int                          m_old_columns{g_tc_COLS};
-    int                          m_old_mouse_width{g_mouse_bar_width};
+    int                          m_old_mouse_width{g_mouse.bar_width};
     bool                         m_old_use_sel_num{g_use_sel_num};
     std::string                  m_old_sel_chars{g_sel_page.chars};
     std::string                  m_old_message{g_msg};

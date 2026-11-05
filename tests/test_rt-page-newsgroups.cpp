@@ -327,7 +327,7 @@ private:
     bool                          m_old_univ_default_cmd{g_univ_default_cmd};
     bool                          m_old_verify{g_verify};
     bool                          m_old_can_home{g_can_home};
-    int                           m_old_mouse_bar_count{g_mouse_bar_cnt};
+    int                           m_old_mouse_bar_count{g_mouse.bar_cnt};
     int                           m_old_term_col{g_term_col};
     GeneralMode                   m_old_general_mode{g_general_mode};
     MinorMode                     m_old_minor_mode{g_mode};
@@ -347,7 +347,7 @@ void NewsgroupSelectorPromptStateTest::SetUp()
     g_univ_default_cmd = false;
     g_verify = false;
     g_can_home = false;
-    g_mouse_bar_cnt = 0;
+    g_mouse.bar_cnt = 0;
     g_term_col = 0;
     g_general_mode = GM_SELECTOR;
     g_mode = MM_NEWSGROUP_SELECTOR;
@@ -370,7 +370,7 @@ void NewsgroupSelectorPromptStateTest::TearDown()
     g_univ_default_cmd = m_old_univ_default_cmd;
     g_verify = m_old_verify;
     g_can_home = m_old_can_home;
-    g_mouse_bar_cnt = m_old_mouse_bar_count;
+    g_mouse.bar_cnt = m_old_mouse_bar_count;
     g_term_col = m_old_term_col;
     g_general_mode = m_old_general_mode;
     g_mode = m_old_minor_mode;
@@ -695,7 +695,7 @@ private:
     char             m_old_kill{g_kill_char};
     std::string_view m_old_backspace{g_tc_BC};
     std::string_view m_old_bell{g_tc_VB};
-    bool             m_old_mouse_down{g_mouse_is_down};
+    bool             m_old_mouse_down{g_mouse.is_down};
 };
 
 void NewsgroupSelectorNumericCatchupStateTest::SetUp()
@@ -705,7 +705,7 @@ void NewsgroupSelectorNumericCatchupStateTest::SetUp()
     g_kill_char = Ctl('u');
     g_tc_BC = "\b";
     g_tc_VB = "";
-    g_mouse_is_down = false;
+    g_mouse.is_down = false;
     prepare_groups();
 }
 
@@ -715,7 +715,7 @@ void NewsgroupSelectorNumericCatchupStateTest::TearDown()
     g_kill_char = m_old_kill;
     g_tc_BC = m_old_backspace;
     g_tc_VB = m_old_bell;
-    g_mouse_is_down = m_old_mouse_down;
+    g_mouse.is_down = m_old_mouse_down;
     NewsgroupSelectorCatchupStateTest::TearDown();
 }
 
