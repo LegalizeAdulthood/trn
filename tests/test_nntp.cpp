@@ -1961,7 +1961,7 @@ protected:
         fs::current_path(m_output_dir, error);
         ASSERT_FALSE(error) << error.message();
 
-        (void) nntp_art_name(ArticleNum{}, false);
+        (void) g_nntp_art.art_name(ArticleNum{}, false);
         g_art_input.fp = nullptr;
         g_parsed_header.parsed_art = ArticleNum{};
         g_nntp.link.flags = NNTP_NEW_CMD_OK;
@@ -1975,7 +1975,7 @@ protected:
             std::fclose(g_art_input.fp);
             g_art_input.fp = nullptr;
         }
-        (void) nntp_art_name(ArticleNum{}, false);
+        (void) g_nntp_art.art_name(ArticleNum{}, false);
 
         g_art_input.fp = m_old_art_fp;
         g_parsed_header.parsed_art = m_old_parsed_art;

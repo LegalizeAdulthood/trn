@@ -1084,7 +1084,7 @@ void RemoteMultipartArticleTest::SetUp()
 {
     MultipartArticleIoTest::SetUp();
     fs::current_path(m_output_dir);
-    (void) nntp_art_name(ArticleNum{}, false);
+    (void) g_nntp_art.art_name(ArticleNum{}, false);
     g_parsed_header.head_buf = ARTICLE_VIEW_HEADER;
     g_parsed_header.parsed_art = ArticleNum{7};
     m_raw_article = g_parsed_header.head_buf + GetParam().body;
@@ -1138,7 +1138,7 @@ void RemoteMultipartArticleTest::TearDown()
         g_nntp.close(true);
         m_server.verify();
     }
-    (void) nntp_art_name(ArticleNum{}, false);
+    (void) g_nntp_art.art_name(ArticleNum{}, false);
     g_nntp.gets_clear_buffer();
     g_nntp.link = m_old_link;
     g_parsed_header.parsed_art = m_old_parsed_art;
@@ -1161,7 +1161,7 @@ void RemoteMultipartArticleTest::expect_next_command()
 void RemoteMultipartArticleTest::expect_raw_cache()
 {
     ASSERT_EQ(0, std::fflush(g_art_input.fp));
-    std::ifstream cache{nntp_art_name(ArticleNum{7}, false), std::ios::binary};
+    std::ifstream cache{g_nntp_art.art_name(ArticleNum{7}, false), std::ios::binary};
     ASSERT_TRUE(cache.is_open());
     const std::string stored{std::istreambuf_iterator<char>{cache}, std::istreambuf_iterator<char>{}};
     EXPECT_EQ(m_raw_article, stored);

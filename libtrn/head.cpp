@@ -449,7 +449,7 @@ bool parse_header(ArticleNum art_num)
     g_progress.spin(20);
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        if (!nntp_art_name(art_num, false).empty())
+        if (!g_nntp_art.art_name(art_num, false).empty())
         {
             if (!art_open(art_num,(ArticlePosition)0))
             {

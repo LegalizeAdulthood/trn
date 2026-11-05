@@ -30,6 +30,8 @@ enum
 
 struct NntpArticleCache
 {
+    std::string art_name(ArticleNum art_num, bool allocate);
+
     ArticlePosition body_pos{-1};
     ArticlePosition body_end{};
     ArticleNum      art_nums[MAX_NNTP_ARTICLES]{};
@@ -55,7 +57,6 @@ std::time_t     nntp_time();
 int             nntp_new_groups(std::time_t t);
 int             nntp_art_nums();
 ArticleNum      nntp_find_real_art(ArticleNum after);
-std::string     nntp_art_name(ArticleNum art_num, bool allocate);
 std::string     nntp_tmp_name(int ndx);
 int             nntp_handle_nested_lists();
 int             nntp_handle_timeout();

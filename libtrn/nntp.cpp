@@ -272,7 +272,7 @@ int nntp_header(ArticleNum art_num)
 
 void nntp_body(ArticleNum art_num)
 {
-    std::string artname = nntp_art_name(art_num, false); // Is it already in a tmp file?
+    std::string artname = g_nntp_art.art_name(art_num, false); // Is it already in a tmp file?
     if (!artname.empty())
     {
         if (g_nntp_art.body_pos >= 0)
@@ -288,7 +288,7 @@ void nntp_body(ArticleNum art_num)
         return;
     }
 
-    artname = nntp_art_name(art_num, true); // Allocate a tmp file
+    artname = g_nntp_art.art_name(art_num, true); // Allocate a tmp file
     if (!(g_art_input.fp = std::fopen(artname.c_str(), "w+b")))
     {
         fmt::print(stderr, "\nUnable to write temporary file: '{}'.\n", artname);
@@ -638,7 +638,7 @@ ArticleNum nntp_find_real_art(ArticleNum after)
     return {};
 }
 
-std::string nntp_art_name(ArticleNum art_num, bool allocate)
+std::string NntpArticleCache::art_name(ArticleNum art_num, bool allocate)
 {
     std::time_t         lowage;
 
@@ -646,8 +646,8 @@ std::string nntp_art_name(ArticleNum art_num, bool allocate)
     {
         for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
         {
-            g_nntp_art.art_nums[i] = ArticleNum{};
-            g_nntp_art.art_ages[i] = 0;
+            art_nums[i] = ArticleNum{};
+            art_ages[i] = 0;
         }
         return {};
     }
@@ -658,22 +658,22 @@ std::string nntp_art_name(ArticleNum art_num, bool allocate)
     lowage = now;
     for (int i = 0; i < MAX_NNTP_ARTICLES; i++)
     {
-        if (g_nntp_art.art_nums[i] == art_num)
+        if (art_nums[i] == art_num)
         {
-            g_nntp_art.art_ages[i] = now;
+            art_ages[i] = now;
             return nntp_tmp_name(i);
         }
-        if (g_nntp_art.art_ages[i] <= lowage)
+        if (art_ages[i] <= lowage)
         {
             j = i;
-            lowage = g_nntp_art.art_ages[j];
+            lowage = art_ages[j];
         }
     }
 
     if (allocate)
     {
-        g_nntp_art.art_nums[j] = art_num;
-        g_nntp_art.art_ages[j] = now;
+        art_nums[j] = art_num;
+        art_ages[j] = now;
         return nntp_tmp_name(j);
     }
 

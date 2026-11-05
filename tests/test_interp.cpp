@@ -2397,7 +2397,7 @@ void RemotePagerArticleTest::start_article(const RemotePagerCase &scenario)
     m_remote_source.m_flags = DF_REMOTE;
     g_data_source = &m_remote_source;
     g_nntp.gets_clear_buffer();
-    (void) nntp_art_name(ArticleNum{}, false);
+    (void) g_nntp_art.art_name(ArticleNum{}, false);
     ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     mime_set_article();
     g_art_buf.clear_art_buf();
@@ -2442,7 +2442,7 @@ void RemotePagerArticleTest::expect_complete_article()
     ASSERT_TRUE(macro_pending());
     EXPECT_EQ('n', read_tty_char());
     EXPECT_FALSE(macro_pending());
-    std::ifstream source{nntp_art_name(g_nav.target.num, false), std::ios::binary};
+    std::ifstream source{g_nntp_art.art_name(g_nav.target.num, false), std::ios::binary};
     ASSERT_TRUE(source.is_open());
     EXPECT_EQ(m_raw_article, (std::string{std::istreambuf_iterator<char>{source}, std::istreambuf_iterator<char>{}}));
 }
@@ -2454,7 +2454,7 @@ void RemotePagerArticleTest::TearDown()
     if (m_started)
     {
         art_close();
-        (void) nntp_art_name(ArticleNum{}, false);
+        (void) g_nntp_art.art_name(ArticleNum{}, false);
         g_nntp.gets_clear_buffer();
         g_nntp.close(true);
         m_server.verify();

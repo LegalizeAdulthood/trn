@@ -5517,7 +5517,7 @@ void DownloadEndArticleTest::SetUp()
     g_nntp.link.flags = NNTP_NEW_CMD_OK;
     g_tc_CE = "\033[K";
     g_nntp.gets_clear_buffer();
-    (void) nntp_art_name(ArticleNum{}, false);
+    (void) g_nntp_art.art_name(ArticleNum{}, false);
     std::error_code error;
     std::filesystem::current_path(output_dir(), error);
     ASSERT_FALSE(error) << error.message();
@@ -5535,7 +5535,7 @@ void DownloadEndArticleTest::TearDown()
         std::fclose(g_art_input.fp);
         g_art_input.fp = nullptr;
     }
-    (void) nntp_art_name(ArticleNum{}, false);
+    (void) g_nntp_art.art_name(ArticleNum{}, false);
     g_nntp.gets_clear_buffer();
     g_nntp.link = std::move(m_old_nntp_link);
     g_parsed_header.head_buf = m_old_head_buf;
@@ -5562,7 +5562,7 @@ void DownloadEndArticleTest::start_download()
         .WillOnce(testing::Return("\xC4"));
     nntp_body(g_nav.target.num);
     ASSERT_NE(nullptr, g_art_input.fp);
-    m_download_file = output_dir() / nntp_art_name(g_nav.target.num, false);
+    m_download_file = output_dir() / g_nntp_art.art_name(g_nav.target.num, false);
     ASSERT_EQ(0, seek_art(g_parsed_header.positions[PAST_HEADER].min_pos));
     g_art_buf.set_seek(g_parsed_header.positions[PAST_HEADER].min_pos);
     g_raw_art_size = g_art_size = ArticlePosition{-1};

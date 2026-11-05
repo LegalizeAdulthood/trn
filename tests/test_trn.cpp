@@ -379,7 +379,7 @@ protected:
         g_art_buf.init();
         g_back_page.init();
         cache_init();
-        (void) nntp_art_name(ArticleNum{}, false);
+        (void) g_nntp_art.art_name(ArticleNum{}, false);
 
         m_data_source.m_flags = DF_REMOTE;
         m_data_source.m_act_sf.m_refetch_secs = DEFAULT_REFETCH_SECS;
@@ -398,7 +398,7 @@ protected:
             std::fclose(g_art_input.fp);
             g_art_input.fp = nullptr;
         }
-        (void) nntp_art_name(ArticleNum{}, false);
+        (void) g_nntp_art.art_name(ArticleNum{}, false);
         g_art_buf.final();
         g_back_page.final();
         head_final();
@@ -6099,7 +6099,7 @@ TEST_P(RemoteNewsgroupRefreshReadingTest, leavingThePagerFinishesTheBodyBeforeRe
     const TerminalInputReader reading_input = g_terminal_input_reader;
     g_terminal_input_reader = [this, reading_input](char *buffer, int size)
     {
-        const std::string name = nntp_art_name(ArticleNum{2}, false);
+        const std::string name = g_nntp_art.art_name(ArticleNum{2}, false);
         std::ifstream     cached{name, std::ios::binary};
         const std::string body{std::istreambuf_iterator<char>{cached}, {}};
         EXPECT_THAT(body, testing::HasSubstr("Pending body line 99\n"));

@@ -253,7 +253,7 @@ void build_cache()
 
 void close_cache()
 {
-    nntp_art_name(ArticleNum{}, false); // clear the tmp file cache
+    g_nntp_art.art_name(ArticleNum{}, false); // clear the tmp file cache
 
     g_subj.clear();
     g_parsed_header.parsed_art = ArticleNum{};

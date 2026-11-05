@@ -88,13 +88,13 @@ protected:
 
 TEST_F(FinalizeTest, allocatesAndFindsNntpArticleName)
 {
-    (void) nntp_art_name(ArticleNum{}, false);
-    EXPECT_TRUE(nntp_art_name(ArticleNum{42}, false).empty());
+    (void) g_nntp_art.art_name(ArticleNum{}, false);
+    EXPECT_TRUE(g_nntp_art.art_name(ArticleNum{42}, false).empty());
 
-    const std::string allocated = nntp_art_name(ArticleNum{42}, true);
+    const std::string allocated = g_nntp_art.art_name(ArticleNum{42}, true);
 
     EXPECT_EQ(nntp_tmp_name(MAX_NNTP_ARTICLES - 1), allocated);
-    EXPECT_EQ(allocated, nntp_art_name(ArticleNum{42}, false));
+    EXPECT_EQ(allocated, g_nntp_art.art_name(ArticleNum{42}, false));
 }
 
 TEST_F(FinalizeTest, removesTemporaryFiles)
