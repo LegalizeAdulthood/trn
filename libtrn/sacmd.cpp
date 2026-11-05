@@ -266,7 +266,7 @@ int sa_do_cmd(std::string_view command)
         if (g_sa_mode_order == SA_ORDER_DESCENDING && g_scoring.delay)
         {
             g_scoring.delay = false;
-            sc_init(true);
+            g_scoring.init(true);
         }
         if (g_sa_mode_order == SA_ORDER_DESCENDING && !g_scoring.initialized) // score order
         {

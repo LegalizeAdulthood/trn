@@ -10257,7 +10257,7 @@ void ScoreArticleTest::SetUp()
     g_sf_verbose = false;
     g_sf_score_verbose = 0;
     g_score_cache.file_clear();
-    sc_init(false);
+    g_scoring.init(false);
     ASSERT_TRUE(g_scoring.initialized);
     for (long number = 1; number <= 3; ++number)
     {

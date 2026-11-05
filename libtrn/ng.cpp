@@ -335,8 +335,8 @@ DoNewsgroupResult do_newsgroup(std::optional<std::string> start_command)
         g_kill.kill_unwanted(g_first_art, "Auto-processing...\n\n", true);
     }
 
-    sc_init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING) && start_command &&
-            !start_command->empty() && (*start_command)[0] == ';');
+    g_scoring.init((g_sa_never_initialized || g_sa_mode_order == SA_ORDER_DESCENDING) && start_command &&
+                   !start_command->empty() && (*start_command)[0] == ';');
 
     if (g_univ_ng_virt_flag)
     {

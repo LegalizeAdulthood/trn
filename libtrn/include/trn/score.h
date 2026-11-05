@@ -20,6 +20,7 @@ enum
 struct ScoringSession
 {
     void set_score(ArticleNum a, int score);
+    void init(bool pend_wait);
 
     // TODO: private
     void score_art_basic(ArticleNum a);
@@ -41,7 +42,6 @@ struct ScoringSession
 extern ScoringSession g_scoring;
 extern bool       g_score_new_first; // changes order of sorting (artnum comparison) when scores are equal
 
-void sc_init(bool pend_wait);
 void sc_cleanup();
 int  sc_score_art(ArticleNum a, bool now);
 void sc_fill_score_list(ArticleNum first, ArticleNum last);

@@ -165,7 +165,7 @@ SaMainResult sa_main_loop()
     if (!g_scoring.initialized && g_sa_mode_order == SA_ORDER_DESCENDING)
     {
         g_scoring.delay = false; // yes, actually score...
-        sc_init(true);          // wait for articles to score
+        g_scoring.init(true);    // wait for articles to score
         if (!g_scoring.initialized)
         {
             g_sa_mode_order = SA_ORDER_ARRIVAL; // arrival order
