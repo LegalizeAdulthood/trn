@@ -647,6 +647,12 @@ void DataSource::remember_active_group(std::string_view group_name, long high, l
     (void) m_act_sf.append(new_active_line, static_cast<int>(group_name.size()));
 }
 
+void DataSource::finish_new_groups(std::time_t server_time)
+{
+    m_act_sf.end_append(m_extra_name);
+    m_last_new_group = server_time;
+}
+
 bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;

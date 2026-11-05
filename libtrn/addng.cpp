@@ -315,8 +315,7 @@ void new_nntp_groups(DataSource *dp)
     }
     if (found_something)
     {
-        dp->m_act_sf.end_append(dp->m_extra_name);
-        dp->m_last_new_group = server_time;
+        dp->finish_new_groups(server_time);
     }
 }
 

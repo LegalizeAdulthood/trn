@@ -104,6 +104,7 @@ struct DataSource
     bool             active_file_hash(std::string_view first_line = {});
     void             refetch_active(std::time_t now, bool force);
     void             remember_active_group(std::string_view group_name, long high, long low, char status);
+    void             finish_new_groups(std::time_t server_time);
     void             visit_active_groups(const std::function<SourceLineVisitor> &visitor)
     {
         m_act_sf.visit_lines(visitor);
