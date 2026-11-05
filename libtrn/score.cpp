@@ -124,7 +124,7 @@ void ScoringSession::init(bool pend_wait)
         ArticleNum a;
         for (a = g_cache.last(g_last_art); a >= g_abs_first; a = g_cache.prev(a))
         {
-            sc_score_art(a,true);       // I want it *now*
+            score_art(a, true); // I want it *now*
             if (g_cache.scored(a))
             {
                 break;
@@ -148,7 +148,7 @@ void ScoringSession::init(bool pend_wait)
         // score everything really fast
         for (ArticleNum art = g_cache.last(g_last_art); art >= g_abs_first; art = g_cache.prev(art))
         {
-            sc_score_art(art, true);
+            score_art(art, true);
         }
     }
     if (pend_wait)
@@ -247,7 +247,7 @@ void ScoringSession::score_art_basic(ArticleNum a)
 
 // Returns an article's score, scoring it if necessary
 //bool now;     // if true, sort the scores if necessary...
-int sc_score_art(ArticleNum a, bool now)
+int ScoringSession::score_art(ArticleNum a, bool now)
 {
     if (a < g_abs_first || a > g_last_art)
     {
@@ -262,22 +262,22 @@ int sc_score_art(ArticleNum a, bool now)
         return LOW_SCORE;
     }
 
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
-        g_scoring.delay = false;
-        g_scoring.sf_force_init = true;
-        g_scoring.init(false);
-        g_scoring.sf_force_init = false;
+        delay = false;
+        sf_force_init = true;
+        init(false);
+        sf_force_init = false;
     }
 
     if (!g_cache.scored(a))
     {
-        if (g_scoring.sf_delay)
+        if (sf_delay)
         {
             sf_init();
-            g_scoring.sf_delay = false;
+            sf_delay = false;
         }
-        g_scoring.score_art_basic(a);
+        score_art_basic(a);
     }
     if (g_cache.is_unavailable(a))
     {
@@ -292,7 +292,7 @@ void sc_fill_score_list(ArticleNum first, ArticleNum last)
 {
     for (ArticleNum i = g_cache.first(first); i <= last; i = g_cache.next(i))
     {
-        (void)sc_score_art(i,false);    // will be sorted later...
+        (void) g_scoring.score_art(i, false); // will be sorted later...
     }
 }
 
@@ -372,7 +372,7 @@ void sc_look_ahead(bool flag, bool nowait)
                 continue;
             }
         }
-        (void) sc_score_art(g_scoring.fill_max, false);
+        (void) g_scoring.score_art(g_scoring.fill_max, false);
     }
     if (oldart)                 // copied from cheat.cpp
     {
@@ -599,7 +599,7 @@ void sc_score_cmd(std::string_view line)
         g_sf_score_verbose = false;
         fmt::print("Scorefile total score: {}\n", j);
         i += j;
-        j = sc_score_art(g_nav.target.num, true);
+        j = g_scoring.score_art(g_nav.target.num, true);
         if (i != j)
         {
             // Consider resubmitting article to filter?

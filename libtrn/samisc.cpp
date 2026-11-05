@@ -142,7 +142,7 @@ void sa_sel_threads()
                     // if scoring, make sure that this article is scored...
                     if (g_sa_mode_order == SA_ORDER_DESCENDING) // score order
                     {
-                        sc_score_art(art,false);
+                        g_scoring.score_art(art, false);
                     }
                 }
                 }// for all articles
@@ -208,8 +208,8 @@ int sa_compare(long a, long b)
             return -1;          // move unscored (b) to end
         }
 
-        long i = sc_score_art(g_sa_ents[a].artnum, true);
-        long j = sc_score_art(g_sa_ents[b].artnum, true);
+        long i = g_scoring.score_art(g_sa_ents[a].artnum, true);
+        long j = g_scoring.score_art(g_sa_ents[b].artnum, true);
         if (i < j)
         {
             return 1;

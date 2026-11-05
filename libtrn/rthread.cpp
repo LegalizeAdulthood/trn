@@ -1194,7 +1194,7 @@ static int subject_score_high(const Subject *sp)
     {
         if ((ap->m_flags & (AF_EXISTS | AF_UNREAD)) == desired_flags)
         {
-            int sc = sc_score_art(ap->article_num(), false);
+            int sc = g_scoring.score_art(ap->article_num(), false);
             if ((!hiscore_found) || (sc > hiscore))
             {
                 hiscore_found = 1;
@@ -1490,8 +1490,7 @@ static int article_order_lines(const Article **art1, const Article **art2)
 
 static int article_order_score(const Article **art1, const Article **art2)
 {
-    int eq = sc_score_art((*art2)->article_num(),false)
-           - sc_score_art((*art1)->article_num(),false);
+    int eq = g_scoring.score_art((*art2)->article_num(), false) - g_scoring.score_art((*art1)->article_num(), false);
     return eq ? eq > 0 ? g_sel.direction : -g_sel.direction : 0;
 }
 

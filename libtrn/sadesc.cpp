@@ -98,7 +98,7 @@ std::string sa_get_desc(long e, int line, bool trunc)
         if (g_scoring.initialized && g_sa_mode_desc_score)
         {
             // we'd like the score now
-            fmt::format_to(std::back_inserter(desc), "[{:4d}] ", sc_score_art(artnum, true));
+            fmt::format_to(std::back_inserter(desc), "[{:4d}] ", g_scoring.score_art(artnum, true));
         }
         if (g_sa_mode_desc_thread_count)
         {

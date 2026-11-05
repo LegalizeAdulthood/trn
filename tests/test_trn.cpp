@@ -10261,7 +10261,7 @@ void ScoreArticleTest::SetUp()
     ASSERT_TRUE(g_scoring.initialized);
     for (long number = 1; number <= 3; ++number)
     {
-        (void) sc_score_art(ArticleNum{number}, true);
+        (void) g_scoring.score_art(ArticleNum{number}, true);
     }
     ASSERT_TRUE(parse_header(g_nav.target.num));
     ASSERT_NE(nullptr, art_open(g_nav.target.num, position));
@@ -12143,7 +12143,7 @@ TEST_F(ScoreArticleTest, rescoringClearsAuthorMatchesFromRemovedRules)
 {
     sf_append("! 5 from: root@example.test");
     g_nav.target.art->m_score_flags = SFLAG_NONE;
-    ASSERT_EQ(15, sc_score_art(g_nav.target.num, true));
+    ASSERT_EQ(15, g_scoring.score_art(g_nav.target.num, true));
     ASSERT_NE(0, g_nav.target.art->m_score_flags & SFLAG_AUTHOR);
     std::ofstream{m_scores / "comp.lang.cpp"} << "newauthor=7\n";
 
@@ -12163,7 +12163,7 @@ TEST_F(ScoreArticleTest, interruptedRescoringInvalidatesOldScoresForLaterOnDeman
     score('\'', "r\n");
 
     EXPECT_FALSE(g_cache.scored(g_nav.target.num));
-    EXPECT_EQ(35, sc_score_art(g_nav.target.num, true));
+    EXPECT_EQ(35, g_scoring.score_art(g_nav.target.num, true));
     EXPECT_TRUE(g_cache.scored(g_nav.target.num));
 }
 

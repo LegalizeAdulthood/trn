@@ -1133,7 +1133,7 @@ void univ_newsgroup_virtual()
 
 void VirtualGroupBuilder::vg_add_article(ArticleNum a)
 {
-    int score = sc_score_art(a, false);
+    int score = g_scoring.score_art(a, false);
     if (use_min_score && (score < min_score))
     {
         return;
