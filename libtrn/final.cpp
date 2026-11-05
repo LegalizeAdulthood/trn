@@ -315,7 +315,7 @@ Signal_t stop_catcher(int signo)
                 errno = 0;                      // needed for getcmd
             }
         }
-        xmouse_check();
+        g_mouse.check();
     }
     sigset(signo,stop_catcher); // disable the stop
 }

@@ -750,7 +750,7 @@ TEST_F(MouseBarTest, checkMouseBarPushesClickedButtonCommand)
     set_option(OI_UNIV_SEL_BTNS, "[Quit]q");
 
     testing::internal::CaptureStdout();
-    xmouse_check();
+    g_mouse.check();
     EXPECT_TRUE(check_mouse_bar(3, 75, 23, 0, 75, 23));
     testing::internal::GetCapturedStdout();
 

@@ -860,7 +860,7 @@ void set_mode(GeneralMode new_gmode, MinorMode new_mode)
     {
         g_general_mode = new_gmode;
         g_mode = new_mode;
-        xmouse_check();
+        g_mouse.check();
     }
 }
 
@@ -2591,11 +2591,11 @@ static int mouse_button_bar_width(const MouseButtonList &buttons)
     return width;
 }
 
-void xmouse_check()
+void MouseInteraction::check()
 {
-    g_mouse.bar_cnt = 0;
-    g_mouse.bar_width = 0;
-    if (g_mouse.use_mouse)
+    bar_cnt = 0;
+    bar_width = 0;
+    if (use_mouse)
     {
         bool turn_it_on;
         MinorMode mmode = g_mode;
@@ -2611,7 +2611,7 @@ void xmouse_check()
         }
         else
         {
-            const std::string mouse_modes = do_interp(g_mouse.modes);
+            const std::string mouse_modes = do_interp(modes);
             turn_it_on = mouse_modes.find(static_cast<char>(g_mode)) != std::string::npos;
         }
         if (turn_it_on)
@@ -2619,50 +2619,50 @@ void xmouse_check()
             switch (mmode)
             {
             case MM_NEWSRC_SELECTOR:
-                g_mouse.bar_btns = &g_newsrc_sel_btns;
+                bar_btns = &g_newsrc_sel_btns;
                 break;
 
             case MM_ADD_GROUP_SELECTOR:
-                g_mouse.bar_btns = &g_add_sel_btns;
+                bar_btns = &g_add_sel_btns;
                 break;
 
             case MM_OPTION_SELECTOR:
-                g_mouse.bar_btns = &g_option_sel_btns;
+                bar_btns = &g_option_sel_btns;
                 break;
 
             case MM_THREAD_SELECTOR:
-                g_mouse.bar_btns = &g_news_sel_btns;
+                bar_btns = &g_news_sel_btns;
                 break;
 
             case MM_NEWSGROUP_SELECTOR:
-                g_mouse.bar_btns = &g_newsgroup_sel_btns;
+                bar_btns = &g_newsgroup_sel_btns;
                 break;
 
             case MM_ARTICLE:
             case MM_PAGER:
-                g_mouse.bar_btns = &g_art_pager_btns;
+                bar_btns = &g_art_pager_btns;
                 break;
 
             case MM_UNIVERSAL:
-                g_mouse.bar_btns = &g_univ_sel_btns;
+                bar_btns = &g_univ_sel_btns;
                 break;
 
             default:
-                g_mouse.bar_btns = nullptr;
+                bar_btns = nullptr;
                 break;
             }
-            if (g_mouse.bar_btns != nullptr)
+            if (bar_btns != nullptr)
             {
-                g_mouse.bar_cnt = size_cast<int>(*g_mouse.bar_btns);
-                g_mouse.bar_width = mouse_button_bar_width(*g_mouse.bar_btns);
+                bar_cnt = size_cast<int>(*bar_btns);
+                bar_width = mouse_button_bar_width(*bar_btns);
             }
-            g_mouse.on();
+            on();
         }
         else
         {
-            g_mouse.off();
+            off();
         }
-        g_mouse.is_down = false;
+        is_down = false;
     }
 }
 

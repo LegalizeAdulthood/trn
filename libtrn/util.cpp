@@ -226,7 +226,7 @@ int do_shell(std::string_view shell, std::string_view cmd)
     termlib_reset();
     const int ret = launch_shell(shell_path, command_text);
     termlib_init();
-    xmouse_check();
+    g_mouse.check();
     g_waiting = false;
     sigset(SIGINT,int_catcher);
 #ifdef SIGQUIT
