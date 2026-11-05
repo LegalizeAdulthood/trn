@@ -7,7 +7,6 @@
 #ifndef TRN_SPAGE_H
 #define TRN_SPAGE_H
 
-int  s_fill_page();
 void s_go_next_page();
 void s_go_prev_page();
 

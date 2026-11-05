@@ -314,35 +314,35 @@ bool ArticleScanSession::refill_page()
  *         negative # on special condition
  *         0 on failure
  */
-int s_fill_page()
+int ArticleScanSession::fill_page()
 {
-    g_art_scan.refill = false;  // we don't need one now
-    if (g_art_scan.top_ent < 1) // set top to first entry
+    refill = false;  // we don't need one now
+    if (top_ent < 1) // set top to first entry
     {
-        g_art_scan.top_ent = g_art_scan.first();
+        top_ent = first();
     }
-    if (g_art_scan.top_ent == 0) // no entries
+    if (top_ent == 0) // no entries
     {
         return 0;       // failure
     }
-    if (!g_art_scan.refill_page()) // try for efficient refill
+    if (!refill_page()) // try for efficient refill
     {
-        if (!g_art_scan.fill_page_backward(g_art_scan.top_ent))
+        if (!fill_page_backward(top_ent))
         {
             // downgrade eligibility standards
-            switch (g_art_scan.cur_type)
+            switch (cur_type)
             {
             case S_ART:               // article context
                 if (g_sa_mode_zoom)             // we were zoomed in
                 {
-                    g_art_scan.ref_top = true;  // for "FOLD" display
+                    ref_top = true;             // for "FOLD" display
                     g_sa_mode_zoom = false;     // zoom out
                     if (g_sa_unzoom_refold)
                     {
                         g_sa_mode_fold = true;
                     }
-                    (void) g_art_scan.go_top_ents(); // go to top (ents and page)
-                    return s_fill_page();
+                    (void) go_top_ents(); // go to top (ents and page)
+                    return fill_page();
                 }
                 return -1;              // there just aren't entries!
 
@@ -355,17 +355,17 @@ int s_fill_page()
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    for (int j = 0; j <= g_art_scan.bot_ent; j++)
+    for (int j = 0; j <= bot_ent; j++)
     {
-        if (!s_eligible(g_art_scan.page_ents[j].ent_num))
+        if (!s_eligible(page_ents[j].ent_num))
         {
-            return s_fill_page();  // ineligible won't be chosen again
+            return fill_page(); // ineligible won't be chosen again
         }
     }
     // be extra cautious about the article scan pages
-    if (g_art_scan.page_has_unavailable_entries())
+    if (page_has_unavailable_entries())
     {
-        return s_fill_page();    // next time the unavail won't be chosen
+        return fill_page(); // next time the unavail won't be chosen
     }
     return 1;   // I guess everything worked :-)
 }

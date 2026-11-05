@@ -87,7 +87,7 @@ int s_cmd_loop()
         // if window is resized, refill and redraw
         if (g_s_resized)
         {
-            i = s_fill_page();
+            i = g_art_scan.fill_page();
             if (i == -1 || i == 0)      // can't fillpage
             {
                 return S_QUIT;
@@ -116,7 +116,7 @@ int s_cmd_loop()
         }
         if (g_art_scan.refill)
         {
-            i = s_fill_page();
+            i = g_art_scan.fill_page();
             if (i == -1 || i == 0)      // can't fillpage
             {
                 return S_QUIT;

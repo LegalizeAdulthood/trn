@@ -177,7 +177,7 @@ SaMainResult sa_main_loop()
     {
         g_art_scan.top_ent = g_art_scan.first();
     }
-    int i = s_fill_page();
+    int i = g_art_scan.fill_page();
     if (i == -1 || i == 0)
     {
         // for now just quit if no page could be filled.
