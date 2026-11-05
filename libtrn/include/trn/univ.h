@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -186,10 +187,15 @@ struct UniversalMenuContext
     UniversalItem *item(UniversalItemIndex item_index);
     void           sort();
 
+    void add_virtual_group(UniversalVirtualGroup group);
+    // Returns the continuation position if erased; retains remembered names.
+    std::optional<std::size_t> erase(UniversalItemIndex item_index);
+
     // TODO: private
     std::size_t position(const UniversalItem *item);
     std::size_t position(UniversalItemIndex item_index);
     UniversalItem *add(UniversalData data, std::string_view desc);
+    void           add_group(std::string_view desc, std::string_view grpname);
 
     UniversalItemList items;
     UniversalNameSet  ng_names;

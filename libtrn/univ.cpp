@@ -71,7 +71,6 @@ static bool           s_univ_done_startup{};     //
 static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
 
 static void           univ_open();
-static void           univ_add_group(std::string_view desc, std::string_view grpname);
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
@@ -220,6 +219,17 @@ std::size_t UniversalMenuContext::position(UniversalItemIndex item_index)
     return items.size();
 }
 
+std::optional<std::size_t> UniversalMenuContext::erase(UniversalItemIndex item_index)
+{
+    const std::size_t item_position = position(item_index);
+    if (item_position == items.size())
+    {
+        return std::nullopt;
+    }
+    items.erase(items.begin() + static_cast<UniversalItemList::difference_type>(item_position));
+    return item_position;
+}
+
 void univ_startup()
 {
     // later: make user top file an option or environment variable?
@@ -302,10 +312,8 @@ UniversalItem *UniversalMenuContext::add(UniversalData data, std::string_view de
     return &node;
 }
 
-static void univ_add_group(std::string_view desc, std::string_view grpname)
+void UniversalMenuContext::add_group(std::string_view desc, std::string_view grpname)
 {
-    UniversalItem* ui;
-
     if (grpname.empty())
     {
         return;
@@ -314,11 +322,11 @@ static void univ_add_group(std::string_view desc, std::string_view grpname)
 
     const std::string group_name{grpname};
 
-    if (g_univ.ng_names.find(group_name) != g_univ.ng_names.end())
+    if (ng_names.find(group_name) != ng_names.end())
     {
         // group was already added
         // perhaps it is marked as deleted?
-        for (UniversalItem &item : univ_items())
+        for (UniversalItem &item : items)
         {
             const UniversalNewsgroup *newsgroup = std::get_if<UniversalNewsgroup>(&item.m_data);
             if (newsgroup == nullptr)
@@ -333,9 +341,8 @@ static void univ_add_group(std::string_view desc, std::string_view grpname)
         }
         return;
     }
-    g_univ.ng_names.insert(group_name);
-    ui = g_univ.add(UniversalNewsgroup{}, desc);
-    ui->group().ng = group_name;
+    ng_names.insert(group_name);
+    add(UniversalNewsgroup{group_name}, desc);
 }
 
 static void univ_add_mask(std::string_view desc, std::string_view mask)
@@ -401,8 +408,6 @@ static void univ_add_text_file(std::string_view desc, std::string_view name)
 // mostly the same as the newsgroup stuff
 void VirtualGroupBuilder::add_virtual_group(std::string_view grpname)
 {
-    UniversalItem *ui;
-
     if (grpname.data() == nullptr)
     {
         return;
@@ -412,12 +417,23 @@ void VirtualGroupBuilder::add_virtual_group(std::string_view grpname)
 
     // perhaps leave if group has no unread, or other factor
     virt_pass_needed = true;
-    const std::string group_name{grpname};
-    if (g_univ.vg_names.find(group_name) != g_univ.vg_names.end())
+    UniversalVirtualGroup group{std::string{grpname}, 0, 0, UF_VG_NONE};
+    if (use_min_score)
+    {
+        group.flags |= UF_VG_MIN_SCORE;
+        group.min_score = min_score;
+    }
+    g_univ.add_virtual_group(std::move(group));
+}
+
+void UniversalMenuContext::add_virtual_group(UniversalVirtualGroup group)
+{
+    const std::string &group_name = group.ng;
+    if (vg_names.find(group_name) != vg_names.end())
     {
         // group was already added
         // perhaps it is marked as deleted?
-        for (UniversalItem &item : univ_items())
+        for (UniversalItem &item : items)
         {
             const UniversalVirtualGroup *vgroup = std::get_if<UniversalVirtualGroup>(&item.m_data);
             if (vgroup == nullptr)
@@ -432,18 +448,8 @@ void VirtualGroupBuilder::add_virtual_group(std::string_view grpname)
         }
         return;
     }
-    g_univ.vg_names.insert(group_name);
-    ui = g_univ.add(UniversalVirtualGroup{}, {});
-    UniversalVirtualGroup &vgroup = ui->vgroup();
-    vgroup.flags = UF_VG_NONE;
-    vgroup.min_score = 0;
-    vgroup.max_score = 0;
-    if (use_min_score)
-    {
-        vgroup.flags |= UF_VG_MIN_SCORE;
-        vgroup.min_score = min_score;
-    }
-    vgroup.ng = group_name;
+    vg_names.insert(group_name);
+    add(std::move(group), {});
 }
 
 // univ_DoMatch uses a modified Wildmat function which is
@@ -545,7 +551,7 @@ void UniversalMenuLoader::use_pattern(std::string_view pattern, int type)
             {
                 if (univ_do_match(np->rc_line(), pattern))
                 {
-                    univ_add_group(np->rc_line(), np->rc_line());
+                    g_univ.add_group(np->rc_line(), np->rc_line());
                 }
             }
             break;
@@ -1256,12 +1262,9 @@ void VirtualGroupBuilder::virt_pass(UniversalGroupVisitor visit_group, Universal
             use_min_score = false;
             current_vg_ui_index = {};
             // later do something with return value
-            const std::size_t expanded_position = g_univ.position(current_index);
-            if (expanded_position < g_univ.items.size())
+            if (const std::optional<std::size_t> next_position = g_univ.erase(current_index))
             {
-                g_univ.items.erase(g_univ.items.begin() +
-                                   static_cast<UniversalItemList::difference_type>(expanded_position));
-                position = expanded_position;
+                position = *next_position;
                 continue;
             }
             ++position;
