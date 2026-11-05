@@ -6613,6 +6613,9 @@ struct MultircSelectorPrompt
     std::vector<std::string> ranges;
     std::vector<std::string> restrictions;
     ArticleNum               article;
+
+    int                         selected;
+    std::vector<NewsgroupFlags> flags;
 };
 
 class MultircSelectorStateTest : public NewsgroupSelectorDelegationStateTest
@@ -6621,9 +6624,11 @@ protected:
     void               SetUp() override;
     void               TearDown() override;
     void               run_outer(std::string commands, bool restore_old = false);
+    char               run_inner(std::string commands);
     void               prepare_sources();
     void               expect_modes(std::vector<MinorMode> modes) const;
     static std::string read_file(const fs::path &path);
+    void               expect_session_finished() const;
 
     std::vector<MultircSelectorPrompt> m_prompts;
     std::array<Newsrc, 2>              m_other_newsrcs{};
@@ -6677,9 +6682,11 @@ void MultircSelectorStateTest::SetUp()
         prompt.group = g_newsgroup_ptr ? std::string{g_newsgroup_ptr->rc_name()} : "";
         prompt.restrictions = multirc_restrictions();
         prompt.article = g_in_ng ? g_nav.target.num : ArticleNum{};
+        prompt.selected = g_selected_count;
         for (const NewsgroupData &group : g_newsgroup_data)
         {
             prompt.ranges.emplace_back(group.rc_numbers());
+            prompt.flags.push_back(group.m_flags);
         }
         if (g_general_mode == GM_SELECTOR && g_sel.mode == SM_NEWSGROUP)
         {
@@ -6738,13 +6745,93 @@ void MultircSelectorStateTest::run_outer(std::string commands, bool restore_old)
 
     SCOPED_TRACE(m_output);
     EXPECT_EQ(m_commands.size(), m_input_pos);
+    expect_session_finished();
+    EXPECT_EQ(restore_old, g_restore_old_newsrc);
+}
+
+char MultircSelectorStateTest::run_inner(std::string commands)
+{
+    m_commands = std::move(commands);
+    testing::internal::CaptureStdout();
+    const char result = newsgroup_selector();
+    m_output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(m_commands.size(), m_input_pos) << m_output;
+    expect_session_finished();
+    return result;
+}
+
+void MultircSelectorStateTest::expect_session_finished() const
+{
     EXPECT_FALSE(macro_pending());
     EXPECT_EQ(GM_READ, g_general_mode);
     EXPECT_EQ(MM_NEWSGROUP_LIST, g_mode);
     EXPECT_FALSE(g_in_ng);
     EXPECT_FALSE(g_doing_ng);
     EXPECT_EQ(nullptr, g_art_input.fp);
-    EXPECT_EQ(restore_old, g_restore_old_newsrc);
+}
+
+class NewsgroupSelectorWorkflowTest : public MultircSelectorStateTest
+{
+protected:
+    void SetUp() override;
+};
+
+void NewsgroupSelectorWorkflowTest::SetUp()
+{
+    MultircSelectorStateTest::SetUp();
+    g_general_mode = GM_READ;
+    g_mode = MM_NEWSGROUP_LIST;
+    g_tc_LINES = 24;
+}
+
+class NewsgroupSelectorPendingSelectionTest : public NewsgroupSelectorWorkflowTest,
+                                              public testing::WithParamInterface<bool>
+{
+};
+
+TEST_P(NewsgroupSelectorPendingSelectionTest, returningFromReadingRetainsOtherSelectionsOnTheRebuiltPage)
+{
+    const bool pending = GetParam();
+
+    const char result = run_inner(std::string{pending ? "ab" : "a"} + "\nQq");
+
+    EXPECT_EQ('q', result);
+    expect_modes(pending ? std::vector<MinorMode>{MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR,
+                                                  MM_ARTICLE, MM_NEWSGROUP_SELECTOR}
+                         : std::vector<MinorMode>{MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_ARTICLE,
+                                                  MM_NEWSGROUP_SELECTOR});
+    ASSERT_GE(m_prompts.size(), 4);
+    const MultircSelectorPrompt &reader = m_prompts[m_prompts.size() - 2];
+    const MultircSelectorPrompt &rebuilt = m_prompts.back();
+    EXPECT_EQ("comp.lang.cpp", reader.group);
+    EXPECT_EQ(ArticleNum{2}, reader.article);
+    EXPECT_THAT(m_output, testing::HasSubstr("Entering comp.lang.cpp"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_EQ((std::vector<std::string>{"comp.lang.cpp", "comp.next", "comp.previous"}), rebuilt.rows);
+    EXPECT_EQ((std::vector<std::string>{" 1-2", " 1-2", " 1-2"}), rebuilt.ranges);
+    EXPECT_EQ(pending ? 1 : 0, rebuilt.selected);
+    EXPECT_EQ(NF_NONE, rebuilt.flags[1] & NF_SEL);
+    EXPECT_EQ(pending ? NF_SEL : NF_NONE, rebuilt.flags[2] & NF_SEL);
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(m_first_text, read_file(m_newsrc.name));
+}
+
+INSTANTIATE_TEST_SUITE_P(OtherSelection, NewsgroupSelectorPendingSelectionTest, testing::Bool());
+
+TEST_F(NewsgroupSelectorWorkflowTest, finishingAGroupRemovesItFromTheUnreadPage)
+{
+    const char result = run_inner("a\nnnq");
+
+    EXPECT_EQ('q', result);
+    expect_modes({MM_NEWSGROUP_SELECTOR, MM_NEWSGROUP_SELECTOR, MM_ARTICLE, MM_ARTICLE, MM_NEWSGROUP_SELECTOR});
+    ASSERT_EQ(5, m_prompts.size());
+    EXPECT_EQ((std::vector<std::string>{"comp.next", "comp.previous"}), m_prompts.back().rows);
+    EXPECT_EQ(" 1-3", m_prompts.back().ranges[1]);
+    EXPECT_EQ(0, m_prompts.back().selected);
+    EXPECT_EQ(TR_NONE, g_newsgroup_data[1].m_to_read);
+    EXPECT_EQ(2, g_sel_page.total_obj_cnt);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_THAT(m_output, testing::HasSubstr("Branch body"));
 }
 
 void MultircSelectorStateTest::prepare_sources()
@@ -14824,6 +14911,26 @@ TEST_P(NewsgroupSelectorSourceExitTest, sourceExitReturnsTheRequestedDirectionWi
 
 INSTANTIATE_TEST_SUITE_P(ReadScopeAndDirection, NewsgroupSelectorSourceExitTest,
                          testing::Combine(testing::Bool(), testing::Values(Ctl('n'), Ctl('p'))));
+
+TEST_F(NewsgroupSelectorScanEntryTest, readingFromScanReturnsToTheGroupPageWithUpdatedReadRanges)
+{
+    prepare_selector_session(false);
+
+    const char result = run_selector_session(";QQqQ");
+
+    EXPECT_EQ('q', result);
+    EXPECT_THAT(m_output, testing::HasSubstr("Reply body"));
+    EXPECT_EQ(" 1-2", g_newsgroup_data[1].rc_numbers());
+    EXPECT_EQ(ArticleUnread{1}, g_newsgroup_data[1].m_to_read);
+    EXPECT_FALSE(g_sa_never_initialized);
+    EXPECT_FALSE(g_sa_initialized);
+    EXPECT_FALSE(g_in_ng);
+    EXPECT_EQ(0, g_selected_count);
+    EXPECT_EQ(NewsgroupNum{3}, g_newsgroup_to_read);
+    expect_exit_files_unchanged();
+    expect_selector_context();
+    expect_next_command('Q');
+}
 
 TEST_F(NewsgroupSelectorScanEntryTest, semicolonEntersTheSelectedGroupInScanModeAndReturnsToTheSelector)
 {
