@@ -553,6 +553,9 @@ protected:
     void         TearDown() override;
     DisplayState dispatch(char command, std::string_view input = {});
     char         run_commands(std::string_view input);
+    char         run_article_session(std::string_view input);
+    void         prepare_article_return();
+    void         expect_article_return() const;
     void         expect_next_command(char command);
 
 private:
@@ -563,6 +566,8 @@ private:
     std::size_t         m_input_index{};
     int                 m_old_dm_count{g_dm_count};
     bool                m_old_verbose{g_verbose};
+    ArticleLocation             m_return_location{};
+    std::array<ArticleFlags, 2> m_return_flags{};
 };
 
 void SelectorCallbackTest::SetUp()
@@ -625,12 +630,47 @@ char SelectorCallbackTest::run_commands(std::string_view input)
     return result;
 }
 
+char SelectorCallbackTest::run_article_session(std::string_view input)
+{
+    testing::internal::CaptureStdout();
+    const char result = run_selector(input);
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
 void SelectorCallbackTest::expect_next_command(char command)
 {
     ASSERT_EQ(m_input.size() - 1, m_input_index);
     EXPECT_EQ(command, read_tty_char());
     EXPECT_EQ(m_input.size(), m_input_index);
     EXPECT_FALSE(macro_pending());
+}
+
+void SelectorCallbackTest::prepare_article_return()
+{
+    g_cache.ptr(ArticleNum{4})->m_flags &= ~AF_DEL;
+    g_in_ng = true;
+    g_general_mode = GM_READ;
+    g_mode = MM_ARTICLE;
+    m_return_location = g_nav.current;
+    m_return_flags = {g_cache.ptr(ArticleNum{3})->m_flags, g_cache.ptr(ArticleNum{4})->m_flags};
+}
+
+void SelectorCallbackTest::expect_article_return() const
+{
+    EXPECT_EQ(m_return_location, g_nav.current);
+    EXPECT_EQ(m_return_location, g_nav.target);
+    EXPECT_EQ(GM_READ, g_general_mode);
+    EXPECT_EQ(MM_ARTICLE, g_mode);
+    EXPECT_EQ(SM_ARTICLE, g_sel.mode);
+    EXPECT_EQ(article_commands, g_sel_session.extra_commands);
+    ASSERT_EQ(2, g_sel_page.page_item_cnt);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{3}), g_sel_page.items[0].u.ap);
+    EXPECT_EQ(g_cache.ptr(ArticleNum{4}), g_sel_page.items[1].u.ap);
+    EXPECT_EQ(m_return_flags[0], g_cache.ptr(ArticleNum{3})->m_flags);
+    EXPECT_EQ(m_return_flags[1], g_cache.ptr(ArticleNum{4})->m_flags);
+    EXPECT_EQ(ArticleUnread{1}, g_selected_count);
+    EXPECT_THAT(m_output, testing::HasSubstr("No marked articles to yank back."));
 }
 
 TEST_F(SelectorCallbackTest, cancelledModePromptOnlyRequestsAnotherPrompt)
@@ -734,6 +774,53 @@ TEST_F(SelectorCallbackTest, helpFollowupReversesOrderOnceWithoutConsumingTheNex
     EXPECT_NE(std::string::npos, m_output.find("Selector Commands:"));
     expect_next_command('q');
 }
+
+class ArticleSelectorHelpSessionTest : public SelectorCallbackTest, public testing::WithParamInterface<char>
+{
+protected:
+    void SetUp() override;
+    void TearDown() override;
+
+private:
+    std::filesystem::path m_root;
+    std::string           m_old_library{g_rn_lib};
+    int                   m_initial_level{g_univ.level};
+};
+
+void ArticleSelectorHelpSessionTest::SetUp()
+{
+    SelectorCallbackTest::SetUp();
+    const testing::TestInfo *info = testing::UnitTest::GetInstance()->current_test_info();
+    m_root = std::filesystem::path{TRN_TEST_TMP_DIR} / info->test_suite_name() / info->name();
+    std::filesystem::create_directories(m_root / "HelpFiles");
+    std::ofstream{m_root / "HelpFiles/top"} << "\"Local help topic\" &selector-help\n";
+    g_rn_lib = m_root.generic_string();
+    g_cache.ptr(ArticleNum{3})->select_article(AUTO_KILL_NONE);
+}
+
+void ArticleSelectorHelpSessionTest::TearDown()
+{
+    EXPECT_EQ(m_initial_level, g_univ.level);
+    g_rn_lib = m_old_library;
+    std::error_code error;
+    std::filesystem::remove_all(m_root, error);
+    EXPECT_FALSE(error) << error.message();
+    SelectorCallbackTest::TearDown();
+}
+
+TEST_P(ArticleSelectorHelpSessionTest, helpReturnsToTheSameArticlePageBeforeResumingReading)
+{
+    prepare_article_return();
+
+    const char result = run_article_session(std::string(1, GetParam()) + "qY+");
+
+    EXPECT_EQ('+', result);
+    expect_article_return();
+    EXPECT_THAT(m_output, testing::HasSubstr(GetParam() == 'H' ? "Selector Commands:" : "Extended Help"));
+    SelectorSessionInputState::expect_next_command('q');
+}
+
+INSTANTIATE_TEST_SUITE_P(OnlineAndPagedHelp, ArticleSelectorHelpSessionTest, testing::Values('h', '?', 'H'));
 
 TEST_F(SelectorCallbackTest, selectorLoopDisplaysTheModeStatusAndReadsTheFollowingExit)
 {
@@ -1628,6 +1715,19 @@ TEST_P(SelectorKillEditorPathTest, editsAndReloadsTheConfiguredLocalFileWithoutC
 INSTANTIATE_TEST_SUITE_P(OrdinarySpacesAndQuotes, SelectorKillEditorPathTest,
                          testing::Values("rules/KILL", "rules with spaces/KILL", "reader's rules/KILL"));
 
+TEST_P(SelectorKillEditorPathTest, editingReturnsToTheSameArticlePageBeforeResumingReading)
+{
+    use_file(GetParam());
+    prepare_article_return();
+
+    const char result = run_article_session(std::string(1, Ctl('k')) + "Y+");
+
+    EXPECT_EQ('+', result);
+    expect_edited_file();
+    expect_article_return();
+    SelectorSessionInputState::expect_next_command('q');
+}
+
 TEST_F(SelectorKillEditorTest, usesEditorWhenVisualIsUnset)
 {
     m_env.expect_no_envar("VISUAL");
@@ -1797,11 +1897,7 @@ char SelectorOptionTest::run_option_session(std::string_view commands)
 {
     g_in_ng = true;
     g_cache.ptr(ArticleNum{4})->m_flags &= ~AF_DEL;
-    push_string(std::string(commands) + 'q', 0200);
-    testing::internal::CaptureStdout();
-    const char result = article_selector('a');
-    m_output = testing::internal::GetCapturedStdout();
-    return result;
+    return run_article_session(commands);
 }
 
 class SelectorInlineOptionTest : public SelectorOptionTest, public testing::WithParamInterface<const char *>
@@ -2008,6 +2104,20 @@ TEST_P(SelectorOptionSessionTest, nestedOptionsReturnToArticleRowsAndRestoreTheA
 
 INSTANTIATE_TEST_SUITE_P(UseAndAbandon, SelectorOptionSessionTest,
                          testing::Values(NestedOptionExit{'\t', true}, NestedOptionExit{'q', false}));
+
+TEST_P(SelectorOptionSessionTest, optionsReturnToTheSameArticlePageBeforeResumingReading)
+{
+    const auto [exit, accepted] = GetParam();
+    prepare_article_return();
+
+    const char result = run_option_session(std::string("&\nb \n") + exit + "Y+");
+
+    EXPECT_EQ('+', result);
+    EXPECT_EQ(!accepted, g_verbose);
+    EXPECT_EQ(nullptr, g_opt_edit.draft);
+    expect_article_return();
+    SelectorSessionInputState::expect_next_command('q');
+}
 
 using SelectorExitCommand = std::pair<char, char>;
 
