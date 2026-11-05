@@ -778,7 +778,7 @@ void cache_until_key()
         return;
     }
 
-    if ((g_data_source->m_flags & DF_REMOTE) && nntp_finish_body(FB_BACKGROUND))
+    if ((g_data_source->m_flags & DF_REMOTE) && g_nntp_art.finish_body(FB_BACKGROUND))
     {
         return;
     }

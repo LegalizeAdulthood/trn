@@ -5529,7 +5529,7 @@ void DownloadEndArticleTest::SetUp()
 
 void DownloadEndArticleTest::TearDown()
 {
-    nntp_finish_body(FB_DISCARD);
+    g_nntp_art.finish_body(FB_DISCARD);
     if (g_art_input.fp)
     {
         std::fclose(g_art_input.fp);

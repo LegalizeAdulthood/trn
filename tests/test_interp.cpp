@@ -7002,7 +7002,7 @@ TEST_F(RemotePagerArticleTest, quittingLeavesTheDownloadIncomplete)
 TEST_F(RemotePagerArticleTest, reopensTheCompletedDownloadWithAKnownSize)
 {
     ASSERT_NO_FATAL_FAILURE(start_article({"PlainText", false, false, 27, false}));
-    nntp_finish_body(FB_SILENT);
+    g_nntp_art.finish_body(FB_SILENT);
     art_close();
     ASSERT_NE(nullptr, art_open(g_nav.target.num, m_body_start));
     g_art_buf.set_seek(m_body_start);

@@ -742,7 +742,7 @@ std::string do_interp(std::string_view &pattern, std::string_view stoppers, std:
                         {
                             if (art_open(g_nav.target.num, (ArticlePosition) 0))
                             {
-                                nntp_finish_body(FB_SILENT);
+                                g_nntp_art.finish_body(FB_SILENT);
                                 set_owned_value(fmt::format("{}/{}", g_data_source->m_spool_dir,
                                                             g_nntp_art.art_name(g_nav.target.num, false)));
                             }

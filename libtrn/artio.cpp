@@ -132,7 +132,7 @@ void art_close()
     {
         if (g_data_source->m_flags & DF_REMOTE)
         {
-            nntp_finish_body(FB_DISCARD);
+            g_nntp_art.finish_body(FB_DISCARD);
         }
         std::fclose(g_art_input.fp); // close it
         g_art_input.fp = nullptr;    // and tell the world
@@ -351,7 +351,7 @@ static void finish_mime_article()
 {
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        nntp_finish_body(FB_SILENT);
+        g_nntp_art.finish_body(FB_SILENT);
         g_raw_art_size = g_nntp_art.art_size();
     }
     seek_art(g_raw_art_size);

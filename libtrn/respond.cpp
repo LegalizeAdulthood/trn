@@ -453,7 +453,7 @@ SaveResult save_article(std::string_view command)
         g_save_dest = file_exp(skip_response_spaces(command.substr(pipe_separator + 1)));
         if (g_data_source->m_flags & DF_REMOTE)
         {
-            nntp_finish_body(FB_SILENT);
+            g_nntp_art.finish_body(FB_SILENT);
         }
         const std::string saver_command = do_interp(get_env_var("PIPESAVER", PIPE_SAVER));
         // then set up for command
@@ -624,7 +624,7 @@ reask_save:
             }
             if (g_data_source->m_flags & DF_REMOTE)
             {
-                nntp_finish_body(FB_SILENT);
+                g_nntp_art.finish_body(FB_SILENT);
             }
             termlib_reset();
             reset_tty();          // make terminal behave
@@ -1359,7 +1359,7 @@ static int invoke(const char *cmd, const char *dir)
 
     if (g_data_source->m_flags & DF_REMOTE)
     {
-        nntp_finish_body(FB_SILENT);
+        g_nntp_art.finish_body(FB_SILENT);
     }
 #ifdef DEBUG
     if (g_debug)

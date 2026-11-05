@@ -276,7 +276,7 @@ void NntpArticleCache::body(ArticleNum art_num)
     {
         if (body_pos >= 0)
         {
-            nntp_finish_body(FB_DISCARD);
+            finish_body(FB_DISCARD);
         }
         g_art_input.fp = std::fopen(artname.c_str(), "rb");
         stat_t art_stat{};
@@ -380,11 +380,11 @@ int NntpArticleCache::copy_body(std::string &line, int limit, ArticlePosition po
     return 1;
 }
 
-int nntp_finish_body(FinishBodyMode bmode)
+int NntpArticleCache::finish_body(FinishBodyMode bmode)
 {
     std::string line;
     line.reserve(NNTP_STRLEN);
-    if (g_nntp_art.body_pos < 0)
+    if (body_pos < 0)
     {
         return 0;
     }
@@ -403,26 +403,26 @@ int nntp_finish_body(FinishBodyMode bmode)
         }
         std::fflush(stdout);
     }
-    if (g_nntp_art.body_end != g_nntp_art.body_pos)
+    if (body_end != body_pos)
     {
-        std::fseek(g_art_input.fp, g_nntp_art.body_end.value_of(), 0);
+        std::fseek(g_art_input.fp, body_end.value_of(), 0);
     }
     if (bmode != FB_BACKGROUND)
     {
-        g_nntp_art.copy_body(line, NNTP_STRLEN, ArticlePosition{0x7fffffffL});
+        copy_body(line, NNTP_STRLEN, ArticlePosition{0x7fffffffL});
     }
     else
     {
-        while (g_nntp_art.copy_body(line, NNTP_STRLEN, g_nntp_art.body_end + ArticlePosition{1}))
+        while (copy_body(line, NNTP_STRLEN, body_end + ArticlePosition{1}))
         {
             if (input_pending())
             {
                 break;
             }
         }
-        if (g_nntp_art.body_pos >= 0)
+        if (body_pos >= 0)
         {
-            std::fseek(g_art_input.fp, g_nntp_art.body_pos.value_of(), 0);
+            std::fseek(g_art_input.fp, body_pos.value_of(), 0);
         }
     }
     if (bmode == FB_OUTPUT)
@@ -690,7 +690,7 @@ int nntp_handle_nested_lists()
     {
         return 0; // TODO: flush data needed?
     }
-    if (nntp_finish_body(FB_DISCARD))
+    if (g_nntp_art.finish_body(FB_DISCARD))
     {
         return 1;
     }

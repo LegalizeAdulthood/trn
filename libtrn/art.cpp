@@ -1195,7 +1195,7 @@ refresh_screen:
     case Ctl('e'):
         if (g_art_size < 0)
         {
-            nntp_finish_body(FB_OUTPUT);
+            g_nntp_art.finish_body(FB_OUTPUT);
             g_raw_art_size = g_nntp_art.art_size();
             g_art_size = g_art_buf.size_from_raw(g_raw_art_size);
         }

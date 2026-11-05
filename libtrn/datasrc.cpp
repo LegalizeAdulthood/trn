@@ -888,7 +888,7 @@ std::vector<std::string> DataSource::find_post_moderators(std::string_view group
     std::istringstream groups{std::string{group_names}};
     if (m_flags & DF_REMOTE)
     {
-        nntp_finish_body(FB_SILENT);
+        g_nntp_art.finish_body(FB_SILENT);
     }
     std::vector<std::string> recipients;
     std::string              group;
