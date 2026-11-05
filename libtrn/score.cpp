@@ -33,7 +33,6 @@
 ScoringSession g_scoring;
 bool       g_score_new_first{};      // changes order of sorting (artnum comparison) when scores are equal
 
-static void sc_score_art_basic(ArticleNum a);
 static void sc_rescore_arts();
 
 //bool pend_wait;       // if true, enter pending mode when scoring...
@@ -234,16 +233,16 @@ void ScoringSession::set_score(ArticleNum a, int score)
 
 // Hopefully people will write more scoring routines later
 // This is where you should add hooks for new scoring methods.
-static void sc_score_art_basic(ArticleNum a)
+void ScoringSession::score_art_basic(ArticleNum a)
 {
     int score = 0;
     score += sf_score(a);       // get a score
 
-    if (g_scoring.do_spin) // appropriate to spin
+    if (do_spin) // appropriate to spin
     {
         g_progress.spin(20); // keep the user amused
     }
-    g_scoring.set_score(a, score); // set the score
+    set_score(a, score); // set the score
 }
 
 // Returns an article's score, scoring it if necessary
@@ -278,7 +277,7 @@ int sc_score_art(ArticleNum a, bool now)
             sf_init();
             g_scoring.sf_delay = false;
         }
-        sc_score_art_basic(a);
+        g_scoring.score_art_basic(a);
     }
     if (g_cache.is_unavailable(a))
     {
@@ -451,7 +450,7 @@ static void sc_rescore_arts()
     {
         if (g_cache.exists(a))
         {
-            sc_score_art_basic(a); // rescore it then
+            g_scoring.score_art_basic(a); // rescore it then
         }
     }
     g_scoring.do_spin = old_spin;

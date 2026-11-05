@@ -21,6 +21,9 @@ struct ScoringSession
 {
     void set_score(ArticleNum a, int score);
 
+    // TODO: private
+    void score_art_basic(ArticleNum a);
+
     bool       kill_thresh_active{};
     int        kill_thresh{LOW_SCORE}; // KILL articles at or below this score
     ArticleNum fill_max{};             // maximum art# scored by fill-routine
