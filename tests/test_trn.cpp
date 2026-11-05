@@ -2452,9 +2452,13 @@ protected:
     UniversalSessionPrompt              snapshot() const;
     std::vector<UniversalSessionPrompt> prompts(MinorMode mode) const;
     void                                expect_caller() const;
+    std::string                         helper_command(std::string_view role) const;
+    static std::string                  read_file(const fs::path &path);
 
     fs::path                            m_menu_file;
     std::vector<UniversalSessionPrompt> m_prompts;
+    trn::testing::MockEnvironment       m_env;
+    std::function<void()>               m_on_prompt;
 
 private:
     UniversalMenuContext     m_old_universal;
@@ -2476,6 +2480,8 @@ private:
 
 void UniversalSessionTest::SetUp()
 {
+    EXPECT_CALL(m_env.getter, Call(testing::_)).WillRepeatedly(testing::Invoke(std::getenv));
+    m_env.expect_no_envar("SELECTCHARS");
     InputNewsgroupReadingTest::SetUp();
     prepare_group_spools();
     for (NewsgroupData &group : g_newsgroup_data)
@@ -2497,6 +2503,10 @@ void UniversalSessionTest::SetUp()
     m_menu_file = m_output_dir / "menu";
     g_terminal_input_reader = [this](char *buffer, int)
     {
+        if (m_on_prompt)
+        {
+            m_on_prompt();
+        }
         m_prompts.push_back(snapshot());
         if (m_input_pos == m_commands.size())
         {
@@ -2513,6 +2523,7 @@ void UniversalSessionTest::SetUp()
 
 void UniversalSessionTest::TearDown()
 {
+    m_on_prompt = {};
     g_terminal_input_reader = m_old_reader;
     while (g_univ.level > 0)
     {
@@ -2595,6 +2606,22 @@ void UniversalSessionTest::expect_caller() const
     EXPECT_TRUE(g_univ.items.empty());
 }
 
+std::string UniversalSessionTest::helper_command(std::string_view role) const
+{
+    return std::string{
+#ifdef USE_SPAWN_SHELL
+               "call "
+#endif
+               "\"" TRN_TEST_PROCESS_TOOL "\" "} +
+           std::string{role};
+}
+
+std::string UniversalSessionTest::read_file(const fs::path &path)
+{
+    std::ifstream input{path};
+    return {std::istreambuf_iterator<char>{input}, std::istreambuf_iterator<char>{}};
+}
+
 class UniversalEntrySessionTest : public UniversalSessionTest,
                                   public testing::WithParamInterface<std::tuple<bool, bool>>
 {
@@ -2670,6 +2697,75 @@ TEST_P(UniversalReadingSessionTest, readingAnItemUsesTheLocalSpoolAndRestoresThe
 
 INSTANTIATE_TEST_SUITE_P(ItemAndDestination, UniversalReadingSessionTest,
                          testing::Combine(testing::Bool(), testing::Bool()));
+
+class UniversalBatchSessionTest : public UniversalSessionTest
+{
+protected:
+    void SetUp() override;
+    void expect_completed_batch();
+};
+
+void UniversalBatchSessionTest::SetUp()
+{
+    UniversalSessionTest::SetUp();
+    std::ofstream{m_output_dir / "notes", std::ios::binary} << "Batch note\n";
+    m_env.expect_env_repeatedly("HELPPAGER", helper_command("viewer").c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_DIRECTORY", m_output_dir.generic_string().c_str());
+    m_env.expect_env_repeatedly("PNEWS_TEST_MODE", "");
+    m_env.expect_env_repeatedly("SELECTCHARS", "ab");
+    load_menu("\"Notes\" &" + (m_output_dir / "notes").generic_string() + "\ncomp.previous comp.next\n");
+    m_on_prompt = [this]
+    {
+        if (g_mode == MM_ARTICLE)
+        {
+            EXPECT_EQ("Batch note\n", read_file(m_output_dir / "viewed-notes"));
+        }
+    };
+}
+
+void UniversalBatchSessionTest::expect_completed_batch()
+{
+    const std::vector<UniversalSessionPrompt> reading = prompts(MM_ARTICLE);
+    ASSERT_EQ(2, reading.size());
+    EXPECT_EQ("comp.previous", reading[0].group);
+    EXPECT_EQ("comp.next", reading[1].group);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_FALSE(menu.empty());
+    EXPECT_EQ(0, menu.back().selected);
+    EXPECT_EQ(0, menu.back().prior);
+    EXPECT_EQ(" 1-3", menu.back().ranges[0]);
+    EXPECT_EQ(" 1", menu.back().ranges[1]);
+    EXPECT_EQ(" 1-3", menu.back().ranges[2]);
+    EXPECT_EQ("viewer\n" + (m_output_dir / "notes").generic_string() + '\n', read_file(m_output_dir / "tools.log"));
+    expect_caller();
+}
+
+TEST_F(UniversalBatchSessionTest, selectedTextAndGroupsAcrossPagesAreProcessedOnceInMenuOrder)
+{
+    const char result = run_menu({"a", "b", ">", "a", "Z", "q", "q", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(6, menu.size());
+    EXPECT_EQ(2, menu[3].prior);
+    EXPECT_EQ(3, menu[4].selected);
+    expect_completed_batch();
+}
+
+TEST_F(UniversalBatchSessionTest, leavingAGroupEarlyRetainsTheUnprocessedSelectionForTheNextBatch)
+{
+    const char result = run_menu({"a", "b", ">", "a", "Z", "Q", "Z", "q", "Q"});
+
+    EXPECT_EQ('Q', result);
+    const std::vector<UniversalSessionPrompt> menu = prompts(MM_UNIVERSAL);
+    ASSERT_EQ(7, menu.size());
+    EXPECT_EQ(1, menu[5].selected);
+    ASSERT_EQ(3, menu[5].items.size());
+    EXPECT_FALSE(menu[5].items[0].m_flags & UF_SEL);
+    EXPECT_FALSE(menu[5].items[1].m_flags & UF_SEL);
+    EXPECT_TRUE(menu[5].items[2].m_flags & UF_SEL);
+    expect_completed_batch();
+}
 
 struct MultircReadingPrompt
 {
