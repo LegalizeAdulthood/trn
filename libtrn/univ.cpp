@@ -246,7 +246,7 @@ void univ_startup()
         if (!(sys_top_load || user_top_load))
         {
             // last resort--all newsgroups
-            univ_close();
+            g_univ.close();
             univ_mask_load("*", "All Newsgroups");
         }
         if (user_top_load)
@@ -277,24 +277,24 @@ void UniversalMenuContext::open()
     level++;
 }
 
-void univ_close()
+void UniversalMenuContext::close()
 {
-    g_univ.items.clear();
-    if (!g_univ.tmp_file.empty())
+    items.clear();
+    if (!tmp_file.empty())
     {
         std::error_code error;
-        fs::remove(g_univ.tmp_file, error);
-        g_univ.tmp_file.clear();
+        fs::remove(tmp_file, error);
+        tmp_file.clear();
     }
-    g_univ.fname.clear();
-    g_univ.title.clear();
-    g_univ.label.clear();
-    g_univ.ng_names.clear();
-    g_univ.vg_names.clear();
+    fname.clear();
+    title.clear();
+    label.clear();
+    ng_names.clear();
+    vg_names.clear();
     g_sel_page.page_univ_index = {};
     g_sel_page.next_univ_index = {};
     g_vg_builder.current_vg_ui_index = {};
-    g_univ.level--;
+    level--;
 }
 
 UniversalItem *UniversalMenuContext::add(UniversalData data, std::string_view desc)
@@ -978,7 +978,7 @@ bool univ_file_load(std::string_view fname, std::string_view title, std::string_
     bool flag = !fname.empty() && g_univ_loader.use_file(fname, label);
     if (!flag)
     {
-        univ_close();
+        g_univ.close();
     }
     if (g_int_count)
     {
@@ -1010,7 +1010,7 @@ void univ_redo_file()
     const std::string tmp_title = g_univ.title;
     const std::string tmp_label = g_univ.label;
 
-    univ_close();
+    g_univ.close();
     if (g_univ.level)
     {
         (void)univ_file_load(tmp_fname, tmp_title, tmp_label);

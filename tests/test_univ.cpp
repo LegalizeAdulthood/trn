@@ -142,7 +142,7 @@ void UnivTest::SetUp()
 {
     while (g_univ.level > 0)
     {
-        univ_close();
+        g_univ.close();
     }
     reset_fake_visit_group();
     reset_test_newsgroups();
@@ -152,7 +152,7 @@ void UnivTest::TearDown()
 {
     while (g_univ.level > 0)
     {
-        univ_close();
+        g_univ.close();
     }
     reset_fake_visit_group();
     reset_test_newsgroups();
@@ -238,7 +238,7 @@ TEST_F(UnivTest, closeRemovesTemporaryFile)
     univ_mask_load("", "Temp");
     g_univ.tmp_file = temp_file.generic_string();
 
-    univ_close();
+    g_univ.close();
 
     EXPECT_TRUE(g_univ.tmp_file.empty());
     EXPECT_FALSE(fs::exists(temp_file));

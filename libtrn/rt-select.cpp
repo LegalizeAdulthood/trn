@@ -1127,7 +1127,7 @@ sel_restart:
         goto sel_restart;
     }
     sel_cleanup();
-    univ_close();
+    g_univ.close();
     return g_sel_session.ret;
 }
 

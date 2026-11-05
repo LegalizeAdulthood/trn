@@ -186,6 +186,7 @@ struct UniversalMenuContext
     UniversalItem *prev_item(const UniversalItem *item);
     UniversalItem *item(UniversalItemIndex item_index);
     void           sort();
+    void           close();
 
     void add_virtual_group(UniversalVirtualGroup group);
     // Returns the continuation position if erased; retains remembered names.
@@ -249,7 +250,6 @@ extern VirtualGroupBuilder g_vg_builder;
 
 void           univ_init();
 void           univ_startup();
-void           univ_close();
 bool           univ_file_load(std::string_view fname, std::string_view title, std::string_view label);
 void           univ_mask_load(std::string_view mask, std::string_view title);
 void           univ_redo_file();
