@@ -5802,6 +5802,127 @@ TEST_P(ArticleSelectorYankCleanupTest, returningAnArticleAppliesOtherPendingKill
 
 INSTANTIATE_TEST_SUITE_P(Mode, ArticleSelectorYankCleanupTest, testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD));
 
+class ArticleSelectorExitStateTest : public ArticleSelectorBehaviorTest
+{
+protected:
+    void TearDown() override;
+    char run_exit(SelectionMode mode, std::string_view input);
+    void expect_exit_sentinel();
+
+private:
+    int m_old_static{g_keep_the_group_static};
+};
+
+void ArticleSelectorExitStateTest::TearDown()
+{
+    g_keep_the_group_static = m_old_static;
+    ArticleSelectorBehaviorTest::TearDown();
+}
+
+char ArticleSelectorExitStateTest::run_exit(SelectionMode mode, std::string_view input)
+{
+    g_sel.default_mode = mode;
+    push_string(input, 0200);
+    testing::internal::CaptureStdout();
+    const char result = article_selector(mode == SM_ARTICLE ? 'a' : mode == SM_SUBJECT ? 's' : 't');
+    m_output = testing::internal::GetCapturedStdout();
+    return result;
+}
+
+void ArticleSelectorExitStateTest::expect_exit_sentinel()
+{
+    ASSERT_TRUE(macro_pending());
+    EXPECT_EQ('Q', read_tty_char() & 0177);
+    EXPECT_FALSE(macro_pending());
+}
+
+class ArticleSelectorCurrentOnlyTest : public ArticleSelectorExitStateTest,
+                                       public testing::WithParamInterface<std::tuple<SelectionMode, bool, int>>
+{
+};
+
+TEST_P(ArticleSelectorCurrentOnlyTest, currentOnlyAcceptanceTargetsTheHighlightedRowDespiteOtherSelections)
+{
+    const auto [mode, already_selected, static_policy] = GetParam();
+    prepare_behavior(mode);
+    g_keep_the_group_static = static_policy;
+
+    const char result = run_exit(mode, already_selected ? "#Q" : "n#Q");
+
+    EXPECT_EQ('#', result);
+    EXPECT_EQ(static_policy == 1 ? 1 : 2, g_keep_the_group_static);
+    EXPECT_TRUE(g_sel.selected_only);
+    EXPECT_EQ(ArticleNum{already_selected ? 1 : 3}, g_nav.target.num);
+    EXPECT_EQ(g_cache.ptr(g_nav.target.num), g_nav.target.art);
+    EXPECT_EQ(mode != SM_ARTICLE && already_selected ? 2 : 1, g_selected_count);
+    EXPECT_EQ(ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(" ", m_newsgroup.rc_numbers());
+    expect_exit_sentinel();
+}
+
+TEST_P(ArticleSelectorCurrentOnlyTest, reopeningAfterReadingTheCurrentItemRestoresTheOtherPendingSelections)
+{
+    const auto [mode, already_selected, static_policy] = GetParam();
+    prepare_behavior(mode);
+    g_keep_the_group_static = static_policy;
+
+    const char first_result = run_exit(mode, already_selected ? "#Q" : "n#Q");
+    const char next_command = read_tty_char() & 0177;
+    g_nav.target.art->one_less();
+    const char second_result = run_exit(mode, "ZQ");
+
+    EXPECT_EQ('#', first_result);
+    EXPECT_EQ('Q', next_command);
+    EXPECT_EQ('Z', second_result);
+    if (already_selected)
+    {
+        expect_articles({2, 3, 4}, {4});
+    }
+    else
+    {
+        expect_articles({1, 2, 4}, {1, 4});
+    }
+    expect_exit_sentinel();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModePriorSelectionAndStaticPolicy, ArticleSelectorCurrentOnlyTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values(0, 1, 2)));
+
+class ArticleSelectorDestinationCommandTest : public ArticleSelectorExitStateTest,
+                                              public testing::WithParamInterface<std::tuple<SelectionMode, bool, char>>
+{
+};
+
+TEST_P(ArticleSelectorDestinationCommandTest, destinationCommandsLeaveTheSelectorWithoutConsumingTheNextInput)
+{
+    const auto [mode, empty, command] = GetParam();
+    prepare_behavior(mode);
+    if (empty)
+    {
+        for (auto &[number, article] : g_cache.article_list)
+        {
+            article.m_flags &= ~(AF_UNREAD | AF_SEL);
+        }
+        m_subject.m_flags &= ~SF_SEL;
+        m_newsgroup.m_to_read = TR_NONE;
+    }
+
+    const char result = run_exit(mode, std::string{command} + 'Q');
+
+    EXPECT_EQ(command, result);
+    EXPECT_EQ(empty ? 0 : command == '#' && mode == SM_ARTICLE ? 1 : 2, g_selected_count);
+    EXPECT_EQ(empty ? TR_NONE : ArticleUnread{4}, m_newsgroup.m_to_read);
+    EXPECT_EQ(mode, g_sel.mode);
+    EXPECT_EQ(GM_SELECTOR, g_general_mode);
+    EXPECT_EQ(MM_THREAD_SELECTOR, g_mode);
+    expect_exit_sentinel();
+}
+
+INSTANTIATE_TEST_SUITE_P(ModePopulationAndDestination, ArticleSelectorDestinationCommandTest,
+                         testing::Combine(testing::Values(SM_ARTICLE, SM_SUBJECT, SM_THREAD), testing::Bool(),
+                                          testing::Values('N', 'P', ';', '#')));
+
 class ArticleSelectorBulkModeTest : public ArticleSelectorBulkStateTest,
                                     public testing::WithParamInterface<SelectionMode>
 {

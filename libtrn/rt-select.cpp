@@ -387,6 +387,16 @@ sel_exit:
     {
         g_art_order.sort(g_sel_session.ret == '+' ? g_nav.current.art : nullptr);
     }
+    if (g_sel_session.ret == '#' && g_sel.mode == SM_ARTICLE && g_sel_page.page_item_cnt)
+    {
+        Article *const current = g_sel_page.items[g_sel_page.item_index].u.ap;
+        g_art_order.ptr_list.assign(1, current);
+        g_art_order.ptr = nullptr;
+        g_sel_page.page_art = g_sel_page.next_art = nullptr;
+        g_selected_count = 1;
+        g_selected_subj_cnt = 1;
+        g_sel.selected_only = true;
+    }
     if (g_sel_session.ret == '+')
     {
         g_nav.target = g_nav.current;
