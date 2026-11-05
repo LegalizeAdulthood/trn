@@ -26,7 +26,7 @@ static void s_clean_page();
 
 // returns true if successful
 //long end;             // entry number to be last on page
-bool s_fill_page_backward(long end)
+bool ArticleScanSession::fill_page_backward(long end)
 {
     int  i;
     long a;             // misc entry number
@@ -38,22 +38,22 @@ bool s_fill_page_backward(long end)
     fmt::print("entry: s_fillpage_backward({})\n", end);
 #endif
 
-    page_lines = g_scr_height - g_art_scan.top_lines - g_art_scan.bot_lines;
-    g_art_scan.page_ents.clear();
+    page_lines = g_scr_height - top_lines - bot_lines;
+    page_ents.clear();
     if (page_lines > 0)
     {
-        g_art_scan.page_ents.reserve(page_lines);
+        page_ents.reserve(page_lines);
     }
-    g_art_scan.bot_ent = -1; // none yet
+    bot_ent = -1; // none yet
     line_on = 0;
 
     // whatever happens, the entry display will need a full refresh...
-    g_art_scan.ref_status = 0;
-    g_art_scan.ref_desc = 0; // refresh from top entry
+    ref_status = 0;
+    ref_desc = 0; // refresh from top entry
 
     if (end < 1)                // start from end
     {
-        end = g_art_scan.last();
+        end = last();
     }
     if (end == 0)               // no entries
     {
@@ -65,7 +65,7 @@ bool s_fill_page_backward(long end)
     }
     else
     {
-        a = g_art_scan.prev_elig(end);
+        a = prev_elig(end);
     }
     if (!a)     // no eligible entries
     {
@@ -81,9 +81,9 @@ bool s_fill_page_backward(long end)
     while ((line_on + s_ent_lines(a)) <= page_lines)
     {
         i = s_ent_lines(a);
-        g_art_scan.page_ents.push_back({a, static_cast<short>(i), 0, (char) 0});
+        page_ents.push_back({a, static_cast<short>(i), 0, (char) 0});
         line_on = line_on+i;
-        a = g_art_scan.prev_elig(a);
+        a = prev_elig(a);
         if (!a)         // no more eligible
         {
             break;      // get out of loop and finish up...
@@ -91,32 +91,32 @@ bool s_fill_page_backward(long end)
     }
 // what if none on page? (desc. too long) Fix later
     g_progress.set_spin(SPIN_POP); // turn off spin on cache misses
-    if (g_art_scan.page_ents.empty())
+    if (page_ents.empty())
     {
         return false;
     }
-    std::reverse(g_art_scan.page_ents.begin(), g_art_scan.page_ents.end());
+    std::reverse(page_ents.begin(), page_ents.end());
     line_on = 0;
-    for (PageEntry &entry : g_art_scan.page_ents)
+    for (PageEntry &entry : page_ents)
     {
         entry.page_flags = (char)0;
         entry.start_line = static_cast<short>(line_on);
         line_on = line_on + entry.lines;
     }
-    g_art_scan.bot_ent = size_cast<long>(g_art_scan.page_ents) - 1;
-    // set new g_art_scan.top_ent
-    g_art_scan.top_ent = g_art_scan.page_ents[0].ent_num;
+    bot_ent = size_cast<long>(page_ents) - 1;
+    // set new top_ent
+    top_ent = page_ents[0].ent_num;
     // Now, suppose that the pointer position is off the page.  That would
     // be bad, so lets make sure it doesn't happen.
     //
-    g_art_scan.ptr_page_line = std::min<long>(g_art_scan.ptr_page_line, g_art_scan.bot_ent);
+    ptr_page_line = std::min<long>(ptr_page_line, bot_ent);
     // temporary fix.  Under some conditions ineligible entries will
     // not be found until they are in the page.  In this case just
     // refill the page.
     //
-    if (g_art_scan.page_has_unavailable_entries())
+    if (page_has_unavailable_entries())
     {
-        return s_fill_page_backward(end);
+        return fill_page_backward(end);
     }
 // next time the unavail won't be chosen
     return true;        // we have a page...
@@ -328,7 +328,7 @@ int s_fill_page()
     }
     if (!s_refill_page())        // try for efficient refill
     {
-        if (!s_fill_page_backward(g_art_scan.top_ent))
+        if (!g_art_scan.fill_page_backward(g_art_scan.top_ent))
         {
             // downgrade eligibility standards
             switch (g_art_scan.cur_type)
@@ -416,7 +416,7 @@ bool s_go_top_ents()
 
 bool s_go_bot_ents()
 {
-    bool flag = s_fill_page_backward(g_art_scan.last()); // fill backwards
+    bool flag = g_art_scan.fill_page_backward(g_art_scan.last()); // fill backwards
     if (!flag)
     {
         return false;
@@ -446,7 +446,7 @@ void s_go_prev_page()
         return;         // no prev. page (we shouldn't have been called)
     }
     // the fill-page will set the refresh for the screen
-    bool flag = s_fill_page_backward(a); // fill backward
+    bool flag = g_art_scan.fill_page_backward(a); // fill backward
     TRN_ASSERT(flag);                   // be nicer later...
     // take care of partially filled previous pages
     flag = s_refill_page();

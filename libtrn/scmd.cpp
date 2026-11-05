@@ -567,7 +567,7 @@ static void s_search(std::string_view command)
     // entry is not on page...
     if (fill_type == 1)
     {
-        (void)s_fill_page_backward(ent);
+        (void) g_art_scan.fill_page_backward(ent);
         g_art_scan.go_bot_page();
         g_art_scan.refill = true;
         g_art_scan.ref_all = true;
