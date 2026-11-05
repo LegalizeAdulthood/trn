@@ -462,24 +462,24 @@ void ScoringSession::rescore_arts()
 
 // Wrapper to isolate scorefile functions from the rest of the world
 // corrupted (:-) for online rescoring
-void sc_append(std::string_view line)
+void ScoringSession::append(std::string_view line)
 {
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
-        if (g_scoring.delay)
+        if (delay)
         {
-            g_scoring.delay = false;
-            g_scoring.sf_force_init = true;
-            g_scoring.init(true);
-            g_scoring.sf_force_init = false;
+            delay = false;
+            sf_force_init = true;
+            init(true);
+            sf_force_init = false;
         }
     }
-    else if (g_scoring.sf_delay)
+    else if (sf_delay)
     {
         sf_init();
-        g_scoring.sf_delay = false;
+        sf_delay = false;
     }
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
@@ -500,7 +500,7 @@ void sc_append(std::string_view line)
     {
         fmt::print("\nRescoring articles...");
         std::fflush(stdout);
-        g_scoring.rescore_arts();
+        rescore_arts();
         fmt::print("Done.\n");
         if (g_sa_initialized)
         {
@@ -563,7 +563,7 @@ void sc_score_cmd(std::string_view line)
         }
         if (easy_command == "\"")
         {
-            sc_append({});
+            g_scoring.append({});
             return;
         }
         line = easy_command;

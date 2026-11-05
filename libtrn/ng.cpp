@@ -801,7 +801,7 @@ ArticleSwitchResult art_switch(std::string command, const std::function<void(Art
         const std::string full_command = finish_command(":", true);
         if (!full_command.empty())       // command entered successfully
         {
-            sc_append(std::string_view{full_command}.substr(1));
+            g_scoring.append(std::string_view{full_command}.substr(1));
         }
         return AS_ASK;
     }

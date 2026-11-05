@@ -26,6 +26,7 @@ struct ScoringSession
     void look_ahead(bool flag, bool nowait);
     int  percent_scored();
     void cleanup();
+    void append(std::string_view line);
 
     // TODO: private
     void score_art_basic(ArticleNum a);
@@ -48,7 +49,6 @@ struct ScoringSession
 extern ScoringSession g_scoring;
 extern bool       g_score_new_first; // changes order of sorting (artnum comparison) when scores are equal
 
-void sc_append(std::string_view line);
 void sc_rescore();
 void sc_score_cmd(std::string_view line);
 void sc_kill_threshold(int thresh);

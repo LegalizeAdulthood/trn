@@ -633,7 +633,7 @@ int sa_do_cmd(std::string_view command)
         }
         fmt::print("\n");
         sa_go_art(artnum);
-        sc_append(sa_command_argument(full_command));
+        g_scoring.append(sa_command_argument(full_command));
         (void) get_anything();
         eat_typeahead();
         break;
