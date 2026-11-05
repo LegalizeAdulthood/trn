@@ -56,6 +56,7 @@ struct utimbuf
 #include <ctime>
 #include <filesystem>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -869,6 +870,56 @@ std::string DataSource::find_moderator(std::string_view group_name)
         g_nntp.link = old_link;
     }
     return moderator_address(group_name, rules);
+}
+
+std::vector<std::string> DataSource::find_post_moderators(std::string_view group_names)
+{
+    if (m_act_sf.m_hp == nullptr)
+    {
+        return {};
+    }
+    const std::string &file = m_moderators_file;
+    const bool         remote_rules = (m_flags & DF_REMOTE) && (file.empty() || file == "remote");
+    if (file == "none" ||
+        (remote_rules && (!g_nntp.link.connection || !g_nntp.link.capabilities.has("LIST", "MODERATORS"))))
+    {
+        return {};
+    }
+    std::istringstream groups{std::string{group_names}};
+    if (m_flags & DF_REMOTE)
+    {
+        nntp_finish_body(FB_SILENT);
+    }
+    std::vector<std::string> recipients;
+    std::string              group;
+    while (std::getline(groups, group, ','))
+    {
+        const std::size_t first = group.find_first_not_of(" \t\r");
+        if (first == std::string::npos)
+        {
+            continue;
+        }
+        group = group.substr(first, group.find_last_not_of(" \t\r") - first + 1);
+        std::istringstream active{find_active_group(group, ArticleNum{})};
+        std::string        name;
+        std::string        high;
+        std::string        low;
+        std::string        flag;
+        if (!(active >> name >> high >> low >> flag) || name != group || flag != "m")
+        {
+            continue;
+        }
+        std::string address = find_moderator(group);
+        if (!address.empty())
+        {
+            const auto position = std::lower_bound(recipients.begin(), recipients.end(), address);
+            if (position == recipients.end() || *position != address)
+            {
+                recipients.insert(position, std::move(address));
+            }
+        }
+    }
+    return recipients;
 }
 
 void DataSource::prepare_group_descriptions(DescriptionLookup lookup)

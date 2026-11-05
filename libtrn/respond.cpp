@@ -963,51 +963,11 @@ static std::string draft_field(std::string_view text, std::string_view field)
 
 static std::string post_moderators(std::string_view draft)
 {
-    if (g_data_source == nullptr || g_data_source->m_act_sf.m_hp == nullptr || !draft_field(draft, "Approved").empty())
+    if (g_data_source == nullptr || !draft_field(draft, "Approved").empty())
     {
         return {};
     }
-    const std::string &file = g_data_source->m_moderators_file;
-    const bool         remote_rules = (g_data_source->m_flags & DF_REMOTE) && (file.empty() || file == "remote");
-    if (file == "none" ||
-        (remote_rules && (!g_nntp.link.connection || !g_nntp.link.capabilities.has("LIST", "MODERATORS"))))
-    {
-        return {};
-    }
-    std::istringstream groups{draft_field(draft, "Newsgroups")};
-    if (g_data_source->m_flags & DF_REMOTE)
-    {
-        nntp_finish_body(FB_SILENT);
-    }
-    std::vector<std::string> recipients;
-    std::string              group;
-    while (std::getline(groups, group, ','))
-    {
-        const std::size_t first = group.find_first_not_of(" \t\r");
-        if (first == std::string::npos)
-        {
-            continue;
-        }
-        group = group.substr(first, group.find_last_not_of(" \t\r") - first + 1);
-        std::istringstream active{g_data_source->find_active_group(group, ArticleNum{})};
-        std::string        name;
-        std::string        high;
-        std::string        low;
-        std::string        flag;
-        if (!(active >> name >> high >> low >> flag) || name != group || flag != "m")
-        {
-            continue;
-        }
-        std::string address = g_data_source->find_moderator(group);
-        if (!address.empty())
-        {
-            const auto position = std::lower_bound(recipients.begin(), recipients.end(), address);
-            if (position == recipients.end() || *position != address)
-            {
-                recipients.insert(position, std::move(address));
-            }
-        }
-    }
+    const std::vector<std::string> recipients = g_data_source->find_post_moderators(draft_field(draft, "Newsgroups"));
     std::string result;
     for (const std::string &address : recipients)
     {

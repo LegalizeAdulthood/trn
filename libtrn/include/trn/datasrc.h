@@ -126,6 +126,9 @@ struct DataSource
     std::string_view find_group_desc(std::string_view group_name);
     void             prepare_group_descriptions(DescriptionLookup lookup);
     std::string      find_moderator(std::string_view group_name);
+
+    std::vector<std::string> find_post_moderators(std::string_view group_names);
+
     inline NNTPFlags nntp_flags() const;
     void             nntp_server_died();
 
