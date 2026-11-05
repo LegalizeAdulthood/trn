@@ -6919,17 +6919,22 @@ TEST_F(NewsgroupSelectorWorkflowTest, unsubscribingWhileReadingRemovesTheGroupFr
     EXPECT_THAT(m_output, testing::HasSubstr("Unsubscribed to newsgroup comp.lang.cpp"));
 }
 
-class NewsgroupSelectorBatchTest : public NewsgroupSelectorWorkflowTest, public testing::WithParamInterface<bool>
+class NewsgroupSelectorSpoolTest : public NewsgroupSelectorWorkflowTest
 {
 protected:
     void SetUp() override;
 };
 
-void NewsgroupSelectorBatchTest::SetUp()
+void NewsgroupSelectorSpoolTest::SetUp()
 {
     NewsgroupSelectorWorkflowTest::SetUp();
     prepare_group_spools();
+    g_recent_newsgroup = &g_newsgroup_data[0];
 }
+
+class NewsgroupSelectorBatchTest : public NewsgroupSelectorSpoolTest, public testing::WithParamInterface<bool>
+{
+};
 
 TEST_P(NewsgroupSelectorBatchTest, acceptingABatchVisitsOnlyItsGroupsInSelectorOrder)
 {
@@ -6980,6 +6985,97 @@ TEST_P(NewsgroupSelectorBatchTest, acceptingABatchVisitsOnlyItsGroupsInSelectorO
 }
 
 INSTANTIATE_TEST_SUITE_P(AcceptancePolicy, NewsgroupSelectorBatchTest, testing::Bool());
+
+using GroupArticle = std::pair<std::string, ArticleNum>;
+
+struct GroupReadingNavigation
+{
+    std::string               name;
+    std::string               input;
+    std::vector<GroupArticle> articles;
+    std::vector<std::string>  ranges;
+    std::string               current;
+    int                       pending;
+};
+
+void PrintTo(const GroupReadingNavigation &navigation, std::ostream *output)
+{
+    *output << navigation.name;
+}
+
+class NewsgroupSelectorReadingNavigationTest : public NewsgroupSelectorSpoolTest,
+                                               public testing::WithParamInterface<GroupReadingNavigation>
+{
+};
+
+TEST_P(NewsgroupSelectorReadingNavigationTest, readingNavigationReturnsToTheExpectedGroupAndSelector)
+{
+    const GroupReadingNavigation &navigation = GetParam();
+
+    const char result = run_inner(navigation.input);
+
+    EXPECT_EQ('q', result);
+    std::vector<GroupArticle> articles;
+    for (const MultircSelectorPrompt &prompt : m_prompts)
+    {
+        if (prompt.mode == MM_ARTICLE)
+        {
+            articles.emplace_back(prompt.group, prompt.article);
+        }
+    }
+    EXPECT_EQ(navigation.articles, articles);
+    ASSERT_FALSE(m_prompts.empty());
+    EXPECT_EQ(MM_NEWSGROUP_SELECTOR, m_prompts.back().mode);
+    EXPECT_EQ(navigation.pending, m_prompts.back().selected);
+    EXPECT_EQ(navigation.ranges, m_prompts.back().ranges);
+    ASSERT_NE(nullptr, g_current_newsgroup);
+    EXPECT_EQ(navigation.current, g_current_newsgroup->rc_name());
+    EXPECT_EQ(&m_multirc, g_multirc);
+    EXPECT_EQ(&m_data_source, g_data_source);
+    for (const GroupArticle &article : navigation.articles)
+    {
+        EXPECT_THAT(m_output, testing::HasSubstr("Group body " + article.first + " article " +
+                                                 std::to_string(article.second.value_of())));
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Destination, NewsgroupSelectorReadingNavigationTest,
+    testing::Values(
+        GroupReadingNavigation{"NextSelected",
+                               "adZ+NQq",
+                               {{"comp.lang.cpp", ArticleNum{2}}, {"comp.previous", ArticleNum{3}}},
+                               {" 1-3", " 1-2", " 1-2"},
+                               "comp.previous",
+                               0},
+        GroupReadingNavigation{
+            "PriorSelected",
+            "adZ+N+PQq",
+            {{"comp.lang.cpp", ArticleNum{2}}, {"comp.previous", ArticleNum{3}}, {"comp.lang.cpp", ArticleNum{3}}},
+            {" 1-3", " 1-3", " 1-2"},
+            "comp.lang.cpp",
+            0},
+        GroupReadingNavigation{"NoPriorSelected",
+                               "adZ+Pq",
+                               {{"comp.lang.cpp", ArticleNum{2}}},
+                               {" 1-2", " 1-2", " 1-2"},
+                               "comp.lang.cpp",
+                               1},
+        GroupReadingNavigation{
+            "OrdinaryNext", "abZqq", {{"comp.lang.cpp", ArticleNum{2}}}, {" 1-2", " 1-2", " 1-2"}, "comp.lang.cpp", 1},
+        GroupReadingNavigation{"RecentGroup",
+                               "a\nQ\\\\-\nQq",
+                               {{"comp.lang.cpp", ArticleNum{2}}, {"comp.previous", ArticleNum{3}}},
+                               {" 1-3", " 1-2", " 1-2"},
+                               "comp.previous",
+                               0},
+        GroupReadingNavigation{"ExplicitArticle",
+                               "\\\\gcomp.next\n\\\\.3\nQq",
+                               {{"comp.next", ArticleNum{3}}},
+                               {" 1-2", " 1", " 1-3"},
+                               "comp.lang.cpp",
+                               0}),
+    [](const testing::TestParamInfo<GroupReadingNavigation> &info) { return info.param.name; });
 
 class NewsgroupSelectorRestartExitTest : public NewsgroupSelectorWorkflowTest,
                                          public testing::WithParamInterface<std::tuple<char, bool>>
