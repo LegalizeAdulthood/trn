@@ -29,6 +29,7 @@ struct ScoringSession
 
     // TODO: private
     void score_art_basic(ArticleNum a);
+    void rescore_arts();
 
     bool       kill_thresh_active{};
     int        kill_thresh{LOW_SCORE}; // KILL articles at or below this score

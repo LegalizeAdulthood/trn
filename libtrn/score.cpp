@@ -33,8 +33,6 @@
 ScoringSession g_scoring;
 bool       g_score_new_first{};      // changes order of sorting (artnum comparison) when scores are equal
 
-static void sc_rescore_arts();
-
 //bool pend_wait;       // if true, enter pending mode when scoring...
 void ScoringSession::init(bool pend_wait)
 {
@@ -419,40 +417,40 @@ int ScoringSession::percent_scored()
     return (scored*100) / total;
 }
 
-static void sc_rescore_arts()
+void ScoringSession::rescore_arts()
 {
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
-        if (g_scoring.delay)
+        if (delay)
         {
-            g_scoring.delay = false;
-            g_scoring.sf_force_init = true;
-            g_scoring.init(true);
-            g_scoring.sf_force_init = false;
+            delay = false;
+            sf_force_init = true;
+            init(true);
+            sf_force_init = false;
         }
     }
-    else if (g_scoring.sf_delay)
+    else if (sf_delay)
     {
         sf_init();
-        g_scoring.sf_delay = false;
+        sf_delay = false;
     }
-    if (!g_scoring.initialized)
+    if (!initialized)
     {
         fmt::print("\nScoring is not initialized, aborting command.\n");
         return;
     }
-    // I think g_scoring.do_spin will always be false, but why take chances?
-    bool old_spin = g_scoring.do_spin;
+    // I think do_spin will always be false, but why take chances?
+    bool old_spin = do_spin;
     g_progress.set_spin(SPIN_FOREGROUND);
-    g_scoring.do_spin = true; // amuse the user
+    do_spin = true; // amuse the user
     for (ArticleNum a = g_cache.first(g_abs_first); a <= g_last_art; a = g_cache.next(a))
     {
         if (g_cache.exists(a))
         {
-            g_scoring.score_art_basic(a); // rescore it then
+            score_art_basic(a); // rescore it then
         }
     }
-    g_scoring.do_spin = old_spin;
+    do_spin = old_spin;
     g_progress.set_spin(SPIN_POP);
     if (g_sa_in)
     {
@@ -502,7 +500,7 @@ void sc_append(std::string_view line)
     {
         fmt::print("\nRescoring articles...");
         std::fflush(stdout);
-        sc_rescore_arts();
+        g_scoring.rescore_arts();
         fmt::print("Done.\n");
         if (g_sa_initialized)
         {
