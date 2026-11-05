@@ -59,6 +59,13 @@ private:
     SourceFile m_source{};
 };
 
+class SourceFileStoredLinesTest : public testing::Test
+{
+protected:
+    SourceFileOwner m_owner;
+    SourceFile     &m_source{m_owner.get()};
+};
+
 class SourceFileTest : public testing::Test
 {
 protected:
@@ -416,6 +423,42 @@ TEST(SourceFileAppendTest, normalizesGreySpaceInDescription)
     ASSERT_EQ(1U, source_file.m_lines.size());
     EXPECT_EQ("comp.lang.apl APL discussion\n", stored_line);
     EXPECT_EQ("comp.lang.apl APL discussion\n", source_file.m_lines.back());
+}
+
+TEST_F(SourceFileStoredLinesTest, anAbsentIndexIsUnavailableWithoutVisitingLines)
+{
+    m_source.close();
+    bool visited = false;
+
+    const bool available = m_source.visit_stored_lines([&visited](std::string_view) { visited = true; });
+
+    EXPECT_FALSE(available);
+    EXPECT_FALSE(visited);
+}
+
+TEST_F(SourceFileStoredLinesTest, anEmptyIndexIsAvailableWithoutVisitingLines)
+{
+    bool visited = false;
+
+    const bool available = m_source.visit_stored_lines([&visited](std::string_view) { visited = true; });
+
+    EXPECT_TRUE(available);
+    EXPECT_FALSE(visited);
+}
+
+TEST_F(SourceFileStoredLinesTest, visitsEveryLineInStoredOrder)
+{
+    (void) m_source.append("bc 1 1 y\n", 2);
+    (void) m_source.append("ad 1 1 y\n", 2);
+    (void) m_source.append("a 1 1 y\n", 1);
+    (void) m_source.append("bc 2 1 y\n", 2);
+    const SourceFile        &source = m_source;
+    std::vector<std::string> lines;
+
+    const bool available = source.visit_stored_lines([&lines](std::string_view line) { lines.emplace_back(line); });
+
+    EXPECT_TRUE(available);
+    EXPECT_EQ((std::vector<std::string>{"bc 1 1 y\n", "ad 1 1 y\n", "a 1 1 y\n", "bc 2 1 y\n"}), lines);
 }
 
 TEST_F(DataSourceFindActiveGroupTest, cachedLookupReturnsBorrowedLineAndFilePosition)

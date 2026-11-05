@@ -44,6 +44,7 @@ struct SourceFile
     void             close();
     Line             lookup(std::string_view key);
     void             visit_lines(const std::function<SourceLineVisitor> &visitor);
+    bool             visit_stored_lines(const std::function<SourceLineVisitor> &visitor) const;
 
     bool refetch_due(std::time_t now, bool force) const
     {

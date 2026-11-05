@@ -1247,6 +1247,19 @@ void SourceFile::visit_lines(const std::function<SourceLineVisitor> &visitor)
                        });
 }
 
+bool SourceFile::visit_stored_lines(const std::function<SourceLineVisitor> &visitor) const
+{
+    if (!m_hp)
+    {
+        return false;
+    }
+    for (const std::string &line : m_lines)
+    {
+        visitor(line);
+    }
+    return true;
+}
+
 void SourceFile::close()
 {
     if (m_fp)
