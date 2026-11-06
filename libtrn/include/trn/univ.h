@@ -250,6 +250,9 @@ extern VirtualGroupBuilder g_vg_builder;
 
 struct UniversalConfiguration
 {
+    // TODO: private
+    std::string edit_new_user_file();
+
     bool done_startup{};
     bool user_top{}; // if true, the user has loaded their own top univ. config file
 };

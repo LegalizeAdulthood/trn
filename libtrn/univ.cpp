@@ -74,7 +74,6 @@ static void           univ_add_file(std::string_view desc, std::string_view fnam
 static UniversalItem *univ_add_virt_num(std::string_view desc, std::string_view grp, ArticleNum art);
 static void           univ_add_text_file(std::string_view desc, std::string_view name);
 static bool           univ_do_match(std::string_view text, std::string_view pattern);
-static std::string univ_edit_new_user_file();
 
 void univ_init()
 {
@@ -1020,7 +1019,7 @@ void univ_redo_file()
     }
 }
 
-static std::string univ_edit_new_user_file()
+std::string UniversalConfiguration::edit_new_user_file()
 {
     const fs::path user_top{file_exp("%+/univ/usertop")};
 
@@ -1054,7 +1053,7 @@ static std::string univ_edit_new_user_file()
     fmt::print("New User Toplevel file created.\n");
     fmt::print("After editing this file, exit and restart trn to use it.\n");
     (void) get_anything();
-    g_univ_config.user_top = true; // do not overwrite this file
+    this->user_top = true; // do not overwrite this file
     return user_top.string();
 }
 
@@ -1076,7 +1075,7 @@ void univ_edit()
     }
     else
     {
-        filename = univ_edit_new_user_file();
+        filename = g_univ_config.edit_new_user_file();
     }
 
     // later consider directory push/pop pair around editing
