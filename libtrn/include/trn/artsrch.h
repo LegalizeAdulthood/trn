@@ -38,6 +38,9 @@ struct ArticleSearchContext
 {
     void init();
 
+    // TODO: private
+    bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
+
     std::string    last_pat;                // last search pattern
     CompiledRegex  sub_compex{};            // last compiled subject search
     CompiledRegex  art_compex{};            // last compiled normal search

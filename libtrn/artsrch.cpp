@@ -35,7 +35,6 @@
 static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
                                        const std::function<void(ArticleNum)> &progress);
 static void            truncate_notes_pattern(std::string &pattern_text, std::size_t text_start);
-static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
 ArticleSearchContext   g_art_search;
 const std::string_view g_scope_str{"sfHhbBa"}; //
@@ -511,7 +510,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         if (matches_selection &&
             (do_read || (!(g_nav.target.art->m_flags & AF_UNREAD) ^ (!g_sel.rereading ? AF_SEL : AF_NONE))))
         {
-            if (wanted(compex, g_nav.target.num, how_much))
+            if (g_art_search.wanted(compex, g_nav.target.num, how_much))
             {
                                     // does the shoe fit?
                 if (cmd_lst.empty())
@@ -554,7 +553,7 @@ static void truncate_notes_pattern(std::string &pattern_text, std::size_t text_s
 // determine if article fits pattern
 // returns true if it exists and fits pattern, false otherwise
 
-static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
+bool ArticleSearchContext::wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
 {
     Article *ap = g_cache.find(art_num);
 
@@ -587,9 +586,9 @@ static bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope)
     case ARTSCOPE_ONE_HDR:
     {
         g_untrim_cache = true;
-        const std::string header = prefetch_lines_copy(art_num, g_art_search.srch_hdr);
+        const std::string header = prefetch_lines_copy(art_num, srch_hdr);
         g_untrim_cache = false;
-        search_text = g_header_rules.type[g_art_search.srch_hdr].name + ": " + header;
+        search_text = g_header_rules.type[srch_hdr].name + ": " + header;
         break;
     }
 
