@@ -72,25 +72,25 @@ enum
 static RegexTranslation s_regex_translation{};
 static RegexExecution   s_regex_execution{};
 
-static void case_fold(bool which)
+void RegexTranslation::case_fold(bool which)
 {
-    if (which != s_regex_translation.folding)
+    if (which != folding)
     {
         if (which)
         {
             for (int i = 'A'; i <= 'Z'; i++)
             {
-                s_regex_translation.trans[i] = std::tolower(i);
+                trans[i] = std::tolower(i);
             }
         }
         else
         {
             for (int i = 'A'; i <= 'Z'; i++)
             {
-                s_regex_translation.trans[i] = i;
+                trans[i] = i;
             }
         }
-        s_regex_translation.folding = which;
+        folding = which;
     }
 }
 
@@ -171,7 +171,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
         return static_cast<int>(static_cast<unsigned char>(pattern[pattern_pos + offset]));
     };
 
-    case_fold(m_do_folding = fold);
+    s_regex_translation.case_fold(m_do_folding = fold);
     if (m_exp_buf.empty())
     {
         m_exp_buf.resize(84);
@@ -435,7 +435,7 @@ std::size_t CompiledRegex::find(std::string_view text)
         m_bracket_start_offsets.fill(std::string::npos);
         m_bracket_end_offsets.fill(std::string::npos);
     }
-    case_fold(m_do_folding); // make sure table is correct
+    s_regex_translation.case_fold(m_do_folding); // make sure table is correct
     s_regex_execution.first_character = p1; // for ^ tests
     const char *expression = m_exp_buf.data();
     if (expression[0] == CCHR && m_alternatives[1] == std::string::npos)

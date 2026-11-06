@@ -29,6 +29,9 @@ struct RegexTranslation
 
     TranslationTable trans{};
     bool             folding{};
+
+    // TODO: private
+    void case_fold(bool which);
 };
 
 struct RegexExecution
