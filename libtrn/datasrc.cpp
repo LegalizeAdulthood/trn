@@ -1329,6 +1329,19 @@ bool SourceFile::visit_stored_lines(const std::function<SourceLineVisitor> &visi
     return true;
 }
 
+std::string SourceFile::refetch_description() const
+{
+    if (m_refetch_secs)
+    {
+        const std::string refetch_text = secs_to_text(m_refetch_secs);
+        if (refetch_text != "never")
+        {
+            return fmt::format(" (refetch{} {})", refetch_text == "missing" ? " if" : ":", refetch_text);
+        }
+    }
+    return {};
+}
+
 void SourceFile::close()
 {
     if (m_fp)

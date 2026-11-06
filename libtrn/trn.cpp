@@ -1132,15 +1132,7 @@ void trn_version()
                 {
                     active_file = "Dynamic active file";
                 }
-                if (data_source.m_act_sf.m_refetch_secs)
-                {
-                    const std::string refetch_text = secs_to_text(data_source.m_act_sf.m_refetch_secs);
-                    if (refetch_text != "never")
-                    {
-                        fmt::format_to(std::back_inserter(active_file), " (refetch{} {})",
-                                       refetch_text == "missing" ? " if" : ":", refetch_text);
-                    }
-                }
+                active_file += data_source.m_act_sf.refetch_description();
                 active_file += ".\n";
                 print_lines(active_file, NO_MARKING);
             }
@@ -1166,15 +1158,7 @@ void trn_version()
                 {
                     fmt::format_to(std::back_inserter(group_desc), "Group desc. file: {}", data_source.m_group_desc);
                 }
-                if (data_source.m_desc_sf.m_refetch_secs)
-                {
-                    const std::string refetch_text = secs_to_text(data_source.m_desc_sf.m_refetch_secs);
-                    if (refetch_text != "never")
-                    {
-                        fmt::format_to(std::back_inserter(group_desc), " (refetch{} {})",
-                                       refetch_text == "missing" ? " if" : ":", refetch_text);
-                    }
-                }
+                group_desc += data_source.m_desc_sf.refetch_description();
                 group_desc += ".\n";
                 print_lines(group_desc, NO_MARKING);
             }
