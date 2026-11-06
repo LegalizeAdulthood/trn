@@ -39,6 +39,7 @@ struct ScanSearchContext
     void set_search_text(std::string_view search_text);
     bool match_description(long ent);
     long forward_search(long ent);
+    long backward_search(long ent);
 
     std::string search_text;
     bool        search_init{};
@@ -52,7 +53,6 @@ static void             s_look_ahead();
 static int              s_do_cmd(std::string_view command);
 static char             s_command_char(std::string_view command);
 static std::string_view s_command_argument(std::string_view command);
-static long             s_backward_search(long ent);
 static void             s_search(std::string_view command);
 static void             s_jump_num(char_int firstchar);
 
@@ -462,7 +462,7 @@ long ScanSearchContext::forward_search(long ent)
     return ent;
 }
 
-static long s_backward_search(long ent)
+long ScanSearchContext::backward_search(long ent)
 {
     if (ent)
     {
@@ -474,7 +474,7 @@ static long s_backward_search(long ent)
     }
     for (; ent; ent = g_art_scan.prev_elig(ent))
     {
-        if (s_scan_search.match_description(ent))
+        if (match_description(ent))
         {
             break;
         }
@@ -535,7 +535,7 @@ static void s_search(std::string_view command)
 
     case '?':
         error_msg = s_search_error_message(command_ch, false);
-        ent = s_backward_search(ent);
+        ent = s_scan_search.backward_search(ent);
         fill_type = 1;          // backwards fill
         break;
 
