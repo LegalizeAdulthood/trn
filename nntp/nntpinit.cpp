@@ -22,9 +22,19 @@
 
 namespace asio = boost::asio;
 
-static asio::io_context        s_context;
-static asio::ip::tcp::resolver s_resolver(s_context);
-static ConnectionFactory       s_nntp_connection_factory;
+namespace
+{
+
+struct NntpConnectionProvider
+{
+    asio::io_context        context;
+    asio::ip::tcp::resolver resolver{context};
+    ConnectionFactory       factory;
+};
+
+static NntpConnectionProvider s_connection_provider;
+
+} // namespace
 
 using resolver_results = asio::ip::tcp::resolver::results_type;
 using error_code_t = boost::system::error_code;
@@ -52,7 +62,7 @@ public:
 
 private:
     std::string           m_server;
-    asio::ip::tcp::socket m_socket{s_context};
+    asio::ip::tcp::socket                                       m_socket{s_connection_provider.context};
     asio::streambuf       m_buffer;
     std::unique_ptr<asio::ssl::context>                         m_tls_context;
     std::unique_ptr<asio::ssl::stream<asio::ip::tcp::socket &>> m_tls;
@@ -150,7 +160,8 @@ static ConnectionPtr create_nntp_connection(std::string_view machine, int port, 
     }
 
     error_code_t                          ec;
-    asio::ip::tcp::resolver::results_type results = s_resolver.resolve(server_name, service_name, ec);
+    asio::ip::tcp::resolver::results_type results =
+        s_connection_provider.resolver.resolve(server_name, service_name, ec);
     if (ec)
     {
         return nullptr;
@@ -170,7 +181,7 @@ static ConnectionPtr create_nntp_connection(std::string_view machine, int port, 
 
 void set_nntp_connection_factory(ConnectionFactory factory)
 {
-    s_nntp_connection_factory = std::move(factory);
+    s_connection_provider.factory = std::move(factory);
 }
 
 int init_nntp()
@@ -189,7 +200,7 @@ int server_init(std::string_view machine)
     g_nntp.link.capabilities = {};
     g_nntp.link.unsupported_commands.clear();
     const int port = g_nntp.link.port_number ? g_nntp.link.port_number : g_nntp.link.implicit_tls ? 563 : 0;
-    g_nntp.link.connection = s_nntp_connection_factory(machine, port, g_nntp.link.implicit_tls ? "nntps" : "nntp");
+    g_nntp.link.connection = s_connection_provider.factory(machine, port, g_nntp.link.implicit_tls ? "nntps" : "nntp");
     if (g_nntp.link.connection == nullptr)
     {
         return -1;
