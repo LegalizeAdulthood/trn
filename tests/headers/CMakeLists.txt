@@ -82,6 +82,7 @@ add_executable(trn-headers-test
     test_smisc.cpp
     test_sorder.cpp
     test_spage.cpp
+    test_SourceCheckpoint.cpp
     test_string-algos.cpp
     test_sw.cpp
     test_terminal.cpp

@@ -28,6 +28,7 @@
 #include <trn/rt-select.h>
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
+#include <trn/SourceCheckpoint.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
@@ -1857,26 +1858,29 @@ bool write_newsrcs(Multirc *mptr)
             std::FILE *info = std::fopen(rp->info_name.string().c_str(), "w");
             if (info != nullptr)
             {
-                fmt::print(info,"Last-Group: {}\nNew-Group-State: {},{},{}\n",
-                        g_newsgroup_name,rp->data_source->m_last_new_group,
-                        rp->data_source->m_act_sf.m_recent_cnt,
-                        rp->data_source->m_desc_sf.m_recent_cnt);
+                const SourceCheckpoint checkpoint{rp->data_source->m_last_new_group,
+                                                  rp->data_source->m_act_sf.m_recent_cnt,
+                                                  rp->data_source->m_desc_sf.m_recent_cnt};
+                fmt::print(info, "Last-Group: {}\nNew-Group-State: {},{},{}\n", g_newsgroup_name, checkpoint.new_time,
+                           checkpoint.active_cnt, checkpoint.desc_cnt);
                 std::fclose(info);
             }
         }
         else
         {
             g_last_run.read();
+            const SourceCheckpoint checkpoint{rp->data_source->m_last_new_group, rp->data_source->m_act_sf.m_recent_cnt,
+                                              rp->data_source->m_desc_sf.m_recent_cnt};
             if (rp->data_source->m_flags & DF_REMOTE)
             {
-                g_last_run.active_size = rp->data_source->m_act_sf.m_recent_cnt;
-                g_last_run.extra_num = rp->data_source->m_desc_sf.m_recent_cnt;
+                g_last_run.active_size = checkpoint.active_cnt;
+                g_last_run.extra_num = checkpoint.desc_cnt;
             }
             else
             {
-                g_last_run.extra_num = rp->data_source->m_act_sf.m_recent_cnt;
+                g_last_run.extra_num = checkpoint.active_cnt;
             }
-            g_last_run.new_time = rp->data_source->m_last_new_group;
+            g_last_run.new_time = checkpoint.new_time;
             g_last_run.write();
         }
 
