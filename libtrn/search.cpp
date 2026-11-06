@@ -67,34 +67,30 @@ enum
                //         REas many times as possible; the value
                //         ORs with the other operator types
 
-    ASCSIZ = 256
 };
-using TranslationTable = Uchar[ASCSIZ];
 
-static TranslationTable s_trans{};
-static bool             s_folding{};
-static int              s_err{};
-static const char      *s_first_character{};
+static RegexTranslation s_regex_translation{};
+static RegexExecution   s_regex_execution{};
 
 static void case_fold(bool which)
 {
-    if (which != s_folding)
+    if (which != s_regex_translation.folding)
     {
         if (which)
         {
             for (int i = 'A'; i <= 'Z'; i++)
             {
-                s_trans[i] = std::tolower(i);
+                s_regex_translation.trans[i] = std::tolower(i);
             }
         }
         else
         {
             for (int i = 'A'; i <= 'Z'; i++)
             {
-                s_trans[i] = i;
+                s_regex_translation.trans[i] = i;
             }
         }
-        s_folding = which;
+        s_regex_translation.folding = which;
     }
 }
 
@@ -110,9 +106,9 @@ static bool cclass(const char *set, int c, int af)
 
 void search_init()
 {
-    for (int i = 0; i < ASCSIZ; i++)
+    for (int i = 0; i < RegexTranslation::ASCSIZ; i++)
     {
-        s_trans[i] = i;
+        s_regex_translation.trans[i] = i;
     }
 }
 
@@ -425,7 +421,7 @@ bool CompiledRegex::execute(std::string_view text)
 
 std::size_t CompiledRegex::find(std::string_view text)
 {
-    Uchar *trt = s_trans;
+    Uchar *trt = s_regex_translation.trans;
 
     if (m_exp_buf.empty())
     {
@@ -440,7 +436,7 @@ std::size_t CompiledRegex::find(std::string_view text)
         m_bracket_end_offsets.fill(std::string::npos);
     }
     case_fold(m_do_folding); // make sure table is correct
-    s_first_character = p1;  // for ^ tests
+    s_regex_execution.first_character = p1; // for ^ tests
     const char *expression = m_exp_buf.data();
     if (expression[0] == CCHR && m_alternatives[1] == std::string::npos)
     {
@@ -452,10 +448,10 @@ std::size_t CompiledRegex::find(std::string_view text)
                 return static_cast<std::size_t>(p1 - m_bracket_str.data());
             }
             p1++;
-        } while (*p1 && !s_err);
-        if (s_err)
+        } while (*p1 && !s_regex_execution.err);
+        if (s_regex_execution.err)
         {
-            s_err = 0;
+            s_regex_execution.err = 0;
         }
         return std::string_view::npos;
     }
@@ -470,10 +466,10 @@ std::size_t CompiledRegex::find(std::string_view text)
             }
         }
         p1++;
-    } while (*p1 && !s_err);
-    if (s_err)
+    } while (*p1 && !s_regex_execution.err);
+    if (s_regex_execution.err)
     {
-        s_err = 0;
+        s_regex_execution.err = 0;
     }
     return std::string_view::npos;
 }
@@ -483,7 +479,7 @@ std::size_t CompiledRegex::find(std::string_view text)
 bool CompiledRegex::advance(const char *lp, const char *ep)
 {
     const char* curlp;
-    Uchar* trt = s_trans;
+    Uchar         *trt = s_regex_translation.trans;
     int i;
     std::ptrdiff_t length{};
 
@@ -515,7 +511,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             return false;
 
         case CIRC:
-            if (lp == s_first_character || lp[-1]=='\n')
+            if (lp == s_regex_execution.first_character || lp[-1] == '\n')
             {
                 continue;
             }
@@ -538,16 +534,14 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             return false;
 
         case WBOUND:
-            if ((lp == s_first_character || !std::isalnum(lp[-1])) !=
-                    (!*lp || !std::isalnum(*lp)) )
+            if ((lp == s_regex_execution.first_character || !std::isalnum(lp[-1])) != (!*lp || !std::isalnum(*lp)))
             {
                 continue;
             }
             return false;
 
         case NWBOUND:
-            if ((lp == s_first_character || !std::isalnum(lp[-1])) ==
-                    (!*lp || !std::isalnum(*lp)))
+            if ((lp == s_regex_execution.first_character || !std::isalnum(lp[-1])) == (!*lp || !std::isalnum(*lp)))
             {
                 continue;
             }
@@ -591,7 +585,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             if (m_bracket_end_offsets[i] == std::string::npos)
             {
                 fmt::print("bad braces\n");
-                s_err = true;
+                s_regex_execution.err = true;
                 return false;
             }
             length = static_cast<std::ptrdiff_t>(get_bracket(i).size());
@@ -607,7 +601,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             if (m_bracket_end_offsets[i] == std::string::npos)
             {
                 fmt::print("bad braces\n");
-                s_err = true;
+                s_regex_execution.err = true;
                 return false;
             }
             length = static_cast<std::ptrdiff_t>(get_bracket(i).size());
@@ -677,7 +671,7 @@ star:
 
         default:
             fmt::print("Badly compiled pattern\n");
-            s_err = true;
+            s_regex_execution.err = true;
             return false;
         }
     }

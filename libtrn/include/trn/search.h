@@ -5,6 +5,8 @@
 #ifndef TRN_SEARCH_H
 #define TRN_SEARCH_H
 
+#include <config/typedef.h>
+
 #include <array>
 #include <cstddef>
 #include <string>
@@ -16,6 +18,24 @@
                                 // RE -- \( \)
 #define NALTS   10              // the maximum number of \|'s
 #endif
+
+struct RegexTranslation
+{
+    enum
+    {
+        ASCSIZ = 256
+    };
+    using TranslationTable = Uchar[ASCSIZ];
+
+    TranslationTable trans{};
+    bool             folding{};
+};
+
+struct RegexExecution
+{
+    int         err{};
+    const char *first_character{};
+};
 
 class CompiledRegex
 {
