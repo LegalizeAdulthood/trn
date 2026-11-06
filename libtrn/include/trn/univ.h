@@ -248,6 +248,14 @@ struct VirtualGroupBuilder
 
 extern VirtualGroupBuilder g_vg_builder;
 
+struct UniversalConfiguration
+{
+    bool done_startup{};
+    bool user_top{}; // if true, the user has loaded their own top univ. config file
+};
+
+extern UniversalConfiguration g_univ_config;
+
 void           univ_init();
 void           univ_startup();
 bool           univ_file_load(std::string_view fname, std::string_view title, std::string_view label);

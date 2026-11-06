@@ -67,8 +67,7 @@ UniversalMenuContext g_univ;
 UniversalMenuLoader  g_univ_loader;
 VirtualGroupBuilder  g_vg_builder;
 
-static bool           s_univ_done_startup{};     //
-static bool           s_univ_user_top{};         // if true, the user has loaded their own top univ. config file
+UniversalConfiguration g_univ_config;
 
 static void           univ_add_mask(std::string_view desc, std::string_view mask);
 static void           univ_add_file(std::string_view desc, std::string_view fname, std::string_view label);
@@ -251,14 +250,14 @@ void univ_startup()
         }
         if (user_top_load)
         {
-            s_univ_user_top = true;
+            g_univ_config.user_top = true;
         }
     }
     else
     {
-        s_univ_user_top = true;
+        g_univ_config.user_top = true;
     }
-    s_univ_done_startup = true;
+    g_univ_config.done_startup = true;
 }
 
 void UniversalMenuContext::open()
@@ -1055,7 +1054,7 @@ static std::string univ_edit_new_user_file()
     fmt::print("New User Toplevel file created.\n");
     fmt::print("After editing this file, exit and restart trn to use it.\n");
     (void) get_anything();
-    s_univ_user_top = true;               // do not overwrite this file
+    g_univ_config.user_top = true; // do not overwrite this file
     return user_top.string();
 }
 
@@ -1064,7 +1063,7 @@ void univ_edit()
 {
     std::string filename;
 
-    if (s_univ_user_top || !(s_univ_done_startup))
+    if (g_univ_config.user_top || !(g_univ_config.done_startup))
     {
         if (!g_univ.tmp_file.empty())
         {
