@@ -66,7 +66,6 @@ static CompiledRegex s_search_compex; // compiled regex for search ahead
 
 static int subject_cmp(std::string_view key, HashDatum data);
 #ifdef PENDING
-static bool cache_xrefs();
 static bool cache_all_arts();
 static bool cache_unread_arts();
 #endif
@@ -790,7 +789,7 @@ void cache_until_key()
     {
         if (s_header_prefetch.cache_subjects())
         {
-            if (cache_xrefs())
+            if (s_header_prefetch.cache_xrefs())
             {
                 if (chase_xrefs(true))
                 {
@@ -814,7 +813,7 @@ void cache_until_key()
             {
                 if (cache_unread_arts())
                 {
-                    if (cache_xrefs())
+                    if (s_header_prefetch.cache_xrefs())
                     {
                         chase_xrefs(true);
                     }
@@ -860,16 +859,16 @@ bool HeaderPrefetch::cache_subjects()
     return subj_to_get > g_last_art;
 }
 
-static bool cache_xrefs()
+bool HeaderPrefetch::cache_xrefs()
 {
     ArticleNum an;
 
-    if (g_olden_days || (g_data_source->m_flags & DF_NO_XREFS) || s_header_prefetch.xref_to_get > g_last_art)
+    if (g_olden_days || (g_data_source->m_flags & DF_NO_XREFS) || xref_to_get > g_last_art)
     {
         return true;
     }
     g_progress.set_spin(SPIN_BACKGROUND);
-    for (an = g_cache.first(s_header_prefetch.xref_to_get); an <= g_last_art; an = g_cache.next(an))
+    for (an = g_cache.first(xref_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
         {
@@ -880,8 +879,8 @@ static bool cache_xrefs()
             prefetch_xref(an);
         }
     }
-    s_header_prefetch.xref_to_get = an;
-    return s_header_prefetch.xref_to_get > g_last_art;
+    xref_to_get = an;
+    return xref_to_get > g_last_art;
 }
 
 static bool cache_all_arts()

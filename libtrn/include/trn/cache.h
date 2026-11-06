@@ -126,6 +126,9 @@ struct HeaderPrefetch
 {
     bool cache_subjects();
 
+    // TODO: private
+    bool cache_xrefs();
+
     ArticleNum subj_to_get{};
     ArticleNum xref_to_get{};
 };
