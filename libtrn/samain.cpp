@@ -46,7 +46,7 @@ void sa_init()
         return;                         // ...most likely dumb terminal
     }
     sa_init_mode();                      // mode differences
-    sa_init_threads();
+    g_sa_threads.init_threads();
     g_sa_mode_read_elig = false;
     if (g_first_art > g_last_art)         // none unread
     {

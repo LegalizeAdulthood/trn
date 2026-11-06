@@ -20,10 +20,10 @@ ArticleScanThreads g_sa_threads;
 
 static long sa_get_subj_thread(long e);
 
-void sa_init_threads()
+void ArticleScanThreads::init_threads()
 {
-    g_sa_threads.num_threads = 0;
-    g_sa_threads.thread_nums.clear();
+    num_threads = 0;
+    thread_nums.clear();
 }
 
 long sa_subj_thread(long e)

@@ -13,13 +13,14 @@
 
 struct ArticleScanThreads
 {
+    void init_threads();
+
     long                                  num_threads{};
     std::unordered_map<std::string, long> thread_nums;
 };
 
 extern ArticleScanThreads g_sa_threads;
 
-void sa_init_threads();
 int sa_subj_thread_count(long a);
 long sa_subj_thread_prev(long a);
 long sa_subj_thread_next(long a);
