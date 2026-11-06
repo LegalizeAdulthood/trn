@@ -20,3 +20,17 @@ void SourceCheckpoint::restore_legacy(const LastRunState &last, bool remote)
         desc_cnt = 0;
     }
 }
+
+void SourceCheckpoint::update_legacy(LastRunState &last, bool remote) const
+{
+    if (remote)
+    {
+        last.active_size = active_cnt;
+        last.extra_num = desc_cnt;
+    }
+    else
+    {
+        last.extra_num = active_cnt;
+    }
+    last.new_time = new_time;
+}

@@ -1866,16 +1866,7 @@ bool write_newsrcs(Multirc *mptr)
             g_last_run.read();
             const SourceCheckpoint checkpoint{rp->data_source->m_last_new_group, rp->data_source->m_act_sf.m_recent_cnt,
                                               rp->data_source->m_desc_sf.m_recent_cnt};
-            if (rp->data_source->m_flags & DF_REMOTE)
-            {
-                g_last_run.active_size = checkpoint.active_cnt;
-                g_last_run.extra_num = checkpoint.desc_cnt;
-            }
-            else
-            {
-                g_last_run.extra_num = checkpoint.active_cnt;
-            }
-            g_last_run.new_time = checkpoint.new_time;
+            checkpoint.update_legacy(g_last_run, (rp->data_source->m_flags & DF_REMOTE) != 0);
             g_last_run.write();
         }
 

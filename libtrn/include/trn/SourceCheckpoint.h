@@ -11,6 +11,7 @@ struct Newsrc;
 struct SourceCheckpoint
 {
     void restore_legacy(const LastRunState &last, bool remote);
+    void update_legacy(LastRunState &last, bool remote) const;
 
     long new_time;
     long active_cnt;
