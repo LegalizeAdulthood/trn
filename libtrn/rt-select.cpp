@@ -172,6 +172,35 @@ private:
     bool        m_save_group_listing;
 };
 
+struct UniversalMenuSaver
+{
+    UniversalMenuSaver();
+
+    UniversalItemList        items;
+    UniversalNameSet         ng_names;
+    UniversalNameSet         vg_names;
+    const UniversalItemIndex page_univ;
+    const UniversalItemIndex next_univ;
+    const std::string        fname;
+    const std::string        label;
+    const std::string        title;
+    const std::string        tmp_file;
+    const char               ret;
+};
+
+UniversalMenuSaver::UniversalMenuSaver() :
+    items(std::move(g_univ.items)),
+    ng_names(std::move(g_univ.ng_names)),
+    vg_names(std::move(g_univ.vg_names)),
+    page_univ(g_sel_page.page_univ_index),
+    next_univ(g_sel_page.next_univ_index),
+    fname(g_univ.fname),
+    label(g_univ.label),
+    title(g_univ.title),
+    tmp_file(g_univ.tmp_file),
+    ret(g_sel_session.ret)
+{
+}
 }
 
 #define PUSH_SELECTOR()                                     \
@@ -209,19 +238,19 @@ private:
     std::string const        save_univ_tmp_file = g_univ.tmp_file;            \
     const char               save_sel_ret = g_sel_session.ret
 
-#define POP_UNIV_SELECTOR()                              \
-    do                                                   \
-    {                                                    \
-        g_univ.items = std::move(save_univ_items);       \
-        g_univ.ng_names = std::move(save_univ_ng_names); \
-        g_univ.vg_names = std::move(save_univ_vg_names); \
-        g_sel_page.page_univ_index = save_page_univ;     \
-        g_sel_page.next_univ_index = save_next_univ;     \
-        g_univ.fname = save_univ_fname;                  \
-        g_univ.label = save_univ_label;                  \
-        g_univ.title = save_univ_title;                  \
-        g_univ.tmp_file = save_univ_tmp_file;            \
-        g_sel_session.ret = save_sel_ret;                \
+#define POP_UNIV_SELECTOR()                                \
+    do                                                     \
+    {                                                      \
+        g_univ.items = std::move(menu_saver.items);        \
+        g_univ.ng_names = std::move(menu_saver.ng_names);  \
+        g_univ.vg_names = std::move(menu_saver.vg_names);  \
+        g_sel_page.page_univ_index = menu_saver.page_univ; \
+        g_sel_page.next_univ_index = menu_saver.next_univ; \
+        g_univ.fname = menu_saver.fname;                   \
+        g_univ.label = menu_saver.label;                   \
+        g_univ.title = menu_saver.title;                   \
+        g_univ.tmp_file = menu_saver.tmp_file;             \
+        g_sel_session.ret = menu_saver.ret;                \
     } while (false)
 
 static void                sel_do_groups();
@@ -1174,7 +1203,7 @@ sel_restart:
             {
                 const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
                 PUSH_SELECTOR();
-                PUSH_UNIV_SELECTOR();
+                UniversalMenuSaver menu_saver;
 
                 ui->m_flags &= ~active_mask;
                 save_selected_count--;
@@ -4614,7 +4643,7 @@ void univ_visit_help(HelpLocation where)
 {
     const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
     PUSH_SELECTOR();
-    PUSH_UNIV_SELECTOR();
+    UniversalMenuSaver menu_saver;
 
     univ_help_main(where);
     (void)universal_selector();
