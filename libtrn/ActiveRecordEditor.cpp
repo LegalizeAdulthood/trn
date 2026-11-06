@@ -37,3 +37,17 @@ ArticleNum ActiveRecordEditor::high() const
     std::from_chars(fields.data(), fields.data() + fields.size(), high);
     return ArticleNum{high};
 }
+
+void ActiveRecordEditor::update_high(ArticleNum high)
+{
+    const std::size_t high_start = name_len + 1;
+    const std::size_t high_end = text.find(' ', high_start);
+    if (high_end != std::string::npos)
+    {
+        const std::size_t      field_width = high_end - high_start;
+        const std::string      high_text = std::to_string(value_of(high));
+        const std::string_view high_digits =
+            std::string_view{high_text}.substr(high_text.size() > field_width ? high_text.size() - field_width : 0);
+        text.replace(high_start, field_width, fmt::format("{:0>{}}", high_digits, field_width));
+    }
+}

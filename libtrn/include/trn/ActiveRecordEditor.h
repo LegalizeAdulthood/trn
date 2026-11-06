@@ -15,6 +15,7 @@ struct ActiveRecordEditor
 {
     void       update_low(std::string_view source);
     ArticleNum high() const;
+    void       update_high(ArticleNum high);
 
     std::string &text;
     std::size_t  name_len;

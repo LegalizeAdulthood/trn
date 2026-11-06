@@ -793,16 +793,7 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
             ActiveRecordEditor cached{*cached_line, name_len};
             if (high && high != cached.high())
             {
-                const std::size_t high_start = cached.name_len + 1;
-                const std::size_t high_end = cached.text.find(' ', high_start);
-                if (high_end != std::string::npos)
-                {
-                    const std::size_t      field_width = high_end - high_start;
-                    const std::string      high_text = std::to_string(value_of(high));
-                    const std::string_view high_digits = std::string_view{high_text}.substr(
-                        high_text.size() > field_width ? high_text.size() - field_width : 0);
-                    cached.text.replace(high_start, field_width, fmt::format("{:0>{}}", high_digits, field_width));
-                }
+                cached.update_high(high);
                 std::fseek(fp, act_pos.value_of(), 0);
                 fmt::print(fp, "{}", *cached_line);
             }

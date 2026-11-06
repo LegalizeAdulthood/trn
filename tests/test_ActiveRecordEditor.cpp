@@ -102,4 +102,44 @@ INSTANTIATE_TEST_SUITE_P(NumericFields, HighWaterReadTest,
                                          HighWaterCase{"NameBoundaryByte", "comp.testX42 7 y\n", 42}),
                          [](const testing::TestParamInfo<HighWaterCase> &info) { return info.param.name; });
 
+struct HighWaterUpdateCase
+{
+    const char *name;
+    const char *text;
+    long        high;
+    const char *expected;
+};
+
+class HighWaterUpdateTest : public ActiveRecordEditorTest, public testing::WithParamInterface<HighWaterUpdateCase>
+{
+protected:
+    void SetUp() override
+    {
+        m_text = GetParam().text;
+    }
+};
+
+TEST_P(HighWaterUpdateTest, changesOnlyTheExistingHighWaterField)
+{
+    m_editor.update_high(ArticleNum{GetParam().high});
+
+    EXPECT_EQ(GetParam().expected, m_text);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RecordLayout, HighWaterUpdateTest,
+    testing::Values(
+        HighWaterUpdateCase{"EqualWidth", "comp.test 00001 00007 y\n", 12345, "comp.test 12345 00007 y\n"},
+        HighWaterUpdateCase{"ZeroPadding", "comp.test 00001 00007 m\n", 42, "comp.test 00042 00007 m\n"},
+        HighWaterUpdateCase{"Zero", "comp.test 00001 00007 y\n", 0, "comp.test 00000 00007 y\n"},
+        HighWaterUpdateCase{"RightmostDigits", "comp.test 00001 00007 y\n", 123456, "comp.test 23456 00007 y\n"},
+        HighWaterUpdateCase{"Negative", "comp.test 00001 00007 y\n", -12, "comp.test 00-12 00007 y\n"},
+        HighWaterUpdateCase{"EmptyField", "comp.test  00007 y\n", 42, "comp.test  00007 y\n"},
+        HighWaterUpdateCase{"MissingField", "comp.test", 42, "comp.test"},
+        HighWaterUpdateCase{"MissingFollowingSeparator", "comp.test 00001", 42, "comp.test 00001"},
+        HighWaterUpdateCase{"ShortRecord", "short", 42, "short"},
+        HighWaterUpdateCase{"UnterminatedRecord", "comp.test 00001 00007 y", 42, "comp.test 00042 00007 y"},
+        HighWaterUpdateCase{"NameBoundaryByte", "comp.testX00001 00007 y\n", 42, "comp.testX00042 00007 y\n"}),
+    [](const testing::TestParamInfo<HighWaterUpdateCase> &info) { return info.param.name; });
+
 } // namespace
