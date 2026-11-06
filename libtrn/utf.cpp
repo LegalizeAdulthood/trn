@@ -113,6 +113,7 @@ struct GraphicState
     std::string      insert_unicode_at(CodePoint c);
     bool             at_norm_char(std::string_view s);
     std::string      create_utf8_copy(std::string_view text);
+    int              put_char_adv(std::string_view &text, bool outputok);
 
     CharsetType      in;
     CharsetType      out;
@@ -673,14 +674,19 @@ bool GraphicState::at_norm_char(std::string_view s)
 
 int put_char_adv(std::string_view &text, bool outputok)
 {
+    return s_gs.put_char_adv(text, outputok);
+}
+
+int GraphicState::put_char_adv(std::string_view &text, bool outputok)
+{
     int it = 0;
     if (!text.empty())
     {
         const char ch = text.front();
-        if (s_gs.in == CHARSET_UTF8 || (ch >= ' ' && ch < 0x7F))
+        if (in == CHARSET_UTF8 || (ch >= ' ' && ch < 0x7F))
         {
-            const int w = s_gs.byte_length_at(text);
-            it = s_gs.visual_width_at(text);
+            const int w = byte_length_at(text);
+            it = visual_width_at(text);
             if (outputok)
             {
                 for (int i = 0; i < w; i += 1)
@@ -690,9 +696,9 @@ int put_char_adv(std::string_view &text, bool outputok)
             }
             text.remove_prefix(static_cast<std::size_t>(w));
         }
-        else if (s_gs.himap_in)
+        else if (himap_in)
         {
-            std::string encoded_text = utf8_text(s_gs.himap_in[U(ch) & 0x7F]);
+            std::string encoded_text = utf8_text(himap_in[U(ch) & 0x7F]);
             for (char byte : encoded_text)
             {
                 std::putchar(byte);
