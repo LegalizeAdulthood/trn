@@ -20,6 +20,19 @@
 #include <string>
 #include <string_view>
 
+namespace
+{
+
+struct UuDecoder
+{
+    std::FILE *ofp{};
+    int        line_length{};
+};
+
+static UuDecoder s_uu_decoder;
+
+} // namespace
+
 static void uudecode_line(std::string_view line, std::FILE *ofp);
 
 int uue_prescan(std::string_view text, std::string &filename, int *partp, int *totalp)
@@ -235,8 +248,6 @@ int uue_prescan(std::string_view text, std::string &filename, int *partp, int *t
 
 DecodeState uudecode(std::FILE *ifp, DecodeState state)
 {
-    static std::FILE *ofp = nullptr;
-    static int        line_length;
     std::string       lastline;
     lastline.reserve(UU_LENGTH + 1);
     std::string line;
@@ -256,10 +267,10 @@ DecodeState uudecode(std::FILE *ifp, DecodeState state)
     if (state == DECODE_DONE)
     {
 all_done:
-        if (ofp)
+        if (s_uu_decoder.ofp)
         {
-            std::fclose(ofp);
-            ofp = nullptr;
+            std::fclose(s_uu_decoder.ofp);
+            s_uu_decoder.ofp = nullptr;
         }
         return state;
     }
@@ -307,8 +318,8 @@ all_done:
             g_decode_filename = decode_filename;
 
             // Create output file and start decoding
-            ofp = std::fopen(decode_filename.c_str(), "wb");
-            if (!ofp)
+            s_uu_decoder.ofp = std::fopen(decode_filename.c_str(), "wb");
+            if (!s_uu_decoder.ofp)
             {
                 return DECODE_ERROR;
             }
@@ -319,7 +330,7 @@ all_done:
         }
 
         case DECODE_INACTIVE: // Looking for uuencoded data to resume
-            if (first_char != 'M' || line_text.size() != static_cast<std::size_t>(line_length))
+            if (first_char != 'M' || line_text.size() != static_cast<std::size_t>(s_uu_decoder.line_length))
             {
                 if (first_char == 'B' && line_text.substr(0, 5) == "BEGIN")
                 {
@@ -331,17 +342,17 @@ all_done:
             // FALL THROUGH
 
         case DECODE_SET_LEN:
-            line_length = static_cast<int>(line_text.size());
+            s_uu_decoder.line_length = static_cast<int>(line_text.size());
             state = DECODE_ACTIVE;
             // FALL THROUGH
 
         case DECODE_ACTIVE: // Decoding data
-            if (first_char == 'M' && line_text.size() == static_cast<std::size_t>(line_length))
+            if (first_char == 'M' && line_text.size() == static_cast<std::size_t>(s_uu_decoder.line_length))
             {
-                uudecode_line(line_text, ofp);
+                uudecode_line(line_text, s_uu_decoder.ofp);
                 break;
             }
-            if (line_text.size() > static_cast<std::size_t>(line_length))
+            if (line_text.size() > static_cast<std::size_t>(s_uu_decoder.line_length))
             {
                 state = DECODE_INACTIVE;
                 break;
@@ -383,13 +394,13 @@ all_done:
                 std::isspace(static_cast<unsigned char>(line_text[3])))
             {
                 // Handle that last line we saved
-                uudecode_line(lastline, ofp);
+                uudecode_line(lastline, s_uu_decoder.ofp);
                 lastline.clear();
 end:
-                if (ofp)
+                if (s_uu_decoder.ofp)
                 {
-                    std::fclose(ofp);
-                    ofp = nullptr;
+                    std::fclose(s_uu_decoder.ofp);
+                    s_uu_decoder.ofp = nullptr;
                 }
                 state = DECODE_MAYBE_DONE;
             }
