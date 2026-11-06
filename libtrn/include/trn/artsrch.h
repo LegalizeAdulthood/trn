@@ -39,6 +39,8 @@ struct ArticleSearchContext
     void init();
 
     // TODO: private
+    ArtSearchResult search_impl(std::string_view command, bool get_cmd,
+                                const std::function<void(ArticleNum)> &progress);
     bool wanted(CompiledRegex *compex, ArticleNum art_num, ArtScope scope);
 
     std::string    last_pat;                // last search pattern

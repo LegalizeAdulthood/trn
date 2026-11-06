@@ -32,8 +32,6 @@
 #include <string_view>
 
 
-static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
-                                       const std::function<void(ArticleNum)> &progress);
 static void            truncate_notes_pattern(std::string &pattern_text, std::size_t text_start);
 
 ArticleSearchContext   g_art_search;
@@ -50,11 +48,11 @@ void ArticleSearchContext::init()
 
 ArtSearchResult art_search(std::string_view command, bool get_cmd, const std::function<void(ArticleNum)> &progress)
 {
-    return art_search_impl(command, get_cmd, progress);
+    return g_art_search.search_impl(command, get_cmd, progress);
 }
 
-static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
-                                       const std::function<void(ArticleNum)> &progress)
+ArtSearchResult ArticleSearchContext::search_impl(std::string_view command, bool get_cmd,
+                                                  const std::function<void(ArticleNum)> &progress)
 {
     std::string completed_command;
     char        cmd_chr = command.empty() ? '\0' : command.front(); // what kind of search?
@@ -89,7 +87,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             }
             command = completed_command;
         }
-        compex = &g_art_search.art_compex;
+        compex = &art_compex;
         const std::string_view search_text = command.substr(1);
         if (!search_text.empty())
         {
@@ -99,9 +97,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         }
         else
         {
-            how_much = g_art_search.how_much;
-            search_header = g_art_search.srch_hdr;
-            do_read = g_art_search.do_read;
+            how_much = this->how_much;
+            search_header = srch_hdr;
+            do_read = this->do_read;
         }
         pattern_text.reserve(search_text.size());
         std::size_t tail_start{};
@@ -121,7 +119,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         }
         if (!pattern_text.empty())
         {
-            g_art_search.last_pat = pattern_text;
+            last_pat = pattern_text;
         }
         std::string_view modifier_tail = search_text.substr(tail_start);
         if (!modifier_tail.empty()) // modifiers or commands?
@@ -236,9 +234,9 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
             }
             ret = SRCH_DONE;
         }
-        g_art_search.how_much = how_much;
-        g_art_search.srch_hdr = search_header;
-        g_art_search.do_read = do_read;
+        this->how_much = how_much;
+        srch_hdr = search_header;
+        this->do_read = do_read;
         if (g_search_ahead)
         {
             g_search_ahead = ArticleNum{-1};
@@ -257,7 +255,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         {
             ret = SRCH_SUBJ_DONE;
         }
-        compex = &g_art_search.sub_compex;
+        compex = &sub_compex;
         std::size_t finding_start{};
         if (how_much == ARTSCOPE_SUBJECT)
         {
@@ -510,7 +508,7 @@ static ArtSearchResult art_search_impl(std::string_view command, bool get_cmd,
         if (matches_selection &&
             (do_read || (!(g_nav.target.art->m_flags & AF_UNREAD) ^ (!g_sel.rereading ? AF_SEL : AF_NONE))))
         {
-            if (g_art_search.wanted(compex, g_nav.target.num, how_much))
+            if (wanted(compex, g_nav.target.num, how_much))
             {
                                     // does the shoe fit?
                 if (cmd_lst.empty())
