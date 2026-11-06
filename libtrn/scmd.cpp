@@ -35,6 +35,9 @@ namespace
 
 struct ScanSearchContext
 {
+    // TODO: private
+    void set_search_text(std::string_view search_text);
+
     std::string search_text;
     bool        search_init{};
 };
@@ -47,7 +50,6 @@ static void             s_look_ahead();
 static int              s_do_cmd(std::string_view command);
 static char             s_command_char(std::string_view command);
 static std::string_view s_command_argument(std::string_view command);
-static void             s_set_search_text(std::string_view search_text);
 static bool             s_match_description(long ent);
 static long             s_forward_search(long ent);
 static long             s_backward_search(long ent);
@@ -392,7 +394,7 @@ static std::string_view s_search_error_message(char command_ch, bool repeated_cu
 
 bool scmd_match_description_for_test(long ent, std::string_view search_text)
 {
-    s_set_search_text(search_text);
+    s_scan_search.set_search_text(search_text);
     return s_match_description(ent);
 }
 
@@ -406,10 +408,10 @@ void scmd_jump_num_for_test(char_int firstchar)
     s_jump_num(firstchar);
 }
 
-static void s_set_search_text(std::string_view search_text)
+void ScanSearchContext::set_search_text(std::string_view search_text)
 {
-    s_scan_search.search_text = search_text;
-    for (char &ch : s_scan_search.search_text)
+    this->search_text = search_text;
+    for (char &ch : this->search_text)
     {
         const unsigned char text_ch = static_cast<unsigned char>(ch);
         if (std::isupper(text_ch))
@@ -508,7 +510,7 @@ static void s_search(std::string_view command)
         {
             search_text.remove_prefix(1);
         }
-        s_set_search_text(search_text);
+        s_scan_search.set_search_text(search_text);
     }
     if (s_scan_search.search_text.empty())
     {
