@@ -60,8 +60,7 @@ int                           g_olden_days{};           // -o
 char                          g_auto_select_postings{}; // -p
 
 #ifdef PENDING
-static ArticleNum    s_subj_to_get{};
-static ArticleNum    s_xref_to_get{};
+static HeaderPrefetch s_header_prefetch;
 static CompiledRegex s_search_compex; // compiled regex for search ahead
 #endif
 
@@ -242,8 +241,8 @@ void build_cache()
     g_cache.last_cached = article_before(g_cache.first_cached);
     g_cache.cached_all_in_range = false;
 #ifdef PENDING
-    s_subj_to_get = g_first_art;
-    s_xref_to_get = g_first_art;
+    s_header_prefetch.subj_to_get = g_first_art;
+    s_header_prefetch.xref_to_get = g_first_art;
 #endif
 
     // Cache as much data in advance as possible, possibly threading
@@ -840,12 +839,12 @@ bool cache_subjects()
 {
     ArticleNum an;
 
-    if (s_subj_to_get > g_last_art)
+    if (s_header_prefetch.subj_to_get > g_last_art)
     {
         return true;
     }
     g_progress.set_spin(SPIN_BACKGROUND);
-    for (an = g_cache.first(s_subj_to_get); an <= g_last_art; an = g_cache.next(an))
+    for (an = g_cache.first(s_header_prefetch.subj_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
         {
@@ -857,20 +856,20 @@ bool cache_subjects()
             prefetch_subj(an);
         }
     }
-    s_subj_to_get = an;
-    return s_subj_to_get > g_last_art;
+    s_header_prefetch.subj_to_get = an;
+    return s_header_prefetch.subj_to_get > g_last_art;
 }
 
 static bool cache_xrefs()
 {
     ArticleNum an;
 
-    if (g_olden_days || (g_data_source->m_flags & DF_NO_XREFS) || s_xref_to_get > g_last_art)
+    if (g_olden_days || (g_data_source->m_flags & DF_NO_XREFS) || s_header_prefetch.xref_to_get > g_last_art)
     {
         return true;
     }
     g_progress.set_spin(SPIN_BACKGROUND);
-    for (an = g_cache.first(s_xref_to_get); an <= g_last_art; an = g_cache.next(an))
+    for (an = g_cache.first(s_header_prefetch.xref_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
         {
@@ -881,8 +880,8 @@ static bool cache_xrefs()
             prefetch_xref(an);
         }
     }
-    s_xref_to_get = an;
-    return s_xref_to_get > g_last_art;
+    s_header_prefetch.xref_to_get = an;
+    return s_header_prefetch.xref_to_get > g_last_art;
 }
 
 static bool cache_all_arts()

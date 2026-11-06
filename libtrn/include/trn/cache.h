@@ -121,6 +121,14 @@ struct ArticleOrder
 
 extern ArticleOrder g_art_order;
 
+#ifdef PENDING
+struct HeaderPrefetch
+{
+    ArticleNum subj_to_get{};
+    ArticleNum xref_to_get{};
+};
+#endif
+
 extern ArticleNum                    g_search_ahead; // are we in subject scan mode? (if so, contains art # found or -1)
 extern Article                      *g_sentinel_art_ptr;
 extern bool                          g_untrim_cache;
