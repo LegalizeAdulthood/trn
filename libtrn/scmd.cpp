@@ -37,6 +37,7 @@ struct ScanSearchContext
 {
     // TODO: private
     void set_search_text(std::string_view search_text);
+    bool match_description(long ent);
 
     std::string search_text;
     bool        search_init{};
@@ -50,7 +51,6 @@ static void             s_look_ahead();
 static int              s_do_cmd(std::string_view command);
 static char             s_command_char(std::string_view command);
 static std::string_view s_command_argument(std::string_view command);
-static bool             s_match_description(long ent);
 static long             s_forward_search(long ent);
 static long             s_backward_search(long ent);
 static void             s_search(std::string_view command);
@@ -395,7 +395,7 @@ static std::string_view s_search_error_message(char command_ch, bool repeated_cu
 bool scmd_match_description_for_test(long ent, std::string_view search_text)
 {
     s_scan_search.set_search_text(search_text);
-    return s_match_description(ent);
+    return s_scan_search.match_description(ent);
 }
 
 std::string_view scmd_search_error_message_for_test(char command_ch, bool repeated_current)
@@ -421,7 +421,7 @@ void ScanSearchContext::set_search_text(std::string_view search_text)
     }
 }
 
-static bool s_match_description(long ent)
+bool ScanSearchContext::match_description(long ent)
 {
     int lines = s_ent_lines(ent);
     for (int i = 1; i <= lines; i++)
@@ -434,7 +434,7 @@ static bool s_match_description(long ent)
                 ch = static_cast<char>(std::tolower(ch)); // convert to lower case
             }
         }
-        if (description.find(s_scan_search.search_text) != std::string::npos)
+        if (description.find(search_text) != std::string::npos)
         {
             return true;
         }
@@ -454,7 +454,7 @@ static long s_forward_search(long ent)
     }
     for (; ent; ent = g_art_scan.next_elig(ent))
     {
-        if (s_match_description(ent))
+        if (s_scan_search.match_description(ent))
         {
             break;
         }
@@ -474,7 +474,7 @@ static long s_backward_search(long ent)
     }
     for (; ent; ent = g_art_scan.prev_elig(ent))
     {
-        if (s_match_description(ent))
+        if (s_scan_search.match_description(ent))
         {
             break;
         }
