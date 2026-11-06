@@ -1,4 +1,5 @@
 add_executable(trn-headers-test
+    test_ActiveRecordEditor.cpp
     test_addng-internal.cpp
     test_addng.cpp
     test_art-internal.cpp

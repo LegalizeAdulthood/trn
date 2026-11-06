@@ -11,6 +11,7 @@
 #include <config/fdio.h>
 #include <config/string_case_compare.h>
 #include <nntp/nntpclient.h>
+#include <trn/ActiveRecordEditor.h>
 #include <trn/DataSourceConfig.h>
 #include <trn/edit_dist.h>
 #include <trn/file-contents.h>
@@ -775,29 +776,31 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
 
         if (!active_line.empty())
         {
+            ActiveRecordEditor active{active_line, name_len};
+            ActiveRecordEditor cached{*cached_line, name_len};
 # ifndef ANCIENT_NEWS
             // Safely update the low-water mark
-            const std::size_t active_flag_separator = active_line.rfind(' ');
-            const std::size_t cached_flag_separator = cached_line->rfind(' ');
+            const std::size_t active_flag_separator = active.text.rfind(' ');
+            const std::size_t cached_flag_separator = cached.text.rfind(' ');
             if (active_flag_separator != std::string::npos && active_flag_separator > 0 &&
                 cached_flag_separator != std::string::npos && cached_flag_separator > 0)
             {
-                const std::size_t active_low_separator = active_line.rfind(' ', active_flag_separator - 1);
-                const std::size_t cached_low_separator = cached_line->rfind(' ', cached_flag_separator - 1);
+                const std::size_t active_low_separator = active.text.rfind(' ', active_flag_separator - 1);
+                const std::size_t cached_low_separator = cached.text.rfind(' ', cached_flag_separator - 1);
                 if (active_low_separator != std::string::npos && cached_low_separator != std::string::npos)
                 {
-                    const std::string_view active_low{active_line.data() + active_low_separator + 1,
+                    const std::string_view active_low{active.text.data() + active_low_separator + 1,
                                                       active_flag_separator - active_low_separator - 1};
                     const std::size_t      field_width = cached_flag_separator - cached_low_separator - 1;
                     const std::string_view low_digits =
                         active_low.substr(active_low.size() > field_width ? active_low.size() - field_width : 0);
-                    cached_line->replace(cached_low_separator + 1, field_width,
-                                         fmt::format("{:0>{}}", low_digits, field_width));
+                    cached.text.replace(cached_low_separator + 1, field_width,
+                                        fmt::format("{:0>{}}", low_digits, field_width));
                 }
             }
 # endif
             const std::string_view active_fields =
-                std::string_view{active_line}.substr(std::min(name_len + 1, active_line.size()));
+                std::string_view{active.text}.substr(std::min(active.name_len + 1, active.text.size()));
             long active_high{};
             std::from_chars(active_fields.data(), active_fields.data() + active_fields.size(), active_high);
             high = ArticleNum{active_high};
@@ -808,21 +811,22 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
     {
         if ((m_flags & DF_REMOTE) && m_act_sf.m_refetch_secs)
         {
+            ActiveRecordEditor     cached{*cached_line, name_len};
             const std::string_view cached_fields =
-                std::string_view{*cached_line}.substr(std::min(name_len + 1, cached_line->size()));
+                std::string_view{cached.text}.substr(std::min(cached.name_len + 1, cached.text.size()));
             long cached_high{};
             std::from_chars(cached_fields.data(), cached_fields.data() + cached_fields.size(), cached_high);
             if (high && high != ArticleNum{cached_high})
             {
-                const std::size_t high_start = name_len + 1;
-                const std::size_t high_end = cached_line->find(' ', high_start);
+                const std::size_t high_start = cached.name_len + 1;
+                const std::size_t high_end = cached.text.find(' ', high_start);
                 if (high_end != std::string::npos)
                 {
                     const std::size_t      field_width = high_end - high_start;
                     const std::string      high_text = std::to_string(value_of(high));
                     const std::string_view high_digits = std::string_view{high_text}.substr(
                         high_text.size() > field_width ? high_text.size() - field_width : 0);
-                    cached_line->replace(high_start, field_width, fmt::format("{:0>{}}", high_digits, field_width));
+                    cached.text.replace(high_start, field_width, fmt::format("{:0>{}}", high_digits, field_width));
                 }
                 std::fseek(fp, act_pos.value_of(), 0);
                 fmt::print(fp, "{}", *cached_line);
