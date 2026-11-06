@@ -30,6 +30,8 @@ struct RegexTranslation
     TranslationTable trans{};
     bool             folding{};
 
+    void init();
+
     // TODO: private
     void case_fold(bool which);
 };

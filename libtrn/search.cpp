@@ -106,9 +106,14 @@ static bool cclass(const char *set, int c, int af)
 
 void search_init()
 {
+    s_regex_translation.init();
+}
+
+void RegexTranslation::init()
+{
     for (int i = 0; i < RegexTranslation::ASCSIZ; i++)
     {
-        s_regex_translation.trans[i] = i;
+        trans[i] = i;
     }
 }
 
