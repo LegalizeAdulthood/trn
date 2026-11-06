@@ -20,7 +20,7 @@
 //
 // Colors and attributes are parsed from the [attribute] section
 // in the trnrc file. Escape sequences for the colors are picked up
-// from term.c by calling the function tc_color_capability.
+// from the terminal color registry by calling g_tc_colors.capability.
 //
 // If colors were specified in the [attribute] section, then colors
 // are used, otherwise only normal monochrome video attributes.
@@ -87,13 +87,13 @@ void ColorOutputContext::init()
     if (use_colors)
     {
         // Get default capabilities.
-        std::string_view fg = tc_color_capability("fg default");
+        std::string_view fg = g_tc_colors.capability("fg default");
         if (fg.empty())
         {
             fmt::print(stderr, "trn: you need a 'fg default' definition in the [termcap] section.\n");
             finalize(1);
         }
-        std::string_view bg = tc_color_capability("bg default");
+        std::string_view bg = g_tc_colors.capability("bg default");
         if (bg.empty())
         {
             fmt::print(stderr, "trn: you need a 'bg default' definition in the [termcap] section.\n");
@@ -209,7 +209,7 @@ void ColorOutputContext::rc_attribute(std::string_view object, std::string_view 
     else
     {
         const std::string capability = fmt::format("fg {}", color);
-        const std::string_view color_capability = tc_color_capability(capability);
+        const std::string_view color_capability = g_tc_colors.capability(capability);
         if (color_capability.empty())
         {
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);
@@ -234,7 +234,7 @@ void ColorOutputContext::rc_attribute(std::string_view object, std::string_view 
     else
     {
         const std::string capability = fmt::format("bg {}", color);
-        const std::string_view color_capability = tc_color_capability(capability);
+        const std::string_view color_capability = g_tc_colors.capability(capability);
         if (color_capability.empty())
         {
             fmt::print(stderr, "trn: no color '{}' for {} in [attribute] section.\n", capability, object);

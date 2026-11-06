@@ -2844,13 +2844,13 @@ void TermCapColors::add_string(std::string_view capability, std::string_view val
 }
 
 // Return the named termcap color capability's string.
-std::string_view tc_color_capability(std::string_view capability)
+std::string_view TermCapColors::capability(std::string_view capability)
 {
-    for (int c = 0; c < g_tc_colors.string_cnt; c++)
+    for (int c = 0; c < string_cnt; c++)
     {
-        if (g_tc_colors.strings[c].capability == capability)
+        if (strings[c].capability == capability)
         {
-            return g_tc_colors.strings[c].string;
+            return strings[c].string;
         }
     }
     return {};
