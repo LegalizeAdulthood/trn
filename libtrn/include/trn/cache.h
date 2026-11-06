@@ -124,6 +124,8 @@ extern ArticleOrder g_art_order;
 #ifdef PENDING
 struct HeaderPrefetch
 {
+    bool cache_subjects();
+
     ArticleNum subj_to_get{};
     ArticleNum xref_to_get{};
 };
@@ -147,9 +149,6 @@ void        dectrl(std::string &str);
 void look_ahead();
 #endif
 void cache_until_key();
-#ifdef PENDING
-bool cache_subjects();
-#endif
 bool cache_range(ArticleNum first, ArticleNum last);
 
 #endif

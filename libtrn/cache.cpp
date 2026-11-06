@@ -788,7 +788,7 @@ void cache_until_key()
     // Prioritize our caching based on what mode we're in
     if (g_general_mode == GM_SELECTOR)
     {
-        if (cache_subjects())
+        if (s_header_prefetch.cache_subjects())
         {
             if (cache_xrefs())
             {
@@ -810,7 +810,7 @@ void cache_until_key()
     {
         if (!g_threaded_group || cache_all_arts())
         {
-            if (cache_subjects())
+            if (s_header_prefetch.cache_subjects())
             {
                 if (cache_unread_arts())
                 {
@@ -835,16 +835,16 @@ void cache_until_key()
 }
 
 #ifdef PENDING
-bool cache_subjects()
+bool HeaderPrefetch::cache_subjects()
 {
     ArticleNum an;
 
-    if (s_header_prefetch.subj_to_get > g_last_art)
+    if (subj_to_get > g_last_art)
     {
         return true;
     }
     g_progress.set_spin(SPIN_BACKGROUND);
-    for (an = g_cache.first(s_header_prefetch.subj_to_get); an <= g_last_art; an = g_cache.next(an))
+    for (an = g_cache.first(subj_to_get); an <= g_last_art; an = g_cache.next(an))
     {
         if (input_pending())
         {
@@ -856,8 +856,8 @@ bool cache_subjects()
             prefetch_subj(an);
         }
     }
-    s_header_prefetch.subj_to_get = an;
-    return s_header_prefetch.subj_to_get > g_last_art;
+    subj_to_get = an;
+    return subj_to_get > g_last_art;
 }
 
 static bool cache_xrefs()
