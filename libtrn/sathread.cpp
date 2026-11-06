@@ -24,9 +24,9 @@ void ArticleScanThreads::init_threads()
     thread_nums.clear();
 }
 
-long sa_subj_thread(long e)
+long ArticleScanThreads::subj_thread(long e)
 {
-    return g_sa_ents[e].subj_thread_num ? g_sa_ents[e].subj_thread_num : g_sa_threads.get_subj_thread(e);
+    return g_sa_ents[e].subj_thread_num ? g_sa_ents[e].subj_thread_num : get_subj_thread(e);
 }
 
 // called only if the macro didn't find a value
@@ -82,7 +82,7 @@ long sa_subj_thread_prev(long a)
 {
     int j;
 
-    int i = sa_subj_thread(a);
+    int i = g_sa_threads.subj_thread(a);
     while ((a = g_art_scan.prev(a)) != 0)
     {
         if (!sa_basic_elig(a))
@@ -91,7 +91,7 @@ long sa_subj_thread_prev(long a)
         }
         if (!(j = g_sa_ents[a].subj_thread_num))
         {
-            j = sa_subj_thread(a);
+            j = g_sa_threads.subj_thread(a);
         }
         if (i == j)
         {
@@ -105,7 +105,7 @@ long sa_subj_thread_next(long a)
 {
     int j;
 
-    int i = sa_subj_thread(a);
+    int i = g_sa_threads.subj_thread(a);
     while ((a = g_art_scan.next(a)) != 0)
     {
         if (!sa_basic_elig(a))
@@ -114,7 +114,7 @@ long sa_subj_thread_next(long a)
         }
         if (!(j = g_sa_ents[a].subj_thread_num))
         {
-            j = sa_subj_thread(a);
+            j = g_sa_threads.subj_thread(a);
         }
         if (i == j)
         {

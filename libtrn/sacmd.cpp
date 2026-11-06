@@ -443,10 +443,10 @@ int sa_do_cmd(std::string_view command)
         break;
 
     case Ctl('n'):    // follow subject forward
-          i = sa_subj_thread(a);
+        i = g_sa_threads.subj_thread(a);
         for (b = g_art_scan.next_elig(a); b; b = g_art_scan.next_elig(b))
         {
-            if (i == sa_subj_thread(b))
+            if (i == g_sa_threads.subj_thread(b))
             {
                 break;
             }
@@ -494,10 +494,10 @@ int sa_do_cmd(std::string_view command)
         break;
 
     case Ctl('p'):    // follow subject backwards
-          i = sa_subj_thread(a);
+        i = g_sa_threads.subj_thread(a);
         for (b = g_art_scan.prev_elig(a); b; b = g_art_scan.prev_elig(b))
         {
-            if (i == sa_subj_thread(b))
+            if (i == g_sa_threads.subj_thread(b))
             {
                 break;
             }

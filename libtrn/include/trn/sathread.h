@@ -14,6 +14,7 @@
 struct ArticleScanThreads
 {
     void init_threads();
+    long subj_thread(long e);
 
     // TODO: private
     long get_subj_thread(long e);
@@ -27,6 +28,5 @@ extern ArticleScanThreads g_sa_threads;
 int sa_subj_thread_count(long a);
 long sa_subj_thread_prev(long a);
 long sa_subj_thread_next(long a);
-long sa_subj_thread(long e);
 
 #endif
