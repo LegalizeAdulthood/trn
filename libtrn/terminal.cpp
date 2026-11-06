@@ -228,11 +228,6 @@ enum
     KM_GMASK = 7
 };
 
-enum
-{
-    TC_STRINGS = 48 // number of colors we can keep track of
-};
-
 InputPushback      g_pushback;
 static const char *s_read_err{"rn read error"};
 
@@ -2819,50 +2814,43 @@ bool MouseInteraction::check_bar(int btn, int x, int y, int btn_clk, int x_clk, 
     return false;
 }
 
-static int s_tc_string_cnt{};
-
-struct ColorCapability
-{
-    std::string capability; // name of capability, e.g. "foreground red"
-    std::string string;     // escape sequence, e.g. "\033[31m"
-};
-static ColorCapability s_tc_strings[TC_STRINGS];
+TermCapColors g_tc_colors;
 
 // Parse a line from the [termcap] section of trnrc.
 void add_tc_string(std::string_view capability, std::string_view value)
 {
     int i;
 
-    for (i = 0; i < s_tc_string_cnt; i++)
+    for (i = 0; i < g_tc_colors.string_cnt; i++)
     {
-        if (s_tc_strings[i].capability == capability)
+        if (g_tc_colors.strings[i].capability == capability)
         {
             break;
         }
     }
-    if (i == s_tc_string_cnt)
+    if (i == g_tc_colors.string_cnt)
     {
-        if (s_tc_string_cnt == TC_STRINGS)
+        if (g_tc_colors.string_cnt == TC_STRINGS)
         {
             fmt::print(stderr, "trn: too many colors in [termcap] section (max is {}).\n",
                        static_cast<int>(TC_STRINGS));
             finalize(1);
         }
-        s_tc_string_cnt++;
-        s_tc_strings[i].capability = capability;
+        g_tc_colors.string_cnt++;
+        g_tc_colors.strings[i].capability = capability;
     }
 
-    s_tc_strings[i].string = value;
+    g_tc_colors.strings[i].string = value;
 }
 
 // Return the named termcap color capability's string.
 std::string_view tc_color_capability(std::string_view capability)
 {
-    for (int c = 0; c < s_tc_string_cnt; c++)
+    for (int c = 0; c < g_tc_colors.string_cnt; c++)
     {
-        if (s_tc_strings[c].capability == capability)
+        if (g_tc_colors.strings[c].capability == capability)
         {
-            return s_tc_strings[c].string;
+            return g_tc_colors.strings[c].string;
         }
     }
     return {};

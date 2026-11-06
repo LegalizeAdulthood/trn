@@ -260,6 +260,25 @@ bool has_home_capability();
 std::string cursor_motion(int x, int y);
 std::string_view standout_start();
 std::string_view standout_end();
+enum
+{
+    TC_STRINGS = 48 // number of colors we can keep track of
+};
+
+struct ColorCapability
+{
+    std::string capability; // name of capability, e.g. "foreground red"
+    std::string string;     // escape sequence, e.g. "\033[31m"
+};
+
+struct TermCapColors
+{
+    int             string_cnt{};
+    ColorCapability strings[TC_STRINGS];
+};
+
+extern TermCapColors g_tc_colors;
+
 void  add_tc_string(std::string_view capability, std::string_view value);
 std::string_view tc_color_capability(std::string_view capability);
 std::string      tgoto_string(std::string_view str, int x, int y);
