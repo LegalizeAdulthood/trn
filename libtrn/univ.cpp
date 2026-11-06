@@ -1002,7 +1002,7 @@ void univ_mask_load(std::string_view mask, std::string_view title)
     }
 }
 
-void univ_redo_file()
+void UniversalConfiguration::redo_file()
 {
     const std::string tmp_fname = g_univ.fname;
     const std::string tmp_title = g_univ.title;
@@ -1015,7 +1015,7 @@ void univ_redo_file()
     }
     else
     {
-        g_univ_config.startup();
+        startup();
     }
 }
 

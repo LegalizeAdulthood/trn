@@ -251,6 +251,7 @@ extern VirtualGroupBuilder g_vg_builder;
 struct UniversalConfiguration
 {
     void startup();
+    void redo_file();
 
     // TODO: private
     std::string edit_new_user_file();
@@ -264,7 +265,6 @@ extern UniversalConfiguration g_univ_config;
 void           univ_init();
 bool           univ_file_load(std::string_view fname, std::string_view title, std::string_view label);
 void           univ_mask_load(std::string_view mask, std::string_view title);
-void           univ_redo_file();
 void           univ_edit();
 void           univ_page_file(const std::filesystem::path &fname);
 void           univ_newsgroup_virtual();
