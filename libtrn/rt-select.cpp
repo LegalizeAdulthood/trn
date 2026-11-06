@@ -175,6 +175,7 @@ private:
 struct SelectorStateSaver
 {
     SelectorStateSaver();
+    void restore();
 
     SelectionMode          mode;
     const bool             rereading;
@@ -190,6 +191,21 @@ SelectorStateSaver::SelectorStateSaver() :
     selected_count(g_selected_count),
     extra_commands(g_sel_session.extra_commands)
 {
+}
+
+void SelectorStateSaver::restore()
+{
+    g_sel.exclusive = exclusive;
+    g_sel.rereading = rereading;
+    g_selected_count = selected_count;
+    g_sel_session.extra_commands = extra_commands;
+    g_bos_on_stop = true;
+    if (g_sel.mode != mode)
+    {
+        g_sel.mode = mode;
+        g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);
+        mode = SM_MAGIC_NUMBER;
+    }
 }
 
 struct UniversalMenuSaver
@@ -237,29 +253,6 @@ void UniversalMenuSaver::restore()
     g_sel_session.ret = ret;
 }
 }
-
-#define PUSH_SELECTOR()                                     \
-    SelectionMode save_sel_mode = g_sel.mode;             \
-    const bool    save_sel_rereading = g_sel.rereading;     \
-    const bool    save_sel_exclusive = g_sel.exclusive;   \
-    ArticleUnread save_selected_count = g_selected_count;   \
-    SelectorCommand *const save_extra_commands = g_sel_session.extra_commands
-
-#define POP_SELECTOR()                                                \
-    do                                                                \
-    {                                                                 \
-        g_sel.exclusive = selector_saver.exclusive;                   \
-        g_sel.rereading = selector_saver.rereading;                   \
-        g_selected_count = selector_saver.selected_count;             \
-        g_sel_session.extra_commands = selector_saver.extra_commands; \
-        g_bos_on_stop = true;                                         \
-        if (g_sel.mode != selector_saver.mode)                        \
-        {                                                             \
-            g_sel.mode = selector_saver.mode;                         \
-            g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);     \
-            selector_saver.mode = SM_MAGIC_NUMBER;                    \
-        }                                                             \
-    } while (false)
 
 static void                sel_do_groups();
 static UniversalReadResult univ_read(UniversalItem *ui);
@@ -666,7 +659,7 @@ sel_restart:
                 }
             }
         }
-        POP_SELECTOR();
+        selector_saver.restore();
         goto sel_restart;
     }
     return g_sel_session.ret;
@@ -754,7 +747,7 @@ sel_restart:
         }
         sel_do_groups();
         selector_saver.selected_count = g_selected_count;
-        POP_SELECTOR();
+        selector_saver.restore();
         if (g_multirc)
         {
             goto sel_restart;
@@ -1218,7 +1211,7 @@ sel_restart:
                 UniversalReadResult ret = univ_read(ui);
 
                 menu_saver.restore();
-                POP_SELECTOR();
+                selector_saver.restore();
                 g_sel.set_selector(SM_UNIVERSAL, parent_order);
                 if (ret == UR_ERROR || ret == UR_BREAK)
                 {
@@ -2339,8 +2332,8 @@ static bool mark_del_as_read(Article &article, int arg)
 ///
 /// @globals
 /// Navigation, selection, input, mail checks, and command execution retain
-/// their existing global side effects. PUSH_SELECTOR/POP_SELECTOR retain
-/// their global policy, count, callback, and terminal restoration boundaries.
+/// their existing global side effects. SelectorStateSaver retains
+/// its global policy, count, callback, and terminal restoration boundaries.
 /// This function directly sets or modifies these global variables:
 /// - `g_term_scrolled`
 /// - `g_page_line`
@@ -2467,7 +2460,7 @@ do_command:
             {
                 clean_screen = false;
             }
-            POP_SELECTOR();
+            selector_saver.restore();
             if (!selector_saver.mode)
             {
                 return DS_RESTART;
@@ -3744,7 +3737,7 @@ reask_sort:
             ret = input_newsgroup();
         } while (ret == ING_INPUT);
         set_mode(GM_SELECTOR,MM_NEWSGROUP_SELECTOR);
-        POP_SELECTOR();
+        selector_saver.restore();
         switch (ret)
         {
         case ING_NO_SERVER:
@@ -4635,14 +4628,14 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
     }
 }
 
-// Icky placement, but the PUSH/POP stuff is local to this file
+// Selector state preservation is local to this file.
 int univ_visit_group(std::string_view group_name)
 {
     SelectorStateSaver selector_saver;
 
     univ_visit_group_main(group_name);
 
-    POP_SELECTOR();
+    selector_saver.restore();
     return 0;           // later may have some error return values
 }
 
@@ -4657,6 +4650,6 @@ void univ_visit_help(HelpLocation where)
     (void)universal_selector();
 
     menu_saver.restore();
-    POP_SELECTOR();
+    selector_saver.restore();
     g_sel.set_selector(g_sel.mode, parent_order);
 }
