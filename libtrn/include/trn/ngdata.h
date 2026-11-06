@@ -68,6 +68,7 @@ struct NewsgroupOrder
 {
     NewsgroupData *first();
     NewsgroupData *last();
+    void           clear();
     void           sync_links();
     void           append(NewsgroupData *np);
     void           pop();

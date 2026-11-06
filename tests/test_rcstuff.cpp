@@ -138,11 +138,9 @@ protected:
         g_sel.newsgroup_sort = SS_NATURAL;
         g_sel.direction = 1;
         g_newsgroup_data.clear();
-        g_ng_order.order.clear();
+        g_ng_order.clear();
         g_newsgroup_count = NewsgroupNum{};
         g_newsgroup_to_read = NewsgroupNum{};
-        g_ng_order.first_newsgroup = nullptr;
-        g_ng_order.last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_recent_newsgroup = nullptr;

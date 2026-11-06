@@ -169,6 +169,13 @@ NewsgroupData *NewsgroupOrder::last()
     return order.empty() ? nullptr : order.back();
 }
 
+void NewsgroupOrder::clear()
+{
+    order.clear();
+    first_newsgroup = nullptr;
+    last_newsgroup = nullptr;
+}
+
 NewsgroupData *newsgroup_next(NewsgroupData *np)
 {
     return np == nullptr ? nullptr : np->m_next;

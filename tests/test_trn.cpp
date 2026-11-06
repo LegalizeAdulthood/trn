@@ -281,7 +281,7 @@ protected:
         g_tmp_dir = m_output_dir.generic_string();
         drain_macro_buffer();
         g_newsgroup_data.clear();
-        g_ng_order.order.clear();
+        g_ng_order.clear();
         g_newsgroup_data.reserve(3);
         g_ng_order.order.reserve(3);
         g_newsgroup_count = NewsgroupNum{};
@@ -290,8 +290,6 @@ protected:
         g_abs_first = ArticleNum{1};
         g_first_art = ArticleNum{1};
         g_last_art = ArticleNum{};
-        g_ng_order.first_newsgroup = nullptr;
-        g_ng_order.last_newsgroup = nullptr;
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_cache.article_list.clear();
@@ -17186,9 +17184,8 @@ TEST_F(NewsgroupSelectorRefreshStateTest, aRefreshOfAnEmptyCatalogStillRefreshes
     DataSource &source = g_data_sources.front();
     replace_active_counts(source, 5);
     g_newsgroup_data.clear();
-    g_ng_order.order.clear();
-    g_ng_order.first_newsgroup = g_ng_order.last_newsgroup = g_newsgroup_ptr = g_current_newsgroup =
-        g_recent_newsgroup = nullptr;
+    g_ng_order.clear();
+    g_newsgroup_ptr = g_current_newsgroup = g_recent_newsgroup = nullptr;
     g_sel_page.page_ngd = g_sel_page.next_ngd = nullptr;
     g_newsgroup_count = g_newsgroup_to_read = NewsgroupNum{};
 

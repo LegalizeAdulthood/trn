@@ -475,9 +475,7 @@ void unuse_multirc(Multirc *mptr)
             clear_newsgroup_item(&np);
         }
         g_newsgroup_data.clear();
-        g_ng_order.order.clear();
-        g_ng_order.first_newsgroup = nullptr;
-        g_ng_order.last_newsgroup = nullptr;
+        g_ng_order.clear();
         g_newsgroup_ptr = nullptr;
         g_current_newsgroup = nullptr;
         g_recent_newsgroup = nullptr;
