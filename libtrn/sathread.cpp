@@ -18,8 +18,6 @@
 
 ArticleScanThreads g_sa_threads;
 
-static long sa_get_subj_thread(long e);
-
 void ArticleScanThreads::init_threads()
 {
     num_threads = 0;
@@ -28,7 +26,7 @@ void ArticleScanThreads::init_threads()
 
 long sa_subj_thread(long e)
 {
-    return g_sa_ents[e].subj_thread_num ? g_sa_ents[e].subj_thread_num : sa_get_subj_thread(e);
+    return g_sa_ents[e].subj_thread_num ? g_sa_ents[e].subj_thread_num : g_sa_threads.get_subj_thread(e);
 }
 
 // called only if the macro didn't find a value
@@ -37,7 +35,7 @@ long sa_subj_thread(long e)
 // later: write a custom comparison function.
 //
 //long e;                       // entry number
-static long sa_get_subj_thread(long e)
+long ArticleScanThreads::get_subj_thread(long e)
 {
     bool old_untrim = g_untrim_cache;
     g_untrim_cache = true;
@@ -53,15 +51,15 @@ static long sa_get_subj_thread(long e)
         subject.erase(0, 2);
     }
 
-    const auto existing = g_sa_threads.thread_nums.find(subject);
-    if (existing != g_sa_threads.thread_nums.end())
+    const auto existing = thread_nums.find(subject);
+    if (existing != thread_nums.end())
     {
         return existing->second;
     }
-    g_sa_threads.num_threads++;
-    g_sa_threads.thread_nums.emplace(subject, g_sa_threads.num_threads);
-    g_sa_ents[e].subj_thread_num = g_sa_threads.num_threads;
-    return g_sa_threads.num_threads;
+    num_threads++;
+    thread_nums.emplace(subject, num_threads);
+    g_sa_ents[e].subj_thread_num = num_threads;
+    return num_threads;
 }
 
 int sa_subj_thread_count(long a)

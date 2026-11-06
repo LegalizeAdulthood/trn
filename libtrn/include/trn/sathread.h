@@ -15,6 +15,9 @@ struct ArticleScanThreads
 {
     void init_threads();
 
+    // TODO: private
+    long get_subj_thread(long e);
+
     long                                  num_threads{};
     std::unordered_map<std::string, long> thread_nums;
 };
