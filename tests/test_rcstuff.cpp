@@ -330,7 +330,67 @@ protected:
     std::shared_ptr<testing::StrictMock<MockNNTPConnection>> m_connection;
 };
 
+class CheckpointWriteNewsrcTest : public NewsrcRotationTest
+{
+protected:
+    void SetUp() override
+    {
+        NewsrcRotationTest::SetUp();
+        g_newsgroup_name = "comp.current";
+        m_data_source.m_last_new_group = 111;
+        m_data_source.m_act_sf.m_recent_cnt = 222;
+        m_data_source.m_desc_sf.m_recent_cnt = 333;
+        m_rc = make_newsrc();
+        m_rc.flags = RF_ACTIVE;
+        m_multirc.m_first = &m_rc;
+        std::ofstream{m_rc.name} << "comp.kept: 1\n";
+    }
+
+    void TearDown() override
+    {
+        g_newsgroup_name = std::move(m_saved_group);
+        NewsrcRotationTest::TearDown();
+    }
+
+    Newsrc  m_rc{};
+    Multirc m_multirc{};
+
+private:
+    std::string m_saved_group{g_newsgroup_name};
+};
+
 } // namespace
+
+TEST_F(CheckpointWriteNewsrcTest, activeUnchangedNewsrcStillSavesItsCheckpoint)
+{
+    ASSERT_TRUE(write_newsrcs(&m_multirc));
+
+    EXPECT_EQ((std::vector<std::string>{"Last-Group: comp.current", "New-Group-State: 111,222,333"}),
+              read_lines(m_rc.info_name));
+    EXPECT_EQ((std::vector<std::string>{"comp.kept: 1"}), read_lines(m_rc.name));
+}
+
+TEST_F(CheckpointWriteNewsrcTest, inactiveNewsrcDoesNotSaveItsCheckpoint)
+{
+    m_rc.flags = RF_NONE;
+
+    ASSERT_TRUE(write_newsrcs(&m_multirc));
+
+    EXPECT_FALSE(fs::exists(m_rc.info_name));
+    EXPECT_EQ((std::vector<std::string>{"comp.kept: 1"}), read_lines(m_rc.name));
+}
+
+TEST_F(CheckpointWriteNewsrcTest, unavailableCheckpointOutputDoesNotPreventSubscriptionSaving)
+{
+    m_rc.info_name = m_output_dir / "missing" / "newsrc.info";
+    m_rc.flags |= RF_RC_CHANGED;
+    add_newsgroup(m_rc, "comp.changed: 1-3");
+
+    ASSERT_TRUE(write_newsrcs(&m_multirc));
+
+    EXPECT_FALSE(fs::exists(m_rc.info_name));
+    EXPECT_EQ((std::vector<std::string>{"comp.changed: 1-3"}), read_lines(m_rc.name));
+}
 
 TEST_F(NewsrcRotationTest, writeNewsrcsReplacesNewsrcWithNewFile)
 {

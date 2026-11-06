@@ -8,6 +8,7 @@
 #include <trn/datasrc.h>
 #include <trn/last.h>
 #include <trn/rcstuff.h>
+#include <trn/trn.h>
 #include <trn/util.h>
 
 #include <fmt/format.h>
@@ -90,5 +91,28 @@ void NewsrcCheckpoint::restore()
         rc.data_source->m_act_sf.m_recent_cnt = checkpoint.active_cnt;
         rc.data_source->m_desc_sf.m_recent_cnt = checkpoint.desc_cnt;
         rc.data_source->m_last_new_group = checkpoint.new_time;
+    }
+}
+
+void NewsrcCheckpoint::save()
+{
+    if (!rc.info_name.empty())
+    {
+        std::FILE *info = std::fopen(rc.info_name.string().c_str(), "w");
+        if (info != nullptr)
+        {
+            const SourceCheckpoint checkpoint{rc.data_source->m_last_new_group, rc.data_source->m_act_sf.m_recent_cnt,
+                                              rc.data_source->m_desc_sf.m_recent_cnt};
+            fmt::print(info, "{}", checkpoint.format_info(g_newsgroup_name));
+            std::fclose(info);
+        }
+    }
+    else
+    {
+        g_last_run.read();
+        const SourceCheckpoint checkpoint{rc.data_source->m_last_new_group, rc.data_source->m_act_sf.m_recent_cnt,
+                                          rc.data_source->m_desc_sf.m_recent_cnt};
+        checkpoint.update_legacy(g_last_run, (rc.data_source->m_flags & DF_REMOTE) != 0);
+        g_last_run.write();
     }
 }

@@ -296,4 +296,60 @@ INSTANTIATE_TEST_SUITE_P(
         LegacyFileRestoreCase{"LegacyZeroTime", true, "comp.loaded\n444\n222\n0\n333\n", 77, 222, 333, "comp.loaded"}),
     [](const testing::TestParamInfo<LegacyFileRestoreCase> &info) { return info.param.name; });
 
+TEST_F(NewsrcCheckpointFileTest, savesLiveSourceValuesWithTheCurrentGroupName)
+{
+    m_source.m_last_new_group = 111;
+    m_source.m_act_sf.m_recent_cnt = 222;
+    m_source.m_desc_sf.m_recent_cnt = 333;
+
+    m_checkpoint.save();
+
+    EXPECT_EQ("Last-Group: comp.current\nNew-Group-State: 111,222,333\n", read_file(m_rc.info_name));
+}
+
+TEST_F(NewsrcCheckpointFileTest, unavailableInfoOutputDoesNotFallBackToTheLegacyFile)
+{
+    m_rc.info_name = m_dir / "missing" / "newsrc.info";
+
+    m_checkpoint.save();
+
+    EXPECT_FALSE(fs::exists(m_rc.info_name));
+    EXPECT_FALSE(fs::exists(g_last_run.file));
+}
+
+struct LegacyFileSaveCase
+{
+    const char *name;
+    bool        remote;
+    const char *expected;
+};
+
+class LegacyCheckpointFileSaveTest : public NewsrcCheckpointFileTest,
+                                     public testing::WithParamInterface<LegacyFileSaveCase>
+{
+protected:
+    void SetUp() override
+    {
+        NewsrcCheckpointFileTest::SetUp();
+        m_rc.info_name.clear();
+        m_source.m_flags = GetParam().remote ? DF_REMOTE : DF_NONE;
+        m_source.m_last_new_group = 911;
+        m_source.m_act_sf.m_recent_cnt = 922;
+        m_source.m_desc_sf.m_recent_cnt = 933;
+        write_file(g_last_run.file, "comp.loaded\n444\n222\n111\n333\n");
+    }
+};
+
+TEST_P(LegacyCheckpointFileSaveTest, reloadsTheLegacyRecordBeforeUpdatingItsCheckpointFields)
+{
+    m_checkpoint.save();
+
+    EXPECT_EQ(GetParam().expected, read_file(g_last_run.file));
+}
+
+INSTANTIATE_TEST_SUITE_P(LocalAndRemote, LegacyCheckpointFileSaveTest,
+                         testing::Values(LegacyFileSaveCase{"Remote", true, "comp.current\n444\n922\n911\n933\n"},
+                                         LegacyFileSaveCase{"Local", false, "comp.current\n444\n222\n911\n922\n"}),
+                         [](const testing::TestParamInfo<LegacyFileSaveCase> &info) { return info.param.name; });
+
 } // namespace
