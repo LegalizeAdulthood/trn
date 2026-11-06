@@ -16,6 +16,7 @@ add_executable(trn-test
     support/NntpTestCertificate.h
     support/NewsgroupPageState.cpp
     support/NewsgroupPageState.h
+    test_ActiveRecordEditor.cpp
     test_addng.cpp
     test_art.cpp
     test_autosub.cpp

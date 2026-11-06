@@ -777,27 +777,10 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
         if (!active_line.empty())
         {
             ActiveRecordEditor active{active_line, name_len};
-            ActiveRecordEditor cached{*cached_line, name_len};
 # ifndef ANCIENT_NEWS
+            ActiveRecordEditor cached{*cached_line, name_len};
             // Safely update the low-water mark
-            const std::size_t active_flag_separator = active.text.rfind(' ');
-            const std::size_t cached_flag_separator = cached.text.rfind(' ');
-            if (active_flag_separator != std::string::npos && active_flag_separator > 0 &&
-                cached_flag_separator != std::string::npos && cached_flag_separator > 0)
-            {
-                const std::size_t active_low_separator = active.text.rfind(' ', active_flag_separator - 1);
-                const std::size_t cached_low_separator = cached.text.rfind(' ', cached_flag_separator - 1);
-                if (active_low_separator != std::string::npos && cached_low_separator != std::string::npos)
-                {
-                    const std::string_view active_low{active.text.data() + active_low_separator + 1,
-                                                      active_flag_separator - active_low_separator - 1};
-                    const std::size_t      field_width = cached_flag_separator - cached_low_separator - 1;
-                    const std::string_view low_digits =
-                        active_low.substr(active_low.size() > field_width ? active_low.size() - field_width : 0);
-                    cached.text.replace(cached_low_separator + 1, field_width,
-                                        fmt::format("{:0>{}}", low_digits, field_width));
-                }
-            }
+            cached.update_low(active.text);
 # endif
             const std::string_view active_fields =
                 std::string_view{active.text}.substr(std::min(active.name_len + 1, active.text.size()));

@@ -7,9 +7,12 @@
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 
 struct ActiveRecordEditor
 {
+    void update_low(std::string_view source);
+
     std::string &text;
     std::size_t  name_len;
 };
