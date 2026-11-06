@@ -30,6 +30,19 @@
 #include <string>
 #include <string_view>
 
+namespace
+{
+
+struct ScanSearchContext
+{
+    std::string search_text;
+    bool        search_init{};
+};
+
+static ScanSearchContext s_scan_search;
+
+} // namespace
+
 static void             s_look_ahead();
 static int              s_do_cmd(std::string_view command);
 static char             s_command_char(std::string_view command);
@@ -345,9 +358,6 @@ static int s_do_cmd(std::string_view command)
     return 0;           // keep on looping!
 }
 
-static std::string s_search_text;
-static bool        s_search_init{};
-
 static char s_command_char(std::string_view command)
 {
     return command.empty() ? '\0' : command.front();
@@ -398,8 +408,8 @@ void scmd_jump_num_for_test(char_int firstchar)
 
 static void s_set_search_text(std::string_view search_text)
 {
-    s_search_text = search_text;
-    for (char &ch : s_search_text)
+    s_scan_search.search_text = search_text;
+    for (char &ch : s_scan_search.search_text)
     {
         const unsigned char text_ch = static_cast<unsigned char>(ch);
         if (std::isupper(text_ch))
@@ -422,7 +432,7 @@ static bool s_match_description(long ent)
                 ch = static_cast<char>(std::tolower(ch)); // convert to lower case
             }
         }
-        if (description.find(s_search_text) != std::string::npos)
+        if (description.find(s_scan_search.search_text) != std::string::npos)
         {
             return true;
         }
@@ -477,10 +487,10 @@ static void s_search(std::string_view command)
     std::string_view error_msg;
     const char       command_ch = s_command_char(command);
 
-    if (!s_search_init)
+    if (!s_scan_search.search_init)
     {
-        s_search_init = true;
-        s_search_text.clear();
+        s_scan_search.search_init = true;
+        s_scan_search.search_text.clear();
     }
     s_rub_ptr();
     const std::string full_command = s_finish_cmd("", std::string_view{&command_ch, 1});
@@ -500,7 +510,7 @@ static void s_search(std::string_view command)
         }
         s_set_search_text(search_text);
     }
-    if (s_search_text.empty())
+    if (s_scan_search.search_text.empty())
     {
         s_beep();
         fmt::print("\nNo previous search string.\n");
@@ -509,7 +519,7 @@ static void s_search(std::string_view command)
         return;
     }
     s_go_bot();
-    fmt::print("Searching for {}", s_search_text);
+    fmt::print("Searching for {}", s_scan_search.search_text);
     std::fflush(stdout);
     const long current_ent = g_art_scan.page_ents[g_art_scan.ptr_page_line].ent_num;
     long       ent = current_ent;
