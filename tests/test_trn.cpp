@@ -2501,11 +2501,14 @@ void UniversalSessionTest::SetUp()
     m_menu_file = m_output_dir / "menu";
     g_terminal_input_reader = [this](char *buffer, int)
     {
+        const int saved_errno = errno;
         if (m_on_prompt)
         {
             m_on_prompt();
         }
         m_prompts.push_back(snapshot());
+        // Observing filesystem state must not turn successful input into an error.
+        errno = saved_errno;
         if (m_input_pos == m_commands.size())
         {
             ADD_FAILURE() << "Unexpected universal-session input in mode " << static_cast<int>(g_mode);
