@@ -568,13 +568,10 @@ void ScanSearchContext::search(std::string_view command)
         g_art_scan.ref_all = true;
         return;
     }
-    for (int i = 0; i <= g_art_scan.bot_ent; i++)
+    if (const int page_line = g_art_scan.find_on_page(ent, ScanPageSearch::WHOLE_PAGE); page_line >= 0)
     {
-        if (g_art_scan.page_ents[i].ent_num == ent) // entry is on same page
-        {
-            g_art_scan.ptr_page_line = i;
-            return;
-        }
+        g_art_scan.ptr_page_line = page_line;
+        return;
     }
     // entry is not on page...
     if (fill_type == 1)

@@ -21,6 +21,7 @@
 #include <string_view>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace
 {
@@ -115,7 +116,73 @@ class ScanCommandSearchTest : public testing::TestWithParam<ScanSearchMessageCas
 {
 };
 
+struct ScanPageLookupCase
+{
+    const char       *name;
+    ScanPageSearch    scope;
+    long              ent;
+    short             pointer;
+    int               expected;
+    long              bottom{4};
+    std::vector<long> rows{101, 202, 303, 404, 505, 606};
+};
+
+class ScanPageLookupTest : public testing::TestWithParam<ScanPageLookupCase>
+{
+protected:
+    void SetUp() override
+    {
+        const ScanPageLookupCase &test_case = GetParam();
+        for (long ent : test_case.rows)
+        {
+            m_page.page_ents.push_back({ent, 1, 0, 0});
+        }
+        m_page.bot_ent = test_case.bottom;
+        m_page.ptr_page_line = test_case.pointer;
+    }
+
+    ArticleScanSession m_page{};
+};
+
 } // namespace
+
+TEST_P(ScanPageLookupTest, findsOnlyWithinTheRequestedVisiblePageRange)
+{
+    const ScanPageLookupCase &test_case = GetParam();
+
+    const int page_line = m_page.find_on_page(test_case.ent, test_case.scope);
+
+    EXPECT_EQ(test_case.expected, page_line);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ScopeAndPosition, ScanPageLookupTest,
+    testing::Values(
+        ScanPageLookupCase{"WholeBeforePointer", ScanPageSearch::WHOLE_PAGE, 101, 2, 0},
+        ScanPageLookupCase{"WholeAtPointer", ScanPageSearch::WHOLE_PAGE, 303, 2, 2},
+        ScanPageLookupCase{"WholeAtBottom", ScanPageSearch::WHOLE_PAGE, 505, 2, 4},
+        ScanPageLookupCase{"WholeAbsent", ScanPageSearch::WHOLE_PAGE, 999, 2, -1},
+        ScanPageLookupCase{"WholeHiddenRow", ScanPageSearch::WHOLE_PAGE, 606, 2, -1},
+        ScanPageLookupCase{"AfterAdjacentRow", ScanPageSearch::AFTER_POINTER, 404, 2, 3},
+        ScanPageLookupCase{"AfterAtBottom", ScanPageSearch::AFTER_POINTER, 505, 2, 4},
+        ScanPageLookupCase{"AfterExcludesPointer", ScanPageSearch::AFTER_POINTER, 303, 2, -1},
+        ScanPageLookupCase{"AfterExcludesEarlierRow", ScanPageSearch::AFTER_POINTER, 101, 2, -1},
+        ScanPageLookupCase{"AfterDoesNotWrap", ScanPageSearch::AFTER_POINTER, 101, 4, -1},
+        ScanPageLookupCase{"AfterHiddenRow", ScanPageSearch::AFTER_POINTER, 606, 2, -1},
+        ScanPageLookupCase{"BeforeAdjacentRow", ScanPageSearch::BEFORE_POINTER, 202, 2, 1},
+        ScanPageLookupCase{"BeforeAtTop", ScanPageSearch::BEFORE_POINTER, 101, 2, 0},
+        ScanPageLookupCase{"BeforeExcludesPointer", ScanPageSearch::BEFORE_POINTER, 303, 2, -1},
+        ScanPageLookupCase{"BeforeExcludesLaterRow", ScanPageSearch::BEFORE_POINTER, 505, 2, -1},
+        ScanPageLookupCase{"BeforeDoesNotWrap", ScanPageSearch::BEFORE_POINTER, 505, 0, -1},
+        ScanPageLookupCase{"WholeFirstMatch", ScanPageSearch::WHOLE_PAGE, 101, 2, 0, 4, {101, 202, 101, 202, 101, 606}},
+        ScanPageLookupCase{
+            "AfterFirstMatch", ScanPageSearch::AFTER_POINTER, 202, 0, 1, 4, {101, 202, 101, 202, 101, 606}},
+        ScanPageLookupCase{
+            "BeforeNearestMatch", ScanPageSearch::BEFORE_POINTER, 101, 4, 2, 4, {101, 202, 101, 202, 101, 606}},
+        ScanPageLookupCase{"WholeEmptyPage", ScanPageSearch::WHOLE_PAGE, 101, 0, -1, -1, {}},
+        ScanPageLookupCase{"AfterEmptyPage", ScanPageSearch::AFTER_POINTER, 101, 0, -1, -1, {}},
+        ScanPageLookupCase{"BeforeEmptyPage", ScanPageSearch::BEFORE_POINTER, 101, 0, -1, -1, {}}),
+    [](const testing::TestParamInfo<ScanPageLookupCase> &info) { return std::string{info.param.name}; });
 
 TEST_P(ScanDescriptionMatchTest, matchesDescriptionIgnoringCase)
 {

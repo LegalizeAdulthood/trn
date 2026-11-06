@@ -456,14 +456,11 @@ int sa_do_cmd(std::string_view command)
             s_beep();
             return 0;
         }
-        for (int j = g_art_scan.ptr_page_line + 1; j <= g_art_scan.bot_ent; j++)
+        if (const int page_line = g_art_scan.find_on_page(b, ScanPageSearch::AFTER_POINTER); page_line >= 0)
         {
-            if (g_art_scan.page_ents[j].ent_num == b) // art is on same page
-            {
-                s_rub_ptr();
-                g_art_scan.ptr_page_line = j;
-                return 0;
-            }
+            s_rub_ptr();
+            g_art_scan.ptr_page_line = page_line;
+            return 0;
         }
         // article is not on page...
         (void) g_art_scan.fill_page_forward(b); // fill forward (*must* work)
@@ -479,14 +476,11 @@ int sa_do_cmd(std::string_view command)
             s_beep();
             return 0;
         }
-        for (int j = 0; j <= g_art_scan.bot_ent; j++)
+        if (const int page_line = g_art_scan.find_on_page(b, ScanPageSearch::WHOLE_PAGE); page_line >= 0)
         {
-            if (g_art_scan.page_ents[j].ent_num == b) // art is on same page
-            {
-                s_rub_ptr();
-                g_art_scan.ptr_page_line = j;
-                return 0;
-            }
+            s_rub_ptr();
+            g_art_scan.ptr_page_line = page_line;
+            return 0;
         }
         // article is not on page...
         (void) g_art_scan.fill_page_forward(b); // fill forward (*must* work)
@@ -507,14 +501,11 @@ int sa_do_cmd(std::string_view command)
             s_beep();
             return 0;
         }
-        for (int j = g_art_scan.ptr_page_line - 1; j >= 0; j--)
+        if (const int page_line = g_art_scan.find_on_page(b, ScanPageSearch::BEFORE_POINTER); page_line >= 0)
         {
-            if (g_art_scan.page_ents[j].ent_num == b) // art is on same page
-            {
-                s_rub_ptr();
-                g_art_scan.ptr_page_line = j;
-                return 0;
-            }
+            s_rub_ptr();
+            g_art_scan.ptr_page_line = page_line;
+            return 0;
         }
         // article is not on page...
         (void) g_art_scan.fill_page_backward(b);       // fill backward (*must* work)

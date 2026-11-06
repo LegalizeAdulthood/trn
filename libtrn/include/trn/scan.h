@@ -70,6 +70,13 @@ struct ScanContext
     long  flags;
 };
 
+enum class ScanPageSearch
+{
+    WHOLE_PAGE,
+    AFTER_POINTER,
+    BEFORE_POINTER
+};
+
 struct ArticleScanSession
 {
     int  new_context(ScanContextType type);
@@ -96,6 +103,7 @@ struct ArticleScanSession
     void go_next_page();
     void go_prev_page();
     bool page_has_unavailable_entries() const;
+    int  find_on_page(long ent, ScanPageSearch scope) const;
 
     // TODO: private
     ScanContext       &current_context();

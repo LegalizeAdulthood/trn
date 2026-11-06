@@ -24,6 +24,20 @@
 
 static void s_clean_page();
 
+int ArticleScanSession::find_on_page(long ent, ScanPageSearch scope) const
+{
+    const int step = scope == ScanPageSearch::BEFORE_POINTER ? -1 : 1;
+    const int first = scope == ScanPageSearch::WHOLE_PAGE ? 0 : ptr_page_line + step;
+    for (int i = first; i >= 0 && i <= bot_ent; i += step)
+    {
+        if (page_ents[i].ent_num == ent)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // returns true if successful
 //long end;             // entry number to be last on page
 bool ArticleScanSession::fill_page_backward(long end)
