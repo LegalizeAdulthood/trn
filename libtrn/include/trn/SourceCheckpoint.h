@@ -5,10 +5,13 @@
 #ifndef TRN_SOURCE_CHECKPOINT_H
 #define TRN_SOURCE_CHECKPOINT_H
 
+struct LastRunState;
 struct Newsrc;
 
 struct SourceCheckpoint
 {
+    void restore_legacy(const LastRunState &last, bool remote);
+
     long new_time;
     long active_cnt;
     long desc_cnt;

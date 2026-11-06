@@ -77,7 +77,7 @@ add_library(libtrn
     sorder.cpp include/trn/sorder.h
     spage.cpp include/trn/spage.h
     include/trn/string-algos.h
-    include/trn/SourceCheckpoint.h
+    SourceCheckpoint.cpp include/trn/SourceCheckpoint.h
     Subject.cpp include/trn/Subject.h
     sw.cpp include/trn/sw.h
     terminal.cpp include/trn/terminal.h

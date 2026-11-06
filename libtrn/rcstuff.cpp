@@ -935,22 +935,17 @@ static bool open_newsrc(Newsrc *rp)
             }
             std::fclose(info);
         }
+        rp->data_source->m_last_new_group = g_last_run.new_time;
     }
     else
     {
         g_last_run.read();
-        if (rp->data_source->m_flags & DF_REMOTE)
-        {
-            rp->data_source->m_act_sf.m_recent_cnt = g_last_run.active_size;
-            rp->data_source->m_desc_sf.m_recent_cnt = g_last_run.extra_num;
-        }
-        else
-        {
-            rp->data_source->m_act_sf.m_recent_cnt = g_last_run.extra_num;
-            rp->data_source->m_desc_sf.m_recent_cnt = 0;
-        }
+        SourceCheckpoint checkpoint{};
+        checkpoint.restore_legacy(g_last_run, (rp->data_source->m_flags & DF_REMOTE) != 0);
+        rp->data_source->m_act_sf.m_recent_cnt = checkpoint.active_cnt;
+        rp->data_source->m_desc_sf.m_recent_cnt = checkpoint.desc_cnt;
+        rp->data_source->m_last_new_group = checkpoint.new_time;
     }
-    rp->data_source->m_last_new_group = g_last_run.new_time;
 
     if (g_paranoid && !g_check_flag)
     {
