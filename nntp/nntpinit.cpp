@@ -27,6 +27,9 @@ namespace
 
 struct NntpConnectionProvider
 {
+    // TODO: private
+    ConnectionPtr create(std::string_view machine, int port, std::string_view service);
+
     asio::io_context        context;
     asio::ip::tcp::resolver resolver{context};
     ConnectionFactory       factory;
@@ -150,7 +153,7 @@ void NNTPConnection::start_tls(error_code_t &ec)
     }
 }
 
-static ConnectionPtr create_nntp_connection(std::string_view machine, int port, std::string_view service)
+ConnectionPtr NntpConnectionProvider::create(std::string_view machine, int port, std::string_view service)
 {
     std::string server_name{machine};
     std::string service_name{service};
@@ -160,8 +163,7 @@ static ConnectionPtr create_nntp_connection(std::string_view machine, int port, 
     }
 
     error_code_t                          ec;
-    asio::ip::tcp::resolver::results_type results =
-        s_connection_provider.resolver.resolve(server_name, service_name, ec);
+    asio::ip::tcp::resolver::results_type results = resolver.resolve(server_name, service_name, ec);
     if (ec)
     {
         return nullptr;
@@ -186,7 +188,8 @@ void set_nntp_connection_factory(ConnectionFactory factory)
 
 int init_nntp()
 {
-    set_nntp_connection_factory(create_nntp_connection);
+    set_nntp_connection_factory([](std::string_view machine, int port, std::string_view service)
+                                { return s_connection_provider.create(machine, port, service); });
     return 1;
 }
 
