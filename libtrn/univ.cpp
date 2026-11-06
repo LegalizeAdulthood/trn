@@ -1058,11 +1058,11 @@ std::string UniversalConfiguration::edit_new_user_file()
 }
 
 // code adapted from edit_kfile in kfile.cpp
-void univ_edit()
+void UniversalConfiguration::edit()
 {
     std::string filename;
 
-    if (g_univ_config.user_top || !(g_univ_config.done_startup))
+    if (user_top || !(done_startup))
     {
         if (!g_univ.tmp_file.empty())
         {
@@ -1075,7 +1075,7 @@ void univ_edit()
     }
     else
     {
-        filename = g_univ_config.edit_new_user_file();
+        filename = edit_new_user_file();
     }
 
     // later consider directory push/pop pair around editing

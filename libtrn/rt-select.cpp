@@ -4327,7 +4327,7 @@ static DisplayState universal_commands(char_int ch)
         return DS_RESTART;
 
     case Ctl('e'):
-        univ_edit();
+        g_univ_config.edit();
         g_univ_config.redo_file();
         g_selected_count = 0;
         sel_cleanup();
