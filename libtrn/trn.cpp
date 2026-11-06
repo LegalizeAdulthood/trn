@@ -166,7 +166,7 @@ void do_multirc()
 
     if (g_use_univ_selector)
     {
-        univ_startup();         // load startup file
+        g_univ_config.startup(); // load startup file
         char ch = universal_selector();
         if (ch != 'Q')
         {

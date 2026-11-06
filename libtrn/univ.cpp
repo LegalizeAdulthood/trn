@@ -227,7 +227,7 @@ std::optional<std::size_t> UniversalMenuContext::erase(UniversalItemIndex item_i
     return item_position;
 }
 
-void univ_startup()
+void UniversalConfiguration::startup()
 {
     // later: make user top file an option or environment variable?
     if (!univ_file_load("%+/univ/top", "Top Level", {}))
@@ -249,14 +249,14 @@ void univ_startup()
         }
         if (user_top_load)
         {
-            g_univ_config.user_top = true;
+            user_top = true;
         }
     }
     else
     {
-        g_univ_config.user_top = true;
+        user_top = true;
     }
-    g_univ_config.done_startup = true;
+    done_startup = true;
 }
 
 void UniversalMenuContext::open()
@@ -1015,7 +1015,7 @@ void univ_redo_file()
     }
     else
     {
-        univ_startup();
+        g_univ_config.startup();
     }
 }
 
