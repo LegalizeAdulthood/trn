@@ -51,6 +51,10 @@
       "description": "Common test preset settings",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 8,
+        "timeout": 60
       }
     },
     {
