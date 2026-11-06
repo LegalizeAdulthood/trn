@@ -172,6 +172,26 @@ private:
     bool        m_save_group_listing;
 };
 
+struct SelectorStateSaver
+{
+    SelectorStateSaver();
+
+    SelectionMode          mode;
+    const bool             rereading;
+    const bool             exclusive;
+    ArticleUnread          selected_count;
+    SelectorCommand *const extra_commands;
+};
+
+SelectorStateSaver::SelectorStateSaver() :
+    mode(g_sel.mode),
+    rereading(g_sel.rereading),
+    exclusive(g_sel.exclusive),
+    selected_count(g_selected_count),
+    extra_commands(g_sel_session.extra_commands)
+{
+}
+
 struct UniversalMenuSaver
 {
     UniversalMenuSaver();
@@ -225,20 +245,20 @@ void UniversalMenuSaver::restore()
     ArticleUnread save_selected_count = g_selected_count;   \
     SelectorCommand *const save_extra_commands = g_sel_session.extra_commands
 
-#define POP_SELECTOR()                                      \
-    do                                                      \
-    {                                                       \
-        g_sel.exclusive = save_sel_exclusive;               \
-        g_sel.rereading = save_sel_rereading;               \
-        g_selected_count = save_selected_count;             \
-        g_sel_session.extra_commands = save_extra_commands; \
-        g_bos_on_stop = true;                               \
-        if (g_sel.mode != save_sel_mode)                    \
-        {                                                   \
-            g_sel.mode = save_sel_mode;                     \
-            g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER); \
-            save_sel_mode = SM_MAGIC_NUMBER;                \
-        }                                                   \
+#define POP_SELECTOR()                                                \
+    do                                                                \
+    {                                                                 \
+        g_sel.exclusive = selector_saver.exclusive;                   \
+        g_sel.rereading = selector_saver.rereading;                   \
+        g_selected_count = selector_saver.selected_count;             \
+        g_sel_session.extra_commands = selector_saver.extra_commands; \
+        g_bos_on_stop = true;                                         \
+        if (g_sel.mode != selector_saver.mode)                        \
+        {                                                             \
+            g_sel.mode = selector_saver.mode;                         \
+            g_sel.set_selector(SM_MAGIC_NUMBER, SS_MAGIC_NUMBER);     \
+            selector_saver.mode = SM_MAGIC_NUMBER;                    \
+        }                                                             \
     } while (false)
 
 static void                sel_do_groups();
@@ -623,13 +643,13 @@ sel_restart:
 
     if (g_sel_session.ret == '\r' || g_sel_session.ret == '\n' || g_sel_session.ret == 'Z' || g_sel_session.ret == '\t')
     {
-        PUSH_SELECTOR();
+        SelectorStateSaver selector_saver;
         for (Multirc *mp = multirc_low(); mp; mp = multirc_next(mp))
         {
             if (mp->m_flags & MF_SEL)
             {
                 mp->m_flags &= ~MF_SEL;
-                save_selected_count--;
+                selector_saver.selected_count--;
                 for (Newsrc *rp = mp->m_first; rp; rp = rp->next)
                 {
                     rp->data_source->m_flags &= ~DF_UNAVAILABLE;
@@ -720,7 +740,7 @@ sel_restart:
     if (g_sel_session.ret == '\r' || g_sel_session.ret == '\n' || g_sel_session.ret == 'Z' ||
         g_sel_session.ret == '\t' || g_sel_session.ret == ';')
     {
-        PUSH_SELECTOR();
+        SelectorStateSaver selector_saver;
         for (NewsgroupData *np = g_ng_order.first(); np; np = newsgroup_next(np))
         {
             if ((np->m_flags & NF_INCLUDED) && (!g_selected_count || (np->m_flags & g_sel.mask)))
@@ -733,7 +753,7 @@ sel_restart:
             }
         }
         sel_do_groups();
-        save_selected_count = g_selected_count;
+        selector_saver.selected_count = g_selected_count;
         POP_SELECTOR();
         if (g_multirc)
         {
@@ -1190,11 +1210,11 @@ sel_restart:
             if (ui->m_flags & active_mask)
             {
                 const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
-                PUSH_SELECTOR();
+                SelectorStateSaver      selector_saver;
                 UniversalMenuSaver menu_saver;
 
                 ui->m_flags &= ~active_mask;
-                save_selected_count--;
+                selector_saver.selected_count--;
                 UniversalReadResult ret = univ_read(ui);
 
                 menu_saver.restore();
@@ -2439,7 +2459,7 @@ do_command:
         }
         else
         {
-            PUSH_SELECTOR();
+            SelectorStateSaver selector_saver;
             g_one_command = true;
             perform(command, false);
             g_one_command = false;
@@ -2448,7 +2468,7 @@ do_command:
                 clean_screen = false;
             }
             POP_SELECTOR();
-            if (!save_sel_mode)
+            if (!selector_saver.mode)
             {
                 return DS_RESTART;
             }
@@ -3700,7 +3720,7 @@ reask_sort:
         Selection u;
         InputNewsgroupResult ret;
         bool                 was_at_top = !g_sel_page.prior_obj_cnt;
-        PUSH_SELECTOR();
+        SelectorStateSaver   selector_saver;
         if (!(g_sel_session.removed_prompt & RP_NEWLINE))
         {
             erase_line(g_mouse.bar_cnt > 0); // erase the prompt
@@ -3754,7 +3774,7 @@ reask_sort:
             break;
 
         default:
-            if (!save_sel_mode)
+            if (!selector_saver.mode)
             {
                 return DS_RESTART;
             }
@@ -4618,7 +4638,7 @@ void selector_mouse(int btn, int x, int y, int btn_clk, int x_clk, int y_clk)
 // Icky placement, but the PUSH/POP stuff is local to this file
 int univ_visit_group(std::string_view group_name)
 {
-    PUSH_SELECTOR();
+    SelectorStateSaver selector_saver;
 
     univ_visit_group_main(group_name);
 
@@ -4630,7 +4650,7 @@ int univ_visit_group(std::string_view group_name)
 void univ_visit_help(HelpLocation where)
 {
     const SelectionSortMode parent_order = static_cast<SelectionSortMode>(g_sel.sort * g_sel.direction);
-    PUSH_SELECTOR();
+    SelectorStateSaver      selector_saver;
     UniversalMenuSaver menu_saver;
 
     univ_help_main(where);
