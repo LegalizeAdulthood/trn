@@ -70,7 +70,6 @@ enum
 };
 
 static RegexTranslation s_regex_translation{};
-static RegexExecution   s_regex_execution{};
 
 void RegexTranslation::case_fold(bool which)
 {
@@ -426,7 +425,8 @@ bool CompiledRegex::execute(std::string_view text)
 
 std::size_t CompiledRegex::find(std::string_view text)
 {
-    Uchar *trt = s_regex_translation.trans;
+    RegexExecution execution{0, nullptr, *this, s_regex_translation};
+    Uchar         *trt = s_regex_translation.trans;
 
     if (m_exp_buf.empty())
     {
@@ -441,22 +441,22 @@ std::size_t CompiledRegex::find(std::string_view text)
         m_bracket_end_offsets.fill(std::string::npos);
     }
     s_regex_translation.case_fold(m_do_folding); // make sure table is correct
-    s_regex_execution.first_character = p1; // for ^ tests
+    execution.first_character = p1;              // for ^ tests
     const char *expression = m_exp_buf.data();
     if (expression[0] == CCHR && m_alternatives[1] == std::string::npos)
     {
         int c = trt[*(Uchar *) (expression + 1)]; // fast check for first char
         do
         {
-            if (trt[*(Uchar *) p1] == c && advance(p1, expression))
+            if (trt[*(Uchar *) p1] == c && execution.advance(p1, expression))
             {
                 return static_cast<std::size_t>(p1 - m_bracket_str.data());
             }
             p1++;
-        } while (*p1 && !s_regex_execution.err);
-        if (s_regex_execution.err)
+        } while (*p1 && !execution.err);
+        if (execution.err)
         {
-            s_regex_execution.err = 0;
+            execution.err = 0;
         }
         return std::string_view::npos;
     }
@@ -465,26 +465,26 @@ std::size_t CompiledRegex::find(std::string_view text)
         std::size_t alt_index = 0;
         while (m_alternatives[alt_index] != std::string::npos)
         {
-            if (advance(p1, expression + m_alternatives[alt_index++]))
+            if (execution.advance(p1, expression + m_alternatives[alt_index++]))
             {
                 return static_cast<std::size_t>(p1 - m_bracket_str.data());
             }
         }
         p1++;
-    } while (*p1 && !s_regex_execution.err);
-    if (s_regex_execution.err)
+    } while (*p1 && !execution.err);
+    if (execution.err)
     {
-        s_regex_execution.err = 0;
+        execution.err = 0;
     }
     return std::string_view::npos;
 }
 
 // advance the match of the regular expression starting at ep along the
 // string lp, simulates an NDFSA
-bool CompiledRegex::advance(const char *lp, const char *ep)
+bool RegexExecution::advance(const char *lp, const char *ep)
 {
     const char* curlp;
-    Uchar         *trt = s_regex_translation.trans;
+    Uchar         *trt = translation.trans;
     int i;
     std::ptrdiff_t length{};
 
@@ -516,7 +516,7 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             return false;
 
         case CIRC:
-            if (lp == s_regex_execution.first_character || lp[-1] == '\n')
+            if (lp == first_character || lp[-1] == '\n')
             {
                 continue;
             }
@@ -539,14 +539,14 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             return false;
 
         case WBOUND:
-            if ((lp == s_regex_execution.first_character || !std::isalnum(lp[-1])) != (!*lp || !std::isalnum(*lp)))
+            if ((lp == first_character || !std::isalnum(lp[-1])) != (!*lp || !std::isalnum(*lp)))
             {
                 continue;
             }
             return false;
 
         case NWBOUND:
-            if ((lp == s_regex_execution.first_character || !std::isalnum(lp[-1])) == (!*lp || !std::isalnum(*lp)))
+            if ((lp == first_character || !std::isalnum(lp[-1])) == (!*lp || !std::isalnum(*lp)))
             {
                 continue;
             }
@@ -574,27 +574,27 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
             return false;
 
         case CBRA:
-            m_bracket_start_offsets[static_cast<unsigned char>(*ep++)] =
-                static_cast<std::size_t>(lp - m_bracket_str.data());
+            regex.m_bracket_start_offsets[static_cast<unsigned char>(*ep++)] =
+                static_cast<std::size_t>(lp - regex.m_bracket_str.data());
             continue;
 
         case CKET:
             i = *ep++;
-            m_bracket_end_offsets[i] = static_cast<std::size_t>(lp - m_bracket_str.data());
-            m_bracket_end_offsets[0] = m_bracket_end_offsets[i];
-            m_bracket_start_offsets[0] = m_bracket_start_offsets[i];
+            regex.m_bracket_end_offsets[i] = static_cast<std::size_t>(lp - regex.m_bracket_str.data());
+            regex.m_bracket_end_offsets[0] = regex.m_bracket_end_offsets[i];
+            regex.m_bracket_start_offsets[0] = regex.m_bracket_start_offsets[i];
             continue;
 
         case CBACK:
             i = *ep++;
-            if (m_bracket_end_offsets[i] == std::string::npos)
+            if (regex.m_bracket_end_offsets[i] == std::string::npos)
             {
                 fmt::print("bad braces\n");
-                s_regex_execution.err = true;
+                err = true;
                 return false;
             }
-            length = static_cast<std::ptrdiff_t>(get_bracket(i).size());
-            if (back_ref(i, lp))
+            length = static_cast<std::ptrdiff_t>(regex.get_bracket(i).size());
+            if (regex.back_ref(i, lp))
             {
                 lp += length;
                 continue;
@@ -603,15 +603,15 @@ bool CompiledRegex::advance(const char *lp, const char *ep)
 
         case CBACK | STAR:
             i = *ep++;
-            if (m_bracket_end_offsets[i] == std::string::npos)
+            if (regex.m_bracket_end_offsets[i] == std::string::npos)
             {
                 fmt::print("bad braces\n");
-                s_regex_execution.err = true;
+                err = true;
                 return false;
             }
-            length = static_cast<std::ptrdiff_t>(get_bracket(i).size());
+            length = static_cast<std::ptrdiff_t>(regex.get_bracket(i).size());
             curlp = lp;
-            while (back_ref(i, lp))
+            while (regex.back_ref(i, lp))
             {
                 lp += length;
             }
@@ -676,7 +676,7 @@ star:
 
         default:
             fmt::print("Badly compiled pattern\n");
-            s_regex_execution.err = true;
+            err = true;
             return false;
         }
     }

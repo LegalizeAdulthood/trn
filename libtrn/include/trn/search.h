@@ -36,10 +36,19 @@ struct RegexTranslation
     void case_fold(bool which);
 };
 
+class CompiledRegex;
+
 struct RegexExecution
 {
-    int         err{};
-    const char *first_character{};
+    int               err{};
+    const char       *first_character{};
+    CompiledRegex    &regex;
+    RegexTranslation &translation;
+
+private:
+    friend class CompiledRegex;
+
+    bool advance(const char *lp, const char *ep);
 };
 
 class CompiledRegex
@@ -54,8 +63,9 @@ public:
     std::size_t      find(std::string_view text);
 
 private:
+    friend struct RegexExecution;
+
     char            *grow_eb(char *epp);
-    bool             advance(const char *lp, const char *ep);
     bool             back_ref(int i, const char *lp);
 
     std::vector<char>                  m_exp_buf;                  // The compiled search string
