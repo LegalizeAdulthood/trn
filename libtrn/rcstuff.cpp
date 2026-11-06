@@ -905,47 +905,8 @@ static bool open_newsrc(Newsrc *rp)
         set_hash(np);
     }
     std::fclose(rcfp);                       // close .newsrc
-    if (!rp->info_name.empty())
-    {
-        std::FILE *info = std::fopen(rp->info_name.string().c_str(), "r");
-        if (info != nullptr)
-        {
-            const std::string info_line = get_a_line(info);
-            if (!info_line.empty())
-            {
-                long             actnum;
-                long             descnum;
-                std::string_view last_group_line{info_line};
-                if (last_group_line.back() == '\n')
-                {
-                    last_group_line.remove_suffix(1);
-                }
-                const std::size_t separator = last_group_line.find(':');
-                if (separator != std::string_view::npos && separator + 2 < last_group_line.size() &&
-                    last_group_line[separator + 1] == ' ')
-                {
-                    g_last_run.newsgroup_name = last_group_line.substr(separator + 2);
-                }
-                if (std::fscanf(info, "New-Group-State: %ld,%ld,%ld", //
-                                &g_last_run.new_time, &actnum, &descnum) == 3)
-                {
-                    rp->data_source->m_act_sf.m_recent_cnt = actnum;
-                    rp->data_source->m_desc_sf.m_recent_cnt = descnum;
-                }
-            }
-            std::fclose(info);
-        }
-        rp->data_source->m_last_new_group = g_last_run.new_time;
-    }
-    else
-    {
-        g_last_run.read();
-        SourceCheckpoint checkpoint{};
-        checkpoint.restore_legacy(g_last_run, (rp->data_source->m_flags & DF_REMOTE) != 0);
-        rp->data_source->m_act_sf.m_recent_cnt = checkpoint.active_cnt;
-        rp->data_source->m_desc_sf.m_recent_cnt = checkpoint.desc_cnt;
-        rp->data_source->m_last_new_group = checkpoint.new_time;
-    }
+    NewsrcCheckpoint checkpoint{*rp};
+    checkpoint.restore();
 
     if (g_paranoid && !g_check_flag)
     {

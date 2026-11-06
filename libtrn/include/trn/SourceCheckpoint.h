@@ -24,6 +24,8 @@ struct SourceCheckpoint
 
 struct NewsrcCheckpoint
 {
+    void restore();
+
     Newsrc &rc;
 };
 
