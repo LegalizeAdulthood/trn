@@ -40,6 +40,7 @@ struct ScanSearchContext
     bool match_description(long ent);
     long forward_search(long ent);
     long backward_search(long ent);
+    void search(std::string_view command);
 
     std::string search_text;
     bool        search_init{};
@@ -53,7 +54,6 @@ static void             s_look_ahead();
 static int              s_do_cmd(std::string_view command);
 static char             s_command_char(std::string_view command);
 static std::string_view s_command_argument(std::string_view command);
-static void             s_search(std::string_view command);
 static void             s_jump_num(char_int firstchar);
 
 void s_go_bot()
@@ -328,7 +328,7 @@ static int s_do_cmd(std::string_view command)
     case '/':
     case '?':
     case 'g':         // goto (search for) group
-        s_search(command);
+        s_scan_search.search(command);
         break;
 
     case '0': case '1': case '2': case '3': case '4':
@@ -483,16 +483,16 @@ long ScanSearchContext::backward_search(long ent)
 }
 
 // perhaps later have a wraparound search?
-static void s_search(std::string_view command)
+void ScanSearchContext::search(std::string_view command)
 {
     int              fill_type; // 0: forward, 1: backward
     std::string_view error_msg;
     const char       command_ch = s_command_char(command);
 
-    if (!s_scan_search.search_init)
+    if (!search_init)
     {
-        s_scan_search.search_init = true;
-        s_scan_search.search_text.clear();
+        search_init = true;
+        search_text.clear();
     }
     s_rub_ptr();
     const std::string full_command = s_finish_cmd("", std::string_view{&command_ch, 1});
@@ -510,9 +510,9 @@ static void s_search(std::string_view command)
         {
             search_text.remove_prefix(1);
         }
-        s_scan_search.set_search_text(search_text);
+        set_search_text(search_text);
     }
-    if (s_scan_search.search_text.empty())
+    if (search_text.empty())
     {
         s_beep();
         fmt::print("\nNo previous search string.\n");
@@ -521,7 +521,7 @@ static void s_search(std::string_view command)
         return;
     }
     s_go_bot();
-    fmt::print("Searching for {}", s_scan_search.search_text);
+    fmt::print("Searching for {}", search_text);
     std::fflush(stdout);
     const long current_ent = g_art_scan.page_ents[g_art_scan.ptr_page_line].ent_num;
     long       ent = current_ent;
@@ -529,21 +529,21 @@ static void s_search(std::string_view command)
     {
     case '/':
         error_msg = s_search_error_message(command_ch, false);
-        ent = s_scan_search.forward_search(ent);
+        ent = forward_search(ent);
         fill_type = 0;          // forwards fill
         break;
 
     case '?':
         error_msg = s_search_error_message(command_ch, false);
-        ent = s_scan_search.backward_search(ent);
+        ent = backward_search(ent);
         fill_type = 1;          // backwards fill
         break;
 
     case 'g':
-        ent = s_scan_search.forward_search(ent);
+        ent = forward_search(ent);
         if (!ent)
         {
-            ent = s_scan_search.forward_search(0); // from top
+            ent = forward_search(0); // from top
             // did we just loop around?
             const bool repeated_current = ent == current_ent;
             error_msg = s_search_error_message(command_ch, repeated_current);
