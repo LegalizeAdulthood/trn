@@ -684,6 +684,27 @@ std::string DataSource::active_file_description() const
     return active_file;
 }
 
+std::string DataSource::group_desc_description() const
+{
+    std::string group_desc;
+    group_desc.reserve(CMD_BUF_LEN);
+    if (!m_desc_sf.m_fp && m_desc_sf.m_hp)
+    {
+        group_desc = "Dynamic group desc. file";
+    }
+    else if (m_flags & DF_TMP_GROUP_DESC)
+    {
+        group_desc = "Copy of remote group desc. file";
+    }
+    else
+    {
+        fmt::format_to(std::back_inserter(group_desc), "Group desc. file: {}", m_group_desc);
+    }
+    group_desc += m_desc_sf.refetch_description();
+    group_desc += ".\n";
+    return group_desc;
+}
+
 bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;

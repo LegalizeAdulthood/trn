@@ -108,6 +108,7 @@ struct DataSource
     void             finish_new_groups(std::time_t server_time);
     void             finish_local_groups(std::time_t last_one, long file_size);
     std::string      active_file_description() const;
+    std::string      group_desc_description() const;
     void             visit_active_groups(const std::function<SourceLineVisitor> &visitor)
     {
         m_act_sf.visit_lines(visitor);

@@ -1124,23 +1124,7 @@ void trn_version()
             }
             if (!data_source.m_group_desc.empty())
             {
-                std::string group_desc;
-                group_desc.reserve(CMD_BUF_LEN);
-                if (!data_source.m_desc_sf.m_fp && data_source.m_desc_sf.m_hp)
-                {
-                    group_desc = "Dynamic group desc. file";
-                }
-                else if (data_source.m_flags & DF_TMP_GROUP_DESC)
-                {
-                    group_desc = "Copy of remote group desc. file";
-                }
-                else
-                {
-                    fmt::format_to(std::back_inserter(group_desc), "Group desc. file: {}", data_source.m_group_desc);
-                }
-                group_desc += data_source.m_desc_sf.refetch_description();
-                group_desc += ".\n";
-                print_lines(group_desc, NO_MARKING);
+                print_lines(data_source.group_desc_description(), NO_MARKING);
             }
             if (data_source.m_flags & DF_TRY_OVERVIEW)
             {
