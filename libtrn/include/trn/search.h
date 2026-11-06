@@ -40,16 +40,14 @@ class CompiledRegex;
 
 struct RegexExecution
 {
-    int               err{};
-    const char       *first_character{};
-    CompiledRegex    &regex;
-    RegexTranslation &translation;
+    int              err{};
+    const char      *first_character{};
+    CompiledRegex   &regex;
+    RegexTranslation translation{};
 
     std::size_t find(std::string_view text);
 
 private:
-    friend class CompiledRegex;
-
     bool advance(const char *lp, const char *ep);
 };
 

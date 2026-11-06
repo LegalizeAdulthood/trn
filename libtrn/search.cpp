@@ -69,8 +69,6 @@ enum
 
 };
 
-static RegexTranslation s_regex_translation{};
-
 void RegexTranslation::case_fold(bool which)
 {
     if (which != folding)
@@ -105,7 +103,6 @@ static bool cclass(const char *set, int c, int af)
 
 void search_init()
 {
-    s_regex_translation.init();
 }
 
 void RegexTranslation::init()
@@ -175,7 +172,7 @@ std::string_view CompiledRegex::compile(std::string_view pattern, bool re, bool 
         return static_cast<int>(static_cast<unsigned char>(pattern[pattern_pos + offset]));
     };
 
-    s_regex_translation.case_fold(m_do_folding = fold);
+    m_do_folding = fold;
     if (m_exp_buf.empty())
     {
         m_exp_buf.resize(84);
@@ -425,7 +422,7 @@ bool CompiledRegex::execute(std::string_view text)
 
 std::size_t CompiledRegex::find(std::string_view text)
 {
-    RegexExecution execution{0, nullptr, *this, s_regex_translation};
+    RegexExecution execution{0, nullptr, *this};
     return execution.find(text);
 }
 
@@ -445,6 +442,7 @@ std::size_t RegexExecution::find(std::string_view text)
         regex.m_bracket_start_offsets.fill(std::string::npos);
         regex.m_bracket_end_offsets.fill(std::string::npos);
     }
+    translation.init();
     translation.case_fold(regex.m_do_folding); // make sure table is correct
     first_character = p1;                      // for ^ tests
     const char *expression = regex.m_exp_buf.data();
