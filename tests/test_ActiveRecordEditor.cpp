@@ -61,4 +61,45 @@ INSTANTIATE_TEST_SUITE_P(
         LowWaterCase{"NoCachedLowSeparator", "comp.test y\n", "comp.test 98 9 m\n", "comp.test y\n"}),
     [](const testing::TestParamInfo<LowWaterCase> &info) { return info.param.name; });
 
+struct HighWaterCase
+{
+    const char *name;
+    const char *text;
+    long        expected;
+};
+
+class HighWaterReadTest : public ActiveRecordEditorTest, public testing::WithParamInterface<HighWaterCase>
+{
+protected:
+    void SetUp() override
+    {
+        m_text = GetParam().text;
+    }
+};
+
+TEST_P(HighWaterReadTest, readsTheHighWaterValueWithoutChangingTheRecord)
+{
+    const ArticleNum high = m_editor.high();
+
+    EXPECT_EQ(ArticleNum{GetParam().expected}, high);
+    EXPECT_EQ(GetParam().text, m_text);
+}
+
+INSTANTIATE_TEST_SUITE_P(NumericFields, HighWaterReadTest,
+                         testing::Values(HighWaterCase{"Decimal", "comp.test 42 7 y\n", 42},
+                                         HighWaterCase{"LeadingZeros", "comp.test 00042 00007 y\n", 42},
+                                         HighWaterCase{"Zero", "comp.test 00000 7 y\n", 0},
+                                         HighWaterCase{"NumericPrefix", "comp.test 42suffix 7 y\n", 42},
+                                         HighWaterCase{"Negative", "comp.test -12 7 y\n", -12},
+                                         HighWaterCase{"LeadingPlus", "comp.test +42 7 y\n", 0},
+                                         HighWaterCase{"LeadingSpace", "comp.test  42 7 y\n", 0},
+                                         HighWaterCase{"MissingField", "comp.test", 0},
+                                         HighWaterCase{"EmptyField", "comp.test ", 0},
+                                         HighWaterCase{"ShortRecord", "short", 0},
+                                         HighWaterCase{"Nonnumeric", "comp.test missing 7 y\n", 0},
+                                         HighWaterCase{"Overflow", "comp.test 999999999999999999999999999 7 y\n", 0},
+                                         HighWaterCase{"Underflow", "comp.test -999999999999999999999999999 7 y\n", 0},
+                                         HighWaterCase{"NameBoundaryByte", "comp.testX42 7 y\n", 42}),
+                         [](const testing::TestParamInfo<HighWaterCase> &info) { return info.param.name; });
+
 } // namespace

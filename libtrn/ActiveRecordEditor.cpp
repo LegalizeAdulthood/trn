@@ -6,6 +6,9 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <charconv>
+
 void ActiveRecordEditor::update_low(std::string_view source)
 {
     const std::size_t active_flag_separator = source.rfind(' ');
@@ -25,4 +28,12 @@ void ActiveRecordEditor::update_low(std::string_view source)
             text.replace(cached_low_separator + 1, field_width, fmt::format("{:0>{}}", low_digits, field_width));
         }
     }
+}
+
+ArticleNum ActiveRecordEditor::high() const
+{
+    const std::string_view fields = std::string_view{text}.substr(std::min(name_len + 1, text.size()));
+    long                   high{};
+    std::from_chars(fields.data(), fields.data() + fields.size(), high);
+    return ArticleNum{high};
 }

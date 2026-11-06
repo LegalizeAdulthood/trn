@@ -782,11 +782,7 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
             // Safely update the low-water mark
             cached.update_low(active.text);
 # endif
-            const std::string_view active_fields =
-                std::string_view{active.text}.substr(std::min(active.name_len + 1, active.text.size()));
-            long active_high{};
-            std::from_chars(active_fields.data(), active_fields.data() + active_fields.size(), active_high);
-            high = ArticleNum{active_high};
+            high = active.high();
         }
     }
 
@@ -794,12 +790,8 @@ std::string DataSource::find_active_group(std::string_view name, ArticleNum high
     {
         if ((m_flags & DF_REMOTE) && m_act_sf.m_refetch_secs)
         {
-            ActiveRecordEditor     cached{*cached_line, name_len};
-            const std::string_view cached_fields =
-                std::string_view{cached.text}.substr(std::min(cached.name_len + 1, cached.text.size()));
-            long cached_high{};
-            std::from_chars(cached_fields.data(), cached_fields.data() + cached_fields.size(), cached_high);
-            if (high && high != ArticleNum{cached_high})
+            ActiveRecordEditor cached{*cached_line, name_len};
+            if (high && high != cached.high())
             {
                 const std::size_t high_start = cached.name_len + 1;
                 const std::size_t high_end = cached.text.find(' ', high_start);
