@@ -45,6 +45,8 @@ struct RegexExecution
     CompiledRegex    &regex;
     RegexTranslation &translation;
 
+    std::size_t find(std::string_view text);
+
 private:
     friend class CompiledRegex;
 

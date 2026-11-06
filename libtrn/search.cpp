@@ -426,55 +426,60 @@ bool CompiledRegex::execute(std::string_view text)
 std::size_t CompiledRegex::find(std::string_view text)
 {
     RegexExecution execution{0, nullptr, *this, s_regex_translation};
-    Uchar         *trt = s_regex_translation.trans;
+    return execution.find(text);
+}
 
-    if (m_exp_buf.empty())
+std::size_t RegexExecution::find(std::string_view text)
+{
+    Uchar *trt = translation.trans;
+
+    if (regex.m_exp_buf.empty())
     {
         return std::string_view::npos;
     }
 
-    m_bracket_str = text;
-    const char *p1 = m_bracket_str.c_str();
-    if (m_num_brackets) // any brackets?
+    regex.m_bracket_str = text;
+    const char *p1 = regex.m_bracket_str.c_str();
+    if (regex.m_num_brackets) // any brackets?
     {
-        m_bracket_start_offsets.fill(std::string::npos);
-        m_bracket_end_offsets.fill(std::string::npos);
+        regex.m_bracket_start_offsets.fill(std::string::npos);
+        regex.m_bracket_end_offsets.fill(std::string::npos);
     }
-    s_regex_translation.case_fold(m_do_folding); // make sure table is correct
-    execution.first_character = p1;              // for ^ tests
-    const char *expression = m_exp_buf.data();
-    if (expression[0] == CCHR && m_alternatives[1] == std::string::npos)
+    translation.case_fold(regex.m_do_folding); // make sure table is correct
+    first_character = p1;                      // for ^ tests
+    const char *expression = regex.m_exp_buf.data();
+    if (expression[0] == CCHR && regex.m_alternatives[1] == std::string::npos)
     {
         int c = trt[*(Uchar *) (expression + 1)]; // fast check for first char
         do
         {
-            if (trt[*(Uchar *) p1] == c && execution.advance(p1, expression))
+            if (trt[*(Uchar *) p1] == c && advance(p1, expression))
             {
-                return static_cast<std::size_t>(p1 - m_bracket_str.data());
+                return static_cast<std::size_t>(p1 - regex.m_bracket_str.data());
             }
             p1++;
-        } while (*p1 && !execution.err);
-        if (execution.err)
+        } while (*p1 && !err);
+        if (err)
         {
-            execution.err = 0;
+            err = 0;
         }
         return std::string_view::npos;
     }
     do // regular algorithm
     {
         std::size_t alt_index = 0;
-        while (m_alternatives[alt_index] != std::string::npos)
+        while (regex.m_alternatives[alt_index] != std::string::npos)
         {
-            if (execution.advance(p1, expression + m_alternatives[alt_index++]))
+            if (advance(p1, expression + regex.m_alternatives[alt_index++]))
             {
-                return static_cast<std::size_t>(p1 - m_bracket_str.data());
+                return static_cast<std::size_t>(p1 - regex.m_bracket_str.data());
             }
         }
         p1++;
-    } while (*p1 && !execution.err);
-    if (execution.err)
+    } while (*p1 && !err);
+    if (err)
     {
-        execution.err = 0;
+        err = 0;
     }
     return std::string_view::npos;
 }
