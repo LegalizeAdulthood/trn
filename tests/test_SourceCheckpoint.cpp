@@ -72,4 +72,36 @@ INSTANTIATE_TEST_SUITE_P(LocalAndRemote, LegacyCheckpointUpdateTest,
                                          LegacyUpdateCase{"Local", false, 222, 72}),
                          [](const testing::TestParamInfo<LegacyUpdateCase> &info) { return info.param.name; });
 
+struct InfoFormatCase
+{
+    const char      *name;
+    SourceCheckpoint checkpoint;
+    const char      *group;
+    const char      *expected;
+};
+
+class CheckpointInfoFormatTest : public testing::TestWithParam<InfoFormatCase>
+{
+};
+
+TEST_P(CheckpointInfoFormatTest, formatsTheExactModernCheckpointRecords)
+{
+    const std::string text = GetParam().checkpoint.format_info(GetParam().group);
+
+    EXPECT_EQ(GetParam().expected, text);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RecordValues, CheckpointInfoFormatTest,
+    testing::Values(InfoFormatCase{"GroupAndCounts",
+                                   {111, 222, 333},
+                                   "comp.current",
+                                   "Last-Group: comp.current\nNew-Group-State: 111,222,333\n"},
+                    InfoFormatCase{"EmptyGroupAndZeros", {0, 0, 0}, "", "Last-Group: \nNew-Group-State: 0,0,0\n"},
+                    InfoFormatCase{"SignedCounts",
+                                   {-111, -222, -333},
+                                   "comp.signed",
+                                   "Last-Group: comp.signed\nNew-Group-State: -111,-222,-333\n"}),
+    [](const testing::TestParamInfo<InfoFormatCase> &info) { return info.param.name; });
+
 } // namespace

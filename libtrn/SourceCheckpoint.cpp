@@ -6,6 +6,8 @@
 
 #include <trn/last.h>
 
+#include <fmt/format.h>
+
 void SourceCheckpoint::restore_legacy(const LastRunState &last, bool remote)
 {
     new_time = last.new_time;
@@ -33,4 +35,9 @@ void SourceCheckpoint::update_legacy(LastRunState &last, bool remote) const
         last.extra_num = active_cnt;
     }
     last.new_time = new_time;
+}
+
+std::string SourceCheckpoint::format_info(std::string_view group) const
+{
+    return fmt::format("Last-Group: {}\nNew-Group-State: {},{},{}\n", group, new_time, active_cnt, desc_cnt);
 }

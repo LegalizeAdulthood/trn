@@ -1856,8 +1856,7 @@ bool write_newsrcs(Multirc *mptr)
                 const SourceCheckpoint checkpoint{rp->data_source->m_last_new_group,
                                                   rp->data_source->m_act_sf.m_recent_cnt,
                                                   rp->data_source->m_desc_sf.m_recent_cnt};
-                fmt::print(info, "Last-Group: {}\nNew-Group-State: {},{},{}\n", g_newsgroup_name, checkpoint.new_time,
-                           checkpoint.active_cnt, checkpoint.desc_cnt);
+                fmt::print(info, "{}", checkpoint.format_info(g_newsgroup_name));
                 std::fclose(info);
             }
         }
