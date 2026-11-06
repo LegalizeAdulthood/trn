@@ -2817,30 +2817,30 @@ bool MouseInteraction::check_bar(int btn, int x, int y, int btn_clk, int x_clk, 
 TermCapColors g_tc_colors;
 
 // Parse a line from the [termcap] section of trnrc.
-void add_tc_string(std::string_view capability, std::string_view value)
+void TermCapColors::add_string(std::string_view capability, std::string_view value)
 {
     int i;
 
-    for (i = 0; i < g_tc_colors.string_cnt; i++)
+    for (i = 0; i < string_cnt; i++)
     {
-        if (g_tc_colors.strings[i].capability == capability)
+        if (strings[i].capability == capability)
         {
             break;
         }
     }
-    if (i == g_tc_colors.string_cnt)
+    if (i == string_cnt)
     {
-        if (g_tc_colors.string_cnt == TC_STRINGS)
+        if (string_cnt == TC_STRINGS)
         {
             fmt::print(stderr, "trn: too many colors in [termcap] section (max is {}).\n",
                        static_cast<int>(TC_STRINGS));
             finalize(1);
         }
-        g_tc_colors.string_cnt++;
-        g_tc_colors.strings[i].capability = capability;
+        string_cnt++;
+        strings[i].capability = capability;
     }
 
-    g_tc_colors.strings[i].string = value;
+    strings[i].string = value;
 }
 
 // Return the named termcap color capability's string.

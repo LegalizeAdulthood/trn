@@ -273,13 +273,14 @@ struct ColorCapability
 
 struct TermCapColors
 {
+    void add_string(std::string_view capability, std::string_view value);
+
     int             string_cnt{};
     ColorCapability strings[TC_STRINGS];
 };
 
 extern TermCapColors g_tc_colors;
 
-void  add_tc_string(std::string_view capability, std::string_view value);
 std::string_view tc_color_capability(std::string_view capability);
 std::string      tgoto_string(std::string_view str, int x, int y);
 #ifdef USE_BUILTIN_TERMINAL_CAPABILITIES

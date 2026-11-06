@@ -15,8 +15,8 @@ namespace
 
 void add_color_capabilities()
 {
-    add_tc_string("fg red", "<fg-red>");
-    add_tc_string("bg blue", "<bg-blue>");
+    g_tc_colors.add_string("fg red", "<fg-red>");
+    g_tc_colors.add_string("bg blue", "<bg-blue>");
 }
 
 } // namespace
@@ -25,8 +25,8 @@ TEST(ColorAttributeTest, parsesForegroundAndBackgroundCapabilities)
 {
     EXPECT_EXIT(
         {
-            add_tc_string("fg default", "<fg-default>");
-            add_tc_string("bg default", "<bg-default>");
+            g_tc_colors.add_string("fg default", "<fg-default>");
+            g_tc_colors.add_string("bg default", "<bg-default>");
             add_color_capabilities();
 
             g_color.rc_attribute("notice", "n red blue");

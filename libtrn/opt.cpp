@@ -221,7 +221,7 @@ void load_options(const fs::path &filename, bool bleat)
             {
                 for (const IniSetting setting : section)
                 {
-                    add_tc_string(setting.name(), setting.value());
+                    g_tc_colors.add_string(setting.name(), setting.value());
                 }
             }
             else if (section_name == "attribute")
