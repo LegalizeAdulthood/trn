@@ -660,6 +660,30 @@ void DataSource::finish_local_groups(std::time_t last_one, long file_size)
     m_act_sf.m_recent_cnt = file_size;
 }
 
+std::string DataSource::active_file_description() const
+{
+    std::string active_file;
+    active_file.reserve(CMD_BUF_LEN);
+    if (m_act_sf.m_fp)
+    {
+        if (m_flags & DF_TMP_ACTIVE_FILE)
+        {
+            active_file = "Copy of remote active file";
+        }
+        else
+        {
+            fmt::format_to(std::back_inserter(active_file), "Local active file: {}", m_extra_name);
+        }
+    }
+    else
+    {
+        active_file = "Dynamic active file";
+    }
+    active_file += m_act_sf.refetch_description();
+    active_file += ".\n";
+    return active_file;
+}
+
 bool DataSource::active_file_hash(std::string_view first_line)
 {
     int ret;

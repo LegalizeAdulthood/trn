@@ -1114,27 +1114,7 @@ void trn_version()
             if (data_source.m_flags & DF_REMOTE)
             {
                 print_lines(fmt::format("News from server {}.\n", data_source.m_news_id), NO_MARKING);
-                std::string active_file;
-                active_file.reserve(CMD_BUF_LEN);
-                if (data_source.m_act_sf.m_fp)
-                {
-                    if (data_source.m_flags & DF_TMP_ACTIVE_FILE)
-                    {
-                        active_file = "Copy of remote active file";
-                    }
-                    else
-                    {
-                        fmt::format_to(std::back_inserter(active_file), "Local active file: {}",
-                                       data_source.m_extra_name);
-                    }
-                }
-                else
-                {
-                    active_file = "Dynamic active file";
-                }
-                active_file += data_source.m_act_sf.refetch_description();
-                active_file += ".\n";
-                print_lines(active_file, NO_MARKING);
+                print_lines(data_source.active_file_description(), NO_MARKING);
             }
             else
             {
