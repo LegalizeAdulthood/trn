@@ -16,15 +16,14 @@
 #include <string>
 #include <unordered_map>
 
-static long                                  s_sa_num_threads{};
-static std::unordered_map<std::string, long> s_sa_thread_nums;
+ArticleScanThreads g_sa_threads;
 
 static long sa_get_subj_thread(long e);
 
 void sa_init_threads()
 {
-    s_sa_num_threads = 0;
-    s_sa_thread_nums.clear();
+    g_sa_threads.num_threads = 0;
+    g_sa_threads.thread_nums.clear();
 }
 
 long sa_subj_thread(long e)
@@ -54,15 +53,15 @@ static long sa_get_subj_thread(long e)
         subject.erase(0, 2);
     }
 
-    const auto existing = s_sa_thread_nums.find(subject);
-    if (existing != s_sa_thread_nums.end())
+    const auto existing = g_sa_threads.thread_nums.find(subject);
+    if (existing != g_sa_threads.thread_nums.end())
     {
         return existing->second;
     }
-    s_sa_num_threads++;
-    s_sa_thread_nums.emplace(subject, s_sa_num_threads);
-    g_sa_ents[e].subj_thread_num = s_sa_num_threads;
-    return s_sa_num_threads;
+    g_sa_threads.num_threads++;
+    g_sa_threads.thread_nums.emplace(subject, g_sa_threads.num_threads);
+    g_sa_ents[e].subj_thread_num = g_sa_threads.num_threads;
+    return g_sa_threads.num_threads;
 }
 
 int sa_subj_thread_count(long a)
