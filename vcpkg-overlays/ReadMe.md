@@ -44,5 +44,13 @@ including <ranges>. It checks __cplusplus on all compilers and also
 _MSVC_LANG because MSVC can report an older __cplusplus value. The same
 C++20 minimum applies in both cases.
 
-Remove this overlay when the bundled strong-type port includes an
-equivalent language-version guard.
+MSVC 19.51 also rejects the template parameter in the prefix increment
+and decrement operators' noexcept expressions. See
+[strong_type issue 62](https://github.com/rollbear/strong_type/issues/62).
+msvc-noexcept.patch computes each conditional exception specification
+from the underlying type in a class constant. The friend operators refer
+to these constants, avoiding the compiler's template parameter lookup
+bug while preserving their exception specifications.
+
+Remove this overlay when the bundled strong-type port includes both
+fixes.

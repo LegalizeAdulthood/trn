@@ -15,11 +15,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, windows-2022, macos-latest ]
+        os: [ ubuntu-24.04, windows-latest, macos-latest ]
         include:
           - os: ubuntu-24.04
             cmake-preset: ci-linux
-          - os: windows-2022
+          - os: windows-latest
             cmake-preset: default
           - os: macos-latest
             cmake-preset: ci-linux

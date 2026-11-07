@@ -1,0 +1,36 @@
+# Copyright (c) 2026, Richard Thomson
+
+--- a/include/strong_type/incrementable.hpp
++++ b/include/strong_type/incrementable.hpp
+@@ -29,11 +29,13 @@
+     class modifier<T, impl::void_t<decltype(++std::declval<underlying_type_t<T>&>())>>
+     {
++        static constexpr bool is_nothrow = noexcept(++std::declval<underlying_type_t<T>&>());
++
+     public:
+         friend
+         STRONG_CONSTEXPR
+         T&
+         operator++(T& t)
+-        noexcept(noexcept(++std::declval<T&>().value_of()))
++        noexcept(is_nothrow)
+         {
+             ++value_of(t);
+             return t;
+--- a/include/strong_type/decrementable.hpp
++++ b/include/strong_type/decrementable.hpp
+@@ -30,11 +30,13 @@
+     class modifier<T, impl::void_t<decltype(--std::declval<underlying_type_t<T>&>())>>
+     {
++        static constexpr bool is_nothrow = noexcept(--std::declval<underlying_type_t<T>&>());
++
+     public:
+         friend
+         STRONG_CONSTEXPR
+         T&
+         operator--(T& t)
+-        noexcept(noexcept(--std::declval<T&>().value_of()))
++        noexcept(is_nothrow)
+         {
+             --value_of(t);
+             return t;
