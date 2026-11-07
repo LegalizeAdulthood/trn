@@ -4,6 +4,7 @@
 
 #include <trn/datasrc.h>
 #include <trn/last.h>
+#include <trn/NewsrcCheckpoint.h>
 #include <trn/rcstuff.h>
 #include <trn/trn.h>
 

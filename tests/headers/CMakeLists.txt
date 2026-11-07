@@ -42,6 +42,7 @@ add_executable(trn-headers-test
     test_ngsrch.cpp
     test_ngstuff-internal.cpp
     test_ngstuff.cpp
+    test_NewsrcCheckpoint.cpp
     test_nntp.cpp
     test_only.cpp
     test_opt.cpp

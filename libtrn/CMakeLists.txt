@@ -39,6 +39,7 @@ add_library(libtrn
     ngdata.cpp include/trn/ngdata.h
     ngsrch.cpp include/trn/ngsrch.h
     ngstuff.cpp include/trn/ngstuff.h include/trn/ngstuff-internal.h
+    NewsrcCheckpoint.cpp include/trn/NewsrcCheckpoint.h
     nntp.cpp include/trn/nntp.h
     only.cpp include/trn/only.h
     opt.cpp include/trn/opt.h

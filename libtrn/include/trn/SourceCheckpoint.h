@@ -5,11 +5,12 @@
 #ifndef TRN_SOURCE_CHECKPOINT_H
 #define TRN_SOURCE_CHECKPOINT_H
 
+#include <trn/NewsrcCheckpoint.h>
+
 #include <string>
 #include <string_view>
 
 struct LastRunState;
-struct Newsrc;
 
 struct SourceCheckpoint
 {
@@ -20,14 +21,6 @@ struct SourceCheckpoint
     long new_time;
     long active_cnt;
     long desc_cnt;
-};
-
-struct NewsrcCheckpoint
-{
-    void restore();
-    void save();
-
-    Newsrc &rc;
 };
 
 #endif

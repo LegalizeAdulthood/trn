@@ -19,6 +19,7 @@
 #include <trn/IniSectionValues.h>
 #include <trn/init.h>
 #include <trn/last.h>
+#include <trn/NewsrcCheckpoint.h>
 #include <trn/ngdata.h>
 #include <trn/nntp.h>
 #include <trn/only.h>
@@ -28,7 +29,6 @@
 #include <trn/rt-select.h>
 #include <trn/size_cast.h>
 #include <trn/smisc.h>
-#include <trn/SourceCheckpoint.h>
 #include <trn/string-algos.h>
 #include <trn/terminal.h>
 #include <trn/trn.h>
