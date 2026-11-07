@@ -53,10 +53,6 @@ enum
 
 // Things we can figure out ourselves
 
-#ifdef SIGTSTP
-#   define BERKELEY // include job control signals?
-#endif
-
 #if defined(FIONREAD) || defined(HAS_RDCHK) || defined(O_NDELAY) || defined(USE_CONIO_TERMINAL_INPUT)
 #   define PENDING
 #endif
