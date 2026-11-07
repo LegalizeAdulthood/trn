@@ -24,6 +24,7 @@ add_library(libtrn
     head.cpp include/trn/head.h
     help.cpp include/trn/help.h
     IniDocument.cpp include/trn/IniDocument.h
+    IniField.cpp include/trn/IniField.h
     IniSchema.cpp include/trn/IniSchema.h
     IniSection.cpp include/trn/IniSection.h
     IniSetting.cpp include/trn/IniSetting.h

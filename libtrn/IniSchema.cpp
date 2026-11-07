@@ -6,29 +6,6 @@
 
 #include <cctype>
 
-IniField::IniField(int id, std::string_view name, std::string_view help) :
-    IniField{id, name, help, Kind::Value}
-{
-}
-
-IniField::IniField(int id, std::string_view name, std::string_view help, Kind kind) :
-    m_id{id},
-    m_name{name},
-    m_help{help},
-    m_kind{kind}
-{
-}
-
-IniField IniField::group(std::string_view name)
-{
-    return IniField{-1, name, {}, Kind::Group};
-}
-
-IniField IniField::value(int id, std::string_view name, std::string_view help)
-{
-    return IniField{id, name, help, Kind::Value};
-}
-
 IniSchema::IniSchema(std::string_view section_name, std::initializer_list<IniField> fields) :
     m_section_name{section_name},
     m_fields{fields}

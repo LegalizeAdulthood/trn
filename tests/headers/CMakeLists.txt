@@ -25,6 +25,7 @@ add_executable(trn-headers-test
     test_head.cpp
     test_help.cpp
     test_IniDocument.cpp
+    test_IniField.cpp
     test_IniSchema.cpp
     test_IniSection.cpp
     test_IniSetting.cpp

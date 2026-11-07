@@ -5,7 +5,7 @@
 #ifndef TRN_INI_SECTION_VALUES_H
 #define TRN_INI_SECTION_VALUES_H
 
-#include <trn/IniSchema.h>
+#include <trn/IniField.h>
 
 #include <cstddef>
 #include <optional>

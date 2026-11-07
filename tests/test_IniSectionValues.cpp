@@ -2,6 +2,8 @@
 // Copyright (c) 2026, Richard Thomson
 #include <trn/IniSectionValues.h>
 
+#include <trn/IniSchema.h>
+
 #include <gtest/gtest.h>
 
 #include <optional>

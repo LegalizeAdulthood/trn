@@ -12,6 +12,7 @@
 #include <trn/datasrc.h>
 #include <trn/final.h>
 #include <trn/IniDocument.h>
+#include <trn/IniSchema.h>
 #include <trn/IniSection.h>
 #include <trn/IniSectionValues.h>
 #include <trn/intrp.h>
