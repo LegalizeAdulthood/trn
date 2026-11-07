@@ -4385,10 +4385,10 @@ void SuccessiveLocalArticlesTest::TearDown()
 
 enum class LocalReadingOrder
 {
-    Numeric,
-    Date,
-    Subject,
-    Thread
+    NUMERIC,
+    DATE,
+    SUBJECT,
+    THREAD
 };
 
 class LocalArticleTraversalTest : public InputNewsgroupReadingTest,
@@ -4434,16 +4434,16 @@ void LocalArticleTraversalTest::SetUp()
     std::ofstream{active_file, std::ios::binary} << "comp.previous 3 1 y\ncomp.lang.cpp 7 1 y\ncomp.next 3 1 y\n";
     ASSERT_EQ(1, m_data_source.m_act_sf.open(active_file, "", ""));
     g_thread_always = true;
-    g_use_threads = g_threaded_group = GetParam() == LocalReadingOrder::Thread;
+    g_use_threads = g_threaded_group = GetParam() == LocalReadingOrder::THREAD;
     g_breadth_first = false;
-    g_scan_on = GetParam() == LocalReadingOrder::Subject ? 1 : 0;
-    const SelectionMode mode = GetParam() == LocalReadingOrder::Thread    ? SM_THREAD
-                               : GetParam() == LocalReadingOrder::Subject ? SM_SUBJECT
+    g_scan_on = GetParam() == LocalReadingOrder::SUBJECT ? 1 : 0;
+    const SelectionMode mode = GetParam() == LocalReadingOrder::THREAD    ? SM_THREAD
+                               : GetParam() == LocalReadingOrder::SUBJECT ? SM_SUBJECT
                                                                           : SM_ARTICLE;
-    g_sel.set_selector(mode, GetParam() == LocalReadingOrder::Numeric ? SS_NATURAL : SS_DATE);
+    g_sel.set_selector(mode, GetParam() == LocalReadingOrder::NUMERIC ? SS_NATURAL : SS_DATE);
     fs::current_path(m_output_dir);
     ASSERT_EQ(1, access_newsgroup());
-    if (GetParam() == LocalReadingOrder::Date)
+    if (GetParam() == LocalReadingOrder::DATE)
     {
         g_art_order.sort();
     }
@@ -4498,13 +4498,13 @@ std::vector<int> LocalArticleTraversalTest::reading_order() const
 {
     switch (GetParam())
     {
-    case LocalReadingOrder::Numeric:
+    case LocalReadingOrder::NUMERIC:
         return {1, 2, 3, 4, 7};
-    case LocalReadingOrder::Date:
+    case LocalReadingOrder::DATE:
         return {1, 2, 4, 3, 7};
-    case LocalReadingOrder::Subject:
+    case LocalReadingOrder::SUBJECT:
         return {1, 3, 2, 7, 4};
-    case LocalReadingOrder::Thread:
+    case LocalReadingOrder::THREAD:
         return {1, 4, 3, 2, 7};
     }
     return {};
@@ -14200,7 +14200,7 @@ TEST_P(LocalArticleTraversalTest, selectedOnlyReadingLeavesOtherUnreadArticlesUn
 
 TEST_P(LocalArticleTraversalTest, previousUnreadSkipsReadAndMissingArticles)
 {
-    const int previous = GetParam() == LocalReadingOrder::Numeric ? 4 : GetParam() == LocalReadingOrder::Date ? 3 : 2;
+    const int previous = GetParam() == LocalReadingOrder::NUMERIC ? 4 : GetParam() == LocalReadingOrder::DATE ? 3 : 2;
 
     const DoNewsgroupResult result = run_reading({"p", "Q"}, "7");
 
@@ -14266,7 +14266,7 @@ TEST_P(LocalArticleTraversalTest, anExplicitUnselectedUnreadTargetIsRead)
 TEST_P(LocalArticleTraversalTest, previousArticleIncludesReadArticlesInTheChosenOrder)
 {
     const int second = reading_order()[1];
-    const int previous = GetParam() == LocalReadingOrder::Subject ? 5 : 1;
+    const int previous = GetParam() == LocalReadingOrder::SUBJECT ? 5 : 1;
 
     const DoNewsgroupResult result = run_reading({" ", "P", "Q"});
 
@@ -14280,7 +14280,7 @@ TEST_P(LocalArticleTraversalTest, previousArticleIncludesReadArticlesInTheChosen
 TEST_P(LocalArticleTraversalTest, nextArticleCanRereadAnAlreadyReadArticle)
 {
     const int second = reading_order()[1];
-    const int next = GetParam() == LocalReadingOrder::Subject ? 5 : second;
+    const int next = GetParam() == LocalReadingOrder::SUBJECT ? 5 : second;
 
     const DoNewsgroupResult result = run_reading({" ", "1\n", "N", "Q"});
 
@@ -14314,19 +14314,19 @@ TEST_P(LocalArticleTraversalTest, restartingTheCurrentArticleDoesNotMarkItReadTw
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadingOrder, LocalArticleTraversalTest,
-                         testing::Values(LocalReadingOrder::Numeric, LocalReadingOrder::Date,
-                                         LocalReadingOrder::Subject, LocalReadingOrder::Thread),
+                         testing::Values(LocalReadingOrder::NUMERIC, LocalReadingOrder::DATE,
+                                         LocalReadingOrder::SUBJECT, LocalReadingOrder::THREAD),
                          [](const testing::TestParamInfo<LocalReadingOrder> &info)
                          {
                              switch (info.param)
                              {
-                             case LocalReadingOrder::Numeric:
+                             case LocalReadingOrder::NUMERIC:
                                  return "Numeric";
-                             case LocalReadingOrder::Date:
+                             case LocalReadingOrder::DATE:
                                  return "Date";
-                             case LocalReadingOrder::Subject:
+                             case LocalReadingOrder::SUBJECT:
                                  return "Subject";
-                             case LocalReadingOrder::Thread:
+                             case LocalReadingOrder::THREAD:
                                  return "Thread";
                              }
                              return "Unknown";

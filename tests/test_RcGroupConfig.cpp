@@ -58,9 +58,9 @@ void PrintTo(const RcGroupFieldCase &value, std::ostream *stream)
 }
 
 const RcGroupFieldCase GROUP_FIELDS[]{
-    {"ID", RcGroupConfigField::Id, &RcGroupConfig::id, "test-local", "default"},
-    {"Newsrc", RcGroupConfigField::Newsrc, &RcGroupConfig::newsrc, "/home/me/.newsrc", ""},
-    {"Add Groups", RcGroupConfigField::AddGroups, &RcGroupConfig::add_groups, "manual", ""}};
+    {"ID", RcGroupConfigField::ID, &RcGroupConfig::id, "test-local", "default"},
+    {"Newsrc", RcGroupConfigField::NEWSRC, &RcGroupConfig::newsrc, "/home/me/.newsrc", ""},
+    {"Add Groups", RcGroupConfigField::ADD_GROUPS, &RcGroupConfig::add_groups, "manual", ""}};
 
 class RcGroupSchemaFieldTest : public RcGroupConfigTest, public testing::WithParamInterface<RcGroupFieldCase>
 {

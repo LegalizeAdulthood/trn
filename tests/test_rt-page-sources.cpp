@@ -176,8 +176,8 @@ void NewGroupPageDisplayState::SetUp()
     NewsgroupPageDisplayState::SetUp();
     g_add_groups = {};
     g_sel.mode = SM_ADD_GROUP;
-    g_sel_page.page_grp = AddGroupIndex::None;
-    g_sel_page.next_grp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::NONE;
+    g_sel_page.next_grp = AddGroupIndex::NONE;
     g_sel_grp_display_mode = "s";
     g_sel_grp_display_mode_index = 0;
     ASSERT_EQ(1, m_source.m_desc_sf.open({}, "", ""));
@@ -456,7 +456,7 @@ TEST_P(NewGroupRowTest, displaysEligibleGroupCountsDescriptionsAndPendingMarkers
     EXPECT_EQ(4, g_sel_page.total_obj_cnt);
     EXPECT_EQ(4, g_sel_page.page_obj_cnt);
     EXPECT_EQ(ArticleNum{4}, g_obj_count);
-    EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
+    EXPECT_EQ(AddGroupIndex::NONE, g_sel_page.next_grp);
     EXPECT_TRUE(g_sel_page.at_end);
 }
 
@@ -518,7 +518,7 @@ TEST_P(NewGroupPageEndingTest, displaysTheFinalPageWithItsSelectionAndStops)
     }
     EXPECT_EQ(2, g_sel_page.prior_obj_cnt);
     EXPECT_EQ(final_rows, g_sel_page.page_obj_cnt);
-    EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
+    EXPECT_EQ(AddGroupIndex::NONE, g_sel_page.next_grp);
     EXPECT_TRUE(g_sel_page.at_end);
     EXPECT_FALSE(g_sel_page.next_page());
 }

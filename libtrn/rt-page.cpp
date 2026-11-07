@@ -675,10 +675,10 @@ try_again:
         if (!g_sel_page.total_obj_cnt && g_sel.exclusive)
         {
             g_sel.exclusive = false;
-            g_sel_page.page_grp = AddGroupIndex::None;
+            g_sel_page.page_grp = AddGroupIndex::NONE;
             goto try_again;
         }
-        if (g_sel_page.page_grp == AddGroupIndex::None)
+        if (g_sel_page.page_grp == AddGroupIndex::NONE)
         {
             (void) g_sel_page.first_page();
         }
@@ -1233,7 +1233,7 @@ bool SelectorPage::last_page()
     case SM_ADD_GROUP:
     {
         const AddGroupIndex gp = page_grp;
-        page_grp = AddGroupIndex::None;
+        page_grp = AddGroupIndex::NONE;
         if (!prev_page())
         {
             page_grp = gp;
@@ -1353,7 +1353,7 @@ bool SelectorPage::next_page()
 
     case SM_ADD_GROUP:
     {
-        if (next_grp != AddGroupIndex::None)
+        if (next_grp != AddGroupIndex::NONE)
         {
             page_grp = next_grp;
             prior_obj_cnt += page_obj_cnt;
@@ -1504,7 +1504,7 @@ bool SelectorPage::prev_page()
         AddGroupIndex gp = page_grp;
         AddGroupIndex page_gp = page_grp;
 
-        if (gp == AddGroupIndex::None)
+        if (gp == AddGroupIndex::NONE)
         {
             gp = g_add_groups.last();
         }
@@ -1512,7 +1512,7 @@ bool SelectorPage::prev_page()
         {
             gp = g_add_groups.prev(gp);
         }
-        while (gp != AddGroupIndex::None)
+        while (gp != AddGroupIndex::NONE)
         {
             if (g_add_groups[gp].m_flags & AGF_INCLUDED)
             {
@@ -1749,7 +1749,7 @@ try_again:
     case SM_ADD_GROUP:
     {
         AddGroupIndex gp = g_sel_page.page_grp;
-        for (; gp != AddGroupIndex::None && g_sel_page.page_item_cnt < g_sel_page.max_per_page;
+        for (; gp != AddGroupIndex::NONE && g_sel_page.page_item_cnt < g_sel_page.max_per_page;
              gp = g_add_groups.next(gp))
         {
             if (gp == u.gp)
@@ -2215,7 +2215,7 @@ start_of_loop:
         if (current_group_display_mode() == 'l')
         {
             int i = 0;
-            for (; gp != AddGroupIndex::None && i < g_sel_page.max_per_page; gp = g_add_groups.next(gp))
+            for (; gp != AddGroupIndex::NONE && i < g_sel_page.max_per_page; gp = g_add_groups.next(gp))
             {
                 if (!(g_add_groups[gp].m_flags & AGF_INCLUDED))
                 {
@@ -2227,7 +2227,7 @@ start_of_loop:
             }
             gp = g_sel_page.page_grp;
         }
-        for (; gp != AddGroupIndex::None && g_sel_page.page_item_cnt < g_sel_page.max_per_page;
+        for (; gp != AddGroupIndex::NONE && g_sel_page.page_item_cnt < g_sel_page.max_per_page;
              gp = g_add_groups.next(gp))
         {
             const AddGroup &group = g_add_groups[gp];

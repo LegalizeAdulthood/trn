@@ -1049,7 +1049,7 @@ TEST_F(DataSourceInitTest, readsImplicitTlsFromAccessFile)
     EXPECT_EQ("news.example", source->m_news_id);
     EXPECT_EQ(5563, source->m_nntp_link.port_number);
     EXPECT_TRUE(source->m_nntp_link.implicit_tls);
-    EXPECT_EQ(NntpSecurity::Cleartext, source->m_nntp_link.security);
+    EXPECT_EQ(NntpSecurity::CLEAR_TEXT, source->m_nntp_link.security);
     EXPECT_FALSE(source->m_nntp_link.allow_starttls);
 }
 

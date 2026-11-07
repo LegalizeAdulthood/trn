@@ -41,7 +41,7 @@ struct AddGroup
 // Zero is the sentinel; other values identify insertion slots until clear().
 enum class AddGroupIndex : std::size_t
 {
-    None
+    NONE
 };
 
 class AddGroupTable

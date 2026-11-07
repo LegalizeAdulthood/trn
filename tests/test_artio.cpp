@@ -1507,12 +1507,12 @@ INSTANTIATE_TEST_SUITE_P(TransferCharsetHtmlAndSubstitution, PipelineMultipartAr
 
 enum class InlineHandler
 {
-    Viewer,
-    Missing,
-    NeedsTerminal,
-    CopiousOutput,
-    RejectedProbe,
-    Fallback
+    VIEWER,
+    MISSING,
+    NEEDS_TERMINAL,
+    COPIOUS_OUTPUT,
+    REJECTED_PROBE,
+    FALLBACK
 };
 
 struct InlineMimeCase
@@ -1522,7 +1522,7 @@ struct InlineMimeCase
     std::string   payload;
     std::string   decoded;
     const char   *type{"image/x-trn-inline"};
-    InlineHandler handler{InlineHandler::Viewer};
+    InlineHandler handler{InlineHandler::VIEWER};
     bool          inline_disposition{true};
     bool          view_inline{true};
     bool          already_viewed{};
@@ -1536,19 +1536,19 @@ const InlineMimeCase INLINE_MIME_CASES[]{
     {"QuotedPrintable", "quoted-printable", "First=20line\nSecond=20line\n", "First line\nSecond line\n"},
     {"Unencoded", "8bit", "First line\nSecond line\n", "First line\nSecond line\n"},
     {"Audio", "base64", "SGVsbG8=\n", "Hello", "audio/x-trn-inline"},
-    {"MissingHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Missing},
-    {"TerminalHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::NeedsTerminal},
-    {"CopiousHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::CopiousOutput},
-    {"RejectedProbe", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::RejectedProbe},
-    {"FallbackHandler", "base64", "SGVsbG8=\n", "Hello", "image/x-trn-inline", InlineHandler::Fallback},
-    {"AttachmentDisposition", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Viewer, false},
-    {"ViewingDisabled", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Viewer, true, false},
-    {"AlreadyViewed", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::Viewer, true, true, true},
-    {"ViewerFailure", "base64", "SGVsbG8=\n", "Hello", "image/x-trn-inline", InlineHandler::Viewer, true, true, false,
+    {"MissingHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::MISSING},
+    {"TerminalHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::NEEDS_TERMINAL},
+    {"CopiousHandler", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::COPIOUS_OUTPUT},
+    {"RejectedProbe", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::REJECTED_PROBE},
+    {"FallbackHandler", "base64", "SGVsbG8=\n", "Hello", "image/x-trn-inline", InlineHandler::FALLBACK},
+    {"AttachmentDisposition", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::VIEWER, false},
+    {"ViewingDisabled", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::VIEWER, true, false},
+    {"AlreadyViewed", "base64", "SGVsbG8=\n", "", "image/x-trn-inline", InlineHandler::VIEWER, true, true, true},
+    {"ViewerFailure", "base64", "SGVsbG8=\n", "Hello", "image/x-trn-inline", InlineHandler::VIEWER, true, true, false,
      1},
-    {"UnsupportedEncoding", "x-trn-unknown", "Hidden payload\n", "", "image/x-trn-inline", InlineHandler::Viewer, true,
+    {"UnsupportedEncoding", "x-trn-unknown", "Hidden payload\n", "", "image/x-trn-inline", InlineHandler::VIEWER, true,
      true, false, 0, false},
-    {"TruncatedBase64", "base64", "SG\n", "", "image/x-trn-inline", InlineHandler::Viewer, true, true, false, 0,
+    {"TruncatedBase64", "base64", "SG\n", "", "image/x-trn-inline", InlineHandler::VIEWER, true, true, false, 0,
      false}};
 
 void PrintTo(const InlineMimeCase &value, std::ostream *output)
@@ -1620,26 +1620,26 @@ void InlineMultipartArticleTest::SetUp()
     const fs::path cap_file = m_output_dir / "mimecap";
     {
         std::ofstream output{cap_file};
-        if (GetParam().handler != InlineHandler::Missing)
+        if (GetParam().handler != InlineHandler::MISSING)
         {
             output << GetParam().type << "; viewer %s";
             switch (GetParam().handler)
             {
-            case InlineHandler::NeedsTerminal:
+            case InlineHandler::NEEDS_TERMINAL:
                 output << "; needsterminal";
                 break;
-            case InlineHandler::CopiousOutput:
+            case InlineHandler::COPIOUS_OUTPUT:
                 output << "; copiousoutput";
                 break;
-            case InlineHandler::RejectedProbe:
-            case InlineHandler::Fallback:
+            case InlineHandler::REJECTED_PROBE:
+            case InlineHandler::FALLBACK:
                 output << "; test=probe";
                 break;
             default:
                 break;
             }
             output << '\n';
-            if (GetParam().handler == InlineHandler::Fallback)
+            if (GetParam().handler == InlineHandler::FALLBACK)
             {
                 output << GetParam().type << "; fallback %s\n";
             }
@@ -1704,7 +1704,7 @@ bool InlineMultipartArticleTest::attempts_viewing() const
 int InlineMultipartArticleTest::expected_viewers() const
 {
     return attempts_viewing() && GetParam().decode_succeeds &&
-           (GetParam().handler == InlineHandler::Viewer || GetParam().handler == InlineHandler::Fallback);
+           (GetParam().handler == InlineHandler::VIEWER || GetParam().handler == InlineHandler::FALLBACK);
 }
 
 TEST_P(InlineMultipartArticleTest, decodesInlineContentAndContinuesToTheNextTextPart)
@@ -1716,7 +1716,7 @@ TEST_P(InlineMultipartArticleTest, decodesInlineContentAndContinuesToTheNextText
     if (expected_viewers())
     {
         EXPECT_EQ(std::vector<std::string>{GetParam().decoded}, m_decoded);
-        EXPECT_EQ(GetParam().handler == InlineHandler::Fallback ? "fallback inline.bin" : "viewer inline.bin",
+        EXPECT_EQ(GetParam().handler == InlineHandler::FALLBACK ? "fallback inline.bin" : "viewer inline.bin",
                   m_commands.front());
     }
     EXPECT_EQ(g_art_size, g_art_buf.article_pos());

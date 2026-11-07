@@ -25,13 +25,13 @@ NNTPLink::AuthMethod NNTPLink::authentication_method()
 {
     if (capabilities.has("AUTHINFO", "USER"))
     {
-        return AuthMethod::UserPass;
+        return AuthMethod::USER_PASS;
     }
     if (capabilities.has("AUTHINFO", "SASL"))
     {
-        return AuthMethod::Sasl;
+        return AuthMethod::SASL;
     }
-    return !capabilities.has("AUTHINFO") && allow_legacy_auth ? AuthMethod::UserPass : AuthMethod::Unavailable;
+    return !capabilities.has("AUTHINFO") && allow_legacy_auth ? AuthMethod::USER_PASS : AuthMethod::UNAVAILABLE;
 }
 
 namespace
@@ -63,7 +63,7 @@ int nntp_handle_auth_err()
 {
     const std::string last_command_save{g_nntp.last_command};
     g_nntp.link.flags &= ~NNTP_FORCE_AUTH_NOW;
-    if (g_nntp.link.auth_state != NntpAuthState::Unauthenticated)
+    if (g_nntp.link.auth_state != NntpAuthState::UNAUTHENTICATED)
     {
         return -2;
     }
@@ -75,35 +75,35 @@ int nntp_handle_auth_err()
         {
             return -2;
         }
-        if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
+        if (g_nntp.link.auth_state == NntpAuthState::AUTHENTICATED)
         {
             capabilities_refreshed = true;
             break;
         }
         switch (g_nntp.link.authentication_method())
         {
-        case NNTPLink::AuthMethod::UserPass:
+        case NNTPLink::AuthMethod::USER_PASS:
             break;
 
-        case NNTPLink::AuthMethod::Sasl:
+        case NNTPLink::AuthMethod::SASL:
             // Dispatch future SASL mechanisms here, before obtaining credentials.
             g_nntp.ser_line = "503 No supported SASL authentication mechanism.";
             return -2;
 
-        case NNTPLink::AuthMethod::Unavailable:
+        case NNTPLink::AuthMethod::UNAVAILABLE:
             g_nntp.ser_line = "502 No permitted authentication method.";
             return -2;
         }
 
-        g_nntp.link.auth_state = NntpAuthState::Authenticating;
+        g_nntp.link.auth_state = NntpAuthState::AUTHENTICATING;
         const bool authenticated = authenticate_user_pass();
-        g_nntp.link.auth_state = authenticated ? NntpAuthState::Authenticated : NntpAuthState::Unauthenticated;
+        g_nntp.link.auth_state = authenticated ? NntpAuthState::AUTHENTICATED : NntpAuthState::UNAUTHENTICATED;
         if (authenticated)
         {
             break;
         }
         if (nntp_response_code(g_nntp.ser_line) != NNTP_ENCRYPTION_REQUIRED_VAL ||
-            g_nntp.link.security != NntpSecurity::Cleartext || nntp_start_tls() < 0)
+            g_nntp.link.security != NntpSecurity::CLEAR_TEXT || nntp_start_tls() < 0)
         {
             return -2;
         }

@@ -808,7 +808,7 @@ sel_restart:
     {
         g_sel.mask = AGF_SEL;
     }
-    g_sel_page.page_grp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::NONE;
     g_sel_session.extra_commands = g_sel.group_listing ? unsubscribed_group_commands : add_group_commands;
 
     init_pages(FILL_LAST_PAGE);
@@ -3902,8 +3902,8 @@ reask_sort:
             return DS_ASK;
         }
         g_sel.set_sort(g_sel.mode, command_char);
-        g_sel_page.page_grp = AddGroupIndex::None;
-        g_sel_page.next_grp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::NONE;
+        g_sel_page.next_grp = AddGroupIndex::NONE;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
     }
@@ -3911,7 +3911,7 @@ reask_sort:
     case 'U':
         sel_cleanup();
         g_sel.rereading = !g_sel.rereading;
-        g_sel_page.page_grp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::NONE;
         return DS_RESTART;
 
     case 'R':
@@ -3920,7 +3920,7 @@ reask_sort:
             sel_cleanup();
         }
         g_sel.set_selector(g_sel.mode, static_cast<SelectionSortMode>(g_sel.sort * -g_sel.direction));
-        g_sel_page.page_grp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::NONE;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3930,7 +3930,7 @@ reask_sort:
             sel_cleanup();
         }
         g_sel.exclusive = !g_sel.exclusive;
-        g_sel_page.page_grp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::NONE;
         init_pages(FILL_LAST_PAGE);
         return DS_DISPLAY;
 
@@ -3955,7 +3955,7 @@ reask_sort:
             {
                 index = g_add_groups.first();
             }
-            while (index != AddGroupIndex::None)
+            while (index != AddGroupIndex::NONE)
             {
                 AddGroup *gp = &g_add_groups[index];
                 if ((!(gp->m_flags & AGF_SEL) ^ (ch == 'J' ? AGF_SEL : AGF_NONE)) //

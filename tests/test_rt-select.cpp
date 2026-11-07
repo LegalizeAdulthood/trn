@@ -1242,10 +1242,10 @@ TEST_F(SelectorInformationTest, closingVersionInformationRedisplaysRowsAndAccept
 #ifdef MAIL_CALL
 enum class SelectorMailboxState
 {
-    Missing,
-    Empty,
-    Read,
-    Unread
+    MISSING,
+    EMPTY,
+    READ,
+    UNREAD
 };
 
 class SelectorMailTest : public SelectorInformationTest
@@ -1287,10 +1287,10 @@ void SelectorMailTest::TearDown()
 
 void SelectorMailTest::prepare_mail(SelectorMailboxState state)
 {
-    if (state != SelectorMailboxState::Missing)
+    if (state != SelectorMailboxState::MISSING)
     {
-        std::ofstream(m_mailbox, std::ios::binary) << (state == SelectorMailboxState::Empty ? "" : "New mail\n");
-        const std::chrono::hours age{state == SelectorMailboxState::Read ? -1 : 1};
+        std::ofstream(m_mailbox, std::ios::binary) << (state == SelectorMailboxState::EMPTY ? "" : "New mail\n");
+        const std::chrono::hours age{state == SelectorMailboxState::READ ? -1 : 1};
         std::filesystem::last_write_time(m_mailbox, std::filesystem::file_time_type::clock::now() + age);
     }
     g_mail_count = 3;
@@ -1334,16 +1334,16 @@ TEST_P(SelectorMailRefreshTest, anExplicitMailRequestRefreshesCachedStatusWithou
 
 INSTANTIATE_TEST_SUITE_P(
     MailboxAndNotice, SelectorMailRefreshTest,
-    testing::Values(SelectorMailCase{"Missing", SelectorMailboxState::Missing, nullptr, ""},
-                    SelectorMailCase{"Empty", SelectorMailboxState::Empty, nullptr, ""},
-                    SelectorMailCase{"AlreadyRead", SelectorMailboxState::Read, nullptr, ""},
-                    SelectorMailCase{"NewMail", SelectorMailboxState::Unread, nullptr, "(Mail) "},
-                    SelectorMailCase{"Configured", SelectorMailboxState::Unread, "[Mail %V] ", "[Mail %V] "},
-                    SelectorMailCase{"EmptyUsesDefault", SelectorMailboxState::Unread, "", "(Mail) "}));
+    testing::Values(SelectorMailCase{"Missing", SelectorMailboxState::MISSING, nullptr, ""},
+                    SelectorMailCase{"Empty", SelectorMailboxState::EMPTY, nullptr, ""},
+                    SelectorMailCase{"AlreadyRead", SelectorMailboxState::READ, nullptr, ""},
+                    SelectorMailCase{"NewMail", SelectorMailboxState::UNREAD, nullptr, "(Mail) "},
+                    SelectorMailCase{"Configured", SelectorMailboxState::UNREAD, "[Mail %V] ", "[Mail %V] "},
+                    SelectorMailCase{"EmptyUsesDefault", SelectorMailboxState::UNREAD, "", "(Mail) "}));
 
 TEST_F(SelectorMailTest, aForcedMailRefreshDisplaysTheInterpolatedNoticeBeforeAcceptingAnotherCommand)
 {
-    prepare_mail(SelectorMailboxState::Unread);
+    prepare_mail(SelectorMailboxState::UNREAD);
     m_env.expect_env_repeatedly("MAILCALL", "[Mail %V] ");
     g_in_ng = true;
 
@@ -1360,7 +1360,7 @@ TEST_F(SelectorMailTest, aForcedMailRefreshDisplaysTheInterpolatedNoticeBeforeAc
 
 TEST_F(SelectorMailTest, aForcedMailRefreshRemovesAStaleNoticeBeforeAcceptingAnotherCommand)
 {
-    prepare_mail(SelectorMailboxState::Missing);
+    prepare_mail(SelectorMailboxState::MISSING);
     g_in_ng = true;
 
     const char result = run_input(std::string(1, Ctl('^')) + 'q');

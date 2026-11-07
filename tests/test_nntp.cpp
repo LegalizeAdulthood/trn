@@ -278,9 +278,9 @@ TEST_F(NNTPTest, connectsImplicitTlsBeforeGreetingAndOnReconnect)
     for (int attempt = 0; attempt < 2; ++attempt)
     {
         EXPECT_EQ(200, server_init(m_machine));
-        EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
+        EXPECT_EQ(NntpSecurity::IMPLICIT_TLS, g_nntp.link.security);
         g_nntp.close(false);
-        EXPECT_EQ(NntpSecurity::Cleartext, g_nntp.link.security);
+        EXPECT_EQ(NntpSecurity::CLEAR_TEXT, g_nntp.link.security);
         EXPECT_TRUE(g_nntp.link.implicit_tls);
     }
 }
@@ -299,7 +299,7 @@ TEST_F(NNTPTest, connectsImplicitTlsOnExplicitPortWithoutAnotherUpgrade)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "STARTTLS", "."});
 
     EXPECT_EQ(201, server_init(m_machine));
-    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::IMPLICIT_TLS, g_nntp.link.security);
 }
 
 TEST_F(NNTPTest, closesImplicitTlsWhenHandshakeFailsBeforeGreeting)
@@ -312,7 +312,7 @@ TEST_F(NNTPTest, closesImplicitTlsWhenHandshakeFailsBeforeGreeting)
 
     EXPECT_EQ(-1, server_init(m_machine));
     EXPECT_FALSE(g_nntp.link.connection);
-    EXPECT_EQ(NntpSecurity::Cleartext, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::CLEAR_TEXT, g_nntp.link.security);
 }
 
 class NNTPConnectedTest : public NNTPTest
@@ -398,7 +398,7 @@ TEST_F(NNTPConnectedTest, defersForcedAuthUntilAfterStartTlsDiscovery)
     g_data_source = saved_source;
 
     EXPECT_EQ(200, result);
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
     EXPECT_TRUE(g_nntp.link.flags & NNTP_FORCE_AUTH_NOW);
 }
 
@@ -490,7 +490,7 @@ TEST_F(NNTPConnectedTest, discoversCapabilitiesOnlyAvailableInReaderMode)
     EXPECT_EQ("200 reader ready", g_nntp.ser_line);
     EXPECT_TRUE(g_nntp.link.capabilities.available);
     EXPECT_FALSE(g_nntp.link.capabilities.has("STARTTLS"));
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
 }
 
 TEST_F(NNTPConnectedTest, clearsCapabilitiesWhenReaderModeDoesNotSupportDiscovery)
@@ -779,7 +779,7 @@ protected:
 void ImplicitTlsPolicyTest::SetUp()
 {
     RequiredTlsPolicyTest::SetUp();
-    g_nntp.link.security = NntpSecurity::ImplicitTls;
+    g_nntp.link.security = NntpSecurity::IMPLICIT_TLS;
 }
 
 class ImplicitTlsCommandTest : public ImplicitTlsPolicyTest, public WithParamInterface<const char *>
@@ -854,7 +854,7 @@ TEST_F(NNTPGetStringTest, protectsPostingWithStartTlsBeforeSendingPost)
     EXPECT_CALL(*m_connection, write_line(StrEq("POST"), _));
 
     EXPECT_EQ(1, g_nntp.command("POST"));
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
 }
 
 TEST_F(NNTPGetStringTest, authTlsPolicyBlocksPasswordExchangeOnChallenge)
@@ -949,7 +949,7 @@ TEST_F(NntpAuthTest, refreshesCapabilitiesAfterAdvertisedUserPass)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
     EXPECT_TRUE(g_nntp.link.capabilities.has("OVER"));
     EXPECT_FALSE(g_nntp.link.capabilities.has("AUTHINFO"));
     EXPECT_TRUE(g_nntp.link.unsupported_commands.empty());
@@ -964,7 +964,7 @@ TEST_F(NntpAuthTest, acceptsUserWithoutSendingPassword)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, rejectsUnadvertisedMethodsInStrictMode)
@@ -1008,7 +1008,7 @@ TEST_F(NntpAuthTest, permitsLegacyUserPassInCompatibilityMode)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, sendsPasswordOnlyForPasswordRequiredReply)
@@ -1017,7 +1017,7 @@ TEST_F(NntpAuthTest, sendsPasswordOnlyForPasswordRequiredReply)
     expect_reply("AUTHINFO USER reader", {"200 unrelated success"});
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::UNAUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, requiresAuthenticationAcceptedAfterPassword)
@@ -1027,7 +1027,7 @@ TEST_F(NntpAuthTest, requiresAuthenticationAcceptedAfterPassword)
     expect_reply("AUTHINFO PASS secret", {"381 invalid continuation"});
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::UNAUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, doesNotRecursivelyAuthenticateAnAuthinfoChallenge)
@@ -1040,7 +1040,7 @@ TEST_F(NntpAuthTest, doesNotRecursivelyAuthenticateAnAuthinfoChallenge)
 
 TEST_F(NntpAuthTest, doesNotAuthenticateAgainAfterSuccess)
 {
-    g_nntp.link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::AUTHENTICATED;
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
@@ -1058,16 +1058,16 @@ TEST_F(NntpAuthTest, refusesCleartextWhenTlsIsRequired)
 
 TEST_F(NntpAuthTest, closeClearsAuthenticationState)
 {
-    g_nntp.link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::AUTHENTICATED;
 
     g_nntp.close(false);
 
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::UNAUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, doesNotUpgradeAfterAuthentication)
 {
-    g_nntp.link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::AUTHENTICATED;
     g_nntp.link.capabilities.add("STARTTLS");
     EXPECT_CALL(*m_connection, write_line(_, _)).Times(0);
 
@@ -1090,22 +1090,22 @@ TEST_F(NntpAuthTest, selectsAuthMethodAfterRequiredTlsUpgrade)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, acceptsImplicitTlsForPasswordAuthentication)
 {
     g_nntp.link.require_tls_for_auth = true;
     g_nntp.link.allow_starttls = false;
-    g_nntp.link.security = NntpSecurity::ImplicitTls;
+    g_nntp.link.security = NntpSecurity::IMPLICIT_TLS;
     InSequence sequence;
     expect_authentication();
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, doesNotRepeatAuthenticationForAnotherChallenge)
@@ -1132,7 +1132,7 @@ TEST_F(NntpAuthTest, doesNotReplayReaderModeAfterAuthentication)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "READER", "."});
 
     EXPECT_EQ(200, server_init(m_machine));
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, skipsReaderModeAfterDiscoveryAuthentication)
@@ -1146,7 +1146,7 @@ TEST_F(NntpAuthTest, skipsReaderModeAfterDiscoveryAuthentication)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "MODE-READER", "."});
 
     EXPECT_EQ(200, server_init(m_machine));
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, restartsUserPassAfterPasswordRequiresTls)
@@ -1163,7 +1163,7 @@ TEST_F(NntpAuthTest, restartsUserPassAfterPasswordRequiresTls)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
 }
 
 TEST_F(NntpAuthTest, reselectsMethodAfterAuthinfoRequiresTls)
@@ -1176,8 +1176,8 @@ TEST_F(NntpAuthTest, reselectsMethodAfterAuthinfoRequiresTls)
     expect_reply("CAPABILITIES", {"101 capabilities follow", "AUTHINFO SASL", "SASL SCRAM-SHA-256", "."});
 
     EXPECT_LT(nntp_handle_auth_err(), 0);
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
+    EXPECT_EQ(NntpAuthState::UNAUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NntpAuthTest, failsStartupWhenPostAuthDiscoveryFailsInReaderMode)
@@ -1207,17 +1207,17 @@ TEST_F(NntpAuthTest, authenticatesOnceWhenTlsDiscoveryNeedsCredentials)
     EXPECT_CALL(*m_connection, write_line(StrEq("GROUP comp.lang.apl"), _));
 
     EXPECT_EQ(1, nntp_handle_auth_err());
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
-    EXPECT_EQ(NntpAuthState::Authenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
+    EXPECT_EQ(NntpAuthState::AUTHENTICATED, g_nntp.link.auth_state);
 }
 
 TEST_F(NNTPTest, startupClearsPreviousAuthenticationState)
 {
     configure_factory_create(nullptr);
-    g_nntp.link.auth_state = NntpAuthState::Authenticated;
+    g_nntp.link.auth_state = NntpAuthState::AUTHENTICATED;
 
     EXPECT_EQ(-1, server_init(m_machine));
-    EXPECT_EQ(NntpAuthState::Unauthenticated, g_nntp.link.auth_state);
+    EXPECT_EQ(NntpAuthState::UNAUTHENTICATED, g_nntp.link.auth_state);
 }
 
 class NntpTlsLoopbackTest : public NNTPTest
@@ -1275,7 +1275,7 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughStartTls)
     g_nntp.link.port_number = server.port();
 
     ASSERT_EQ(1, nntp_connect("localhost", false));
-    EXPECT_EQ(NntpSecurity::StartTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::START_TLS, g_nntp.link.security);
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, g_nntp.check());
     ASSERT_EQ(1, g_nntp.command("BODY 1"));
@@ -1331,7 +1331,7 @@ TEST_F(NntpTlsLoopbackTest, readsArticleThroughImplicitTls)
     g_nntp.link.allow_starttls = false;
 
     ASSERT_EQ(1, nntp_connect("localhost", false));
-    EXPECT_EQ(NntpSecurity::ImplicitTls, g_nntp.link.security);
+    EXPECT_EQ(NntpSecurity::IMPLICIT_TLS, g_nntp.link.security);
     ASSERT_EQ(1, g_nntp.command("GROUP comp.lang.apl"));
     ASSERT_EQ(1, g_nntp.check());
     ASSERT_EQ(1, g_nntp.command("BODY 1"));

@@ -195,8 +195,8 @@ int init_nntp()
 
 int server_init(std::string_view machine)
 {
-    g_nntp.link.security = NntpSecurity::Cleartext;
-    g_nntp.link.auth_state = NntpAuthState::Unauthenticated;
+    g_nntp.link.security = NntpSecurity::CLEAR_TEXT;
+    g_nntp.link.auth_state = NntpAuthState::UNAUTHENTICATED;
     g_nntp.link.tls_attempted = false;
     g_nntp.link.selected_group.clear();
     g_nntp.link.selected_article = 0;
@@ -220,7 +220,7 @@ int server_init(std::string_view machine)
             g_nntp.close(false);
             return -1;
         }
-        g_nntp.link.security = NntpSecurity::ImplicitTls;
+        g_nntp.link.security = NntpSecurity::IMPLICIT_TLS;
     }
 
     // Now get the server's signon message
@@ -234,7 +234,7 @@ int server_init(std::string_view machine)
             g_nntp.close(false);
             return -1;
         }
-        if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
+        if (g_nntp.link.auth_state == NntpAuthState::AUTHENTICATED)
         {
             g_nntp.ser_line = save_line;
             return nntp_response_code(g_nntp.ser_line);
@@ -260,7 +260,7 @@ int server_init(std::string_view machine)
         {
             g_nntp.ser_line = save_line;
         }
-        else if (reader_status > 0 && g_nntp.link.auth_state == NntpAuthState::Authenticated)
+        else if (reader_status > 0 && g_nntp.link.auth_state == NntpAuthState::AUTHENTICATED)
         {
             g_nntp.ser_line = save_line;
         }
@@ -273,7 +273,7 @@ int server_init(std::string_view machine)
                 g_nntp.close(false);
                 return -1;
             }
-            if (g_nntp.link.security == NntpSecurity::Cleartext && g_nntp.link.allow_starttls &&
+            if (g_nntp.link.security == NntpSecurity::CLEAR_TEXT && g_nntp.link.allow_starttls &&
                 g_nntp.link.capabilities.has("STARTTLS") && nntp_start_tls() < 0)
             {
                 return -1;

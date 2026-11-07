@@ -80,8 +80,8 @@ protected:
     {
         m_old_groups = std::move(g_add_groups);
         g_add_groups = {};
-        m_old_page = std::exchange(g_sel_page.page_grp, AddGroupIndex::None);
-        m_old_next = std::exchange(g_sel_page.next_grp, AddGroupIndex::None);
+        m_old_page = std::exchange(g_sel_page.page_grp, AddGroupIndex::NONE);
+        m_old_next = std::exchange(g_sel_page.next_grp, AddGroupIndex::NONE);
         m_old_data_source = g_data_source;
         m_old_sel_sort = g_sel.sort;
         m_old_sel_direction = g_sel.direction;
@@ -122,8 +122,8 @@ void StoredAddGroupsTest::SetUp()
     AddGroupStorageTest::SetUp();
     m_first = add_to_list("comp.lang.c++", 42, ':');
     m_last = add_to_list("news.software.readers", -1, '!');
-    ASSERT_NE(AddGroupIndex::None, m_first);
-    ASSERT_NE(AddGroupIndex::None, m_last);
+    ASSERT_NE(AddGroupIndex::NONE, m_first);
+    ASSERT_NE(AddGroupIndex::NONE, m_last);
 }
 
 class AddGroupInitializationTest : public AddGroupStorageTest, public testing::WithParamInterface<bool>
@@ -152,10 +152,10 @@ struct EmptyGroupQueryCase
 const EmptyGroupQueryCase EMPTY_GROUP_QUERY_CASES[]{
     {"Empty", [](AddGroupTable &groups) { return groups.empty(); }},
     {"Indices", [](AddGroupTable &groups) { return groups.indices().empty(); }},
-    {"First", [](AddGroupTable &groups) { return groups.first() == AddGroupIndex::None; }},
-    {"Last", [](AddGroupTable &groups) { return groups.last() == AddGroupIndex::None; }},
-    {"Next", [](AddGroupTable &groups) { return groups.next(AddGroupIndex::None) == AddGroupIndex::None; }},
-    {"Previous", [](AddGroupTable &groups) { return groups.prev(AddGroupIndex::None) == AddGroupIndex::None; }}};
+    {"First", [](AddGroupTable &groups) { return groups.first() == AddGroupIndex::NONE; }},
+    {"Last", [](AddGroupTable &groups) { return groups.last() == AddGroupIndex::NONE; }},
+    {"Next", [](AddGroupTable &groups) { return groups.next(AddGroupIndex::NONE) == AddGroupIndex::NONE; }},
+    {"Previous", [](AddGroupTable &groups) { return groups.prev(AddGroupIndex::NONE) == AddGroupIndex::NONE; }}};
 
 void PrintTo(const EmptyGroupQueryCase &value, std::ostream *output)
 {
@@ -189,8 +189,8 @@ void GrownAddGroupIdentityTest::SetUp()
     AddGroupStorageTest::SetUp();
     m_beta = add_to_list("comp.lang.beta", 5, ':');
     m_alpha = add_to_list("comp.lang.alpha", 3, '!');
-    ASSERT_NE(AddGroupIndex::None, m_beta);
-    ASSERT_NE(AddGroupIndex::None, m_alpha);
+    ASSERT_NE(AddGroupIndex::NONE, m_beta);
+    ASSERT_NE(AddGroupIndex::NONE, m_alpha);
     g_sel_page.page_grp = m_beta;
     g_sel_page.next_grp = m_alpha;
     m_item.gp = m_beta;
@@ -250,7 +250,7 @@ void AddGroupSortTest::SetUp()
     m_ids = {add_to_list("comp.Z", 3, ':'), add_to_list("comp.a", 3, ':'), add_to_list("comp.b", 9, ':')};
     for (const AddGroupIndex index : m_ids)
     {
-        ASSERT_NE(AddGroupIndex::None, index);
+        ASSERT_NE(AddGroupIndex::NONE, index);
     }
     g_sel.sort = GetParam().previous_mode;
     g_sel.direction = GetParam().previous_direction;
@@ -274,8 +274,8 @@ protected:
         m_old_use_add_selector = g_use_add_selector;
         m_old_groups = std::move(g_add_groups);
         g_add_groups = {};
-        m_old_page = std::exchange(g_sel_page.page_grp, AddGroupIndex::None);
-        m_old_next = std::exchange(g_sel_page.next_grp, AddGroupIndex::None);
+        m_old_page = std::exchange(g_sel_page.page_grp, AddGroupIndex::NONE);
+        m_old_next = std::exchange(g_sel_page.next_grp, AddGroupIndex::NONE);
         m_old_int_count = g_int_count;
         m_old_erase_screen = g_erase_screen;
         m_old_tc_am = g_tc_AM;
@@ -533,8 +533,8 @@ protected:
         EXPECT_FALSE(changed);
         EXPECT_EQ(old_count, g_newsgroup_count);
         EXPECT_TRUE(g_add_groups.empty());
-        EXPECT_EQ(AddGroupIndex::None, g_sel_page.page_grp);
-        EXPECT_EQ(AddGroupIndex::None, g_sel_page.next_grp);
+        EXPECT_EQ(AddGroupIndex::NONE, g_sel_page.page_grp);
+        EXPECT_EQ(AddGroupIndex::NONE, g_sel_page.next_grp);
         return output;
     }
 
@@ -645,7 +645,7 @@ TEST_P(AddGroupInitializationTest, initializesStoredNameCountAndSelection)
 
     const AddGroupIndex index = add_to_list(name, unsubscribed ? -1 : 42, unsubscribed ? '!' : ':');
 
-    ASSERT_NE(AddGroupIndex::None, index);
+    ASSERT_NE(AddGroupIndex::NONE, index);
     EXPECT_EQ(1U, g_add_groups.size());
     EXPECT_EQ(name, g_add_groups[index].m_name);
     EXPECT_EQ(unsubscribed ? 0 : 42, g_add_groups[index].m_to_read.value_of());
@@ -672,7 +672,7 @@ TEST_P(StoredAddGroupTraversalTest, stopsAtTheTraversalBoundary)
 {
     const AddGroupIndex index = GetParam() ? g_add_groups.prev(m_first) : g_add_groups.next(m_last);
 
-    EXPECT_EQ(AddGroupIndex::None, index);
+    EXPECT_EQ(AddGroupIndex::NONE, index);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReverseOrForward, StoredAddGroupTraversalTest, testing::Bool());
@@ -698,7 +698,7 @@ TEST_F(AddGroupStorageTest, sortAddGroupsOrdersByUnreadCount)
     EXPECT_EQ(first, g_add_groups.prev(second));
     EXPECT_EQ(second, g_add_groups.prev(third));
     EXPECT_EQ(third, g_add_groups.last());
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.next(third));
+    EXPECT_EQ(AddGroupIndex::NONE, g_add_groups.next(third));
 }
 
 TEST_P(EmptyAddGroupQueryTest, reportsNoStoredGroups)
@@ -752,7 +752,7 @@ TEST_F(AddGroupStorageTest, clearDisposesGroupsAndDuplicateLookupState)
     g_add_groups.clear();
 
     EXPECT_TRUE(g_add_groups.empty());
-    EXPECT_EQ(AddGroupIndex::None, g_add_groups.first());
+    EXPECT_EQ(AddGroupIndex::NONE, g_add_groups.first());
     const AddGroupIndex replacement = add_to_list(std::string(256, 'a'), 9, '!');
     ASSERT_EQ(1U, g_add_groups.size());
     EXPECT_EQ(9, g_add_groups[replacement].m_to_read.value_of());

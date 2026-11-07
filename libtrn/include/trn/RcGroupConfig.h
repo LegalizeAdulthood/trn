@@ -13,9 +13,9 @@ class IniSectionValues;
 
 enum class RcGroupConfigField
 {
-    Id = 1,
-    Newsrc,
-    AddGroups
+    ID = 1,
+    NEWSRC,
+    ADD_GROUPS
 };
 
 class RcGroupConfig

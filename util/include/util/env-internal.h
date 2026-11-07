@@ -12,8 +12,8 @@
 
 enum class PasswdNameFormat
 {
-    Berkeley,
-    Usg
+    BERKELEY,
+    USG
 };
 
 std::string passwd_full_name(std::string_view gecos, std::string_view login_name, PasswdNameFormat format);

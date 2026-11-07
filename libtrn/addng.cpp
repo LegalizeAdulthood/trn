@@ -98,32 +98,32 @@ void AddGroupTable::sort(int (*compare)(const AddGroup *, const AddGroup *))
 
 AddGroupIndex AddGroupTable::first() const
 {
-    return m_order.empty() ? AddGroupIndex::None : m_order.front();
+    return m_order.empty() ? AddGroupIndex::NONE : m_order.front();
 }
 
 AddGroupIndex AddGroupTable::last() const
 {
-    return m_order.empty() ? AddGroupIndex::None : m_order.back();
+    return m_order.empty() ? AddGroupIndex::NONE : m_order.back();
 }
 
 AddGroupIndex AddGroupTable::next(AddGroupIndex index) const
 {
-    if (index == AddGroupIndex::None)
+    if (index == AddGroupIndex::NONE)
     {
-        return AddGroupIndex::None;
+        return AddGroupIndex::NONE;
     }
     const std::size_t pos = m_positions[static_cast<std::size_t>(index) - 1] + 1;
-    return pos == m_order.size() ? AddGroupIndex::None : m_order[pos];
+    return pos == m_order.size() ? AddGroupIndex::NONE : m_order[pos];
 }
 
 AddGroupIndex AddGroupTable::prev(AddGroupIndex index) const
 {
-    if (index == AddGroupIndex::None)
+    if (index == AddGroupIndex::NONE)
     {
-        return AddGroupIndex::None;
+        return AddGroupIndex::NONE;
     }
     const std::size_t pos = m_positions[static_cast<std::size_t>(index) - 1];
-    return pos == 0 ? AddGroupIndex::None : m_order[pos - 1];
+    return pos == 0 ? AddGroupIndex::NONE : m_order[pos - 1];
 }
 
 static void skip_active_field_space(std::string_view &text)
@@ -228,8 +228,8 @@ static void process_list(GetNewsgroupFlags flag)
         }
     }
     g_add_groups.clear();
-    g_sel_page.page_grp = AddGroupIndex::None;
-    g_sel_page.next_grp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::NONE;
+    g_sel_page.next_grp = AddGroupIndex::NONE;
 }
 
 void new_nntp_groups(DataSource *dp)
@@ -416,8 +416,8 @@ std::string active_list_pattern()
 static void collect_active_groups()
 {
     g_add_groups.clear();
-    g_sel_page.page_grp = AddGroupIndex::None;
-    g_sel_page.next_grp = AddGroupIndex::None;
+    g_sel_page.page_grp = AddGroupIndex::NONE;
+    g_sel_page.next_grp = AddGroupIndex::NONE;
 
     for (DataSource *dp = data_source_first(); dp; dp = data_source_next(dp))
     {

@@ -41,8 +41,8 @@ protected:
         m_old_int_count = g_int_count;
 
         m_group = g_add_groups.add("comp/lang", 0, 0, nullptr);
-        g_sel_page.page_grp = AddGroupIndex::None;
-        g_sel_page.next_grp = AddGroupIndex::None;
+        g_sel_page.page_grp = AddGroupIndex::NONE;
+        g_sel_page.next_grp = AddGroupIndex::NONE;
         g_newsgroup_ptr = nullptr;
         g_newsgroup_to_read = NewsgroupNum{1};
         g_general_mode = GM_READ;

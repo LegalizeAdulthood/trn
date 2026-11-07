@@ -13,8 +13,8 @@ class IniField
 public:
     enum class Kind
     {
-        Value,
-        Group
+        VALUE,
+        GROUP
     };
 
     IniField(int id, std::string_view name, std::string_view help = {});
@@ -60,12 +60,12 @@ inline IniField::Kind IniField::kind() const
 
 inline bool IniField::is_value() const
 {
-    return m_kind == Kind::Value;
+    return m_kind == Kind::VALUE;
 }
 
 inline bool IniField::is_group() const
 {
-    return m_kind == Kind::Group;
+    return m_kind == Kind::GROUP;
 }
 
 #endif

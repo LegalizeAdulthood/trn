@@ -14,27 +14,27 @@ class IniSectionValues;
 
 enum class DataSourceConfigField
 {
-    NntpServer = 1,
-    ActiveFile,
-    ActiveFileRefetch,
-    SpoolDir,
-    OverviewDir,
-    ActiveTimes,
-    GroupDesc,
-    GroupDescRefetch,
-    AuthUser,
-    AuthPassword,
-    AuthCommand,
-    XhdrBroken,
-    Xrefs,
-    OverviewFormatFile,
-    ForceAuth,
-    AllowLegacyAuth,
-    StartTls,
-    ImplicitTls,
-    RequireTlsForAuth,
-    RequireTlsForPosting,
-    ModeratorsFile
+    NNTP_SERVER = 1,
+    ACTIVE_FILE,
+    ACTIVE_FILE_REFETCH,
+    SPOOL_DIR,
+    OVERVIEW_DIRECTORY,
+    ACTIVE_TIMES_FILE,
+    GROUP_DESCRIPTION,
+    GROUP_DESC_REFETCH,
+    AUTH_USER,
+    AUTH_PASSWORD,
+    AUTH_COMMAND,
+    XHDR_BROKEN,
+    XREFS,
+    OVERVIEW_FORMAT_FILE,
+    FORCE_AUTH,
+    ALLOW_LEGACY_AUTH,
+    START_TLS,
+    IMPLICIT_TLS,
+    REQUIRE_TLS_FOR_AUTH,
+    REQUIRE_TLS_FOR_POSTING,
+    MODERATORS_FILE
 };
 
 class DataSourceConfig

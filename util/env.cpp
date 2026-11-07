@@ -215,7 +215,7 @@ static void env_init2()
 
 std::string passwd_full_name(std::string_view gecos, std::string_view login_name, PasswdNameFormat format)
 {
-    if (format == PasswdNameFormat::Berkeley)
+    if (format == PasswdNameFormat::BERKELEY)
     {
 #ifdef BERKJUNK
         while (!gecos.empty() && !std::isalnum(static_cast<unsigned char>(gecos.front())) && gecos.front() != '&')
@@ -301,9 +301,9 @@ static bool set_user_name()
 #endif
 #ifdef PASS_NAMES
 #ifdef BERKELEY_NAMES
-    constexpr PasswdNameFormat format = PasswdNameFormat::Berkeley;
+    constexpr PasswdNameFormat format = PasswdNameFormat::BERKELEY;
 #else
-    constexpr PasswdNameFormat format = PasswdNameFormat::Usg;
+    constexpr PasswdNameFormat format = PasswdNameFormat::USG;
 #endif
     g_real_name = passwd_full_name(s == nullptr ? std::string_view{} : std::string_view{s}, g_login_name, format);
 #endif

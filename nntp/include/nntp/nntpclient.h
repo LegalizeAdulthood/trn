@@ -61,16 +61,16 @@ private:
 
 enum class NntpSecurity
 {
-    Cleartext,
-    StartTls,
-    ImplicitTls
+    CLEAR_TEXT,
+    START_TLS,
+    IMPLICIT_TLS
 };
 
 enum class NntpAuthState
 {
-    Unauthenticated,
-    Authenticating,
-    Authenticated
+    UNAUTHENTICATED,
+    AUTHENTICATING,
+    AUTHENTICATED
 };
 
 struct NNTPLink
@@ -80,9 +80,9 @@ struct NNTPLink
     // TODO: private
     enum class AuthMethod
     {
-        Unavailable,
-        UserPass,
-        Sasl
+        UNAVAILABLE,
+        USER_PASS,
+        SASL
     };
 
     AuthMethod authentication_method();
@@ -95,8 +95,8 @@ struct NNTPLink
     NntpCapabilities capabilities;
     // Sorted command names rejected by this session.
     std::vector<std::string> unsupported_commands;
-    NntpSecurity             security{NntpSecurity::Cleartext};
-    NntpAuthState            auth_state{NntpAuthState::Unauthenticated};
+    NntpSecurity             security{NntpSecurity::CLEAR_TEXT};
+    NntpAuthState            auth_state{NntpAuthState::UNAUTHENTICATED};
     bool                     allow_legacy_auth{true};
     bool                     allow_starttls{true};
     bool                     implicit_tls{};

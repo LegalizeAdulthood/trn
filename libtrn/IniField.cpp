@@ -5,7 +5,7 @@
 #include <trn/IniField.h>
 
 IniField::IniField(int id, std::string_view name, std::string_view help) :
-    IniField{id, name, help, Kind::Value}
+    IniField{id, name, help, Kind::VALUE}
 {
 }
 
@@ -19,10 +19,10 @@ IniField::IniField(int id, std::string_view name, std::string_view help, Kind ki
 
 IniField IniField::group(std::string_view name)
 {
-    return IniField{-1, name, {}, Kind::Group};
+    return IniField{-1, name, {}, Kind::GROUP};
 }
 
 IniField IniField::value(int id, std::string_view name, std::string_view help)
 {
-    return IniField{id, name, help, Kind::Value};
+    return IniField{id, name, help, Kind::VALUE};
 }

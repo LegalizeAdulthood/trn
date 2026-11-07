@@ -355,7 +355,7 @@ int nntp_group_descriptions(std::string_view pattern)
 
 int nntp_require_tls()
 {
-    if (g_nntp.link.security != NntpSecurity::Cleartext)
+    if (g_nntp.link.security != NntpSecurity::CLEAR_TEXT)
     {
         return 1;
     }
@@ -370,11 +370,11 @@ int nntp_require_tls()
 
 int nntp_start_tls()
 {
-    if (g_nntp.link.security != NntpSecurity::Cleartext)
+    if (g_nntp.link.security != NntpSecurity::CLEAR_TEXT)
     {
         return 1;
     }
-    if (g_nntp.link.auth_state == NntpAuthState::Authenticated)
+    if (g_nntp.link.auth_state == NntpAuthState::AUTHENTICATED)
     {
         g_nntp.ser_line = "483 TLS must be negotiated before authentication.";
         return -1;
@@ -403,7 +403,7 @@ int nntp_start_tls()
         g_nntp.close(false);
         return -1;
     }
-    g_nntp.link.security = NntpSecurity::StartTls;
+    g_nntp.link.security = NntpSecurity::START_TLS;
     g_nntp.link.selected_group.clear();
     g_nntp.link.selected_article = 0;
     g_nntp.link.trailing_cr = false;
@@ -523,7 +523,7 @@ read_it:
     }
 #endif
     if (!retried_tls && nntp_response_code(ser_line) == NNTP_ENCRYPTION_REQUIRED_VAL &&
-        link.auth_state != NntpAuthState::Authenticating && link.security == NntpSecurity::Cleartext &&
+        link.auth_state != NntpAuthState::AUTHENTICATING && link.security == NntpSecurity::CLEAR_TEXT &&
         link.allow_starttls && !link.tls_attempted)
     {
         const std::string command = last_command;
@@ -535,7 +535,7 @@ read_it:
         goto read_it;
     }
     if (nntp_response_code(ser_line) == NNTP_AUTH_NEEDED_VAL && last_command != "STARTTLS" &&
-        link.auth_state == NntpAuthState::Unauthenticated &&
+        link.auth_state == NntpAuthState::UNAUTHENTICATED &&
         !string_case_equal(std::string_view{last_command}.substr(0, last_command.find(' ')), "AUTHINFO"))
     {
         const bool reader_mode = last_command == "MODE READER";
@@ -674,8 +674,8 @@ void NntpSession::close(bool send_quit)
     link.capabilities = {};
     link.unsupported_commands.clear();
     link.flags |= NNTP_NEW_CMD_OK;
-    link.security = NntpSecurity::Cleartext;
-    link.auth_state = NntpAuthState::Unauthenticated;
+    link.security = NntpSecurity::CLEAR_TEXT;
+    link.auth_state = NntpAuthState::UNAUTHENTICATED;
     link.tls_attempted = false;
     link.selected_group.clear();
     link.selected_article = 0;

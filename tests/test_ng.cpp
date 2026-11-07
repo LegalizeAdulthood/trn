@@ -809,11 +809,11 @@ class RestoreScopeArticleTest : public RestoreDelayedArticleTest, public testing
 
 enum class RestoreOrder
 {
-    Numeric,
-    Subject,
-    DepthFirst,
-    BreadthFirst,
-    Sorted
+    NUMERIC,
+    SUBJECT,
+    DEPTH_FIRST,
+    BREADTH_FIRST,
+    SORTED
 };
 
 class RestoreOrderArticleTest : public RestoreDelayedArticleTest, public testing::WithParamInterface<RestoreOrder>
@@ -4114,11 +4114,11 @@ class DirectNumericBoundaryArticleTest : public DirectNavigationArticleTest, pub
 
 enum class DirectReadingOrder
 {
-    Numeric,
-    DepthFirst,
-    BreadthFirst,
-    Subject,
-    Sorted
+    NUMERIC,
+    DEPTH_FIRST,
+    BREADTH_FIRST,
+    SUBJECT,
+    SORTED
 };
 
 class DirectFirstUnreadArticleTest : public DirectNavigationArticleTest,
@@ -7727,13 +7727,13 @@ TEST_P(RestoreOrderArticleTest, restartsAtTheFirstEligibleArticleInReadingOrderI
     g_selected_subj_cnt = 1;
     m_subjects[2].m_flags |= SF_SEL;
     g_first_art = ArticleNum{6};
-    g_threaded_group = GetParam() == RestoreOrder::DepthFirst || GetParam() == RestoreOrder::BreadthFirst;
-    g_breadth_first = GetParam() == RestoreOrder::BreadthFirst;
-    g_search_ahead = GetParam() == RestoreOrder::Subject ? ArticleNum{4} : ArticleNum{};
+    g_threaded_group = GetParam() == RestoreOrder::DEPTH_FIRST || GetParam() == RestoreOrder::BREADTH_FIRST;
+    g_breadth_first = GetParam() == RestoreOrder::BREADTH_FIRST;
+    g_search_ahead = GetParam() == RestoreOrder::SUBJECT ? ArticleNum{4} : ArticleNum{};
     g_sa_in = true;
     g_sa_follow = false;
     g_s_follow_temp = false;
-    if (GetParam() == RestoreOrder::Sorted)
+    if (GetParam() == RestoreOrder::SORTED)
     {
         for (const long number : {3, 2, 6, 5, 1, 4, 7})
         {
@@ -7741,7 +7741,7 @@ TEST_P(RestoreOrderArticleTest, restartsAtTheFirstEligibleArticleInReadingOrderI
         }
         g_art_order.ptr = g_art_order.ptr_list.data() + 6;
     }
-    const long first = GetParam() == RestoreOrder::Sorted ? 6 : GetParam() == RestoreOrder::BreadthFirst ? 5 : 4;
+    const long first = GetParam() == RestoreOrder::SORTED ? 6 : GetParam() == RestoreOrder::BREADTH_FIRST ? 5 : 4;
 
     EXPECT_EQ("\nReturning 2 Marked articles...\n", restore_delayed(first));
 
@@ -7754,12 +7754,12 @@ TEST_P(RestoreOrderArticleTest, restartsAtTheFirstEligibleArticleInReadingOrderI
     EXPECT_EQ(SF_VISIT, m_subjects[0].m_flags);
     EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[1].m_flags);
     EXPECT_EQ(SF_SEL | SF_VISIT, m_subjects[2].m_flags);
-    EXPECT_EQ(GetParam() == RestoreOrder::Sorted ? g_art_order.ptr_list.data() + 2 : nullptr, g_art_order.ptr);
+    EXPECT_EQ(GetParam() == RestoreOrder::SORTED ? g_art_order.ptr_list.data() + 2 : nullptr, g_art_order.ptr);
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadingOrder, RestoreOrderArticleTest,
-                         testing::Values(RestoreOrder::Numeric, RestoreOrder::Subject, RestoreOrder::DepthFirst,
-                                         RestoreOrder::BreadthFirst, RestoreOrder::Sorted));
+                         testing::Values(RestoreOrder::NUMERIC, RestoreOrder::SUBJECT, RestoreOrder::DEPTH_FIRST,
+                                         RestoreOrder::BREADTH_FIRST, RestoreOrder::SORTED));
 
 TEST_F(RestoreDelayedArticleTest, noPendingArticlesStillRestartsAtExistingUnreadArticlesFromGroupEnd)
 {
@@ -13745,17 +13745,17 @@ TEST_P(DirectFirstUnreadArticleTest, caretUsesConfiguredOrderAndSkipsReadAndUnse
     long order_index = -1;
     switch (GetParam())
     {
-    case DirectReadingOrder::Numeric:
+    case DirectReadingOrder::NUMERIC:
         g_threaded_group = false;
         g_search_ahead = ArticleNum{};
         break;
-    case DirectReadingOrder::DepthFirst:
+    case DirectReadingOrder::DEPTH_FIRST:
         break;
-    case DirectReadingOrder::BreadthFirst:
+    case DirectReadingOrder::BREADTH_FIRST:
         g_breadth_first = true;
         target = 6;
         break;
-    case DirectReadingOrder::Subject:
+    case DirectReadingOrder::SUBJECT:
         g_threaded_group = false;
         m_subjects[1].m_prev = nullptr;
         m_subjects[1].m_next = &m_subjects[0];
@@ -13765,7 +13765,7 @@ TEST_P(DirectFirstUnreadArticleTest, caretUsesConfiguredOrderAndSkipsReadAndUnse
         g_subj.last = &m_subjects[0];
         target = 11;
         break;
-    case DirectReadingOrder::Sorted:
+    case DirectReadingOrder::SORTED:
         set_order({2, 8, 11, 3, 6, 1, 4, 12, 7, 9, 10});
         target = 11;
         order_index = 2;
@@ -13776,9 +13776,9 @@ TEST_P(DirectFirstUnreadArticleTest, caretUsesConfiguredOrderAndSkipsReadAndUnse
 }
 
 INSTANTIATE_TEST_SUITE_P(ReadingOrder, DirectFirstUnreadArticleTest,
-                         testing::Values(DirectReadingOrder::Numeric, DirectReadingOrder::DepthFirst,
-                                         DirectReadingOrder::BreadthFirst, DirectReadingOrder::Subject,
-                                         DirectReadingOrder::Sorted));
+                         testing::Values(DirectReadingOrder::NUMERIC, DirectReadingOrder::DEPTH_FIRST,
+                                         DirectReadingOrder::BREADTH_FIRST, DirectReadingOrder::SUBJECT,
+                                         DirectReadingOrder::SORTED));
 
 TEST_F(DirectNavigationArticleTest, caretIncludesUnselectedUnreadArticlesWhenSelectionFilteringIsOff)
 {

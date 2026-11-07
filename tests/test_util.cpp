@@ -396,7 +396,7 @@ TEST_F(FileExpansionTest, expandsDotDirectory)
 
 TEST_P(BerkeleyNameTest, extractsTheFullName)
 {
-    const std::string result = passwd_full_name(m_gecos, "guest", PasswdNameFormat::Berkeley);
+    const std::string result = passwd_full_name(m_gecos, "guest", PasswdNameFormat::BERKELEY);
 
     EXPECT_EQ(GetParam().second, result);
 }
@@ -409,7 +409,7 @@ INSTANTIATE_TEST_SUITE_P(DelimitersAndAmpersands, BerkeleyNameTest,
 
 TEST(PasswdFullNameTest, usgKeepsNameBetweenHyphenAndParen)
 {
-    EXPECT_EQ("Mister Guest User", passwd_full_name("000-Mister Guest User(000)", "guest", PasswdNameFormat::Usg));
+    EXPECT_EQ("Mister Guest User", passwd_full_name("000-Mister Guest User(000)", "guest", PasswdNameFormat::USG));
 }
 
 #ifndef PASS_NAMES
