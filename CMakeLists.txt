@@ -50,8 +50,6 @@ else()
     endif()
 endif()
 
-set(CMAKE_INSTALL_PREFIX "install")
-
 set(trn_text_files
     HACKERSGUIDE.txt
     INIT.txt
